@@ -1,7 +1,4 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio } from '@/utils/mobileAudioUnlock';
@@ -10,32 +7,28 @@ interface PitchPipeProps {
   className?: string;
 }
 
-// Base frequencies for octave 4 (middle C)
-const baseWhiteKeys = [
-  { note: 'C', baseFrequency: 261.63 },
-  { note: 'D', baseFrequency: 293.66 },
-  { note: 'E', baseFrequency: 329.63 },
-  { note: 'F', baseFrequency: 349.23 },
-  { note: 'G', baseFrequency: 392.00 },
-  { note: 'A', baseFrequency: 440.00 },
-  { note: 'B', baseFrequency: 493.88 },
-];
-
-const baseBlackKeys = [
-  { note: 'C♯', baseFrequency: 277.18, position: 0.5 },
-  { note: 'D♯', baseFrequency: 311.13, position: 1.5 },
-  { note: 'F♯', baseFrequency: 369.99, position: 3.5 },
-  { note: 'G♯', baseFrequency: 415.30, position: 4.5 },
-  { note: 'A♯', baseFrequency: 466.16, position: 5.5 },
+// Chromatic scale C4 to C5 (13 notes including both C's)
+const chromaticNotes = [
+  { note: 'C', display: 'C', frequency: 261.63, isSharp: false },
+  { note: 'C#', display: 'C♯/D♭', frequency: 277.18, isSharp: true },
+  { note: 'D', display: 'D', frequency: 293.66, isSharp: false },
+  { note: 'D#', display: 'D♯/E♭', frequency: 311.13, isSharp: true },
+  { note: 'E', display: 'E', frequency: 329.63, isSharp: false },
+  { note: 'F', display: 'F', frequency: 349.23, isSharp: false },
+  { note: 'F#', display: 'F♯/G♭', frequency: 369.99, isSharp: true },
+  { note: 'G', display: 'G', frequency: 392.00, isSharp: false },
+  { note: 'G#', display: 'G♯/A♭', frequency: 415.30, isSharp: true },
+  { note: 'A', display: 'A', frequency: 440.00, isSharp: false },
+  { note: 'A#', display: 'A♯/B♭', frequency: 466.16, isSharp: true },
+  { note: 'B', display: 'B', frequency: 493.88, isSharp: false },
 ];
 
 export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   const [isPlaying, setIsPlaying] = useState<string | null>(null);
-  const [volume, setVolume] = useState([0.3]);
+  const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
-  const [octave, setOctave] = useState<number>(4); // Default to octave 4 (middle C)
   const audioContextRef = useRef<AudioContext | null>(null);
-  const oscillatorRef = useRef<OscillatorNode | null>(null);
+  const oscillatorsRef = useRef<OscillatorNode[]>([]);
   const gainNodeRef = useRef<GainNode | null>(null);
 
   // Setup mobile audio unlock on mount
@@ -44,23 +37,9 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
     return cleanup;
   }, []);
 
-  // Calculate frequencies for selected octave
-  const octaveMultiplier = Math.pow(2, octave - 4); // 4 is the base octave
-  const whiteKeys = baseWhiteKeys.map(key => ({
-    ...key,
-    frequency: key.baseFrequency * octaveMultiplier
-  }));
-  const blackKeys = baseBlackKeys.map(key => ({
-    ...key,
-    frequency: key.baseFrequency * octaveMultiplier
-  }));
-
   const initAudioContext = useCallback(async () => {
     try {
-      // Force unlock for iOS on user gesture
       forceUnlockAudio();
-      
-      // Use shared unlock utility for iOS compatibility
       const ctx = await unlockAudioContext();
       audioContextRef.current = ctx;
       return ctx;
@@ -70,82 +49,95 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
     }
   }, []);
 
-  const playTone = useCallback(async (frequency: number, note: string) => {
-    // Force unlock audio on touch (critical for iOS)
+  // Create flute-like sound using multiple oscillators
+  const startTone = useCallback(async (frequency: number, note: string) => {
     forceUnlockAudio();
     
-    if (isPlaying === note) {
-      stopTone();
-      return;
-    }
-
-    stopTone(); // Stop any currently playing tone
-    
     const audioContext = await initAudioContext();
-    
     if (!audioContext || audioContext.state !== 'running') {
       console.warn('AudioContext not available or not running');
       return;
     }
-    
-    // Create oscillator for the tone
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = frequency;
-    oscillator.type = 'sine'; // Pure tone
+
+    // Stop any existing tone
+    stopTone();
+
+    const masterGain = audioContext.createGain();
+    masterGain.connect(audioContext.destination);
     
     const currentVolume = isMuted ? 0 : volume[0];
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(currentVolume, audioContext.currentTime + 0.05);
-    
-    oscillator.start();
-    
-    oscillatorRef.current = oscillator;
-    gainNodeRef.current = gainNode;
+    masterGain.gain.setValueAtTime(0, audioContext.currentTime);
+    masterGain.gain.linearRampToValueAtTime(currentVolume * 0.5, audioContext.currentTime + 0.08);
+
+    // Flute-like timbre: fundamental + soft harmonics
+    const harmonics = [
+      { ratio: 1, gain: 1.0 },      // Fundamental
+      { ratio: 2, gain: 0.3 },      // 2nd harmonic (soft)
+      { ratio: 3, gain: 0.1 },      // 3rd harmonic (very soft)
+    ];
+
+    const oscillators: OscillatorNode[] = [];
+
+    harmonics.forEach(({ ratio, gain: harmonicGain }) => {
+      const osc = audioContext.createOscillator();
+      const oscGain = audioContext.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.value = frequency * ratio;
+      oscGain.gain.value = harmonicGain;
+      
+      osc.connect(oscGain);
+      oscGain.connect(masterGain);
+      osc.start();
+      oscillators.push(osc);
+    });
+
+    // Add slight vibrato for more realism
+    const lfo = audioContext.createOscillator();
+    const lfoGain = audioContext.createGain();
+    lfo.type = 'sine';
+    lfo.frequency.value = 5; // 5Hz vibrato
+    lfoGain.gain.value = 2; // 2Hz pitch deviation
+    lfo.connect(lfoGain);
+    oscillators.forEach(osc => lfoGain.connect(osc.frequency));
+    lfo.start();
+    oscillators.push(lfo);
+
+    oscillatorsRef.current = oscillators;
+    gainNodeRef.current = masterGain;
     setIsPlaying(note);
-    
-    // Auto-stop after 3 seconds
-    setTimeout(() => {
-      if (isPlaying === note) {
-        stopTone();
-      }
-    }, 3000);
-  }, [isPlaying, volume, isMuted, initAudioContext]);
+  }, [volume, isMuted, initAudioContext]);
 
   const stopTone = useCallback(() => {
-    if (oscillatorRef.current && gainNodeRef.current && audioContextRef.current) {
+    if (gainNodeRef.current && audioContextRef.current) {
       try {
-        gainNodeRef.current.gain.linearRampToValueAtTime(0, audioContextRef.current.currentTime + 0.05);
+        gainNodeRef.current.gain.linearRampToValueAtTime(0, audioContextRef.current.currentTime + 0.08);
         setTimeout(() => {
-          oscillatorRef.current?.stop();
-          oscillatorRef.current = null;
+          oscillatorsRef.current.forEach(osc => {
+            try { osc.stop(); } catch {}
+          });
+          oscillatorsRef.current = [];
           gainNodeRef.current = null;
-        }, 50);
-      } catch (error) {
-        // Oscillator might already be stopped
-        oscillatorRef.current = null;
+        }, 100);
+      } catch {
+        oscillatorsRef.current = [];
         gainNodeRef.current = null;
       }
     }
     setIsPlaying(null);
   }, []);
 
-  // Cleanup on unmount - don't close shared context
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopTone();
-      // Don't close the shared audio context
     };
   }, [stopTone]);
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
     if (gainNodeRef.current && audioContextRef.current) {
-      const newVolume = !isMuted ? 0 : volume[0];
+      const newVolume = !isMuted ? 0 : volume[0] * 0.5;
       gainNodeRef.current.gain.setValueAtTime(newVolume, audioContextRef.current.currentTime);
     }
   };
@@ -153,115 +145,152 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);
     if (gainNodeRef.current && audioContextRef.current && !isMuted) {
-      gainNodeRef.current.gain.setValueAtTime(newVolume[0], audioContextRef.current.currentTime);
+      gainNodeRef.current.gain.setValueAtTime(newVolume[0] * 0.5, audioContextRef.current.currentTime);
     }
   };
 
+  // Handle touch/mouse events for press-and-hold
+  const handleNoteStart = (note: typeof chromaticNotes[0]) => (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    startTone(note.frequency, note.note);
+  };
+
+  const handleNoteEnd = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    stopTone();
+  };
+
+  // Calculate position for each note around the circle
+  const getPosition = (index: number, total: number) => {
+    // Start from top (12 o'clock) and go clockwise
+    const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
+    const radius = 42; // percentage from center
+    return {
+      x: 50 + radius * Math.cos(angle),
+      y: 50 + radius * Math.sin(angle),
+      rotation: (index / total) * 360 - 90 + 90, // Rotate text to be readable
+    };
+  };
+
   return (
-    <Card className={`w-full max-w-2xl ${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Pitch Pipe</span>
-          <div className="flex items-center gap-2">
-            <Select value={octave.toString()} onValueChange={(value) => setOctave(parseInt(value))}>
-              <SelectTrigger className="w-20 h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2">C2</SelectItem>
-                <SelectItem value="3">C3</SelectItem>
-                <SelectItem value="4">C4</SelectItem>
-                <SelectItem value="5">C5</SelectItem>
-                <SelectItem value="6">C6</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMute}
-              className="h-8 w-8"
-            >
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </Button>
-            <div className="w-20">
-              <Slider
-                value={volume}
-                onValueChange={handleVolumeChange}
-                max={1}
-                min={0}
-                step={0.1}
-                className="w-full"
-              />
-            </div>
+    <div className={`flex flex-col items-center gap-4 ${className}`}>
+      {/* Circular Pitch Pipe */}
+      <div 
+        className="relative w-72 h-72 sm:w-80 sm:h-80 rounded-full shadow-2xl select-none"
+        style={{
+          background: 'radial-gradient(circle at 30% 30%, #3a3a3a 0%, #1a1a1a 50%, #0f0f0f 100%)',
+          boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.5), 0 8px 32px rgba(0,0,0,0.4), 0 0 0 4px #2a2a2a',
+        }}
+      >
+        {/* Center decoration */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full flex items-center justify-center"
+          style={{
+            background: 'radial-gradient(circle at 40% 40%, #3a3a3a 0%, #1a1a1a 100%)',
+            boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.6), 0 1px 2px rgba(255,255,255,0.1)',
+          }}
+        >
+          <div className="text-center">
+            <div className="text-[10px] text-gray-400 font-medium tracking-wider">CHROMATIC</div>
+            <div className="text-[10px] text-gray-400 font-medium tracking-wider">PITCH PIPE</div>
+            <div className="text-2xl text-gray-300 mt-1">𝄞</div>
           </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Piano Keyboard Layout */}
-        <div className="relative w-full h-40 mb-4 bg-gray-100 p-2 rounded-lg">
-          {/* White Keys */}
-          <div className="flex h-full gap-px">
-            {whiteKeys.map((key, index) => (
-              <div
-                key={key.note}
-                className={`flex-1 cursor-pointer transition-all duration-100 flex items-end justify-center pb-3 text-sm font-medium select-none ${
-                  isPlaying === key.note
-                    ? "bg-blue-200 shadow-inner transform translate-y-1"
-                    : "bg-white hover:bg-gray-50 shadow-md"
-                } ${index === 0 ? "rounded-l-md" : ""} ${index === whiteKeys.length - 1 ? "rounded-r-md" : ""}`}
-                style={{
-                  boxShadow: isPlaying === key.note 
-                    ? "inset 0 2px 4px rgba(0,0,0,0.3)" 
-                    : "0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)"
-                }}
-                onClick={() => playTone(key.frequency, key.note)}
-              >
-                <span className="text-gray-700 font-semibold">{key.note}</span>
-              </div>
-            ))}
-          </div>
+        </div>
+
+        {/* Center bolt */}
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full z-10"
+          style={{
+            background: 'linear-gradient(145deg, #4a4a4a, #2a2a2a)',
+            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.5)',
+          }}
+        />
+
+        {/* Note buttons arranged in a circle */}
+        {chromaticNotes.map((note, index) => {
+          const pos = getPosition(index, chromaticNotes.length);
+          const isActive = isPlaying === note.note;
           
-          {/* Black Keys */}
-          <div className="absolute top-2 left-2 right-2 h-24 pointer-events-none">
-            {blackKeys.map((key) => {
-              const leftPercentage = (key.position / whiteKeys.length) * 100;
-              return (
-                <div
-                  key={key.note}
-                  className={`absolute w-7 h-full cursor-pointer transition-all duration-100 flex items-end justify-center pb-2 text-xs font-medium pointer-events-auto select-none ${
-                    isPlaying === key.note
-                      ? "bg-gray-600 shadow-inner transform translate-y-1"
-                      : "bg-gray-900 hover:bg-gray-800"
-                  }`}
-                  style={{
-                    left: `calc(${leftPercentage}% - 0.875rem)`,
-                    borderRadius: "0 0 4px 4px",
-                    boxShadow: isPlaying === key.note 
-                      ? "inset 0 2px 4px rgba(0,0,0,0.6)" 
-                      : "0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)"
-                  }}
-                  onClick={() => playTone(key.frequency, key.note)}
-                >
-                  <span className="text-white text-xs">{key.note}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        
-        <div className="text-center space-y-2">
-          {isPlaying && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={stopTone}
-              className="mt-2"
+          return (
+            <button
+              key={note.note}
+              onMouseDown={handleNoteStart(note)}
+              onMouseUp={handleNoteEnd}
+              onMouseLeave={handleNoteEnd}
+              onTouchStart={handleNoteStart(note)}
+              onTouchEnd={handleNoteEnd}
+              onTouchCancel={handleNoteEnd}
+              className="absolute flex items-center justify-center transition-all duration-75 touch-none"
+              style={{
+                left: `${pos.x}%`,
+                top: `${pos.y}%`,
+                transform: `translate(-50%, -50%)`,
+                width: note.isSharp ? '32px' : '36px',
+                height: note.isSharp ? '32px' : '36px',
+              }}
             >
-              Stop Playing
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+              <span
+                className={`font-bold transition-all duration-75 ${
+                  note.isSharp ? 'text-xs' : 'text-base'
+                } ${
+                  isActive 
+                    ? 'text-amber-400 scale-125 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' 
+                    : 'text-gray-200 hover:text-white'
+                }`}
+                style={{
+                  textShadow: isActive 
+                    ? '0 0 10px rgba(251,191,36,0.8)' 
+                    : '0 1px 2px rgba(0,0,0,0.8)',
+                }}
+              >
+                {note.isSharp ? (
+                  <span className="flex flex-col items-center leading-none">
+                    <span className="text-[10px]">♯↑♭</span>
+                  </span>
+                ) : (
+                  note.note
+                )}
+              </span>
+            </button>
+          );
+        })}
+
+        {/* Decorative ring */}
+        <div 
+          className="absolute inset-4 rounded-full pointer-events-none"
+          style={{
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        />
+        <div 
+          className="absolute inset-16 rounded-full pointer-events-none"
+          style={{
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}
+        />
+      </div>
+
+      {/* Volume Controls */}
+      <div className="flex items-center gap-3 bg-card/50 px-4 py-2 rounded-full border border-border">
+        <button
+          onClick={toggleMute}
+          className="p-1.5 hover:bg-muted rounded-full transition-colors"
+        >
+          {isMuted ? <VolumeX className="h-4 w-4 text-muted-foreground" /> : <Volume2 className="h-4 w-4" />}
+        </button>
+        <Slider
+          value={volume}
+          onValueChange={handleVolumeChange}
+          max={1}
+          min={0}
+          step={0.1}
+          className="w-24"
+        />
+      </div>
+
+      {/* Instructions */}
+      <p className="text-xs text-muted-foreground text-center">
+        Press and hold any note to play
+      </p>
+    </div>
   );
 };
