@@ -59,57 +59,44 @@ export const CalendarViews = () => {
     <TooltipProvider>
       <div className="space-y-4">
         <Card className="border border-border/50 bg-card">
-          <CardHeader className="p-0">
-            {/* Member Controls */}
-            <div className="bg-muted/50 rounded-t-lg border-b border-border">
-              <div className="flex items-center justify-between gap-2 px-3 sm:px-4 pt-3 sm:pt-4 pb-2">
-                <h3 className="text-sm sm:text-base font-semibold text-foreground">Quick Actions</h3>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 px-3 sm:px-4 pb-3 sm:pb-4">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 w-full h-auto min-h-[3rem] border-primary/30 hover:bg-primary/10 px-4 py-2 flex flex-col sm:flex-row items-center justify-center"
-                      onClick={() => navigate('/calendar/settings')}
-                    >
-                      <Clock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm font-medium">My Availability</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Set your appointment availability</p>
-                  </TooltipContent>
-                </Tooltip>
-                {isExecMember && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="w-full">
-                        <CreateEventDialog onEventCreated={fetchEvents} />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Create a new event for the calendar</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-          
           <CardContent className="p-3 sm:p-4">
             <div className="relative">
-              {/* Header with View Selector */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 px-2 sm:px-4 py-3 sm:py-4 mb-3 sm:mb-4 bg-muted/30 rounded-lg border border-border/50">
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">Calendar</h2>
+              {/* Header with View Selector and Actions */}
+              <div className="flex flex-col gap-3 px-2 sm:px-4 py-3 sm:py-4 mb-3 sm:mb-4 bg-muted/30 rounded-lg border border-border/50">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="h-5 w-5 text-primary" />
+                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">Calendar</h2>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CalendarViewSelector 
+                      activeView={activeView} 
+                      onViewChange={setActiveView}
+                    />
+                  </div>
                 </div>
-                <CalendarViewSelector 
-                  activeView={activeView} 
-                  onViewChange={setActiveView}
-                />
+                {/* Quick Actions integrated into header */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 border-primary/30 hover:bg-primary/10"
+                        onClick={() => navigate('/calendar/settings')}
+                      >
+                        <Clock className="h-4 w-4" />
+                        <span className="text-xs sm:text-sm">My Availability</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Set your appointment availability</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  {isExecMember && (
+                    <CreateEventDialog onEventCreated={fetchEvents} />
+                  )}
+                </div>
               </div>
               
               {/* Content Area */}
