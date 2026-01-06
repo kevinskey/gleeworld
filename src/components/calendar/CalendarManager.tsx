@@ -155,9 +155,7 @@ export const CalendarManager = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Calendar Management</h2>
-          <p className="text-muted-foreground">
-            Create and manage calendars to organize your events
-          </p>
+          
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
