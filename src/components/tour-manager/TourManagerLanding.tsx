@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  Calendar, MapPin, Users, FileText, Building2, ClipboardList,
-  ChevronRight, Clock, MapPinned, UserCheck, FileCheck, Phone
+  Calendar, MapPin, Users, FileText, ClipboardList,
+  ChevronRight, MapPinned, UserCheck, Phone, Music, 
+  BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 interface TourManagerLandingProps {
   onNavigate: (section: string) => void;
@@ -19,7 +24,45 @@ interface TourManagerLandingProps {
   };
 }
 
+interface TourEvent {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date?: string;
+  location?: string;
+  venue_name?: string;
+}
+
+interface KeyPerson {
+  role: string;
+  name: string;
+  email?: string;
+  avatar?: string;
+  icon: React.ElementType;
+}
+
 export const TourManagerLanding = ({ onNavigate, stats }: TourManagerLandingProps) => {
+  const navigate = useNavigate();
+  const [tourEvents, setTourEvents] = useState<TourEvent[]>([]);
+  const [tourTitle, setTourTitle] = useState('Spring Tour 2026');
+  
+  // Key personnel - in production this would come from database
+  const keyPersonnel: KeyPerson[] = [
+    { role: 'Tour Manager', name: 'Dr. Kevin Johnson', icon: Users },
+    { role: 'Asst. Tour Manager', name: 'TBD', icon: Users },
+    { role: 'Student Conductor', name: 'TBD', icon: Mic2 },
+    { role: 'Treasurer', name: 'TBD', icon: DollarSign },
+    { role: 'Librarian', name: 'TBD', icon: BookOpen },
+    { role: 'Setup Crew Manager', name: 'TBD', icon: UsersRound },
+  ];
+
+  const sectionLeaders: KeyPerson[] = [
+    { role: 'Soprano I', name: 'TBD', icon: Music },
+    { role: 'Soprano II', name: 'TBD', icon: Music },
+    { role: 'Alto I', name: 'TBD', icon: Music },
+    { role: 'Alto II', name: 'TBD', icon: Music },
+  ];
+
   const defaultStats = {
     upcomingDates: stats?.upcomingDates ?? 0,
     activeRoutes: stats?.activeRoutes ?? 0,
@@ -29,65 +72,48 @@ export const TourManagerLanding = ({ onNavigate, stats }: TourManagerLandingProp
     pendingDocs: stats?.pendingDocs ?? 0,
   };
 
+  useEffect(() => {
+    const fetchTourEvents = async () => {
+      const { data } = await supabase
+        .from('gw_tour_events')
+        .select('id, title, start_date, end_date, location, venue_name')
+        .gte('start_date', new Date().toISOString())
+        .order('start_date', { ascending: true })
+        .limit(5);
+      
+      if (data) setTourEvents(data);
+    };
+    fetchTourEvents();
+  }, []);
+
   const sections = [
-    {
-      id: 'tour-dates',
-      title: 'Tour Dates',
-      description: 'Manage performance dates, venues, and scheduling',
-      icon: Calendar,
-      color: 'bg-blue-500',
-      stat: defaultStats.upcomingDates,
-      statLabel: 'upcoming',
-    },
-    {
-      id: 'route-planning',
-      title: 'Routes',
-      description: 'Plan and optimize tour routes and travel logistics',
-      icon: MapPin,
-      color: 'bg-emerald-500',
-      stat: defaultStats.activeRoutes,
-      statLabel: 'active routes',
-    },
-    {
-      id: 'hosts',
-      title: 'Contacts',
-      description: 'Venue contacts, hosts, and key relationships',
-      icon: Phone,
-      color: 'bg-purple-500',
-      stat: defaultStats.contacts,
-      statLabel: 'contacts',
-    },
-    {
-      id: 'contracts',
-      title: 'Contracts',
-      description: 'Performance agreements and legal documents',
-      icon: FileText,
-      color: 'bg-amber-500',
-      stat: defaultStats.pendingContracts,
-      statLabel: 'pending',
-    },
-    {
-      id: 'roster',
-      title: 'Roster',
-      description: 'Tour members, confirmations, and assignments',
-      icon: Users,
-      color: 'bg-rose-500',
-      stat: defaultStats.rosterCount,
-      statLabel: 'members',
-    },
-    {
-      id: 'documents',
-      title: 'Documents',
-      description: 'Required forms, waivers, and tour materials',
-      icon: ClipboardList,
-      color: 'bg-cyan-500',
-      stat: defaultStats.pendingDocs,
-      statLabel: 'pending',
-    },
+    { id: 'tour-dates', title: 'Dates', icon: Calendar, color: 'bg-blue-500', stat: defaultStats.upcomingDates, statLabel: 'upcoming' },
+    { id: 'route-planning', title: 'Routes', icon: MapPin, color: 'bg-emerald-500', stat: defaultStats.activeRoutes, statLabel: 'routes' },
+    { id: 'hosts', title: 'Contacts', icon: Phone, color: 'bg-purple-500', stat: defaultStats.contacts, statLabel: 'contacts' },
+    { id: 'contracts', title: 'Contracts', icon: FileText, color: 'bg-amber-500', stat: defaultStats.pendingContracts, statLabel: 'pending' },
+    { id: 'roster', title: 'Roster', icon: Users, color: 'bg-rose-500', stat: defaultStats.rosterCount, statLabel: 'members' },
+    { id: 'documents', title: 'Docs', icon: ClipboardList, color: 'bg-cyan-500', stat: defaultStats.pendingDocs, statLabel: 'pending' },
   ];
+
+  const handleViewCalendar = () => {
+    navigate('/calendar');
+  };
 
   return (
     <div className="space-y-4">
+      {/* Tour Title & Quick Stats */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">{tourTitle}</h2>
+          <p className="text-xs text-muted-foreground">Tour overview and key information</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleViewCalendar} className="gap-1.5">
+          <CalendarDays className="h-3.5 w-3.5" />
+          View Calendar
+          <ExternalLink className="h-3 w-3" />
+        </Button>
+      </div>
+
       {/* Compact Stats Row */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
         {sections.map((section) => (
@@ -102,64 +128,158 @@ export const TourManagerLanding = ({ onNavigate, stats }: TourManagerLandingProp
         ))}
       </div>
 
-      {/* Main Sections Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Two Column Layout: Personnel & Upcoming Dates */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Key Personnel */}
+        <Card>
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              Key Personnel
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="grid grid-cols-2 gap-2">
+              {keyPersonnel.map((person) => (
+                <div key={person.role} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                      {person.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium truncate">{person.name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{person.role}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Section Leaders */}
+            <div className="mt-3 pt-3 border-t">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Section Leaders</p>
+              <div className="grid grid-cols-2 gap-2">
+                {sectionLeaders.map((person) => (
+                  <div key={person.role} className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/30 transition-colors">
+                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Music className="h-3 w-3 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-medium truncate">{person.role}: {person.name}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Upcoming Tour Dates */}
+        <Card>
+          <CardHeader className="py-3 px-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                Upcoming Tour Dates
+              </CardTitle>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onNavigate('tour-dates')}>
+                View All
+                <ChevronRight className="h-3 w-3 ml-1" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            {tourEvents.length === 0 ? (
+              <div className="text-center py-6">
+                <Calendar className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">No upcoming dates</p>
+                <Button variant="outline" size="sm" className="mt-2" onClick={() => onNavigate('tour-dates')}>
+                  Add Tour Dates
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {tourEvents.map((event) => (
+                  <div 
+                    key={event.id} 
+                    className="flex items-start gap-3 p-2 rounded-lg border hover:bg-muted/30 cursor-pointer transition-colors"
+                    onClick={() => onNavigate('tour-dates')}
+                  >
+                    <div className="flex-shrink-0 w-10 text-center">
+                      <div className="text-lg font-bold text-primary leading-none">
+                        {format(new Date(event.start_date), 'd')}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground uppercase">
+                        {format(new Date(event.start_date), 'MMM')}
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{event.title}</p>
+                      {(event.venue_name || event.location) && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          {event.venue_name || event.location}
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant="outline" className="text-[10px] flex-shrink-0">
+                      {format(new Date(event.start_date), 'EEE')}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Calendar Integration Note */}
+            <div className="mt-3 pt-3 border-t">
+              <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <CalendarDays className="h-3 w-3" />
+                Tour dates sync automatically to the main calendar
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Section Cards Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {sections.map((section) => (
           <Card 
             key={section.id}
-            className="group cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30"
+            className="group cursor-pointer hover:shadow-md transition-all border hover:border-primary/30"
             onClick={() => onNavigate(section.id)}
           >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className={`p-3 rounded-xl ${section.color} text-white`}>
-                  <section.icon className="h-6 w-6" />
-                </div>
-                <Badge variant="secondary" className="text-sm">
-                  {section.stat} {section.statLabel}
-                </Badge>
+            <CardContent className="p-3">
+              <div className={`p-2 rounded-lg ${section.color} text-white w-fit mb-2`}>
+                <section.icon className="h-4 w-4" />
               </div>
-              <CardTitle className="text-xl mt-4 group-hover:text-primary transition-colors">
-                {section.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-sm mb-4">
-                {section.description}
-              </p>
-              <div className="flex items-center text-primary text-sm font-medium">
-                <span>Open {section.title}</span>
-                <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </div>
+              <p className="text-sm font-medium group-hover:text-primary transition-colors">{section.title}</p>
+              <p className="text-xs text-muted-foreground">{section.stat} {section.statLabel}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Quick Actions Bar */}
-      <Card className="bg-muted/50">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground mr-2">Quick Actions:</span>
-            <Button variant="outline" size="sm" onClick={() => onNavigate('tour-dates')}>
-              <Calendar className="h-4 w-4 mr-2" />
-              Add Tour Date
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onNavigate('contracts')}>
-              <FileText className="h-4 w-4 mr-2" />
-              New Contract
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onNavigate('roster')}>
-              <UserCheck className="h-4 w-4 mr-2" />
-              Manage Roster
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onNavigate('route-planning')}>
-              <MapPinned className="h-4 w-4 mr-2" />
-              Plan Route
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Quick Actions */}
+      <div className="flex flex-wrap items-center gap-2 pt-2">
+        <span className="text-xs font-medium text-muted-foreground">Quick:</span>
+        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onNavigate('tour-dates')}>
+          <Calendar className="h-3 w-3 mr-1" />
+          Add Date
+        </Button>
+        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onNavigate('contracts')}>
+          <FileText className="h-3 w-3 mr-1" />
+          Contract
+        </Button>
+        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onNavigate('roster')}>
+          <UserCheck className="h-3 w-3 mr-1" />
+          Roster
+        </Button>
+        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onNavigate('route-planning')}>
+          <MapPinned className="h-3 w-3 mr-1" />
+          Route
+        </Button>
+      </div>
     </div>
   );
 };
