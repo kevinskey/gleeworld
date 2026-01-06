@@ -57,7 +57,7 @@ export const CalendarViews = () => {
         </CardContent>
       </Card>;
   }
-  return <div className="flex flex-col h-full min-h-0">
+  return <div className="flex flex-col h-full overflow-hidden">
       {/* Main Calendar Layout */}
       <div className="flex flex-col lg:flex-row gap-2 sm:gap-3 flex-1 min-h-0">
         {/* Calendar Grid Section */}
