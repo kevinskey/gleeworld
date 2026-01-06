@@ -91,9 +91,10 @@ export const DashboardStoreSection = () => {
       </div>;
   }
   return <div className="w-full bg-background">
+      {/* Section Header - Edge to Edge */}
+      <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground py-5 px-4 sm:px-6 lg:px-8 w-full">Shop</h2>
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pl-[30px] pt-[2px]">
-        {/* Section Header */}
-        <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground py-[10px] pl-[20px] pb-[20px] pt-[20px]">Shop</h2>
         
 
         {/* Product Horizontal Scroll */}
