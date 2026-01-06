@@ -187,24 +187,24 @@ export const DashboardStoreSection = () => {
                 </div>
                 
                 {/* White Content Section */}
-                <div className="bg-white p-4 flex flex-col min-h-[200px]">
-                  {course.description && <p className="text-gray-700 text-sm leading-relaxed mb-4">
+                <div className="bg-white p-4 flex flex-col h-[240px]">
+                  {course.description && <p className="text-gray-700 text-sm leading-relaxed mb-4 line-clamp-2">
                       {course.description}
                     </p>}
                   
-                  {/* Course Highlights */}
-                  <div className="mb-4 flex-1">
+                  {/* Course Highlights - Fixed height */}
+                  <div className="mb-4 flex-1 h-[100px]">
                     <h5 className="font-semibold text-gray-900 mb-2">Course Highlights:</h5>
                     <ul className="space-y-1">
-                      {highlights.map((highlight, idx) => <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
+                      {highlights.slice(0, 4).map((highlight, idx) => <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
                           <ChevronRight className="h-3 w-3 text-gray-400" />
                           {highlight}
                         </li>)}
                     </ul>
                   </div>
                   
-                  {/* Enter Button */}
-                  <button onClick={() => navigate(`/glee-academy/course/${course.id}`)} className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors">
+                  {/* Enter Button - Fixed at bottom */}
+                  <button onClick={() => navigate(`/glee-academy/course/${course.id}`)} className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors mt-auto">
                     <span className="font-medium">Enter {course.course_code || course.title}</span>
                     <ChevronRight className="h-4 w-4" />
                   </button>
