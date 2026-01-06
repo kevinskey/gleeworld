@@ -64,7 +64,8 @@ export const CreateEventDialog = ({
     recurrence_type: 'weekly',
     recurrence_interval: 1,
     recurrence_end_date: '',
-    max_occurrences: 10
+    max_occurrences: 10,
+    recurrence_days_of_week: [] as number[] // 0=Sunday, 1=Monday, ..., 6=Saturday
   });
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [notificationMessage, setNotificationMessage] = useState('');
@@ -492,6 +493,9 @@ export const CreateEventDialog = ({
             parent_event_id_param: newEvent.id,
             recurrence_type_param: formData.recurrence_type,
             recurrence_interval_param: formData.recurrence_interval,
+            recurrence_days_of_week_param: formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0 
+              ? formData.recurrence_days_of_week 
+              : null,
             recurrence_end_date_param: formData.recurrence_end_date ? new Date(formData.recurrence_end_date + 'T23:59:59').toISOString() : null,
             max_occurrences_param: formData.max_occurrences
           });
@@ -535,7 +539,8 @@ export const CreateEventDialog = ({
         recurrence_type: 'weekly',
         recurrence_interval: 1,
         recurrence_end_date: '',
-        max_occurrences: 10
+        max_occurrences: 10,
+        recurrence_days_of_week: []
       });
       setSelectedUserIds([]);
       setNotificationMessage('');
@@ -868,6 +873,52 @@ export const CreateEventDialog = ({
                       </div>
                     </div>
                   </div>
+
+                  {/* Day of Week Selector - Only shown for weekly recurrence */}
+                  {formData.recurrence_type === 'weekly' && (
+                    <div className="space-y-2">
+                      <Label>Repeat on Days</Label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Select specific days of the week (e.g., MWF for classes)
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { value: 0, label: 'Sun' },
+                          { value: 1, label: 'Mon' },
+                          { value: 2, label: 'Tue' },
+                          { value: 3, label: 'Wed' },
+                          { value: 4, label: 'Thu' },
+                          { value: 5, label: 'Fri' },
+                          { value: 6, label: 'Sat' },
+                        ].map((day) => (
+                          <Button
+                            key={day.value}
+                            type="button"
+                            variant={formData.recurrence_days_of_week.includes(day.value) ? "default" : "outline"}
+                            size="sm"
+                            className="w-12"
+                            onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                recurrence_days_of_week: prev.recurrence_days_of_week.includes(day.value)
+                                  ? prev.recurrence_days_of_week.filter(d => d !== day.value)
+                                  : [...prev.recurrence_days_of_week, day.value].sort((a, b) => a - b)
+                              }));
+                            }}
+                          >
+                            {day.label}
+                          </Button>
+                        ))}
+                      </div>
+                      {formData.recurrence_days_of_week.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Selected: {formData.recurrence_days_of_week.map(d => 
+                            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]
+                          ).join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
