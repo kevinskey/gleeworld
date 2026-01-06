@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Rnd } from 'react-rnd';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Music2, Piano, Timer, AudioLines, Gauge } from 'lucide-react';
+import { Music2, Piano, Timer, AudioLines, Gauge, X, GripHorizontal } from 'lucide-react';
 import { TuningForkIcon } from '@/components/icons/TuningForkIcon';
 import { Metronome } from '@/components/sight-singing/Metronome';
 import { PitchPipe } from '@/components/pitch-pipe/PitchPipe';
@@ -28,6 +29,9 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
     metronome: boolean; pitch: boolean; pianoSmall: boolean; pianoFull: boolean; tuner: boolean;
   }>({ metronome: false, pitch: false, pianoSmall: false, pianoFull: false, tuner: false });
 
+  const [pitchPipeSize, setPitchPipeSize] = useState({ width: 320, height: 320 });
+  const [pitchPipePosition, setPitchPipePosition] = useState({ x: 100, y: 100 });
+
   const [tempo, setTempo] = useState(96);
   const [isMetroPlaying, setIsMetroPlaying] = useState(false);
   const { themeName } = useTheme();
@@ -44,6 +48,15 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
     const cleanup = setupMobileAudioUnlock();
     return cleanup;
   }, []);
+
+  // Center pitch pipe on open
+  useEffect(() => {
+    if (open.pitch) {
+      const centerX = (window.innerWidth - pitchPipeSize.width) / 2;
+      const centerY = (window.innerHeight - pitchPipeSize.height) / 2;
+      setPitchPipePosition({ x: centerX, y: centerY });
+    }
+  }, [open.pitch]);
 
   // Pre-unlock audio when dropdown is opened (user gesture)
   const handleDropdownClick = () => {
@@ -98,12 +111,57 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
         </DialogContent>
       </Dialog>
 
-      {/* Pitch Pipe - Floating circle with transparent background */}
-      <Dialog open={open.pitch} onOpenChange={(v) => setOpen((o) => ({ ...o, pitch: v }))}>
-        <DialogContent className="bg-transparent border-none shadow-none p-0 max-w-fit [&>button]:text-white [&>button]:hover:bg-white/20">
-          <PitchPipe />
-        </DialogContent>
-      </Dialog>
+      {/* Pitch Pipe - Draggable and Resizable */}
+      {open.pitch && (
+        <div className="fixed inset-0 z-[9999] pointer-events-none">
+          <Rnd
+            size={{ width: pitchPipeSize.width, height: pitchPipeSize.height }}
+            position={{ x: pitchPipePosition.x, y: pitchPipePosition.y }}
+            onDragStop={(e, d) => setPitchPipePosition({ x: d.x, y: d.y })}
+            onResizeStop={(e, direction, ref, delta, position) => {
+              const size = Math.min(ref.offsetWidth, ref.offsetHeight);
+              setPitchPipeSize({ width: size, height: size });
+              setPitchPipePosition(position);
+            }}
+            lockAspectRatio={true}
+            minWidth={200}
+            minHeight={200}
+            maxWidth={500}
+            maxHeight={500}
+            bounds="window"
+            dragHandleClassName="pitch-pipe-drag-handle"
+            className="pointer-events-auto"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <div className="relative w-full h-full flex items-center justify-center">
+              {/* Close button */}
+              <button
+                onClick={() => setOpen((o) => ({ ...o, pitch: false }))}
+                className="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 text-white flex items-center justify-center shadow-lg transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              
+              {/* Drag handle */}
+              <div className="pitch-pipe-drag-handle absolute -top-2 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full bg-gray-800 hover:bg-gray-700 text-white cursor-move flex items-center gap-1 shadow-lg">
+                <GripHorizontal className="h-3 w-3" />
+                <span className="text-[10px]">Drag</span>
+              </div>
+
+              {/* Resize indicator */}
+              <div className="absolute -bottom-2 -right-2 z-10 w-6 h-6 rounded-full bg-gray-800 text-white flex items-center justify-center shadow-lg cursor-se-resize">
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 21L12 21M21 21L21 12M21 21L9 9" />
+                </svg>
+              </div>
+              
+              <div style={{ transform: `scale(${pitchPipeSize.width / 320})`, transformOrigin: 'center' }}>
+                <PitchPipe />
+              </div>
+            </div>
+          </Rnd>
+        </div>
+      )}
 
       {/* Full Piano - Full Screen */}
       {open.pianoFull && (
