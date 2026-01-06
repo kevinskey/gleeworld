@@ -35,7 +35,8 @@ export const CalendarViews = () => {
 
   // Filter events based on visible calendars
   const filteredEvents = events.filter(event => {
-    return visibleCalendarIds.length === 0 || visibleCalendarIds.includes(event.calendar_id);
+    // Only show events from selected calendars
+    return visibleCalendarIds.includes(event.calendar_id);
   });
 
   // Get events for selected date
