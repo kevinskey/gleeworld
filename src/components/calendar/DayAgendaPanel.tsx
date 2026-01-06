@@ -83,7 +83,7 @@ const EventCard = ({
   formatEventTime,
   isPersonal
 }: EventCardProps) => <div onClick={() => onEventClick?.(event)} className={`p-4 rounded-lg border cursor-pointer transition-colors ${isPersonal ? 'border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10' : 'border-border/50 bg-background hover:bg-accent/50'}`}>
-    <h3 className="font-semibold text-foreground mb-2">{event.title}</h3>
+    <h3 className="font-semibold text-foreground mb-2 text-lg">{event.title}</h3>
     
     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
       <Clock className="h-4 w-4 flex-shrink-0" />
