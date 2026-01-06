@@ -142,14 +142,11 @@ export const TourManagerLanding = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
-            {keyPersonnel.length === 0 ? (
-              <div className="text-center py-6">
+            {keyPersonnel.length === 0 ? <div className="text-center py-6">
                 <Users className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
                 <p className="text-sm text-muted-foreground">No personnel assigned</p>
                 <p className="text-xs text-muted-foreground mt-1">Configure tour personnel in settings</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
+              </div> : <div className="grid grid-cols-2 gap-2">
                 {keyPersonnel.map(person => <div key={person.role} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
                     <Avatar className="h-7 w-7">
                       <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
@@ -161,12 +158,10 @@ export const TourManagerLanding = ({
                       <p className="text-[10px] truncate text-blue-50">{person.role}</p>
                     </div>
                   </div>)}
-              </div>
-            )}
+              </div>}
             
             {/* Section Leaders */}
-            {sectionLeaders.length > 0 && (
-              <div className="mt-3 pt-3 border-t">
+            {sectionLeaders.length > 0 && <div className="mt-3 pt-3 border-t">
                 <p className="text-xs font-medium mb-2 text-primary-foreground">Section Leaders</p>
                 <div className="grid grid-cols-2 gap-2">
                   {sectionLeaders.map(person => <div key={person.role} className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/30 transition-colors">
@@ -178,8 +173,7 @@ export const TourManagerLanding = ({
                       </div>
                     </div>)}
                 </div>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
 
@@ -239,37 +233,11 @@ export const TourManagerLanding = ({
       </div>
 
       {/* Quick Actions */}
-      <div className="flex flex-wrap items-center gap-2 pb-2">
-        <span className="text-xs font-medium text-muted-foreground">Quick:</span>
-        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onNavigate('tour-dates')}>
-          <Calendar className="h-3 w-3 mr-1" />
-          Add Date
-        </Button>
-        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onNavigate('contracts')}>
-          <FileText className="h-3 w-3 mr-1" />
-          Contract
-        </Button>
-        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onNavigate('roster')}>
-          <UserCheck className="h-3 w-3 mr-1" />
-          Roster
-        </Button>
-        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onNavigate('route-planning')}>
-          <MapPinned className="h-3 w-3 mr-1" />
-          Route
-        </Button>
-      </div>
+      
 
       {/* Section Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {sections.map(section => <Card key={section.id} className="group cursor-pointer hover:shadow-md transition-all border hover:border-primary/30" onClick={() => onNavigate(section.id)}>
-            <CardContent className="p-3">
-              <div className={`p-2 rounded-lg ${section.color} text-white w-fit mb-2`}>
-                <section.icon className="h-4 w-4" />
-              </div>
-              <p className="text-sm font-medium transition-colors text-primary-foreground">{section.title}</p>
-              <p className="text-xs text-stone-400">{section.stat} {section.statLabel}</p>
-            </CardContent>
-          </Card>)}
+        {sections.map(section => {})}
       </div>
     </div>;
 };

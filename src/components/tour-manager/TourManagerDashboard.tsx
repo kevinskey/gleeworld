@@ -313,9 +313,7 @@ export const TourManagerDashboard = ({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          <div className="p-3 lg:p-4 lg:max-w-5xl">
-            {renderContent()}
-          </div>
+          
         </div>
       </main>
 
