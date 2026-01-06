@@ -207,9 +207,10 @@ export const FeaturedProducts = ({
         {/* Products Container */}
         <div 
           id="products-container"
-          className="flex gap-4 overflow-x-scroll pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth"
+          className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap"
           style={{ 
-            scrollbarWidth: 'thin',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch'
           }}
         >
