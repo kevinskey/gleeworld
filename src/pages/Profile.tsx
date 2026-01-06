@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -42,9 +43,10 @@ import {
   Shirt,
   Heart,
   Home,
-  Shield
+  Shield,
+  ChevronRight,
+  Lock
 } from "lucide-react";
-import { Lock } from "lucide-react";
 import { AvatarCropDialog } from "@/components/shared/AvatarCropDialog";
 import { RequestChangeDialog } from "@/components/profile/RequestChangeDialog";
 import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
@@ -159,6 +161,13 @@ const Profile = () => {
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const [requestField, setRequestField] = useState<{ label: string; currentValue?: string | number | null } | null>(null);
   const [phoneDisplay, setPhoneDisplay] = useState('');
+  
+  // New dashboard-specific state
+  const [uniformIssued, setUniformIssued] = useState(false);
+  const [depositPaid, setDepositPaid] = useState(false);
+  const [photoVideoConsent, setPhotoVideoConsent] = useState(true);
+  const [adminNotes, setAdminNotes] = useState('');
+
   const openRequestChange = (label: string, currentValue?: string | number | null) => {
     setRequestField({ label, currentValue });
     setRequestDialogOpen(true);
@@ -199,199 +208,170 @@ const Profile = () => {
     formState: { errors },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
+    defaultValues: {
+      first_name: "",
+      middle_name: "",
+      last_name: "",
+      bio: "",
+      website_url: "",
+      phone_number: "",
+      student_number: "",
+      workplace: "",
+      school_address: "",
+      home_address: "",
+      voice_part: "",
+      can_dance: false,
+      preferred_payment_method: "",
+      shoe_size: "",
+      hair_color: "",
+      has_tattoos: false,
+      visible_piercings: false,
+      academic_major: "",
+      pronouns: "",
+      class_year: undefined,
+      emergency_contact: "",
+      allergies: "",
+      parent_guardian_contact: "",
+      join_date: "",
+      mentor_opt_in: false,
+      reunion_rsvp: false,
+      instagram: "",
+      twitter: "",
+      facebook: "",
+      youtube: "",
+      bust_measurement: "",
+      waist_measurement: "",
+      hips_measurement: "",
+      height_measurement: "",
+      dress_size: "",
+      classification: "",
+    },
   });
 
   const canDance = watch("can_dance");
 
   useEffect(() => {
     if (profile) {
-      // Set form values from profile data - split full_name if exists
-      if (profile.full_name) {
-        const nameParts = profile.full_name.split(' ');
-        setValue("first_name", nameParts[0] || "");
-        setValue("middle_name", nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : "");
-        setValue("last_name", nameParts.length > 1 ? nameParts[nameParts.length - 1] : "");
-      } else {
-        setValue("first_name", profile.first_name || "");
-        setValue("middle_name", profile.middle_name || "");
-        setValue("last_name", profile.last_name || "");
-      }
-      
+      console.log("Setting form values from profile:", profile);
+      setValue("first_name", profile.first_name || "");
+      setValue("middle_name", profile.middle_name || "");
+      setValue("last_name", profile.last_name || "");
       setValue("bio", profile.bio || "");
       setValue("website_url", profile.website_url || "");
       setValue("phone_number", profile.phone_number || "");
-      setPhoneDisplay(profile.phone_number || "");
       setValue("student_number", profile.student_number || "");
       setValue("workplace", profile.workplace || "");
       setValue("school_address", profile.school_address || "");
       setValue("home_address", profile.home_address || "");
-      setValue("voice_part", profile.voice_part || "");
+      setValue("voice_part", (profile.voice_part as any) || "");
       setValue("can_dance", profile.can_dance || false);
-      setValue("preferred_payment_method", profile.preferred_payment_method || "");
-      
-      // New fields
-      setValue("dress_size", profile.dress_size || "");
+      setValue("preferred_payment_method", (profile.preferred_payment_method as any) || "");
       setValue("shoe_size", profile.shoe_size || "");
       setValue("hair_color", profile.hair_color || "");
       setValue("has_tattoos", profile.has_tattoos || false);
       setValue("visible_piercings", profile.visible_piercings || false);
       setValue("academic_major", profile.academic_major || "");
       setValue("pronouns", profile.pronouns || "");
-      setValue("class_year", (profile.class_year ? String(profile.class_year) : "") as any);
-      
+      setValue("class_year", profile.class_year || undefined);
       setValue("emergency_contact", profile.emergency_contact || "");
       setValue("allergies", profile.allergies || "");
       setValue("parent_guardian_contact", profile.parent_guardian_contact || "");
       setValue("join_date", profile.join_date || "");
       setValue("mentor_opt_in", profile.mentor_opt_in || false);
       setValue("reunion_rsvp", profile.reunion_rsvp || false);
-      
-      // Set social media links
-      const socialLinks = profile.social_media_links || {};
-      setValue("instagram", socialLinks.instagram || "");
-      setValue("twitter", socialLinks.twitter || "");
-      setValue("facebook", socialLinks.facebook || "");
-      setValue("youtube", socialLinks.youtube || "");
-
-      // Set wardrobe fields from measurements JSONB
-      const measurements = profile.measurements as any || {};
-      setValue("bust_measurement", measurements.bust?.toString() || "");
-      setValue("waist_measurement", measurements.waist?.toString() || "");
-      setValue("hips_measurement", measurements.hips?.toString() || "");
-      setValue("height_measurement", measurements.height_cm?.toString() || "");
-      setValue("shoe_size", measurements.shoe_size?.toString() || profile.shoe_size || "");
+      setValue("instagram", (profile as any).instagram || "");
+      setValue("twitter", (profile as any).twitter || "");
+      setValue("facebook", (profile as any).facebook || "");
+      setValue("youtube", (profile as any).youtube || "");
+      setValue("bust_measurement", profile.bust_measurement?.toString() || "");
+      setValue("waist_measurement", profile.waist_measurement?.toString() || "");
+      setValue("hips_measurement", profile.hips_measurement?.toString() || "");
+      setValue("height_measurement", profile.height_measurement?.toString() || "");
       setValue("dress_size", profile.dress_size || "");
+      setValue("classification", profile.classification || "");
 
-      // Set instruments and dietary restrictions
-      setSelectedInstruments(profile.instruments_played || []);
-      setSelectedDietaryRestrictions(profile.dietary_restrictions || []);
+      setPhoneDisplay(profile.phone_number || '');
+
+      if (profile.instruments_played) {
+        setSelectedInstruments(profile.instruments_played);
+      }
+      if (profile.dietary_restrictions) {
+        setSelectedDietaryRestrictions(profile.dietary_restrictions);
+      }
     }
   }, [profile, setValue]);
 
+  const handleInstrumentChange = (instrument: string, checked: boolean) => {
+    if (checked) {
+      setSelectedInstruments([...selectedInstruments, instrument]);
+    } else {
+      setSelectedInstruments(selectedInstruments.filter((i) => i !== instrument));
+    }
+  };
+
+  const handleDietaryRestrictionChange = (restriction: string, checked: boolean) => {
+    if (checked) {
+      setSelectedDietaryRestrictions([...selectedDietaryRestrictions, restriction]);
+    } else {
+      setSelectedDietaryRestrictions(selectedDietaryRestrictions.filter((r) => r !== restriction));
+    }
+  };
+
   const onSubmit = async (data: ProfileFormData) => {
-    console.log("🎯 Save Profile button clicked! isEditing:", isEditing, "loading:", loading);
-    console.log("🎯 Form errors before submit:", errors);
-    console.log("🎯 Current form values:", data);
-    console.log("🚀 Form submitted with data:", data);
-    console.log("🚀 Form data keys:", Object.keys(data));
-    console.log("🚀 Form errors:", errors);
-    console.log("🚀 Is editing:", isEditing);
-    console.log("🚀 Loading state:", loading);
-    
-    // Check if any measurement fields are in the form data
-    const measurementFields = Object.keys(data).filter(key => key.includes('measurement'));
-    console.log("🚀 Measurement fields in form data:", measurementFields);
-    
+    console.log("🎯 onSubmit called with data:", data);
     if (!user) {
-      console.log("❌ No user found, cannot save profile");
+      console.log("🎯 No user found, aborting");
       return;
     }
 
     setLoading(true);
+    console.log("🎯 Starting profile update...");
+
+    const updatePayload = {
+      first_name: data.first_name,
+      middle_name: data.middle_name,
+      last_name: data.last_name,
+      full_name: `${data.first_name} ${data.middle_name ? data.middle_name + ' ' : ''}${data.last_name}`.trim(),
+      bio: data.bio,
+      website_url: data.website_url,
+      phone_number: data.phone_number,
+      student_number: data.student_number,
+      workplace: data.workplace,
+      school_address: data.school_address,
+      home_address: data.home_address,
+      voice_part: data.voice_part || null,
+      can_dance: data.can_dance,
+      preferred_payment_method: data.preferred_payment_method || null,
+      shoe_size: data.shoe_size,
+      hair_color: data.hair_color,
+      has_tattoos: data.has_tattoos,
+      visible_piercings: data.visible_piercings,
+      academic_major: data.academic_major,
+      pronouns: data.pronouns,
+      class_year: data.class_year,
+      emergency_contact: data.emergency_contact,
+      allergies: data.allergies,
+      parent_guardian_contact: data.parent_guardian_contact,
+      join_date: data.join_date,
+      mentor_opt_in: data.mentor_opt_in,
+      reunion_rsvp: data.reunion_rsvp,
+      instruments_played: selectedInstruments,
+      dietary_restrictions: selectedDietaryRestrictions,
+      instagram: data.instagram,
+      twitter: data.twitter,
+      facebook: data.facebook,
+      youtube: data.youtube,
+      bust_measurement: data.bust_measurement ? parseFloat(data.bust_measurement) : null,
+      waist_measurement: data.waist_measurement ? parseFloat(data.waist_measurement) : null,
+      hips_measurement: data.hips_measurement ? parseFloat(data.hips_measurement) : null,
+      height_measurement: data.height_measurement ? parseFloat(data.height_measurement) : null,
+      dress_size: data.dress_size,
+      classification: data.classification,
+    };
+
+    console.log("🎯 Update payload:", updatePayload);
+
     try {
-      const socialMediaLinks = {
-        instagram: data.instagram,
-        twitter: data.twitter,
-        facebook: data.facebook,
-        youtube: data.youtube,
-      };
-
-      console.log("Attempting to update profile with:", {
-        first_name: data.first_name,
-        middle_name: data.middle_name,
-        last_name: data.last_name,
-        bio: data.bio,
-        website_url: data.website_url,
-        phone_number: data.phone_number,
-        student_number: data.student_number,
-        workplace: data.workplace,
-        school_address: data.school_address,
-        home_address: data.home_address,
-        voice_part: data.voice_part,
-        can_dance: data.can_dance,
-        preferred_payment_method: data.preferred_payment_method,
-        instruments_played: selectedInstruments,
-        social_media_links: socialMediaLinks,
-      });
-
-      // Create full_name from separate fields for backward compatibility
-      const fullName = [data.first_name, data.middle_name, data.last_name].filter(Boolean).join(' ');
-
-      // Build update payloads; lock admin-only fields for non-admin users
-      const measurementsData = {
-        bust: data.bust_measurement ? parseFloat(data.bust_measurement) : null,
-        waist: data.waist_measurement ? parseFloat(data.waist_measurement) : null,
-        hips: data.hips_measurement ? parseFloat(data.hips_measurement) : null,
-        height_cm: data.height_measurement ? parseFloat(data.height_measurement) : null,
-        shoe_size: data.shoe_size ? parseFloat(data.shoe_size) : null,
-      };
-
-      const baseUpdates: any = {
-        first_name: data.first_name,
-        middle_name: data.middle_name,
-        last_name: data.last_name,
-        full_name: fullName,
-        bio: data.bio,
-        website_url: data.website_url,
-        phone_number: data.phone_number,
-        workplace: data.workplace,
-        school_address: data.school_address,
-        home_address: data.home_address,
-        can_dance: data.can_dance,
-        preferred_payment_method: data.preferred_payment_method === "" ? null : data.preferred_payment_method,
-        instruments_played: selectedInstruments,
-        social_media_links: socialMediaLinks,
-        
-        // New fields (user-editable)
-        dress_size: data.dress_size,
-        shoe_size: data.shoe_size,
-        hair_color: data.hair_color,
-        has_tattoos: data.has_tattoos,
-        visible_piercings: data.visible_piercings,
-        academic_major: data.academic_major,
-        pronouns: data.pronouns,
-        class_year: data.class_year ?? null,
-        emergency_contact: data.emergency_contact,
-        dietary_restrictions: selectedDietaryRestrictions,
-        allergies: data.allergies,
-        parent_guardian_contact: data.parent_guardian_contact,
-        mentor_opt_in: data.mentor_opt_in,
-        reunion_rsvp: data.reunion_rsvp,
-        
-        // Store measurements in both JSONB column and individual columns for wardrobe sync
-        measurements: measurementsData,
-        bust_measurement: data.bust_measurement ? parseFloat(data.bust_measurement) : null,
-        waist_measurement: data.waist_measurement ? parseFloat(data.waist_measurement) : null,
-        hips_measurement: data.hips_measurement ? parseFloat(data.hips_measurement) : null,
-        height_measurement: data.height_measurement ? parseFloat(data.height_measurement) : null,
-        
-        // Map form fields to database columns for wardrobe sync
-        formal_dress_size: data.dress_size || null, // map dress_size to formal_dress_size
-        tshirt_size: data.dress_size || null, // map dress_size to tshirt_size for consistency
-        
-        updated_at: new Date().toISOString(),
-      };
-
-      const adminOnlyUpdates = {
-        student_number: data.student_number,
-        voice_part: data.voice_part === "" ? null : (data.voice_part as any),
-        join_date: data.join_date === "" ? null : data.join_date,
-      };
-
-      const updatePayload = isAdmin ? { ...baseUpdates, ...adminOnlyUpdates } : baseUpdates;
-
-      console.log("🔍 Final updatePayload being sent to Supabase:", updatePayload);
-      console.log("🔍 Payload keys:", Object.keys(updatePayload));
-      console.log("🔍 Measurement columns in payload:", {
-        bust_measurement: updatePayload.bust_measurement,
-        waist_measurement: updatePayload.waist_measurement,
-        hips_measurement: updatePayload.hips_measurement,
-        height_measurement: updatePayload.height_measurement,
-        formal_dress_size: updatePayload.formal_dress_size,
-        tshirt_size: updatePayload.tshirt_size
-      });
-
-      console.log("🔍 About to make PATCH request to gw_profiles...");
       const { error } = await supabase
         .from("gw_profiles")
         .update(updatePayload)
@@ -402,44 +382,21 @@ const Profile = () => {
         throw error;
       }
 
-      console.log("Profile updated successfully");
       toast({
-        title: "Success",
-        description: "Profile updated successfully",
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
       });
+
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating profile:", error);
-      console.error("Error details:", {
-        message: error?.message,
-        code: error?.code,
-        details: error?.details,
-        hint: error?.hint
-      });
       toast({
         title: "Error",
-        description: `Failed to update profile: ${error?.message || 'Unknown error'}`,
+        description: "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
-      console.log("🎯 Form submission result:", loading);
-    }
-  };
-
-  const handleInstrumentChange = (instrument: string, checked: boolean) => {
-    if (checked) {
-      setSelectedInstruments([...selectedInstruments, instrument]);
-    } else {
-      setSelectedInstruments(selectedInstruments.filter(i => i !== instrument));
-    }
-  };
-
-  const handleDietaryRestrictionChange = (restriction: string, checked: boolean) => {
-    if (checked) {
-      setSelectedDietaryRestrictions([...selectedDietaryRestrictions, restriction]);
-    } else {
-      setSelectedDietaryRestrictions(selectedDietaryRestrictions.filter(r => r !== restriction));
     }
   };
 
@@ -448,17 +405,17 @@ const Profile = () => {
     
     switch (fieldType) {
       case 'basic':
-        return true; // All roles see basic info
+        return true;
       case 'academic':
-        return role !== 'fan'; // All except fans
+        return role !== 'fan';
       case 'wardrobe':
-        return ['user', 'admin', 'super-admin'].includes(role); // Members and above
+        return ['user', 'admin', 'super-admin'].includes(role);
       case 'health':
-        return ['user', 'admin', 'super-admin'].includes(role); // Members and above
+        return ['user', 'admin', 'super-admin'].includes(role);
       case 'professional':
-        return ['admin', 'super-admin'].includes(role); // Admin and above
+        return ['admin', 'super-admin'].includes(role);
       case 'social':
-        return true; // All roles
+        return true;
       default:
         return true;
     }
@@ -468,7 +425,6 @@ const Profile = () => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file type - now including HEIC
     const isValidImage = file.type.startsWith('image/') || isHeicFile(file);
     if (!isValidImage) {
       toast({
@@ -482,7 +438,6 @@ const Profile = () => {
     try {
       let processedFile = file;
       
-      // Check if it's a HEIC file and convert if needed
       if (isHeicFile(file)) {
         toast({
           title: "Processing HEIC",
@@ -500,7 +455,6 @@ const Profile = () => {
           return;
         }
 
-        // Use the converted file
         processedFile = conversionResult.file!;
         
         toast({
@@ -509,7 +463,6 @@ const Profile = () => {
         });
       }
 
-      // Create object URL for the processed file (converted or original)
       const imageUrl = URL.createObjectURL(processedFile);
       setSelectedImageForCrop(imageUrl);
       setIsCropDialogOpen(true);
@@ -543,13 +496,11 @@ const Profile = () => {
         .from('user-files')
         .getPublicUrl(filePath);
 
-      // Use the updateAvatarUrl method from useProfile hook for immediate update
       const success = await updateAvatarUrl(data.publicUrl);
       
       if (success) {
         setIsCropDialogOpen(false);
         
-        // Clean up the object URL
         if (selectedImageForCrop) {
           URL.revokeObjectURL(selectedImageForCrop);
           setSelectedImageForCrop("");
@@ -560,7 +511,6 @@ const Profile = () => {
           description: "Avatar updated successfully",
         });
 
-        // Force a page refresh to update the header avatar
         setTimeout(() => {
           window.location.reload();
         }, 1000);
@@ -579,11 +529,33 @@ const Profile = () => {
 
   const handleCropDialogClose = () => {
     setIsCropDialogOpen(false);
-    // Clean up the object URL
     if (selectedImageForCrop) {
       URL.revokeObjectURL(selectedImageForCrop);
       setSelectedImageForCrop("");
     }
+  };
+
+  const getInitials = () => {
+    const firstName = watch("first_name") || profile?.first_name || '';
+    const lastName = watch("last_name") || profile?.last_name || '';
+    return `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase() || 'U';
+  };
+
+  const displayName = `${watch("first_name") || profile?.first_name || ''} ${watch("last_name") || profile?.last_name || ''}`.trim() || 'User';
+  const firstName = watch("first_name") || profile?.first_name || displayName.split(' ')[0] || '';
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Not set';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const getVoicePartLabel = (value?: string) => {
+    const part = voiceParts.find(p => p.value === value);
+    return part ? `$${part.value.charAt(1)}` : 'Not set';
   };
 
   if (!user) {
@@ -600,911 +572,471 @@ const Profile = () => {
 
   return (
     <UniversalLayout>
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">Profile</h1>
-            <p className="text-lg text-muted-foreground">{isEditing ? "Make changes to your profile information" : ""}</p>
-          </div>
-          <Button
-            onClick={() => setIsEditing(!isEditing)}
-            variant={isEditing ? "outline" : "default"}
-          >
-            {isEditing ? (
-              "Cancel Editing"
-            ) : (
-              <>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Profile
-              </>
-            )}
-          </Button>
-        </div>
-
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Profile Picture & Basic Info */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <User className="h-5 w-5" />
-                Basic Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-6">
-                <div className="relative">
-                  <Avatar className="h-24 w-24 border-4 border-border shadow-lg">
-                    <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
-                    <AvatarFallback className="bg-muted text-muted-foreground">
-                      <User className="h-12 w-12" />
-                    </AvatarFallback>
-                  </Avatar>
-                  {isEditing && (
-                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 transition-colors">
-                      <input
-                        type="file"
-                        accept="image/*,.heic,.heif"
-                        onChange={handleAvatarUpload}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
-                      <Camera className="h-6 w-6 text-white" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="first_name">First Name *</Label>
-                      <Input
-                        id="first_name"
-                        {...register("first_name")}
-                        disabled={!isEditing}
-                        className="mt-1"
-                      />
-                      {errors.first_name && (
-                        <p className="text-destructive text-sm mt-1">{errors.first_name.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="last_name">Last Name *</Label>
-                      <Input
-                        id="last_name"
-                        {...register("last_name")}
-                        disabled={!isEditing}
-                        className="mt-1"
-                      />
-                      {errors.last_name && (
-                        <p className="text-destructive text-sm mt-1">{errors.last_name.message}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="middle_name">Middle Name</Label>
-                    <Input
-                      id="middle_name"
-                      {...register("middle_name")}
-                      disabled={!isEditing}
-                      className="mt-1"
-                      placeholder="Optional"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="pronouns">Pronouns</Label>
-                    <Select
-                      value={watch("pronouns") || ""}
-                      onValueChange={(value) => setValue("pronouns", value)}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select pronouns" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {pronounOptions.map((pronoun) => (
-                          <SelectItem key={pronoun} value={pronoun}>
-                            {pronoun}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="bio">Bio</Label>
-                    <Textarea
-                      id="bio"
-                      {...register("bio")}
-                      disabled={!isEditing}
-                      className="mt-1"
-                      rows={3}
-                      placeholder="Tell us about yourself..."
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Contact Information */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <Phone className="h-5 w-5" />
-                Contact Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="phone_number">Phone Number</Label>
-                <Input
-                  id="phone_number"
-                  type="tel"
-                  value={phoneDisplay}
-                  onChange={handlePhoneChange}
-                  disabled={!isEditing}
-                  className="mt-1"
-                  placeholder="(555) 123-4567"
-                  maxLength={14}
-                />
-              </div>
-              <div>
-                <Label htmlFor="website_url">Website</Label>
-                <Input
-                  id="website_url"
-                  {...register("website_url")}
-                  disabled={!isEditing}
-                  className="mt-1"
-                  placeholder="https://"
-                />
-                {errors.website_url && (
-                  <p className="text-destructive text-sm mt-1">{errors.website_url.message}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Addresses */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <MapPin className="h-5 w-5" />
-                Addresses
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="home_address">Home Address</Label>
-                <Textarea
-                  id="home_address"
-                  {...register("home_address")}
-                  disabled={!isEditing}
-                  className="mt-1"
-                  rows={2}
-                />
-              </div>
-              <div>
-                <Label htmlFor="school_address">School Address</Label>
-                <Textarea
-                  id="school_address"
-                  {...register("school_address")}
-                  disabled={!isEditing}
-                  className="mt-1"
-                  rows={2}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Voice Part/Section Information */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <Music className="h-5 w-5" />
-                Voice Part/Section
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>
-                <Label htmlFor="voice_part">Voice Part</Label>
-                <Select 
-                  value={watch("voice_part") || ""} 
-                  onValueChange={(value) => { if (isAdmin) setValue("voice_part", value as any) }}
-                  disabled={!isEditing || !isAdmin}
-                >
-                  <SelectTrigger className={`bg-background border-border text-foreground ${(!isEditing || !isAdmin) ? 'opacity-60 cursor-not-allowed' : ''}`}>
-                    <SelectValue placeholder="Select your voice part" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border z-50">
-                    <SelectItem value="none" className="text-foreground hover:bg-muted">None</SelectItem>
-                    <SelectItem value="S1" className="text-foreground hover:bg-muted">Soprano 1 (S1)</SelectItem>
-                    <SelectItem value="S2" className="text-foreground hover:bg-muted">Soprano 2 (S2)</SelectItem>
-                    <SelectItem value="A1" className="text-foreground hover:bg-muted">Alto 1 (A1)</SelectItem>
-                    <SelectItem value="A2" className="text-foreground hover:bg-muted">Alto 2 (A2)</SelectItem>
-                    <SelectItem value="T1" className="text-foreground hover:bg-muted">Tenor 1 (T1)</SelectItem>
-                    <SelectItem value="T2" className="text-foreground hover:bg-muted">Tenor 2 (T2)</SelectItem>
-                    <SelectItem value="B1" className="text-foreground hover:bg-muted">Bass 1 (B1)</SelectItem>
-                    <SelectItem value="B2" className="text-foreground hover:bg-muted">Bass 2 (B2)</SelectItem>
-                    <SelectItem value="DOC" className="text-foreground hover:bg-muted">Director of Choirs (DOC)</SelectItem>
-                  </SelectContent>
-                </Select>
-                {!isAdmin && (
-                  <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
-                    <Lock className="h-4 w-4" />
-                    Voice part is set by staff.
-                    <Button variant="link" size="sm" className="px-0 h-auto" onClick={() => openRequestChange("Voice Part", watch("voice_part") || "")}>
-                      Request change
-                    </Button>
-                  </p>
-                )}
-
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Academic Information */}
-          {shouldShowField('academic') && (
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-card-foreground">
-                  <GraduationCap className="h-5 w-5" />
-                  Academic Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="academic_major">Academic Major</Label>
-                  <Input
-                    id="academic_major"
-                    {...register("academic_major")}
-                    disabled={!isEditing}
-                    className="mt-1"
-                    placeholder="e.g., Music, Business, Biology"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="class_year">Current Class Year</Label>
-                  <Input
-                    id="class_year"
-                    type="number"
-                    {...register("class_year")}
-                    disabled={!isEditing}
-                    className="mt-1"
-                    placeholder="2024"
-                    min="1900"
-                    max="2050"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="student_number">Student Number</Label>
-                  <Input
-                    id="student_number"
-                    {...register("student_number")}
-                    disabled={!isEditing || !isAdmin}
-                    className="mt-1"
-                    placeholder="Your student ID"
-                  />
-                  {!isAdmin && (
-                    <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
-                      <Lock className="h-4 w-4" />
-                      Student number is an official record.
-                      <Button variant="link" size="sm" className="px-0 h-auto" onClick={() => openRequestChange("Student Number", watch("student_number") || "")}>
-                        Request change
-                      </Button>
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="join_date">Glee Club Join Date</Label>
-                  <Input
-                    id="join_date"
-                    type="date"
-                    {...register("join_date")}
-                    disabled={!isEditing || !isAdmin}
-                    className="mt-1"
-                  />
-                  {!isAdmin && (
-                    <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
-                      <Lock className="h-4 w-4" />
-                      Join date is set by staff.
-                      <Button variant="link" size="sm" className="px-0 h-auto" onClick={() => openRequestChange("Join Date", watch("join_date") || "")}>
-                        Request change
-                      </Button>
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Wardrobe & Wellness */}
-          {shouldShowField('wardrobe') && (
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-card-foreground">
-                  <Shirt className="h-5 w-5" />
-                  Wardrobe & Wellness
-                </CardTitle>
-                <CardDescription>Information for performances and health requirements</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="dress_size">Dress/Top Size</Label>
-                    <Select
-                      value={watch("dress_size") || ""}
-                      onValueChange={(value) => setValue("dress_size", value)}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {dressSizes.map((size) => (
-                          <SelectItem key={size} value={size}>
-                            {size}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="shoe_size">Shoe Size</Label>
-                    <Select
-                      value={watch("shoe_size") || ""}
-                      onValueChange={(value) => setValue("shoe_size", value)}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {shoeSizes.map((size) => (
-                          <SelectItem key={size} value={size}>
-                            {size}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="hair_color">Hair Color</Label>
-                    <Input
-                      id="hair_color"
-                      {...register("hair_color")}
-                      disabled={!isEditing}
-                      className="mt-1"
-                      placeholder="e.g., Brown, Black, Blonde"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="has_tattoos"
-                      checked={watch("has_tattoos")}
-                      onCheckedChange={(checked) => setValue("has_tattoos", checked as boolean)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="has_tattoos">Has Tattoos</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="visible_piercings"
-                      checked={watch("visible_piercings")}
-                      onCheckedChange={(checked) => setValue("visible_piercings", checked as boolean)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="visible_piercings">Has Visible Piercings</Label>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Health & Safety */}
-          {shouldShowField('health') && (
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-card-foreground">
-                  <Heart className="h-5 w-5" />
-                  Health & Safety
-                </CardTitle>
-                <CardDescription>Emergency contacts and health information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="emergency_contact">Emergency Contact</Label>
-                    <Input
-                      id="emergency_contact"
-                      {...register("emergency_contact")}
-                      disabled={!isEditing}
-                      className="mt-1"
-                      placeholder="Name and phone number"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="parent_guardian_contact">Parent/Guardian Contact</Label>
-                    <Input
-                      id="parent_guardian_contact"
-                      {...register("parent_guardian_contact")}
-                      disabled={!isEditing}
-                      className="mt-1"
-                      placeholder="If applicable"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Dietary Restrictions</Label>
-                  <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    {ALL_DIETARY_OPTIONS.map((restriction) => (
-                      <div key={restriction} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`dietary_${restriction}`}
-                          checked={selectedDietaryRestrictions.includes(restriction)}
-                          onCheckedChange={(checked) =>
-                            handleDietaryRestrictionChange(restriction, checked as boolean)
-                          }
-                          disabled={!isEditing}
-                        />
-                        <Label htmlFor={`dietary_${restriction}`} className="text-sm">
-                          {restriction}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="allergies">Allergies & Medical Notes</Label>
-                  <Textarea
-                    id="allergies"
-                    {...register("allergies")}
-                    disabled={!isEditing}
-                    className="mt-1"
-                    rows={2}
-                    placeholder="List any allergies or important medical information..."
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Professional Information */}
-          {shouldShowField('professional') && (
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-card-foreground">
-                  <Briefcase className="h-5 w-5" />
-                  Professional Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="workplace">Where do you work?</Label>
-                  <Input
-                    id="workplace"
-                    {...register("workplace")}
-                    disabled={!isEditing}
-                    className="mt-1"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Musical Information */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <Music2 className="h-5 w-5" />
-                Musical Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="can_dance"
-                  checked={canDance}
-                  onCheckedChange={(checked) => setValue("can_dance", checked as boolean)}
-                  disabled={!isEditing}
-                />
-                <Label htmlFor="can_dance">Can Dance</Label>
-              </div>
-
-              <div>
-                <Label>Instruments Played</Label>
-                <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {instruments.map((instrument) => (
-                    <div key={instrument} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={instrument}
-                        checked={selectedInstruments.includes(instrument)}
-                        onCheckedChange={(checked) =>
-                          handleInstrumentChange(instrument, checked as boolean)
-                        }
-                        disabled={!isEditing}
-                      />
-                      <Label htmlFor={instrument} className="text-sm">
-                        {instrument}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-                {selectedInstruments.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {selectedInstruments.map((instrument) => (
-                      <Badge key={instrument} variant="secondary">
-                        <Music2 className="h-3 w-3 mr-1" />
-                        {instrument}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment Information */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <DollarSign className="h-5 w-5" />
-                Payment Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div>
-                <Label htmlFor="preferred_payment_method">Preferred Payment Method</Label>
-                <Select
-                  value={watch("preferred_payment_method") || ""}
-                  onValueChange={(value) => setValue("preferred_payment_method", value as any)}
-                  disabled={!isEditing}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select payment method" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {paymentMethods.map((method) => (
-                      <SelectItem key={method.value} value={method.value}>
-                        {method.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Wardrobe & Measurements */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <Shirt className="h-5 w-5" />
-                Wardrobe & Measurements
-              </CardTitle>
-              <CardDescription>Wardrobe sizing and measurement information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Measurements Section */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-foreground">Measurements</h4>
-                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                   <div>
-                     <Label htmlFor="bust_measurement">Bust {!isWardrobeManager && <span className="text-xs text-muted-foreground">(Wardrobe Manager Only)</span>}</Label>
-                     <div className="relative">
-                       <Input
-                         id="bust_measurement"
-                         {...register("bust_measurement")}
-                         disabled={!isEditing || !isWardrobeManager}
-                         className="mt-1"
-                         placeholder="36"
-                       />
-                       {(!isEditing || !isWardrobeManager) && (
-                         <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                       )}
-                     </div>
-                   </div>
-                   <div>
-                     <Label htmlFor="waist_measurement">Waist {!isWardrobeManager && <span className="text-xs text-muted-foreground">(Wardrobe Manager Only)</span>}</Label>
-                     <div className="relative">
-                       <Input
-                         id="waist_measurement"
-                         {...register("waist_measurement")}
-                         disabled={!isEditing || !isWardrobeManager}
-                         className="mt-1"
-                         placeholder="28"
-                       />
-                       {(!isEditing || !isWardrobeManager) && (
-                         <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                       )}
-                     </div>
-                   </div>
-                   <div>
-                     <Label htmlFor="hips_measurement">Hips {!isWardrobeManager && <span className="text-xs text-muted-foreground">(Wardrobe Manager Only)</span>}</Label>
-                     <div className="relative">
-                       <Input
-                         id="hips_measurement"
-                         {...register("hips_measurement")}
-                         disabled={!isEditing || !isWardrobeManager}
-                         className="mt-1"
-                         placeholder="38"
-                       />
-                       {(!isEditing || !isWardrobeManager) && (
-                         <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                       )}
-                     </div>
-                   </div>
-                   <div>
-                     <Label htmlFor="height_measurement">Height {!isWardrobeManager && <span className="text-xs text-muted-foreground">(Wardrobe Manager Only)</span>}</Label>
-                     <div className="relative">
-                       <Input
-                         id="height_measurement"
-                         {...register("height_measurement")}
-                         disabled={!isEditing || !isWardrobeManager}
-                         className="mt-1"
-                         placeholder="5'6&quot;"
-                       />
-                       {(!isEditing || !isWardrobeManager) && (
-                         <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                       )}
-                     </div>
-                   </div>
-                 </div>
-              </div>
-
-              {/* Sizes Section */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-foreground">Sizes</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="dress_size">Dress Size</Label>
-                    <Select
-                      value={watch("dress_size") || ""}
-                      onValueChange={(value) => setValue("dress_size", value)}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select dress size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["XS", "S", "M", "L", "XL", "XXL", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20"].map((size) => (
-                          <SelectItem key={size} value={size}>
-                            {size}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Physical Appearance */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-foreground">Physical Appearance</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="hair_color">Hair Color</Label>
-                    <Input
-                      id="hair_color"
-                      {...register("hair_color")}
-                      disabled={!isEditing}
-                      className="mt-1"
-                      placeholder="Brown, Black, etc."
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2 pt-6">
-                    <Checkbox
-                      id="has_tattoos"
-                      checked={watch("has_tattoos")}
-                      onCheckedChange={(checked) => setValue("has_tattoos", Boolean(checked))}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="has_tattoos" className="text-sm font-normal cursor-pointer">
-                      Has Tattoos
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 pt-6">
-                    <Checkbox
-                      id="visible_piercings"
-                      checked={watch("visible_piercings")}
-                      onCheckedChange={(checked) => setValue("visible_piercings", Boolean(checked))}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="visible_piercings" className="text-sm font-normal cursor-pointer">
-                      Has Visible Piercings
-                    </Label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Classification */}
-              <div>
-                <Label htmlFor="classification">Classification</Label>
-                <Select
-                  value={watch("classification") || ""}
-                  onValueChange={(value) => setValue("classification", value)}
-                  disabled={!isEditing}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select classification" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["Freshman", "Sophomore", "Junior", "Senior"].map((classification) => (
-                      <SelectItem key={classification} value={classification}>
-                        {classification}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Glee Club Membership */}
-          {shouldShowField('academic') && (
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-card-foreground">
-                  <Music className="h-5 w-5" />
-                  Glee Club Membership
-                </CardTitle>
-                <CardDescription>Alumni and mentorship information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="mentor_opt_in"
-                      checked={watch("mentor_opt_in")}
-                      onCheckedChange={(checked) => setValue("mentor_opt_in", checked as boolean)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="mentor_opt_in">Opt-in to Mentorship Program</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="reunion_rsvp"
-                      checked={watch("reunion_rsvp")}
-                      onCheckedChange={(checked) => setValue("reunion_rsvp", checked as boolean)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="reunion_rsvp">RSVP for Next Reunion</Label>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Social Media */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <Globe className="h-5 w-5" />
-                Social Media Links
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="instagram" className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4" />
-                  Instagram
-                </Label>
-                <Input
-                  id="instagram"
-                  {...register("instagram")}
-                  disabled={!isEditing}
-                  className="mt-1"
-                  placeholder="@username"
-                />
-              </div>
-              <div>
-                <Label htmlFor="twitter" className="flex items-center gap-2">
-                  <Twitter className="h-4 w-4" />
-                  Twitter
-                </Label>
-                <Input
-                  id="twitter"
-                  {...register("twitter")}
-                  disabled={!isEditing}
-                  className="mt-1"
-                  placeholder="@username"
-                />
-              </div>
-              <div>
-                <Label htmlFor="facebook" className="flex items-center gap-2">
-                  <Facebook className="h-4 w-4" />
-                  Facebook
-                </Label>
-                <Input
-                  id="facebook"
-                  {...register("facebook")}
-                  disabled={!isEditing}
-                  className="mt-1"
-                  placeholder="Facebook profile URL"
-                />
-              </div>
-              <div>
-                <Label htmlFor="youtube" className="flex items-center gap-2">
-                  <Youtube className="h-4 w-4" />
-                  YouTube
-                </Label>
-                <Input
-                  id="youtube"
-                  {...register("youtube")}
-                  disabled={!isEditing}
-                  className="mt-1"
-                  placeholder="YouTube channel URL"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {isEditing && (
-            <div className="flex justify-end space-x-2">
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="bg-card border-b border-border px-4 py-4 md:px-6">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                Glee Club Member Dashboard
+              </h1>
+              <p className="text-muted-foreground">Spelman College Glee Club</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-foreground hidden sm:inline">{displayName}</span>
               <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsEditing(false)}
+                onClick={() => setIsEditing(!isEditing)}
+                variant={isEditing ? "outline" : "default"}
+                size="sm"
               >
-                Cancel
-              </Button>
-              <Button 
-                type="button"
-                disabled={loading}
-                onClick={async () => {
-                  console.log("🎯 Save Profile button clicked! isEditing:", isEditing, "loading:", loading);
-                  
-                  // Check if user is logged in
-                  if (!user) {
-                    toast({
-                      title: "Error",
-                      description: "You must be logged in to save your profile",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  
-                  // Show saving feedback immediately
-                  toast({
-                    title: "Saving...",
-                    description: "Updating your profile",
-                  });
-                  
-                  try {
-                    // Trigger form submission with error handling
-                    await handleSubmit(
-                      // Success callback
-                      onSubmit,
-                      // Error callback - fires when validation fails
-                      (formErrors) => {
-                        console.error("🎯 Form validation errors:", formErrors);
-                        const errorMessages = Object.entries(formErrors)
-                          .map(([field, error]) => `${field}: ${error?.message}`)
-                          .join(', ');
-                        toast({
-                          title: "Validation Error",
-                          description: errorMessages || "Please check your form inputs",
-                          variant: "destructive",
-                        });
-                      }
-                    )();
-                  } catch (submitError: any) {
-                    console.error("🎯 Form submission error:", submitError);
-                    toast({
-                      title: "Error",
-                      description: `Failed to save: ${submitError?.message || 'Unknown error'}`,
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                {loading ? "Saving..." : "Save Profile"}
+                {isEditing ? (
+                  "Cancel"
+                ) : (
+                  <>
+                    <Edit className="h-4 w-4 mr-2" />
+                    View Profile
+                  </>
+                )}
               </Button>
             </div>
-          )}
-        </form>
+          </div>
+        </div>
+
+        {/* Dashboard Content */}
+        <div className="max-w-7xl mx-auto px-4 py-6 md:px-6">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              
+              {/* Left Column */}
+              <div className="space-y-4">
+                {/* Profile Overview Card */}
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-semibold">Profile Overview</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Avatar Section */}
+                    <div className="flex flex-col items-center">
+                      <div className="relative">
+                        <Avatar className="h-28 w-28 border-4 border-border shadow-lg">
+                          <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
+                          <AvatarFallback className="bg-muted text-muted-foreground text-2xl">
+                            {getInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {isEditing && (
+                          <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 transition-colors">
+                            <input
+                              type="file"
+                              accept="image/*,.heic,.heif"
+                              onChange={handleAvatarUpload}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                            <Camera className="h-6 w-6 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Name */}
+                      <h3 className="mt-3 text-xl font-bold text-foreground">{displayName}</h3>
+                      {firstName && firstName !== displayName && (
+                        <p className="text-sm text-muted-foreground">{firstName}</p>
+                      )}
+                    </div>
+
+                    {/* Contact Info */}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground min-w-[50px]">email</span>
+                        <span className="text-foreground">{user?.email || 'Not set'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground min-w-[50px]">Phone</span>
+                        {isEditing ? (
+                          <Input
+                            type="tel"
+                            value={phoneDisplay}
+                            onChange={handlePhoneChange}
+                            className="h-8 text-sm"
+                            placeholder="(555) 123-4567"
+                            maxLength={14}
+                          />
+                        ) : (
+                          <span className="text-foreground">{profile?.phone_number || 'Not set'}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Voice Part & Status */}
+                    <div className="space-y-3 pt-2 border-t border-border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Voice Part</span>
+                        {isEditing && isAdmin ? (
+                          <Select value={watch("voice_part") || ""} onValueChange={(value) => setValue("voice_part", value as any)}>
+                            <SelectTrigger className="w-20 h-8 text-sm">
+                              <SelectValue placeholder="—" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {voiceParts.map((part) => (
+                                <SelectItem key={part.value} value={part.value}>
+                                  {part.value}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-sm font-medium">{getVoicePartLabel(watch("voice_part"))}</span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Status</span>
+                        <div className="flex items-center gap-1">
+                          {isEditing ? (
+                            <Select value={watch("classification") || ""} onValueChange={(value) => setValue("classification", value)}>
+                              <SelectTrigger className="w-28 h-8 text-sm">
+                                <SelectValue placeholder="Select" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {["Freshman", "Sophomore", "Junior", "Senior"].map((c) => (
+                                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <>
+                              <Badge variant="secondary" className="text-xs">
+                                {watch("classification") || 'Not set'}
+                              </Badge>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Join Date</span>
+                        {isEditing && isAdmin ? (
+                          <Input
+                            type="date"
+                            {...register("join_date")}
+                            className="w-32 h-8 text-sm"
+                          />
+                        ) : (
+                          <span className="text-sm">{formatDate(watch("join_date"))}</span>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Participation Compact */}
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold">Participation</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Attendance Log</h4>
+                      <div className="flex items-center justify-between border border-border rounded-md px-3 py-2">
+                        <span className="text-sm text-muted-foreground">View Records</span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Rehearsal Notes</h4>
+                      <div className="space-y-1">
+                        {["Lift Every Voice and Sing", "I'll Be On My Way", "Ad Astra"].map((piece) => (
+                          <div key={piece} className="flex items-center gap-2">
+                            <Checkbox checked disabled className="data-[state=checked]:bg-primary" />
+                            <span className="text-sm text-foreground">{piece}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Middle Column */}
+              <div className="space-y-4">
+                {/* Participation Full */}
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold">Participation</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Attendance Log</h4>
+                      <div className="space-y-1">
+                        {[
+                          { date: "04/20/2024", status: "Present" },
+                          { date: "04/19/2024", status: "Late" },
+                          { date: "04/16/2024", status: "Absent" },
+                        ].map((record, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{record.date}</span>
+                            <span className="mx-2 text-muted-foreground">—</span>
+                            <span className={
+                              record.status === 'Present' ? 'text-green-600' :
+                              record.status === 'Late' ? 'text-yellow-600' : 'text-red-600'
+                            }>{record.status}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Rehearsal Notes</h4>
+                      <Textarea
+                        disabled={!isEditing}
+                        className="min-h-[60px] text-sm"
+                        placeholder="Add rehearsal notes..."
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Repertoire Check-Off</h4>
+                      <div className="space-y-2">
+                        {["Lift Every Voice and Sing", "I'll Be On My Way", "Ad Astra"].map((piece) => (
+                          <div key={piece} className="flex items-center gap-2">
+                            <Checkbox checked disabled={!isEditing} className="data-[state=checked]:bg-primary" />
+                            <span className="text-sm text-foreground">{piece}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Wardrobe */}
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold">Wardrobe</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">T-shirt Size</span>
+                        {isEditing ? (
+                          <Select value={watch("dress_size") || ""} onValueChange={(value) => setValue("dress_size", value)}>
+                            <SelectTrigger className="w-20 h-8 text-sm">
+                              <SelectValue placeholder="—" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {dressSizes.map((size) => (
+                                <SelectItem key={size} value={size}>{size}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-sm font-medium text-foreground">{watch("dress_size") || '—'}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Blazer/Dress Size</span>
+                        <span className="text-sm font-medium text-foreground">{watch("dress_size") || '—'}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Shoe Size</span>
+                        {isEditing ? (
+                          <Select value={watch("shoe_size") || ""} onValueChange={(value) => setValue("shoe_size", value)}>
+                            <SelectTrigger className="w-20 h-8 text-sm">
+                              <SelectValue placeholder="—" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {shoeSizes.map((size) => (
+                                <SelectItem key={size} value={size}>{size}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-sm font-medium text-foreground">{watch("shoe_size") || '—'}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-3 pt-2 border-t border-border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Uniform Issued</span>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={uniformIssued}
+                            onCheckedChange={setUniformIssued}
+                            disabled={!isEditing}
+                          />
+                          <span className="text-xs text-green-600 font-medium">
+                            {uniformIssued ? 'YES' : 'NO'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Deposit Paid</span>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={depositPaid}
+                            onCheckedChange={setDepositPaid}
+                            disabled={!isEditing}
+                          />
+                          <span className={`text-xs font-medium ${depositPaid ? 'text-green-600' : 'text-muted-foreground'}`}>
+                            {depositPaid ? 'YES' : 'No'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Admin Consent */}
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold">Admin Consent</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Photo/Video Consent</span>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={photoVideoConsent}
+                          onCheckedChange={setPhotoVideoConsent}
+                          disabled={!isEditing}
+                        />
+                        <span className={`text-xs font-medium ${photoVideoConsent ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {photoVideoConsent ? 'YES' : 'NO'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Performance Media Tags</h4>
+                      <Input
+                        disabled={!isEditing}
+                        className="h-9"
+                        placeholder="Add media tags..."
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-4">
+                {/* Music Access */}
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold">Music Access</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Folder Assignment</h4>
+                      <Input
+                        disabled={!isEditing || !isAdmin}
+                        className="h-9"
+                        placeholder="Folder number"
+                        defaultValue="25"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Sheet Music PDF Access</h4>
+                      <div className="flex items-center justify-between border border-border rounded-md px-3 py-2 bg-background">
+                        <span className="text-sm text-foreground">{watch("voice_part") ? `${voiceParts.find(p => p.value === watch("voice_part"))?.label || 'Soprano'} | Folder` : 'Soprano | Folder'}</span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Voice Check Record</h4>
+                      <Input
+                        disabled={!isEditing}
+                        className="h-9"
+                        placeholder="Voice check details"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Solo Roles</h4>
+                      <Input
+                        disabled={!isEditing}
+                        className="h-9"
+                        placeholder="List solo roles"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Financial Info */}
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold">Financial Info</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Dues Balance</span>
+                      <span className="text-sm font-semibold text-foreground">$50.00</span>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Payment History</h4>
+                      <div className="space-y-1">
+                        {[
+                          { date: "02/01/2024", desc: "Dues Payment", amount: "$0.00" },
+                          { date: "05/13/2022", desc: "Dues Payment", amount: "100.00" },
+                        ].map((payment, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{payment.date}</span>
+                            <span className="text-foreground truncate max-w-[100px]">{payment.desc}</span>
+                            <span className="text-foreground">{payment.amount}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Fundraiser Participation</h4>
+                      <Input
+                        disabled={!isEditing}
+                        className="h-9"
+                        placeholder="Participation details"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Admin Notes - Only visible to admins */}
+                {isAdmin && (
+                  <Card className="bg-card border-border">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg font-semibold">Admin Notes</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div>
+                        <h4 className="text-sm font-medium text-foreground mb-2">Notes</h4>
+                        <Textarea
+                          value={adminNotes}
+                          onChange={(e) => setAdminNotes(e.target.value)}
+                          disabled={!isEditing}
+                          className="min-h-[100px] text-sm"
+                          placeholder="Add administrative notes..."
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+
+            {/* Save Button */}
+            {isEditing && (
+              <div className="flex justify-end mt-6 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : "Save Profile"}
+                </Button>
+              </div>
+            )}
+          </form>
+        </div>
         
         {/* Avatar Crop Dialog */}
         <AvatarCropDialog
