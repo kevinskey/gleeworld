@@ -40,9 +40,9 @@ export const DashboardStoreSection = () => {
         setProducts(productsData);
       }
 
-      // Fetch courses
+      // Fetch courses from gw_courses
       const { data: coursesData, error: coursesError } = await supabase
-        .from('glee_academy_courses')
+        .from('gw_courses')
         .select('id, title, description, course_code, instructor_name')
         .eq('is_active', true)
         .limit(10)
