@@ -32,6 +32,27 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
   const hbcuGold = '#FFDF00';
   const spelmanWhite = '#ffffff';
 
+  // Restore piano state if the header/toolkit remounts during orientation change
+  useEffect(() => {
+    try {
+      const shouldReopen = sessionStorage.getItem('gw_toolkit_piano_open') === '1';
+      if (shouldReopen) {
+        setOpen((o) => ({ ...o, piano: true }));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Persist piano open state so it survives header swaps on rotation
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('gw_toolkit_piano_open', open.piano ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [open.piano]);
+
   // Setup mobile audio unlock on mount
   useEffect(() => {
     const cleanup = setupMobileAudioUnlock();
