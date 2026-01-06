@@ -930,17 +930,47 @@ export const CreateEventDialog = ({
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Max Occurrences</Label>
-                      <Input type="number" min="1" max="365" value={formData.max_occurrences} onChange={e => setFormData(prev => ({
-                    ...prev,
-                    max_occurrences: parseInt(e.target.value) || 10
-                  }))} placeholder="10" />
+                      {formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0 ? (
+                        <>
+                          <Label>Number of Weeks</Label>
+                          <Input 
+                            type="number" 
+                            min="1" 
+                            max="52" 
+                            value={Math.ceil(formData.max_occurrences / Math.max(formData.recurrence_days_of_week.length, 1))} 
+                            onChange={e => {
+                              const weeks = parseInt(e.target.value) || 1;
+                              setFormData(prev => ({
+                                ...prev,
+                                max_occurrences: weeks * prev.recurrence_days_of_week.length
+                              }));
+                            }} 
+                            placeholder="16" 
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            {formData.recurrence_days_of_week.length} days/week × {Math.ceil(formData.max_occurrences / Math.max(formData.recurrence_days_of_week.length, 1))} weeks = {formData.max_occurrences} events
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <Label>Max Occurrences</Label>
+                          <Input type="number" min="1" max="365" value={formData.max_occurrences} onChange={e => setFormData(prev => ({
+                            ...prev,
+                            max_occurrences: parseInt(e.target.value) || 10
+                          }))} placeholder="10" />
+                        </>
+                      )}
                     </div>
                   </div>
 
                   <p className="text-xs text-muted-foreground">
                     Recurring events will be created automatically when you save this event.
-                    {formData.recurrence_end_date ? ` Events will repeat until ${new Date(formData.recurrence_end_date).toLocaleDateString()}.` : ` Up to ${formData.max_occurrences} future events will be created.`}
+                    {formData.recurrence_end_date 
+                      ? ` Events will repeat until ${new Date(formData.recurrence_end_date).toLocaleDateString()}.` 
+                      : formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0
+                        ? ` ${formData.max_occurrences} events will be created over ${Math.ceil(formData.max_occurrences / formData.recurrence_days_of_week.length)} weeks.`
+                        : ` Up to ${formData.max_occurrences} future events will be created.`
+                    }
                   </p>
                 </div>}
             </div>
