@@ -20,7 +20,7 @@ import { MyModules } from './MyModules';
 import { supabase } from '@/integrations/supabase/client';
 import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
 import { FourCardLayout } from './FourCardLayout';
-import { ProductSlider } from './ProductSlider';
+import { DashboardStoreSection } from './DashboardStoreSection';
 
 // Lazy load heavy components
 const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then(m => ({
@@ -340,13 +340,8 @@ export const UnifiedDashboard = () => {
         </div>
       </div>
 
-      {/* Full Screen Empty Div */}
-      <div className="w-full h-[200px] bg-muted flex items-center justify-center">
-        <h2 className="text-2xl font-bold tracking-wide text-foreground">SHOP GLEEWORLD</h2>
-      </div>
-
-      {/* Horizontal E-commerce Slider */}
-      <ProductSlider />
+      {/* Modern Store Section */}
+      <DashboardStoreSection />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-4 space-y-6">
