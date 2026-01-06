@@ -13,21 +13,10 @@ import { forceUnlockAudio, setupMobileAudioUnlock } from '@/utils/mobileAudioUnl
 import { useIsMobile } from '@/hooks/use-mobile';
 import { HEADER_ICON_SIZES } from '@/components/layout/headerIconSizes';
 
-// Static chromatic ranges
-const FULL_PIANO_RANGE = [
-  'C3','C#3','D3','D#3','E3','F3','F#3','G3','G#3','A3','A#3','B3',
-  'C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4','A4','A#4','B4',
-  'C5','C#5','D5','D#5','E5','F5','F#5','G5'
-];
-
-const SMALL_PIANO_RANGE = [
-  'C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4','A4','A#4','B4','C5'
-];
-
 export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '' }) => {
   const [open, setOpen] = useState<{
-    metronome: boolean; pitch: boolean; pianoSmall: boolean; pianoFull: boolean; tuner: boolean;
-  }>({ metronome: false, pitch: false, pianoSmall: false, pianoFull: false, tuner: false });
+    metronome: boolean; pitch: boolean; piano: boolean; tuner: boolean;
+  }>({ metronome: false, pitch: false, piano: false, tuner: false });
 
   const [pitchPipeSize, setPitchPipeSize] = useState({ width: 280, height: 280 });
   const [pitchPipePosition, setPitchPipePosition] = useState({ x: 20, y: 80 });
@@ -94,11 +83,8 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
           <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, pitch: true })); }}>
             <AudioLines className="mr-2 h-4 w-4" /> Pitch Pipe
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, pianoSmall: true })); }}>
-            <Piano className="mr-2 h-4 w-4" /> Small Piano
-          </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, pianoFull: true })); }}>
-            <Piano className="mr-2 h-4 w-4" /> Full Piano (C3–G5)
+          <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, piano: true })); }}>
+            <Piano className="mr-2 h-4 w-4" /> Piano
           </DropdownMenuItem>
           <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, tuner: true })); }}>
             <Gauge className="mr-2 h-4 w-4" /> Tuner
@@ -168,22 +154,10 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
         </div>
       )}
 
-      {/* Full Piano - Full Screen */}
-      {open.pianoFull && (
-        <VirtualPiano onClose={() => setOpen((o) => ({ ...o, pianoFull: false }))} />
+      {/* Piano - Full Screen Responsive */}
+      {open.piano && (
+        <VirtualPiano onClose={() => setOpen((o) => ({ ...o, piano: false }))} />
       )}
-
-      {/* Small Piano */}
-      <Dialog open={open.pianoSmall} onOpenChange={(v) => setOpen((o) => ({ ...o, pianoSmall: v }))}>
-        <DialogContent className="sm:max-w-[720px] bg-background border border-border top-[calc(15%+76px)] translate-y-0 sm:top-[calc(20%+76px)]">
-          <DialogHeader>
-            <DialogTitle className="text-base">Small Piano</DialogTitle>
-          </DialogHeader>
-          <div className="overflow-x-auto">
-            <VirtualPiano />
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Tuner */}
       <Dialog open={open.tuner} onOpenChange={(v) => setOpen((o) => ({ ...o, tuner: v }))}>
