@@ -87,7 +87,7 @@ const EventCard = ({
     
     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
       <Clock className="h-4 w-4 flex-shrink-0" />
-      <span>{formatEventTime(event.start_date, event.end_date ?? undefined)}</span>
+      <span className="text-base">{formatEventTime(event.start_date, event.end_date ?? undefined)}</span>
     </div>
 
     {event.location && <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
@@ -95,7 +95,7 @@ const EventCard = ({
         <span className="truncate">{event.location}</span>
       </div>}
 
-    {event.description && <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+    {event.description && <p className="text-muted-foreground line-clamp-2 mt-2 text-base">
         {event.description}
       </p>}
   </div>;
