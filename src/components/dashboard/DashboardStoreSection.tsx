@@ -51,11 +51,7 @@ export const DashboardStoreSection = () => {
         {/* Bold Header */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground leading-none lg:text-lg">COLLECTIONS
-24-25<br />
-              COLLECTIONS<br />
-              <span className="text-primary text-lg">24-25</span>
-            </h1>
+            
           </div>
           
           {/* Filters & Sorts - Right Side */}
