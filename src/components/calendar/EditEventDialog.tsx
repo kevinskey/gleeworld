@@ -58,10 +58,12 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [isAdminLike, setIsAdminLike] = useState(false);
+  const [calendars, setCalendars] = useState<{id: string; name: string; color: string}[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     event_type: 'performance',
+    calendar_id: '',
     start_date: '',
     end_date: '',
     venue_name: '',
@@ -133,6 +135,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         title: event.title || '',
         description: event.description || '',
         event_type: event.event_type || 'performance',
+        calendar_id: event.calendar_id || '',
         start_date: formatDateForInput(event.start_date),
         end_date: event.end_date ? formatDateForInput(event.end_date) : '',
         venue_name: event.venue_name || '',
@@ -158,6 +161,19 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
       setImageFile(null);
     }
   }, [event]);
+
+  // Fetch calendars
+  useEffect(() => {
+    const fetchCalendars = async () => {
+      const { data } = await supabase
+        .from('gw_calendars')
+        .select('id, name, color')
+        .eq('is_visible', true)
+        .order('name');
+      setCalendars(data || []);
+    };
+    fetchCalendars();
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -249,6 +265,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         title: formData.title,
         description: formData.description || null,
         event_type: formData.event_type,
+        calendar_id: formData.calendar_id || null,
         start_date: formData.start_date ? new Date(formData.start_date + ':00').toISOString() : null,
         end_date: formData.end_date ? new Date(formData.end_date + ':00').toISOString() : null,
         location: null,
@@ -459,6 +476,31 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                           <div className="flex items-center gap-2">
                             <div className={`w-2 h-2 rounded-full ${type.color.split(' ')[0]}`} />
                             {type.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="calendar_id" className="text-sm font-medium">Calendar</Label>
+                  <Select
+                    value={formData.calendar_id}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, calendar_id: value }))}
+                  >
+                    <SelectTrigger className="animate-fade-in">
+                      <SelectValue placeholder="Select calendar" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {calendars.map((cal) => (
+                        <SelectItem key={cal.id} value={cal.id}>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-sm flex-shrink-0" 
+                              style={{ backgroundColor: cal.color }}
+                            />
+                            {cal.name}
                           </div>
                         </SelectItem>
                       ))}
