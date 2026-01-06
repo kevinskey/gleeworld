@@ -151,11 +151,11 @@ export const MonthlyCalendar = ({
       )}
 
       {/* Day Headers */}
-      <div className="grid grid-cols-7 gap-px bg-border rounded-t-lg overflow-hidden flex-shrink-0">
+      <div className="grid grid-cols-7 gap-px bg-border/80 ring-1 ring-inset ring-border/70 rounded-t-lg overflow-hidden flex-shrink-0">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-          <div 
-            key={idx} 
-            className="p-1 sm:p-1.5 text-center text-[10px] sm:text-xs font-medium text-muted-foreground bg-muted/50"
+          <div
+            key={idx}
+            className="p-1 sm:p-1.5 text-center text-[10px] sm:text-xs font-semibold text-foreground/80 bg-muted"
           >
             {day}
           </div>
@@ -163,7 +163,7 @@ export const MonthlyCalendar = ({
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-px bg-border rounded-b-lg overflow-hidden -mt-4 flex-1 auto-rows-fr">
+      <div className="grid grid-cols-7 gap-px bg-border/80 ring-1 ring-inset ring-border/70 rounded-b-lg overflow-hidden -mt-4 flex-1 auto-rows-fr">
         {days.map(day => {
           const dayEvents = getEventsForDate(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
@@ -177,10 +177,10 @@ export const MonthlyCalendar = ({
               onClick={() => handleDateClick(day)}
               className={cn(
                 "min-h-0 p-1 sm:p-1.5 cursor-pointer transition-colors bg-card flex flex-col",
-                !isCurrentMonth && "bg-muted/30",
-                isToday && "bg-primary/5",
-                isSelected && "bg-primary/10 ring-1 ring-inset ring-primary",
-                "hover:bg-accent/50"
+                !isCurrentMonth && "bg-muted/50",
+                isToday && "bg-primary/10",
+                isSelected && "bg-primary/15 ring-1 ring-inset ring-primary",
+                "hover:bg-accent"
               )}
             >
               {/* Date Number */}
