@@ -87,30 +87,19 @@ export const TourManagerLanding = ({ onNavigate, stats }: TourManagerLandingProp
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-xl p-8 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAzMHYySDI0di0yaDEyek0zNiAyNnYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2">Tour Management</h1>
-          <p className="text-blue-100 text-lg max-w-2xl">
-            Coordinate dates, routes, contacts, contracts, and logistics for seamless tour operations.
-          </p>
-        </div>
-        
-        {/* Quick Stats Row */}
-        <div className="relative z-10 mt-6 grid grid-cols-3 md:grid-cols-6 gap-4">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => onNavigate(section.id)}
-              className="text-center p-3 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-            >
-              <div className="text-2xl font-bold">{section.stat}</div>
-              <div className="text-xs text-blue-200 capitalize">{section.statLabel}</div>
-            </button>
-          ))}
-        </div>
+    <div className="space-y-4">
+      {/* Compact Stats Row */}
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            onClick={() => onNavigate(section.id)}
+            className="text-center p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+          >
+            <div className="text-xl font-bold text-foreground">{section.stat}</div>
+            <div className="text-[10px] text-muted-foreground capitalize">{section.statLabel}</div>
+          </button>
+        ))}
       </div>
 
       {/* Main Sections Grid */}
