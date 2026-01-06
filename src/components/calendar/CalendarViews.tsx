@@ -57,13 +57,13 @@ export const CalendarViews = () => {
         </CardContent>
       </Card>;
   }
-  return <div className="space-y-2">
+  return <div className="flex flex-col h-[calc(100vh-120px)]">
       {/* Main Calendar Layout */}
-      <div className="flex flex-col lg:flex-row gap-3">
+      <div className="flex flex-col lg:flex-row gap-3 flex-1 min-h-0">
         {/* Calendar Grid Section - takes more space */}
-        <div className="flex-[3]">
-          <Card className="border border-border/50 bg-card">
-            <CardContent className="p-3 sm:p-4">
+        <div className="flex-[3] flex flex-col min-h-0">
+          <Card className="border border-border/50 bg-card flex-1 flex flex-col min-h-0">
+            <CardContent className="p-3 sm:p-4 flex flex-col flex-1 min-h-0">
               {/* Calendar Header - more compact */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -96,7 +96,9 @@ export const CalendarViews = () => {
               </div>
 
               {/* Calendar Grid */}
-              <MonthlyCalendar events={filteredEvents} onEventUpdated={fetchEvents} currentDate={currentDate} selectedDate={selectedDate} onDateSelect={setSelectedDate} onMonthChange={setCurrentDate} />
+              <div className="flex-1 min-h-0">
+                <MonthlyCalendar events={filteredEvents} onEventUpdated={fetchEvents} currentDate={currentDate} selectedDate={selectedDate} onDateSelect={setSelectedDate} onMonthChange={setCurrentDate} />
+              </div>
             </CardContent>
           </Card>
         </div>

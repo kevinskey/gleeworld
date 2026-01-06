@@ -124,7 +124,7 @@ export const MonthlyCalendar = ({
   const showInternalNav = !externalCurrentDate;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full">
       {/* Internal Navigation - only show if not externally controlled */}
       {showInternalNav && (
         <div className="flex items-center justify-between mb-4">
@@ -164,7 +164,7 @@ export const MonthlyCalendar = ({
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-px bg-border rounded-b-lg overflow-hidden -mt-4">
+      <div className="grid grid-cols-7 gap-px bg-border rounded-b-lg overflow-hidden -mt-4 flex-1">
         {days.map(day => {
           const dayEvents = getEventsForDate(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
@@ -177,7 +177,7 @@ export const MonthlyCalendar = ({
               key={day.toString()}
               onClick={() => handleDateClick(day)}
               className={cn(
-                "min-h-[70px] sm:min-h-[90px] p-1.5 sm:p-2 cursor-pointer transition-colors bg-card",
+                "min-h-0 h-full p-1.5 sm:p-2 cursor-pointer transition-colors bg-card",
                 !isCurrentMonth && "bg-muted/30",
                 isToday && "bg-primary/5",
                 isSelected && "bg-primary/10 ring-2 ring-inset ring-primary",
