@@ -202,8 +202,8 @@ export const CalendarFilterStrip = ({
                   }} 
                   className={`flex items-center gap-1 px-1.5 py-1 rounded text-[9px] sm:text-[10px] transition-all border cursor-pointer ${
                     isSelected 
-                      ? 'bg-background border-border opacity-100' 
-                      : 'bg-muted/30 border-transparent opacity-50 hover:opacity-75'
+                      ? 'bg-background border-border opacity-100 text-foreground' 
+                      : 'bg-muted/30 border-transparent opacity-70 hover:opacity-100 text-white'
                   }`}
                   title={`${calendar.name} - Click to ${isSelected ? 'hide' : 'show'}`}
                 >
