@@ -17,7 +17,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
 import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
-import { SplashWrapper } from "@/components/splash/SplashWrapper";
+
 import { LiveInvitePopup } from "@/components/glee-lounge/LiveInvitePopup";
 import { GleeAssistant } from "@/components/assistant/GleeAssistant";
 import { AssistantProvider } from "@/contexts/AssistantContext";
@@ -343,7 +343,6 @@ const App = () => {
                   <CourseProvider>
                   <MessengerProvider>
                   <AssistantProvider>
-                  <SplashWrapper>
                   <div>
                   <Toaster />
                   <Sonner />
@@ -2393,7 +2392,6 @@ const App = () => {
                     <GlobalMusicPlayer />
                     <PWAInstallPrompt />
                    </div>
-                   </SplashWrapper>
                    </AssistantProvider>
                   </MessengerProvider>
                   </CourseProvider>
