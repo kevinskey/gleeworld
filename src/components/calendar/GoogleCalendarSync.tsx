@@ -170,22 +170,22 @@ export const GoogleCalendarSync = () => {
   React.useEffect(() => {
     fetchAutoSyncConfigs();
   }, []);
-  return <Card className="w-full max-w-md">
+  return <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
-          Google Calendar Integration
+          Google Calendar Sync
         </CardTitle>
         <CardDescription>
-          Import events from your Google Calendar to the Spelman calendar system.
+          Import events from a public Google Calendar. Your synced events will appear on the GleeWorld calendar.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="calendarId">Calendar ID</Label>
-          <Input id="calendarId" placeholder="your-email@gmail.com or calendar-id" value={calendarId} onChange={e => setCalendarId(e.target.value)} />
+          <Input id="calendarId" placeholder="your-email@gmail.com or calendar-id" value={calendarId} onChange={e => setCalendarId(e.target.value)} className="bg-background" />
           <p className="text-xs text-muted-foreground">
-            Use your Gmail address or find the Calendar ID in Google Calendar settings
+            Your calendar must be set to "public" in Google Calendar settings for sync to work.
           </p>
         </div>
 
@@ -196,79 +196,76 @@ export const GoogleCalendarSync = () => {
                 Syncing...
               </> : <>
                 <Download className="mr-2 h-4 w-4" />
-                Sync Once
+                Sync Now
               </>}
           </Button>
           
-          <Button onClick={handleAddAutoSync} disabled={!calendarId} variant="outline">
+          <Button onClick={handleAddAutoSync} disabled={!calendarId} variant="outline" title="Add to auto-sync (every hour)">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="border-t pt-4 space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Auto-Sync Calendars</span>
-            <Dialog open={showAutoSyncDialog} onOpenChange={setShowAutoSyncDialog}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Auto-Sync Settings</DialogTitle>
-                  <DialogDescription>
-                    Manage calendars that sync automatically every hour.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  {autoSyncConfigs.map(config => <div key={config.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <Checkbox checked={config.is_active} onCheckedChange={() => handleToggleAutoSync(config.id, config.is_active)} />
-                        <div>
-                          <p className="text-sm font-medium">{config.calendar_id}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Every {config.sync_frequency_hours}h • 
-                            {config.last_sync_at ? ` Last: ${new Date(config.last_sync_at).toLocaleDateString()}` : ' Never synced'}
-                          </p>
+        {autoSyncConfigs.length > 0 && (
+          <div className="border-t pt-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Auto-Sync Calendars</span>
+              <Dialog open={showAutoSyncDialog} onOpenChange={setShowAutoSyncDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Auto-Sync Settings</DialogTitle>
+                    <DialogDescription>
+                      Manage calendars that sync automatically every hour.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    {autoSyncConfigs.map(config => <div key={config.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Checkbox checked={config.is_active} onCheckedChange={() => handleToggleAutoSync(config.id, config.is_active)} />
+                          <div>
+                            <p className="text-sm font-medium">{config.calendar_id}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Every {config.sync_frequency_hours}h • 
+                              {config.last_sync_at ? ` Last: ${new Date(config.last_sync_at).toLocaleDateString()}` : ' Never synced'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteAutoSync(config.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>)}
-                  {autoSyncConfigs.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">
-                      No auto-sync calendars configured
-                    </p>}
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          {autoSyncConfigs.length > 0 && <div className="text-xs text-muted-foreground">
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteAutoSync(config.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>)}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            
+            <div className="text-xs text-muted-foreground">
               {autoSyncConfigs.filter(c => c.is_active).length} of {autoSyncConfigs.length} calendars active
-            </div>}
-          
-          <Button onClick={handleHolidaySync} disabled={isSyncingHolidays} variant="outline" className="w-full">
-            {isSyncingHolidays ? <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Syncing Holidays...
-              </> : <>
-                <Star className="mr-2 h-4 w-4" />
-                Sync National Holidays
-              </>}
-          </Button>
-        </div>
-
+            </div>
+          </div>
+        )}
         
+        <Button onClick={handleHolidaySync} disabled={isSyncingHolidays} variant="outline" className="w-full">
+          {isSyncingHolidays ? <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Syncing Holidays...
+            </> : <>
+              <Star className="mr-2 h-4 w-4" />
+              Sync National Holidays
+            </>}
+        </Button>
 
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p className="text-primary-foreground"><strong>How to get your Calendar ID:</strong></p>
+        <div className="text-xs text-muted-foreground space-y-2 border-t pt-4">
+          <p className="font-medium">How to make your Google Calendar public:</p>
           <ol className="list-decimal list-inside space-y-1">
-            <li className="text-primary-foreground">Go to Google Calendar</li>
-            <li className="text-primary-foreground">Click Settings (gear icon)</li>
-            <li className="text-primary-foreground">Click on your calendar name</li>
-            <li className="text-primary-foreground">Scroll down to find "Calendar ID"</li>
+            <li>Go to Google Calendar settings</li>
+            <li>Click on your calendar name</li>
+            <li>Under "Access permissions", check "Make available to public"</li>
+            <li>Copy your Calendar ID from "Integrate calendar" section</li>
           </ol>
         </div>
       </CardContent>
