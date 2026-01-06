@@ -98,128 +98,152 @@ export const DashboardStoreSection = () => {
         
 
         {/* Product Horizontal Scroll */}
-        {products.length > 0 ? <>
-            <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch'
-        }}>
-              {products.map(product => <div key={product.id} onClick={() => navigate(`/shop/${product.id}`)} className="group cursor-pointer flex-shrink-0 w-64 snap-start">
-                  {/* Product Image */}
-                  <div className="relative aspect-[3/4] bg-muted/50 rounded-lg overflow-hidden mb-4">
-                    {product.images?.[0] ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center">
-                        <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
-                      </div>}
-                    
-                    {/* Add Button Overlay */}
-                    <button className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-background/80 backdrop-blur-sm border border-border rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-background" onClick={e => {
-                e.stopPropagation();
-                // Add to cart logic
-              }}>
-                      <Plus className="h-4 w-4 text-foreground" />
-                    </button>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs text-muted-foreground">
-                          Glee Merch
-                        </span>
-                        {product.images && product.images.length > 1 && <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                            <span className="w-3 h-3 border border-muted-foreground/50 rounded-sm" />
-                            +{product.images.length - 1}
-                          </span>}
-                      </div>
-                      <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                        {product.title}
-                      </h3>
-                    </div>
-                    <span className="text-foreground font-medium whitespace-nowrap">
-                      $ {product.price.toFixed(0)}
-                    </span>
-                  </div>
-                </div>)}
-            </div>
-
-            {/* View All & Glee Academy */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-10">
-              
-              <Button onClick={() => navigate('/glee-academy')} className="flex-1 gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left">
-                <GraduationCap className="h-5 w-5" />
-                Glee Academy
-              </Button>
-            </div>
-
-            {/* Courses Horizontal Scroll */}
-            <div className="mt-6">
-              <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" style={{
+        {products.length > 0 ? (
+          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch'
           }}>
-                {courses.length > 0 ? courses.map(course => {
-              const CourseIcon = getCourseIcon(course.title);
-              const highlights = getCourseHighlights(course.title);
-              const level = getCourseLevel(course.title);
-              return <div key={course.id} className="flex-shrink-0 w-80 snap-start rounded-lg overflow-hidden shadow-lg">
-                        {/* Blue Header Section */}
-                        <div className="p-4 bg-[#53baee]">
-                          {/* Top row with icon, code, and level */}
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <CourseIcon className="h-5 w-5 text-white/80" />
-                              {course.course_code && <span className="px-3 py-1 bg-[#003366] text-white text-sm font-medium rounded">
-                                  {course.course_code}
-                                </span>}
-                            </div>
-                            <span className="text-white text-sm font-medium">{level}</span>
-                          </div>
-                          
-                          {/* Course title and duration */}
-                          <h4 className="text-white font-semibold text-lg leading-tight">
-                            {course.title}
-                          </h4>
-                          <p className="text-white/70 text-sm mt-1">Semester</p>
-                        </div>
-                        
-                        {/* White Content Section */}
-                        <div className="bg-white p-4 flex flex-col min-h-[200px]">
-                          {course.description && <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                              {course.description}
-                            </p>}
-                          
-                          {/* Course Highlights */}
-                          <div className="mb-4 flex-1">
-                            <h5 className="font-semibold text-gray-900 mb-2">Course Highlights:</h5>
-                            <ul className="space-y-1">
-                              {highlights.map((highlight, idx) => <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
-                                  <ChevronRight className="h-3 w-3 text-gray-400" />
-                                  {highlight}
-                                </li>)}
-                            </ul>
-                          </div>
-                          
-                          {/* Enter Button */}
-                          <button onClick={() => navigate(`/glee-academy/course/${course.id}`)} className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors">
-                            <span className="font-medium">Enter {course.course_code || course.title}</span>
-                            <ChevronRight className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>;
-            }) : <div className="flex-shrink-0 w-80 snap-start bg-muted/30 border border-dashed border-border rounded-lg p-4 flex items-center justify-center min-h-[300px]">
-                    <p className="text-sm text-muted-foreground">No courses available yet</p>
-                  </div>}
+            {products.map(product => (
+              <div key={product.id} onClick={() => navigate(`/shop/${product.id}`)} className="group cursor-pointer flex-shrink-0 w-64 snap-start">
+                {/* Product Image */}
+                <div className="relative aspect-[3/4] bg-muted/50 rounded-lg overflow-hidden mb-4">
+                  {product.images?.[0] ? (
+                    <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
+                    </div>
+                  )}
+                  
+                  {/* Add Button Overlay */}
+                  <button 
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-background/80 backdrop-blur-sm border border-border rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-background" 
+                    onClick={e => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <Plus className="h-4 w-4 text-foreground" />
+                  </button>
+                </div>
+
+                {/* Product Info */}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs text-muted-foreground">Glee Merch</span>
+                      {product.images && product.images.length > 1 && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                          <span className="w-3 h-3 border border-muted-foreground/50 rounded-sm" />
+                          +{product.images.length - 1}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                      {product.title}
+                    </h3>
+                  </div>
+                  <span className="text-foreground font-medium whitespace-nowrap">
+                    $ {product.price.toFixed(0)}
+                  </span>
+                </div>
               </div>
-            </div>
-          </> : <div className="text-center py-16">
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
             <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
             <p className="text-muted-foreground">No products available yet</p>
             <Button onClick={() => navigate('/shop')} className="mt-4">
               Visit Shop
             </Button>
-          </div>}
+          </div>
+        )}
+      </div>
+
+      {/* Glee Academy - Edge to Edge */}
+      <Button 
+        onClick={() => navigate('/glee-academy')} 
+        className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none"
+      >
+        <GraduationCap className="h-5 w-5" />
+        Glee Academy
+      </Button>
+
+      {/* Courses Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Courses Horizontal Scroll */}
+        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch'
+        }}>
+          {courses.length > 0 ? courses.map(course => {
+            const CourseIcon = getCourseIcon(course.title);
+            const highlights = getCourseHighlights(course.title);
+            const level = getCourseLevel(course.title);
+            return (
+              <div key={course.id} className="flex-shrink-0 w-80 snap-start rounded-lg overflow-hidden shadow-lg">
+                {/* Blue Header Section */}
+                <div className="p-4 bg-[#53baee]">
+                  {/* Top row with icon, code, and level */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <CourseIcon className="h-5 w-5 text-white/80" />
+                      {course.course_code && (
+                        <span className="px-3 py-1 bg-[#003366] text-white text-sm font-medium rounded">
+                          {course.course_code}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-white text-sm font-medium">{level}</span>
+                  </div>
+                  
+                  {/* Course title and duration */}
+                  <h4 className="text-white font-semibold text-lg leading-tight">
+                    {course.title}
+                  </h4>
+                  <p className="text-white/70 text-sm mt-1">Semester</p>
+                </div>
+                
+                {/* White Content Section */}
+                <div className="bg-white p-4 flex flex-col min-h-[200px]">
+                  {course.description && (
+                    <p className="text-gray-700 text-sm leading-relaxed mb-4">
+                      {course.description}
+                    </p>
+                  )}
+                  
+                  {/* Course Highlights */}
+                  <div className="mb-4 flex-1">
+                    <h5 className="font-semibold text-gray-900 mb-2">Course Highlights:</h5>
+                    <ul className="space-y-1">
+                      {highlights.map((highlight, idx) => (
+                        <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
+                          <ChevronRight className="h-3 w-3 text-gray-400" />
+                          {highlight}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  {/* Enter Button */}
+                  <button 
+                    onClick={() => navigate(`/glee-academy/course/${course.id}`)} 
+                    className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <span className="font-medium">Enter {course.course_code || course.title}</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          }) : (
+            <div className="flex-shrink-0 w-80 snap-start bg-muted/30 border border-dashed border-border rounded-lg p-4 flex items-center justify-center min-h-[300px]">
+              <p className="text-sm text-muted-foreground">No courses available yet</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>;
 };
