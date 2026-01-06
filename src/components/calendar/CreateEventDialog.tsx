@@ -368,7 +368,7 @@ export const CreateEventDialog = ({
         is_recurring: formData.is_recurring,
         recurrence_type: formData.is_recurring ? formData.recurrence_type : null,
         recurrence_interval: formData.is_recurring ? formData.recurrence_interval : null,
-        recurrence_end_date: formData.is_recurring && formData.recurrence_end_date ? new Date(formData.recurrence_end_date + ':00').toISOString() : null,
+        recurrence_end_date: formData.is_recurring && formData.recurrence_end_date ? new Date(formData.recurrence_end_date + 'T23:59:59').toISOString() : null,
         max_occurrences: formData.is_recurring ? formData.max_occurrences : null
       };
       console.log('Creating event with data:', eventData);
