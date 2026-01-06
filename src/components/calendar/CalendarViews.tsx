@@ -87,17 +87,11 @@ export const CalendarViews = () => {
                   }}>
                     Today
                   </Button>
-                  <Button variant="secondary" size="sm" className="h-7 text-xs">
-                    Events
+                  <Button size="sm" className="gap-1.5 h-7" onClick={() => setShowCreateEvent(true)}>
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">New Event</span>
+                    <span className="sm:hidden">New</span>
                   </Button>
-                  <Button variant="secondary" size="sm" className="h-7 text-xs">
-                    Appointments
-                  </Button>
-                  {isExecMember && <Button size="sm" className="gap-1.5 h-7" onClick={() => setShowCreateEvent(true)}>
-                      <Plus className="h-4 w-4" />
-                      <span className="hidden sm:inline">New Event</span>
-                      <span className="sm:hidden">New</span>
-                    </Button>}
                 </div>
               </div>
 
