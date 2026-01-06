@@ -106,20 +106,20 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
       {/* Sidebar - hidden on mobile, shown on desktop */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-56 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0",
+          "fixed inset-y-0 left-0 z-40 w-56 bg-blue-100 dark:bg-blue-900 border-r border-blue-200 dark:border-blue-800 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="px-3 py-3 border-b border-border flex items-center justify-between">
+          <div className="px-3 py-3 border-b border-blue-200 dark:border-blue-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex gap-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                 <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
               </div>
-              <span className="text-sm font-medium text-foreground whitespace-nowrap">Tour Manager</span>
+              <span className="text-sm font-medium text-blue-800 dark:text-blue-300 whitespace-nowrap">Tour Manager</span>
             </div>
             <Button
               variant="ghost"
@@ -144,8 +144,8 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors text-left",
                     activeSection === item.value
-                      ? "bg-primary text-primary-foreground"
-                      : "text-foreground/70 hover:text-foreground hover:bg-muted/50"
+                      ? "bg-blue-600 dark:bg-blue-700 text-white"
+                      : "text-blue-800 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 hover:bg-blue-200/50 dark:hover:bg-blue-800/50"
                   )}
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -156,8 +156,8 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
           </ScrollArea>
 
           {/* Sidebar Footer */}
-          <div className="p-3 border-t border-border">
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50 transition-colors">
+          <div className="p-3 border-t border-blue-200 dark:border-blue-800">
+            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-200 rounded-md hover:bg-blue-200/50 dark:hover:bg-blue-800/50 transition-colors">
               <Search className="h-4 w-4" />
               <span>Search</span>
             </button>
