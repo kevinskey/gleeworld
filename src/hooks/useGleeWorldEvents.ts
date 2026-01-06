@@ -28,6 +28,10 @@ export interface GleeWorldEvent {
   attendance_deadline?: string | null;
   late_arrival_allowed?: boolean | null;
   excuse_required?: boolean | null;
+  // Recurring event fields
+  is_recurring?: boolean | null;
+  parent_event_id?: string | null;
+  recurrence_type?: string | null;
   // Add source to differentiate between events and appointments
   source?: 'event' | 'appointment';
   // Calendar information from join

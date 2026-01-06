@@ -24497,6 +24497,10 @@ export type Database = {
         Args: { encrypted_token: string }
         Returns: string
       }
+      delete_recurring_gw_events: {
+        Args: { p_delete_type?: string; p_event_id: string }
+        Returns: Json
+      }
       delete_user_and_data: {
         Args: { target_user_id: string }
         Returns: boolean
