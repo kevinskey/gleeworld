@@ -47,7 +47,7 @@ export const DashboardStoreSection = () => {
       </div>;
   }
   return <div className="w-full bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pl-[30px] pt-[20px]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pl-[30px] pt-[2px]">
         {/* Section Header */}
         <h2 className="text-2xl font-bold text-foreground mb-6">Shop</h2>
         
