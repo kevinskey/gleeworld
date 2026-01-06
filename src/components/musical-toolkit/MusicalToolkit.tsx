@@ -98,12 +98,9 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
         </DialogContent>
       </Dialog>
 
-      {/* Pitch Pipe */}
+      {/* Pitch Pipe - Floating circle with transparent background */}
       <Dialog open={open.pitch} onOpenChange={(v) => setOpen((o) => ({ ...o, pitch: v }))}>
-        <DialogContent className="sm:max-w-md bg-background border border-border top-[15%] translate-y-0 sm:top-[20%]">
-          <DialogHeader>
-            <DialogTitle className="text-base">Pitch Pipe</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="bg-transparent border-none shadow-none p-0 max-w-fit [&>button]:text-white [&>button]:hover:bg-white/20">
           <PitchPipe />
         </DialogContent>
       </Dialog>
