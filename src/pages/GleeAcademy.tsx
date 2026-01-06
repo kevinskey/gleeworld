@@ -32,68 +32,7 @@ const GleeAcademy = () => {
         </div>
 
         {/* Courses Section */}
-        <div className="py-12 sm:py-16 lg:py-20 bg-background pt-[10px]">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h1 className="text-3xl font-bold text-foreground mb-2 -mt-4 sm:text-base">
-                Our Course Offerings
-              </h1>
-              <div className="w-full flex items-center justify-center py-[5px]">
-                <span className="text-[#1a1a2e] drop-shadow-[0_2px_4px_rgba(255,255,255,0.5)]">Spring 2026 Semester</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {ACADEMY_COURSES.map(course => {
-              const IconComponent = course.icon;
-              return <Card key={course.id} className="group hover:shadow-xl transition-all duration-300 bg-card border border-border h-full flex flex-col cursor-pointer" onClick={() => handleCourseClick(course.route)}>
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <IconComponent className="h-5 w-5 text-primary" />
-                          </div>
-                          <Badge variant="secondary" className="text-xs font-mono">
-                            {course.courseCode}
-                          </Badge>
-                        </div>
-                        <Badge className="bg-primary text-primary-foreground text-xs">
-                          {course.level}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-lg font-bold text-primary-foreground">
-                        {course.title}
-                      </CardTitle>
-                      <span className="text-sm text-slate-50">{course.duration}</span>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col pt-0">
-                      <p className="text-muted-foreground mb-6 text-sm pt-4">
-                        {course.description}
-                      </p>
-                      
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-sm text-foreground mb-2">Course Highlights:</h4>
-                        <ul className="space-y-2">
-                          {course.highlights.map((highlight, index) => <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-                              <ChevronRight className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                              <span>{highlight}</span>
-                            </li>)}
-                        </ul>
-                      </div>
-                      
-                      <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground" size="default" onClick={e => {
-                    e.stopPropagation();
-                    handleCourseClick(course.route);
-                  }}>
-                        Enter {course.courseCode}
-                        <ChevronRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </CardContent>
-                  </Card>;
-            })}
-            </div>
-          </div>
-        </div>
+        
 
         {/* Call to Action Section */}
         <div className="bg-muted/30 py-8 sm:py-12 px-4 sm:px-6">
