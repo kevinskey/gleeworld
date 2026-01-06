@@ -160,22 +160,22 @@ export const TourManagerLanding = ({
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium truncate text-primary-foreground">{person.name}</p>
-                      <p className="text-[10px] truncate text-blue-50">{person.role}</p>
+                      <p className="text-xs font-medium truncate">{person.name}</p>
+                      <p className="text-[10px] truncate text-muted-foreground">{person.role}</p>
                     </div>
                   </div>)}
               </div>}
             
             {/* Section Leaders */}
             {sectionLeaders.length > 0 && <div className="mt-3 pt-3 border-t">
-                <p className="text-xs font-medium mb-2 text-primary-foreground">Section Leaders</p>
+                <p className="text-xs font-medium mb-2">Section Leaders</p>
                 <div className="grid grid-cols-2 gap-2">
                   {sectionLeaders.map(person => <div key={person.role} className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/30 transition-colors">
                       <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center">
                         <Music className="h-3 w-3 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-medium truncate text-accent">{person.role}: {person.name}</p>
+                        <p className="text-[10px] font-medium truncate text-muted-foreground">{person.role}: {person.name}</p>
                       </div>
                     </div>)}
                 </div>
@@ -207,21 +207,21 @@ export const TourManagerLanding = ({
               </div> : <div className="space-y-2">
                 {tourEvents.map(event => <div key={event.id} className="flex items-start gap-3 p-2 rounded-lg border hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => onNavigate('tour-dates')}>
                     <div className="flex-shrink-0 w-10 text-center">
-                      <div className="text-lg font-bold leading-none text-primary-foreground">
+                      <div className="text-lg font-bold leading-none">
                         {format(new Date(event.start_date), 'd')}
                       </div>
-                      <div className="text-[10px] uppercase text-primary-foreground">
+                      <div className="text-[10px] uppercase text-muted-foreground">
                         {format(new Date(event.start_date), 'MMM')}
                       </div>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate text-primary-foreground">{event.title}</p>
-                      {(event.venue_name || event.location) && <p className="text-xs flex items-center gap-1 truncate text-secondary-foreground">
+                      <p className="text-sm font-medium truncate">{event.title}</p>
+                      {(event.venue_name || event.location) && <p className="text-xs flex items-center gap-1 truncate text-muted-foreground">
                           <MapPin className="h-3 w-3 flex-shrink-0" />
                           {event.venue_name || event.location}
                         </p>}
                     </div>
-                    <Badge variant="outline" className="text-[10px] flex-shrink-0 text-secondary-foreground">
+                    <Badge variant="outline" className="text-[10px] flex-shrink-0">
                       {format(new Date(event.start_date), 'EEE')}
                     </Badge>
                   </div>)}
