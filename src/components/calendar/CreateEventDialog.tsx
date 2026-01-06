@@ -344,12 +344,29 @@ export const CreateEventDialog = ({
     }
     setLoading(true);
     try {
+      // For recurring events, ensure end_date is on the same day as start_date (preserving end time)
+      let computedEndDate: Date | null = null;
+      if (formData.end_date && formData.start_date) {
+        if (formData.is_recurring) {
+          // For recurring events, end_date should represent "end time" of each occurrence
+          // Use start_date's date but end_date's time
+          computedEndDate = new Date(formData.start_date);
+          computedEndDate.setHours(formData.end_date.getHours(), formData.end_date.getMinutes(), 0, 0);
+          // If end time is before start time, assume it's the next day
+          if (computedEndDate <= formData.start_date) {
+            computedEndDate.setDate(computedEndDate.getDate() + 1);
+          }
+        } else {
+          computedEndDate = formData.end_date;
+        }
+      }
+
       const eventData = {
         title: formData.title.trim(),
         description: formData.description?.trim() || null,
         event_type: formData.event_type,
         start_date: formData.start_date ? formData.start_date.toISOString() : null,
-        end_date: formData.end_date ? formData.end_date.toISOString() : null,
+        end_date: computedEndDate ? computedEndDate.toISOString() : null,
         location: null,
         venue_name: formData.venue_name?.trim() || null,
         address: formData.address?.trim() || null,
@@ -688,13 +705,16 @@ export const CreateEventDialog = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">End</Label>
+                  <Label className="text-xs">{formData.is_recurring ? 'End Time' : 'End'}</Label>
                   <DateTimePicker
                     value={formData.end_date}
                     onChange={(date) => setFormData(prev => ({ ...prev, end_date: date }))}
-                    placeholder="Select end date"
+                    placeholder={formData.is_recurring ? "End time" : "Select end date"}
                     className="h-8 text-sm"
                   />
+                  {formData.is_recurring && (
+                    <p className="text-[10px] text-muted-foreground">Time each occurrence ends</p>
+                  )}
                 </div>
               </div>
 
