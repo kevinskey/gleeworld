@@ -248,6 +248,7 @@ import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
 import ChildrenGoAudition from "./pages/ChildrenGoAudition";
+import EventCheckinPage from "./pages/EventCheckinPage";
 import ChildrenGoAuditionsAdmin from "./pages/admin/ChildrenGoAuditionsAdmin";
 import ConcertTicketRequest from "./pages/ConcertTicketRequest";
 import ConcertTicketAdmin from "./pages/admin/ConcertTicketAdmin";
@@ -406,6 +407,15 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <ConcertTicketRequest />
+                  </PublicRoute>
+                } 
+              />
+              {/* Event Check-in via QR Code */}
+              <Route 
+                path="/event-checkin/:token" 
+                element={
+                  <PublicRoute>
+                    <EventCheckinPage />
                   </PublicRoute>
                 } 
               />
