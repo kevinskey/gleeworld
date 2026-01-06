@@ -15,19 +15,26 @@ import { useToast } from "@/hooks/use-toast";
 import { useUsers } from "@/hooks/useUsers";
 import { AddressInput } from "@/components/shared/AddressInput";
 import { UserPicker } from "./UserPicker";
-
 interface CreateEventDialogProps {
   onEventCreated: () => void;
   initialDate?: Date;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
-
-export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalOpen, onOpenChange }: CreateEventDialogProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+export const CreateEventDialog = ({
+  onEventCreated,
+  initialDate,
+  open: externalOpen,
+  onOpenChange
+}: CreateEventDialogProps) => {
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const [internalOpen, setInternalOpen] = useState(false);
-  
+
   // Use external control if provided, otherwise use internal state
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = (value: boolean) => {
@@ -64,7 +71,7 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
-  
+
   // Team member management state
   interface TeamMember {
     userId: string;
@@ -74,7 +81,7 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
   }
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [notificationMethod, setNotificationMethod] = useState<'email' | 'sms'>('email');
-  
+
   // Appointment scheduling state
   const [requiresAppointments, setRequiresAppointments] = useState(false);
   const [appointmentDate, setAppointmentDate] = useState<Date>();
@@ -82,25 +89,51 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
   const [appointmentDuration, setAppointmentDuration] = useState(30);
   const [appointmentType, setAppointmentType] = useState('planning');
   const [appointmentDescription, setAppointmentDescription] = useState('');
-  
-  // Calendar management state
-  const [calendars, setCalendars] = useState<{ id: string; name: string; color: string }[]>([]);
-  const [selectedCalendarId, setSelectedCalendarId] = useState('');
 
-  const eventTypes = [
-    { value: 'performance', label: 'Performance' },
-    { value: 'rehearsal', label: 'Rehearsal' },
-    { value: 'sectional', label: 'Sectional' },
-    { value: 'member-meeting', label: 'Member Meeting' },
-    { value: 'exec-meeting', label: 'Exec Board Meeting' },
-    { value: 'voice-lesson', label: 'Voice Lesson' },
-    { value: 'tutorial', label: 'Tutorial' },
-    { value: 'social', label: 'Social Event' },
-    { value: 'meeting', label: 'Meeting' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'audition', label: 'Audition' },
-    { value: 'other', label: 'Other' }
-  ];
+  // Calendar management state
+  const [calendars, setCalendars] = useState<{
+    id: string;
+    name: string;
+    color: string;
+  }[]>([]);
+  const [selectedCalendarId, setSelectedCalendarId] = useState('');
+  const eventTypes = [{
+    value: 'performance',
+    label: 'Performance'
+  }, {
+    value: 'rehearsal',
+    label: 'Rehearsal'
+  }, {
+    value: 'sectional',
+    label: 'Sectional'
+  }, {
+    value: 'member-meeting',
+    label: 'Member Meeting'
+  }, {
+    value: 'exec-meeting',
+    label: 'Exec Board Meeting'
+  }, {
+    value: 'voice-lesson',
+    label: 'Voice Lesson'
+  }, {
+    value: 'tutorial',
+    label: 'Tutorial'
+  }, {
+    value: 'social',
+    label: 'Social Event'
+  }, {
+    value: 'meeting',
+    label: 'Meeting'
+  }, {
+    value: 'workshop',
+    label: 'Workshop'
+  }, {
+    value: 'audition',
+    label: 'Audition'
+  }, {
+    value: 'other',
+    label: 'Other'
+  }];
 
   // Helper function to calculate attendance deadline (30 minutes after start)
   const calculateAttendanceDeadline = (startDate: string) => {
@@ -109,49 +142,42 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
     const deadline = new Date(start.getTime() + 30 * 60000); // Add 30 minutes
     return deadline.toISOString().slice(0, 16);
   };
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
         toast({
           title: "File too large",
           description: "Please select an image smaller than 5MB",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-      
       setImageFile(file);
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         setImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
-
   const removeImage = () => {
     setImageFile(null);
     setImagePreview('');
   };
-
   const uploadImage = async (file: File, eventId: string): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${eventId}-${Date.now()}.${fileExt}`;
       const filePath = `${user?.id}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('event-images')
-        .upload(filePath, file);
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('event-images').upload(filePath, file);
       if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('event-images')
-        .getPublicUrl(filePath);
-
+      const {
+        data
+      } = supabase.storage.from('event-images').getPublicUrl(filePath);
       return data.publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -162,35 +188,33 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
   // Load calendars when dialog opens
   const loadCalendars = async () => {
     try {
-      const { data, error } = await supabase
-        .from('gw_calendars')
-        .select('id, name, color, is_default')
-        .eq('is_visible', true)
-        .order('is_default', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('gw_calendars').select('id, name, color, is_default').eq('is_visible', true).order('is_default', {
+        ascending: false
+      });
       if (error) throw error;
 
       // If no calendars exist, create a default personal calendar
       if (!data || data.length === 0) {
         if (!user) throw new Error('You must be signed in to create a calendar.');
-        const { data: newCal, error: createCalError } = await supabase
-          .from('gw_calendars')
-          .insert({
-            name: 'My Events',
-            description: 'Personal event calendar',
-            color: '#6366f1',
-            is_visible: true,
-            is_default: true,
-            created_by: user.id
-          })
-          .select('id, name, color, is_default')
-          .single();
+        const {
+          data: newCal,
+          error: createCalError
+        } = await supabase.from('gw_calendars').insert({
+          name: 'My Events',
+          description: 'Personal event calendar',
+          color: '#6366f1',
+          is_visible: true,
+          is_default: true,
+          created_by: user.id
+        }).select('id, name, color, is_default').single();
         if (createCalError) throw createCalError;
         setCalendars([newCal]);
         setSelectedCalendarId(newCal.id);
         return;
       }
-
       setCalendars(data || []);
       // Set default calendar if no calendar is selected
       if (!selectedCalendarId && data && data.length > 0) {
@@ -202,11 +226,10 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
       toast({
         title: "Error",
         description: "Failed to load calendars",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   useEffect(() => {
     if (open) {
       loadCalendars();
@@ -216,14 +239,19 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
         const month = String(initialDate.getMonth() + 1).padStart(2, '0');
         const day = String(initialDate.getDate()).padStart(2, '0');
         const dateString = `${year}-${month}-${day}T00:00`;
-        setFormData(prev => ({ ...prev, start_date: dateString }));
+        setFormData(prev => ({
+          ...prev,
+          start_date: dateString
+        }));
       }
     }
   }, [open, initialDate]);
 
   // Team member management functions
-  const { users, loading: usersLoading } = useUsers();
-  
+  const {
+    users,
+    loading: usersLoading
+  } = useUsers();
   const addTeamMember = (userId: string) => {
     const user = users.find(u => u.id === userId);
     if (user && !teamMembers.find(tm => tm.userId === userId)) {
@@ -235,30 +263,30 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
       }]);
     }
   };
-
   const removeTeamMember = (userId: string) => {
     setTeamMembers(prev => prev.filter(tm => tm.userId !== userId));
   };
-
   const updateTeamMemberResponsibility = (userId: string, responsibility: string) => {
-    setTeamMembers(prev => prev.map(tm => 
-      tm.userId === userId ? { ...tm, responsibility } : tm
-    ));
+    setTeamMembers(prev => prev.map(tm => tm.userId === userId ? {
+      ...tm,
+      responsibility
+    } : tm));
   };
-
   const generateDescription = async () => {
     if (!formData.title) {
       toast({
         title: "Missing Information",
         description: "Please enter an event title first",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setGeneratingDescription(true);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-event-description', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('generate-event-description', {
         body: {
           title: formData.title,
           eventType: formData.event_type,
@@ -266,26 +294,26 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
           maxAttendees: formData.max_attendees
         }
       });
-
       if (error) throw error;
-
-      setFormData(prev => ({ ...prev, description: data.description }));
+      setFormData(prev => ({
+        ...prev,
+        description: data.description
+      }));
       toast({
         title: "Success",
-        description: "AI-generated description added!",
+        description: "AI-generated description added!"
       });
     } catch (err) {
       console.error('Error generating description:', err);
       toast({
         title: "Error",
         description: "Failed to generate description",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setGeneratingDescription(false);
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -295,29 +323,26 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
       toast({
         title: "Validation Error",
         description: "Event title is required",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     if (!formData.start_date) {
       toast({
-        title: "Validation Error", 
+        title: "Validation Error",
         description: "Start date and time is required",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     if (!selectedCalendarId) {
       toast({
         title: "Validation Error",
         description: "Please select a calendar for this event",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setLoading(true);
     try {
       const eventData = {
@@ -345,15 +370,11 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
         recurrence_end_date: formData.is_recurring && formData.recurrence_end_date ? new Date(formData.recurrence_end_date + ':00').toISOString() : null,
         max_occurrences: formData.is_recurring ? formData.max_occurrences : null
       };
-
       console.log('Creating event with data:', eventData);
-
-      const { data: newEvent, error } = await supabase
-        .from('gw_events')
-        .insert([eventData])
-        .select()
-        .single();
-
+      const {
+        data: newEvent,
+        error
+      } = await supabase.from('gw_events').insert([eventData]).select().single();
       if (error) {
         console.error('Database error:', error);
         throw error;
@@ -365,10 +386,9 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
         imageUrl = await uploadImage(imageFile, newEvent.id);
         if (imageUrl) {
           // Update the event with the image URL in the correct table
-          await supabase
-            .from('gw_events')
-            .update({ image_url: imageUrl })
-            .eq('id', newEvent.id);
+          await supabase.from('gw_events').update({
+            image_url: imageUrl
+          }).eq('id', newEvent.id);
         }
       }
 
@@ -379,11 +399,9 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
           user_id: member.userId,
           role: member.responsibility || 'Team Member'
         }));
-
-        const { error: teamError } = await supabase
-          .from('event_team_members')
-          .insert(teamMemberData);
-
+        const {
+          error: teamError
+        } = await supabase.from('event_team_members').insert(teamMemberData);
         if (teamError) {
           console.error('Error saving team members:', teamError);
         }
@@ -412,8 +430,7 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
             // Stagger appointments by the duration + 5 min buffer
             const appointmentDateTime = new Date(appointmentDate);
             const [hours, minutes] = appointmentTime.split(':').map(Number);
-            appointmentDateTime.setHours(hours, minutes + (index * (appointmentDuration + 5)), 0, 0);
-
+            appointmentDateTime.setHours(hours, minutes + index * (appointmentDuration + 5), 0, 0);
             const appointmentData = {
               title: `${formData.title} - ${member.responsibility || 'Team Planning'}`,
               description: appointmentDescription || `Planning meeting for ${formData.title} with ${member.name}`,
@@ -427,17 +444,10 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
               created_by: user.id,
               assigned_to: member.userId
             };
-
-            return supabase
-              .from('gw_appointments')
-              .insert(appointmentData)
-              .select()
-              .single();
+            return supabase.from('gw_appointments').insert(appointmentData).select().single();
           });
-
           const appointmentResults = await Promise.all(appointmentPromises);
           const successfulAppointments = appointmentResults.filter(result => !result.error);
-          
           if (successfulAppointments.length > 0) {
             // Send appointment notifications
             await supabase.functions.invoke('send-appointment-notification', {
@@ -475,23 +485,22 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
       // Create recurring events if enabled
       if (formData.is_recurring && newEvent) {
         try {
-          const { data: recurrenceCount, error: recurrenceError } = await supabase.rpc(
-            'create_recurring_event_instances',
-            {
-              parent_event_id_param: newEvent.id,
-              recurrence_type_param: formData.recurrence_type,
-              recurrence_interval_param: formData.recurrence_interval,
-              recurrence_end_date_param: formData.recurrence_end_date ? new Date(formData.recurrence_end_date + 'T23:59:59').toISOString() : null,
-              max_occurrences_param: formData.max_occurrences
-            }
-          );
-
+          const {
+            data: recurrenceCount,
+            error: recurrenceError
+          } = await supabase.rpc('create_recurring_event_instances', {
+            parent_event_id_param: newEvent.id,
+            recurrence_type_param: formData.recurrence_type,
+            recurrence_interval_param: formData.recurrence_interval,
+            recurrence_end_date_param: formData.recurrence_end_date ? new Date(formData.recurrence_end_date + 'T23:59:59').toISOString() : null,
+            max_occurrences_param: formData.max_occurrences
+          });
           if (recurrenceError) {
             console.error('Error creating recurring events:', recurrenceError);
             toast({
               title: "Warning",
               description: "Event created but recurring instances failed to generate",
-              variant: "destructive",
+              variant: "destructive"
             });
           } else {
             console.log(`Created ${recurrenceCount} recurring events`);
@@ -500,17 +509,12 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
           console.error('Error creating recurring events:', recurrenceErr);
         }
       }
-
       const totalNotifications = teamMembers.length + selectedUserIds.length;
-      const successMessage = formData.is_recurring 
-        ? `Event created successfully with recurring instances!${totalNotifications > 0 ? ` Notifications sent to ${totalNotifications} user(s).` : ''}`
-        : `Event created successfully!${totalNotifications > 0 ? ` Notifications sent to ${totalNotifications} user(s).` : ''}`;
-      
+      const successMessage = formData.is_recurring ? `Event created successfully with recurring instances!${totalNotifications > 0 ? ` Notifications sent to ${totalNotifications} user(s).` : ''}` : `Event created successfully!${totalNotifications > 0 ? ` Notifications sent to ${totalNotifications} user(s).` : ''}`;
       toast({
         title: "Success",
-        description: successMessage,
+        description: successMessage
       });
-
       setOpen(false);
       setFormData({
         title: '',
@@ -549,29 +553,19 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
       onEventCreated();
     } catch (err) {
       console.error('Error creating event:', err);
-      const message = err instanceof Error
-        ? err.message
-        : (typeof err === 'object' && err && 'message' in (err as any)
-            ? (err as any).message
-            : 'Failed to create event');
+      const message = err instanceof Error ? err.message : typeof err === 'object' && err && 'message' in (err as any) ? (err as any).message : 'Failed to create event';
       toast({
         title: "Error",
         description: message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
+  return <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1 text-xs w-full h-12 border-primary/30 hover:bg-primary/10 px-2 flex flex-col items-center justify-center">
-          <Plus className="h-4 w-4 flex-shrink-0" />
-          <span className="text-[10px] leading-tight hidden sm:inline">Add Event</span>
-          <span className="text-[10px] leading-tight sm:hidden">Add</span>
-        </Button>
+        
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -586,123 +580,91 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
             {/* Calendar Selection */}
             <div className="space-y-2">
               <Label htmlFor="calendar">Calendar *</Label>
-              <Select
-                value={selectedCalendarId}
-                onValueChange={setSelectedCalendarId}
-              >
+              <Select value={selectedCalendarId} onValueChange={setSelectedCalendarId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a calendar..." />
                 </SelectTrigger>
                 <SelectContent className="max-h-40 overflow-y-auto z-50 bg-background border shadow-lg">
-                  {calendars.map((calendar) => (
-                    <SelectItem key={calendar.id} value={calendar.id}>
+                  {calendars.map(calendar => <SelectItem key={calendar.id} value={calendar.id}>
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: calendar.color }}
-                        />
+                        <div className="w-3 h-3 rounded-full" style={{
+                      backgroundColor: calendar.color
+                    }} />
                         <span>{calendar.name}</span>
                       </div>
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="title">Event Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="e.g., Fall Concert"
-                required
-              />
+              <Input id="title" value={formData.title} onChange={e => setFormData(prev => ({
+              ...prev,
+              title: e.target.value
+            }))} placeholder="e.g., Fall Concert" required />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="description">Description</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={generateDescription}
-                  disabled={generatingDescription || !formData.title}
-                  className="h-8"
-                >
+                <Button type="button" variant="outline" size="sm" onClick={generateDescription} disabled={generatingDescription || !formData.title} className="h-8">
                   <Sparkles className="h-3 w-3 mr-1" />
                   {generatingDescription ? "Generating..." : "AI Generate"}
                 </Button>
               </div>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Event description... (or use AI Generate)"
-                rows={3}
-              />
+              <Textarea id="description" value={formData.description} onChange={e => setFormData(prev => ({
+              ...prev,
+              description: e.target.value
+            }))} placeholder="Event description... (or use AI Generate)" rows={3} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="event_type">Event Type</Label>
-                <Select
-                  value={formData.event_type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, event_type: value }))}
-                >
+                <Select value={formData.event_type} onValueChange={value => setFormData(prev => ({
+                ...prev,
+                event_type: value
+              }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {eventTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
+                    {eventTypes.map(type => <SelectItem key={type.value} value={type.value}>
                         {type.label}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="max_attendees">Max Attendees</Label>
-                <Input
-                  id="max_attendees"
-                  type="number"
-                  value={formData.max_attendees}
-                  onChange={(e) => setFormData(prev => ({ ...prev, max_attendees: e.target.value }))}
-                  placeholder="Optional"
-                />
+                <Input id="max_attendees" type="number" value={formData.max_attendees} onChange={e => setFormData(prev => ({
+                ...prev,
+                max_attendees: e.target.value
+              }))} placeholder="Optional" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start_date">Start Date & Time *</Label>
-                <Input
-                  id="start_date"
-                  type="datetime-local"
-                  value={formData.start_date}
-                  onChange={(e) => {
-                    const newStartDate = e.target.value;
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      start_date: newStartDate,
-                      attendance_deadline: prev.attendance_required && newStartDate ? calculateAttendanceDeadline(newStartDate) : prev.attendance_deadline
-                    }));
-                  }}
-                  required
-                />
+                <Input id="start_date" type="datetime-local" value={formData.start_date} onChange={e => {
+                const newStartDate = e.target.value;
+                setFormData(prev => ({
+                  ...prev,
+                  start_date: newStartDate,
+                  attendance_deadline: prev.attendance_required && newStartDate ? calculateAttendanceDeadline(newStartDate) : prev.attendance_deadline
+                }));
+              }} required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="end_date">End Date & Time</Label>
-                <Input
-                  id="end_date"
-                  type="datetime-local"
-                  value={formData.end_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                />
+                <Input id="end_date" type="datetime-local" value={formData.end_date} onChange={e => setFormData(prev => ({
+                ...prev,
+                end_date: e.target.value
+              }))} />
               </div>
             </div>
 
@@ -725,32 +687,25 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                     Should members be required to mark attendance?
                   </p>
                 </div>
-                <Switch
-                  checked={formData.attendance_required}
-                  onCheckedChange={(checked) => {
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      attendance_required: checked,
-                      attendance_deadline: checked && prev.start_date ? calculateAttendanceDeadline(prev.start_date) : prev.attendance_deadline
-                    }));
-                  }}
-                />
+                <Switch checked={formData.attendance_required} onCheckedChange={checked => {
+                setFormData(prev => ({
+                  ...prev,
+                  attendance_required: checked,
+                  attendance_deadline: checked && prev.start_date ? calculateAttendanceDeadline(prev.start_date) : prev.attendance_deadline
+                }));
+              }} />
               </div>
 
-              {formData.attendance_required && (
-                <div className="space-y-4 p-4 border rounded-lg bg-background">
+              {formData.attendance_required && <div className="space-y-4 p-4 border rounded-lg bg-background">
                   <div className="space-y-2">
                     <Label htmlFor="attendance_deadline">
                       Attendance Deadline
                       <span className="text-xs text-muted-foreground ml-2">(Automatically set to 30 minutes after start)</span>
                     </Label>
-                    <Input
-                      id="attendance_deadline"
-                      type="datetime-local"
-                      value={formData.attendance_deadline}
-                      onChange={(e) => setFormData(prev => ({ ...prev, attendance_deadline: e.target.value }))}
-                      placeholder="When must attendance be marked?"
-                    />
+                    <Input id="attendance_deadline" type="datetime-local" value={formData.attendance_deadline} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  attendance_deadline: e.target.value
+                }))} placeholder="When must attendance be marked?" />
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Members must mark their attendance before this time
@@ -763,10 +718,10 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                         Can members mark attendance after the start time?
                       </p>
                     </div>
-                    <Switch
-                      checked={formData.late_arrival_allowed}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, late_arrival_allowed: checked }))}
-                    />
+                    <Switch checked={formData.late_arrival_allowed} onCheckedChange={checked => setFormData(prev => ({
+                  ...prev,
+                  late_arrival_allowed: checked
+                }))} />
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -776,80 +731,52 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                         Must members provide an excuse if they can't attend?
                       </p>
                     </div>
-                    <Switch
-                      checked={formData.excuse_required}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, excuse_required: checked }))}
-                    />
+                    <Switch checked={formData.excuse_required} onCheckedChange={checked => setFormData(prev => ({
+                  ...prev,
+                  excuse_required: checked
+                }))} />
                   </div>
-                </div>
-              )}
+                </div>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="venue_name">Venue Name</Label>
-              <Input
-                id="venue_name"
-                value={formData.venue_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, venue_name: e.target.value }))}
-                placeholder="e.g., Memorial Auditorium"
-              />
+              <Input id="venue_name" value={formData.venue_name} onChange={e => setFormData(prev => ({
+              ...prev,
+              venue_name: e.target.value
+            }))} placeholder="e.g., Memorial Auditorium" />
             </div>
 
-            <AddressInput
-              id="address"
-              label="Full Address"
-              value={formData.address}
-              onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
-              placeholder="Complete street address"
-              onPlaceSelect={(place) => {
-                if (place.formatted_address) {
-                  setFormData(prev => ({ ...prev, address: place.formatted_address || '' }));
-                }
-              }}
-            />
+            <AddressInput id="address" label="Full Address" value={formData.address} onChange={value => setFormData(prev => ({
+            ...prev,
+            address: value
+          }))} placeholder="Complete street address" onPlaceSelect={place => {
+            if (place.formatted_address) {
+              setFormData(prev => ({
+                ...prev,
+                address: place.formatted_address || ''
+              }));
+            }
+          }} />
 
             <div className="space-y-2">
               <Label htmlFor="event_image">Event Image</Label>
               <div className="space-y-2">
-                {imagePreview ? (
-                  <div className="relative">
-                    <img
-                      src={imagePreview}
-                      alt="Event preview"
-                      className="w-full h-32 object-cover rounded-md border"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={removeImage}
-                      className="absolute top-2 right-2"
-                    >
+                {imagePreview ? <div className="relative">
+                    <img src={imagePreview} alt="Event preview" className="w-full h-32 object-cover rounded-md border" />
+                    <Button type="button" variant="outline" size="sm" onClick={removeImage} className="absolute top-2 right-2">
                       <X className="h-4 w-4" />
                     </Button>
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
+                  </div> : <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
                     <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                     <p className="text-sm text-muted-foreground mb-2">
                       Upload an event image to display on the landing page
                     </p>
-                    <Input
-                      id="event_image"
-                      type="file"
-                      accept="image/*,.heic,.heif"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('event_image')?.click()}
-                    >
+                    <Input id="event_image" type="file" accept="image/*,.heic,.heif" onChange={handleImageUpload} className="hidden" />
+                    <Button type="button" variant="outline" onClick={() => document.getElementById('event_image')?.click()}>
                       Choose Image
                     </Button>
-                  </div>
-                )}
+                  </div>}
                 <p className="text-xs text-muted-foreground">
                   Maximum file size: 5MB. Supported formats: JPG, PNG, WebP
                 </p>
@@ -864,10 +791,10 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                     Do attendees need to register for this event?
                   </p>
                 </div>
-                <Switch
-                  checked={formData.registration_required}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, registration_required: checked }))}
-                />
+                <Switch checked={formData.registration_required} onCheckedChange={checked => setFormData(prev => ({
+                ...prev,
+                registration_required: checked
+              }))} />
               </div>
 
               <div className="flex items-center justify-between">
@@ -877,10 +804,10 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                     Should this event be visible to the public?
                   </p>
                 </div>
-                <Switch
-                  checked={formData.is_public}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_public: checked }))}
-                />
+                <Switch checked={formData.is_public} onCheckedChange={checked => setFormData(prev => ({
+                ...prev,
+                is_public: checked
+              }))} />
               </div>
             </div>
 
@@ -903,21 +830,20 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                     Automatically create future instances of this event
                   </p>
                 </div>
-                <Switch
-                  checked={formData.is_recurring}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_recurring: checked }))}
-                />
+                <Switch checked={formData.is_recurring} onCheckedChange={checked => setFormData(prev => ({
+                ...prev,
+                is_recurring: checked
+              }))} />
               </div>
 
-              {formData.is_recurring && (
-                <div className="space-y-4 p-4 border rounded-lg bg-background">
+              {formData.is_recurring && <div className="space-y-4 p-4 border rounded-lg bg-background">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Recurrence Pattern</Label>
-                      <Select
-                        value={formData.recurrence_type}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, recurrence_type: value }))}
-                      >
+                      <Select value={formData.recurrence_type} onValueChange={value => setFormData(prev => ({
+                    ...prev,
+                    recurrence_type: value
+                  }))}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -932,17 +858,12 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                     <div className="space-y-2">
                       <Label>Repeat Every</Label>
                       <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="1"
-                          max="12"
-                          value={formData.recurrence_interval}
-                          onChange={(e) => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(e.target.value) || 1 }))}
-                          className="w-20"
-                        />
+                        <Input type="number" min="1" max="12" value={formData.recurrence_interval} onChange={e => setFormData(prev => ({
+                      ...prev,
+                      recurrence_interval: parseInt(e.target.value) || 1
+                    }))} className="w-20" />
                         <span className="text-sm text-muted-foreground">
-                          {formData.recurrence_type === 'daily' ? 'days' : 
-                           formData.recurrence_type === 'weekly' ? 'weeks' : 'months'}
+                          {formData.recurrence_type === 'daily' ? 'days' : formData.recurrence_type === 'weekly' ? 'weeks' : 'months'}
                         </span>
                       </div>
                     </div>
@@ -951,35 +872,26 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>End Date (Optional)</Label>
-                      <Input
-                        type="date"
-                        value={formData.recurrence_end_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
-                      />
+                      <Input type="date" value={formData.recurrence_end_date} onChange={e => setFormData(prev => ({
+                    ...prev,
+                    recurrence_end_date: e.target.value
+                  }))} />
                     </div>
 
                     <div className="space-y-2">
                       <Label>Max Occurrences</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="365"
-                        value={formData.max_occurrences}
-                        onChange={(e) => setFormData(prev => ({ ...prev, max_occurrences: parseInt(e.target.value) || 10 }))}
-                        placeholder="10"
-                      />
+                      <Input type="number" min="1" max="365" value={formData.max_occurrences} onChange={e => setFormData(prev => ({
+                    ...prev,
+                    max_occurrences: parseInt(e.target.value) || 10
+                  }))} placeholder="10" />
                     </div>
                   </div>
 
                   <p className="text-xs text-muted-foreground">
                     Recurring events will be created automatically when you save this event.
-                    {formData.recurrence_end_date ? 
-                      ` Events will repeat until ${new Date(formData.recurrence_end_date).toLocaleDateString()}.` :
-                      ` Up to ${formData.max_occurrences} future events will be created.`
-                    }
+                    {formData.recurrence_end_date ? ` Events will repeat until ${new Date(formData.recurrence_end_date).toLocaleDateString()}.` : ` Up to ${formData.max_occurrences} future events will be created.`}
                   </p>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Team Member Management Section */}
@@ -999,70 +911,41 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                     <SelectValue placeholder="Select a team member to add..." />
                   </SelectTrigger>
                   <SelectContent className="max-h-40 overflow-y-auto z-50 bg-background border shadow-lg">
-                    {usersLoading ? (
-                      <SelectItem value="loading" disabled>Loading users...</SelectItem>
-                    ) : (
-                      users
-                        .filter(user => !teamMembers.find(tm => tm.userId === user.id))
-                        .map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
+                    {usersLoading ? <SelectItem value="loading" disabled>Loading users...</SelectItem> : users.filter(user => !teamMembers.find(tm => tm.userId === user.id)).map(user => <SelectItem key={user.id} value={user.id}>
                             <div className="flex flex-col">
                               <span className="font-medium">
                                 {user.full_name || user.email}
                               </span>
-                              {user.full_name && user.email && (
-                                <span className="text-sm text-muted-foreground">
+                              {user.full_name && user.email && <span className="text-sm text-muted-foreground">
                                   {user.email}
-                                </span>
-                              )}
+                                </span>}
                             </div>
-                          </SelectItem>
-                        ))
-                    )}
+                          </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Team Members List */}
-              {teamMembers.length > 0 && (
-                <div className="space-y-3">
+              {teamMembers.length > 0 && <div className="space-y-3">
                   <Label>Team Members & Responsibilities</Label>
-                  {teamMembers.map((member) => (
-                    <div key={member.userId} className="p-3 border rounded-lg space-y-2">
+                  {teamMembers.map(member => <div key={member.userId} className="p-3 border rounded-lg space-y-2">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">{member.name}</p>
                           <p className="text-sm text-muted-foreground">{member.email}</p>
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeTeamMember(member.userId)}
-                          className="text-destructive hover:text-destructive"
-                        >
+                        <Button type="button" variant="ghost" size="sm" onClick={() => removeTeamMember(member.userId)} className="text-destructive hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      <Input
-                        placeholder="Enter their responsibility/role..."
-                        value={member.responsibility}
-                        onChange={(e) => updateTeamMemberResponsibility(member.userId, e.target.value)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+                      <Input placeholder="Enter their responsibility/role..." value={member.responsibility} onChange={e => updateTeamMemberResponsibility(member.userId, e.target.value)} />
+                    </div>)}
+                </div>}
 
               {/* Notification Preferences */}
-              {teamMembers.length > 0 && (
-                <div className="space-y-3">
+              {teamMembers.length > 0 && <div className="space-y-3">
                   <Label>Notification Method</Label>
-                  <RadioGroup 
-                    value={notificationMethod} 
-                    onValueChange={(value: 'email' | 'sms') => setNotificationMethod(value)}
-                    className="flex space-x-4"
-                  >
+                  <RadioGroup value={notificationMethod} onValueChange={(value: 'email' | 'sms') => setNotificationMethod(value)} className="flex space-x-4">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="email" id="email" />
                       <Label htmlFor="email">Email</Label>
@@ -1072,27 +955,17 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                       <Label htmlFor="sms">SMS/Text</Label>
                     </div>
                   </RadioGroup>
-                </div>
-              )}
+                </div>}
 
               {/* Custom Message */}
-              {teamMembers.length > 0 && (
-                <div className="space-y-2">
+              {teamMembers.length > 0 && <div className="space-y-2">
                   <Label htmlFor="notificationMessage">Custom Message (Optional)</Label>
-                  <Textarea
-                    id="notificationMessage"
-                    value={notificationMessage}
-                    onChange={(e) => setNotificationMessage(e.target.value)}
-                    placeholder="Add a personal message to the notification..."
-                    rows={3}
-                  />
-                </div>
-              )}
+                  <Textarea id="notificationMessage" value={notificationMessage} onChange={e => setNotificationMessage(e.target.value)} placeholder="Add a personal message to the notification..." rows={3} />
+                </div>}
             </div>
 
             {/* Appointment Scheduling Section */}
-            {teamMembers.length > 0 && (
-              <div className="space-y-4 border-t pt-4">
+            {teamMembers.length > 0 && <div className="space-y-4 border-t pt-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
@@ -1104,47 +977,28 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                         Schedule individual planning meetings with team members
                       </p>
                     </div>
-                    <Switch
-                      checked={requiresAppointments}
-                      onCheckedChange={setRequiresAppointments}
-                    />
+                    <Switch checked={requiresAppointments} onCheckedChange={setRequiresAppointments} />
                   </div>
                 </div>
 
-                {requiresAppointments && (
-                  <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                {requiresAppointments && <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Appointment Date */}
                       <div className="space-y-2">
                         <Label>Appointment Date</Label>
-                        <Calendar
-                          mode="single"
-                          selected={appointmentDate}
-                          onSelect={setAppointmentDate}
-                          className="rounded-md border w-full"
-                          disabled={(date) => date < new Date()}
-                        />
+                        <Calendar mode="single" selected={appointmentDate} onSelect={setAppointmentDate} className="rounded-md border w-full" disabled={date => date < new Date()} />
                       </div>
 
                       {/* Appointment Details */}
                       <div className="space-y-3">
                         <div className="space-y-2">
                           <Label htmlFor="appointmentTime">Time</Label>
-                          <Input
-                            id="appointmentTime"
-                            type="time"
-                            value={appointmentTime}
-                            onChange={(e) => setAppointmentTime(e.target.value)}
-                            placeholder="Select time"
-                          />
+                          <Input id="appointmentTime" type="time" value={appointmentTime} onChange={e => setAppointmentTime(e.target.value)} placeholder="Select time" />
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="appointmentDuration">Duration (minutes)</Label>
-                          <Select 
-                            value={appointmentDuration.toString()} 
-                            onValueChange={(value) => setAppointmentDuration(parseInt(value))}
-                          >
+                          <Select value={appointmentDuration.toString()} onValueChange={value => setAppointmentDuration(parseInt(value))}>
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
@@ -1176,19 +1030,12 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
 
                         <div className="space-y-2">
                           <Label htmlFor="appointmentDescription">Meeting Description</Label>
-                          <Textarea
-                            id="appointmentDescription"
-                            value={appointmentDescription}
-                            onChange={(e) => setAppointmentDescription(e.target.value)}
-                            placeholder="Describe the purpose of these appointments..."
-                            rows={3}
-                          />
+                          <Textarea id="appointmentDescription" value={appointmentDescription} onChange={e => setAppointmentDescription(e.target.value)} placeholder="Describe the purpose of these appointments..." rows={3} />
                         </div>
                       </div>
                     </div>
 
-                    {appointmentDate && appointmentTime && (
-                      <div className="p-3 bg-primary/10 rounded-lg">
+                    {appointmentDate && appointmentTime && <div className="p-3 bg-primary/10 rounded-lg">
                         <p className="text-sm font-medium flex items-center gap-2">
                           <Clock className="h-4 w-4" />
                           Appointments will be scheduled for:
@@ -1196,12 +1043,9 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                         <p className="text-sm text-muted-foreground mt-1">
                           {appointmentDate.toLocaleDateString()} at {appointmentTime} ({appointmentDuration} min each) with {teamMembers.length} team member{teamMembers.length > 1 ? 's' : ''}
                         </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                      </div>}
+                  </div>}
+              </div>}
 
             {/* General User Notifications Section */}
             <div className="space-y-4 border-t pt-4">
@@ -1213,10 +1057,7 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
                 <p className="text-sm text-muted-foreground">
                   Select additional users to notify about this event (not team members)
                 </p>
-                <UserPicker
-                  selectedUserIds={selectedUserIds}
-                  onSelectionChange={setSelectedUserIds}
-                />
+                <UserPicker selectedUserIds={selectedUserIds} onSelectionChange={setSelectedUserIds} />
               </div>
             </div>
           </div>
@@ -1231,6 +1072,5 @@ export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalO
           </div>
         </form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
