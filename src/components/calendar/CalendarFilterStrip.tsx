@@ -14,6 +14,7 @@ interface Calendar {
   color: string;
   is_visible: boolean;
   is_default?: boolean;
+  created_by?: string | null;
 }
 
 interface CalendarFilterStripProps {
@@ -47,7 +48,7 @@ export const CalendarFilterStrip = ({ onCalendarsChange }: CalendarFilterStripPr
     try {
       const { data, error } = await supabase
         .from('gw_calendars')
-        .select('id, name, color, is_visible, is_default')
+        .select('id, name, color, is_visible, is_default, created_by')
         .eq('is_visible', true)
         .order('name', { ascending: true });
 
@@ -86,8 +87,31 @@ export const CalendarFilterStrip = ({ onCalendarsChange }: CalendarFilterStripPr
 
       if (data) {
         setCalendarControlsEnabled(data.calendar_controls_enabled);
+
+        // If the user has saved a custom selection, respect it,
+        // but automatically include any "system" calendars (created_by is null)
+        // so global calendars like Spelman don't disappear for existing users.
         if (data.selected_calendars && data.selected_calendars.length > 0) {
-          setSelectedCalendarIds(data.selected_calendars);
+          let systemCalendarIds: string[] = [];
+
+          if (calendars.length > 0) {
+            systemCalendarIds = calendars
+              .filter((cal) => !cal.created_by)
+              .map((cal) => cal.id);
+          } else {
+            const { data: systemCalendars } = await supabase
+              .from('gw_calendars')
+              .select('id')
+              .is('created_by', null)
+              .eq('is_visible', true);
+            systemCalendarIds = (systemCalendars || []).map((c) => c.id);
+          }
+
+          const merged = Array.from(new Set([...data.selected_calendars, ...systemCalendarIds]));
+          setSelectedCalendarIds(merged);
+
+          // Persist the merge once so the user can still toggle calendars later.
+          await saveSelectedCalendars(merged);
         }
       } else {
         // Create default preferences for new user
