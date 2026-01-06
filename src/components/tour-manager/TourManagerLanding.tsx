@@ -39,51 +39,9 @@ export const TourManagerLanding = ({
 }: TourManagerLandingProps) => {
   const navigate = useNavigate();
   const [tourEvents, setTourEvents] = useState<TourEvent[]>([]);
-  const [tourTitle, setTourTitle] = useState('Spring Tour 2026');
-
-  // Key personnel - in production this would come from database
-  const keyPersonnel: KeyPerson[] = [{
-    role: 'Tour Manager',
-    name: 'Dr. Kevin Johnson',
-    icon: Users
-  }, {
-    role: 'Asst. Tour Manager',
-    name: 'TBD',
-    icon: Users
-  }, {
-    role: 'Student Conductor',
-    name: 'TBD',
-    icon: Mic2
-  }, {
-    role: 'Treasurer',
-    name: 'TBD',
-    icon: DollarSign
-  }, {
-    role: 'Librarian',
-    name: 'TBD',
-    icon: BookOpen
-  }, {
-    role: 'Setup Crew Manager',
-    name: 'TBD',
-    icon: UsersRound
-  }];
-  const sectionLeaders: KeyPerson[] = [{
-    role: 'Soprano I',
-    name: 'TBD',
-    icon: Music
-  }, {
-    role: 'Soprano II',
-    name: 'TBD',
-    icon: Music
-  }, {
-    role: 'Alto I',
-    name: 'TBD',
-    icon: Music
-  }, {
-    role: 'Alto II',
-    name: 'TBD',
-    icon: Music
-  }];
+  const [tourTitle, setTourTitle] = useState<string | null>(null);
+  const [keyPersonnel, setKeyPersonnel] = useState<KeyPerson[]>([]);
+  const [sectionLeaders, setSectionLeaders] = useState<KeyPerson[]>([]);
   const defaultStats = {
     upcomingDates: stats?.upcomingDates ?? 0,
     activeRoutes: stats?.activeRoutes ?? 0,
@@ -153,8 +111,10 @@ export const TourManagerLanding = ({
       {/* Tour Title & Quick Stats */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">{tourTitle}</h2>
-          <p className="text-xs text-muted-foreground">Tour overview and key information</p>
+          <h2 className="text-lg font-semibold text-foreground">{tourTitle || 'Tour Overview'}</h2>
+          <p className="text-xs text-muted-foreground">
+            {tourTitle ? 'Tour overview and key information' : 'No active tour configured'}
+          </p>
         </div>
         <Button variant="outline" size="sm" onClick={handleViewCalendar} className="gap-1.5">
           <CalendarDays className="h-3.5 w-3.5" />
@@ -182,34 +142,44 @@ export const TourManagerLanding = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
-            <div className="grid grid-cols-2 gap-2">
-              {keyPersonnel.map(person => <div key={person.role} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
-                  <Avatar className="h-7 w-7">
-                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                      {person.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium truncate text-primary-foreground">{person.name}</p>
-                    <p className="text-[10px] truncate text-blue-50">{person.role}</p>
-                  </div>
-                </div>)}
-            </div>
-            
-            {/* Section Leaders */}
-            <div className="mt-3 pt-3 border-t">
-              <p className="text-xs font-medium mb-2 text-primary-foreground">Section Leaders</p>
+            {keyPersonnel.length === 0 ? (
+              <div className="text-center py-6">
+                <Users className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">No personnel assigned</p>
+                <p className="text-xs text-muted-foreground mt-1">Configure tour personnel in settings</p>
+              </div>
+            ) : (
               <div className="grid grid-cols-2 gap-2">
-                {sectionLeaders.map(person => <div key={person.role} className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/30 transition-colors">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Music className="h-3 w-3 text-primary" />
-                    </div>
+                {keyPersonnel.map(person => <div key={person.role} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <Avatar className="h-7 w-7">
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                        {person.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-medium truncate text-accent">{person.role}: {person.name}</p>
+                      <p className="text-xs font-medium truncate text-primary-foreground">{person.name}</p>
+                      <p className="text-[10px] truncate text-blue-50">{person.role}</p>
                     </div>
                   </div>)}
               </div>
-            </div>
+            )}
+            
+            {/* Section Leaders */}
+            {sectionLeaders.length > 0 && (
+              <div className="mt-3 pt-3 border-t">
+                <p className="text-xs font-medium mb-2 text-primary-foreground">Section Leaders</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {sectionLeaders.map(person => <div key={person.role} className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/30 transition-colors">
+                      <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Music className="h-3 w-3 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-medium truncate text-accent">{person.role}: {person.name}</p>
+                      </div>
+                    </div>)}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
