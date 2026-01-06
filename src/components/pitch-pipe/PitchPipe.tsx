@@ -174,7 +174,7 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   };
 
   return (
-    <div className={`flex flex-col items-center gap-4 ${className}`}>
+    <div className={`flex items-center justify-center ${className}`}>
       {/* Circular Pitch Pipe */}
       <div 
         className="relative w-72 h-72 sm:w-80 sm:h-80 rounded-full shadow-2xl select-none"
@@ -183,23 +183,40 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
           boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.5), 0 8px 32px rgba(0,0,0,0.4), 0 0 0 4px #2a2a2a',
         }}
       >
-        {/* Center decoration */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full flex items-center justify-center"
+        {/* Center area with controls */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full flex flex-col items-center justify-center"
           style={{
             background: 'radial-gradient(circle at 40% 40%, #3a3a3a 0%, #1a1a1a 100%)',
             boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.6), 0 1px 2px rgba(255,255,255,0.1)',
           }}
         >
-          <div className="text-center">
-            <div className="text-[10px] text-gray-400 font-medium tracking-wider">CHROMATIC</div>
-            <div className="text-[10px] text-gray-400 font-medium tracking-wider">PITCH PIPE</div>
-            <div className="text-2xl text-gray-300 mt-1">𝄞</div>
+          <div className="text-[8px] text-gray-400 font-medium tracking-wider">CHROMATIC</div>
+          <div className="text-[8px] text-gray-400 font-medium tracking-wider mb-1">PITCH PIPE</div>
+          
+          {/* Volume control in center */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={toggleMute}
+              className="p-0.5 hover:bg-white/10 rounded-full transition-colors"
+            >
+              {isMuted ? <VolumeX className="h-3 w-3 text-gray-500" /> : <Volume2 className="h-3 w-3 text-gray-400" />}
+            </button>
+            <Slider
+              value={volume}
+              onValueChange={handleVolumeChange}
+              max={1}
+              min={0}
+              step={0.1}
+              className="w-10 [&_[role=slider]]:h-2 [&_[role=slider]]:w-2 [&_.bg-primary]:bg-gray-500"
+            />
           </div>
+          
+          <div className="text-lg text-gray-300 mt-0.5">𝄞</div>
         </div>
 
         {/* Center bolt */}
         <div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full z-10"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-6 w-4 h-4 rounded-full z-10"
           style={{
             background: 'linear-gradient(145deg, #4a4a4a, #2a2a2a)',
             boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.5)',
@@ -210,6 +227,7 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
         {chromaticNotes.map((note, index) => {
           const pos = getPosition(index, chromaticNotes.length);
           const isActive = isPlaying === note.note;
+          const isC = note.note === 'C4' || note.note === 'C5';
           
           return (
             <button
@@ -220,18 +238,16 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
               onTouchStart={handleNoteStart(note)}
               onTouchEnd={handleNoteEnd}
               onTouchCancel={handleNoteEnd}
-              className="absolute flex items-center justify-center transition-all duration-75 touch-none"
+              className="absolute flex flex-col items-center justify-center transition-all duration-75 touch-none"
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
                 transform: `translate(-50%, -50%)`,
-                width: note.isSharp ? '32px' : '36px',
-                height: note.isSharp ? '32px' : '36px',
               }}
             >
               <span
                 className={`font-bold transition-all duration-75 ${
-                  note.isSharp ? 'text-xs' : 'text-base'
+                  note.isSharp ? 'text-[10px]' : 'text-lg'
                 } ${
                   isActive 
                     ? 'text-amber-400 scale-125 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' 
@@ -243,19 +259,19 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
                     : '0 1px 2px rgba(0,0,0,0.8)',
                 }}
               >
-                {note.isSharp ? (
-                  <span className="flex flex-col items-center leading-none">
-                    <span className="text-[10px]">♯↑♭</span>
-                  </span>
-                ) : (
-                  note.note
-                )}
+                {note.display}
               </span>
+              {/* Show octave number for C notes */}
+              {isC && (
+                <span className={`text-[8px] -mt-1 ${isActive ? 'text-amber-400' : 'text-gray-400'}`}>
+                  {note.note === 'C4' ? '4' : '5'}
+                </span>
+              )}
             </button>
           );
         })}
 
-        {/* Decorative ring */}
+        {/* Decorative rings */}
         <div 
           className="absolute inset-4 rounded-full pointer-events-none"
           style={{
@@ -263,35 +279,12 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
           }}
         />
         <div 
-          className="absolute inset-16 rounded-full pointer-events-none"
+          className="absolute inset-[4.5rem] rounded-full pointer-events-none"
           style={{
             border: '1px solid rgba(255,255,255,0.05)',
           }}
         />
       </div>
-
-      {/* Volume Controls */}
-      <div className="flex items-center gap-3 bg-card/50 px-4 py-2 rounded-full border border-border">
-        <button
-          onClick={toggleMute}
-          className="p-1.5 hover:bg-muted rounded-full transition-colors"
-        >
-          {isMuted ? <VolumeX className="h-4 w-4 text-muted-foreground" /> : <Volume2 className="h-4 w-4" />}
-        </button>
-        <Slider
-          value={volume}
-          onValueChange={handleVolumeChange}
-          max={1}
-          min={0}
-          step={0.1}
-          className="w-24"
-        />
-      </div>
-
-      {/* Instructions */}
-      <p className="text-xs text-muted-foreground text-center">
-        Press and hold any note to play
-      </p>
     </div>
   );
 };
