@@ -61,10 +61,10 @@ const GleeAcademy = () => {
                           {course.level}
                         </Badge>
                       </div>
-                      <CardTitle className="text-lg font-bold text-foreground">
+                      <CardTitle className="text-lg font-bold text-primary-foreground">
                         {course.title}
                       </CardTitle>
-                      <span className="text-sm text-muted-foreground">{course.duration}</span>
+                      <span className="text-sm text-slate-50">{course.duration}</span>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col pt-0">
                       <p className="text-muted-foreground mb-6 text-sm pt-4">
