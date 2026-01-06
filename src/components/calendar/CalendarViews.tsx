@@ -3,26 +3,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calendar as CalendarIcon } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, Clock } from "lucide-react";
 import { CalendarViewSelector } from "./CalendarViewSelector";
 import { MonthlyCalendar } from "./MonthlyCalendar";
 import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
-import { CalendarExport } from "./CalendarExport";
-import { CalendarToggle } from "./CalendarToggle";
 import { CalendarManager } from "./CalendarManager";
 import { CalendarFilterStrip } from "./CalendarFilterStrip";
 import { CreateEventDialog } from "./CreateEventDialog";
-import { AppointmentScheduler } from "@/components/appointments/AppointmentScheduler";
 import { AppointmentsList } from "@/components/appointments/AppointmentsList";
-import { CallMeetingDialog } from "./CallMeetingDialog";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { useNavigate } from "react-router-dom";
 
 export const CalendarViews = () => {
   const [activeView, setActiveView] = useState("month");
   const [visibleCalendarIds, setVisibleCalendarIds] = useState<string[]>([]);
+  const navigate = useNavigate();
   const {
     events,
     loading,
@@ -65,17 +63,23 @@ export const CalendarViews = () => {
             {/* Member Controls */}
             <div className="bg-muted/50 rounded-t-lg border-b border-border">
               <div className="flex items-center justify-between gap-2 px-3 sm:px-4 pt-3 sm:pt-4 pb-2">
-                <h3 className="text-sm sm:text-base font-semibold text-foreground">Member Controls</h3>
+                <h3 className="text-sm sm:text-base font-semibold text-foreground">Quick Actions</h3>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 px-3 sm:px-4 pb-3 sm:pb-4">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="w-full">
-                      <AppointmentScheduler />
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 w-full h-auto min-h-[3rem] border-primary/30 hover:bg-primary/10 px-4 py-2 flex flex-col sm:flex-row items-center justify-center"
+                      onClick={() => navigate('/calendar/settings')}
+                    >
+                      <Clock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-medium">My Availability</span>
+                    </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Schedule a Glee Club audition appointment</p>
+                    <p>Set your appointment availability</p>
                   </TooltipContent>
                 </Tooltip>
                 {isExecMember && (
@@ -163,11 +167,6 @@ export const CalendarViews = () => {
         
         {/* Appointments Section */}
         {isAdmin && <AppointmentsList />}
-        
-        {/* Export Button */}
-        <div className="flex justify-center pb-4">
-          <CalendarExport />
-        </div>
       </div>
     </TooltipProvider>
   );
