@@ -80,16 +80,22 @@ export const CalendarViews = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <Button variant="outline" size="sm" className="h-7" onClick={() => {
-                  setCurrentDate(new Date());
-                  setSelectedDate(new Date());
-                }}>
+                    setCurrentDate(new Date());
+                    setSelectedDate(new Date());
+                  }}>
                     Today
                   </Button>
-                  {isExecMember && <Button size="sm" className="gap-2 h-7" onClick={() => setShowCreateEvent(true)}>
+                  <Button variant="secondary" size="sm" className="h-7 text-xs">
+                    Events
+                  </Button>
+                  <Button variant="secondary" size="sm" className="h-7 text-xs">
+                    Appointments
+                  </Button>
+                  {isExecMember && <Button size="sm" className="gap-1.5 h-7" onClick={() => setShowCreateEvent(true)}>
                       <Plus className="h-4 w-4" />
-                      <span className="hidden sm:inline">New Appointment</span>
+                      <span className="hidden sm:inline">New Event</span>
                       <span className="sm:hidden">New</span>
                     </Button>}
                 </div>
