@@ -62,13 +62,13 @@ export function DateTimePicker({
           {value ? format(value, "PPp") : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 z-[100]" align="start">
-        <div className="p-3 border-b">
+      <PopoverContent className="w-auto p-0 z-[100]" align="start" sideOffset={4}>
+        <div className="p-2 border-b">
           <Input
             type="time"
             value={timeValue}
             onChange={(e) => handleTimeChange(e.target.value)}
-            className="w-full"
+            className="w-full h-8 text-sm"
           />
         </div>
         <Calendar
@@ -76,7 +76,24 @@ export function DateTimePicker({
           selected={value}
           onSelect={handleDateSelect}
           initialFocus
-          className="pointer-events-auto"
+          className="pointer-events-auto p-2 text-sm"
+          classNames={{
+            months: "flex flex-col space-y-2",
+            month: "space-y-2",
+            caption: "flex justify-center pt-1 relative items-center mb-2",
+            caption_label: "text-sm font-medium",
+            nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+            table: "w-full border-collapse",
+            head_row: "flex",
+            head_cell: "text-muted-foreground rounded-md w-8 font-normal text-xs",
+            row: "flex w-full mt-1",
+            cell: "relative w-8 h-8 p-0 text-center text-sm focus-within:relative focus-within:z-20",
+            day: "h-8 w-8 p-0 font-normal text-sm hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground rounded-md",
+            day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+            day_today: "bg-accent text-accent-foreground font-semibold",
+            day_outside: "text-muted-foreground opacity-50",
+            day_disabled: "text-muted-foreground opacity-50",
+          }}
         />
       </PopoverContent>
     </Popover>
