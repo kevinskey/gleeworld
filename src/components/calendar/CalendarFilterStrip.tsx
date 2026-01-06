@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ChevronDown, ChevronUp, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 interface Calendar {
   id: string;
   name: string;
@@ -182,68 +180,54 @@ export const CalendarFilterStrip = ({
       </Card>;
   }
   return <Card className="border border-primary/30 bg-gradient-to-br from-primary/5 via-background to-secondary/5 shadow-sm">
-      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-        <CardContent className="px-2 sm:px-3 py-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 sm:gap-2">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-auto p-0.5">
-                  {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </Button>
-              </CollapsibleTrigger>
-              
-              <span className="text-[10px] sm:text-xs font-medium text-primary-foreground">
-                Filters
-              </span>
-              
-              <span className="text-[9px] sm:text-[10px] text-secondary-foreground hidden sm:inline">
-                ({selectedCalendarIds.length}/{calendars.length})
-              </span>
-            </div>
-
-            {/* Quick toggle preview */}
-            {!isExpanded && <div className="flex items-center gap-0.5 sm:gap-1">
-                {calendars.slice(0, 4).map(calendar => <button key={calendar.id} onClick={() => toggleCalendar(calendar.id)} className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm border transition-opacity ${selectedCalendarIds.includes(calendar.id) ? 'opacity-100' : 'opacity-30'}`} style={{
-              backgroundColor: calendar.color
-            }} title={`${calendar.name}`} />)}
-                {calendars.length > 4 && <span className="text-[9px] text-muted-foreground ml-0.5">
-                    +{calendars.length - 4}
-                  </span>}
-              </div>}
+      <CardContent className="px-2 sm:px-3 py-1.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Label */}
+          <span className="text-[10px] sm:text-xs font-medium text-primary-foreground flex-shrink-0">
+            Calendars:
+          </span>
+          
+          {/* All calendar swatches */}
+          <div className="flex items-center gap-1 flex-wrap flex-1">
+            {calendars.map(calendar => {
+              const isSelected = selectedCalendarIds.includes(calendar.id);
+              return (
+                <button 
+                  key={calendar.id} 
+                  onClick={() => toggleCalendar(calendar.id)} 
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] sm:text-xs transition-all border ${
+                    isSelected 
+                      ? 'bg-background border-border opacity-100' 
+                      : 'bg-muted/30 border-transparent opacity-50 hover:opacity-75'
+                  }`}
+                  title={`${calendar.name} - Click to ${isSelected ? 'hide' : 'show'}`}
+                >
+                  <div 
+                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm flex-shrink-0 transition-transform ${isSelected ? 'scale-100' : 'scale-75'}`} 
+                    style={{ backgroundColor: calendar.color }}
+                  />
+                  <span className="truncate max-w-[60px] sm:max-w-[80px]">{calendar.name}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <CollapsibleContent>
-            <div className="pt-2">
-              <Separator className="mb-2" />
-              
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs font-medium">Select Calendars to Display</h4>
-                <Button variant="outline" size="sm" onClick={toggleAll} className="text-[10px] h-6 px-2">
-                  {selectedCalendarIds.length === calendars.length ? 'Deselect All' : 'Select All'}
-                </Button>
-              </div>
+          {/* Toggle all button */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={toggleAll} 
+            className="text-[9px] sm:text-[10px] h-5 px-1.5 flex-shrink-0"
+          >
+            {selectedCalendarIds.length === calendars.length ? 'Hide All' : 'Show All'}
+          </Button>
+        </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
-                {calendars.map(calendar => {
-                const isSelected = selectedCalendarIds.includes(calendar.id);
-                return <button key={calendar.id} onClick={() => toggleCalendar(calendar.id)} className={`flex items-center gap-2 px-2 py-1 rounded border text-xs transition-all hover:bg-muted/50 ${isSelected ? 'bg-background border-border' : 'bg-muted/30 border-border/30 opacity-60'}`}>
-                      <div className={`w-3 h-3 rounded-sm border transition-all flex-shrink-0 ${isSelected ? 'scale-100' : 'scale-75 opacity-50'}`} style={{
-                    backgroundColor: isSelected ? calendar.color : 'transparent',
-                    borderColor: calendar.color
-                  }} />
-                      <span className={`truncate ${isSelected ? 'font-medium' : 'font-normal'}`}>
-                        {calendar.name}
-                      </span>
-                    </button>;
-              })}
-              </div>
-
-              {calendars.length === 0 && <div className="text-center py-4 text-sm text-muted-foreground">
-                  No calendars available
-                </div>}
-            </div>
-          </CollapsibleContent>
-        </CardContent>
-      </Collapsible>
+        {calendars.length === 0 && (
+          <div className="text-center py-2 text-[10px] text-muted-foreground">
+            No calendars available
+          </div>
+        )}
+      </CardContent>
     </Card>;
 };
