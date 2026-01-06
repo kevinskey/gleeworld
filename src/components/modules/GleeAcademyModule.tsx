@@ -83,7 +83,7 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
                       </ul>
                       
                       <Button 
-                        className="w-full mt-4 group-hover:bg-primary/90 transition-colors text-sm" 
+                        className="w-full mt-auto group-hover:bg-primary/90 transition-colors text-sm" 
                         size="sm"
                         onClick={(e) => { e.stopPropagation(); handleCourseClick(course.route); }}
                       >
