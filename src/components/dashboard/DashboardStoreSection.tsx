@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Plus, ChevronDown, GraduationCap } from 'lucide-react';
+import { ShoppingBag, Plus, ChevronDown, GraduationCap, BookOpen, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+interface Course {
+  id: string;
+  title: string;
+  description: string | null;
+  course_code: string | null;
+  instructor_name: string | null;
+}
 interface Product {
   id: string;
   title: string;
@@ -13,24 +21,40 @@ interface Product {
 const categories = ['(ALL)', 'Apparel', 'Accessories', 'Music'];
 export const DashboardStoreSection = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('(ALL)');
   const [showMore, setShowMore] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
-    const fetchProducts = async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('gw_products').select('id, title, price, images').eq('is_active', true).limit(9).order('created_at', {
-        ascending: false
-      });
-      if (!error && data) {
-        setProducts(data);
+    const fetchData = async () => {
+      // Fetch products
+      const { data: productsData, error: productsError } = await supabase
+        .from('gw_products')
+        .select('id, title, price, images')
+        .eq('is_active', true)
+        .limit(9)
+        .order('created_at', { ascending: false });
+      
+      if (!productsError && productsData) {
+        setProducts(productsData);
       }
+
+      // Fetch courses
+      const { data: coursesData, error: coursesError } = await supabase
+        .from('glee_academy_courses')
+        .select('id, title, description, course_code, instructor_name')
+        .eq('is_active', true)
+        .limit(10)
+        .order('created_at', { ascending: false });
+      
+      if (!coursesError && coursesData) {
+        setCourses(coursesData);
+      }
+
       setLoading(false);
     };
-    fetchProducts();
+    fetchData();
   }, []);
   const displayedProducts = showMore ? products : products.slice(0, 6);
   if (loading) {
@@ -105,6 +129,53 @@ export const DashboardStoreSection = () => {
                 <GraduationCap className="h-5 w-5" />
                 Glee Academy
               </Button>
+            </div>
+
+            {/* Courses Horizontal Scroll */}
+            <div className="mt-6">
+              <div 
+                className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" 
+                style={{
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                  WebkitOverflowScrolling: 'touch'
+                }}
+              >
+                {courses.length > 0 ? (
+                  courses.map(course => (
+                    <div 
+                      key={course.id} 
+                      onClick={() => navigate(`/glee-academy/course/${course.id}`)} 
+                      className="group cursor-pointer flex-shrink-0 w-72 snap-start bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-[#003666] flex items-center justify-center flex-shrink-0">
+                          <BookOpen className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {course.course_code && (
+                            <span className="text-xs text-muted-foreground">{course.course_code}</span>
+                          )}
+                          <h4 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                            {course.title}
+                          </h4>
+                          {course.instructor_name && (
+                            <p className="text-xs text-muted-foreground mt-1">{course.instructor_name}</p>
+                          )}
+                        </div>
+                        <Play className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                      </div>
+                      {course.description && (
+                        <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{course.description}</p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex-shrink-0 w-72 snap-start bg-muted/30 border border-dashed border-border rounded-lg p-4 flex items-center justify-center">
+                    <p className="text-sm text-muted-foreground">No courses available yet</p>
+                  </div>
+                )}
+              </div>
             </div>
           </> : <div className="text-center py-16">
             <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
