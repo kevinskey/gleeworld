@@ -1,9 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Plus, ChevronDown, GraduationCap, BookOpen, Play } from 'lucide-react';
+import { ShoppingBag, Plus, ChevronDown, GraduationCap, BookOpen, Play, Users, Music, Monitor, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+// Course highlights mapping based on course type
+const getCourseHighlights = (title: string): string[] => {
+  if (title.toLowerCase().includes('glee')) {
+    return ['Choral Performance', 'Vocal Training', 'Tours & Concerts', 'Community'];
+  }
+  if (title.toLowerCase().includes('conducting')) {
+    return ['Conducting Technique', 'Score Analysis', 'Repertoire', 'Rehearsal Skills'];
+  }
+  if (title.toLowerCase().includes('african') || title.toLowerCase().includes('survey')) {
+    return ['Music History', 'Cultural Context', 'Listening Journals', 'Critical Analysis'];
+  }
+  return ['Course Materials', 'Assignments', 'Discussions', 'Resources'];
+};
+
+const getCourseIcon = (title: string) => {
+  if (title.toLowerCase().includes('glee')) return Users;
+  if (title.toLowerCase().includes('conducting')) return Music;
+  return Monitor;
+};
+
+const getCourseLevel = (title: string): string => {
+  if (title.toLowerCase().includes('glee')) return 'Audition Required';
+  if (title.toLowerCase().includes('conducting')) return 'Intermediate';
+  return 'All Levels';
+};
 
 interface Course {
   id: string;
@@ -142,36 +168,73 @@ export const DashboardStoreSection = () => {
                 }}
               >
                 {courses.length > 0 ? (
-                  courses.map(course => (
-                    <div 
-                      key={course.id} 
-                      onClick={() => navigate(`/glee-academy/course/${course.id}`)} 
-                      className="group cursor-pointer flex-shrink-0 w-72 snap-start bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 rounded-lg bg-[#003666] flex items-center justify-center flex-shrink-0">
-                          <BookOpen className="h-6 w-6 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          {course.course_code && (
-                            <span className="text-xs text-muted-foreground">{course.course_code}</span>
-                          )}
-                          <h4 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                  courses.map(course => {
+                    const CourseIcon = getCourseIcon(course.title);
+                    const highlights = getCourseHighlights(course.title);
+                    const level = getCourseLevel(course.title);
+                    
+                    return (
+                      <div 
+                        key={course.id} 
+                        className="flex-shrink-0 w-80 snap-start rounded-lg overflow-hidden shadow-lg"
+                      >
+                        {/* Blue Header Section */}
+                        <div className="bg-[#0066CC] p-4">
+                          {/* Top row with icon, code, and level */}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <CourseIcon className="h-5 w-5 text-white/80" />
+                              {course.course_code && (
+                                <span className="px-3 py-1 bg-[#003366] text-white text-sm font-medium rounded">
+                                  {course.course_code}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-white text-sm font-medium">{level}</span>
+                          </div>
+                          
+                          {/* Course title and duration */}
+                          <h4 className="text-white font-semibold text-lg leading-tight">
                             {course.title}
                           </h4>
-                          {course.instructor_name && (
-                            <p className="text-xs text-muted-foreground mt-1">{course.instructor_name}</p>
-                          )}
+                          <p className="text-white/70 text-sm mt-1">Semester</p>
                         </div>
-                        <Play className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                        
+                        {/* White Content Section */}
+                        <div className="bg-white p-4 flex flex-col min-h-[200px]">
+                          {course.description && (
+                            <p className="text-gray-700 text-sm leading-relaxed mb-4">
+                              {course.description}
+                            </p>
+                          )}
+                          
+                          {/* Course Highlights */}
+                          <div className="mb-4 flex-1">
+                            <h5 className="font-semibold text-gray-900 mb-2">Course Highlights:</h5>
+                            <ul className="space-y-1">
+                              {highlights.map((highlight, idx) => (
+                                <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
+                                  <ChevronRight className="h-3 w-3 text-gray-400" />
+                                  {highlight}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          {/* Enter Button */}
+                          <button 
+                            onClick={() => navigate(`/glee-academy/course/${course.id}`)}
+                            className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors"
+                          >
+                            <span className="font-medium">Enter {course.course_code || course.title}</span>
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
-                      {course.description && (
-                        <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{course.description}</p>
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
-                  <div className="flex-shrink-0 w-72 snap-start bg-muted/30 border border-dashed border-border rounded-lg p-4 flex items-center justify-center">
+                  <div className="flex-shrink-0 w-80 snap-start bg-muted/30 border border-dashed border-border rounded-lg p-4 flex items-center justify-center min-h-[300px]">
                     <p className="text-sm text-muted-foreground">No courses available yet</p>
                   </div>
                 )}
