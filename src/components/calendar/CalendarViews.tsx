@@ -61,32 +61,19 @@ export const CalendarViews = () => {
         <Card className="border border-border/50 bg-card">
           <CardContent className="p-3 sm:p-4">
             <div className="relative">
-              {/* Header with View Selector and Actions */}
-              <div className="flex flex-col gap-3 px-2 sm:px-4 py-3 sm:py-4 mb-3 sm:mb-4 bg-muted/30 rounded-lg border border-border/50">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">Calendar</h2>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CalendarViewSelector 
-                      activeView={activeView} 
-                      onViewChange={setActiveView}
-                    />
-                  </div>
-                </div>
-                {/* Quick Actions integrated into header */}
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
+              {/* Header: Actions + View Selector */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div className="flex flex-wrap items-center gap-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="gap-2 border-primary/30 hover:bg-primary/10"
+                        className="gap-2"
                         onClick={() => navigate('/calendar/settings')}
                       >
                         <Clock className="h-4 w-4" />
-                        <span className="text-xs sm:text-sm">My Availability</span>
+                        <span className="text-sm">Availability</span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -97,6 +84,10 @@ export const CalendarViews = () => {
                     <CreateEventDialog onEventCreated={fetchEvents} />
                   )}
                 </div>
+                <CalendarViewSelector 
+                  activeView={activeView} 
+                  onViewChange={setActiveView}
+                />
               </div>
               
               {/* Content Area */}
