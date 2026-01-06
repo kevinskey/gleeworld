@@ -42,7 +42,7 @@ export const ContractsList = ({
   const [selectedContracts, setSelectedContracts] = useState<Set<string>>(new Set());
   const [sendDialogContract, setSendDialogContract] = useState<Contract | null>(null);
   const [isResendMode, setIsResendMode] = useState(false);
-  const [isOpen, setIsOpen] = useState(false); // Default to collapsed
+  const [isOpen, setIsOpen] = useState(true); // Default to open
   const [editTitleDialogOpen, setEditTitleDialogOpen] = useState(false);
   const [selectedEditContract, setSelectedEditContract] = useState<Contract | null>(null);
   const {
