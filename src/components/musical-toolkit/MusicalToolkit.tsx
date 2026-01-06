@@ -29,8 +29,8 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
     metronome: boolean; pitch: boolean; pianoSmall: boolean; pianoFull: boolean; tuner: boolean;
   }>({ metronome: false, pitch: false, pianoSmall: false, pianoFull: false, tuner: false });
 
-  const [pitchPipeSize, setPitchPipeSize] = useState({ width: 320, height: 320 });
-  const [pitchPipePosition, setPitchPipePosition] = useState({ x: 100, y: 100 });
+  const [pitchPipeSize, setPitchPipeSize] = useState({ width: 280, height: 280 });
+  const [pitchPipePosition, setPitchPipePosition] = useState({ x: 20, y: 80 });
 
   const [tempo, setTempo] = useState(96);
   const [isMetroPlaying, setIsMetroPlaying] = useState(false);
@@ -49,12 +49,17 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
     return cleanup;
   }, []);
 
-  // Center pitch pipe on open
+  // Center pitch pipe on open, size based on screen
   useEffect(() => {
     if (open.pitch) {
-      const centerX = (window.innerWidth - pitchPipeSize.width) / 2;
-      const centerY = (window.innerHeight - pitchPipeSize.height) / 2;
-      setPitchPipePosition({ x: centerX, y: centerY });
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      const isMobileSize = screenWidth < 400;
+      const initialSize = isMobileSize ? Math.min(screenWidth - 40, 260) : 280;
+      setPitchPipeSize({ width: initialSize, height: initialSize });
+      const centerX = (screenWidth - initialSize) / 2;
+      const centerY = (screenHeight - initialSize) / 2;
+      setPitchPipePosition({ x: Math.max(10, centerX), y: Math.max(60, centerY) });
     }
   }, [open.pitch]);
 
@@ -124,10 +129,10 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
               setPitchPipePosition(position);
             }}
             lockAspectRatio={true}
-            minWidth={200}
-            minHeight={200}
-            maxWidth={500}
-            maxHeight={500}
+            minWidth={150}
+            minHeight={150}
+            maxWidth={Math.min(500, window.innerWidth - 20)}
+            maxHeight={Math.min(500, window.innerHeight - 100)}
             bounds="window"
             dragHandleClassName="pitch-pipe-drag-handle"
             className="pointer-events-auto"
@@ -155,7 +160,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
                 </svg>
               </div>
               
-              <div style={{ transform: `scale(${pitchPipeSize.width / 320})`, transformOrigin: 'center' }}>
+              <div style={{ transform: `scale(${pitchPipeSize.width / 264})`, transformOrigin: 'center' }}>
                 <PitchPipe />
               </div>
             </div>
