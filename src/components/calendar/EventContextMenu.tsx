@@ -101,6 +101,7 @@ export const EventContextMenu: React.FC<EventContextMenuProps> = ({
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div
+            className="w-4/5 flex justify-center"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onTouchMove={handleTouchMove}
