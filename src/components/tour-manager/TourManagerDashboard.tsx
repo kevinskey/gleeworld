@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { 
   Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, 
-  ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X
+  ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home
 } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
@@ -22,6 +22,8 @@ import { BusBuddiesSection } from '@/components/tour/BusBuddiesSection';
 import { TourDocumentsSection } from '@/components/tour/TourDocumentsSection';
 import { LivePerformancesSection } from '@/components/tour/LivePerformancesSection';
 import { TourRosterSection } from '@/components/tour/TourRosterSection';
+import { TourManagerLanding } from './TourManagerLanding';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TourManagerDashboardProps {
   user?: {
@@ -36,9 +38,10 @@ interface TourManagerDashboardProps {
 }
 
 const navItems = [
+  { value: 'overview', label: 'Overview', icon: Home },
   { value: 'booking-requests', label: 'Requests', icon: Mail },
   { value: 'contracts', label: 'Contracts', icon: FileText },
-  { value: 'hosts', label: 'Hosts', icon: Building2 },
+  { value: 'hosts', label: 'Contacts', icon: Building2 },
   { value: 'tour-dates', label: 'Dates', icon: Calendar },
   { value: 'roster', label: 'Roster', icon: UserCheck },
   { value: 'route-planning', label: 'Routes', icon: MapPin },
@@ -49,9 +52,10 @@ const navItems = [
 ];
 
 const contentConfig: Record<string, { title: string; description: string }> = {
+  'overview': { title: 'Tour Management', description: 'Overview of all tour operations' },
   'booking-requests': { title: 'Requests', description: 'Manage incoming performance requests and inquiries' },
   'contracts': { title: 'Contracts', description: 'Create, manage, and track contract signatures' },
-  'hosts': { title: 'Hosts', description: 'Manage performance venues and host relationships' },
+  'hosts': { title: 'Contacts', description: 'Manage venue contacts and host relationships' },
   'tour-dates': { title: 'Dates', description: 'View all tour dates, venues, and locations' },
   'roster': { title: 'Roster', description: 'Manage which members are going on tour' },
   'route-planning': { title: 'Routes', description: 'Optimize tour routes with intelligent planning' },
@@ -63,19 +67,71 @@ const contentConfig: Record<string, { title: string; description: string }> = {
 
 export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('booking-requests');
+  const [activeSection, setActiveSection] = useState('overview');
   const [contractEventData, setContractEventData] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [stats, setStats] = useState({
+    upcomingDates: 0,
+    activeRoutes: 0,
+    contacts: 0,
+    pendingContracts: 0,
+    rosterCount: 0,
+    pendingDocs: 0,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Fetch tour dates count
+        const { count: datesCount } = await supabase
+          .from('gw_tour_events')
+          .select('*', { count: 'exact', head: true })
+          .gte('start_date', new Date().toISOString());
+        
+        // Fetch roster count
+        const { count: rosterCount } = await supabase
+          .from('gw_tour_roster')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'confirmed');
+        
+        // Fetch pending contracts
+        const { count: contractsCount } = await supabase
+          .from('contracts_v2')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending');
+
+        // Fetch booking requests as contacts proxy
+        const { count: requestsCount } = await supabase
+          .from('booking_requests')
+          .select('*', { count: 'exact', head: true });
+
+        setStats({
+          upcomingDates: datesCount || 0,
+          activeRoutes: 1,
+          contacts: requestsCount || 0,
+          pendingContracts: contractsCount || 0,
+          rosterCount: rosterCount || 0,
+          pendingDocs: 3,
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   const handleGenerateContract = (event: any) => {
     setContractEventData(event);
     setActiveSection('contracts');
   };
 
-  const currentContent = contentConfig[activeSection] || contentConfig['booking-requests'];
+  const currentContent = contentConfig[activeSection] || contentConfig['overview'];
 
   const renderContent = () => {
     switch (activeSection) {
+      case 'overview':
+        return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
       case 'booking-requests':
         return <BookingRequestManager user={user} />;
       case 'contracts':
@@ -97,7 +153,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
       case 'wardrobe':
         return <WardrobeMistressHub />;
       default:
-        return <BookingRequestManager user={user} />;
+        return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
     }
   };
 
