@@ -214,9 +214,9 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5 md:gap-1">
+      <div className="grid grid-cols-7 border border-border rounded-lg overflow-hidden">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-          <div key={day} className="p-1 md:p-2 text-center text-xs md:text-sm font-medium text-muted-foreground">
+          <div key={day} className="p-1 md:p-2 text-center text-xs md:text-sm font-semibold text-foreground bg-muted/50 border-b border-border">
             <span className="hidden sm:inline">{day}</span>
             <span className="sm:hidden">{['S', 'M', 'T', 'W', 'T', 'F', 'S'][index]}</span>
           </div>
@@ -236,10 +236,10 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
             <div
               key={day.toString()}
               className={`
-                min-h-[60px] md:min-h-[100px] p-1 md:p-2 border border-border cursor-pointer
-                ${isCurrentMonth ? 'bg-background hover:bg-muted/20' : 'bg-muted/30 hover:bg-muted/40'}
-                ${isToday ? 'bg-primary/10 border-primary' : ''}
-                transition-colors duration-150
+                min-h-[60px] md:min-h-[100px] p-1 md:p-2 border-r border-b border-border/60 cursor-pointer
+                ${isCurrentMonth ? 'bg-card hover:bg-accent/30' : 'bg-muted/40 hover:bg-muted/50'}
+                ${isToday ? 'bg-primary/10 ring-2 ring-inset ring-primary' : ''}
+                transition-colors duration-150 last:border-r-0 [&:nth-child(7n)]:border-r-0
               `}
               onClick={() => handleDateClick(day)}
             >
