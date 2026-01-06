@@ -175,9 +175,9 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
 
   return (
     <div className={`flex items-center justify-center ${className}`}>
-      {/* Circular Pitch Pipe */}
+      {/* Circular Pitch Pipe - fixed size, parent handles scaling */}
       <div 
-        className="relative w-72 h-72 sm:w-80 sm:h-80 rounded-full shadow-2xl select-none"
+        className="relative w-64 h-64 rounded-full shadow-2xl select-none flex-shrink-0"
         style={{
           background: 'radial-gradient(circle at 30% 30%, #3a3a3a 0%, #1a1a1a 50%, #0f0f0f 100%)',
           boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.5), 0 8px 32px rgba(0,0,0,0.4), 0 0 0 4px #2a2a2a',
