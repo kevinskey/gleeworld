@@ -25,7 +25,7 @@ const GleeAcademy = () => {
           <div className="w-[80vw] mx-auto text-center">
             <h1 style={{
             fontSize: 'clamp(4rem, 18vw, 16rem)'
-          }} className="font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#B8860B] uppercase leading-none text-6xl">
+          }} className="font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#B8860B] uppercase leading-none text-2xl">
               Glee Academy
             </h1>
           </div>
