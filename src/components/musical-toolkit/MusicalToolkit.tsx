@@ -58,7 +58,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
             aria-label="Musical Toolkit"
             onClick={handleDropdownClick}
             onTouchStart={handleDropdownClick}
-            className={`inline-flex items-center justify-center ${HEADER_ICON_SIZES.button} p-0 transition-colors hover:bg-white/10 rounded-full text-white`}
+            className={`inline-flex items-center justify-center ${HEADER_ICON_SIZES.button} p-0 transition-colors hover:bg-muted rounded-full text-current`}
           >
             <Piano className={HEADER_ICON_SIZES.icon} />
           </button>
