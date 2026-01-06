@@ -38,7 +38,7 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
             {ACADEMY_COURSES.filter(course => course.isActive).map(course => {
               const IconComponent = course.icon;
               return (
