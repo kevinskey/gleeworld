@@ -218,7 +218,7 @@ export const TourMilestones = () => {
                       )}
                     </div>
                   </PopoverTrigger>
-                  <PopoverContent className="w-72 p-3 bg-card border z-50" align="start">
+                  <PopoverContent className="w-72 p-3 bg-white dark:bg-gray-900 border shadow-lg z-50" align="start">
                     <div className="space-y-3">
                       <h4 className="font-medium text-sm text-foreground">Sign-off Details</h4>
                       
