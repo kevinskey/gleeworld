@@ -17,20 +17,15 @@ const GleeAcademy = () => {
         {/* Hero Section - Horizontal Banner */}
         <div className="relative w-full bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f3460] py-6 sm:py-8">
           <div className="container mx-auto px-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white/80 hover:text-white hover:bg-white/10 mb-4"
-              onClick={() => navigate('/dashboard')}
-            >
+            <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 mb-4" onClick={() => navigate('/dashboard')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
           </div>
           <div className="w-[80vw] mx-auto text-center">
-            <h1 className="font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#B8860B] uppercase leading-none" style={{
+            <h1 style={{
             fontSize: 'clamp(4rem, 18vw, 16rem)'
-          }}>
+          }} className="font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#B8860B] uppercase leading-none text-6xl">
               Glee Academy
             </h1>
           </div>
