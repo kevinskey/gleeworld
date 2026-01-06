@@ -120,7 +120,7 @@ export const TourMilestones = () => {
             width: `${progress}%`
           }} />
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-[10px] mt-1 text-secondary-foreground">
             {Math.round(progress)}% complete
           </p>
         </div>

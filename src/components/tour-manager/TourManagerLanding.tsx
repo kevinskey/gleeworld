@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { TourMilestones } from './TourMilestones';
-
 interface TourManagerLandingProps {
   onNavigate: (section: string) => void;
   stats?: {
@@ -133,7 +132,7 @@ export const TourManagerLanding = ({
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
         {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="text-center p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
             <div className="text-xl font-bold text-foreground">{section.stat}</div>
-            <div className="text-[10px] text-muted-foreground capitalize">{section.statLabel}</div>
+            <div className="text-[10px] capitalize text-slate-950">{section.statLabel}</div>
           </button>)}
       </div>
 
@@ -149,9 +148,9 @@ export const TourManagerLanding = ({
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
             {keyPersonnel.length === 0 ? <div className="text-center py-6">
-                <Users className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                <p className="text-sm text-muted-foreground">No personnel assigned</p>
-                <p className="text-xs text-muted-foreground mt-1">Configure tour personnel in settings</p>
+                <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
+                <p className="text-sm text-primary-foreground">No personnel assigned</p>
+                <p className="text-xs mt-1 text-primary-foreground">Configure tour personnel in settings</p>
               </div> : <div className="grid grid-cols-2 gap-2">
                 {keyPersonnel.map(person => <div key={person.role} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
                     <Avatar className="h-7 w-7">
@@ -207,21 +206,21 @@ export const TourManagerLanding = ({
               </div> : <div className="space-y-2">
                 {tourEvents.map(event => <div key={event.id} className="flex items-start gap-3 p-2 rounded-lg border hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => onNavigate('tour-dates')}>
                     <div className="flex-shrink-0 w-10 text-center">
-                      <div className="text-lg font-bold leading-none">
+                      <div className="text-lg font-bold leading-none text-primary-foreground">
                         {format(new Date(event.start_date), 'd')}
                       </div>
-                      <div className="text-[10px] uppercase text-muted-foreground">
+                      <div className="text-[10px] uppercase text-primary-foreground">
                         {format(new Date(event.start_date), 'MMM')}
                       </div>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{event.title}</p>
-                      {(event.venue_name || event.location) && <p className="text-xs flex items-center gap-1 truncate text-muted-foreground">
+                      <p className="text-sm font-medium truncate text-primary-foreground">{event.title}</p>
+                      {(event.venue_name || event.location) && <p className="text-xs flex items-center gap-1 truncate text-primary-foreground">
                           <MapPin className="h-3 w-3 flex-shrink-0" />
                           {event.venue_name || event.location}
                         </p>}
                     </div>
-                    <Badge variant="outline" className="text-[10px] flex-shrink-0">
+                    <Badge variant="outline" className="text-[10px] flex-shrink-0 text-primary-foreground">
                       {format(new Date(event.start_date), 'EEE')}
                     </Badge>
                   </div>)}
@@ -229,7 +228,7 @@ export const TourManagerLanding = ({
             
             {/* Calendar Integration Note */}
             <div className="mt-3 pt-3 border-t">
-              <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+              <p className="text-[10px] flex items-center gap-1 text-primary-foreground">
                 <CalendarDays className="h-3 w-3" />
                 Tour dates sync automatically to the main calendar
               </p>
@@ -243,17 +242,11 @@ export const TourManagerLanding = ({
 
       {/* Section Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {sections.map(section => (
-          <button
-            key={section.id}
-            onClick={() => onNavigate(section.id)}
-            className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors text-left"
-          >
+        {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors text-left">
             <section.icon className={cn("h-5 w-5 mb-2", section.color.replace('bg-', 'text-'))} />
             <div className="text-sm font-medium">{section.title}</div>
             <div className="text-xs text-muted-foreground">{section.stat} {section.statLabel}</div>
-          </button>
-        ))}
+          </button>)}
       </div>
     </div>;
 };
