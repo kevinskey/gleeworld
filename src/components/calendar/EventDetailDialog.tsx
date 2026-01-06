@@ -7,14 +7,21 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, MapPinIcon, ClockIcon, UsersIcon, ExternalLinkIcon, FileText, DollarSign, EditIcon, MoreHorizontalIcon } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from "@/components/ui/dropdown-menu";
+  CalendarIcon, 
+  MapPinIcon, 
+  ClockIcon, 
+  UsersIcon, 
+  FileText, 
+  DollarSign, 
+  EditIcon, 
+  ExternalLink,
+  Navigation,
+  ListChecks,
+  Settings2
+} from "lucide-react";
 import { format } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EditEventDialog } from "./EditEventDialog";
@@ -66,214 +73,242 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
     window.open(calendarUrl, '_blank');
   };
 
+  const handleGetDirections = () => {
+    const mapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(event.location + (event.address ? `, ${event.address}` : ''))}`;
+    window.open(mapsUrl, '_blank');
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <DialogTitle className="text-lg sm:text-xl break-words">{event.title}</DialogTitle>
-              <Badge className={getEventTypeColor(event.event_type)}>
-                {event.event_type || 'Event'}
-              </Badge>
-              {event.status && event.status !== 'scheduled' && (
-                <Badge 
-                  className={
-                    event.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                    event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                    event.status === 'postponed' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }
-                >
-                  {event.status}
-                </Badge>
-              )}
-            </div>
-            
-            {canEdit && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover-scale flex-shrink-0">
-                    <MoreHorizontalIcon className="h-4 w-4" />
+      <DialogContent className="max-w-[95vw] sm:max-w-lg md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+        {/* Header Section */}
+        <div className="sticky top-0 z-10 bg-background border-b">
+          <DialogHeader className="p-4 sm:p-6 pb-4">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <DialogTitle className="text-xl sm:text-2xl font-bold break-words leading-tight">
+                    {event.title}
+                  </DialogTitle>
+                </div>
+                {canEdit && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setEditOpen(true)}
+                    className="flex-shrink-0 gap-2"
+                  >
+                    <EditIcon className="h-4 w-4" />
+                    <span className="hidden sm:inline">Edit</span>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                    <EditIcon className="h-4 w-4 mr-2" />
-                    Edit Event
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleAddToCalendar}>
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    Add to Calendar
-                  </DropdownMenuItem>
-                  {event.location && (
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        const mapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(event.location + (event.address ? `, ${event.address}` : ''))}`;
-                        window.open(mapsUrl, '_blank');
-                      }}
-                    >
-                      <MapPinIcon className="h-4 w-4 mr-2" />
-                      Get Directions
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-        </DialogHeader>
+                )}
+              </div>
+              
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className={`${getEventTypeColor(event.event_type)} font-medium`}>
+                  {event.event_type || 'Event'}
+                </Badge>
+                {event.status && event.status !== 'scheduled' && (
+                  <Badge 
+                    variant="outline"
+                    className={
+                      event.status === 'confirmed' ? 'border-green-500 text-green-700 dark:text-green-400' :
+                      event.status === 'cancelled' ? 'border-red-500 text-red-700 dark:text-red-400' :
+                      event.status === 'postponed' ? 'border-yellow-500 text-yellow-700 dark:text-yellow-400' :
+                      'border-muted-foreground'
+                    }
+                  >
+                    {event.status}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
         
-        <div className="space-y-6">
+        <div className="p-4 sm:p-6 pt-4 space-y-6">
+          {/* Date & Time Card */}
+          <Card className="bg-primary/5 border-primary/20">
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-primary/10 rounded-lg">
+                    <CalendarIcon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground">
+                      {format(new Date(event.start_date), 'EEEE, MMMM d, yyyy')}
+                    </div>
+                  </div>
+                </div>
+                <Separator orientation="vertical" className="hidden sm:block h-8" />
+                <Separator className="sm:hidden" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-primary/10 rounded-lg">
+                    <ClockIcon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground">
+                      {format(new Date(event.start_date), 'h:mm a')}
+                      {event.end_date && (
+                        <span className="text-muted-foreground"> – {format(new Date(event.end_date), 'h:mm a')}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Event Image */}
           {event.image_url && (
-            <div>
-              <h4 className="font-semibold mb-2">Event Image</h4>
-              <div className="w-full max-w-md mx-auto">
-                <img 
-                  src={event.image_url} 
-                  alt={event.title}
-                  className="w-full h-48 object-cover rounded-lg border shadow-sm"
-                  onError={(e) => {
-                    console.log('Failed to load event image:', event.image_url);
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              </div>
+            <div className="rounded-xl overflow-hidden border shadow-sm">
+              <img 
+                src={event.image_url} 
+                alt={event.title}
+                className="w-full h-48 sm:h-64 object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             </div>
           )}
           
+          {/* Description */}
           {event.description && (
             <div>
-              <h4 className="font-semibold mb-2">Description</h4>
-              <p className="text-muted-foreground">{event.description}</p>
+              <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Description</h4>
+              <p className="text-foreground leading-relaxed">{event.description}</p>
             </div>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <div className="font-medium">
-                    {format(new Date(event.start_date), 'EEEE, MMMM d, yyyy')}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <ClockIcon className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <div className="font-medium">
-                    {format(new Date(event.start_date), 'h:mm a')}
-                    {event.end_date && (
-                      <> - {format(new Date(event.end_date), 'h:mm a')}</>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {event.location && (
-                <div className="flex items-center gap-2">
-                  <MapPinIcon className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    {event.venue_name && (
-                      <div className="font-medium">{event.venue_name}</div>
-                    )}
-                    <div className="text-muted-foreground">
-                      {event.location}
-                      {event.address && `, ${event.address}`}
+          {/* Location */}
+          {event.location && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 bg-secondary/50 rounded-lg mt-0.5">
+                      <MapPinIcon className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      {event.venue_name && (
+                        <div className="font-semibold">{event.venue_name}</div>
+                      )}
+                      <div className="text-muted-foreground">
+                        {event.location}
+                        {event.address && <span>, {event.address}</span>}
+                      </div>
                     </div>
                   </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleGetDirections}
+                    className="flex-shrink-0 gap-2"
+                  >
+                    <Navigation className="h-4 w-4" />
+                    <span className="hidden sm:inline">Directions</span>
+                  </Button>
                 </div>
-              )}
-            </div>
-            
-            <div className="space-y-3">
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Capacity & Registration */}
+          {(event.max_attendees || event.registration_required) && (
+            <div className="flex flex-col sm:flex-row gap-3">
               {event.max_attendees && (
-                <div className="flex items-center gap-2">
-                  <UsersIcon className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">Capacity</div>
-                    <div className="text-muted-foreground">
-                      Maximum {event.max_attendees} attendees
+                <Card className="flex-1">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="p-2.5 bg-secondary/50 rounded-lg">
+                      <UsersIcon className="h-5 w-5 text-muted-foreground" />
                     </div>
-                  </div>
-                </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Capacity</div>
+                      <div className="font-semibold">{event.max_attendees} attendees</div>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
               
               {event.registration_required && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                  <div className="font-medium text-blue-900 dark:text-blue-300">
-                    Registration Required
-                  </div>
-                  <div className="text-sm text-blue-700 dark:text-blue-400">
-                    Please register before attending this event
-                  </div>
-                </div>
+                <Card className="flex-1 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="p-2.5 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                      <ListChecks className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-blue-900 dark:text-blue-300">Registration Required</div>
+                      <div className="text-sm text-blue-700 dark:text-blue-400">Please register before attending</div>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
-          </div>
+          )}
           
-          {/* Contract Management Section */}
-          <div className="border-t pt-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <h4 className="font-semibold">Event Management</h4>
-              <div className="flex flex-col sm:flex-row gap-2">
-                {canEdit && (
+          {/* Admin Management Section */}
+          {canEdit && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Settings2 className="h-5 w-5 text-muted-foreground" />
+                  <h4 className="font-semibold text-lg">Event Management</h4>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <EventClassListManager
                     eventId={event.id}
                     eventTitle={event.title}
                   />
-                )}
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    // Navigate to contract management for this event
-                    navigate(`/event-planner?eventId=${event.id}`);
-                  }}
-                  className="w-full sm:w-auto"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Manage Contracts
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    // Navigate to budget planning for this event
-                    navigate(`/event-planner?eventId=${event.id}&tab=budget`);
-                  }}
-                  className="w-full sm:w-auto"
-                >
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Budget Planning
-                </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate(`/event-planner?eventId=${event.id}`)}
+                    className="h-auto py-4 flex-col gap-2 hover:bg-secondary/80"
+                  >
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">Contracts</span>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate(`/event-planner?eventId=${event.id}&tab=budget`)}
+                    className="h-auto py-4 flex-col gap-2 hover:bg-secondary/80"
+                  >
+                    <DollarSign className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">Budget</span>
+                  </Button>
+                </div>
+                
+                <p className="text-sm text-muted-foreground">
+                  Manage class lists, performer contracts, and event budgets from the Event Planner.
+                </p>
               </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              This event is automatically synced with the contract and budget management system. 
-              You can manage performer contracts and event budgets from the Event Planner.
-            </p>
-          </div>
+            </>
+          )}
           
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button onClick={handleAddToCalendar} variant="outline" className="w-full sm:w-auto">
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              Add to Calendar
+          {/* Quick Actions */}
+          <Separator />
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              onClick={handleAddToCalendar} 
+              variant="default"
+              className="flex-1 gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Add to Google Calendar
             </Button>
             
             {event.location && (
               <Button 
                 variant="outline"
-                onClick={() => {
-                  const mapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(event.location + (event.address ? `, ${event.address}` : ''))}`;
-                  window.open(mapsUrl, '_blank');
-                }}
-                className="w-full sm:w-auto"
+                onClick={handleGetDirections}
+                className="flex-1 gap-2"
               >
-                <MapPinIcon className="h-4 w-4 mr-2" />
+                <MapPinIcon className="h-4 w-4" />
                 Get Directions
               </Button>
             )}
