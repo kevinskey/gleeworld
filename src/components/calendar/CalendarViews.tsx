@@ -87,11 +87,11 @@ export const CalendarViews = () => {
                   }}>
                     Today
                   </Button>
-                  <Button size="sm" className="gap-1.5 h-7" onClick={() => setShowCreateEvent(true)}>
+                  {isAdmin && <Button size="sm" className="gap-1.5 h-7" onClick={() => setShowCreateEvent(true)}>
                     <Plus className="h-4 w-4" />
                     <span className="hidden sm:inline">New Event</span>
                     <span className="sm:hidden">New</span>
-                  </Button>
+                  </Button>}
                 </div>
               </div>
 
