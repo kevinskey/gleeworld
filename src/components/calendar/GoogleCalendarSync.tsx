@@ -267,8 +267,8 @@ export const GoogleCalendarSync = () => {
           <ol className="list-decimal list-inside space-y-1">
             <li className="text-primary-foreground">Go to Google Calendar</li>
             <li className="text-primary-foreground">Click Settings (gear icon)</li>
-            <li>Click on your calendar name</li>
-            <li>Scroll down to find "Calendar ID"</li>
+            <li className="text-primary-foreground">Click on your calendar name</li>
+            <li className="text-primary-foreground">Scroll down to find "Calendar ID"</li>
           </ol>
         </div>
       </CardContent>
