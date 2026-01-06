@@ -181,44 +181,44 @@ export const CalendarFilterStrip = ({
         </CardContent>
       </Card>;
   }
-  return <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-background to-secondary/5 shadow-md">
+  return <Card className="border border-primary/30 bg-gradient-to-br from-primary/5 via-background to-secondary/5 shadow-sm">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-        <CardContent className="p-3">
+        <CardContent className="px-3 py-1.5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-auto p-1">
-                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                <Button variant="ghost" size="sm" className="h-auto p-0.5">
+                  {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </Button>
               </CollapsibleTrigger>
               
-              <span className="text-sm font-medium text-primary-foreground">
+              <span className="text-xs font-medium text-primary-foreground">
                 Calendar Filters
               </span>
               
-              <span className="text-xs text-secondary-foreground">
+              <span className="text-[10px] text-secondary-foreground">
                 ({selectedCalendarIds.length}/{calendars.length} active)
               </span>
             </div>
 
             {/* Quick toggle preview */}
             {!isExpanded && <div className="flex items-center gap-1">
-                {calendars.slice(0, 5).map(calendar => <button key={calendar.id} onClick={() => toggleCalendar(calendar.id)} className={`w-4 h-4 rounded-sm border transition-opacity ${selectedCalendarIds.includes(calendar.id) ? 'opacity-100' : 'opacity-30'}`} style={{
+                {calendars.slice(0, 5).map(calendar => <button key={calendar.id} onClick={() => toggleCalendar(calendar.id)} className={`w-3 h-3 rounded-sm border transition-opacity ${selectedCalendarIds.includes(calendar.id) ? 'opacity-100' : 'opacity-30'}`} style={{
               backgroundColor: calendar.color
             }} title={`${calendar.name} - Click to ${selectedCalendarIds.includes(calendar.id) ? 'hide' : 'show'}`} />)}
-                {calendars.length > 5 && <span className="text-xs text-muted-foreground ml-1">
+                {calendars.length > 5 && <span className="text-[10px] text-muted-foreground ml-1">
                     +{calendars.length - 5}
                   </span>}
               </div>}
           </div>
 
           <CollapsibleContent>
-            <div className="pt-3">
-              <Separator className="mb-3" />
+            <div className="pt-2">
+              <Separator className="mb-2" />
               
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium">Select Calendars to Display</h4>
-                <Button variant="outline" size="sm" onClick={toggleAll} className="text-xs">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-medium">Select Calendars to Display</h4>
+                <Button variant="outline" size="sm" onClick={toggleAll} className="text-[10px] h-6 px-2">
                   {selectedCalendarIds.length === calendars.length ? 'Deselect All' : 'Select All'}
                 </Button>
               </div>

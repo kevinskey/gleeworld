@@ -114,18 +114,18 @@ export const CalendarViews = () => {
 
       {/* Admin Controls */}
       {isAdmin && <Card className="border border-border/50">
-          <CardHeader className="p-4">
+          <CardContent className="px-3 py-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-primary-foreground">Admin Controls</h3>
+              <h3 className="text-xs font-semibold text-primary-foreground">Admin Controls</h3>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => navigate('/calendar/settings')} className="gap-2">
-                  <Settings className="h-4 w-4" />
+                <Button variant="outline" size="sm" onClick={() => navigate('/calendar/settings')} className="gap-1.5 h-7 text-xs px-2">
+                  <Settings className="h-3.5 w-3.5" />
                   Settings
                 </Button>
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
+                    <Button variant="outline" size="sm" className="h-7 text-xs px-2">
+                      <Plus className="h-3.5 w-3.5 mr-1" />
                       Manage Calendars
                     </Button>
                   </DialogTrigger>
@@ -135,7 +135,7 @@ export const CalendarViews = () => {
                 </Dialog>
               </div>
             </div>
-          </CardHeader>
+          </CardContent>
         </Card>}
 
       {/* Create Event Dialog - triggered by state */}
