@@ -223,15 +223,15 @@ export const CalendarFilterStrip = ({
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
                 {calendars.map(calendar => {
                 const isSelected = selectedCalendarIds.includes(calendar.id);
-                return <button key={calendar.id} onClick={() => toggleCalendar(calendar.id)} className={`flex items-center gap-3 p-2 rounded-md border transition-all hover:bg-muted/50 ${isSelected ? 'bg-background border-border' : 'bg-muted/30 border-border/30 opacity-60'}`}>
-                      <div className={`w-4 h-4 rounded-sm border-2 transition-all ${isSelected ? 'scale-100' : 'scale-75 opacity-50'}`} style={{
+                return <button key={calendar.id} onClick={() => toggleCalendar(calendar.id)} className={`flex items-center gap-2 px-2 py-1 rounded border text-xs transition-all hover:bg-muted/50 ${isSelected ? 'bg-background border-border' : 'bg-muted/30 border-border/30 opacity-60'}`}>
+                      <div className={`w-3 h-3 rounded-sm border transition-all flex-shrink-0 ${isSelected ? 'scale-100' : 'scale-75 opacity-50'}`} style={{
                     backgroundColor: isSelected ? calendar.color : 'transparent',
                     borderColor: calendar.color
                   }} />
-                      <span className={`text-sm ${isSelected ? 'font-medium' : 'font-normal'}`}>
+                      <span className={`truncate ${isSelected ? 'font-medium' : 'font-normal'}`}>
                         {calendar.name}
                       </span>
                     </button>;
