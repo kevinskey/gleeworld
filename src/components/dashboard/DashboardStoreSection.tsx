@@ -96,7 +96,7 @@ export const DashboardStoreSection = () => {
                             +{product.images.length - 1}
                           </span>}
                       </div>
-                      <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                      <h3 className="text-foreground truncate group-hover:text-primary transition-colors text-xl font-normal">
                         {product.title}
                       </h3>
                     </div>
