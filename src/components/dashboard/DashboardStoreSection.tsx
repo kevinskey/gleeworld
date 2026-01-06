@@ -54,7 +54,7 @@ export const DashboardStoreSection = () => {
             <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground leading-none lg:text-lg">COLLECTIONS
 24-25<br />
               COLLECTIONS<br />
-              <span className="text-primary">24-25</span>
+              <span className="text-primary text-4xl">24-25</span>
             </h1>
           </div>
           
@@ -63,11 +63,7 @@ export const DashboardStoreSection = () => {
         </div>
 
         {/* Category Tabs */}
-        <div className="flex items-center gap-6 mb-8 border-b border-border pb-4">
-          {categories.map(cat => <button key={cat} onClick={() => setActiveCategory(cat)} className={cn("text-sm font-medium transition-colors", activeCategory === cat ? "text-foreground font-bold" : "text-muted-foreground hover:text-foreground")}>
-              {cat}
-            </button>)}
-        </div>
+        
 
         {/* Product Horizontal Scroll */}
         {products.length > 0 ? <>
