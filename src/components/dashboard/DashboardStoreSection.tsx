@@ -101,7 +101,7 @@ export const DashboardStoreSection = () => {
             {/* View All & Glee Academy */}
             <div className="flex flex-col sm:flex-row gap-4 mt-10">
               
-              <Button onClick={() => navigate('/glee-academy')} className="flex-1 gap-2 py-[100px] text-4xl">
+              <Button onClick={() => navigate('/glee-academy')} className="flex-1 gap-2 py-[100px] text-4xl bg-orange-500 hover:bg-orange-400">
                 <GraduationCap className="h-5 w-5" />
                 Explore Glee Academy
               </Button>
