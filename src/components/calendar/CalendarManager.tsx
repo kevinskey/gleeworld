@@ -220,7 +220,7 @@ export const CalendarManager = () => {
                   <div className="w-4 h-4 rounded-full" style={{
                 backgroundColor: calendar.color
               }} />
-                  <CardTitle className="text-lg text-blue-500">{calendar.name}</CardTitle>
+                  <CardTitle className="text-primary-foreground text-xl">{calendar.name}</CardTitle>
                   {calendar.is_default && <Badge variant="secondary">Default</Badge>}
                 </div>
                 <div className="flex items-center gap-1">
@@ -237,7 +237,7 @@ export const CalendarManager = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {calendar.description && <CardDescription className="text-sm">
+              {calendar.description && <CardDescription className="text-xs">
                   {calendar.description}
                 </CardDescription>}
               <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
