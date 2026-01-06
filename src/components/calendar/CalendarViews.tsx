@@ -57,37 +57,37 @@ export const CalendarViews = () => {
         </CardContent>
       </Card>;
   }
-  return <div className="space-y-4">
+  return <div className="space-y-2">
       {/* Main Calendar Layout */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        {/* Calendar Grid Section */}
-        <div className="flex-1">
+      <div className="flex flex-col lg:flex-row gap-3">
+        {/* Calendar Grid Section - takes more space */}
+        <div className="flex-[3]">
           <Card className="border border-border/50 bg-card">
-            <CardContent className="p-4 sm:p-6">
-              {/* Calendar Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2 sm:gap-4">
+            <CardContent className="p-3 sm:p-4">
+              {/* Calendar Header - more compact */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <h2 className="text-lg sm:text-xl font-semibold text-foreground">
                     {format(currentDate, 'MMMM yyyy')}
                   </h2>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => navigateMonth('prev')} className="h-8 w-8">
+                  <div className="flex items-center gap-0.5">
+                    <Button variant="ghost" size="icon" onClick={() => navigateMonth('prev')} className="h-7 w-7">
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => navigateMonth('next')} className="h-8 w-8">
+                    <Button variant="ghost" size="icon" onClick={() => navigateMonth('next')} className="h-7 w-7">
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => {
+                  <Button variant="outline" size="sm" className="h-7" onClick={() => {
                   setCurrentDate(new Date());
                   setSelectedDate(new Date());
                 }}>
                     Today
                   </Button>
-                  {isExecMember && <Button size="sm" className="gap-2" onClick={() => setShowCreateEvent(true)}>
+                  {isExecMember && <Button size="sm" className="gap-2 h-7" onClick={() => setShowCreateEvent(true)}>
                       <Plus className="h-4 w-4" />
                       <span className="hidden sm:inline">New Appointment</span>
                       <span className="sm:hidden">New</span>
@@ -101,8 +101,8 @@ export const CalendarViews = () => {
           </Card>
         </div>
 
-        {/* Day Agenda Panel */}
-        <div className="lg:w-80 xl:w-96">
+        {/* Day Agenda Panel - narrower */}
+        <div className="lg:w-64 xl:w-72">
           <DayAgendaPanel selectedDate={selectedDate} events={selectedDateEvents} onEventClick={event => {
           console.log('Event clicked:', event);
         }} />
