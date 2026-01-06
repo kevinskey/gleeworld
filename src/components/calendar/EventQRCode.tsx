@@ -17,7 +17,9 @@ export const EventQRCode = ({ eventId, eventTitle, eventQrToken }: EventQRCodePr
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
-  const checkInUrl = `${window.location.origin}/event-checkin/${eventQrToken}`;
+  // Use production domain for QR codes, not the preview URL
+  const baseUrl = import.meta.env.PROD ? 'https://gleeworld.org' : window.location.origin;
+  const checkInUrl = `${baseUrl}/event-checkin/${eventQrToken}`;
 
   useEffect(() => {
     if (open && eventQrToken) {
