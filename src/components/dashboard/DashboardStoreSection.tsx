@@ -170,14 +170,6 @@ export const DashboardStoreSection = () => {
         Glee Academy
       </Button>
 
-      {/* My Modules - Edge to Edge */}
-      <Button 
-        onClick={() => navigate('/modules')} 
-        className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none"
-      >
-        <BookOpen className="h-5 w-5" />
-        My Modules
-      </Button>
 
       {/* Courses Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -254,5 +246,14 @@ export const DashboardStoreSection = () => {
           )}
         </div>
       </div>
+
+      {/* My Modules - Edge to Edge */}
+      <Button 
+        onClick={() => navigate('/modules')} 
+        className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none"
+      >
+        <BookOpen className="h-5 w-5" />
+        My Modules
+      </Button>
     </div>;
 };
