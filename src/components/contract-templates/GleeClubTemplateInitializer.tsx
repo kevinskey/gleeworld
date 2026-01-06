@@ -3,20 +3,20 @@ import { useContractTemplates } from '@/hooks/useContractTemplates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Plus, Loader2, X } from 'lucide-react';
-
 export const GleeClubTemplateInitializer = () => {
-  const { templates, createGleeClubTemplate } = useContractTemplates();
+  const {
+    templates,
+    createGleeClubTemplate
+  } = useContractTemplates();
   const [isCreating, setIsCreating] = useState(false);
   const [hasGleeClubTemplate, setHasGleeClubTemplate] = useState(false);
   const [isDismissed, setIsDismissed] = useState(() => {
     return localStorage.getItem('glee-club-template-ready-dismissed') === 'true';
   });
-
   useEffect(() => {
     const gleeClubTemplate = templates.find(t => t.name === 'Glee Club Performance Agreement');
     setHasGleeClubTemplate(!!gleeClubTemplate);
   }, [templates]);
-
   const handleCreateTemplate = async () => {
     setIsCreating(true);
     try {
@@ -33,38 +33,28 @@ export const GleeClubTemplateInitializer = () => {
   if (hasGleeClubTemplate && isDismissed) {
     return null;
   }
-
   if (hasGleeClubTemplate) {
-    return (
-      <Card className="border-green-200 bg-green-50">
+    return <Card className="border-green-200 bg-green-50">
         <CardHeader>
           <CardTitle className="flex items-center justify-between text-green-800">
-            <div className="flex items-center">
+            <div className="flex items-center text-primary-foreground">
               <CheckCircle className="h-5 w-5 mr-2" />
               Glee Club Template Ready
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setIsDismissed(true);
-                localStorage.setItem('glee-club-template-ready-dismissed', 'true');
-              }}
-              className="text-green-600 hover:text-green-800 hover:bg-green-100"
-            >
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={() => {
+            setIsDismissed(true);
+            localStorage.setItem('glee-club-template-ready-dismissed', 'true');
+          }} className="text-green-600 hover:text-green-800 hover:bg-green-100">
+              <X className="h-4 w-4 text-accent-foreground" />
             </Button>
           </CardTitle>
-          <CardDescription className="text-green-600">
+          <CardDescription className="text-primary-foreground">
             The Spelman College Glee Club Performance Agreement template is available and ready to use.
           </CardDescription>
         </CardHeader>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <Card className="border-blue-200 bg-blue-50">
+  return <Card className="border-blue-200 bg-blue-50">
       <CardHeader>
         <CardTitle className="text-blue-800">Initialize Glee Club Template</CardTitle>
         <CardDescription className="text-blue-600">
@@ -72,24 +62,15 @@ export const GleeClubTemplateInitializer = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Button 
-          onClick={handleCreateTemplate}
-          disabled={isCreating}
-          className="w-full"
-        >
-          {isCreating ? (
-            <>
+        <Button onClick={handleCreateTemplate} disabled={isCreating} className="w-full">
+          {isCreating ? <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               Creating Template...
-            </>
-          ) : (
-            <>
+            </> : <>
               <Plus className="h-4 w-4 mr-2" />
               Create Glee Club Template
-            </>
-          )}
+            </>}
         </Button>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
