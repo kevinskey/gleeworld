@@ -164,7 +164,7 @@ export const ContractsList = ({
 
                   {filteredAndSortedContracts.map(contract => {
                 const sendCount = contractSendHistory[contract.id] || 0;
-                return <ContractItem key={contract.id} contract={contract} isSelected={selectedContracts.has(contract.id)} sendCount={sendCount} onSelect={handleSelectContract} onView={onViewContract} onDelete={handleDeleteContract} onAdminSign={handleAdminSign} onSend={contract => handleOpenSendDialog(contract, false)} onResend={contract => handleOpenSendDialog(contract, true)} onEditTitle={handleEditTitle} className="border border-stone-50" />;
+                return <ContractItem key={contract.id} contract={contract} isSelected={selectedContracts.has(contract.id)} sendCount={sendCount} onSelect={handleSelectContract} onView={onViewContract} onDelete={handleDeleteContract} onAdminSign={handleAdminSign} onSend={contract => handleOpenSendDialog(contract, false)} onResend={contract => handleOpenSendDialog(contract, true)} onEditTitle={handleEditTitle} />;
               })}
 
                   {filteredAndSortedContracts.length === 0 && contracts.length > 0 && <div className="text-center py-8">
