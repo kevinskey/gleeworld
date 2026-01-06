@@ -106,15 +106,22 @@ export const DashboardStoreSection = () => {
           ))}
         </div>
 
-        {/* Product Grid */}
+        {/* Product Horizontal Scroll */}
         {products.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayedProducts.map((product) => (
+            <div 
+              className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap"
+              style={{ 
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
+              {products.map((product) => (
                 <div
                   key={product.id}
                   onClick={() => navigate(`/shop/${product.id}`)}
-                  className="group cursor-pointer"
+                  className="group cursor-pointer flex-shrink-0 w-64 snap-start"
                 >
                   {/* Product Image */}
                   <div className="relative aspect-[3/4] bg-muted/50 rounded-lg overflow-hidden mb-4">
@@ -167,19 +174,6 @@ export const DashboardStoreSection = () => {
                 </div>
               ))}
             </div>
-
-            {/* More Button */}
-            {products.length > 6 && !showMore && (
-              <div className="flex flex-col items-center mt-10">
-                <button
-                  onClick={() => setShowMore(true)}
-                  className="text-muted-foreground hover:text-foreground transition-colors flex flex-col items-center gap-1"
-                >
-                  <span>More</span>
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </div>
-            )}
 
             {/* View All & Glee Academy */}
             <div className="flex flex-col sm:flex-row gap-4 mt-10">
