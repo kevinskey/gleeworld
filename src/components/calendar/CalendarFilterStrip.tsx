@@ -180,22 +180,27 @@ export const CalendarFilterStrip = ({
       </Card>;
   }
   return <Card className="border border-primary/30 bg-gradient-to-br from-primary/5 via-background to-secondary/5 shadow-sm">
-      <CardContent className="px-2 sm:px-3 py-1">
-        <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+      <CardContent className="px-2 sm:px-3 py-1.5">
+        <div className="flex items-center justify-center gap-2 sm:gap-3">
           {/* Label */}
-          <span className="text-[9px] sm:text-[10px] font-medium text-primary-foreground flex-shrink-0">
+          <span className="text-[10px] sm:text-xs font-medium text-primary-foreground flex-shrink-0">
             Calendars:
           </span>
           
-          {/* All calendar swatches - centered, compact */}
-          <div className="flex items-center justify-center gap-0.5 sm:gap-1 flex-wrap">
+          {/* All calendar swatches - centered */}
+          <div className="flex items-center justify-center gap-1 sm:gap-1.5 flex-wrap">
             {calendars.map(calendar => {
               const isSelected = selectedCalendarIds.includes(calendar.id);
               return (
                 <button 
                   key={calendar.id} 
-                  onClick={() => toggleCalendar(calendar.id)} 
-                  className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[8px] sm:text-[9px] transition-all border ${
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleCalendar(calendar.id);
+                  }} 
+                  className={`flex items-center gap-1 px-1.5 py-1 rounded text-[9px] sm:text-[10px] transition-all border cursor-pointer ${
                     isSelected 
                       ? 'bg-background border-border opacity-100' 
                       : 'bg-muted/30 border-transparent opacity-50 hover:opacity-75'
@@ -203,10 +208,10 @@ export const CalendarFilterStrip = ({
                   title={`${calendar.name} - Click to ${isSelected ? 'hide' : 'show'}`}
                 >
                   <div 
-                    className={`w-2 h-2 rounded-sm flex-shrink-0 transition-transform ${isSelected ? 'scale-100' : 'scale-75'}`} 
+                    className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 transition-transform ${isSelected ? 'scale-100' : 'scale-75'}`} 
                     style={{ backgroundColor: calendar.color }}
                   />
-                  <span className="truncate max-w-[40px] sm:max-w-[50px]">{calendar.name}</span>
+                  <span className="truncate max-w-[45px] sm:max-w-[55px]">{calendar.name}</span>
                 </button>
               );
             })}
@@ -214,10 +219,15 @@ export const CalendarFilterStrip = ({
 
           {/* Toggle all button */}
           <Button 
+            type="button"
             variant="ghost" 
             size="sm" 
-            onClick={toggleAll} 
-            className="text-[8px] sm:text-[9px] h-4 px-1 flex-shrink-0"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleAll();
+            }} 
+            className="text-[9px] sm:text-[10px] h-5 px-1.5 flex-shrink-0"
           >
             {selectedCalendarIds.length === calendars.length ? 'Hide' : 'All'}
           </Button>
