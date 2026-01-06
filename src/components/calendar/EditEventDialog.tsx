@@ -21,7 +21,8 @@ import {
   TrashIcon,
   AlertTriangleIcon,
   ImageIcon,
-  UploadIcon
+  UploadIcon,
+  CalendarDays
 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,7 +73,14 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
     attendance_required: false,
     attendance_deadline: '',
     late_arrival_allowed: true,
-    excuse_required: false
+    excuse_required: false,
+    // Recurring settings
+    is_recurring: false,
+    recurrence_type: 'weekly',
+    recurrence_interval: 1,
+    recurrence_end_date: '',
+    max_occurrences: 10,
+    recurrence_days_of_week: [] as number[]
   });
 
   // Helper function to calculate attendance deadline (30 minutes after start)
@@ -115,6 +123,12 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
     return localDate.toISOString().slice(0, 16);
   };
 
+      // Helper to format date for date input (YYYY-MM-DD)
+      const formatDateOnly = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+      };
+
       setFormData({
         title: event.title || '',
         description: event.description || '',
@@ -130,7 +144,14 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         attendance_required: event.attendance_required || false,
         attendance_deadline: event.attendance_deadline ? formatDateForInput(event.attendance_deadline) : '',
         late_arrival_allowed: event.late_arrival_allowed !== false,
-        excuse_required: event.excuse_required || false
+        excuse_required: event.excuse_required || false,
+        // Recurring settings
+        is_recurring: event.is_recurring || false,
+        recurrence_type: (event as any).recurrence_type || 'weekly',
+        recurrence_interval: (event as any).recurrence_interval || 1,
+        recurrence_end_date: (event as any).recurrence_end_date ? formatDateOnly((event as any).recurrence_end_date) : '',
+        max_occurrences: (event as any).max_occurrences || 10,
+        recurrence_days_of_week: (event as any).recurrence_days_of_week || []
       });
 
       // Set existing image if available
@@ -242,6 +263,13 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         attendance_deadline: formData.attendance_deadline ? new Date(formData.attendance_deadline + ':00').toISOString() : null,
         late_arrival_allowed: formData.late_arrival_allowed,
         excuse_required: formData.excuse_required,
+        // Recurring settings
+        is_recurring: formData.is_recurring,
+        recurrence_type: formData.is_recurring ? formData.recurrence_type : null,
+        recurrence_interval: formData.is_recurring ? formData.recurrence_interval : null,
+        recurrence_end_date: formData.is_recurring && formData.recurrence_end_date ? new Date(formData.recurrence_end_date).toISOString() : null,
+        max_occurrences: formData.is_recurring ? formData.max_occurrences : null,
+        recurrence_days_of_week: formData.is_recurring && formData.recurrence_type === 'weekly' ? formData.recurrence_days_of_week : null,
         updated_at: new Date().toISOString()
       };
 
@@ -728,6 +756,126 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Recurring Settings Card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Recurring Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">Recurring Event</Label>
+                  <p className="text-xs text-muted-foreground">
+                    This event repeats on a schedule
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.is_recurring}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_recurring: checked }))}
+                />
+              </div>
+
+              {formData.is_recurring && (
+                <div className="space-y-4 p-4 border rounded-lg bg-background">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Repeat</Label>
+                      <Select
+                        value={formData.recurrence_type}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, recurrence_type: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Every</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="1"
+                          max="12"
+                          value={formData.recurrence_interval}
+                          onChange={(e) => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(e.target.value) || 1 }))}
+                          className="w-20"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {formData.recurrence_type === 'daily' ? 'day(s)' : formData.recurrence_type === 'weekly' ? 'week(s)' : 'month(s)'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Max Occurrences</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0 
+                          ? Math.ceil(formData.max_occurrences / Math.max(formData.recurrence_days_of_week.length, 1))
+                          : formData.max_occurrences
+                        }
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 1;
+                          if (formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0) {
+                            setFormData(prev => ({ ...prev, max_occurrences: val * prev.recurrence_days_of_week.length }));
+                          } else {
+                            setFormData(prev => ({ ...prev, max_occurrences: val }));
+                          }
+                        }}
+                        placeholder={formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0 ? "weeks" : "times"}
+                      />
+                    </div>
+                  </div>
+
+                  {formData.recurrence_type === 'weekly' && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Repeat on</Label>
+                      <div className="flex gap-2">
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+                          <Button
+                            key={i}
+                            type="button"
+                            variant={formData.recurrence_days_of_week.includes(i) ? "default" : "outline"}
+                            size="sm"
+                            className="w-10 h-10"
+                            onClick={() => setFormData(prev => ({
+                              ...prev,
+                              recurrence_days_of_week: prev.recurrence_days_of_week.includes(i)
+                                ? prev.recurrence_days_of_week.filter(x => x !== i)
+                                : [...prev.recurrence_days_of_week, i].sort((a, b) => a - b)
+                            }))}
+                          >
+                            {day.charAt(0)}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">End Date (optional)</Label>
+                    <Input
+                      type="date"
+                      value={formData.recurrence_end_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
+                      placeholder="Series end date"
+                    />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
