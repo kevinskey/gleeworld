@@ -24,6 +24,7 @@ import { LivePerformancesSection } from '@/components/tour/LivePerformancesSecti
 import { TourRosterSection } from '@/components/tour/TourRosterSection';
 import { TourManagerLanding } from './TourManagerLanding';
 import { TourLogisticsSection } from './TourLogisticsSection';
+import { BusInfoSection } from '@/components/tour/BusInfoSection';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TourManagerDashboardProps {
@@ -48,7 +49,8 @@ const navItems = [
   { value: 'roster', label: 'Roster', icon: UserCheck },
   { value: 'route-planning', label: 'Routes', icon: MapPin },
   { value: 'rooming', label: 'Rooms', icon: Bed },
-  { value: 'bus-buddies', label: 'Bus', icon: Bus },
+  { value: 'bus-buddies', label: 'Bus Buddies', icon: Users },
+  { value: 'bus-info', label: 'Bus Info', icon: Bus },
   { value: 'documents', label: 'Docs', icon: ClipboardList },
   { value: 'wardrobe', label: 'Wardrobe', icon: Shirt },
 ];
@@ -63,7 +65,8 @@ const contentConfig: Record<string, { title: string; description: string }> = {
   'roster': { title: 'Roster', description: 'Manage which members are going on tour' },
   'route-planning': { title: 'Routes', description: 'Optimize tour routes with intelligent planning' },
   'rooming': { title: 'Rooms', description: 'View and manage hotel room assignments' },
-  'bus-buddies': { title: 'Bus', description: 'Assign bus buddies and seating arrangements' },
+  'bus-buddies': { title: 'Bus Buddies', description: 'Assign bus buddies and seating arrangements' },
+  'bus-info': { title: 'Bus Info', description: 'Bus details, rules, amenities, and important information' },
   'documents': { title: 'Documents', description: 'Manage important tour documentation' },
   'wardrobe': { title: 'Wardrobe', description: 'Track uniforms, costumes, and wardrobe items' },
 };
@@ -153,6 +156,8 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
         return <RoomingAssignmentsSection />;
       case 'bus-buddies':
         return <BusBuddiesSection />;
+      case 'bus-info':
+        return <BusInfoSection />;
       case 'documents':
         return <TourDocumentsSection />;
       case 'wardrobe':
@@ -260,15 +265,6 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                 />
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-2 text-sm flex-shrink-0"
-              onClick={() => navigate('/bus-information')}
-            >
-              <Bus className="h-4 w-4" />
-              <span className="hidden sm:inline">Bus Info</span>
-            </Button>
           </div>
         </header>
 
