@@ -193,11 +193,11 @@ export const MonthlyCalendar = ({
                 {format(day, 'd')}
               </div>
 
-              {/* Event Dots - Minimalist indicator */}
+              {/* Event Lines - Minimalist indicator */}
               {hasEvents && (
-                <div className="flex flex-wrap gap-0.5">
+                <div className="flex flex-col gap-0.5 mt-0.5">
                   {dayEvents.slice(0, 3).map((event) => {
-                    const dotClass = (() => {
+                    const lineClass = (() => {
                       switch (event.event_type) {
                         case 'performance':
                           return 'bg-primary';
@@ -208,8 +208,6 @@ export const MonthlyCalendar = ({
                         case 'social':
                           return 'bg-muted-foreground';
                         default:
-                          // Important: many synced calendars use event_type = 'other'
-                          // Ensure dots are still visible.
                           return 'bg-primary';
                       }
                     })();
@@ -219,8 +217,8 @@ export const MonthlyCalendar = ({
                         key={event.id}
                         onClick={(e) => handleEventClick(event, e)}
                         className={cn(
-                          'w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full cursor-pointer hover:scale-125 transition-transform',
-                          dotClass
+                          'h-1 sm:h-1.5 w-full rounded-sm cursor-pointer hover:opacity-80 transition-opacity truncate',
+                          lineClass
                         )}
                         title={event.title}
                       />
