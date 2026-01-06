@@ -4,7 +4,7 @@ import { BackNavigation } from "@/components/shared/BackNavigation";
 const Calendar = () => {
   return <UniversalLayout showHeader={true} showFooter={false}>
       <div className="min-h-screen w-full">
-        <div className="w-full px-[100px] py-[20px] sm:py-8">
+        <div className="w-full py-[20px] sm:py-8 px-[50px] pt-[3px]">
           {/* Back Navigation */}
           <BackNavigation className="mb-6" />
           
