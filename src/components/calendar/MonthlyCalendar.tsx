@@ -6,6 +6,7 @@ import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
 import { CreateEventDialog } from "./CreateEventDialog";
+import { EventContextMenu } from "./EventContextMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -212,16 +213,32 @@ export const MonthlyCalendar = ({
                       }
                     })();
 
+                    const canEdit = userPermissions && (
+                      userPermissions.isSuperAdmin || 
+                      userPermissions.isAdmin || 
+                      user?.id === event.created_by
+                    );
+                    const canDelete = canEdit;
+
                     return (
-                      <div
+                      <EventContextMenu
                         key={event.id}
-                        onClick={(e) => handleEventClick(event, e)}
-                        className={cn(
-                          'h-1 sm:h-1.5 w-4/5 rounded-full cursor-pointer hover:opacity-80 transition-opacity',
-                          lineClass
-                        )}
-                        title={event.title}
-                      />
+                        event={event}
+                        canEdit={!!canEdit}
+                        canDelete={!!canDelete}
+                        onView={() => setSelectedEvent(event)}
+                        onEdit={() => setEditingEvent(event)}
+                        onDeleted={onEventUpdated}
+                      >
+                        <div
+                          onClick={(e) => handleEventClick(event, e)}
+                          className={cn(
+                            'h-1 sm:h-1.5 w-4/5 rounded-full cursor-pointer hover:opacity-80 transition-opacity',
+                            lineClass
+                          )}
+                          title={event.title}
+                        />
+                      </EventContextMenu>
                     );
                   })}
                   {dayEvents.length > 3 && (
