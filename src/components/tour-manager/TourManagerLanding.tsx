@@ -238,21 +238,8 @@ export const TourManagerLanding = ({
         </Card>
       </div>
 
-      {/* Section Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {sections.map(section => <Card key={section.id} className="group cursor-pointer hover:shadow-md transition-all border hover:border-primary/30" onClick={() => onNavigate(section.id)}>
-            <CardContent className="p-3">
-              <div className={`p-2 rounded-lg ${section.color} text-white w-fit mb-2`}>
-                <section.icon className="h-4 w-4" />
-              </div>
-              <p className="text-sm font-medium transition-colors text-primary-foreground">{section.title}</p>
-              <p className="text-xs text-stone-400">{section.stat} {section.statLabel}</p>
-            </CardContent>
-          </Card>)}
-      </div>
-
       {/* Quick Actions */}
-      <div className="flex flex-wrap items-center gap-2 pt-2">
+      <div className="flex flex-wrap items-center gap-2 pb-2">
         <span className="text-xs font-medium text-muted-foreground">Quick:</span>
         <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onNavigate('tour-dates')}>
           <Calendar className="h-3 w-3 mr-1" />
@@ -270,6 +257,19 @@ export const TourManagerLanding = ({
           <MapPinned className="h-3 w-3 mr-1" />
           Route
         </Button>
+      </div>
+
+      {/* Section Cards Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {sections.map(section => <Card key={section.id} className="group cursor-pointer hover:shadow-md transition-all border hover:border-primary/30" onClick={() => onNavigate(section.id)}>
+            <CardContent className="p-3">
+              <div className={`p-2 rounded-lg ${section.color} text-white w-fit mb-2`}>
+                <section.icon className="h-4 w-4" />
+              </div>
+              <p className="text-sm font-medium transition-colors text-primary-foreground">{section.title}</p>
+              <p className="text-xs text-stone-400">{section.stat} {section.statLabel}</p>
+            </CardContent>
+          </Card>)}
       </div>
     </div>;
 };
