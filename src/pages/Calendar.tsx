@@ -1,10 +1,8 @@
 import { CalendarViews } from "@/components/calendar/CalendarViews";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { BackNavigation } from "@/components/shared/BackNavigation";
-
 const Calendar = () => {
-  return (
-    <UniversalLayout showHeader={true} showFooter={false}>
+  return <UniversalLayout showHeader={true} showFooter={false}>
       <div className="min-h-screen w-full">
         <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
           {/* Back Navigation */}
@@ -15,17 +13,13 @@ const Calendar = () => {
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
               My Calendar
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Manage your schedule and appointments
-            </p>
+            
           </div>
           
           {/* Main Content */}
           <CalendarViews />
         </div>
       </div>
-    </UniversalLayout>
-  );
+    </UniversalLayout>;
 };
-
 export default Calendar;
