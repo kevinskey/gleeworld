@@ -7,20 +7,21 @@ interface PitchPipeProps {
   className?: string;
 }
 
-// Chromatic scale C4 to C5 (13 notes including both C's)
+// Chromatic scale C4 to C5 (13 notes)
 const chromaticNotes = [
-  { note: 'C', display: 'C', frequency: 261.63, isSharp: false },
-  { note: 'C#', display: 'C♯/D♭', frequency: 277.18, isSharp: true },
-  { note: 'D', display: 'D', frequency: 293.66, isSharp: false },
-  { note: 'D#', display: 'D♯/E♭', frequency: 311.13, isSharp: true },
-  { note: 'E', display: 'E', frequency: 329.63, isSharp: false },
-  { note: 'F', display: 'F', frequency: 349.23, isSharp: false },
-  { note: 'F#', display: 'F♯/G♭', frequency: 369.99, isSharp: true },
-  { note: 'G', display: 'G', frequency: 392.00, isSharp: false },
-  { note: 'G#', display: 'G♯/A♭', frequency: 415.30, isSharp: true },
-  { note: 'A', display: 'A', frequency: 440.00, isSharp: false },
-  { note: 'A#', display: 'A♯/B♭', frequency: 466.16, isSharp: true },
-  { note: 'B', display: 'B', frequency: 493.88, isSharp: false },
+  { note: 'C4', display: 'C', frequency: 261.63, isSharp: false },
+  { note: 'C#4', display: '♯♭', frequency: 277.18, isSharp: true },
+  { note: 'D4', display: 'D', frequency: 293.66, isSharp: false },
+  { note: 'D#4', display: '♯♭', frequency: 311.13, isSharp: true },
+  { note: 'E4', display: 'E', frequency: 329.63, isSharp: false },
+  { note: 'F4', display: 'F', frequency: 349.23, isSharp: false },
+  { note: 'F#4', display: '♯♭', frequency: 369.99, isSharp: true },
+  { note: 'G4', display: 'G', frequency: 392.00, isSharp: false },
+  { note: 'G#4', display: '♯♭', frequency: 415.30, isSharp: true },
+  { note: 'A4', display: 'A', frequency: 440.00, isSharp: false },
+  { note: 'A#4', display: '♯♭', frequency: 466.16, isSharp: true },
+  { note: 'B4', display: 'B', frequency: 493.88, isSharp: false },
+  { note: 'C5', display: 'C', frequency: 523.25, isSharp: false },
 ];
 
 export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
