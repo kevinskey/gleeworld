@@ -151,20 +151,19 @@ export const MonthlyCalendar = ({
       )}
 
       {/* Day Headers */}
-      <div className="grid grid-cols-7 gap-px bg-border rounded-t-lg overflow-hidden">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+      <div className="grid grid-cols-7 gap-px bg-border rounded-t-lg overflow-hidden flex-shrink-0">
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
           <div 
-            key={day} 
-            className="p-2 text-center text-xs sm:text-sm font-medium text-muted-foreground bg-muted/50"
+            key={idx} 
+            className="p-1 sm:p-1.5 text-center text-[10px] sm:text-xs font-medium text-muted-foreground bg-muted/50"
           >
-            <span className="hidden sm:inline">{day}</span>
-            <span className="sm:hidden">{day.charAt(0)}</span>
+            {day}
           </div>
         ))}
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-px bg-border rounded-b-lg overflow-hidden -mt-4 flex-1">
+      <div className="grid grid-cols-7 gap-px bg-border rounded-b-lg overflow-hidden -mt-4 flex-1 auto-rows-fr">
         {days.map(day => {
           const dayEvents = getEventsForDate(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
@@ -177,16 +176,16 @@ export const MonthlyCalendar = ({
               key={day.toString()}
               onClick={() => handleDateClick(day)}
               className={cn(
-                "min-h-0 h-full p-1.5 sm:p-2 cursor-pointer transition-colors bg-card",
+                "min-h-0 p-1 sm:p-1.5 cursor-pointer transition-colors bg-card flex flex-col",
                 !isCurrentMonth && "bg-muted/30",
                 isToday && "bg-primary/5",
-                isSelected && "bg-primary/10 ring-2 ring-inset ring-primary",
+                isSelected && "bg-primary/10 ring-1 ring-inset ring-primary",
                 "hover:bg-accent/50"
               )}
             >
               {/* Date Number */}
               <div className={cn(
-                "text-sm font-medium mb-1",
+                "text-[10px] sm:text-xs font-medium",
                 !isCurrentMonth && "text-muted-foreground/50",
                 isToday && "text-primary font-bold",
                 isSelected && "text-primary"
