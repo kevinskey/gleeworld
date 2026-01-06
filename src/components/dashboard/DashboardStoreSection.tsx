@@ -49,7 +49,7 @@ export const DashboardStoreSection = () => {
   return <div className="w-full bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pl-[30px] pt-[2px]">
         {/* Section Header */}
-        <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground py-[15px] pl-[20px]">Shop</h2>
+        <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground py-[10px] pl-[20px] pb-[20px] pt-[20px]">Shop</h2>
         
 
         {/* Product Horizontal Scroll */}
@@ -101,9 +101,9 @@ export const DashboardStoreSection = () => {
             {/* View All & Glee Academy */}
             <div className="flex flex-col sm:flex-row gap-4 mt-10">
               
-              <Button onClick={() => navigate('/glee-academy')} className="flex-1 gap-2 py-[100px] text-4xl bg-orange-500 hover:bg-orange-400">
+              <Button onClick={() => navigate('/glee-academy')} className="flex-1 gap-2 py-[100px] text-4xl text-center">
                 <GraduationCap className="h-5 w-5" />
-                Explore Glee Academy
+                Glee Academy
               </Button>
             </div>
           </> : <div className="text-center py-16">
