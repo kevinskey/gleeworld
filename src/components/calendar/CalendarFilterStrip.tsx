@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -202,113 +201,98 @@ export const CalendarFilterStrip = ({
 
   if (loading) {
     return (
-      <Card className="border border-border/50 bg-muted/30">
-        <CardContent className="p-3">
-          <div className="animate-pulse text-sm text-muted-foreground">
-            Loading calendar filters...
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-1 text-[10px] text-muted-foreground animate-pulse">
+        Loading...
+      </div>
     );
   }
 
   if (!calendarControlsEnabled) {
     return (
-      <Card className="border border-border/50 bg-muted/30">
-        <CardContent className="p-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Settings className="h-4 w-4" />
-            Calendar controls have been disabled by your administrator
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+        <Settings className="h-3 w-3" />
+        <span className="truncate">Controls disabled</span>
+      </div>
+    );
+  }
+
+  if (calendars.length === 0) {
+    return (
+      <div className="text-[10px] text-muted-foreground">
+        No calendars
+      </div>
     );
   }
 
   return (
-    <Card className="border border-primary/30 bg-gradient-to-br from-primary/5 via-background to-secondary/5 shadow-sm">
-      <CardContent className="px-2 sm:px-3 py-1.5">
-        <div className="flex items-center justify-center gap-2 sm:gap-3">
-          {/* Label */}
-          <span className="text-[10px] sm:text-xs font-medium text-primary-foreground flex-shrink-0">
-            Calendars:
-          </span>
-
-          {/* All calendar swatches - centered */}
-          <div className="flex items-center justify-center gap-1 sm:gap-1.5 flex-wrap">
-            {calendars.map(calendar => {
-              const isSelected = selectedCalendarIds.includes(calendar.id);
-              return (
-                <ContextMenu key={calendar.id}>
-                  <ContextMenuTrigger asChild>
+    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+      {/* Mobile: horizontal scroll strip */}
+      <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide py-0.5 flex-1 min-w-0">
+        {calendars.map(calendar => {
+          const isSelected = selectedCalendarIds.includes(calendar.id);
+          return (
+            <ContextMenu key={calendar.id}>
+              <ContextMenuTrigger asChild>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleCalendar(calendar.id);
+                  }}
+                  className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] transition-all border flex-shrink-0 ${
+                    isSelected
+                      ? 'bg-background border-border shadow-sm'
+                      : 'bg-muted/40 border-transparent opacity-60 hover:opacity-100'
+                  }`}
+                  title={`${calendar.name} - Click to toggle`}
+                >
+                  <div
+                    className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 ${isSelected ? '' : 'opacity-50'}`}
+                    style={{ backgroundColor: calendar.color }}
+                  />
+                  <span className="truncate max-w-[40px] sm:max-w-[60px]">{calendar.name}</span>
+                </button>
+              </ContextMenuTrigger>
+              <ContextMenuContent className="bg-popover z-50 p-2">
+                <ContextMenuLabel className="text-xs font-medium px-1 pb-2">
+                  Change color for {calendar.name}
+                </ContextMenuLabel>
+                <ContextMenuSeparator />
+                <div className="grid grid-cols-6 gap-1.5 p-1 pt-2">
+                  {presetColors.map(color => (
                     <button
+                      key={color}
                       type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleCalendar(calendar.id);
-                      }}
-                      className={`flex items-center gap-1 px-1.5 py-1 rounded text-[9px] sm:text-[10px] transition-all border cursor-pointer ${
-                        isSelected
-                          ? 'bg-background border-border opacity-100 text-foreground'
-                          : 'bg-muted/30 border-transparent opacity-70 hover:opacity-100 text-white'
+                      onClick={() => updateCalendarColor(calendar.id, color)}
+                      className={`w-5 h-5 rounded-md border-2 transition-all hover:scale-110 ${
+                        calendar.color === color ? 'border-primary ring-2 ring-primary/30' : 'border-transparent'
                       }`}
-                      title={`${calendar.name} - Click to toggle, right-click to change color`}
-                    >
-                      <div
-                        className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 transition-transform ${isSelected ? 'scale-100' : 'scale-75'}`}
-                        style={{ backgroundColor: calendar.color }}
-                      />
-                      <span className="truncate max-w-[45px] sm:max-w-[55px]">{calendar.name}</span>
-                    </button>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent className="bg-popover z-50 p-2">
-                    <ContextMenuLabel className="text-xs font-medium px-1 pb-2">
-                      Change color for {calendar.name}
-                    </ContextMenuLabel>
-                    <ContextMenuSeparator />
-                    <div className="grid grid-cols-6 gap-1.5 p-1 pt-2">
-                      {presetColors.map(color => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => updateCalendarColor(calendar.id, color)}
-                          className={`w-5 h-5 rounded-md border-2 transition-all hover:scale-110 ${
-                            calendar.color === color ? 'border-primary ring-2 ring-primary/30' : 'border-transparent'
-                          }`}
-                          style={{ backgroundColor: color }}
-                          title={color}
-                        />
-                      ))}
-                    </div>
-                  </ContextMenuContent>
-                </ContextMenu>
-              );
-            })}
-          </div>
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+              </ContextMenuContent>
+            </ContextMenu>
+          );
+        })}
+      </div>
 
-          {/* Toggle all button */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleAll();
-            }}
-            className="text-[9px] sm:text-[10px] h-5 px-1.5 flex-shrink-0"
-          >
-            {selectedCalendarIds.length === calendars.length ? 'Hide' : 'All'}
-          </Button>
-        </div>
-
-        {calendars.length === 0 && (
-          <div className="text-center py-2 text-[10px] text-muted-foreground">
-            No calendars available
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {/* Toggle all - always visible */}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleAll();
+        }}
+        className="text-[9px] sm:text-[10px] h-5 px-1.5 flex-shrink-0 text-muted-foreground hover:text-foreground"
+      >
+        {selectedCalendarIds.length === calendars.length ? 'None' : 'All'}
+      </Button>
+    </div>
   );
 };
