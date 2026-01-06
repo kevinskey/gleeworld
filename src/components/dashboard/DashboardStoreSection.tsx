@@ -92,9 +92,9 @@ export const DashboardStoreSection = () => {
   }
   return <div className="w-full bg-background">
       {/* Section Header - Edge to Edge */}
-      <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground py-5 px-4 sm:px-6 lg:px-8 w-full">Shop</h2>
+      <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground py-5 px-4 sm:px-6 lg:px-8 w-full pt-[2px]">Shop</h2>
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pl-[30px] pt-[2px]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pl-[30px] pt-[2px] pb-[2px]">
         
 
         {/* Product Horizontal Scroll */}
@@ -187,24 +187,24 @@ export const DashboardStoreSection = () => {
                 </div>
                 
                 {/* White Content Section */}
-                <div className="bg-white p-4 flex flex-col h-[240px]">
-                  {course.description && <p className="text-gray-700 text-sm leading-relaxed mb-4 line-clamp-2">
+                <div className="bg-white p-4 flex flex-col min-h-[200px]">
+                  {course.description && <p className="text-gray-700 text-sm leading-relaxed mb-4">
                       {course.description}
                     </p>}
                   
-                  {/* Course Highlights - Fixed height */}
-                  <div className="mb-4 flex-1 h-[100px]">
+                  {/* Course Highlights */}
+                  <div className="mb-4 flex-1">
                     <h5 className="font-semibold text-gray-900 mb-2">Course Highlights:</h5>
                     <ul className="space-y-1">
-                      {highlights.slice(0, 4).map((highlight, idx) => <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
+                      {highlights.map((highlight, idx) => <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
                           <ChevronRight className="h-3 w-3 text-gray-400" />
                           {highlight}
                         </li>)}
                     </ul>
                   </div>
                   
-                  {/* Enter Button - Fixed at bottom */}
-                  <button onClick={() => navigate(`/glee-academy/course/${course.id}`)} className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors mt-auto">
+                  {/* Enter Button */}
+                  <button onClick={() => navigate(`/glee-academy/course/${course.id}`)} className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors">
                     <span className="font-medium">Enter {course.course_code || course.title}</span>
                     <ChevronRight className="h-4 w-4" />
                   </button>
