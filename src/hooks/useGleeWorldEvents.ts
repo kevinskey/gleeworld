@@ -28,6 +28,7 @@ export interface GleeWorldEvent {
   attendance_deadline?: string | null;
   late_arrival_allowed?: boolean | null;
   excuse_required?: boolean | null;
+  event_qr_token?: string | null;
   // Recurring event fields
   is_recurring?: boolean | null;
   parent_event_id?: string | null;
