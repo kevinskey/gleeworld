@@ -1,10 +1,10 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Eye, Calendar, User } from "lucide-react";
 import { useContracts } from "@/hooks/useContracts";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { formatContractDisplayName } from "@/lib/contract-utils";
 import type { Contract } from "@/hooks/useContracts";
 
 interface ContractsSectionProps {
@@ -100,7 +100,7 @@ export const ContractsSection = ({ onViewContract }: ContractsSectionProps) => {
                 <FileText className="h-5 w-5 text-primary flex-shrink-0 mt-0.5 sm:mt-0" />
                 <div className="min-w-0 flex-1">
                   <h4 className="font-medium text-foreground truncate text-xs sm:text-sm leading-tight">
-                    {contract.title.replace(/^(Tour Contract|TC)\s*-\s*/i, '')}
+                    {formatContractDisplayName(contract.title)}
                   </h4>
                   <div className="flex flex-col gap-0.5 mt-0.5 text-[10px] sm:text-xs text-muted-foreground">
                     <div className="flex items-center gap-1.5">
