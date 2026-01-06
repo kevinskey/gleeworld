@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 
 interface DateTimePickerProps {
-  value: Date;
+  value?: Date;
   onChange: (date: Date | undefined) => void;
   placeholder?: string;
   className?: string;
@@ -21,21 +21,19 @@ export function DateTimePicker({
   className
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false);
-  const [timeValue, setTimeValue] = React.useState(() => 
+  const [timeValue, setTimeValue] = React.useState(() =>
     value ? format(value, "HH:mm") : "12:00"
   );
 
-  // Sync timeValue when value changes externally
+  // Sync timeValue when value changes externally, but don't fight user typing
   React.useEffect(() => {
-    if (value) {
-      setTimeValue(format(value, "HH:mm"));
-    }
-  }, [value]);
+    if (value) setTimeValue(format(value, "HH:mm"));
+  }, [value?.getTime()]);
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
       const [hours, minutes] = timeValue.split(":");
-      selectedDate.setHours(parseInt(hours), parseInt(minutes));
+      selectedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
       onChange(selectedDate);
       setOpen(false);
     }
@@ -43,12 +41,10 @@ export function DateTimePicker({
 
   const handleTimeChange = (time: string) => {
     setTimeValue(time);
-    if (value) {
-      const [hours, minutes] = time.split(":");
-      const newDate = new Date(value);
-      newDate.setHours(parseInt(hours), parseInt(minutes));
-      onChange(newDate);
-    }
+    const [hours, minutes] = time.split(":");
+    const base = value ? new Date(value) : new Date();
+    base.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    onChange(base);
   };
 
   return (

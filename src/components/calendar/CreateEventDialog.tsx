@@ -674,24 +674,24 @@ export const CreateEventDialog = ({
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-xs">Start *</Label>
-                  <DateTimePicker 
-                    value={formData.start_date || new Date()} 
+                  <DateTimePicker
+                    value={formData.start_date}
                     onChange={(date) => {
                       setFormData(prev => ({
                         ...prev,
                         start_date: date,
                         attendance_deadline: prev.attendance_required && date ? calculateAttendanceDeadline(date) : prev.attendance_deadline
                       }));
-                    }} 
+                    }}
                     placeholder="Select start date"
                     className="h-8 text-sm"
                   />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">End</Label>
-                  <DateTimePicker 
-                    value={formData.end_date || new Date()} 
-                    onChange={(date) => setFormData(prev => ({ ...prev, end_date: date }))} 
+                  <DateTimePicker
+                    value={formData.end_date}
+                    onChange={(date) => setFormData(prev => ({ ...prev, end_date: date }))}
                     placeholder="Select end date"
                     className="h-8 text-sm"
                   />
