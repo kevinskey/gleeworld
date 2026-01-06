@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Building2, Search, Plus, Star, Calendar, MapPin, Mail, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
 interface Host {
   id: string;
   contact_name: string;
@@ -35,7 +34,6 @@ interface Host {
   created_at: string;
   updated_at: string;
 }
-
 interface HostManagerProps {
   user?: {
     id: string;
@@ -44,8 +42,9 @@ interface HostManagerProps {
     role?: string;
   };
 }
-
-export const HostManager = ({ user }: HostManagerProps) => {
+export const HostManager = ({
+  user
+}: HostManagerProps) => {
   const [hosts, setHosts] = useState<Host[]>([]);
   const [filteredHosts, setFilteredHosts] = useState<Host[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,22 +70,20 @@ export const HostManager = ({ user }: HostManagerProps) => {
     notes: '',
     source: 'manual_entry' as const
   });
-
   useEffect(() => {
     fetchHosts();
   }, []);
-
   useEffect(() => {
     filterHosts();
   }, [hosts, searchTerm, filterType, filterPriority]);
-
   const fetchHosts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('hosts')
-        .select('*')
-        .order('updated_at', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('hosts').select('*').order('updated_at', {
+        ascending: false
+      });
       if (error) throw error;
       setHosts(data || []);
     } catch (error) {
@@ -96,19 +93,12 @@ export const HostManager = ({ user }: HostManagerProps) => {
       setLoading(false);
     }
   };
-
   const filterHosts = () => {
     let filtered = hosts;
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(host => 
-        host.organization_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        host.contact_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        host.contact_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        host.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        host.venue_name?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter(host => host.organization_name?.toLowerCase().includes(searchTerm.toLowerCase()) || host.contact_name?.toLowerCase().includes(searchTerm.toLowerCase()) || host.contact_email?.toLowerCase().includes(searchTerm.toLowerCase()) || host.city?.toLowerCase().includes(searchTerm.toLowerCase()) || host.venue_name?.toLowerCase().includes(searchTerm.toLowerCase()));
     }
 
     // Type filter
@@ -121,20 +111,15 @@ export const HostManager = ({ user }: HostManagerProps) => {
       const priorityNumber = filterPriority === 'high' ? 1 : filterPriority === 'medium' ? 3 : 5;
       filtered = filtered.filter(host => host.priority_level === priorityNumber);
     }
-
     setFilteredHosts(filtered);
   };
-
   const handleAddHost = async () => {
     try {
-      const { data, error } = await supabase
-        .from('hosts')
-        .insert([newHost])
-        .select()
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('hosts').insert([newHost]).select().single();
       if (error) throw error;
-
       setHosts(prev => [data, ...prev]);
       setShowAddDialog(false);
       setNewHost({
@@ -158,43 +143,41 @@ export const HostManager = ({ user }: HostManagerProps) => {
       toast.error('Failed to add host');
     }
   };
-
   const getPriorityColor = (priority: number | undefined) => {
     if (!priority) return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
     if (priority <= 2) return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'; // high
     if (priority <= 4) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'; // medium
     return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'; // low
   };
-
   const getPriorityLabel = (priority: number | undefined) => {
     if (!priority) return 'Unknown';
     if (priority <= 2) return 'High';
     if (priority <= 4) return 'Medium';
     return 'Low';
   };
-
   const getTypeColor = (type: string | undefined) => {
     if (!type) return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
     switch (type) {
-      case 'venue': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
-      case 'organization': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
-      case 'church': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300';
-      case 'school': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300';
-      case 'corporate': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+      case 'venue':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
+      case 'organization':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
+      case 'church':
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300';
+      case 'school':
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300';
+      case 'corporate':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
     }
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
+    return <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Header with Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
@@ -264,12 +247,7 @@ export const HostManager = ({ user }: HostManagerProps) => {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search hosts by organization, contact, email, or city..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+          <Input placeholder="Search hosts by organization, contact, email, or city..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-[180px]">
@@ -312,16 +290,17 @@ export const HostManager = ({ user }: HostManagerProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="organization_name">Organization Name *</Label>
-                <Input
-                  id="organization_name"
-                  value={newHost.organization_name}
-                  onChange={(e) => setNewHost(prev => ({ ...prev, organization_name: e.target.value }))}
-                  placeholder="Enter organization name"
-                />
+                <Input id="organization_name" value={newHost.organization_name} onChange={e => setNewHost(prev => ({
+                ...prev,
+                organization_name: e.target.value
+              }))} placeholder="Enter organization name" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="type">Organization Type</Label>
-                <Select value={newHost.organization_type} onValueChange={(value) => setNewHost(prev => ({ ...prev, organization_type: value }))}>
+                <Select value={newHost.organization_type} onValueChange={value => setNewHost(prev => ({
+                ...prev,
+                organization_type: value
+              }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -336,80 +315,66 @@ export const HostManager = ({ user }: HostManagerProps) => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contact_name">Contact Name *</Label>
-                <Input
-                  id="contact_name"
-                  value={newHost.contact_name}
-                  onChange={(e) => setNewHost(prev => ({ ...prev, contact_name: e.target.value }))}
-                  placeholder="Enter contact person name"
-                />
+                <Input id="contact_name" value={newHost.contact_name} onChange={e => setNewHost(prev => ({
+                ...prev,
+                contact_name: e.target.value
+              }))} placeholder="Enter contact person name" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contact_email">Contact Email</Label>
-                <Input
-                  id="contact_email"
-                  type="email"
-                  value={newHost.contact_email}
-                  onChange={(e) => setNewHost(prev => ({ ...prev, contact_email: e.target.value }))}
-                  placeholder="Enter contact email"
-                />
+                <Input id="contact_email" type="email" value={newHost.contact_email} onChange={e => setNewHost(prev => ({
+                ...prev,
+                contact_email: e.target.value
+              }))} placeholder="Enter contact email" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contact_phone">Contact Phone</Label>
-                <Input
-                  id="contact_phone"
-                  value={newHost.contact_phone}
-                  onChange={(e) => setNewHost(prev => ({ ...prev, contact_phone: e.target.value }))}
-                  placeholder="Enter contact phone"
-                />
+                <Input id="contact_phone" value={newHost.contact_phone} onChange={e => setNewHost(prev => ({
+                ...prev,
+                contact_phone: e.target.value
+              }))} placeholder="Enter contact phone" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="website_url">Website</Label>
-                <Input
-                  id="website_url"
-                  value={newHost.website_url}
-                  onChange={(e) => setNewHost(prev => ({ ...prev, website_url: e.target.value }))}
-                  placeholder="Enter website URL"
-                />
+                <Input id="website_url" value={newHost.website_url} onChange={e => setNewHost(prev => ({
+                ...prev,
+                website_url: e.target.value
+              }))} placeholder="Enter website URL" />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="street_address">Address</Label>
-                <Input
-                  id="street_address"
-                  value={newHost.street_address}
-                  onChange={(e) => setNewHost(prev => ({ ...prev, street_address: e.target.value }))}
-                  placeholder="Enter street address"
-                />
+                <Input id="street_address" value={newHost.street_address} onChange={e => setNewHost(prev => ({
+                ...prev,
+                street_address: e.target.value
+              }))} placeholder="Enter street address" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  value={newHost.city}
-                  onChange={(e) => setNewHost(prev => ({ ...prev, city: e.target.value }))}
-                  placeholder="Enter city"
-                />
+                <Input id="city" value={newHost.city} onChange={e => setNewHost(prev => ({
+                ...prev,
+                city: e.target.value
+              }))} placeholder="Enter city" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="state">State</Label>
-                <Input
-                  id="state"
-                  value={newHost.state}
-                  onChange={(e) => setNewHost(prev => ({ ...prev, state: e.target.value }))}
-                  placeholder="Enter state"
-                />
+                <Input id="state" value={newHost.state} onChange={e => setNewHost(prev => ({
+                ...prev,
+                state: e.target.value
+              }))} placeholder="Enter state" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="zip_code">ZIP Code</Label>
-                <Input
-                  id="zip_code"
-                  value={newHost.zip_code}
-                  onChange={(e) => setNewHost(prev => ({ ...prev, zip_code: e.target.value }))}
-                  placeholder="Enter ZIP code"
-                />
+                <Input id="zip_code" value={newHost.zip_code} onChange={e => setNewHost(prev => ({
+                ...prev,
+                zip_code: e.target.value
+              }))} placeholder="Enter ZIP code" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="priority_level">Priority Level</Label>
-                <Select value={newHost.priority_level.toString()} onValueChange={(value) => setNewHost(prev => ({ ...prev, priority_level: parseInt(value) }))}>
+                <Select value={newHost.priority_level.toString()} onValueChange={value => setNewHost(prev => ({
+                ...prev,
+                priority_level: parseInt(value)
+              }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -422,13 +387,10 @@ export const HostManager = ({ user }: HostManagerProps) => {
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={newHost.notes}
-                  onChange={(e) => setNewHost(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Enter any additional notes or preferences"
-                  rows={3}
-                />
+                <Textarea id="notes" value={newHost.notes} onChange={e => setNewHost(prev => ({
+                ...prev,
+                notes: e.target.value
+              }))} placeholder="Enter any additional notes or preferences" rows={3} />
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-6">
@@ -445,68 +407,51 @@ export const HostManager = ({ user }: HostManagerProps) => {
 
       {/* Hosts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredHosts.map((host) => (
-          <Card key={host.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedHost(host)}>
+        {filteredHosts.map(host => <Card key={host.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedHost(host)}>
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{host.organization_name || host.venue_name || 'Unnamed Organization'}</CardTitle>
+                  <CardTitle className="text-xl">{host.organization_name || host.venue_name || 'Unnamed Organization'}</CardTitle>
                   <div className="flex items-center gap-2 mt-2">
-                    {host.organization_type && (
-                      <Badge className={getTypeColor(host.organization_type)}>
+                    {host.organization_type && <Badge className={getTypeColor(host.organization_type)}>
                         {host.organization_type}
-                      </Badge>
-                    )}
-                    <Badge className={getPriorityColor(host.priority_level)}>
-                      {getPriorityLabel(host.priority_level)} priority
-                    </Badge>
+                      </Badge>}
+                    
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {host.contact_name && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {host.contact_name && <div className="flex items-center gap-2 text-sm text-primary-foreground">
                   <Users className="h-3 w-3" />
                   {host.contact_name}
-                </div>
-              )}
-              {host.contact_email && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                </div>}
+              {host.contact_email && <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Mail className="h-3 w-3" />
                   {host.contact_email}
-                </div>
-              )}
-              {host.city && host.state && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                </div>}
+              {host.city && host.state && <div className="flex items-center gap-2 text-sm text-primary-foreground">
                   <MapPin className="h-3 w-3" />
                   {host.city}, {host.state}
-                </div>
-              )}
+                </div>}
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Performances:</span>
-                <span className="font-medium">{host.total_performances || 0}</span>
+                <span className="text-primary-foreground">Performances:</span>
+                <span className="font-medium text-secondary-foreground">{host.total_performances || 0}</span>
               </div>
-              {host.last_performance_date && (
-                <div className="flex items-center justify-between text-sm">
+              {host.last_performance_date && <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Last performance:</span>
                   <span className="font-medium">
                     {new Date(host.last_performance_date).toLocaleDateString()}
                   </span>
-                </div>
-              )}
+                </div>}
             </CardContent>
-          </Card>
-        ))}
+          </Card>)}
       </div>
 
-      {filteredHosts.length === 0 && (
-        <div className="text-center py-8">
+      {filteredHosts.length === 0 && <div className="text-center py-8">
           <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-muted-foreground">No hosts found</h3>
           <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 };
