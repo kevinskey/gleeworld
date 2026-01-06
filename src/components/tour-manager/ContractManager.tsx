@@ -41,7 +41,7 @@ export const ContractManager = ({ user, initialContractData }: ContractManagerPr
   const { contracts, loading, error, deleteContract, refetch } = useContracts();
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [contractViewerOpen, setContractViewerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(initialContractData ? 'tour-template' : 'tour-template');
+  const [activeTab, setActiveTab] = useState(initialContractData ? 'tour-template' : 'all');
 
   const handleViewContract = (contract: Contract) => {
     setSelectedContract(contract);
@@ -70,19 +70,15 @@ export const ContractManager = ({ user, initialContractData }: ContractManagerPr
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex flex-wrap gap-1 bg-muted/50 p-1 h-auto">
+          <TabsTrigger value="all" className="text-xs px-3 py-1.5">All Contracts</TabsTrigger>
+          <TabsTrigger value="user" className="text-xs px-3 py-1.5">My Contracts</TabsTrigger>
           <TabsTrigger value="tour-template" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
             <Route className="h-3.5 w-3.5" />
             <span>Tour Template</span>
           </TabsTrigger>
-          <TabsTrigger value="all" className="text-xs px-3 py-1.5">All Contracts</TabsTrigger>
-          <TabsTrigger value="user" className="text-xs px-3 py-1.5">My Contracts</TabsTrigger>
           <TabsTrigger value="templates" className="text-xs px-3 py-1.5">Templates</TabsTrigger>
           <TabsTrigger value="create" className="text-xs px-3 py-1.5">Create New</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="tour-template" className="space-y-6">
-          <TourContractTemplate initialData={initialContractData} />
-        </TabsContent>
 
         <TabsContent value="all" className="space-y-6">
           <ContractsList
@@ -95,6 +91,10 @@ export const ContractManager = ({ user, initialContractData }: ContractManagerPr
             onRetry={refetch}
             onContractUpdated={handleContractUpdated}
           />
+        </TabsContent>
+
+        <TabsContent value="tour-template" className="space-y-6">
+          <TourContractTemplate initialData={initialContractData} />
         </TabsContent>
 
         <TabsContent value="user" className="space-y-6">
