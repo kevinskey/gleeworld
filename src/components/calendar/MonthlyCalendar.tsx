@@ -196,21 +196,36 @@ export const MonthlyCalendar = ({
               {/* Event Dots - Minimalist indicator */}
               {hasEvents && (
                 <div className="flex flex-wrap gap-0.5">
-                  {dayEvents.slice(0, 3).map((event) => (
-                    <div
-                      key={event.id}
-                      onClick={(e) => handleEventClick(event, e)}
-                      className={cn(
-                        "w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full cursor-pointer hover:scale-125 transition-transform",
-                        event.event_type === 'performance' && "bg-purple-500",
-                        event.event_type === 'rehearsal' && "bg-blue-500",
-                        event.event_type === 'meeting' && "bg-green-500",
-                        event.event_type === 'social' && "bg-pink-500",
-                        !event.event_type && "bg-primary"
-                      )}
-                      title={event.title}
-                    />
-                  ))}
+                  {dayEvents.slice(0, 3).map((event) => {
+                    const dotClass = (() => {
+                      switch (event.event_type) {
+                        case 'performance':
+                          return 'bg-primary';
+                        case 'rehearsal':
+                          return 'bg-secondary';
+                        case 'meeting':
+                          return 'bg-accent';
+                        case 'social':
+                          return 'bg-muted-foreground';
+                        default:
+                          // Important: many synced calendars use event_type = 'other'
+                          // Ensure dots are still visible.
+                          return 'bg-primary';
+                      }
+                    })();
+
+                    return (
+                      <div
+                        key={event.id}
+                        onClick={(e) => handleEventClick(event, e)}
+                        className={cn(
+                          'w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full cursor-pointer hover:scale-125 transition-transform',
+                          dotClass
+                        )}
+                        title={event.title}
+                      />
+                    );
+                  })}
                   {dayEvents.length > 3 && (
                     <span className="text-[10px] text-muted-foreground">+{dayEvents.length - 3}</span>
                   )}
