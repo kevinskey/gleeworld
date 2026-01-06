@@ -195,7 +195,7 @@ export const MonthlyCalendar = ({
 
               {/* Event Lines - Minimalist indicator */}
               {hasEvents && (
-                <div className="flex flex-col gap-0.5 mt-0.5">
+                <div className="flex flex-col items-center gap-0.5 mt-0.5">
                   {dayEvents.slice(0, 3).map((event) => {
                     const lineClass = (() => {
                       switch (event.event_type) {
