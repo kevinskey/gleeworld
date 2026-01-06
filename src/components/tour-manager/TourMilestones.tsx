@@ -144,7 +144,7 @@ export const TourMilestones = () => {
                         <X className="h-3 w-3" />
                       </Button>
                     </div> : <>
-                      <span className={cn("flex-1 text-xs text-foreground", milestone.completed && "line-through text-muted-foreground")}>
+                      <span className={cn("flex-1 text-xs text-white", milestone.completed && "line-through text-muted-foreground")}>
                         {milestone.title}
                       </span>
                       <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
