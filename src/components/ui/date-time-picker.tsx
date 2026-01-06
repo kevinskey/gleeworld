@@ -21,24 +21,34 @@ export function DateTimePicker({
   className
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false);
-  const [timeValue, setTimeValue] = React.useState(
-    format(value, "HH:mm")
+  const [timeValue, setTimeValue] = React.useState(() => 
+    value ? format(value, "HH:mm") : "12:00"
   );
+
+  // Sync timeValue when value changes externally
+  React.useEffect(() => {
+    if (value) {
+      setTimeValue(format(value, "HH:mm"));
+    }
+  }, [value]);
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
       const [hours, minutes] = timeValue.split(":");
       selectedDate.setHours(parseInt(hours), parseInt(minutes));
       onChange(selectedDate);
+      setOpen(false);
     }
   };
 
   const handleTimeChange = (time: string) => {
     setTimeValue(time);
-    const [hours, minutes] = time.split(":");
-    const newDate = new Date(value);
-    newDate.setHours(parseInt(hours), parseInt(minutes));
-    onChange(newDate);
+    if (value) {
+      const [hours, minutes] = time.split(":");
+      const newDate = new Date(value);
+      newDate.setHours(parseInt(hours), parseInt(minutes));
+      onChange(newDate);
+    }
   };
 
   return (
@@ -56,7 +66,7 @@ export function DateTimePicker({
           {value ? format(value, "PPp") : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0 z-[100]" align="start">
         <div className="p-3 border-b">
           <Input
             type="time"

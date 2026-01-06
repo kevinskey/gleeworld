@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Calendar } from "@/components/ui/calendar";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Plus, Sparkles, Send, Upload, X, Users, Trash2, CalendarDays, Clock, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,8 +50,8 @@ export const CreateEventDialog = ({
     title: '',
     description: '',
     event_type: 'performance',
-    start_date: '',
-    end_date: '',
+    start_date: new Date() as Date | undefined,
+    end_date: undefined as Date | undefined,
     venue_name: '',
     address: '',
     max_attendees: '',
@@ -137,10 +138,9 @@ export const CreateEventDialog = ({
   }];
 
   // Helper function to calculate attendance deadline (30 minutes after start)
-  const calculateAttendanceDeadline = (startDate: string) => {
+  const calculateAttendanceDeadline = (startDate: Date | undefined) => {
     if (!startDate) return '';
-    const start = new Date(startDate + ':00');
-    const deadline = new Date(start.getTime() + 30 * 60000); // Add 30 minutes
+    const deadline = new Date(startDate.getTime() + 30 * 60000); // Add 30 minutes
     return deadline.toISOString().slice(0, 16);
   };
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -234,15 +234,13 @@ export const CreateEventDialog = ({
   useEffect(() => {
     if (open) {
       loadCalendars();
-      // Pre-fill date if initialDate is provided, defaulting to 12:00 AM
+      // Pre-fill date if initialDate is provided
       if (initialDate) {
-        const year = initialDate.getFullYear();
-        const month = String(initialDate.getMonth() + 1).padStart(2, '0');
-        const day = String(initialDate.getDate()).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}T00:00`;
+        const startDate = new Date(initialDate);
+        startDate.setHours(0, 0, 0, 0);
         setFormData(prev => ({
           ...prev,
-          start_date: dateString
+          start_date: startDate
         }));
       }
     }
@@ -350,8 +348,8 @@ export const CreateEventDialog = ({
         title: formData.title.trim(),
         description: formData.description?.trim() || null,
         event_type: formData.event_type,
-        start_date: formData.start_date ? new Date(formData.start_date + ':00').toISOString() : null,
-        end_date: formData.end_date ? new Date(formData.end_date + ':00').toISOString() : null,
+        start_date: formData.start_date ? formData.start_date.toISOString() : null,
+        end_date: formData.end_date ? formData.end_date.toISOString() : null,
         location: null,
         venue_name: formData.venue_name?.trim() || null,
         address: formData.address?.trim() || null,
@@ -524,8 +522,8 @@ export const CreateEventDialog = ({
         title: '',
         description: '',
         event_type: 'performance',
-        start_date: '',
-        end_date: '',
+        start_date: new Date(),
+        end_date: undefined,
         venue_name: '',
         address: '',
         max_attendees: '',
@@ -676,18 +674,27 @@ export const CreateEventDialog = ({
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-xs">Start *</Label>
-                  <Input type="datetime-local" value={formData.start_date} onChange={e => {
-                    const newStartDate = e.target.value;
-                    setFormData(prev => ({
-                      ...prev,
-                      start_date: newStartDate,
-                      attendance_deadline: prev.attendance_required && newStartDate ? calculateAttendanceDeadline(newStartDate) : prev.attendance_deadline
-                    }));
-                  }} required className="h-8 text-sm" />
+                  <DateTimePicker 
+                    value={formData.start_date || new Date()} 
+                    onChange={(date) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        start_date: date,
+                        attendance_deadline: prev.attendance_required && date ? calculateAttendanceDeadline(date) : prev.attendance_deadline
+                      }));
+                    }} 
+                    placeholder="Select start date"
+                    className="h-8 text-sm"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">End</Label>
-                  <Input type="datetime-local" value={formData.end_date} onChange={e => setFormData(prev => ({ ...prev, end_date: e.target.value }))} className="h-8 text-sm" />
+                  <DateTimePicker 
+                    value={formData.end_date || new Date()} 
+                    onChange={(date) => setFormData(prev => ({ ...prev, end_date: date }))} 
+                    placeholder="Select end date"
+                    className="h-8 text-sm"
+                  />
                 </div>
               </div>
 
