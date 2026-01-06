@@ -26,6 +26,7 @@ import { format } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EditEventDialog } from "./EditEventDialog";
 import { EventClassListManager } from "./EventClassListManager";
+import { EventQRCode } from "./EventQRCode";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -258,11 +259,19 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
                   <h4 className="font-semibold text-lg">Event Management</h4>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <EventClassListManager
                     eventId={event.id}
                     eventTitle={event.title}
                   />
+                  
+                  {event.event_qr_token && (
+                    <EventQRCode
+                      eventId={event.id}
+                      eventTitle={event.title}
+                      eventQrToken={event.event_qr_token}
+                    />
+                  )}
                   
                   <Button 
                     variant="outline"

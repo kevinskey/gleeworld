@@ -8572,6 +8572,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           end_date: string | null
+          event_qr_token: string
           event_type: string | null
           excuse_required: boolean | null
           external_id: string | null
@@ -8613,6 +8614,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           end_date?: string | null
+          event_qr_token?: string
           event_type?: string | null
           excuse_required?: boolean | null
           external_id?: string | null
@@ -8654,6 +8656,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           end_date?: string | null
+          event_qr_token?: string
           event_type?: string | null
           excuse_required?: boolean | null
           external_id?: string | null
