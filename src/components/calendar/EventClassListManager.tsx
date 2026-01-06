@@ -327,9 +327,9 @@ export const EventClassListManager = ({ eventId, eventTitle }: EventClassListMan
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Users className="h-4 w-4" />
-          Manage Class Lists
+        <Button variant="outline" className="h-auto py-4 flex-col gap-2 hover:bg-secondary/80">
+          <Users className="h-5 w-5 text-muted-foreground" />
+          <span className="font-medium">Class Lists</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
