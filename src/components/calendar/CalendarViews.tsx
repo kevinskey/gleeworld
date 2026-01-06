@@ -101,8 +101,8 @@ export const CalendarViews = () => {
           </Card>
         </div>
 
-        {/* Day Agenda Panel - narrower */}
-        <div className="lg:w-64 xl:w-72">
+        {/* Day Agenda Panel */}
+        <div className="lg:w-80 xl:w-96">
           <DayAgendaPanel selectedDate={selectedDate} events={selectedDateEvents} onEventClick={event => {
           console.log('Event clicked:', event);
         }} />
