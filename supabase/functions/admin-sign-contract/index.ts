@@ -130,6 +130,23 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .eq('id', contractId);
 
+    // Sync contract to calendar (for tour contracts)
+    try {
+      console.log("Syncing contract to calendar...");
+      const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-contract-to-calendar', {
+        body: { contractId }
+      });
+      
+      if (syncError) {
+        console.error('Calendar sync error:', syncError);
+      } else {
+        console.log('Calendar sync result:', syncData);
+      }
+    } catch (syncErr) {
+      console.error('Failed to sync to calendar:', syncErr);
+      // Don't throw - calendar sync is optional
+    }
+
     // Find the user who signed the contract to send W9 request
     let userId = null;
     if (recipientEmail) {

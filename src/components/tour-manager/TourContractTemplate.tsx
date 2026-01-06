@@ -236,6 +236,30 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
       const contractContent = generatePlainTextContract();
       const contractTitle = `TC - ${variables.HOST_NAME || 'New Host'} - ${variables.PERFORMANCE_DATE || 'TBD'}`;
 
+      // Save contract metadata for calendar sync
+      const contractMetadata = {
+        HOST_NAME: variables.HOST_NAME,
+        HOST_LOCATION: variables.HOST_LOCATION,
+        HOST_CONTACT_NAME: variables.HOST_CONTACT_NAME,
+        HOST_CONTACT_EMAIL: variables.HOST_CONTACT_EMAIL,
+        HOST_CONTACT_PHONE: variables.HOST_CONTACT_PHONE,
+        HOST_SIGNATORY_NAME: variables.HOST_SIGNATORY_NAME,
+        HOST_SIGNATORY_TITLE: variables.HOST_SIGNATORY_TITLE,
+        HOST_DEPARTMENT: variables.HOST_DEPARTMENT,
+        PERFORMANCE_DATE: variables.PERFORMANCE_DATE,
+        START_TIME: variables.START_TIME,
+        END_TIME: variables.END_TIME,
+        VENUE_NAME: variables.VENUE_NAME,
+        VENUE_ADDRESS: variables.VENUE_ADDRESS,
+        HONORARIUM_AMOUNT: variables.HONORARIUM_AMOUNT,
+        DEPOSIT_AMOUNT: variables.DEPOSIT_AMOUNT,
+        PERFORMER_COUNT: variables.PERFORMER_COUNT,
+        ROOM_COUNT: variables.ROOM_COUNT,
+        DIRECTOR_ROOMS: variables.DIRECTOR_ROOMS,
+        SOUND_CHECK_HOURS: variables.SOUND_CHECK_HOURS,
+        SPECIAL_NOTES: variables.SPECIAL_NOTES,
+      };
+
       const { error } = await supabase
         .from('contracts_v2')
         .insert({
@@ -243,7 +267,8 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
           content: contractContent,
           status: 'draft',
           created_by: user.id,
-          is_template: false
+          is_template: false,
+          contract_metadata: contractMetadata
         });
 
       if (error) throw error;

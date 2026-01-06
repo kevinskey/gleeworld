@@ -2462,7 +2462,9 @@ export type Database = {
       contracts_v2: {
         Row: {
           archived: boolean
+          calendar_event_id: string | null
           content: string
+          contract_metadata: Json | null
           created_at: string
           created_by: string | null
           id: string
@@ -2471,11 +2473,14 @@ export type Database = {
           stipend_amount: number | null
           template_id: string | null
           title: string
+          tour_event_id: string | null
           updated_at: string
         }
         Insert: {
           archived?: boolean
+          calendar_event_id?: string | null
           content: string
+          contract_metadata?: Json | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -2484,11 +2489,14 @@ export type Database = {
           stipend_amount?: number | null
           template_id?: string | null
           title: string
+          tour_event_id?: string | null
           updated_at?: string
         }
         Update: {
           archived?: boolean
+          calendar_event_id?: string | null
           content?: string
+          contract_metadata?: Json | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -2497,14 +2505,29 @@ export type Database = {
           stipend_amount?: number | null
           template_id?: string | null
           title?: string
+          tour_event_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "contracts_v2_calendar_event_id_fkey"
+            columns: ["calendar_event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contracts_v2_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "contracts_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_v2_tour_event_id_fkey"
+            columns: ["tour_event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_events"
             referencedColumns: ["id"]
           },
         ]
@@ -8567,6 +8590,7 @@ export type Database = {
           attendance_type: string | null
           calendar_id: string
           category: string | null
+          contract_id: string | null
           course_id: string | null
           created_at: string | null
           created_by: string | null
@@ -8609,6 +8633,7 @@ export type Database = {
           attendance_type?: string | null
           calendar_id: string
           category?: string | null
+          contract_id?: string | null
           course_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -8651,6 +8676,7 @@ export type Database = {
           attendance_type?: string | null
           calendar_id?: string
           category?: string | null
+          contract_id?: string | null
           course_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -8690,6 +8716,13 @@ export type Database = {
             columns: ["calendar_id"]
             isOneToOne: false
             referencedRelation: "gw_calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_events_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_v2"
             referencedColumns: ["id"]
           },
           {
