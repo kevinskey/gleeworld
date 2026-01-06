@@ -4,15 +4,9 @@ import { BackNavigation } from "@/components/shared/BackNavigation";
 const Calendar = () => {
   return <UniversalLayout showHeader={true} showFooter={false}>
       <div className="min-h-screen w-full">
-        <div className="w-full py-[20px] sm:py-8 px-[50px] pt-[3px]">
+        <div className="w-full py-2 sm:py-4 px-[50px]">
           {/* Back Navigation */}
-          <BackNavigation className="mb-6" />
-          
-          {/* Header - Clean Figma Style */}
-          <div className="mb-6 sm:mb-8">
-            
-            
-          </div>
+          <BackNavigation className="mb-2" />
           
           {/* Main Content */}
           <CalendarViews />
