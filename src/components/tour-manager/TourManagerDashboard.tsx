@@ -249,7 +249,7 @@ export const TourManagerDashboard = ({
       <aside className={cn("fixed inset-y-0 left-0 z-40 w-56 bg-blue-700 dark:bg-blue-900 border-r border-blue-600 dark:border-blue-800 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="px-3 py-3 border-b border-blue-600 dark:border-blue-800 flex items-center justify-between">
+          <div className="px-3 py-3 border-b border-blue-600 dark:border-blue-800 flex items-center justify-between bg-slate-700">
             <div className="flex items-center gap-2">
               <div className="flex gap-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
@@ -265,13 +265,13 @@ export const TourManagerDashboard = ({
 
           {/* Navigation */}
           <ScrollArea className="flex-1 py-2">
-            <nav className="px-2 space-y-0.5">
+            <nav className="px-2 space-y-0.5 bg-black">
               {navItems.map(item => <button key={item.value} onClick={() => {
               setActiveSection(item.value);
               setSidebarOpen(false);
             }} className={cn("w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors text-left", activeSection === item.value ? "bg-white/20 text-white" : "text-blue-100 hover:text-white hover:bg-white/10")}>
                   <item.icon className="h-5 w-5 flex-shrink-0" />
-                  <span>{item.label}</span>
+                  <span className="text-primary-foreground">{item.label}</span>
                 </button>)}
             </nav>
           </ScrollArea>
