@@ -52,6 +52,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showRecurringDeleteDialog, setShowRecurringDeleteDialog] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -302,23 +303,44 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (deleteType: 'this_only' | 'all_occurrences' = 'this_only') => {
     if (!event) return;
 
     setDeleteLoading(true);
     try {
-      const { error } = await supabase
-        .from('gw_events')
-        .delete()
-        .eq('id', event.id);
+      // Check if this is a recurring event (has parent or is a parent with children)
+      const isRecurring = event.is_recurring || event.parent_event_id;
+      
+      if (isRecurring && deleteType === 'all_occurrences') {
+        // Use the RPC function to delete all occurrences
+        const { data, error } = await supabase.rpc('delete_recurring_gw_events', {
+          p_event_id: event.id,
+          p_delete_type: 'all_occurrences'
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Event deleted successfully!",
-      });
+        const result = data as { success: boolean; deleted_count: number; message: string };
+        toast({
+          title: "Success",
+          description: result.message || "All recurring events deleted successfully!",
+        });
+      } else {
+        // Delete only this event
+        const { error } = await supabase
+          .from('gw_events')
+          .delete()
+          .eq('id', event.id);
 
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Event deleted successfully!",
+        });
+      }
+
+      setShowRecurringDeleteDialog(false);
       onOpenChange(false);
       onEventUpdated();
     } catch (err) {
@@ -332,6 +354,9 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
       setDeleteLoading(false);
     }
   };
+
+  // Check if event is part of a recurring series
+  const isRecurringEvent = event?.is_recurring || event?.parent_event_id;
 
   const getEventTypeColor = (type: string) => {
     return eventTypes.find(t => t.value === type)?.color || 'bg-gray-100 text-gray-800';
@@ -736,35 +761,80 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                 </AlertDialog>
               )}
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button type="button" variant="destructive" size="sm" className="w-full sm:w-auto">
-                    <TrashIcon className="h-4 w-4 mr-2" />
-                    Delete Event
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="flex items-center gap-2">
-                      <AlertTriangleIcon className="h-5 w-5 text-destructive" />
+              {isRecurringEvent ? (
+                // Recurring event delete dialog with options
+                <AlertDialog open={showRecurringDeleteDialog} onOpenChange={setShowRecurringDeleteDialog}>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" variant="destructive" size="sm" className="w-full sm:w-auto">
+                      <TrashIcon className="h-4 w-4 mr-2" />
                       Delete Event
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete "{event.title}"? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
-                      onClick={handleDelete}
-                      disabled={deleteLoading}
-                      className="bg-destructive hover:bg-destructive/90"
-                    >
-                      {deleteLoading ? "Deleting..." : "Delete Event"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangleIcon className="h-5 w-5 text-destructive" />
+                        Delete Recurring Event
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        "{event.title}" is part of a recurring series. What would you like to delete?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="flex flex-col gap-2 py-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => handleDelete('this_only')}
+                        disabled={deleteLoading}
+                        className="justify-start"
+                      >
+                        {deleteLoading ? "Deleting..." : "Delete this event only"}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDelete('all_occurrences')}
+                        disabled={deleteLoading}
+                        className="justify-start"
+                      >
+                        {deleteLoading ? "Deleting..." : "Delete all occurrences"}
+                      </Button>
+                    </div>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              ) : (
+                // Regular event delete dialog
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" variant="destructive" size="sm" className="w-full sm:w-auto">
+                      <TrashIcon className="h-4 w-4 mr-2" />
+                      Delete Event
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangleIcon className="h-5 w-5 text-destructive" />
+                        Delete Event
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{event.title}"? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={() => handleDelete('this_only')}
+                        disabled={deleteLoading}
+                        className="bg-destructive hover:bg-destructive/90"
+                      >
+                        {deleteLoading ? "Deleting..." : "Delete Event"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
