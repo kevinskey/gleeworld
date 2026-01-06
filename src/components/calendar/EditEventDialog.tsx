@@ -54,6 +54,8 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showRecurringDeleteDialog, setShowRecurringDeleteDialog] = useState(false);
+  const [showRecurringSaveDialog, setShowRecurringSaveDialog] = useState(false);
+  const [pendingSaveEvent, setPendingSaveEvent] = useState<React.FormEvent | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -242,6 +244,21 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
     e.preventDefault();
     if (!user || !event) return;
 
+    // Check if this is a recurring event - if so, show dialog to ask user
+    const isRecurring = event.is_recurring || event.parent_event_id;
+    if (isRecurring) {
+      setPendingSaveEvent(e);
+      setShowRecurringSaveDialog(true);
+      return;
+    }
+
+    // Not recurring, proceed with normal save
+    await performSave('this_only');
+  };
+
+  const performSave = async (saveType: 'this_only' | 'all_occurrences') => {
+    if (!user || !event) return;
+
     setLoading(true);
     try {
       let imageUrl = event.image_url; // Keep existing image by default
@@ -280,28 +297,77 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         attendance_deadline: formData.attendance_deadline ? new Date(formData.attendance_deadline + ':00').toISOString() : null,
         late_arrival_allowed: formData.late_arrival_allowed,
         excuse_required: formData.excuse_required,
-        // Recurring settings
-        is_recurring: formData.is_recurring,
-        recurrence_type: formData.is_recurring ? formData.recurrence_type : null,
-        recurrence_interval: formData.is_recurring ? formData.recurrence_interval : null,
-        recurrence_end_date: formData.is_recurring && formData.recurrence_end_date ? new Date(formData.recurrence_end_date).toISOString() : null,
-        max_occurrences: formData.is_recurring ? formData.max_occurrences : null,
-        recurrence_days_of_week: formData.is_recurring && formData.recurrence_type === 'weekly' ? formData.recurrence_days_of_week : null,
+        // Recurring settings - only update these if saving all occurrences
+        ...(saveType === 'all_occurrences' ? {
+          is_recurring: formData.is_recurring,
+          recurrence_type: formData.is_recurring ? formData.recurrence_type : null,
+          recurrence_interval: formData.is_recurring ? formData.recurrence_interval : null,
+          recurrence_end_date: formData.is_recurring && formData.recurrence_end_date ? new Date(formData.recurrence_end_date).toISOString() : null,
+          max_occurrences: formData.is_recurring ? formData.max_occurrences : null,
+          recurrence_days_of_week: formData.is_recurring && formData.recurrence_type === 'weekly' ? formData.recurrence_days_of_week : null,
+        } : {}),
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
-        .from('gw_events')
-        .update(eventData)
-        .eq('id', event.id);
+      if (saveType === 'all_occurrences') {
+        // Update all events in the series
+        const parentId = event.parent_event_id || event.id;
+        
+        // Update parent event
+        const { error: parentError } = await supabase
+          .from('gw_events')
+          .update(eventData)
+          .eq('id', parentId);
 
-      if (error) throw error;
+        if (parentError) throw parentError;
 
-      toast({
-        title: "Success",
-        description: "Event updated successfully!",
-      });
+        // Update all child events (excluding date-specific fields)
+        const { title, description, event_type, calendar_id, venue_name, address, max_attendees, registration_required, is_public, status, attendance_required, late_arrival_allowed, excuse_required } = eventData;
+        const childEventData = {
+          title,
+          description,
+          event_type,
+          calendar_id,
+          venue_name,
+          address,
+          max_attendees,
+          registration_required,
+          is_public,
+          status,
+          attendance_required,
+          late_arrival_allowed,
+          excuse_required,
+          updated_at: new Date().toISOString()
+        };
 
+        const { error: childError } = await supabase
+          .from('gw_events')
+          .update(childEventData)
+          .eq('parent_event_id', parentId);
+
+        if (childError) throw childError;
+
+        toast({
+          title: "Success",
+          description: "All events in the series updated successfully!",
+        });
+      } else {
+        // Update only this event
+        const { error } = await supabase
+          .from('gw_events')
+          .update(eventData)
+          .eq('id', event.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Event updated successfully!",
+        });
+      }
+
+      setShowRecurringSaveDialog(false);
+      setPendingSaveEvent(null);
       onOpenChange(false);
       onEventUpdated();
     } catch (err) {
@@ -1039,6 +1105,47 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
             </div>
           </div>
         </form>
+
+        {/* Recurring Save Dialog */}
+        <AlertDialog open={showRecurringSaveDialog} onOpenChange={setShowRecurringSaveDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                Update Recurring Event
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                "{event?.title}" is part of a recurring series. Would you like to update just this event or all events in the series?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex flex-col gap-2 py-4">
+              <Button
+                variant="outline"
+                onClick={() => performSave('this_only')}
+                disabled={loading}
+                className="justify-start"
+              >
+                {loading ? "Saving..." : "Update this event only"}
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => performSave('all_occurrences')}
+                disabled={loading}
+                className="justify-start"
+              >
+                {loading ? "Saving..." : "Update all events in series"}
+              </Button>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setShowRecurringSaveDialog(false);
+                setPendingSaveEvent(null);
+              }}>
+                Cancel
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
