@@ -234,7 +234,7 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
       }
 
       const contractContent = generatePlainTextContract();
-      const contractTitle = `Tour Contract - ${variables.HOST_NAME || 'New Host'} - ${variables.PERFORMANCE_DATE || 'TBD'}`;
+      const contractTitle = `TC - ${variables.HOST_NAME || 'New Host'} - ${variables.PERFORMANCE_DATE || 'TBD'}`;
 
       const { error } = await supabase
         .from('contracts_v2')
