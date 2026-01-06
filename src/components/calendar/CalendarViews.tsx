@@ -138,10 +138,15 @@ export const CalendarViews = () => {
           </CardContent>
         </Card>}
 
-      {/* Create Event Dialog - triggered by state */}
-      {showCreateEvent && <CreateEventDialog onEventCreated={() => {
-      setShowCreateEvent(false);
-      fetchEvents();
-    }} initialDate={selectedDate} />}
+      {/* Create Event Dialog - controlled by state */}
+      <CreateEventDialog 
+        open={showCreateEvent}
+        onOpenChange={setShowCreateEvent}
+        onEventCreated={() => {
+          setShowCreateEvent(false);
+          fetchEvents();
+        }} 
+        initialDate={selectedDate} 
+      />
     </div>;
 };
