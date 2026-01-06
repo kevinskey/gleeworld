@@ -111,34 +111,31 @@ export const CalendarViews = () => {
         </div>
       </div>
 
-      {/* Calendar Filter Strip */}
-      <CalendarFilterStrip onCalendarsChange={setVisibleCalendarIds} />
-
-      {/* Admin Controls */}
-      {isAdmin && <Card className="border border-border/50">
-          <CardContent className="px-3 py-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-primary-foreground">Admin Controls</h3>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => navigate('/calendar/settings')} className="gap-1.5 h-7 text-xs px-2">
-                  <Settings className="h-3.5 w-3.5" />
-                  Settings
+      {/* Combined Footer: Filters + Admin Controls */}
+      <div className="flex items-center justify-between gap-3 mt-2">
+        <div className="flex-1 min-w-0">
+          <CalendarFilterStrip onCalendarsChange={setVisibleCalendarIds} />
+        </div>
+        {isAdmin && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="outline" size="sm" onClick={() => navigate('/calendar/settings')} className="gap-1.5 h-7 text-xs px-2">
+              <Settings className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Settings</span>
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-7 text-xs px-2">
+                  <Plus className="h-3.5 w-3.5 sm:mr-1" />
+                  <span className="hidden sm:inline">Manage Calendars</span>
                 </Button>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 text-xs px-2">
-                      <Plus className="h-3.5 w-3.5 mr-1" />
-                      Manage Calendars
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                    <CalendarManager />
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-          </CardContent>
-        </Card>}
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <CalendarManager />
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+      </div>
 
       {/* Create Event Dialog - controlled by state */}
       <CreateEventDialog 
