@@ -57,40 +57,39 @@ export const CalendarViews = () => {
         </CardContent>
       </Card>;
   }
-  return <div className="flex flex-col h-[calc(100vh-120px)]">
+  return <div className="flex flex-col h-full min-h-0">
       {/* Main Calendar Layout */}
-      <div className="flex flex-col lg:flex-row gap-3 flex-1 min-h-0">
-        {/* Calendar Grid Section - takes more space */}
-        <div className="flex-[3] flex flex-col min-h-0">
+      <div className="flex flex-col lg:flex-row gap-2 sm:gap-3 flex-1 min-h-0">
+        {/* Calendar Grid Section */}
+        <div className="flex-1 lg:flex-[3] flex flex-col min-h-0">
           <Card className="border border-border/50 bg-card flex-1 flex flex-col min-h-0">
-            <CardContent className="p-3 sm:p-4 flex flex-col flex-1 min-h-0">
-              {/* Calendar Header - more compact */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <h2 className="text-lg sm:text-xl font-semibold text-foreground">
-                    {format(currentDate, 'MMMM yyyy')}
+            <CardContent className="p-2 sm:p-3 md:p-4 flex flex-col flex-1 min-h-0">
+              {/* Calendar Header - compact */}
+              <div className="flex items-center justify-between mb-2 flex-shrink-0">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <h2 className="text-sm sm:text-base md:text-lg font-semibold text-foreground">
+                    {format(currentDate, 'MMM yyyy')}
                   </h2>
-                  <div className="flex items-center gap-0.5">
-                    <Button variant="ghost" size="icon" onClick={() => navigateMonth('prev')} className="h-7 w-7">
-                      <ChevronLeft className="h-4 w-4" />
+                  <div className="flex items-center">
+                    <Button variant="ghost" size="icon" onClick={() => navigateMonth('prev')} className="h-6 w-6 sm:h-7 sm:w-7">
+                      <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => navigateMonth('next')} className="h-7 w-7">
-                      <ChevronRight className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" onClick={() => navigateMonth('next')} className="h-6 w-6 sm:h-7 sm:w-7">
+                      <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <Button variant="outline" size="sm" className="h-7" onClick={() => {
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <Button variant="outline" size="sm" className="h-6 sm:h-7 text-xs px-2" onClick={() => {
                     setCurrentDate(new Date());
                     setSelectedDate(new Date());
                   }}>
                     Today
                   </Button>
-                  {isAdmin && <Button size="sm" className="gap-1.5 h-7" onClick={() => setShowCreateEvent(true)}>
-                    <Plus className="h-4 w-4" />
-                    <span className="hidden sm:inline">New Event</span>
-                    <span className="sm:hidden">New</span>
+                  {isAdmin && <Button size="sm" className="gap-1 h-6 sm:h-7 text-xs px-2" onClick={() => setShowCreateEvent(true)}>
+                    <Plus className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">New</span>
                   </Button>}
                 </div>
               </div>
@@ -103,8 +102,8 @@ export const CalendarViews = () => {
           </Card>
         </div>
 
-        {/* Day Agenda Panel */}
-        <div className="lg:w-72 xl:w-80">
+        {/* Day Agenda Panel - collapsible on mobile, sidebar on desktop */}
+        <div className="lg:w-64 xl:w-72 flex-shrink-0 max-h-[30vh] lg:max-h-none overflow-hidden">
           <DayAgendaPanel selectedDate={selectedDate} events={selectedDateEvents} onEventClick={event => {
           console.log('Event clicked:', event);
         }} />
@@ -112,24 +111,24 @@ export const CalendarViews = () => {
       </div>
 
       {/* Combined Footer: Filters + Admin Controls */}
-      <div className="flex items-center justify-between gap-3 mt-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 mt-1 sm:mt-2 flex-shrink-0">
         <div className="flex-1 min-w-0">
           <CalendarFilterStrip onCalendarsChange={setVisibleCalendarIds} />
         </div>
         {isAdmin && (
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Button variant="outline" size="sm" onClick={() => navigate('/calendar/settings')} className="gap-1.5 h-7 text-xs px-2">
-              <Settings className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Button variant="outline" size="sm" onClick={() => navigate('/calendar/settings')} className="gap-1 h-6 text-[10px] sm:text-xs px-1.5 sm:px-2">
+              <Settings className="h-3 w-3" />
               <span className="hidden sm:inline">Settings</span>
             </Button>
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-7 text-xs px-2">
-                  <Plus className="h-3.5 w-3.5 sm:mr-1" />
-                  <span className="hidden sm:inline">Manage Calendars</span>
+                <Button variant="outline" size="sm" className="h-6 text-[10px] sm:text-xs px-1.5 sm:px-2">
+                  <Plus className="h-3 w-3 sm:mr-1" />
+                  <span className="hidden md:inline">Manage</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[90vh] overflow-y-auto">
                 <CalendarManager />
               </DialogContent>
             </Dialog>
