@@ -186,7 +186,7 @@ export const ComprehensiveAppointmentSystem = () => {
             <h1 className="text-xl font-bold capitalize">{mainView}</h1>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto p-4 md:p-6 px-0">
+        <div className="w-full p-4 md:p-6 px-[50px]">
           {mainView === 'calendar' && <EnhancedAppointmentCalendar appointments={visibleAppointments} calendarEvents={gleeWorldEvents} onAppointmentSelect={setSelectedAppointment} />}
           {mainView === 'management' && <AppointmentManager appointments={visibleAppointments} onAppointmentCreate={handleAppointmentCreate} onAppointmentUpdate={handleAppointmentUpdate} onAppointmentDelete={handleAppointmentDelete} editingAppointmentId={editingAppointmentId} onEditingAppointmentIdChange={setEditingAppointmentId} />}
           {mainView === 'services' && <AppointmentServiceManager />}
