@@ -144,7 +144,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="flex min-h-screen bg-background">
         {/* Left Sidebar - Navigation */}
-        <div className="w-[220px] min-w-[220px] bg-muted border-r border-border flex-shrink-0 hidden lg:block pr-[10px]">
+        <div className="w-[260px] min-w-[260px] bg-muted border-r border-border flex-shrink-0 hidden lg:block pr-[10px]">
           <div className="p-4 border-b border-border pb-[30px] pt-[20px]">
             <Mus240SemesterSelector showLabel={false} className="mb-2" />
             <div className="text-lg font-bold text-foreground pt-[10px]">{course.courseCode}</div>
