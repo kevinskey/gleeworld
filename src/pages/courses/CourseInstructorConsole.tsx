@@ -282,17 +282,7 @@ export const CourseInstructorConsole = () => {
                 </CardContent>
               </Card>}
 
-            {activeTab === 'grades' && <Card>
-                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
-                    <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Grades Administration
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-2 sm:p-4 md:p-6">
-                  <GradesAdmin />
-                </CardContent>
-              </Card>}
+            {activeTab === 'grades'}
 
             {activeTab === 'students' && dbCourse && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
