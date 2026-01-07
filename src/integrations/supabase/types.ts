@@ -4566,10 +4566,12 @@ export type Database = {
       glee_academy_tests: {
         Row: {
           allow_retakes: boolean | null
+          available_from: string | null
           course_id: string
           created_at: string | null
           created_by: string | null
           description: string | null
+          due_date: string | null
           duration_minutes: number | null
           id: string
           instructions: string | null
@@ -4584,10 +4586,12 @@ export type Database = {
         }
         Insert: {
           allow_retakes?: boolean | null
+          available_from?: string | null
           course_id: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          due_date?: string | null
           duration_minutes?: number | null
           id?: string
           instructions?: string | null
@@ -4602,10 +4606,12 @@ export type Database = {
         }
         Update: {
           allow_retakes?: boolean | null
+          available_from?: string | null
           course_id?: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          due_date?: string | null
           duration_minutes?: number | null
           id?: string
           instructions?: string | null
