@@ -760,7 +760,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                   </div>}
               </ScrollArea> : <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Click a date to view sessions</p>
+                <p className="text-primary-foreground">Click a date to view sessions</p>
               </div>}
           </CardContent>
         </Card>
