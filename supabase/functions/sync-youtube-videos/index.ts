@@ -391,27 +391,81 @@ serve(async (req) => {
     
     const channel: YouTubeChannel = channelData.items[0]
 
-    // Get channel videos
+    // Get channel videos - first try search API, then fallback to uploads playlist
+    let videosData: any = null
+    let videoIds: string[] = []
+    
+    // Try search API first
     const videosUrl = `https://www.googleapis.com/youtube/v3/search?channelId=${channelId}&part=snippet&order=date&type=video&maxResults=${maxResults}&key=${youtubeApiKey}`
-    console.log('Fetching videos from:', videosUrl.replace(youtubeApiKey, '[API_KEY]'))
+    console.log('Fetching videos from search API:', videosUrl.replace(youtubeApiKey, '[API_KEY]'))
     const videosResponse = await fetch(videosUrl)
     
-    if (!videosResponse.ok) {
-      const errorText = await videosResponse.text()
-      console.error('Videos fetch error:', videosResponse.status, errorText)
-      throw new Error(`Failed to fetch videos: ${videosResponse.status} - ${errorText}`)
+    if (videosResponse.ok) {
+      videosData = await videosResponse.json()
+      if (videosData.items && videosData.items.length > 0) {
+        videoIds = videosData.items.map((item: any) => item.id.videoId)
+        console.log(`Found ${videoIds.length} videos via search API`)
+      }
     }
     
-    const videosData = await videosResponse.json()
+    // Fallback to uploads playlist if search returned no results
+    if (videoIds.length === 0) {
+      console.log('Search API returned no videos, trying uploads playlist...')
+      // The uploads playlist ID is derived from channel ID by replacing 'UC' with 'UU'
+      const uploadsPlaylistId = `UU${channelId.slice(2)}`
+      const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?playlistId=${uploadsPlaylistId}&part=snippet,contentDetails&maxResults=${maxResults}&key=${youtubeApiKey}`
+      console.log('Fetching from uploads playlist:', playlistUrl.replace(youtubeApiKey, '[API_KEY]'))
+      
+      const playlistResponse = await fetch(playlistUrl)
+      if (playlistResponse.ok) {
+        const playlistData = await playlistResponse.json()
+        if (playlistData.items && playlistData.items.length > 0) {
+          videoIds = playlistData.items.map((item: any) => item.contentDetails.videoId)
+          console.log(`Found ${videoIds.length} videos via uploads playlist`)
+        }
+      } else {
+        console.log('Uploads playlist fetch failed:', await playlistResponse.text())
+      }
+    }
     
-    if (!videosData.items || videosData.items.length === 0) {
-      throw new Error('No videos found for this channel')
+    if (videoIds.length === 0) {
+      // Still no videos - save the channel but with a message
+      console.log('No public videos found for this channel')
+      
+      // Save channel anyway so it appears in the list
+      const { data: savedChannel, error: channelSaveError } = await supabaseClient
+        .from('youtube_channels')
+        .upsert({
+          channel_id: channelId,
+          channel_name: channel.snippet.title,
+          channel_description: channel.snippet.description,
+          channel_url: `https://youtube.com/channel/${channelId}`,
+          thumbnail_url: channel.snippet.thumbnails.high?.url || channel.snippet.thumbnails.medium?.url,
+          subscriber_count: parseInt(channel.statistics.subscriberCount || '0'),
+          video_count: parseInt(channel.statistics.videoCount || '0'),
+          last_synced_at: new Date().toISOString(),
+          channel_handle: channel.snippet.customUrl ? `@${channel.snippet.customUrl}` : null
+        }, { onConflict: 'channel_id' })
+        .select()
+        .single()
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Channel added but no public videos found',
+          channel: channel.snippet.title,
+          videosAdded: 0
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      )
     }
 
     // Get detailed video information
-    const videoIds = videosData.items.map((item: any) => item.id.videoId).join(',')
-    const videoDetailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${youtubeApiKey}`
-    console.log('Fetching video details for', videosData.items.length, 'videos')
+    const videoDetailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds.join(',')}&key=${youtubeApiKey}`
+    console.log('Fetching video details for', videoIds.length, 'videos')
     const videoDetailsResponse = await fetch(videoDetailsUrl)
     
     if (!videoDetailsResponse.ok) {
