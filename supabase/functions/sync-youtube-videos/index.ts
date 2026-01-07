@@ -85,6 +85,11 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
       '@spelmangleeclub': SPELMAN_GLEE_CLUB_CHANNEL_ID,
       'spelman glee club': SPELMAN_GLEE_CLUB_CHANNEL_ID,
       'spelman college glee club': SPELMAN_GLEE_CLUB_CHANNEL_ID,
+      // GleeWorld Radio - default for course video library
+      'gleeworldradio': 'UCGW-youtube-channel-id', // Will be resolved via API if not found
+      '@gleeworldradio': 'UCGW-youtube-channel-id',
+      'glee world radio': 'UCGW-youtube-channel-id',
+      'gleeworld radio': 'UCGW-youtube-channel-id',
     }
     
     // Extract handle from various input formats
