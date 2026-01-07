@@ -18,9 +18,22 @@ export const FanFeaturesCard = () => {
     icon: ShoppingBag,
     path: '/shop'
   }];
-  return <RoleCard title="Fan Zone" icon={Star} accentColor="text-yellow-500">
+  return (
+    <RoleCard title="Fan Zone" icon={Star} accentColor="text-yellow-500">
       <div className="space-y-2">
-        {fanLinks.map(link => {})}
+        {fanLinks.map((link) => (
+          <Button
+            key={link.path}
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2"
+            onClick={() => navigate(link.path)}
+          >
+            <link.icon className="h-4 w-4 text-muted-foreground" />
+            <span>{link.label}</span>
+          </Button>
+        ))}
       </div>
-    </RoleCard>;
+    </RoleCard>
+  );
 };
