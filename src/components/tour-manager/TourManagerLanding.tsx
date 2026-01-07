@@ -47,10 +47,15 @@ export const TourManagerLanding = ({
   const navigate = useNavigate();
   const [contractTourDates, setContractTourDates] = useState<ContractTourDate[]>([]);
   const [tourTitle, setTourTitle] = useState<string | null>(null);
-  const [keyPersonnel, setKeyPersonnel] = useState<KeyPerson[]>([
-    { role: 'Tour Manager', name: 'Aaliyah Deere', icon: Users },
-    { role: 'Tour Manager', name: 'Onnesty Peele', icon: Users },
-  ]);
+  const [keyPersonnel, setKeyPersonnel] = useState<KeyPerson[]>([{
+    role: 'Tour Manager',
+    name: 'Aaliyah Deere',
+    icon: Users
+  }, {
+    role: 'Tour Manager',
+    name: 'Onnesty Peele',
+    icon: Users
+  }]);
   const [sectionLeaders, setSectionLeaders] = useState<KeyPerson[]>([]);
   const defaultStats = {
     upcomingDates: stats?.upcomingDates ?? 0,
@@ -63,15 +68,11 @@ export const TourManagerLanding = ({
   useEffect(() => {
     const fetchContractTourDates = async () => {
       const today = new Date().toISOString().split('T')[0];
-      const { data } = await supabase
-        .from('contracts_v2')
-        .select('id, title, status, contract_metadata')
-        .not('contract_metadata->performance_date', 'is', null)
-        .gte('contract_metadata->performance_date', today)
-        .in('status', ['completed', 'pending', 'sent'])
-        .order('contract_metadata->performance_date', { ascending: true })
-        .limit(5);
-      
+      const {
+        data
+      } = await supabase.from('contracts_v2').select('id, title, status, contract_metadata').not('contract_metadata->performance_date', 'is', null).gte('contract_metadata->performance_date', today).in('status', ['completed', 'pending', 'sent']).order('contract_metadata->performance_date', {
+        ascending: true
+      }).limit(5);
       if (data) {
         setContractTourDates(data as ContractTourDate[]);
       }
@@ -176,8 +177,8 @@ export const TourManagerLanding = ({
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium truncate">{person.name}</p>
-                      <p className="text-[10px] truncate text-muted-foreground">{person.role}</p>
+                      <p className="text-xs font-medium truncate text-primary-foreground">{person.name}</p>
+                      <p className="text-[10px] truncate text-primary-foreground">{person.role}</p>
                     </div>
                   </div>)}
               </div>}
@@ -220,46 +221,34 @@ export const TourManagerLanding = ({
                 </Button>
               </div> : <div className="space-y-2">
                 {contractTourDates.map(contract => {
-                  const meta = contract.contract_metadata;
-                  const performanceDate = meta?.performance_date ? new Date(meta.performance_date) : null;
-                  const location = [meta?.venue_city, meta?.venue_state].filter(Boolean).join(', ');
-                  
-                  return (
-                    <div key={contract.id} className="flex items-start gap-3 p-2 rounded-lg border hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => onNavigate('contracts')}>
+              const meta = contract.contract_metadata;
+              const performanceDate = meta?.performance_date ? new Date(meta.performance_date) : null;
+              const location = [meta?.venue_city, meta?.venue_state].filter(Boolean).join(', ');
+              return <div key={contract.id} className="flex items-start gap-3 p-2 rounded-lg border hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => onNavigate('contracts')}>
                       <div className="flex-shrink-0 w-10 text-center">
-                        {performanceDate ? (
-                          <>
+                        {performanceDate ? <>
                             <div className="text-lg font-bold leading-none text-primary-foreground">
                               {format(performanceDate, 'd')}
                             </div>
                             <div className="text-[10px] uppercase text-primary-foreground">
                               {format(performanceDate, 'MMM')}
                             </div>
-                          </>
-                        ) : (
-                          <div className="text-xs text-muted-foreground">TBD</div>
-                        )}
+                          </> : <div className="text-xs text-muted-foreground">TBD</div>}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate text-primary-foreground">
                           {meta?.host_name || contract.title}
                         </p>
-                        {(meta?.venue_name || location) && (
-                          <p className="text-xs flex items-center gap-1 truncate text-primary-foreground">
+                        {(meta?.venue_name || location) && <p className="text-xs flex items-center gap-1 truncate text-primary-foreground">
                             <MapPin className="h-3 w-3 flex-shrink-0" />
                             {meta?.venue_name || location}
-                          </p>
-                        )}
+                          </p>}
                       </div>
-                      <Badge 
-                        variant={contract.status === 'completed' ? 'default' : 'outline'} 
-                        className="text-[10px] flex-shrink-0"
-                      >
+                      <Badge variant={contract.status === 'completed' ? 'default' : 'outline'} className="text-[10px] flex-shrink-0">
                         {contract.status === 'completed' ? 'Signed' : contract.status}
                       </Badge>
-                    </div>
-                  );
-                })}
+                    </div>;
+            })}
               </div>}
             
             {/* Calendar Integration Note */}

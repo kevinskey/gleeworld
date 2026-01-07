@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Calendar, ChevronRight, Route, Building2, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
-
 interface TourEvent {
   id: string;
   title: string;
@@ -17,7 +16,6 @@ interface TourEvent {
   description: string | null;
   status: string | null;
 }
-
 interface ContractEvent {
   id: string;
   title: string;
@@ -28,7 +26,6 @@ interface ContractEvent {
   host_name: string | null;
   status: string;
 }
-
 interface TimelineEvent {
   id: string;
   title: string;
@@ -38,35 +35,32 @@ interface TimelineEvent {
   status: string;
   venue?: string;
 }
-
 interface TourRouteTimelineProps {
   onNavigate: (section: string) => void;
   limit?: number;
 }
-
-export const TourRouteTimeline = ({ onNavigate, limit = 10 }: TourRouteTimelineProps) => {
+export const TourRouteTimeline = ({
+  onNavigate,
+  limit = 10
+}: TourRouteTimelineProps) => {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchAllEvents = async () => {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
 
       // Fetch tour events
-      const { data: tourEvents } = await supabase
-        .from('gw_tour_events')
-        .select('id, title, start_date, end_date, location, venue_name, event_type, description')
-        .gte('start_date', today)
-        .order('start_date', { ascending: true });
+      const {
+        data: tourEvents
+      } = await supabase.from('gw_tour_events').select('id, title, start_date, end_date, location, venue_name, event_type, description').gte('start_date', today).order('start_date', {
+        ascending: true
+      });
 
       // Fetch contracts with performance dates
-      const { data: contracts } = await supabase
-        .from('contracts_v2')
-        .select('id, title, status, contract_metadata')
-        .not('contract_metadata->performance_date', 'is', null)
-        .gte('contract_metadata->performance_date', today)
-        .in('status', ['completed', 'pending', 'sent']);
+      const {
+        data: contracts
+      } = await supabase.from('contracts_v2').select('id, title, status, contract_metadata').not('contract_metadata->performance_date', 'is', null).gte('contract_metadata->performance_date', today).in('status', ['completed', 'pending', 'sent']);
 
       // Combine and normalize events
       const timelineEvents: TimelineEvent[] = [];
@@ -81,7 +75,7 @@ export const TourRouteTimeline = ({ onNavigate, limit = 10 }: TourRouteTimelineP
             location: event.location || '',
             venue: event.venue_name || undefined,
             type: 'tour_event',
-            status: 'scheduled',
+            status: 'scheduled'
           });
         });
       }
@@ -99,7 +93,7 @@ export const TourRouteTimeline = ({ onNavigate, limit = 10 }: TourRouteTimelineP
               location: location,
               venue: meta.venue_name || undefined,
               type: 'contract',
-              status: contract.status,
+              status: contract.status
             });
           }
         });
@@ -112,10 +106,8 @@ export const TourRouteTimeline = ({ onNavigate, limit = 10 }: TourRouteTimelineP
       setEvents(timelineEvents.slice(0, limit));
       setLoading(false);
     };
-
     fetchAllEvents();
   }, [limit]);
-
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'completed':
@@ -129,17 +121,14 @@ export const TourRouteTimeline = ({ onNavigate, limit = 10 }: TourRouteTimelineP
         return 'bg-muted';
     }
   };
-
   const getStatusBadge = (status: string, type: string) => {
     if (type === 'contract') {
       return status === 'completed' ? 'Signed' : status;
     }
     return status;
   };
-
   if (loading) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader className="py-3 px-4">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Route className="h-4 w-4 text-primary" />
@@ -151,12 +140,9 @@ export const TourRouteTimeline = ({ onNavigate, limit = 10 }: TourRouteTimelineP
             <div className="animate-pulse text-muted-foreground text-sm">Loading route...</div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader className="py-3 px-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -170,22 +156,18 @@ export const TourRouteTimeline = ({ onNavigate, limit = 10 }: TourRouteTimelineP
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4 pt-0">
-        {events.length === 0 ? (
-          <div className="text-center py-6">
+        {events.length === 0 ? <div className="text-center py-6">
             <Route className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
             <p className="text-sm text-muted-foreground">No upcoming stops</p>
             <Button variant="outline" size="sm" className="mt-2" onClick={() => onNavigate('tour-dates')}>
               Add Tour Dates
             </Button>
-          </div>
-        ) : (
-          <div className="relative">
+          </div> : <div className="relative">
             {/* Timeline line */}
             <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-border" />
             
             <div className="space-y-3">
-              {events.map((event, index) => (
-                <div key={event.id} className="relative flex gap-3 pl-1">
+              {events.map((event, index) => <div key={event.id} className="relative flex gap-3 pl-1">
                   {/* Timeline dot */}
                   <div className={`relative z-10 w-[10px] h-[10px] rounded-full mt-1.5 flex-shrink-0 ${getStatusColor(event.status)}`} />
                   
@@ -194,40 +176,33 @@ export const TourRouteTimeline = ({ onNavigate, limit = 10 }: TourRouteTimelineP
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                          <span className="text-xs font-medium text-muted-foreground">
+                          <span className="text-xs font-medium text-primary-foreground">
                             {format(event.date, 'EEE, MMM d, yyyy')}
                           </span>
                         </div>
-                        <p className="text-sm font-medium truncate">{event.title}</p>
-                        {(event.venue || event.location) && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <MapPin className="h-3 w-3 flex-shrink-0" />
-                            <span className="truncate">
+                        <p className="text-sm font-medium truncate text-primary-foreground">{event.title}</p>
+                        {(event.venue || event.location) && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <MapPin className="h-3 w-3 flex-shrink-0 text-primary" />
+                            <span className="truncate text-primary-foreground">
                               {event.venue ? `${event.venue}${event.location ? `, ${event.location}` : ''}` : event.location}
                             </span>
-                          </p>
-                        )}
+                          </p>}
                       </div>
-                      <Badge variant="outline" className="text-[10px] flex-shrink-0 capitalize">
+                      <Badge variant="outline" className="text-[10px] flex-shrink-0 capitalize text-primary-foreground">
                         {getStatusBadge(event.status, event.type)}
                       </Badge>
                     </div>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
-          </div>
-        )}
+          </div>}
         
-        {events.length > 0 && (
-          <div className="mt-3 pt-3 border-t">
+        {events.length > 0 && <div className="mt-3 pt-3 border-t">
             <p className="text-[10px] flex items-center gap-1 text-muted-foreground">
               <Clock className="h-3 w-3" />
               {events.length} stops in chronological order
             </p>
-          </div>
-        )}
+          </div>}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
