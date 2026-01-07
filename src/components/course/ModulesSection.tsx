@@ -268,9 +268,9 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                 }
                 
                 return (
-                  <Collapsible key={index} defaultOpen={index < 3}>
+                  <Collapsible key={index} defaultOpen={index < 3} className="group/collapsible">
                     <Card className="overflow-hidden group">
-                      <CollapsibleTrigger className="w-full">
+                      <CollapsibleTrigger className="w-full [&[data-state=open]>div>div:last-child>svg:last-child]:rotate-180">
                         <CardHeader className="py-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -312,12 +312,12 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
-                              <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform" />
+                              <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
                             </div>
                           </div>
                         </CardHeader>
                       </CollapsibleTrigger>
-                      <CollapsibleContent>
+                      <CollapsibleContent className="animate-accordion-down data-[state=closed]:animate-accordion-up">
                         <CardContent className="pt-0 pb-4 space-y-4 bg-primary-foreground">
                           {/* Topics */}
                           {topicItems.length > 0 && <div className="space-y-2">
