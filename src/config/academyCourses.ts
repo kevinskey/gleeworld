@@ -43,7 +43,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     id: 'a0000000-0000-0000-0000-000000000210',
     courseCode: 'MUS 210',
     title: 'Choral Conducting and Literature',
-    description: 'Master the art of choral conducting with comprehensive training in technique, score analysis, and repertoire selection.',
+    description: 'Master the art of choral conducting with technique, score analysis, and repertoire selection.',
     icon: Music,
     level: 'Intermediate',
     duration: '16 Weeks',
