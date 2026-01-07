@@ -481,11 +481,29 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                     Course Resources
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4">
-                    Access readings, audio examples, videos, and research materials for the course.
-                  </p>
-                  <p className="text-muted-foreground">No resources uploaded yet.</p>
+                <CardContent className="space-y-6">
+                  {/* Course Textbook */}
+                  {course.courseCode === 'MUS 210' && (
+                    <div>
+                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        Course Textbook
+                      </h3>
+                      <div className="rounded-lg border overflow-hidden">
+                        <iframe
+                          src="https://conducting.gleeworld.org"
+                          style={{ width: '100%', height: '600px' }}
+                          allow="fullscreen"
+                          title="Course Textbook"
+                          className="bg-background"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {course.courseCode !== 'MUS 210' && (
+                    <p className="text-muted-foreground">No resources uploaded yet.</p>
+                  )}
                 </CardContent>
               </Card>}
 
