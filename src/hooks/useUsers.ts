@@ -67,22 +67,34 @@ export const useUsers = () => {
       let rolesByUser = new Map<string, string[]>();
 
       if (userIds.length > 0) {
-        const { data: roleRows, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('user_id, role')
-          .in('user_id', userIds);
-
-        if (rolesError) {
-          console.error('Error fetching user_roles:', rolesError);
-          // Do not throw; proceed with gw_profiles roles as fallback
-        } else {
-          rolesByUser = roleRows?.reduce((acc: Map<string, string[]>, row: any) => {
-            const arr = acc.get(row.user_id) ?? [];
-            arr.push(row.role);
-            acc.set(row.user_id, arr);
-            return acc;
-          }, new Map<string, string[]>()) || new Map();
+        // Batch user IDs to avoid URL length limits (max ~100 per request)
+        const BATCH_SIZE = 100;
+        const batches: string[][] = [];
+        for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+          batches.push(userIds.slice(i, i + BATCH_SIZE));
         }
+
+        const allRoleRows: { user_id: string; role: string }[] = [];
+        for (const batch of batches) {
+          const { data: roleRows, error: rolesError } = await supabase
+            .from('user_roles')
+            .select('user_id, role')
+            .in('user_id', batch);
+
+          if (rolesError) {
+            console.error('Error fetching user_roles batch:', rolesError);
+            // Continue with other batches
+          } else if (roleRows) {
+            allRoleRows.push(...roleRows);
+          }
+        }
+
+        rolesByUser = allRoleRows.reduce((acc: Map<string, string[]>, row) => {
+          const arr = acc.get(row.user_id) ?? [];
+          arr.push(row.role);
+          acc.set(row.user_id, arr);
+          return acc;
+        }, new Map<string, string[]>());
 
         console.log('useUsers: fetched user_roles summary:', {
           usersWithRoles: rolesByUser.size,
