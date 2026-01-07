@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { 
   Target, Plus, Trash2, GripVertical, Link2, Lightbulb, CheckCircle2,
-  ArrowRight
+  ArrowRight, ClipboardPaste
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -78,6 +78,8 @@ export const LearningObjectivesManager: React.FC<Props> = ({ courseId, syllabusI
   const [rubricCriteria, setRubricCriteria] = useState<RubricCriterion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRubricDialog, setShowRubricDialog] = useState(false);
+  const [showPasteDialog, setShowPasteDialog] = useState(false);
+  const [pasteText, setPasteText] = useState('');
   const [selectedObjective, setSelectedObjective] = useState<LearningObjective | null>(null);
   const [newCriterion, setNewCriterion] = useState<Partial<RubricCriterion>>({
     assignment_type: '',
@@ -130,6 +132,43 @@ export const LearningObjectivesManager: React.FC<Props> = ({ courseId, syllabusI
       is_measurable: true
     };
     setObjectives([...objectives, newObjective]);
+  };
+
+  const parseAndAddObjectives = () => {
+    if (!pasteText.trim()) {
+      toast.error('Please paste some objectives');
+      return;
+    }
+
+    // Split by common bullet patterns: •, -, *, numbered lists, or newlines
+    const lines = pasteText
+      .split(/[\n\r]+/)
+      .map(line => line
+        .replace(/^[\s]*[-•*◦▪▸►●○]\s*/, '') // Remove bullet characters
+        .replace(/^[\s]*\d+[.)]\s*/, '') // Remove numbered list prefixes (1. or 1))
+        .trim()
+      )
+      .filter(line => line.length > 0);
+
+    if (lines.length === 0) {
+      toast.error('No objectives found in pasted text');
+      return;
+    }
+
+    const newObjectives: LearningObjective[] = lines.map((text, index) => ({
+      course_id: courseId,
+      syllabus_id: syllabusId,
+      objective_text: text,
+      category: 'knowledge',
+      bloom_level: 'understand',
+      position: objectives.length + index,
+      is_measurable: true
+    }));
+
+    setObjectives([...objectives, ...newObjectives]);
+    setPasteText('');
+    setShowPasteDialog(false);
+    toast.success(`Added ${newObjectives.length} objectives`);
   };
 
   const updateObjective = (index: number, field: keyof LearningObjective, value: any) => {
@@ -260,9 +299,13 @@ export const LearningObjectivesManager: React.FC<Props> = ({ courseId, syllabusI
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowPasteDialog(true)}>
+              <ClipboardPaste className="h-4 w-4 mr-1" />
+              Paste List
+            </Button>
             <Button variant="outline" onClick={addObjective}>
               <Plus className="h-4 w-4 mr-1" />
-              Add Objective
+              Add One
             </Button>
             <Button onClick={saveObjectives}>
               Save All
@@ -482,6 +525,56 @@ export const LearningObjectivesManager: React.FC<Props> = ({ courseId, syllabusI
             <Button onClick={createRubricFromObjective}>
               <ArrowRight className="h-4 w-4 mr-1" />
               Create Criterion
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Paste Multiple Objectives Dialog */}
+      <Dialog open={showPasteDialog} onOpenChange={setShowPasteDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardPaste className="h-5 w-5" />
+              Paste Learning Objectives
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Paste a list of objectives below. Each line will become a separate objective.
+              Supports bullet points (•, -, *) and numbered lists (1., 2., etc.)
+            </p>
+            
+            <Textarea
+              value={pasteText}
+              onChange={e => setPasteText(e.target.value)}
+              placeholder={`Example:
+• Demonstrate proper conducting patterns
+• Analyze choral scores for interpretation
+• Develop rehearsal techniques
+- Evaluate choral performances
+1. Apply baton technique principles
+2. Create a rehearsal plan`}
+              rows={10}
+              className="font-mono text-sm"
+            />
+            
+            <p className="text-xs text-muted-foreground">
+              {pasteText.split(/[\n\r]+/).filter(l => l.trim()).length} objectives detected
+            </p>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setPasteText('');
+              setShowPasteDialog(false);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={parseAndAddObjectives}>
+              <Plus className="h-4 w-4 mr-1" />
+              Add Objectives
             </Button>
           </DialogFooter>
         </DialogContent>
