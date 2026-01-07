@@ -27,6 +27,7 @@ import { ModulesSection } from '@/components/course/ModulesSection';
 import { CalendarSection } from '@/components/course/CalendarSection';
 import { ClassNotesManager } from '@/components/course/ClassNotesManager';
 import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
+import { CourseClassCalendar } from '@/components/course/CourseClassCalendar';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
