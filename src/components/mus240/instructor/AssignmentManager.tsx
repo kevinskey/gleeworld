@@ -42,7 +42,9 @@ interface JournalSubmission {
 }
 export const AssignmentManager = () => {
   const navigate = useNavigate();
-  const { currentSemester } = useMus240SemesterSafe();
+  const {
+    currentSemester
+  } = useMus240SemesterSafe();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Record<string, JournalSubmission[]>>({});
   const [grades, setGrades] = useState<Record<string, any[]>>({});
@@ -254,15 +256,12 @@ export const AssignmentManager = () => {
     if (selectedStudent === 'all') return subs;
     return subs.filter(s => s.student_id === selectedStudent);
   };
-
   const getSubmissionCount = (assignmentCode?: string) => {
     return getFilteredSubmissions(assignmentCode).length;
   };
-  
   const getGradedCount = (assignmentCode?: string) => {
     return getFilteredSubmissions(assignmentCode).filter(s => s.grade !== null).length;
   };
-  
   const getUngradedCount = (assignmentCode?: string) => {
     const subs = getFilteredSubmissions(assignmentCode);
     return subs.filter(s => {
@@ -270,7 +269,6 @@ export const AssignmentManager = () => {
       return gradeRecords.length === 0 || gradeRecords.every(g => g.overall_score === null);
     }).length;
   };
-  
   const getNeedsFinalGradeCount = (assignmentCode?: string) => {
     const subs = getFilteredSubmissions(assignmentCode);
     return subs.filter(s => {
@@ -285,24 +283,21 @@ export const AssignmentManager = () => {
     const sortedByDate = [...subs].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
     return sortedByDate[0]?.submitted_at;
   };
-
   const getStudentGrade = (assignmentCode?: string) => {
     if (selectedStudent === 'all' || !assignmentCode) return null;
     const subs = getFilteredSubmissions(assignmentCode);
     if (subs.length === 0) return null;
-    
     const submission = subs[0];
     const gradeRecords = grades[submission.id] || [];
     if (gradeRecords.length === 0) return null;
-    
     const grade = gradeRecords[0];
     return {
       score: grade.overall_score,
-      points_possible: 20, // All journals are out of 20
+      points_possible: 20,
+      // All journals are out of 20
       letter_grade: grade.letter_grade
     };
   };
-
   const openEditModal = (assignment: Assignment) => {
     setEditingAssignment(assignment);
     setFormData({
@@ -336,25 +331,23 @@ export const AssignmentManager = () => {
       toast.error('Failed to get AI assistance');
     }
   };
-
   const handleGradeAllWithAI = async (regradeAll = false) => {
     if (selectedStudent === 'all') {
       toast.error('Please select a specific student to grade their work');
       return;
     }
-
     setIsGradingAll(true);
     let successCount = 0;
     let errorCount = 0;
-
     try {
       // Get submissions for the selected student
-      const submissionsToGrade: Array<{journalId: string; assignmentId: string}> = [];
-      
+      const submissionsToGrade: Array<{
+        journalId: string;
+        assignmentId: string;
+      }> = [];
       for (const assignment of assignments) {
         if (!assignment.assignment_code) continue;
         const subs = getFilteredSubmissions(assignment.assignment_code);
-        
         for (const sub of subs) {
           if (regradeAll) {
             // Regrade all submissions
@@ -366,7 +359,6 @@ export const AssignmentManager = () => {
             // Only grade ungraded submissions
             const gradeRecords = grades[sub.id] || [];
             const needsGrading = gradeRecords.length === 0 || gradeRecords.every(g => g.overall_score === null);
-            
             if (needsGrading) {
               submissionsToGrade.push({
                 journalId: sub.id,
@@ -376,25 +368,28 @@ export const AssignmentManager = () => {
           }
         }
       }
-
       if (submissionsToGrade.length === 0) {
         toast.info(regradeAll ? 'No submissions found for this student' : 'No ungraded submissions found for this student');
         setIsGradingAll(false);
         return;
       }
-
       toast.info(`${regradeAll ? 'Regrading' : 'Grading'} ${submissionsToGrade.length} submission${submissionsToGrade.length !== 1 ? 's' : ''}...`);
 
       // Grade each submission
-      for (const { journalId, assignmentId } of submissionsToGrade) {
+      for (const {
+        journalId,
+        assignmentId
+      } of submissionsToGrade) {
         try {
-          const { data, error } = await supabase.functions.invoke('grade-journal', {
+          const {
+            data,
+            error
+          } = await supabase.functions.invoke('grade-journal', {
             body: {
               assignment_id: assignmentId,
               journal_id: journalId
             }
           });
-
           if (error) throw error;
           if (data?.success) {
             successCount++;
@@ -409,7 +404,6 @@ export const AssignmentManager = () => {
 
       // Refresh data
       await Promise.all([fetchSubmissions(), fetchGrades()]);
-
       if (successCount > 0) {
         toast.success(`Successfully graded ${successCount} submission${successCount !== 1 ? 's' : ''}${errorCount > 0 ? ` (${errorCount} failed)` : ''}`);
       } else {
@@ -422,7 +416,6 @@ export const AssignmentManager = () => {
       setIsGradingAll(false);
     }
   };
-  
   const extractJournalNumber = (title: string): number => {
     const match = title.match(/(?:LISTENING JOURNAL|JOURNAL|LJ)\s*(\d+)/i);
     return match ? parseInt(match[1], 10) : 999; // Put unnumbered at end
@@ -456,8 +449,8 @@ export const AssignmentManager = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
         <div className="w-full lg:w-auto">
-          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground">Assignment Manager</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Create and manage listening journal assignments</p>
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-primary-foreground">Assignment Manager</h2>
+          <p className="text-xs sm:text-sm mt-0.5 text-primary-foreground">Create and manage listening journal assignments</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -476,7 +469,7 @@ export const AssignmentManager = () => {
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <Select value={sortBy} onValueChange={v => setSortBy(v as any)}>
               <SelectTrigger className="w-[100px] sm:w-[120px] md:w-[140px] h-8 sm:h-9 text-xs sm:text-sm">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
@@ -552,30 +545,16 @@ export const AssignmentManager = () => {
               </form>
             </DialogContent>
           </Dialog>
-          {selectedStudent !== 'all' && (
-            <>
-              <Button 
-                onClick={() => handleGradeAllWithAI(false)}
-                disabled={isGradingAll}
-                variant="outline"
-                size="sm"
-                className="whitespace-nowrap h-8 sm:h-9 text-xs sm:text-sm"
-              >
+          {selectedStudent !== 'all' && <>
+              <Button onClick={() => handleGradeAllWithAI(false)} disabled={isGradingAll} variant="outline" size="sm" className="whitespace-nowrap h-8 sm:h-9 text-xs sm:text-sm">
                 <Brain className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 {isGradingAll ? 'Grading...' : 'Grade All'}
               </Button>
-              <Button 
-                onClick={() => handleGradeAllWithAI(true)}
-                disabled={isGradingAll}
-                variant="default"
-                size="sm"
-                className="whitespace-nowrap h-8 sm:h-9 text-xs sm:text-sm"
-              >
+              <Button onClick={() => handleGradeAllWithAI(true)} disabled={isGradingAll} variant="default" size="sm" className="whitespace-nowrap h-8 sm:h-9 text-xs sm:text-sm">
                 <Brain className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 {isGradingAll ? 'Regrading...' : 'Regrade All'}
               </Button>
-            </>
-          )}
+            </>}
         </div>
       </div>
 
@@ -611,31 +590,26 @@ export const AssignmentManager = () => {
                 </div>
                 {/* Stats Row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
-                  {selectedStudent !== 'all' ? (
-                    <>
+                  {selectedStudent !== 'all' ? <>
                       {/* Student-specific grade view */}
                       <div className="col-span-2 md:col-span-1 text-center">
                         {(() => {
-                          const grade = getStudentGrade(assignment.assignment_code);
-                          if (grade?.score !== null && grade?.score !== undefined) {
-                            return (
-                              <>
+                    const grade = getStudentGrade(assignment.assignment_code);
+                    if (grade?.score !== null && grade?.score !== undefined) {
+                      return <>
                                 <div className="text-2xl font-bold text-green-600">
                                   {grade.score.toFixed(1)}/{grade.points_possible}
                                 </div>
                                 <div className="text-xs text-muted-foreground">Grade</div>
-                              </>
-                            );
-                          }
-                          return (
-                            <>
+                              </>;
+                    }
+                    return <>
                               <div className="text-lg font-semibold text-gray-500">
                                 Not graded
                               </div>
                               <div className="text-xs text-muted-foreground">Grade</div>
-                            </>
-                          );
-                        })()}
+                            </>;
+                  })()}
                       </div>
                       <div className="col-span-2 md:col-span-1 text-center">
                         <div className="text-2xl font-bold text-foreground">
@@ -649,9 +623,7 @@ export const AssignmentManager = () => {
                         </div>
                         <div className="text-xs text-muted-foreground">Last Student Edit</div>
                       </div>
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       {/* Original all-students view */}
                       <div className="text-center">
                         <div className="text-2xl font-bold text-foreground">
@@ -677,8 +649,7 @@ export const AssignmentManager = () => {
                         </div>
                         <div className="text-xs text-muted-foreground">Last Student Edit</div>
                       </div>
-                    </>
-                  )}
+                    </>}
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -692,56 +663,37 @@ export const AssignmentManager = () => {
                         Due {new Date(assignment.due_date).toLocaleDateString()}
                       </div>}
                   </div>
-                  {getSubmissionCount(assignment.assignment_code) > 0 && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => {
-                        if (selectedStudent !== 'all') {
-                          // Toggle expansion for inline viewing when student is selected
-                          setExpandedAssignment(
-                            expandedAssignment === assignment.id ? null : assignment.id
-                          );
-                        } else {
-                          // Navigate to journals page when viewing all students
-                          navigate(`/mus-240/instructor/journals?assignment=${assignment.assignment_code}`);
-                        }
-                      }}
-                    >
-                      {selectedStudent !== 'all' && expandedAssignment === assignment.id ? (
-                        <>
+                  {getSubmissionCount(assignment.assignment_code) > 0 && <Button variant="outline" size="sm" onClick={() => {
+                if (selectedStudent !== 'all') {
+                  // Toggle expansion for inline viewing when student is selected
+                  setExpandedAssignment(expandedAssignment === assignment.id ? null : assignment.id);
+                } else {
+                  // Navigate to journals page when viewing all students
+                  navigate(`/mus-240/instructor/journals?assignment=${assignment.assignment_code}`);
+                }
+              }}>
+                      {selectedStudent !== 'all' && expandedAssignment === assignment.id ? <>
                           <ChevronUp className="h-4 w-4 mr-2" />
                           Hide Submission
-                        </>
-                      ) : (
-                        <>
+                        </> : <>
                           <FileText className="h-4 w-4 mr-2" />
                           View Submission{selectedStudent === 'all' ? 's' : ''}
-                        </>
-                      )}
-                    </Button>
-                  )}
+                        </>}
+                    </Button>}
                 </div>
               </div>
             </CardContent>
 
             {/* Inline Journal Grader - shown when assignment is expanded and student is selected */}
-            {expandedAssignment === assignment.id && selectedStudent !== 'all' && (
-              <InlineJournalGrader
-                assignmentId={assignment.id}
-                assignmentCode={assignment.assignment_code || ''}
-                studentId={selectedStudent}
-                onClose={() => setExpandedAssignment(null)}
-              />
-            )}
+            {expandedAssignment === assignment.id && selectedStudent !== 'all' && <InlineJournalGrader assignmentId={assignment.id} assignmentCode={assignment.assignment_code || ''} studentId={selectedStudent} onClose={() => setExpandedAssignment(null)} />}
           </Card>)}
       </div>
 
       {assignments.length === 0 && <Card>
           <CardContent className="py-12 text-center">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
-            <p className="text-gray-600 mb-4">Create your first listening journal assignment to get started.</p>
+            <h3 className="text-lg font-medium mb-2 text-primary-foreground">No assignments yet</h3>
+            <p className="mb-4 text-primary-foreground">Create your first listening journal assignment to get started.</p>
             <Button onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create Assignment
