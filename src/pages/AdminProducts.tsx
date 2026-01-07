@@ -27,17 +27,7 @@ const AdminProducts = () => {
 
   return (
     <UniversalLayout>
-      <div className="space-y-4 md:space-y-6 px-4 md:px-0">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Shield className="h-6 w-6 md:h-8 md:w-8 text-brand-500" />
-            <Package className="h-6 w-6 md:h-8 md:w-8 text-brand-500" />
-            <h1 className="text-2xl md:text-3xl font-bebas text-brand-800 tracking-wide">Admin Products</h1>
-          </div>
-        </div>
-
-        {/* Product Manager Component */}
+      <div className="max-w-7xl mx-auto px-4 py-6 md:px-6 lg:px-8">
         <ProductManager />
       </div>
     </UniversalLayout>
