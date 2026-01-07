@@ -7679,6 +7679,41 @@ export type Database = {
           },
         ]
       }
+      gw_course_requirements: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          requirement_text: string
+          syllabus_id: string | null
+          weight_percentage: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          requirement_text: string
+          syllabus_id?: string | null
+          weight_percentage?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          requirement_text?: string
+          syllabus_id?: string | null
+          weight_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_requirements_syllabus_id_fkey"
+            columns: ["syllabus_id"]
+            isOneToOne: false
+            referencedRelation: "gw_syllabus_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_course_rubrics: {
         Row: {
           assignment_type: string | null
@@ -9887,6 +9922,60 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      gw_learning_objectives: {
+        Row: {
+          bloom_level: string | null
+          category: string | null
+          course_id: string | null
+          created_at: string
+          id: string
+          is_measurable: boolean | null
+          objective_text: string
+          position: number
+          syllabus_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          bloom_level?: string | null
+          category?: string | null
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          is_measurable?: boolean | null
+          objective_text: string
+          position?: number
+          syllabus_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bloom_level?: string | null
+          category?: string | null
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          is_measurable?: boolean | null
+          objective_text?: string
+          position?: number
+          syllabus_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_learning_objectives_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_learning_objectives_syllabus_id_fkey"
+            columns: ["syllabus_id"]
+            isOneToOne: false
+            referencedRelation: "gw_syllabus_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_licensing_entries: {
         Row: {
@@ -16044,6 +16133,101 @@ export type Database = {
             columns: ["assignment_id"]
             isOneToOne: false
             referencedRelation: "gw_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_syllabus_templates: {
+        Row: {
+          academic_honesty_policy: string | null
+          additional_policies: Json | null
+          attendance_policy: string | null
+          class_time: string | null
+          classroom: string | null
+          course_id: string | null
+          created_at: string
+          created_by: string | null
+          credits: number | null
+          disability_statement: string | null
+          grading_breakdown: Json | null
+          grading_scale: Json | null
+          id: string
+          instructor_email: string | null
+          instructor_name: string | null
+          instructor_office: string | null
+          instructor_phone: string | null
+          is_published: boolean | null
+          late_assignment_policy: string | null
+          name: string
+          office_hours: string | null
+          purpose: string | null
+          term: string | null
+          textbooks: Json | null
+          updated_at: string
+          weekly_schedule: Json | null
+        }
+        Insert: {
+          academic_honesty_policy?: string | null
+          additional_policies?: Json | null
+          attendance_policy?: string | null
+          class_time?: string | null
+          classroom?: string | null
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          credits?: number | null
+          disability_statement?: string | null
+          grading_breakdown?: Json | null
+          grading_scale?: Json | null
+          id?: string
+          instructor_email?: string | null
+          instructor_name?: string | null
+          instructor_office?: string | null
+          instructor_phone?: string | null
+          is_published?: boolean | null
+          late_assignment_policy?: string | null
+          name?: string
+          office_hours?: string | null
+          purpose?: string | null
+          term?: string | null
+          textbooks?: Json | null
+          updated_at?: string
+          weekly_schedule?: Json | null
+        }
+        Update: {
+          academic_honesty_policy?: string | null
+          additional_policies?: Json | null
+          attendance_policy?: string | null
+          class_time?: string | null
+          classroom?: string | null
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          credits?: number | null
+          disability_statement?: string | null
+          grading_breakdown?: Json | null
+          grading_scale?: Json | null
+          id?: string
+          instructor_email?: string | null
+          instructor_name?: string | null
+          instructor_office?: string | null
+          instructor_phone?: string | null
+          is_published?: boolean | null
+          late_assignment_policy?: string | null
+          name?: string
+          office_hours?: string | null
+          purpose?: string | null
+          term?: string | null
+          textbooks?: Json | null
+          updated_at?: string
+          weekly_schedule?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_syllabus_templates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
             referencedColumns: ["id"]
           },
         ]
