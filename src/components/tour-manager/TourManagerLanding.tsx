@@ -20,13 +20,17 @@ interface TourManagerLandingProps {
     pendingDocs: number;
   };
 }
-interface TourEvent {
+interface ContractTourDate {
   id: string;
   title: string;
-  start_date: string;
-  end_date?: string;
-  location?: string;
-  venue_name?: string;
+  status: string;
+  contract_metadata: {
+    performance_date?: string;
+    venue_name?: string;
+    venue_city?: string;
+    venue_state?: string;
+    host_name?: string;
+  } | null;
 }
 interface KeyPerson {
   role: string;
@@ -40,7 +44,7 @@ export const TourManagerLanding = ({
   stats
 }: TourManagerLandingProps) => {
   const navigate = useNavigate();
-  const [tourEvents, setTourEvents] = useState<TourEvent[]>([]);
+  const [contractTourDates, setContractTourDates] = useState<ContractTourDate[]>([]);
   const [tourTitle, setTourTitle] = useState<string | null>(null);
   const [keyPersonnel, setKeyPersonnel] = useState<KeyPerson[]>([
     { role: 'Tour Manager', name: 'Aaliyah Deere', icon: Users },
@@ -56,15 +60,22 @@ export const TourManagerLanding = ({
     pendingDocs: stats?.pendingDocs ?? 0
   };
   useEffect(() => {
-    const fetchTourEvents = async () => {
-      const {
-        data
-      } = await supabase.from('gw_tour_events').select('id, title, start_date, end_date, location, venue_name').gte('start_date', new Date().toISOString()).order('start_date', {
-        ascending: true
-      }).limit(5);
-      if (data) setTourEvents(data);
+    const fetchContractTourDates = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('contracts_v2')
+        .select('id, title, status, contract_metadata')
+        .not('contract_metadata->performance_date', 'is', null)
+        .gte('contract_metadata->performance_date', today)
+        .in('status', ['completed', 'pending', 'sent'])
+        .order('contract_metadata->performance_date', { ascending: true })
+        .limit(5);
+      
+      if (data) {
+        setContractTourDates(data as ContractTourDate[]);
+      }
     };
-    fetchTourEvents();
+    fetchContractTourDates();
   }, []);
   const sections = [{
     id: 'tour-dates',
@@ -200,40 +211,61 @@ export const TourManagerLanding = ({
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
-            {tourEvents.length === 0 ? <div className="text-center py-6">
+            {contractTourDates.length === 0 ? <div className="text-center py-6">
                 <Calendar className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
                 <p className="text-sm text-muted-foreground">No upcoming dates</p>
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => onNavigate('tour-dates')}>
-                  Add Tour Dates
+                <Button variant="outline" size="sm" className="mt-2" onClick={() => onNavigate('contracts')}>
+                  View Contracts
                 </Button>
               </div> : <div className="space-y-2">
-                {tourEvents.map(event => <div key={event.id} className="flex items-start gap-3 p-2 rounded-lg border hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => onNavigate('tour-dates')}>
-                    <div className="flex-shrink-0 w-10 text-center">
-                      <div className="text-lg font-bold leading-none text-primary-foreground">
-                        {format(new Date(event.start_date), 'd')}
+                {contractTourDates.map(contract => {
+                  const meta = contract.contract_metadata;
+                  const performanceDate = meta?.performance_date ? new Date(meta.performance_date) : null;
+                  const location = [meta?.venue_city, meta?.venue_state].filter(Boolean).join(', ');
+                  
+                  return (
+                    <div key={contract.id} className="flex items-start gap-3 p-2 rounded-lg border hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => onNavigate('contracts')}>
+                      <div className="flex-shrink-0 w-10 text-center">
+                        {performanceDate ? (
+                          <>
+                            <div className="text-lg font-bold leading-none text-primary-foreground">
+                              {format(performanceDate, 'd')}
+                            </div>
+                            <div className="text-[10px] uppercase text-primary-foreground">
+                              {format(performanceDate, 'MMM')}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-xs text-muted-foreground">TBD</div>
+                        )}
                       </div>
-                      <div className="text-[10px] uppercase text-primary-foreground">
-                        {format(new Date(event.start_date), 'MMM')}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate text-primary-foreground">
+                          {meta?.host_name || contract.title}
+                        </p>
+                        {(meta?.venue_name || location) && (
+                          <p className="text-xs flex items-center gap-1 truncate text-primary-foreground">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                            {meta?.venue_name || location}
+                          </p>
+                        )}
                       </div>
+                      <Badge 
+                        variant={contract.status === 'completed' ? 'default' : 'outline'} 
+                        className="text-[10px] flex-shrink-0"
+                      >
+                        {contract.status === 'completed' ? 'Signed' : contract.status}
+                      </Badge>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate text-primary-foreground">{event.title}</p>
-                      {(event.venue_name || event.location) && <p className="text-xs flex items-center gap-1 truncate text-primary-foreground">
-                          <MapPin className="h-3 w-3 flex-shrink-0" />
-                          {event.venue_name || event.location}
-                        </p>}
-                    </div>
-                    <Badge variant="outline" className="text-[10px] flex-shrink-0 text-primary-foreground">
-                      {format(new Date(event.start_date), 'EEE')}
-                    </Badge>
-                  </div>)}
+                  );
+                })}
               </div>}
             
             {/* Calendar Integration Note */}
             <div className="mt-3 pt-3 border-t">
               <p className="text-[10px] flex items-center gap-1 text-primary-foreground">
                 <CalendarDays className="h-3 w-3" />
-                Tour dates sync automatically to the main calendar
+                Tour dates from signed contracts
               </p>
             </div>
           </CardContent>
