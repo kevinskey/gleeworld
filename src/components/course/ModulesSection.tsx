@@ -295,7 +295,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                         <CardContent className="pt-0 pb-4 space-y-4 bg-primary-foreground">
                           {/* Topics */}
                           {topicItems.length > 0 && <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground pt-[10px] pb-[10px] pl-[5px]">
                                 <Music className="h-4 w-4" />
                                 Topics
                               </div>
