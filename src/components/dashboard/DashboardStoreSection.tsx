@@ -208,7 +208,7 @@ export const DashboardStoreSection = () => {
                   </div>
                   
                   {/* Enter Button */}
-                  <button onClick={() => navigate(`/glee-academy/course/${course.id}`)} className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors">
+                  <button onClick={() => navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`)} className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors">
                     <span className="font-medium">Enter {course.course_code || course.title}</span>
                     <ChevronRight className="h-4 w-4" />
                   </button>
