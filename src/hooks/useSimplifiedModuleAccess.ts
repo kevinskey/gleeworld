@@ -76,7 +76,6 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'notifications': 'notifications',
           'pr-coordinator': 'pr-coordinator',
           'pr-manager': 'pr-hub',
-          'scheduling-module': 'scheduling-module',
           'service-management': 'service-management',
           'calendar-management': 'calendar-management',
           'buckets-of-love': 'buckets-of-love',

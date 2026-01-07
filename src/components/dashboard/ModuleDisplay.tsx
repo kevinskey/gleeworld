@@ -22,7 +22,7 @@ import { EmailManagementModule } from '../modules/EmailManagementModule';
 import { CalendarManagementModule } from '../modules/CalendarManagementModule';
 import { BucketsOfLoveModule } from '../modules/BucketsOfLoveModule';
 import { FanEngagementModule } from '../modules/FanEngagementModule';
-import { SchedulingModule } from '../modules/SchedulingModule';
+
 
 import { FirstYearConsoleModule } from '../modules/FirstYearConsoleModule';
 import { PermissionsModule } from '../modules/PermissionsModule';
@@ -112,8 +112,6 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <FanEngagementModule />;
       case 'concert-ticket-requests':
         return <ConcertTicketRequestsModule />;
-      case 'scheduling-module':
-        return <SchedulingModule />;
       case 'service-management':
         return (
           <div className="p-6">
