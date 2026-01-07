@@ -167,8 +167,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             }, {
               icon: MessagesSquare,
               label: 'Messages',
-              tab: 'messages',
-              isExternal: true
+              tab: 'messages'
             }, {
               icon: ClipboardList,
               label: 'Assignments',
@@ -217,14 +216,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: Calendar,
               label: 'Calendar',
               tab: 'calendar'
-            }].map(item => <button key={item.tab} onClick={() => {
-              if (item.isExternal && item.tab === 'messages') {
-                // Navigate to messenger with course context
-                navigate(`/messenger?courseId=${course.id}&courseName=${encodeURIComponent(course.courseCode + ' - ' + course.title)}`);
-              } else {
-                setActiveTab(item.tab);
-              }
-            }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
+            }].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 
                 <span className="text-xl pl-[20px]">{item.label}</span>
               </button>)}
