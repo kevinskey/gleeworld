@@ -8,9 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useGleeWorldEvents } from '@/hooks/useGleeWorldEvents';
 import QRCode from 'qrcode';
 import { 
   Calendar as CalendarIcon, 
@@ -26,12 +28,13 @@ import {
   RefreshCw,
   BookOpen,
   Music,
-  Eye,
-  Edit,
   Trash2,
-  CheckCircle
+  CheckCircle,
+  Sparkles,
+  GraduationCap,
+  AlertCircle
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO, addHours } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO, addHours, eachDayOfInterval as dateEachDayOfInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
 import conductingImage from '@/assets/conducting-class-event.jpg';
 
@@ -50,6 +53,35 @@ interface ClassSession {
   attendance_required: boolean;
   created_by: string | null;
   created_at: string;
+}
+
+interface Semester {
+  id: string;
+  name: string;
+  term: string;
+  year: number;
+  start_date: string;
+  end_date: string;
+  classes_end_date: string | null;
+  exception_dates: string[];
+  academic_events: Array<{
+    title: string;
+    date?: string;
+    start_date?: string;
+    end_date?: string;
+    type: string;
+  }>;
+  is_active: boolean;
+}
+
+interface CourseInfo {
+  id: string;
+  meeting_patterns: {
+    days: number[];
+    startTime: string;
+    endTime: string;
+  } | null;
+  classroom: string | null;
 }
 
 interface QRCodeData {
@@ -82,12 +114,19 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { events: spelmanEvents, loading: spelmanLoading } = useGleeWorldEvents();
   
   const [sessions, setSessions] = useState<ClassSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSession, setSelectedSession] = useState<ClassSession | null>(null);
+  const [activeTab, setActiveTab] = useState<'class' | 'spelman'>('class');
+  
+  // Semester state
+  const [activeSemester, setActiveSemester] = useState<Semester | null>(null);
+  const [courseInfo, setCourseInfo] = useState<CourseInfo | null>(null);
+  const [generatingSessions, setGeneratingSessions] = useState(false);
   
   // Create session dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -110,9 +149,11 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
   const [generatingQR, setGeneratingQR] = useState(false);
   const [attendanceCount, setAttendanceCount] = useState(0);
 
-  // Fetch sessions
+  // Fetch sessions, semester, and course info
   useEffect(() => {
     fetchSessions();
+    fetchActiveSemester();
+    fetchCourseInfo();
   }, [courseId]);
 
   const fetchSessions = async () => {
@@ -131,6 +172,148 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       toast({ title: 'Error', description: 'Failed to load class sessions', variant: 'destructive' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchActiveSemester = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_semesters')
+        .select('*')
+        .eq('is_active', true)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      if (data) {
+        const exceptionDates = Array.isArray(data.exception_dates) 
+          ? (data.exception_dates as unknown as string[]) 
+          : [];
+        const academicEvents = Array.isArray(data.academic_events) 
+          ? (data.academic_events as unknown as Semester['academic_events']) 
+          : [];
+        setActiveSemester({
+          ...data,
+          exception_dates: exceptionDates,
+          academic_events: academicEvents
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching semester:', error);
+    }
+  };
+
+  const fetchCourseInfo = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_courses')
+        .select('id, meeting_patterns')
+        .eq('id', courseId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      if (data) {
+        setCourseInfo({
+          id: data.id,
+          meeting_patterns: data.meeting_patterns as CourseInfo['meeting_patterns'],
+          classroom: null
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching course info:', error);
+    }
+  };
+
+  // Generate semester class sessions automatically
+  const generateSemesterSessions = async () => {
+    if (!activeSemester || !courseInfo?.meeting_patterns || !user) {
+      toast({ 
+        title: 'Cannot Generate', 
+        description: 'No active semester or course meeting pattern configured', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    const { days, startTime, endTime } = courseInfo.meeting_patterns;
+    if (!days || days.length === 0) {
+      toast({ 
+        title: 'No Schedule', 
+        description: 'Course has no meeting days configured', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    try {
+      setGeneratingSessions(true);
+      
+      // Generate all dates for the semester based on meeting pattern
+      const start = new Date(activeSemester.start_date);
+      const end = new Date(activeSemester.classes_end_date || activeSemester.end_date);
+      const exceptionSet = new Set(activeSemester.exception_dates);
+      
+      const sessionDates: Date[] = [];
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dayOfWeek = d.getDay();
+        const dateStr = d.toISOString().split('T')[0];
+        
+        if (days.includes(dayOfWeek) && !exceptionSet.has(dateStr)) {
+          sessionDates.push(new Date(d));
+        }
+      }
+
+      if (sessionDates.length === 0) {
+        toast({ title: 'No Dates', description: 'No valid class dates found for this semester', variant: 'destructive' });
+        return;
+      }
+
+      // Check for existing sessions
+      const { count } = await supabase
+        .from('gw_course_class_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('course_id', courseId);
+
+      if ((count || 0) > 0) {
+        const confirmed = window.confirm(
+          `This course already has ${count} sessions. This will add ${sessionDates.length} new sessions. Continue?`
+        );
+        if (!confirmed) {
+          setGeneratingSessions(false);
+          return;
+        }
+      }
+
+      // Create sessions
+      const sessionsToCreate = sessionDates.map((date, index) => ({
+        course_id: courseId,
+        title: `${courseCode} - Class ${index + 1}`,
+        description: `Week ${Math.floor(index / days.length) + 1} session`,
+        session_date: date.toISOString().split('T')[0],
+        start_time: startTime,
+        end_time: endTime,
+        location: courseInfo.classroom,
+        session_type: 'class',
+        image_url: conductingImage,
+        attendance_required: true,
+        created_by: user.id
+      }));
+
+      const { error } = await supabase
+        .from('gw_course_class_sessions')
+        .insert(sessionsToCreate);
+
+      if (error) throw error;
+
+      toast({ 
+        title: 'Sessions Generated', 
+        description: `Created ${sessionDates.length} class sessions for ${activeSemester.name}` 
+      });
+      fetchSessions();
+    } catch (error) {
+      console.error('Error generating sessions:', error);
+      toast({ title: 'Error', description: 'Failed to generate sessions', variant: 'destructive' });
+    } finally {
+      setGeneratingSessions(false);
     }
   };
 
@@ -335,19 +518,36 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Class Calendar</h2>
-          <p className="text-muted-foreground">Manage class sessions with attendance tracking</p>
+          <p className="text-muted-foreground">
+            {activeSemester ? `${activeSemester.name} • ` : ''}Manage class sessions with attendance tracking
+          </p>
         </div>
         {isInstructor && (
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-[#003666]">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Class Session
+          <div className="flex items-center gap-2">
+            {activeSemester && courseInfo?.meeting_patterns && (
+              <Button 
+                variant="outline" 
+                onClick={generateSemesterSessions}
+                disabled={generatingSessions}
+              >
+                {generatingSessions ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-2" />
+                )}
+                Generate Semester
               </Button>
-            </DialogTrigger>
+            )}
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-[#003666]">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Session
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Create Class Session</DialogTitle>

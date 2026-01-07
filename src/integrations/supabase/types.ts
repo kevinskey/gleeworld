@@ -8156,6 +8156,7 @@ export type Database = {
           meeting_patterns: Json | null
           price_cents: number | null
           semester: string | null
+          semester_id: string | null
           start_date: string | null
           syllabus_url: string | null
           term: string | null
@@ -8184,6 +8185,7 @@ export type Database = {
           meeting_patterns?: Json | null
           price_cents?: number | null
           semester?: string | null
+          semester_id?: string | null
           start_date?: string | null
           syllabus_url?: string | null
           term?: string | null
@@ -8212,6 +8214,7 @@ export type Database = {
           meeting_patterns?: Json | null
           price_cents?: number | null
           semester?: string | null
+          semester_id?: string | null
           start_date?: string | null
           syllabus_url?: string | null
           term?: string | null
@@ -8219,7 +8222,15 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gw_courses_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "gw_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_dashboard_card_order: {
         Row: {
@@ -14379,6 +14390,60 @@ export type Database = {
           week_7_points?: number | null
           week_8_points?: number | null
           week_9_points?: number | null
+        }
+        Relationships: []
+      }
+      gw_semesters: {
+        Row: {
+          academic_events: Json | null
+          classes_end_date: string | null
+          created_at: string
+          created_by: string | null
+          end_date: string
+          exception_dates: Json | null
+          finals_end: string | null
+          finals_start: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          start_date: string
+          term: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          academic_events?: Json | null
+          classes_end_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date: string
+          exception_dates?: Json | null
+          finals_end?: string | null
+          finals_start?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          start_date: string
+          term: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          academic_events?: Json | null
+          classes_end_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string
+          exception_dates?: Json | null
+          finals_end?: string | null
+          finals_start?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          start_date?: string
+          term?: string
+          updated_at?: string
+          year?: number
         }
         Relationships: []
       }
