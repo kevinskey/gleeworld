@@ -26,6 +26,7 @@ import { SyllabusTemplateEditor } from '@/components/academy/syllabus/SyllabusTe
 import { ModulesSection } from '@/components/course/ModulesSection';
 import { CalendarSection } from '@/components/course/CalendarSection';
 import { ClassNotesManager } from '@/components/course/ClassNotesManager';
+import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -326,15 +327,8 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'resources' && (
               <ResourcesAdmin />
             )}
-            {activeTab === 'videos' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Video Library</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Video library coming soon.</p>
-                </CardContent>
-              </Card>
+            {activeTab === 'videos' && dbCourse && (
+              <CourseVideoLibrary courseId={dbCourse.id} isInstructor={true} />
             )}
             {activeTab === 'audio' && (
               <Card>

@@ -5,6 +5,16 @@ export const GLEE_CLUB_CHANNEL_ID = 'UCK7x9GxnHNiw4H82upcxmcw';
 export const GLEE_CLUB_CHANNEL_URL = 'https://www.youtube.com/@SpelmanCollegeGleeClub';
 export const GLEE_CLUB_UPLOADS_PLAYLIST_ID = `UU${GLEE_CLUB_CHANNEL_ID.slice(2)}`;
 
+// GleeWorld Radio YouTube channel - Default for courses
+export const GLEE_WORLD_RADIO_CHANNEL_HANDLE = '@GleeWorldRadio';
+export const GLEE_WORLD_RADIO_CHANNEL_URL = 'https://www.youtube.com/@GleeWorldRadio';
+
+// Default channels for course video library
+export const DEFAULT_COURSE_CHANNELS = [
+  { handle: '@GleeWorldRadio', name: 'GleeWorld Radio', isDefault: true },
+  { handle: '@SpelmanCollegeGleeClub', name: 'Spelman College Glee Club', isDefault: false },
+];
+
 
 // Extract YouTube video ID from various URL formats
 export function extractYouTubeVideoId(input: string): string | null {
