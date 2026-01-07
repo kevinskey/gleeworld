@@ -343,21 +343,8 @@ export const UnifiedDashboard = () => {
       {/* Modern Store Section */}
       <DashboardStoreSection />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-4 space-y-6 pb-0 pt-0">
-          {/* 4 Fixed Cards - Role-specific content */}
-          <FourCardLayout role={profile.role} isAdmin={profile.is_admin} isSuperAdmin={profile.is_super_admin} />
-
-          {/* My Modules (assigned modules based on exec role) */}
-          <MyModules userProfile={{
-          user_id: profile.user_id,
-          role: profile.role,
-          exec_board_role: profile.exec_board_role,
-          is_exec_board: profile.is_exec_board,
-          is_admin: profile.is_admin,
-          is_super_admin: profile.is_super_admin
-        }} />
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pl-0 pr-0">
+        
       </div>
       
       {/* Messages Panel Overlay */}
