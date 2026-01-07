@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FileText, Eye, Send, Trash2, PenTool, RotateCcw, Edit, User } from "lucide-react";
+import { FileText, Eye, Send, Trash2, PenTool, RotateCcw, Edit, User, Calendar, CalendarCheck } from "lucide-react";
 import { getStatusColor, getStatusText } from "./contractUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -22,6 +22,8 @@ interface ContractItemProps {
   onSend: (contract: Contract) => void;
   onResend?: (contract: Contract) => void;
   onEditTitle?: (contract: Contract) => void;
+  onSyncToCalendar?: (contract: Contract) => void;
+  isSyncing?: boolean;
 }
 
 export const ContractItem = ({
@@ -34,7 +36,9 @@ export const ContractItem = ({
   onAdminSign,
   onSend,
   onResend,
-  onEditTitle
+  onEditTitle,
+  onSyncToCalendar,
+  isSyncing
 }: ContractItemProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
@@ -140,6 +144,26 @@ export const ContractItem = ({
               <Send className="h-3 w-3" />
             )}
           </Button>
+          
+          {/* Sync to Calendar button for completed contracts */}
+          {userIsAdmin && contract.status === 'completed' && onSyncToCalendar && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onSyncToCalendar(contract)}
+              disabled={isSyncing}
+              title={(contract as any).calendar_event_id ? "Synced to Calendar" : "Sync to Calendar"}
+              className={`h-8 w-8 p-0 ${(contract as any).calendar_event_id 
+                ? "border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950" 
+                : "border-purple-300 text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950"}`}
+            >
+              {(contract as any).calendar_event_id ? (
+                <CalendarCheck className="h-3 w-3" />
+              ) : (
+                <Calendar className="h-3 w-3" />
+              )}
+            </Button>
+          )}
           
           {userIsAdmin && (
             <Button 

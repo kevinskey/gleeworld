@@ -15,6 +15,7 @@ import { useContractSendHistory } from "@/hooks/useContractSendHistory";
 import { useAdminSigning } from "@/hooks/useAdminSigning";
 import { useLastRecipient } from "@/hooks/useLastRecipient";
 import { useContractFiltering } from "@/hooks/useContractFiltering";
+import { supabase } from "@/integrations/supabase/client";
 import type { Contract } from "@/hooks/useContracts";
 interface ContractsListProps {
   contracts: Contract[];
@@ -45,6 +46,7 @@ export const ContractsList = ({
   const [isOpen, setIsOpen] = useState(true); // Default to open
   const [editTitleDialogOpen, setEditTitleDialogOpen] = useState(false);
   const [selectedEditContract, setSelectedEditContract] = useState<Contract | null>(null);
+  const [syncingContractId, setSyncingContractId] = useState<string | null>(null);
   const {
     contractSendHistory,
     reloadSendHistory
@@ -137,6 +139,42 @@ export const ContractsList = ({
   const handleContractUpdated = (updatedContract: Contract) => {
     onContractUpdated?.(updatedContract);
   };
+
+  const handleSyncToCalendar = async (contract: Contract) => {
+    setSyncingContractId(contract.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-contract-to-calendar', {
+        body: { contractId: contract.id }
+      });
+
+      if (error) {
+        console.error('Sync error:', error);
+        toast({
+          title: "Sync Failed",
+          description: error.message || "Failed to sync contract to calendar",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Synced to Calendar",
+        description: data.message || "Contract has been synced to the Touring calendar"
+      });
+      
+      // Refresh contracts to show updated calendar_event_id
+      onRetry?.();
+    } catch (err) {
+      console.error('Sync error:', err);
+      toast({
+        title: "Sync Failed",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setSyncingContractId(null);
+    }
+  };
   console.log('ContractsList render - lastRecipient:', lastRecipient, 'loading:', lastRecipientLoading);
   return <>
       <Card className="w-full">
@@ -164,7 +202,7 @@ export const ContractsList = ({
 
                   {filteredAndSortedContracts.map(contract => {
                 const sendCount = contractSendHistory[contract.id] || 0;
-                return <ContractItem key={contract.id} contract={contract} isSelected={selectedContracts.has(contract.id)} sendCount={sendCount} onSelect={handleSelectContract} onView={onViewContract} onDelete={handleDeleteContract} onAdminSign={handleAdminSign} onSend={contract => handleOpenSendDialog(contract, false)} onResend={contract => handleOpenSendDialog(contract, true)} onEditTitle={handleEditTitle} />;
+                return <ContractItem key={contract.id} contract={contract} isSelected={selectedContracts.has(contract.id)} sendCount={sendCount} onSelect={handleSelectContract} onView={onViewContract} onDelete={handleDeleteContract} onAdminSign={handleAdminSign} onSend={contract => handleOpenSendDialog(contract, false)} onResend={contract => handleOpenSendDialog(contract, true)} onEditTitle={handleEditTitle} onSyncToCalendar={handleSyncToCalendar} isSyncing={syncingContractId === contract.id} />;
               })}
 
                   {filteredAndSortedContracts.length === 0 && contracts.length > 0 && <div className="text-center py-8">

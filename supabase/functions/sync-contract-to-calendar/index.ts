@@ -272,10 +272,18 @@ const handler = async (req: Request): Promise<Response> => {
 function parseContractContent(content: string, existingMetadata: ContractMetadata): ContractMetadata {
   const metadata = { ...existingMetadata };
   
-  // Try to extract host name
-  const hostMatch = content.match(/and\s+(.+?),\s+which is located in/);
-  if (hostMatch && !metadata.HOST_NAME) {
-    metadata.HOST_NAME = hostMatch[1].trim();
+  // Try to extract host name from title pattern "Artist Name - Event Name"
+  const titleMatch = content.match(/between[^a]+and\s+(.+?),\s+which is located/i);
+  if (titleMatch && !metadata.HOST_NAME) {
+    metadata.HOST_NAME = titleMatch[1].trim();
+  }
+  
+  // Also try from contract title format
+  if (!metadata.HOST_NAME) {
+    const dashMatch = content.match(/Contract:\s*(.+?)\s+-\s+(.+?)(?:\n|$)/i);
+    if (dashMatch) {
+      metadata.HOST_NAME = dashMatch[2].trim(); // Event name as host
+    }
   }
   
   // Try to extract location
@@ -284,16 +292,35 @@ function parseContractContent(content: string, existingMetadata: ContractMetadat
     metadata.HOST_LOCATION = locationMatch[1].trim();
   }
   
-  // Try to extract performance date
-  const dateMatch = content.match(/performance shall be on\s+(.+?),?\s+beginning/i);
-  if (dateMatch && !metadata.PERFORMANCE_DATE) {
-    metadata.PERFORMANCE_DATE = dateMatch[1].trim();
+  // Try to extract performance date - various formats
+  const datePatterns = [
+    /performance shall be on\s+(.+?),?\s+beginning/i,
+    /Performance Date:\s*(.+?)(?:\n|$)/i,
+    /Date of Performance:\s*(.+?)(?:\n|$)/i,
+    /on\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}/i,
+  ];
+  
+  for (const pattern of datePatterns) {
+    const dateMatch = content.match(pattern);
+    if (dateMatch && !metadata.PERFORMANCE_DATE) {
+      metadata.PERFORMANCE_DATE = dateMatch[1]?.trim() || dateMatch[0]?.trim();
+      break;
+    }
   }
   
   // Try to extract venue
-  const venueMatch = content.match(/shall be held at\s+(.+?),\s+located at/);
-  if (venueMatch && !metadata.VENUE_NAME) {
-    metadata.VENUE_NAME = venueMatch[1].trim();
+  const venuePatterns = [
+    /shall be held at\s+(.+?),\s+located at/i,
+    /Venue:\s*(.+?)(?:\n|$)/i,
+    /Location:\s*(.+?)(?:\n|$)/i,
+  ];
+  
+  for (const pattern of venuePatterns) {
+    const venueMatch = content.match(pattern);
+    if (venueMatch && !metadata.VENUE_NAME) {
+      metadata.VENUE_NAME = venueMatch[1].trim();
+      break;
+    }
   }
   
   // Try to extract venue address
@@ -303,10 +330,21 @@ function parseContractContent(content: string, existingMetadata: ContractMetadat
   }
   
   // Try to extract honorarium
-  const honorariumMatch = content.match(/honorarium in the sum of\s+(.+?)\s+dollars/i);
-  if (honorariumMatch && !metadata.HONORARIUM_AMOUNT) {
-    metadata.HONORARIUM_AMOUNT = honorariumMatch[1].trim();
+  const honorariumPatterns = [
+    /honorarium in the sum of\s+(.+?)\s+dollars/i,
+    /Honorarium:\s*\$?(.+?)(?:\n|$)/i,
+    /stipend of\s+\$?(.+?)(?:\s|$)/i,
+  ];
+  
+  for (const pattern of honorariumPatterns) {
+    const honorariumMatch = content.match(pattern);
+    if (honorariumMatch && !metadata.HONORARIUM_AMOUNT) {
+      metadata.HONORARIUM_AMOUNT = honorariumMatch[1].trim().replace(/[,$]/g, '');
+      break;
+    }
   }
+  
+  console.log("Parsed metadata from content:", metadata);
   
   return metadata;
 }
