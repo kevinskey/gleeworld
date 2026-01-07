@@ -206,7 +206,7 @@ export const CalendarFilterStrip = ({
                   <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 ${isSelected ? '' : 'opacity-50'}`} style={{
                 backgroundColor: calendar.color
               }} />
-                  <span className="truncate max-w-[40px] sm:max-w-[60px] text-xs">{calendar.name}</span>
+                  <span className="truncate max-w-[80px] sm:max-w-[120px] text-xs">{calendar.name}</span>
                 </button>
               </ContextMenuTrigger>
               <ContextMenuContent className="bg-popover z-50 p-2">
