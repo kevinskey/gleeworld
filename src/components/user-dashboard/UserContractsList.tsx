@@ -3,20 +3,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FileText, Calendar, Download, Eye, User } from "lucide-react";
+import { FileText, Calendar, Download, Eye, User, Edit } from "lucide-react";
 import { useUserContracts } from "@/hooks/useUserContracts";
 import { useState } from "react";
 import { ContractViewer } from "@/components/ContractViewer";
+import { EditContractDialog } from "@/components/contracts/EditContractDialog";
 import { useContractRecipientProfile } from "@/hooks/useContractRecipientProfile";
 
 interface ContractCardProps {
   contract: any;
   onViewContract: (contract: any) => void;
+  onEditContract: (contract: any) => void;
   getStatusColor: (status: string) => string;
 }
 
-const ContractCard = ({ contract, onViewContract, getStatusColor }: ContractCardProps) => {
+const ContractCard = ({ contract, onViewContract, onEditContract, getStatusColor }: ContractCardProps) => {
   const { profile: recipientProfile } = useContractRecipientProfile(contract.id);
+  
+  // Allow editing for draft or pending contracts (not yet signed)
+  const canEdit = contract.signature_status === 'pending' || 
+                  contract.status === 'draft' || 
+                  (!contract.artist_signed_at && !contract.admin_signed_at);
 
   return (
     <Card>
@@ -68,6 +75,17 @@ const ContractCard = ({ contract, onViewContract, getStatusColor }: ContractCard
             )}
           </div>
           <div className="flex gap-2">
+            {canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEditContract(contract)}
+                className="border-brand-300 text-brand-700 hover:bg-brand-50"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -95,9 +113,11 @@ const ContractCard = ({ contract, onViewContract, getStatusColor }: ContractCard
 };
 
 export const UserContractsList = () => {
-  const { contracts, loading, error } = useUserContracts();
+  const { contracts, loading, error, refetch } = useUserContracts();
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [contractViewerOpen, setContractViewerOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -112,6 +132,17 @@ export const UserContractsList = () => {
     console.log('UserContractsList: Viewing contract:', contract);
     setSelectedContract(contract);
     setContractViewerOpen(true);
+  };
+
+  const handleEditContract = (contract: any) => {
+    console.log('UserContractsList: Editing contract:', contract);
+    setEditingContract(contract);
+    setEditDialogOpen(true);
+  };
+
+  const handleContractUpdated = (updatedContract: any) => {
+    console.log('UserContractsList: Contract updated:', updatedContract);
+    refetch();
   };
 
   if (loading) {
@@ -161,6 +192,7 @@ export const UserContractsList = () => {
             key={contract.id}
             contract={contract}
             onViewContract={handleViewContract}
+            onEditContract={handleEditContract}
             getStatusColor={getStatusColor}
           />
         ))}
@@ -170,6 +202,13 @@ export const UserContractsList = () => {
         contract={selectedContract}
         open={contractViewerOpen}
         onOpenChange={setContractViewerOpen}
+      />
+
+      <EditContractDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        contract={editingContract}
+        onContractUpdated={handleContractUpdated}
       />
     </>
   );
