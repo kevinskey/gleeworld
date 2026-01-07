@@ -1173,7 +1173,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded bg-red-100 border border-red-300" />
-                      <span className="text-primary-foreground">Holiday/Break</span>
+                      <span className="text-primary-foreground text-lg">Holiday/Break</span>
                     </div>
                   </div>
 
