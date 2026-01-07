@@ -548,94 +548,95 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                   Add Session
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Create Class Session</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div>
-                  <Label>Title *</Label>
-                  <Input
-                    value={newSession.title}
-                    onChange={e => setNewSession(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="e.g., Conducting Fundamentals"
-                  />
-                </div>
-                <div>
-                  <Label>Description</Label>
-                  <Textarea
-                    value={newSession.description}
-                    onChange={e => setNewSession(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Class topics and objectives..."
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Create Class Session</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
                   <div>
-                    <Label>Date *</Label>
+                    <Label>Title *</Label>
                     <Input
-                      type="date"
-                      value={newSession.session_date}
-                      onChange={e => setNewSession(prev => ({ ...prev, session_date: e.target.value }))}
+                      value={newSession.title}
+                      onChange={e => setNewSession(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="e.g., Conducting Fundamentals"
                     />
                   </div>
                   <div>
-                    <Label>Type</Label>
-                    <Select
-                      value={newSession.session_type}
-                      onValueChange={value => setNewSession(prev => ({ ...prev, session_type: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SESSION_TYPES.map(type => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Start Time</Label>
-                    <Input
-                      type="time"
-                      value={newSession.start_time}
-                      onChange={e => setNewSession(prev => ({ ...prev, start_time: e.target.value }))}
+                    <Label>Description</Label>
+                    <Textarea
+                      value={newSession.description}
+                      onChange={e => setNewSession(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Class topics and objectives..."
+                      rows={3}
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Date *</Label>
+                      <Input
+                        type="date"
+                        value={newSession.session_date}
+                        onChange={e => setNewSession(prev => ({ ...prev, session_date: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Type</Label>
+                      <Select
+                        value={newSession.session_type}
+                        onValueChange={value => setNewSession(prev => ({ ...prev, session_type: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SESSION_TYPES.map(type => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Start Time</Label>
+                      <Input
+                        type="time"
+                        value={newSession.start_time}
+                        onChange={e => setNewSession(prev => ({ ...prev, start_time: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>End Time</Label>
+                      <Input
+                        type="time"
+                        value={newSession.end_time}
+                        onChange={e => setNewSession(prev => ({ ...prev, end_time: e.target.value }))}
+                      />
+                    </div>
+                  </div>
                   <div>
-                    <Label>End Time</Label>
+                    <Label>Location</Label>
                     <Input
-                      type="time"
-                      value={newSession.end_time}
-                      onChange={e => setNewSession(prev => ({ ...prev, end_time: e.target.value }))}
+                      value={newSession.location}
+                      onChange={e => setNewSession(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="e.g., Music Building Room 101"
                     />
                   </div>
                 </div>
-                <div>
-                  <Label>Location</Label>
-                  <Input
-                    value={newSession.location}
-                    onChange={e => setNewSession(prev => ({ ...prev, location: e.target.value }))}
-                    placeholder="e.g., Music Building Room 101"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreateSession} disabled={creating} className="bg-[#003666]">
-                  {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                  Create Session
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateSession} disabled={creating} className="bg-[#003666]">
+                    {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                    Create Session
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         )}
       </div>
 
