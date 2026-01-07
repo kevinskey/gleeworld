@@ -100,12 +100,13 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Contract not found: ' + (contractError?.message || 'Unknown error'));
     }
 
-    // Only sync completed contracts
-    if (contract.status !== 'completed') {
-      console.log("Contract not completed, skipping calendar sync");
+    // Allow draft, pending, sent, and completed contracts to sync
+    const allowedStatuses = ['draft', 'pending', 'sent', 'pending_recipient', 'completed'];
+    if (!allowedStatuses.includes(contract.status)) {
+      console.log("Contract status not eligible for sync:", contract.status);
       return new Response(JSON.stringify({ 
         success: false, 
-        message: 'Contract must be completed before syncing to calendar'
+        message: `Contract status "${contract.status}" is not eligible for calendar sync`
       }), {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -124,6 +125,20 @@ const handler = async (req: Request): Promise<Response> => {
     if (!metadata.HOST_NAME || !metadata.PERFORMANCE_DATE) {
       console.log("Metadata incomplete, attempting to parse from contract content");
       metadata = parseContractContent(contract.content, metadata);
+      
+      // Save parsed metadata back to contract for future use
+      if (metadata.HOST_NAME || metadata.PERFORMANCE_DATE) {
+        const { error: updateMetaError } = await supabase
+          .from('contracts_v2')
+          .update({ contract_metadata: metadata })
+          .eq('id', contractId);
+        
+        if (updateMetaError) {
+          console.error('Error saving parsed metadata:', updateMetaError);
+        } else {
+          console.log('Saved parsed metadata to contract');
+        }
+      }
     }
 
     // Build event dates
