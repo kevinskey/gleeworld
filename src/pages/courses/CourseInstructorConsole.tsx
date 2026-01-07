@@ -24,6 +24,7 @@ import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
 import { StudentCommunications } from '@/components/mus240/instructor/StudentCommunications';
 import { SyllabusTemplateEditor } from '@/components/academy/syllabus/SyllabusTemplateEditor';
 import { ModulesSection } from '@/components/course/ModulesSection';
+import { CalendarSection } from '@/components/course/CalendarSection';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -282,15 +283,8 @@ export const CourseInstructorConsole = () => {
                 </CardContent>
               </Card>
             )}
-            {activeTab === 'calendar' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Course Calendar</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Calendar integration coming soon.</p>
-                </CardContent>
-              </Card>
+            {activeTab === 'calendar' && dbCourse?.id && (
+              <CalendarSection courseId={dbCourse.id} />
             )}
             {activeTab === 'assignments' && (
               <AssignmentManager />
