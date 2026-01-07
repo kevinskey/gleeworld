@@ -94,7 +94,7 @@ export const DashboardStoreSection = () => {
       {/* Section Header - Edge to Edge */}
       <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground px-4 sm:px-6 lg:px-8 w-full pt-[20px] py-[20px] pb-[20px]">Shop</h2>
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:px-0 md:py-0 pt-0 pb-0 pl-0 pr-0">
+      <div className="w-full px-[50px]">
         
 
         {/* Product Horizontal Scroll */}
