@@ -144,9 +144,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
         <div className="flex min-h-screen bg-background">
         {/* Left Sidebar - Navigation */}
         <div className="w-[15%] min-w-[180px] bg-muted border-r border-border flex-shrink-0 hidden lg:block">
-          <div className="p-4 border-b border-border">
+          <div className="p-4 border-b border-border pb-[30px] pt-[20px]">
             <Mus240SemesterSelector showLabel={false} className="mb-2" />
-            <div className="text-lg font-bold text-foreground">{course.courseCode}</div>
+            <div className="text-lg font-bold text-foreground pt-[10px]">{course.courseCode}</div>
             <div className="text-sm text-muted-foreground">{course.title}</div>
           </div>
           
@@ -238,7 +238,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
           </div>
 
-          <div className="px-4 lg:px-6 space-y-4 max-w-5xl mx-auto">
+          <div className="px-4 lg:px-6 space-y-4 max-w-5xl mx-auto pt-[10px]">
             {/* Back Button - Desktop only */}
             <Button variant="ghost" onClick={() => navigate('/glee-academy')} className="hidden lg:flex -mt-2 pt-[10px]">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -250,14 +250,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-3 mb-2">
                   <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
-                  <Badge variant="outline" className="border-white/30 text-white">
+                  <Badge variant="outline" className="border-white/30 text-white px-0 pt-[10px]">
                     {course.level}
                   </Badge>
                 </div>
-                <CardTitle className="text-2xl lg:text-3xl font-bold text-white">{course.title}</CardTitle>
+                <CardTitle className="text-2xl lg:text-3xl font-bold text-white pb-[10px]">{course.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80">{course.description}</p>
+                <p className="text-white/80 pt-[10px]">{course.description}</p>
               </CardContent>
             </Card>
 
@@ -290,7 +290,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-lg font-semibold">Enroll in this Course</h3>
-                          <p className="text-muted-foreground">Get access to all course materials, assignments, and the course lounge.</p>
+                          <p className="text-muted-foreground text-lg">Get access to all course materials, assignments, and the course lounge.</p>
                         </div>
                         <Button onClick={handleEnroll} size="lg">
                           <GraduationCap className="h-5 w-5 mr-2" />
@@ -303,13 +303,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 {/* Welcome Card */}
                 <Card className="bg-primary border-0">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
+                    <CardTitle className="flex items-center gap-2 text-white text-2xl">
                       <BookOpen className="h-5 w-5 text-white" />
                       Welcome to {course.title}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-white/80 mb-4">{course.description}</p>
+                    <p className="text-white/80 mb-4 text-xl">{course.description}</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {course.highlights.map((highlight, i) => <div key={i} className="bg-white/10 rounded-lg p-3 text-center">
                           <span className="text-sm font-medium text-white">{highlight}</span>
@@ -364,7 +364,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                   label: 'Grades',
                   tab: 'grades'
                 }].map(item => <Card key={item.tab} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setActiveTab(item.tab)}>
-                      <CardContent className="p-4 text-center">
+                      <CardContent className="p-4 text-center border border-muted-foreground">
                         <item.icon className="h-8 w-8 mx-auto text-primary mb-2" />
                         <span className="font-medium">{item.label}</span>
                       </CardContent>
@@ -476,7 +476,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
         {/* Right Sidebar - Resources */}
         <div className="w-[20%] min-w-[200px] bg-muted border-l border-border flex-shrink-0 overflow-y-auto hidden xl:block">
           <div className="p-4 space-y-4">
-            <h3 className="font-bold text-foreground">Course Resources</h3>
+            <h3 className="font-bold text-foreground pt-[40px]">Course Resources</h3>
             
             {[{
               icon: Video,
@@ -494,7 +494,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: FileText,
               label: 'Documents',
               desc: 'Handouts and readings'
-            }].map((item, i) => <Card key={i} className="cursor-pointer hover:bg-muted/50 transition-colors">
+            }].map((item, i) => <Card key={i} className="cursor-pointer hover:bg-muted/50 transition-colors border">
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
