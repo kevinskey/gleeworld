@@ -82,71 +82,101 @@ serve(async (req) => {
       )
     }
 
-    // Parse the CSV data
-    const lines = csvData.trim().split('\n');
+    // Parse the CSV/TSV data (handles Banner-style exports with control chars)
+    const normalized = String(csvData)
+      .replace(/\u0000/g, '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      // remove most non-printable characters but keep tabs/newlines
+      .replace(/[^\x09\x0A\x20-\x7E]/g, '');
+
+    const lines = normalized
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+
     const students: StudentRow[] = [];
     const errors: { row: number; error: string }[] = [];
-    
-    // Find the header row (contains "Student Name", "ID", etc.)
+
+    const detectDelimiter = (line: string): ',' | '\t' => {
+      const commaCols = line.split(',').length;
+      const tabCols = line.split('\t').length;
+      return tabCols > commaCols ? '\t' : ',';
+    };
+
+    const splitRow = (line: string, delimiter: ',' | '\t') => {
+      const parts = line
+        .split(delimiter)
+        .map((v) => v.trim().replace(/"/g, '').replace(/\*\*/g, ''));
+      return parts;
+    };
+
+    // Find the header row (contains "Student Name" and "ID"/"Student ID")
     let headerRowIndex = -1;
     let headers: string[] = [];
-    
+    let delimiter: ',' | '\t' = ',';
+
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].toLowerCase();
-      if (line.includes('student name') && line.includes('id')) {
+      const lower = lines[i].toLowerCase();
+      if (lower.includes('student name') && (lower.includes('\tid\t') || lower.includes('student id') || lower.includes('banner id') || lower.includes(' id'))) {
         headerRowIndex = i;
-        headers = lines[i].split(',').map(h => h.trim().toLowerCase());
+        delimiter = detectDelimiter(lines[i]);
+        headers = splitRow(lines[i], delimiter).map((h) => h.toLowerCase());
         break;
       }
     }
 
     if (headerRowIndex === -1) {
-      // Try alternate format - simple CSV with headers
-      headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      // Fallback: assume first row is headers
       headerRowIndex = 0;
+      delimiter = detectDelimiter(lines[0] ?? '');
+      headers = splitRow(lines[0] ?? '', delimiter).map((h) => h.toLowerCase());
     }
 
-    // Find column indices - more flexible matching
-    const nameIndex = headers.findIndex(h => 
+    // Find column indices - flexible matching
+    const nameIndex = headers.findIndex((h) =>
       h.includes('student name') || h.includes('student_name') || h === 'name' || h === 'full name' || h === 'full_name'
     );
-    const idIndex = headers.findIndex(h => 
-      h === 'id' || h === 'sid' || h.includes('student id') || h.includes('student_id') || 
+    const idIndex = headers.findIndex((h) =>
+      h === 'id' || h === 'sid' || h.includes('student id') || h.includes('student_id') ||
       h.includes('banner id') || h.includes('banner_id') || h.includes('spelman id')
     );
-    const statusIndex = headers.findIndex(h => 
-      h.includes('registration status') || h.includes('registration_status') || 
+    const statusIndex = headers.findIndex((h) =>
+      h.includes('registration status') || h.includes('registration_status') ||
       h.includes('reg status') || h === 'status'
     );
-    const levelIndex = headers.findIndex(h => h.includes('level') || h === 'class level' || h === 'academic level');
-    const creditIndex = headers.findIndex(h => h.includes('credit') || h.includes('hours') || h === 'cr hrs');
-    const classIndex = headers.findIndex(h => 
-      (h.includes('class') && !h.includes('classlist') && !h.includes('class level')) || 
+    const levelIndex = headers.findIndex((h) => h.includes('level') || h === 'class level' || h === 'academic level');
+    const creditIndex = headers.findIndex((h) => h.includes('credit') || h.includes('hours') || h === 'cr hrs');
+    const classIndex = headers.findIndex((h) =>
+      (h.includes('class') && !h.includes('classlist') && !h.includes('class level')) ||
       h === 'year' || h.includes('class year')
     );
 
+    console.log('Detected delimiter:', delimiter === '\t' ? 'TAB' : 'COMMA');
     console.log('Raw headers:', headers);
     console.log('Headers found:', { nameIndex, idIndex, statusIndex, levelIndex, creditIndex, classIndex });
 
     // Process student rows
     for (let i = headerRowIndex + 1; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (!line || line.startsWith(',') || line.toLowerCase().includes('enrollment') || line.toLowerCase().includes('wait list')) {
+      const lower = line.toLowerCase();
+
+      if (!line || line.startsWith(delimiter) || lower.includes('enrollment') || lower.includes('wait list')) {
         continue;
       }
 
-      const values = line.split(',').map(v => v.trim().replace(/"/g, '').replace(/\*\*/g, ''));
-      
+      const values = splitRow(line, delimiter);
+
       const name = nameIndex !== -1 ? values[nameIndex] : null;
       const studentId = idIndex !== -1 ? values[idIndex] : null;
-      
+
       if (!name || !studentId || studentId.length < 5) {
         continue;
       }
 
       students.push({
-        name: name,
-        studentId: studentId,
+        name,
+        studentId,
         registrationStatus: statusIndex !== -1 ? values[statusIndex] || 'Registered' : 'Registered',
         level: levelIndex !== -1 ? values[levelIndex] || 'Undergraduate' : 'Undergraduate',
         creditHours: creditIndex !== -1 ? parseInt(values[creditIndex]) || 4 : 4,
