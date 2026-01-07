@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, FolderOpen, FileText, Video, ClipboardList, Link as LinkIcon, Calendar, BookOpen, Music } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, FolderOpen, FileText, Video, ClipboardList, Link as LinkIcon, Calendar, BookOpen, Music, Pencil, Save, X, Plus, Trash2 } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { ModuleCreator } from './ModuleCreator';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 interface ModulesSectionProps {
   courseId: string;
 }
@@ -19,6 +24,11 @@ interface WeekItem {
 export const ModulesSection: React.FC<ModulesSectionProps> = ({
   courseId
 }) => {
+  const queryClient = useQueryClient();
+  const [editingWeekIndex, setEditingWeekIndex] = useState<number | null>(null);
+  const [editedWeek, setEditedWeek] = useState<WeekItem | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
   // Fetch course modules from database
   const {
     data: modules,
@@ -59,6 +69,95 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
     }
   });
   const weeklySchedule: WeekItem[] = Array.isArray(syllabusData?.weekly_schedule) ? syllabusData.weekly_schedule as unknown as WeekItem[] : [];
+
+  const handleEditWeek = (index: number, week: WeekItem) => {
+    setEditingWeekIndex(index);
+    setEditedWeek({ ...week });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingWeekIndex(null);
+    setEditedWeek(null);
+  };
+
+  const handleSaveWeek = async () => {
+    if (editingWeekIndex === null || !editedWeek || !syllabusData) return;
+    
+    setIsSaving(true);
+    try {
+      const updatedSchedule = [...weeklySchedule];
+      updatedSchedule[editingWeekIndex] = editedWeek;
+      
+      const { error } = await supabase
+        .from('gw_syllabus_templates')
+        .update({ weekly_schedule: updatedSchedule as unknown as Json })
+        .eq('course_id', courseId);
+      
+      if (error) throw error;
+      
+      toast.success('Week updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['syllabus-weekly-schedule', courseId] });
+      setEditingWeekIndex(null);
+      setEditedWeek(null);
+    } catch (error: any) {
+      toast.error('Failed to save: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAddWeek = async () => {
+    if (!syllabusData) return;
+    
+    setIsSaving(true);
+    try {
+      const newWeek: WeekItem = {
+        week: `Week ${weeklySchedule.length + 1}`,
+        topics: '',
+        readings: '',
+        assignments: ''
+      };
+      const updatedSchedule = [...weeklySchedule, newWeek];
+      
+      const { error } = await supabase
+        .from('gw_syllabus_templates')
+        .update({ weekly_schedule: updatedSchedule as unknown as Json })
+        .eq('course_id', courseId);
+      
+      if (error) throw error;
+      
+      toast.success('Week added successfully');
+      queryClient.invalidateQueries({ queryKey: ['syllabus-weekly-schedule', courseId] });
+    } catch (error: any) {
+      toast.error('Failed to add week: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteWeek = async (index: number) => {
+    if (!syllabusData || !confirm('Delete this week?')) return;
+    
+    setIsSaving(true);
+    try {
+      const updatedSchedule = weeklySchedule.filter((_, i) => i !== index);
+      
+      const { error } = await supabase
+        .from('gw_syllabus_templates')
+        .update({ weekly_schedule: updatedSchedule as unknown as Json })
+        .eq('course_id', courseId);
+      
+      if (error) throw error;
+      
+      toast.success('Week deleted');
+      queryClient.invalidateQueries({ queryKey: ['syllabus-weekly-schedule', courseId] });
+    } catch (error: any) {
+      toast.error('Failed to delete: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const getItemIcon = (type: string) => {
     switch (type) {
       case 'video':
@@ -113,16 +212,64 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
 
         {/* Course Outline (Weekly Schedule) Tab */}
         <TabsContent value="outline" className="space-y-4 mt-4">
+          <div className="flex justify-end mb-2">
+            <Button onClick={handleAddWeek} disabled={isSaving} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Week
+            </Button>
+          </div>
           {hasWeeklySchedule ? <div className="space-y-3">
               {weeklySchedule.map((week, index) => {
-            const {
-              readings,
-              assignments,
-              topicItems
-            } = parseTopicsContent(week.topics || '');
-            const weekLabel = week.week || `Week ${index + 1}`;
-            return <Collapsible key={index} defaultOpen={index < 3}>
-                    <Card className="overflow-hidden">
+                const isEditing = editingWeekIndex === index;
+                const {
+                  readings,
+                  assignments,
+                  topicItems
+                } = parseTopicsContent(week.topics || '');
+                const weekLabel = week.week || `Week ${index + 1}`;
+                
+                if (isEditing && editedWeek) {
+                  return (
+                    <Card key={index} className="overflow-hidden border-primary">
+                      <CardHeader className="py-4">
+                        <div className="space-y-4">
+                          <Input
+                            value={editedWeek.week}
+                            onChange={(e) => setEditedWeek({ ...editedWeek, week: e.target.value })}
+                            placeholder="Week title (e.g., Week 1: Introduction)"
+                            className="font-semibold"
+                          />
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Topics (one per line)</label>
+                            <Textarea
+                              value={editedWeek.topics}
+                              onChange={(e) => setEditedWeek({ ...editedWeek, topics: e.target.value })}
+                              placeholder="Enter topics, readings (prefix with 'Read:'), assignments (prefix with 'Due:')"
+                              rows={6}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Tip: Use "Read:" for readings and "Due:" for assignments
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button onClick={handleSaveWeek} disabled={isSaving} size="sm">
+                              <Save className="h-4 w-4 mr-2" />
+                              Save
+                            </Button>
+                            <Button onClick={handleCancelEdit} variant="outline" size="sm">
+                              <X className="h-4 w-4 mr-2" />
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  );
+                }
+                
+                return (
+                  <Collapsible key={index} defaultOpen={index < 3}>
+                    <Card className="overflow-hidden group">
                       <CollapsibleTrigger className="w-full">
                         <CardHeader className="py-4">
                           <div className="flex items-center justify-between">
@@ -141,6 +288,30 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                               {assignments.length > 0 && <Badge variant="secondary" className="text-xs">
                                   {assignments.length} due
                                 </Badge>}
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditWeek(index, week);
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteWeek(index);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                               <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform" />
                             </div>
                           </div>
@@ -197,8 +368,9 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                         </CardContent>
                       </CollapsibleContent>
                     </Card>
-                  </Collapsible>;
-          })}
+                  </Collapsible>
+                );
+              })}
             </div> : <Card>
               <CardContent className="py-12 text-center">
                 <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
@@ -206,7 +378,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                   No course outline available yet.
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  The instructor will publish the weekly schedule soon.
+                  Click "Add Week" to create your first module.
                 </p>
               </CardContent>
             </Card>}
