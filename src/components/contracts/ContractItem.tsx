@@ -146,7 +146,7 @@ export const ContractItem = ({
           </Button>
           
           {/* Sync to Calendar button for completed contracts */}
-          {userIsAdmin && contract.status === 'completed' && onSyncToCalendar && (
+          {userIsAdmin && ['draft', 'pending', 'sent', 'pending_recipient', 'completed'].includes(contract.status) && onSyncToCalendar && (
             <Button 
               variant="outline" 
               size="sm"
