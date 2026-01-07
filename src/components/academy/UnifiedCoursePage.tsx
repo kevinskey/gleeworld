@@ -260,7 +260,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
         <div className="flex-1 overflow-y-auto">
           {/* Course Header - Full width on mobile, seamless with header */}
           <div className="bg-gradient-to-r from-primary to-primary/80 lg:hidden">
-            <div className="px-4 pb-6 pt-4">
+            <div className="px-4 sm:px-6 pb-6 pt-4">
               <div className="flex items-center gap-3 mb-2">
                 <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
                 <Badge variant="outline" className="border-white/30 text-white">
@@ -272,9 +272,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
           </div>
 
-          <div className="px-4 lg:px-6 space-y-4 max-w-5xl mx-auto pt-[10px] pl-[10px]">
+          <div className="px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 space-y-6 max-w-6xl mx-auto py-6">
             {/* Back Button - Desktop only */}
-            <Button variant="ghost" onClick={() => navigate('/glee-academy')} className="hidden lg:flex -mt-2 pt-[10px]">
+            <Button variant="ghost" onClick={() => navigate('/glee-academy')} className="hidden lg:flex -mb-2">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Academy
             </Button>
