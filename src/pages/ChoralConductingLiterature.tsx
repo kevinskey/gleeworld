@@ -83,7 +83,7 @@ Three tardies = 1 absence. A tardy is issued when any student is not in the clas
     courseStructure: 'This course will be delivered in-person, through the course management system SpeleLearn (Canvas). Throughout the semester, you will participate in a blend of individual and group activities. Course activities will consist of reading book chapters, viewing presentations, viewing videos, listening to music, discussion forums, online quizzes and tests, and group assignments.',
     disabilityStatement: 'Any student who feels she may need an accommodation based on the impact of a disability should contact the Office of Disability Services privately to discuss her specific needs. Please contact the Office of Disability Services at (404) 223-7590 in MacVicar Hall to coordinate reasonable accommodations.',
     academicHonestyStatement: 'The Spelman College community is committed to maintaining the integrity of the College and its academic programs. Each student is required to abide by Spelman\'s code of conduct and is expected to produce work that reflects her own ideas. Academic dishonesty will not be tolerated.',
-    textbookIframeUrl: 'https://gamma.app/embed/qpwgjhqyohq63uo'
+    textbookIframeUrl: 'https://conducting.gleeworld.org'
   };
 
   return <CourseTemplate {...courseData} />;
