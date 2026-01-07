@@ -298,7 +298,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
         error
       } = await supabase.from('gw_course_class_sessions').insert(sessionsToCreate).select();
       if (error) throw error;
-      
+
       // Auto-generate QR codes for all created sessions
       if (createdSessions) {
         const qrCodesToCreate = createdSessions.map(session => ({
@@ -315,19 +315,19 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
             session_title: session.title
           }
         }));
-        
-        const { data: qrCodes } = await supabase.from('gw_attendance_qr_codes').insert(qrCodesToCreate).select();
-        
+        const {
+          data: qrCodes
+        } = await supabase.from('gw_attendance_qr_codes').insert(qrCodesToCreate).select();
+
         // Update sessions with QR code IDs
         if (qrCodes) {
           for (const qr of qrCodes) {
-            await supabase.from('gw_course_class_sessions')
-              .update({ qr_code_id: qr.id })
-              .eq('id', qr.event_id);
+            await supabase.from('gw_course_class_sessions').update({
+              qr_code_id: qr.id
+            }).eq('id', qr.event_id);
           }
         }
       }
-      
       toast({
         title: 'Sessions Generated',
         description: `Created ${sessionDates.length} class sessions with QR codes for ${activeSemester.name}`
@@ -406,7 +406,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
           error
         } = await supabase.from('gw_course_class_sessions').insert(sessionsToCreate).select();
         if (error) throw error;
-        
+
         // Auto-generate QR codes for all created sessions
         if (createdSessions && user) {
           const qrCodesToCreate = createdSessions.map(session => ({
@@ -423,19 +423,19 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               session_title: session.title
             }
           }));
-          
-          const { data: qrCodes } = await supabase.from('gw_attendance_qr_codes').insert(qrCodesToCreate).select();
-          
+          const {
+            data: qrCodes
+          } = await supabase.from('gw_attendance_qr_codes').insert(qrCodesToCreate).select();
+
           // Update sessions with QR code IDs
           if (qrCodes) {
             for (const qr of qrCodes) {
-              await supabase.from('gw_course_class_sessions')
-                .update({ qr_code_id: qr.id })
-                .eq('id', qr.event_id);
+              await supabase.from('gw_course_class_sessions').update({
+                qr_code_id: qr.id
+              }).eq('id', qr.event_id);
             }
           }
         }
-        
         toast({
           title: 'Success',
           description: `Created ${sessionsToCreate.length} recurring sessions with QR codes`
@@ -459,13 +459,14 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
           created_by: user?.id
         }).select().single();
         if (error) throw error;
-        
+
         // Auto-generate QR code for the session
         if (createdSession && user) {
           const token = crypto.randomUUID();
           const expiresAt = addHours(parseISO(createdSession.session_date + 'T' + createdSession.end_time), 2);
-          
-          const { data: qrCode } = await supabase.from('gw_attendance_qr_codes').insert({
+          const {
+            data: qrCode
+          } = await supabase.from('gw_attendance_qr_codes').insert({
             event_id: createdSession.id,
             qr_token: token,
             generated_by: user.id,
@@ -479,14 +480,12 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               session_title: createdSession.title
             }
           }).select().single();
-          
           if (qrCode) {
-            await supabase.from('gw_course_class_sessions')
-              .update({ qr_code_id: qrCode.id })
-              .eq('id', createdSession.id);
+            await supabase.from('gw_course_class_sessions').update({
+              qr_code_id: qrCode.id
+            }).eq('id', createdSession.id);
           }
         }
-        
         toast({
           title: 'Success',
           description: 'Class session created with QR code'
@@ -1366,14 +1365,14 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                           return <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1.5 py-1">
                                       <div className="flex items-center gap-1 font-medium">
                                         <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
-                                        <span className="truncate">{session.title}</span>
+                                        <span className="truncate text-primary-foreground">{session.title}</span>
                                       </div>
                                       <div className="text-[10px] text-muted-foreground mt-0.5">
                                         {session.start_time} - {session.end_time}
                                       </div>
                                     </div>;
                         })}
-                                {daySessions.length === 0 && daySpelmanEvents.length === 0 && !academicEvent && !isHoliday && <div className="text-xs text-muted-foreground text-center py-4">No events</div>}
+                                {daySessions.length === 0 && daySpelmanEvents.length === 0 && !academicEvent && !isHoliday && <div className="text-xs text-center py-4 text-primary-foreground">No events</div>}
                               </div>
                             </button>;
                   })}
