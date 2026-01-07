@@ -4,12 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { 
-  BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, 
-  MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, 
-  Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home,
-  Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare
-} from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,17 +23,25 @@ import { CourseMessagingInterface } from './CourseMessagingInterface';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 
 // Lazy loaded components for performance
-const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({ default: m.AcademyPollSystem })));
-const GradesAdmin = React.lazy(() => import('@/components/mus240/instructor/GradesAdmin').then(m => ({ default: m.GradesAdmin })));
-
+const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
+  default: m.AcademyPollSystem
+})));
+const GradesAdmin = React.lazy(() => import('@/components/mus240/instructor/GradesAdmin').then(m => ({
+  default: m.GradesAdmin
+})));
 interface UnifiedCoursePageProps {
   course: AcademyCourse;
 }
-
-export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) => {
+export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
+  course
+}) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { currentSemester } = useMus240SemesterSafe();
+  const {
+    user
+  } = useAuth();
+  const {
+    currentSemester
+  } = useMus240SemesterSafe();
   const [activeTab, setActiveTab] = useState('home');
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollmentLoading, setEnrollmentLoading] = useState(true);
@@ -48,25 +51,19 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
   useEffect(() => {
     checkEnrollmentAndRole();
   }, [user, course.id, currentSemester]);
-
   const checkEnrollmentAndRole = async () => {
     if (!user) {
       setEnrollmentLoading(false);
       return;
     }
-
     try {
       // Check admin status and role
-      const { data: profile } = await supabase
-        .from('gw_profiles')
-        .select('is_admin, is_super_admin, role')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: profile
+      } = await supabase.from('gw_profiles').select('is_admin, is_super_admin, role').eq('user_id', user.id).single();
       setIsAdmin(profile?.is_admin || profile?.is_super_admin || false);
 
       // For MUS 070 (Glee Club), members and admins are auto-enrolled
@@ -80,27 +77,18 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
       // For MUS 240, check the mus240_enrollments table with current semester
       if (course.id === 'a0000000-0000-0000-0000-000000000240') {
-        const { data: mus240Enrollment } = await supabase
-          .from('mus240_enrollments')
-          .select('*')
-          .eq('student_id', user.id)
-          .eq('semester', currentSemester)
-          .eq('enrollment_status', 'enrolled')
-          .maybeSingle();
-
+        const {
+          data: mus240Enrollment
+        } = await supabase.from('mus240_enrollments').select('*').eq('student_id', user.id).eq('semester', currentSemester).eq('enrollment_status', 'enrolled').maybeSingle();
         setIsEnrolled(!!mus240Enrollment || profile?.is_admin || profile?.is_super_admin);
         setEnrollmentLoading(false);
         return;
       }
 
       // Check enrollment for other courses
-      const { data: enrollment } = await supabase
-        .from('gw_course_enrollments')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('course_id', course.id)
-        .maybeSingle();
-
+      const {
+        data: enrollment
+      } = await supabase.from('gw_course_enrollments').select('*').eq('user_id', user.id).eq('course_id', course.id).maybeSingle();
       setIsEnrolled(!!enrollment);
     } catch (error) {
       console.error('Error checking enrollment:', error);
@@ -108,49 +96,38 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
       setEnrollmentLoading(false);
     }
   };
-
   const handleEnroll = async () => {
     if (!user) {
       toast.error('Please log in to enroll');
       navigate('/auth');
       return;
     }
-
     try {
       // First get the course UUID from the database
-      const { data: courseData, error: courseError } = await supabase
-        .from('gw_courses')
-        .select('id')
-        .eq('course_code', course.courseCode.replace(' ', '-'))
-        .single();
-
+      const {
+        data: courseData,
+        error: courseError
+      } = await supabase.from('gw_courses').select('id').eq('course_code', course.courseCode.replace(' ', '-')).single();
       if (courseError || !courseData) {
         // Try alternative format
-        const { data: altCourseData } = await supabase
-          .from('gw_courses')
-          .select('id')
-          .ilike('course_code', `%${course.courseCode.replace(' ', '%')}%`)
-          .single();
-
+        const {
+          data: altCourseData
+        } = await supabase.from('gw_courses').select('id').ilike('course_code', `%${course.courseCode.replace(' ', '%')}%`).single();
         if (!altCourseData) {
           toast.error('Course not found');
           return;
         }
       }
-
       const courseId = courseData?.id;
-
-      const { error } = await supabase
-        .from('gw_course_enrollments')
-        .insert({
-          course_id: courseId,
-          user_id: user.id,
-          role: 'student',
-          enrollment_status: 'enrolled'
-        });
-
+      const {
+        error
+      } = await supabase.from('gw_course_enrollments').insert({
+        course_id: courseId,
+        user_id: user.id,
+        role: 'student',
+        enrollment_status: 'enrolled'
+      });
       if (error) throw error;
-
       setIsEnrolled(true);
       toast.success(`Successfully enrolled in ${course.title}!`);
     } catch (error: any) {
@@ -162,9 +139,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
       }
     }
   };
-
-  return (
-    <div className="academy-neutral">
+  return <div className="academy-neutral">
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="flex min-h-screen bg-background">
         {/* Left Sidebar - Navigation */}
@@ -176,37 +151,74 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
           </div>
           
           <nav className="p-2 space-y-1">
-            {[
-              { icon: Home, label: 'Home', tab: 'home' },
-              { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
-              { icon: Bell, label: 'Announcements', tab: 'announcements' },
-              { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
-              { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
-              { icon: PenLine, label: 'Journals', tab: 'journals' },
-              { icon: FileCheck, label: 'Tests', tab: 'tests' },
-              { icon: BarChart, label: 'Polls', tab: 'polls' },
-              { icon: Brain, label: 'AI Groups', tab: 'ai-groups' },
-              { icon: Users, label: 'Groups', tab: 'groups' },
-              { icon: MessageSquare, label: 'Lounge', tab: 'lounge' },
-              { icon: Library, label: 'Resources', tab: 'resources' },
-              { icon: Trophy, label: 'Grades', tab: 'grades' },
-              { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
-              { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
-              { icon: Calendar, label: 'Calendar', tab: 'calendar' },
-            ].map(item => (
-              <button
-                key={item.tab}
-                onClick={() => setActiveTab(item.tab)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                  activeTab === item.tab 
-                    ? 'bg-primary text-primary-foreground font-medium' 
-                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                }`}
-              >
+            {[{
+              icon: Home,
+              label: 'Home',
+              tab: 'home'
+            }, {
+              icon: FileText,
+              label: 'Syllabus',
+              tab: 'syllabus'
+            }, {
+              icon: Bell,
+              label: 'Announcements',
+              tab: 'announcements'
+            }, {
+              icon: MessagesSquare,
+              label: 'Messages',
+              tab: 'messages'
+            }, {
+              icon: ClipboardList,
+              label: 'Assignments',
+              tab: 'assignments'
+            }, {
+              icon: PenLine,
+              label: 'Journals',
+              tab: 'journals'
+            }, {
+              icon: FileCheck,
+              label: 'Tests',
+              tab: 'tests'
+            }, {
+              icon: BarChart,
+              label: 'Polls',
+              tab: 'polls'
+            }, {
+              icon: Brain,
+              label: 'AI Groups',
+              tab: 'ai-groups'
+            }, {
+              icon: Users,
+              label: 'Groups',
+              tab: 'groups'
+            }, {
+              icon: MessageSquare,
+              label: 'Lounge',
+              tab: 'lounge'
+            }, {
+              icon: Library,
+              label: 'Resources',
+              tab: 'resources'
+            }, {
+              icon: Trophy,
+              label: 'Grades',
+              tab: 'grades'
+            }, {
+              icon: UserCheck,
+              label: 'Attendance',
+              tab: 'attendance'
+            }, {
+              icon: Ruler,
+              label: 'Rubrics',
+              tab: 'rubrics'
+            }, {
+              icon: Calendar,
+              label: 'Calendar',
+              tab: 'calendar'
+            }].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 <item.icon className="h-4 w-4" />
                 <span>{item.label}</span>
-              </button>
-            ))}
+              </button>)}
           </nav>
         </div>
 
@@ -228,11 +240,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
           <div className="px-4 lg:px-6 space-y-4 max-w-5xl mx-auto">
             {/* Back Button - Desktop only */}
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/glee-academy')}
-              className="hidden lg:flex -mt-2"
-            >
+            <Button variant="ghost" onClick={() => navigate('/glee-academy')} className="hidden lg:flex -mt-2 pt-[10px]">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Academy
             </Button>
@@ -255,7 +263,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
             {/* Mobile Tab Navigation - Below Welcome Card */}
             <div className="lg:hidden relative z-10 -mx-4 px-4">
-              <Tabs value={activeTab} onValueChange={(val) => { console.log('Tab changed to:', val); setActiveTab(val); }}>
+              <Tabs value={activeTab} onValueChange={val => {
+                console.log('Tab changed to:', val);
+                setActiveTab(val);
+              }}>
                 <TabsList className="w-full grid grid-cols-4 h-auto">
                   <TabsTrigger value="home" className="text-xs px-2">Home</TabsTrigger>
                   <TabsTrigger value="messages" className="text-xs px-2">Messages</TabsTrigger>
@@ -272,11 +283,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             </div>
 
             {/* Content Sections */}
-            {activeTab === 'home' && (
-              <div className="space-y-6">
+            {activeTab === 'home' && <div className="space-y-6">
                 {/* Enrollment Card */}
-                {!isEnrolled && !enrollmentLoading && (
-                  <Card className="border-primary/50 bg-primary/5">
+                {!isEnrolled && !enrollmentLoading && <Card className="border-primary/50 bg-primary/5">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
@@ -289,8 +298,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
                         </Button>
                       </div>
                     </CardContent>
-                  </Card>
-                )}
+                  </Card>}
 
                 {/* Welcome Card */}
                 <Card className="bg-primary border-0">
@@ -303,11 +311,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
                   <CardContent>
                     <p className="text-white/80 mb-4">{course.description}</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {course.highlights.map((highlight, i) => (
-                        <div key={i} className="bg-white/10 rounded-lg p-3 text-center">
+                      {course.highlights.map((highlight, i) => <div key={i} className="bg-white/10 rounded-lg p-3 text-center">
                           <span className="text-sm font-medium text-white">{highlight}</span>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
                   </CardContent>
                 </Card>
@@ -341,57 +347,48 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
                 {/* Quick Links */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
-                    { icon: FileCheck, label: 'Tests', tab: 'tests' },
-                    { icon: MessageSquare, label: 'Lounge', tab: 'lounge' },
-                    { icon: Trophy, label: 'Grades', tab: 'grades' },
-                  ].map(item => (
-                    <Card 
-                      key={item.tab}
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => setActiveTab(item.tab)}
-                    >
+                  {[{
+                  icon: ClipboardList,
+                  label: 'Assignments',
+                  tab: 'assignments'
+                }, {
+                  icon: FileCheck,
+                  label: 'Tests',
+                  tab: 'tests'
+                }, {
+                  icon: MessageSquare,
+                  label: 'Lounge',
+                  tab: 'lounge'
+                }, {
+                  icon: Trophy,
+                  label: 'Grades',
+                  tab: 'grades'
+                }].map(item => <Card key={item.tab} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setActiveTab(item.tab)}>
                       <CardContent className="p-4 text-center">
                         <item.icon className="h-8 w-8 mx-auto text-primary mb-2" />
                         <span className="font-medium">{item.label}</span>
                       </CardContent>
-                    </Card>
-                  ))}
+                    </Card>)}
                 </div>
-              </div>
-            )}
+              </div>}
 
-            {activeTab === 'syllabus' && (
-              <Card>
+            {activeTab === 'syllabus' && <Card>
                 <CardHeader>
                   <CardTitle>Course Syllabus</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">Syllabus content will be available here.</p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'announcements' && (
-              <CourseAnnouncements courseId={course.id} />
-            )}
+            {activeTab === 'announcements' && <CourseAnnouncements courseId={course.id} />}
 
-            {activeTab === 'messages' && (
-              <CourseMessagingInterface 
-                courseId={course.id}
-                courseName={course.title}
-                isEnrolled={isEnrolled}
-              />
-            )}
+            {activeTab === 'messages' && <CourseMessagingInterface courseId={course.id} courseName={course.title} isEnrolled={isEnrolled} />}
 
-            {activeTab === 'assignments' && (
-              <CourseAssignments courseId={course.id} isEnrolled={isEnrolled} />
-            )}
+            {activeTab === 'assignments' && <CourseAssignments courseId={course.id} isEnrolled={isEnrolled} />}
 
             {/* Journals Tab - Available for all courses */}
-            {activeTab === 'journals' && (
-              <Card>
+            {activeTab === 'journals' && <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PenLine className="h-5 w-5 text-primary" />
@@ -404,22 +401,16 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
                   </p>
                   <p className="text-muted-foreground">No journals assigned yet.</p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'tests' && (
-              <CourseTestsSection courseId={course.id} legacyCourseId={course.courseCode.toLowerCase().replace(' ', '')} />
-            )}
+            {activeTab === 'tests' && <CourseTestsSection courseId={course.id} legacyCourseId={course.courseCode.toLowerCase().replace(' ', '')} />}
 
-            {activeTab === 'polls' && (
-              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading polls...</CardContent></Card>}>
+            {activeTab === 'polls' && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading polls...</CardContent></Card>}>
                 <AcademyPollSystem courseId={course.id} />
-              </React.Suspense>
-            )}
+              </React.Suspense>}
 
             {/* AI Groups Tab - Available for all courses */}
-            {activeTab === 'ai-groups' && (
-              <Card>
+            {activeTab === 'ai-groups' && <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Brain className="h-5 w-5 text-primary" />
@@ -432,17 +423,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
                   </p>
                   <p className="text-muted-foreground">No AI project groups assigned yet.</p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Groups Tab */}
-            {activeTab === 'groups' && (
-              <CourseGroupsPanel courseId={course.id} />
-            )}
+            {activeTab === 'groups' && <CourseGroupsPanel courseId={course.id} />}
 
             {/* Resources Tab - Available for all courses */}
-            {activeTab === 'resources' && (
-              <Card>
+            {activeTab === 'resources' && <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Library className="h-5 w-5 text-primary" />
@@ -455,62 +442,34 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
                   </p>
                   <p className="text-muted-foreground">No resources uploaded yet.</p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'lounge' && (
-              <CourseLounge 
-                courseId={course.id} 
-                courseName={course.title} 
-                isEnrolled={isEnrolled}
-                instructorEmail={course.instructor.email}
-                isAdmin={isAdmin}
-              />
-            )}
+            {activeTab === 'lounge' && <CourseLounge courseId={course.id} courseName={course.title} isEnrolled={isEnrolled} instructorEmail={course.instructor.email} isAdmin={isAdmin} />}
 
-            {activeTab === 'grades' && (
-              isAdmin ? (
-                <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
+            {activeTab === 'grades' && (isAdmin ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
                   <GradesAdmin />
-                </React.Suspense>
-              ) : (
-                <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />
-              )
-            )}
+                </React.Suspense> : <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />)}
 
-            {activeTab === 'attendance' && (
-              <CourseAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} />
-            )}
+            {activeTab === 'attendance' && <CourseAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} />}
 
-            {activeTab === 'rubrics' && (
-              <Card>
+            {activeTab === 'rubrics' && <Card>
                 <CardHeader>
                   <CardTitle>Grading Rubrics</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">Rubrics for assignments will be displayed here.</p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'calendar' && (
-              <CourseCalendarView courseId={course.id} />
-            )}
+            {activeTab === 'calendar' && <CourseCalendarView courseId={course.id} />}
 
             {/* Instructor Control Center Button */}
-            {isAdmin && (
-              <div className="fixed bottom-6 right-6 z-50">
-                <Button 
-                  onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} 
-                  variant="default" 
-                  className="shadow-lg" 
-                  size="lg"
-                >
+            {isAdmin && <div className="fixed bottom-6 right-6 z-50">
+                <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="shadow-lg" size="lg">
                   <Settings className="h-5 w-5 mr-2" />
                   Instructor Control Center
                 </Button>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
 
@@ -519,13 +478,23 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
           <div className="p-4 space-y-4">
             <h3 className="font-bold text-foreground">Course Resources</h3>
             
-            {[
-              { icon: Video, label: 'Video Library', desc: 'Lecture recordings' },
-              { icon: Headphones, label: 'Audio Examples', desc: 'Listening materials' },
-              { icon: Music, label: 'Sheet Music', desc: 'Scores and materials' },
-              { icon: FileText, label: 'Documents', desc: 'Handouts and readings' },
-            ].map((item, i) => (
-              <Card key={i} className="cursor-pointer hover:bg-muted/50 transition-colors">
+            {[{
+              icon: Video,
+              label: 'Video Library',
+              desc: 'Lecture recordings'
+            }, {
+              icon: Headphones,
+              label: 'Audio Examples',
+              desc: 'Listening materials'
+            }, {
+              icon: Music,
+              label: 'Sheet Music',
+              desc: 'Scores and materials'
+            }, {
+              icon: FileText,
+              label: 'Documents',
+              desc: 'Handouts and readings'
+            }].map((item, i) => <Card key={i} className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -537,12 +506,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </div>
     </UniversalLayout>
-  </div>
-  );
+  </div>;
 };
