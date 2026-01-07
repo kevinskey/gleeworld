@@ -43,6 +43,7 @@ import Mus001Page from "./pages/courses/Mus001Page";
 import Mus000Page from "./pages/courses/Mus000Page";
 import Glee101Page from "./pages/courses/Glee101Page";
 import AcademyCoursePage from "./pages/academy/AcademyCoursePage";
+import CourseInstructorConsole from "./pages/courses/CourseInstructorConsole";
 import CourseLoungeRedirect from "./pages/CourseLoungeRedirect";
 
 import Index from "./pages/Index";
@@ -480,6 +481,16 @@ const App = () => {
                   <PublicRoute>
                     <AcademyCoursePage />
                   </PublicRoute>
+                }
+              />
+              
+              {/* Dynamic Instructor Console - handles all courses */}
+              <Route 
+                path="/:courseCode/instructor/console" 
+                element={
+                  <ProtectedRoute>
+                    <CourseInstructorConsole />
+                  </ProtectedRoute>
                 }
               />
               
