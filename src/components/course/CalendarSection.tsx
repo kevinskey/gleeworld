@@ -231,7 +231,7 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
                       </p>
                     </div>
                   </div>
-                  {event.event_type && <Badge variant="outline" className="capitalize">
+                  {event.event_type && <Badge variant="outline" className="capitalize text-primary-foreground">
                       {event.event_type.replace('-', ' ')}
                     </Badge>}
                 </div>)}
