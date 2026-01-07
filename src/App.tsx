@@ -43,6 +43,7 @@ import Mus001Page from "./pages/courses/Mus001Page";
 import Mus000Page from "./pages/courses/Mus000Page";
 import Glee101Page from "./pages/courses/Glee101Page";
 import AcademyCoursePage from "./pages/academy/AcademyCoursePage";
+import AcademyCoursesAdmin from "./pages/admin/AcademyCoursesAdmin";
 import CourseInstructorConsole from "./pages/courses/CourseInstructorConsole";
 import CourseLoungeRedirect from "./pages/CourseLoungeRedirect";
 
@@ -648,7 +649,7 @@ const App = () => {
                 } 
                />
                {/* Admin routes - place before dashboard routes for proper matching */}
-                <Route 
+                 <Route 
                   path="/admin" 
                   element={
                     <ProtectedRoute>
@@ -661,7 +662,19 @@ const App = () => {
                    } 
                  />
                  <Route 
-                   path="/admin/appointments" 
+                   path="/admin/academy-courses" 
+                   element={
+                     <ProtectedRoute>
+                       <AdminOnlyRoute>
+                         <UniversalLayout>
+                           <AcademyCoursesAdmin />
+                         </UniversalLayout>
+                       </AdminOnlyRoute>
+                     </ProtectedRoute>
+                   } 
+                 />
+                 <Route 
+                   path="/admin/appointments"
                    element={
                      <ProtectedRoute>
                        <AdminOnlyRoute>
