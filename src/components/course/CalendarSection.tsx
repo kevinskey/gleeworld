@@ -5,28 +5,24 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarIcon, BookOpen, FileCheck, Users, Clock, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO } from 'date-fns';
 import { useGleeWorldEvents } from '@/hooks/useGleeWorldEvents';
-
 interface CalendarSectionProps {
   courseId: string;
 }
-
 const SPELMAN_CALENDAR_NAME = 'Spelman';
-
 export const CalendarSection: React.FC<CalendarSectionProps> = ({
   courseId
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  
-  const { events, loading: eventsLoading } = useGleeWorldEvents();
-  
+  const {
+    events,
+    loading: eventsLoading
+  } = useGleeWorldEvents();
+
   // Filter events to show only Spelman calendar events by default
   const spelmanEvents = useMemo(() => {
-    return events.filter(event => 
-      event.gw_calendars?.name === SPELMAN_CALENDAR_NAME
-    );
+    return events.filter(event => event.gw_calendars?.name === SPELMAN_CALENDAR_NAME);
   }, [events]);
-
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart);
@@ -35,14 +31,12 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
     start: calendarStart,
     end: calendarEnd
   });
-
   const getEventsForDate = (date: Date) => {
     return spelmanEvents.filter(event => {
       const eventDate = parseISO(event.start_date);
       return isSameDay(eventDate, date);
     });
   };
-
   const getEventColor = (eventType?: string) => {
     switch (eventType?.toLowerCase()) {
       case 'class':
@@ -67,7 +61,6 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
         return 'bg-primary/10 text-primary border-primary/20';
     }
   };
-
   const getEventIcon = (eventType?: string) => {
     switch (eventType?.toLowerCase()) {
       case 'class':
@@ -87,28 +80,18 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
         return <CalendarIcon className="h-3 w-3" />;
     }
   };
-
   const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
-
   const upcomingEvents = useMemo(() => {
     const now = new Date();
-    return spelmanEvents
-      .filter(event => parseISO(event.start_date) >= now)
-      .sort((a, b) => parseISO(a.start_date).getTime() - parseISO(b.start_date).getTime())
-      .slice(0, 5);
+    return spelmanEvents.filter(event => parseISO(event.start_date) >= now).sort((a, b) => parseISO(a.start_date).getTime() - parseISO(b.start_date).getTime()).slice(0, 5);
   }, [spelmanEvents]);
-
   if (eventsLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
+    return <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="ml-2 text-muted-foreground">Loading calendar...</span>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Academic Calendar</h2>
         <Badge variant="secondary" className="bg-[#8b5cf6]/10 text-[#8b5cf6]">
@@ -122,9 +105,7 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
           <CardTitle className="text-lg text-primary-foreground">Course Schedule</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm mb-4 text-primary-foreground/90">
-            View Spelman College events and important academic dates integrated with {courseId.toUpperCase()}.
-          </p>
+          
           
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="outline" className="bg-white/10 text-white border-white/20">
@@ -168,48 +149,33 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-7 gap-1 mb-2">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <div key={day} className="text-center text-xs font-medium py-2 text-primary-foreground">
                   {day}
-                </div>
-              ))}
+                </div>)}
             </div>
             <div className="grid grid-cols-7 gap-1">
               {calendarDays.map((day, idx) => {
-                const dayEvents = getEventsForDate(day);
-                const isCurrentMonth = isSameMonth(day, currentDate);
-                const isToday = isSameDay(day, new Date());
-                const isSelected = selectedDate && isSameDay(day, selectedDate);
-                
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedDate(day)}
-                    className={`
+              const dayEvents = getEventsForDate(day);
+              const isCurrentMonth = isSameMonth(day, currentDate);
+              const isToday = isSameDay(day, new Date());
+              const isSelected = selectedDate && isSameDay(day, selectedDate);
+              return <button key={idx} onClick={() => setSelectedDate(day)} className={`
                       aspect-square p-1 text-sm rounded-lg border transition-colors
                       ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}
                       ${isToday ? 'border-primary bg-primary/5 font-bold' : 'border-border'}
                       ${isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}
                       ${dayEvents.length > 0 ? 'font-semibold' : ''}
-                    `}
-                  >
+                    `}>
                     <div className="flex flex-col items-center justify-center h-full">
-                      <span>{format(day, 'd')}</span>
-                      {dayEvents.length > 0 && (
-                        <div className="flex gap-0.5 mt-0.5">
-                          {dayEvents.slice(0, 3).map((event, i) => (
-                            <div
-                              key={i}
-                              className="w-1 h-1 rounded-full"
-                              style={{ backgroundColor: event.gw_calendars?.color || '#8b5cf6' }}
-                            />
-                          ))}
-                        </div>
-                      )}
+                      <span className="text-primary-foreground">{format(day, 'd')}</span>
+                      {dayEvents.length > 0 && <div className="flex gap-0.5 mt-0.5">
+                          {dayEvents.slice(0, 3).map((event, i) => <div key={i} className="w-1 h-1 rounded-full" style={{
+                      backgroundColor: event.gw_calendars?.color || '#8b5cf6'
+                    }} />)}
+                        </div>}
                     </div>
-                  </button>
-                );
-              })}
+                  </button>;
+            })}
             </div>
           </CardContent>
         </Card>
@@ -222,13 +188,8 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {selectedDateEvents.length > 0 ? (
-              <div className="space-y-3">
-                {selectedDateEvents.map(event => (
-                  <div
-                    key={event.id}
-                    className={`border rounded-lg p-3 ${getEventColor(event.event_type)}`}
-                  >
+            {selectedDateEvents.length > 0 ? <div className="space-y-3">
+                {selectedDateEvents.map(event => <div key={event.id} className={`border rounded-lg p-3 ${getEventColor(event.event_type)}`}>
                     <div className="flex items-start gap-2">
                       {getEventIcon(event.event_type)}
                       <div className="flex-1 min-w-0">
@@ -237,26 +198,16 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
                           <Clock className="h-3 w-3 inline mr-1" />
                           {format(parseISO(event.start_date), 'h:mm a')}
                         </p>
-                        {event.location && (
-                          <p className="text-xs opacity-80 mt-1">{event.location}</p>
-                        )}
-                        {event.description && (
-                          <p className="text-xs opacity-80 mt-1 line-clamp-2">{event.description}</p>
-                        )}
+                        {event.location && <p className="text-xs opacity-80 mt-1">{event.location}</p>}
+                        {event.description && <p className="text-xs opacity-80 mt-1 line-clamp-2">{event.description}</p>}
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : selectedDate ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
+                  </div>)}
+              </div> : selectedDate ? <p className="text-sm text-muted-foreground text-center py-8">
                 No events scheduled for this date
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">
+              </p> : <p className="text-sm text-center py-8 text-primary-foreground">
                 Select a date to view events
-              </p>
-            )}
+              </p>}
           </CardContent>
         </Card>
       </div>
@@ -267,39 +218,27 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
           <CardTitle className="text-lg">Upcoming Spelman Events</CardTitle>
         </CardHeader>
         <CardContent>
-          {upcomingEvents.length > 0 ? (
-            <div className="space-y-2">
-              {upcomingEvents.map(event => (
-                <div
-                  key={event.id}
-                  className={`flex items-center justify-between p-3 border rounded-lg ${getEventColor(event.event_type)}`}
-                >
+          {upcomingEvents.length > 0 ? <div className="space-y-2">
+              {upcomingEvents.map(event => <div key={event.id} className={`flex items-center justify-between p-3 border rounded-lg ${getEventColor(event.event_type)}`}>
                   <div className="flex items-center gap-3">
                     {getEventIcon(event.event_type)}
                     <div>
-                      <h4 className="font-semibold text-sm">{event.title}</h4>
-                      <p className="text-xs opacity-80">
+                      <h4 className="font-semibold text-sm text-primary-foreground">{event.title}</h4>
+                      <p className="text-xs opacity-80 text-primary-foreground pt-[5px]">
                         {format(parseISO(event.start_date), 'MMM d, yyyy')}
                         {' • '}
                         {format(parseISO(event.start_date), 'h:mm a')}
                       </p>
                     </div>
                   </div>
-                  {event.event_type && (
-                    <Badge variant="outline" className="capitalize">
+                  {event.event_type && <Badge variant="outline" className="capitalize">
                       {event.event_type.replace('-', ' ')}
-                    </Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">
+                    </Badge>}
+                </div>)}
+            </div> : <p className="text-sm text-muted-foreground text-center py-8">
               No upcoming events from the Spelman calendar
-            </p>
-          )}
+            </p>}
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
