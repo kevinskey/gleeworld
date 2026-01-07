@@ -148,7 +148,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           <div className="p-4 border-b border-border pb-[30px] pt-[20px]">
             <Mus240SemesterSelector showLabel={false} className="mb-2" />
             <div className="text-lg font-bold text-foreground pt-[10px] pl-[20px]">{course.courseCode}</div>
-            <div className="text-sm text-muted-foreground pl-[20px]">{course.title}</div>
+            <div className="text-sm text-black border-4 border-solid border-primary pt-[5px] pb-[5px] pr-[5px] pl-[15px]">{course.title}</div>
           </div>
           
           <nav className="p-2 space-y-1">
