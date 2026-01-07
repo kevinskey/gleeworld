@@ -91,6 +91,12 @@ export const DashboardStoreSection = () => {
       </div>;
   }
   return <div className="w-full bg-background">
+      {/* My Modules - Edge to Edge (Top) */}
+      <Button onClick={() => navigate('/modules')} className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none">
+        <BookOpen className="h-5 w-5" />
+        My Modules
+      </Button>
+
       {/* Section Header - Edge to Edge */}
       <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground px-4 sm:px-6 lg:px-8 w-full pt-[20px] py-[20px] pb-[20px]">Shop</h2>
       
@@ -216,18 +222,5 @@ export const DashboardStoreSection = () => {
         </div>
       </div>
 
-      {/* My Modules - Edge to Edge */}
-      <Button onClick={() => navigate('/modules')} className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none">
-        <BookOpen className="h-5 w-5" />
-        My Modules
-      </Button>
-
-      {/* Fan Zone - Edge to Edge */}
-      
-      {/* My Modules (Bottom) - Edge to Edge */}
-      <Button onClick={() => navigate('/modules')} className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none">
-        <BookOpen className="h-5 w-5" />
-        My Modules
-      </Button>
     </div>;
 };
