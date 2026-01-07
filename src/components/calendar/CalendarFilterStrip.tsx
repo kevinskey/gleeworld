@@ -192,6 +192,7 @@ export const CalendarFilterStrip = ({
       </div>;
   }
   return <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+      <span className="text-xs font-medium text-muted-foreground flex-shrink-0">Calendars:</span>
       {/* Mobile: horizontal scroll strip */}
       <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide py-0.5 flex-1 min-w-0">
         {calendars.map(calendar => {
