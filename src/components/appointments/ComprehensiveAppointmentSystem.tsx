@@ -9,12 +9,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { EnhancedAppointmentCalendar } from './EnhancedAppointmentCalendar';
 import { AppointmentManager } from './AppointmentManager';
 import { AppointmentServiceManager } from './AppointmentServiceManager';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isToday, isAfter, startOfDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isToday, isAfter, startOfDay, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealAppointments, useCreateRealAppointment, useUpdateRealAppointment, useDeleteRealAppointment, type Appointment } from '@/hooks/useRealAppointments';
 import { useCalendars } from '@/hooks/useCalendars';
+import { useGleeWorldEvents, type GleeWorldEvent } from '@/hooks/useGleeWorldEvents';
 export const ComprehensiveAppointmentSystem = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export const ComprehensiveAppointmentSystem = () => {
   const {
     data: calendars = []
   } = useCalendars();
+  const { events: gleeWorldEvents, loading: eventsLoading } = useGleeWorldEvents();
   const createMutation = useCreateRealAppointment();
   const updateMutation = useUpdateRealAppointment();
   const deleteMutation = useDeleteRealAppointment();
@@ -83,17 +85,40 @@ export const ComprehensiveAppointmentSystem = () => {
   });
   const startDayOfWeek = monthStart.getDay();
   const paddingDays = Array(startDayOfWeek).fill(null);
+  // Get appointments for a specific date
   const getAppointmentsForDate = (date: Date) => {
     return visibleAppointments.filter(apt => isSameDay(new Date(apt.date), date));
   };
 
-  // Calendars with appointment counts for sidebar
+  // Get calendar events for a specific date (from main calendar)
+  const getEventsForDate = (date: Date) => {
+    return gleeWorldEvents.filter(event => {
+      const eventStart = parseISO(event.start_date);
+      return isSameDay(eventStart, date);
+    });
+  };
+
+  // Combined count for mini calendar dots
+  const getItemsForDate = (date: Date) => {
+    const appointments = getAppointmentsForDate(date);
+    const events = getEventsForDate(date);
+    return { appointments, events, total: appointments.length + events.length };
+  };
+
+  // Calendars with event counts for sidebar
   const calendarsWithCounts = useMemo(() => {
-    return calendars.slice(0, 5).map(cal => ({
-      ...cal,
-      todayCount: visibleAppointments.filter(apt => isToday(apt.date) && apt.calendarId === cal.id).length
-    }));
-  }, [calendars, visibleAppointments]);
+    return calendars.slice(0, 5).map(cal => {
+      const appointmentCount = visibleAppointments.filter(apt => isToday(apt.date) && apt.calendarId === cal.id).length;
+      const eventCount = gleeWorldEvents.filter(event => {
+        const eventStart = parseISO(event.start_date);
+        return isToday(eventStart) && event.calendar_id === cal.id;
+      }).length;
+      return {
+        ...cal,
+        todayCount: appointmentCount + eventCount
+      };
+    });
+  }, [calendars, visibleAppointments, gleeWorldEvents]);
   const handleCheckIn = async (appointmentId: string) => {
     await updateMutation.mutateAsync({
       id: appointmentId,
@@ -155,7 +180,7 @@ export const ComprehensiveAppointmentSystem = () => {
           </div>
         </div>
         <div className="max-w-7xl mx-auto p-4 md:p-6">
-          {mainView === 'calendar' && <EnhancedAppointmentCalendar appointments={visibleAppointments} onAppointmentSelect={setSelectedAppointment} />}
+          {mainView === 'calendar' && <EnhancedAppointmentCalendar appointments={visibleAppointments} calendarEvents={gleeWorldEvents} onAppointmentSelect={setSelectedAppointment} />}
           {mainView === 'management' && <AppointmentManager appointments={visibleAppointments} onAppointmentCreate={handleAppointmentCreate} onAppointmentUpdate={handleAppointmentUpdate} onAppointmentDelete={handleAppointmentDelete} editingAppointmentId={editingAppointmentId} onEditingAppointmentIdChange={setEditingAppointmentId} />}
           {mainView === 'services' && <AppointmentServiceManager />}
         </div>
@@ -235,12 +260,17 @@ export const ComprehensiveAppointmentSystem = () => {
                 <div className="grid grid-cols-7 gap-1">
                   {paddingDays.map((_, i) => <div key={`pad-${i}`} className="p-1" />)}
                   {monthDays.map(date => {
-                  const dayAppts = getAppointmentsForDate(date);
+                  const { appointments: dayAppts, events: dayEvents, total } = getItemsForDate(date);
                   const isSelected = isSameDay(date, selectedDate);
                   const isCurrentDay = isToday(date);
                   return <button key={date.toISOString()} onClick={() => setSelectedDate(date)} className={cn("p-1 text-xs rounded-full relative transition-colors", isSelected && "bg-primary text-primary-foreground", isCurrentDay && !isSelected && "bg-blue-100 text-blue-700 font-bold", !isSelected && !isCurrentDay && "hover:bg-muted")}>
                         {format(date, 'd')}
-                        {dayAppts.length > 0 && !isSelected && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />}
+                        {total > 0 && !isSelected && (
+                          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-0.5">
+                            {dayAppts.length > 0 && <div className="w-1 h-1 bg-primary rounded-full" />}
+                            {dayEvents.length > 0 && <div className="w-1 h-1 bg-green-500 rounded-full" />}
+                          </div>
+                        )}
                       </button>;
                 })}
                 </div>

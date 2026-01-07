@@ -53,18 +53,40 @@ interface Appointment {
   calendarId?: string;
 }
 
+interface CalendarEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  start_date: string;
+  end_date: string | null;
+  location: string | null;
+  venue_name: string | null;
+  event_type: string | null;
+  is_public: boolean | null;
+  calendar_id: string;
+  gw_calendars?: {
+    name: string;
+    color: string;
+    is_visible: boolean;
+  };
+}
+
 interface EnhancedAppointmentCalendarProps {
   appointments?: Appointment[];
+  calendarEvents?: CalendarEvent[];
   onDateSelect?: (date: Date) => void;
   onAppointmentSelect?: (appointment: Appointment) => void;
+  onEventSelect?: (event: CalendarEvent) => void;
 }
 
 type ViewMode = 'month' | 'week' | 'day';
 
 export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarProps> = ({
   appointments = [],
+  calendarEvents = [],
   onDateSelect,
-  onAppointmentSelect
+  onAppointmentSelect,
+  onEventSelect
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -88,8 +110,27 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
     return filteredAppointments.filter(apt => isSameDay(new Date(apt.date), date));
   };
 
+  // Get calendar events for a specific date
+  const getEventsForDate = (date: Date) => {
+    return calendarEvents.filter(event => {
+      const eventStart = parseISO(event.start_date);
+      return isSameDay(eventStart, date);
+    });
+  };
+
+  // Combined items for a date
+  const getItemsForDate = (date: Date) => {
+    const appointments = getAppointmentsForDate(date);
+    const events = getEventsForDate(date);
+    return { appointments, events, total: appointments.length + events.length };
+  };
+
   const getTodaysAppointments = () => {
     return getAppointmentsForDate(new Date()).sort((a, b) => a.time.localeCompare(b.time));
+  };
+
+  const getTodaysEvents = () => {
+    return getEventsForDate(new Date()).sort((a, b) => a.start_date.localeCompare(b.start_date));
   };
 
   const getWeekAppointments = () => {
@@ -104,6 +145,16 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
       if (dateComparison !== 0) return dateComparison;
       return a.time.localeCompare(b.time);
     });
+  };
+
+  const getWeekEvents = () => {
+    const weekStart = startOfWeek(selectedDate);
+    const weekEnd = endOfWeek(selectedDate);
+    
+    return calendarEvents.filter(event => {
+      const eventDate = parseISO(event.start_date);
+      return eventDate >= weekStart && eventDate <= weekEnd;
+    }).sort((a, b) => a.start_date.localeCompare(b.start_date));
   };
 
   const getStatusColor = (status: string) => {
@@ -160,9 +211,15 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
         
         <div className="grid grid-cols-7 gap-1">
           {monthDays.map(date => {
-            const dayAppointments = getAppointmentsForDate(date);
+            const { appointments: dayAppointments, events: dayEvents, total } = getItemsForDate(date);
             const isSelected = isSameDay(date, selectedDate);
             const isCurrentDay = isToday(date);
+            
+            // Combine all items and take first 3
+            const allItems = [
+              ...dayAppointments.map(apt => ({ type: 'appointment' as const, item: apt })),
+              ...dayEvents.map(event => ({ type: 'event' as const, item: event }))
+            ].slice(0, 3);
             
             return (
               <div
@@ -171,7 +228,7 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
                   'min-h-[120px] p-2 border rounded-lg cursor-pointer transition-all hover:bg-accent/50',
                   isSelected && 'bg-primary/10 border-primary',
                   isCurrentDay && 'ring-2 ring-primary/50',
-                  dayAppointments.length > 0 && 'bg-secondary/30'
+                  total > 0 && 'bg-secondary/30'
                 )}
                 onClick={() => handleDateClick(date)}
               >
@@ -183,32 +240,53 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
                   )}>
                     {format(date, 'd')}
                   </span>
-                  {dayAppointments.length > 0 && (
+                  {total > 0 && (
                     <Badge variant="secondary" className="text-xs h-5">
-                      {dayAppointments.length}
+                      {total}
                     </Badge>
                   )}
                 </div>
                 
                 <div className="space-y-1">
-                  {dayAppointments.slice(0, 3).map(apt => (
-                    <div
-                      key={apt.id}
-                      className={cn(
-                        'text-xs p-1 rounded border truncate cursor-pointer',
-                        getStatusColor(apt.status)
-                      )}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAppointmentSelect?.(apt);
-                      }}
-                    >
-                      {apt.time} - {apt.clientName}
-                    </div>
-                  ))}
-                  {dayAppointments.length > 3 && (
+                  {allItems.map((entry) => {
+                    if (entry.type === 'appointment') {
+                      const apt = entry.item as Appointment;
+                      return (
+                        <div
+                          key={apt.id}
+                          className={cn(
+                            'text-xs p-1 rounded border truncate cursor-pointer',
+                            getStatusColor(apt.status)
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAppointmentSelect?.(apt);
+                          }}
+                        >
+                          {apt.time} - {apt.clientName}
+                        </div>
+                      );
+                    } else {
+                      const event = entry.item as CalendarEvent;
+                      const eventColor = event.gw_calendars?.color || '#10b981';
+                      return (
+                        <div
+                          key={event.id}
+                          className="text-xs p-1 rounded border truncate cursor-pointer text-white"
+                          style={{ backgroundColor: eventColor, borderColor: eventColor }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEventSelect?.(event);
+                          }}
+                        >
+                          {format(parseISO(event.start_date), 'HH:mm')} - {event.title}
+                        </div>
+                      );
+                    }
+                  })}
+                  {total > 3 && (
                     <div className="text-xs text-muted-foreground text-center">
-                      +{dayAppointments.length - 3} more
+                      +{total - 3} more
                     </div>
                   )}
                 </div>
@@ -228,7 +306,7 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
       <div className="space-y-4">
         <div className="grid grid-cols-7 gap-2">
           {weekDays.map(date => {
-            const dayAppointments = getAppointmentsForDate(date);
+            const { appointments: dayAppointments, events: dayEvents } = getItemsForDate(date);
             const isCurrentDay = isToday(date);
             const isSelected = isSameDay(date, selectedDate);
             
@@ -252,6 +330,7 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
                 </div>
                 
                 <div className="space-y-1 min-h-[300px]">
+                  {/* Appointments */}
                   {dayAppointments.map(apt => (
                     <div
                       key={apt.id}
@@ -266,6 +345,22 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
                       <div className="text-xs truncate">{apt.service}</div>
                     </div>
                   ))}
+                  {/* Calendar Events */}
+                  {dayEvents.map(event => {
+                    const eventColor = event.gw_calendars?.color || '#10b981';
+                    return (
+                      <div
+                        key={event.id}
+                        className="p-2 rounded border cursor-pointer hover:shadow-md transition-all text-white"
+                        style={{ backgroundColor: eventColor, borderColor: eventColor }}
+                        onClick={() => onEventSelect?.(event)}
+                      >
+                        <div className="font-medium text-sm">{format(parseISO(event.start_date), 'HH:mm')}</div>
+                        <div className="text-xs truncate">{event.title}</div>
+                        {event.location && <div className="text-xs truncate opacity-80">{event.location}</div>}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -276,7 +371,7 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
   };
 
   const renderDayView = () => {
-    const dayAppointments = getAppointmentsForDate(selectedDate);
+    const { appointments: dayAppointments, events: dayEvents, total } = getItemsForDate(selectedDate);
     
     return (
       <div className="space-y-4">
@@ -285,71 +380,117 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
             {format(selectedDate, 'EEEE, MMMM d, yyyy')}
           </h3>
           <p className="text-muted-foreground">
-            {dayAppointments.length} appointment{dayAppointments.length !== 1 ? 's' : ''} scheduled
+            {dayAppointments.length} appointment{dayAppointments.length !== 1 ? 's' : ''}, {dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''} scheduled
           </p>
         </div>
         
         <div className="space-y-3">
-          {dayAppointments.length === 0 ? (
+          {total === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No appointments scheduled for this day</p>
+              <p>No appointments or events scheduled for this day</p>
             </div>
           ) : (
-            dayAppointments.map(apt => (
-              <Card 
-                key={apt.id}
-                className="cursor-pointer hover:shadow-md transition-all"
-                onClick={() => onAppointmentSelect?.(apt)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
+            <>
+              {/* Appointments */}
+              {dayAppointments.map(apt => (
+                <Card 
+                  key={apt.id}
+                  className="cursor-pointer hover:shadow-md transition-all"
+                  onClick={() => onAppointmentSelect?.(apt)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{apt.time}</span>
+                        </div>
+                        <Badge className={cn('border', getStatusBadgeColor(apt.status))}>
+                          {apt.status}
+                        </Badge>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {apt.duration} min
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{apt.time}</span>
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{apt.clientName}</span>
                       </div>
-                      <Badge className={cn('border', getStatusBadgeColor(apt.status))}>
-                        {apt.status}
-                      </Badge>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {apt.duration} min
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{apt.clientName}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{apt.clientEmail}</span>
-                    </div>
-                    
-                    {apt.clientPhone && (
+                      
                       <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{apt.clientPhone}</span>
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{apt.clientEmail}</span>
                       </div>
-                    )}
-                    
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{apt.service}</span>
+                      
+                      {apt.clientPhone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{apt.clientPhone}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{apt.service}</span>
+                      </div>
+                      
+                      {apt.notes && (
+                        <div className="mt-3 p-3 bg-secondary/50 rounded">
+                          <p className="text-sm">{apt.notes}</p>
+                        </div>
+                      )}
                     </div>
-                    
-                    {apt.notes && (
-                      <div className="mt-3 p-3 bg-secondary/50 rounded">
-                        <p className="text-sm">{apt.notes}</p>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {/* Calendar Events */}
+              {dayEvents.map(event => {
+                const eventColor = event.gw_calendars?.color || '#10b981';
+                return (
+                  <Card 
+                    key={event.id}
+                    className="cursor-pointer hover:shadow-md transition-all"
+                    onClick={() => onEventSelect?.(event)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{format(parseISO(event.start_date), 'HH:mm')}</span>
+                          </div>
+                          <Badge style={{ backgroundColor: eventColor, color: 'white', borderColor: eventColor }}>
+                            {event.event_type || 'Event'}
+                          </Badge>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                      
+                      <div className="space-y-2">
+                        <div className="font-medium text-lg">{event.title}</div>
+                        
+                        {event.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{event.location}</span>
+                          </div>
+                        )}
+                        
+                        {event.description && (
+                          <div className="mt-3 p-3 bg-secondary/50 rounded">
+                            <p className="text-sm">{event.description}</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </>
           )}
         </div>
       </div>
@@ -465,27 +606,49 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {getTodaysAppointments().length === 0 ? (
+              {getTodaysAppointments().length === 0 && getTodaysEvents().length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No appointments today
+                  No appointments or events today
                 </p>
               ) : (
-                getTodaysAppointments().map(apt => (
-                  <div
-                    key={apt.id}
-                    className="p-3 border rounded-lg cursor-pointer hover:bg-accent transition-all"
-                    onClick={() => onAppointmentSelect?.(apt)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-sm">{apt.time}</span>
-                      <Badge className={cn('text-xs', getStatusBadgeColor(apt.status))}>
-                        {apt.status}
-                      </Badge>
+                <>
+                  {getTodaysAppointments().map(apt => (
+                    <div
+                      key={apt.id}
+                      className="p-3 border rounded-lg cursor-pointer hover:bg-accent transition-all"
+                      onClick={() => onAppointmentSelect?.(apt)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm">{apt.time}</span>
+                        <Badge className={cn('text-xs', getStatusBadgeColor(apt.status))}>
+                          {apt.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm font-medium">{apt.clientName}</p>
+                      <p className="text-xs text-muted-foreground">{apt.service}</p>
                     </div>
-                    <p className="text-sm font-medium">{apt.clientName}</p>
-                    <p className="text-xs text-muted-foreground">{apt.service}</p>
-                  </div>
-                ))
+                  ))}
+                  {getTodaysEvents().map(event => {
+                    const eventColor = event.gw_calendars?.color || '#10b981';
+                    return (
+                      <div
+                        key={event.id}
+                        className="p-3 border rounded-lg cursor-pointer hover:bg-accent transition-all"
+                        style={{ borderLeftColor: eventColor, borderLeftWidth: 3 }}
+                        onClick={() => onEventSelect?.(event)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-sm">{format(parseISO(event.start_date), 'HH:mm')}</span>
+                          <Badge style={{ backgroundColor: eventColor, color: 'white' }} className="text-xs">
+                            Event
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-medium">{event.title}</p>
+                        {event.location && <p className="text-xs text-muted-foreground">{event.location}</p>}
+                      </div>
+                    );
+                  })}
+                </>
               )}
             </CardContent>
           </Card>
