@@ -14,7 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGleeWorldEvents } from '@/hooks/useGleeWorldEvents';
 import QRCode from 'qrcode';
-import { Calendar as CalendarIcon, Plus, QrCode, Users, Clock, MapPin, ChevronLeft, ChevronRight, Loader2, Download, RefreshCw, BookOpen, Music, Trash2, CheckCircle, Sparkles, GraduationCap, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, QrCode, Users, Clock, MapPin, ChevronLeft, ChevronRight, Loader2, Download, RefreshCw, BookOpen, Music, Trash2, CheckCircle, Sparkles, GraduationCap, AlertCircle, Repeat } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO, addHours, eachDayOfInterval as dateEachDayOfInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
 import conductingImage from '@/assets/conducting-class-event.jpg';
@@ -132,7 +133,11 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
     end_time: '10:30',
     location: '',
     session_type: 'class',
-    attendance_required: true
+    attendance_required: true,
+    is_recurring: false,
+    recurring_frequency: 'weekly',
+    recurring_days: [] as string[],
+    recurring_end_date: ''
   });
   const [creating, setCreating] = useState(false);
 
@@ -327,7 +332,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
     return getSessionsForDate(selectedDate);
   }, [selectedDate, sessions]);
 
-  // Create session
+  // Create session (with optional recurrence)
   const handleCreateSession = async () => {
     if (!newSession.title || !newSession.session_date) {
       toast({
@@ -337,39 +342,75 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       });
       return;
     }
+
+    // Validate recurring settings
+    if (newSession.is_recurring) {
+      if (newSession.recurring_frequency === 'weekly' && newSession.recurring_days.length === 0) {
+        toast({
+          title: 'Error',
+          description: 'Please select at least one day for weekly recurrence',
+          variant: 'destructive'
+        });
+        return;
+      }
+      if (!newSession.recurring_end_date) {
+        toast({
+          title: 'Error',
+          description: 'Please set an end date for recurring sessions',
+          variant: 'destructive'
+        });
+        return;
+      }
+    }
+
     try {
       setCreating(true);
-      const {
-        error
-      } = await supabase.from('gw_course_class_sessions').insert({
-        course_id: courseId,
-        title: newSession.title,
-        description: newSession.description || null,
-        session_date: newSession.session_date,
-        start_time: newSession.start_time,
-        end_time: newSession.end_time,
-        location: newSession.location || null,
-        session_type: newSession.session_type,
-        image_url: conductingImage,
-        attendance_required: newSession.attendance_required,
-        created_by: user?.id
-      });
-      if (error) throw error;
-      toast({
-        title: 'Success',
-        description: 'Class session created'
-      });
+
+      if (newSession.is_recurring) {
+        // Generate recurring sessions
+        const sessionsToCreate = generateRecurringSessions();
+        if (sessionsToCreate.length === 0) {
+          toast({
+            title: 'No Sessions',
+            description: 'No sessions could be generated with the specified pattern',
+            variant: 'destructive'
+          });
+          setCreating(false);
+          return;
+        }
+
+        const { error } = await supabase.from('gw_course_class_sessions').insert(sessionsToCreate);
+        if (error) throw error;
+
+        toast({
+          title: 'Success',
+          description: `Created ${sessionsToCreate.length} recurring sessions`
+        });
+      } else {
+        // Single session
+        const { error } = await supabase.from('gw_course_class_sessions').insert({
+          course_id: courseId,
+          title: newSession.title,
+          description: newSession.description || null,
+          session_date: newSession.session_date,
+          start_time: newSession.start_time,
+          end_time: newSession.end_time,
+          location: newSession.location || null,
+          session_type: newSession.session_type,
+          image_url: conductingImage,
+          attendance_required: newSession.attendance_required,
+          created_by: user?.id
+        });
+        if (error) throw error;
+
+        toast({
+          title: 'Success',
+          description: 'Class session created'
+        });
+      }
+
       setCreateDialogOpen(false);
-      setNewSession({
-        title: '',
-        description: '',
-        session_date: format(new Date(), 'yyyy-MM-dd'),
-        start_time: '09:00',
-        end_time: '10:30',
-        location: '',
-        session_type: 'class',
-        attendance_required: true
-      });
+      resetNewSession();
       fetchSessions();
     } catch (error) {
       console.error('Error creating session:', error);
@@ -381,6 +422,79 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
     } finally {
       setCreating(false);
     }
+  };
+
+  const resetNewSession = () => {
+    setNewSession({
+      title: '',
+      description: '',
+      session_date: format(new Date(), 'yyyy-MM-dd'),
+      start_time: '09:00',
+      end_time: '10:30',
+      location: '',
+      session_type: 'class',
+      attendance_required: true,
+      is_recurring: false,
+      recurring_frequency: 'weekly',
+      recurring_days: [],
+      recurring_end_date: ''
+    });
+  };
+
+  // Generate recurring sessions based on pattern
+  const generateRecurringSessions = () => {
+    const sessions: any[] = [];
+    const startDate = new Date(newSession.session_date);
+    const endDate = new Date(newSession.recurring_end_date);
+    const exceptionSet = new Set(activeSemester?.exception_dates || []);
+    
+    const daysMap: Record<string, number> = {
+      sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
+      thursday: 4, friday: 5, saturday: 6
+    };
+    
+    let currentDate = new Date(startDate);
+    let sessionCount = 0;
+    const maxSessions = 100; // Safety limit
+
+    while (currentDate <= endDate && sessionCount < maxSessions) {
+      const dateStr = format(currentDate, 'yyyy-MM-dd');
+      const dayOfWeek = currentDate.getDay();
+      
+      let shouldCreate = false;
+      
+      if (newSession.recurring_frequency === 'daily') {
+        shouldCreate = true;
+      } else if (newSession.recurring_frequency === 'weekly') {
+        const dayName = Object.keys(daysMap).find(key => daysMap[key] === dayOfWeek);
+        shouldCreate = dayName ? newSession.recurring_days.includes(dayName) : false;
+      } else if (newSession.recurring_frequency === 'monthly') {
+        shouldCreate = currentDate.getDate() === startDate.getDate();
+      }
+      
+      // Skip exception dates (holidays, breaks)
+      if (shouldCreate && !exceptionSet.has(dateStr)) {
+        sessions.push({
+          course_id: courseId,
+          title: newSession.title,
+          description: newSession.description || null,
+          session_date: dateStr,
+          start_time: newSession.start_time,
+          end_time: newSession.end_time,
+          location: newSession.location || null,
+          session_type: newSession.session_type,
+          image_url: conductingImage,
+          attendance_required: newSession.attendance_required,
+          created_by: user?.id
+        });
+        sessionCount++;
+      }
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return sessions;
   };
 
   // Generate QR Code for session
@@ -592,14 +706,90 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                   location: e.target.value
                 }))} placeholder="e.g., Music Building Room 101" />
                   </div>
+
+                  {/* Recurrence Options */}
+                  <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <Repeat className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-sm">Repeat Session</p>
+                        <p className="text-xs text-muted-foreground">Create recurring sessions</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={newSession.is_recurring}
+                      onCheckedChange={(checked) => setNewSession(prev => ({ ...prev, is_recurring: checked }))}
+                    />
+                  </div>
+
+                  {newSession.is_recurring && (
+                    <div className="space-y-4 p-3 rounded-lg border bg-muted/20">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Frequency</Label>
+                          <Select
+                            value={newSession.recurring_frequency}
+                            onValueChange={(value) => setNewSession(prev => ({ ...prev, recurring_frequency: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="daily">Daily</SelectItem>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>End Date *</Label>
+                          <Input
+                            type="date"
+                            value={newSession.recurring_end_date}
+                            onChange={(e) => setNewSession(prev => ({ ...prev, recurring_end_date: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+
+                      {newSession.recurring_frequency === 'weekly' && (
+                        <div className="space-y-2">
+                          <Label>Repeat on Days *</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].map((day) => (
+                              <label key={day} className="flex items-center space-x-1.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={newSession.recurring_days.includes(day)}
+                                  onChange={(e) => {
+                                    const updatedDays = e.target.checked
+                                      ? [...newSession.recurring_days, day]
+                                      : newSession.recurring_days.filter(d => d !== day);
+                                    setNewSession(prev => ({ ...prev, recurring_days: updatedDays }));
+                                  }}
+                                  className="rounded border-gray-300"
+                                />
+                                <span className="text-sm capitalize">{day.slice(0, 3)}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeSemester && (
+                        <p className="text-xs text-muted-foreground">
+                          Sessions will respect {activeSemester.exception_dates.length} exception dates from {activeSemester.name}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                  <Button variant="outline" onClick={() => { setCreateDialogOpen(false); resetNewSession(); }}>
                     Cancel
                   </Button>
                   <Button onClick={handleCreateSession} disabled={creating} className="bg-[#003666]">
                     {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                    Create Session
+                    {newSession.is_recurring ? 'Create Sessions' : 'Create Session'}
                   </Button>
                 </DialogFooter>
               </DialogContent>
