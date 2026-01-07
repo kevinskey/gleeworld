@@ -90,7 +90,17 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
                   <pre className="whitespace-pre-wrap font-sans">{submission.notes}</pre>
                 )}
                 {submission.recording_url && (
-                  <audio controls src={submission.recording_url} className="w-full" />
+                  submission.recording_url.includes('.webm') || 
+                  submission.recording_url.includes('.mp4') || 
+                  submission.recording_url.includes('.mov') ? (
+                    <video 
+                      controls 
+                      src={submission.recording_url} 
+                      className="w-full rounded-lg max-h-[500px]"
+                    />
+                  ) : (
+                    <audio controls src={submission.recording_url} className="w-full" />
+                  )
                 )}
               </div>
             ) : (
