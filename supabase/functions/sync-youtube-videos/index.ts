@@ -347,9 +347,9 @@ serve(async (req) => {
     }
 
     requestBody = await req.json()
-    const { channelInput, maxResults = 50 } = requestBody
+    const { channelInput, maxResults = 50, courseId = null } = requestBody
     
-    console.log('Request body:', { channelInput, maxResults })
+    console.log('Request body:', { channelInput, maxResults, courseId })
     
     // Handle mock data request
     if (channelInput === 'MOCK_DATA') {
@@ -493,7 +493,8 @@ serve(async (req) => {
           subscriber_count: parseInt(channel.statistics.subscriberCount || '0'),
           video_count: parseInt(channel.statistics.videoCount || '0'),
           last_synced_at: new Date().toISOString(),
-          channel_handle: channel.snippet.customUrl ? `@${channel.snippet.customUrl}` : null
+          channel_handle: channel.snippet.customUrl ? `@${channel.snippet.customUrl}` : null,
+          course_id: courseId
         })
         .eq('channel_id', channelId)
         .select()
@@ -517,7 +518,8 @@ serve(async (req) => {
           subscriber_count: parseInt(channel.statistics.subscriberCount || '0'),
           video_count: parseInt(channel.statistics.videoCount || '0'),
           last_synced_at: new Date().toISOString(),
-          channel_handle: channel.snippet.customUrl ? `@${channel.snippet.customUrl}` : null
+          channel_handle: channel.snippet.customUrl ? `@${channel.snippet.customUrl}` : null,
+          course_id: courseId
         })
         .select()
         .single()
@@ -543,7 +545,8 @@ serve(async (req) => {
       comment_count: parseInt(video.statistics.commentCount || '0'),
       tags: video.snippet.tags || [],
       video_url: `https://youtube.com/watch?v=${video.id}`,
-      display_order: index + 1
+      display_order: index + 1,
+      course_id: courseId
     }))
 
     console.log('Saving', videosToUpsert.length, 'videos to database')
