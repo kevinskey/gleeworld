@@ -7,12 +7,13 @@ const TIMEZONE = 'America/New_York';
 const SEMESTER_START = '2026-01-14';
 const SEMESTER_END = '2026-04-29';
 
-// Exception dates (no classes)
+// Exception dates (no classes - campus closed or no classes held)
 const EXCEPTION_DATES = new Set([
-  '2026-01-19', // MLK Jr. Day
-  '2026-03-09', '2026-03-10', '2026-03-11', '2026-03-12', '2026-03-13', // Spring Break
-  '2026-04-03', // Good Friday
-  '2026-04-17', // Research Day
+  '2026-01-19', // MLK Jr. Day - Campus Closed
+  '2026-03-09', '2026-03-10', '2026-03-11', '2026-03-12', '2026-03-13', // Spring Break - No Classes
+  '2026-04-03', // Good Friday - No Classes
+  '2026-04-09', // Founders Day Observed - No Classes
+  '2026-04-17', // Research Day - No Classes
 ]);
 
 interface CourseConfig {
