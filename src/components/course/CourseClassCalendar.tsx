@@ -356,10 +356,8 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
         return;
       }
     }
-
     try {
       setCreating(true);
-
       if (newSession.is_recurring) {
         // Generate recurring sessions
         const sessionsToCreate = generateRecurringSessions();
@@ -372,17 +370,19 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
           setCreating(false);
           return;
         }
-
-        const { error } = await supabase.from('gw_course_class_sessions').insert(sessionsToCreate);
+        const {
+          error
+        } = await supabase.from('gw_course_class_sessions').insert(sessionsToCreate);
         if (error) throw error;
-
         toast({
           title: 'Success',
           description: `Created ${sessionsToCreate.length} recurring sessions`
         });
       } else {
         // Single session
-        const { error } = await supabase.from('gw_course_class_sessions').insert({
+        const {
+          error
+        } = await supabase.from('gw_course_class_sessions').insert({
           course_id: courseId,
           title: newSession.title,
           description: newSession.description || null,
@@ -396,13 +396,11 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
           created_by: user?.id
         });
         if (error) throw error;
-
         toast({
           title: 'Success',
           description: 'Class session created'
         });
       }
-
       setCreateDialogOpen(false);
       resetNewSession();
       fetchSessions();
@@ -417,7 +415,6 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       setCreating(false);
     }
   };
-
   const resetNewSession = () => {
     setNewSession({
       title: '',
@@ -441,12 +438,15 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
     const startDate = new Date(newSession.session_date);
     const endDate = new Date(newSession.recurring_end_date);
     const exceptionSet = new Set(activeSemester?.exception_dates || []);
-    
     const daysMap: Record<string, number> = {
-      sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
-      thursday: 4, friday: 5, saturday: 6
+      sunday: 0,
+      monday: 1,
+      tuesday: 2,
+      wednesday: 3,
+      thursday: 4,
+      friday: 5,
+      saturday: 6
     };
-    
     let currentDate = new Date(startDate);
     let sessionCount = 0;
     const maxSessions = 100; // Safety limit
@@ -454,9 +454,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
     while (currentDate <= endDate && sessionCount < maxSessions) {
       const dateStr = format(currentDate, 'yyyy-MM-dd');
       const dayOfWeek = currentDate.getDay();
-      
       let shouldCreate = false;
-      
       if (newSession.recurring_frequency === 'daily') {
         shouldCreate = true;
       } else if (newSession.recurring_frequency === 'weekly') {
@@ -465,7 +463,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       } else if (newSession.recurring_frequency === 'monthly') {
         shouldCreate = currentDate.getDate() === startDate.getDate();
       }
-      
+
       // Skip exception dates (holidays, breaks)
       if (shouldCreate && !exceptionSet.has(dateStr)) {
         sessions.push({
@@ -483,11 +481,10 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
         });
         sessionCount++;
       }
-      
+
       // Move to next day
       currentDate.setDate(currentDate.getDate() + 1);
     }
-    
     return sessions;
   };
 
@@ -501,7 +498,6 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       setCurrentDate(subDays(currentDate, 1));
     }
   };
-
   const navigateNext = () => {
     if (calendarView === 'month') {
       setCurrentDate(addMonths(currentDate, 1));
@@ -511,7 +507,6 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       setCurrentDate(addDays(currentDate, 1));
     }
   };
-
   const getCalendarTitle = () => {
     if (calendarView === 'month') {
       return format(currentDate, 'MMMM yyyy');
@@ -531,16 +526,21 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       const monthEnd = endOfMonth(currentDate);
       const calendarStart = startOfWeek(monthStart);
       const calendarEnd = endOfWeek(monthEnd);
-      return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+      return eachDayOfInterval({
+        start: calendarStart,
+        end: calendarEnd
+      });
     } else if (calendarView === 'week') {
       const weekStart = startOfWeek(currentDate);
       const weekEnd = endOfWeek(currentDate);
-      return eachDayOfInterval({ start: weekStart, end: weekEnd });
+      return eachDayOfInterval({
+        start: weekStart,
+        end: weekEnd
+      });
     } else {
       return [currentDate];
     }
   };
-
   const viewDays = getViewDays();
 
   // Generate QR Code for session
@@ -762,21 +762,20 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                         <p className="text-xs text-muted-foreground">Create recurring sessions</p>
                       </div>
                     </div>
-                    <Switch
-                      checked={newSession.is_recurring}
-                      onCheckedChange={(checked) => setNewSession(prev => ({ ...prev, is_recurring: checked }))}
-                    />
+                    <Switch checked={newSession.is_recurring} onCheckedChange={checked => setNewSession(prev => ({
+                  ...prev,
+                  is_recurring: checked
+                }))} />
                   </div>
 
-                  {newSession.is_recurring && (
-                    <div className="space-y-4 p-3 rounded-lg border bg-muted/20">
+                  {newSession.is_recurring && <div className="space-y-4 p-3 rounded-lg border bg-muted/20">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>Frequency</Label>
-                          <Select
-                            value={newSession.recurring_frequency}
-                            onValueChange={(value) => setNewSession(prev => ({ ...prev, recurring_frequency: value }))}
-                          >
+                          <Select value={newSession.recurring_frequency} onValueChange={value => setNewSession(prev => ({
+                      ...prev,
+                      recurring_frequency: value
+                    }))}>
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
@@ -789,48 +788,39 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                         </div>
                         <div className="space-y-2">
                           <Label>End Date *</Label>
-                          <Input
-                            type="date"
-                            value={newSession.recurring_end_date}
-                            onChange={(e) => setNewSession(prev => ({ ...prev, recurring_end_date: e.target.value }))}
-                          />
+                          <Input type="date" value={newSession.recurring_end_date} onChange={e => setNewSession(prev => ({
+                      ...prev,
+                      recurring_end_date: e.target.value
+                    }))} />
                         </div>
                       </div>
 
-                      {newSession.recurring_frequency === 'weekly' && (
-                        <div className="space-y-2">
+                      {newSession.recurring_frequency === 'weekly' && <div className="space-y-2">
                           <Label>Repeat on Days *</Label>
                           <div className="flex flex-wrap gap-2">
-                            {['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].map((day) => (
-                              <label key={day} className="flex items-center space-x-1.5 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={newSession.recurring_days.includes(day)}
-                                  onChange={(e) => {
-                                    const updatedDays = e.target.checked
-                                      ? [...newSession.recurring_days, day]
-                                      : newSession.recurring_days.filter(d => d !== day);
-                                    setNewSession(prev => ({ ...prev, recurring_days: updatedDays }));
-                                  }}
-                                  className="rounded border-gray-300"
-                                />
+                            {['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].map(day => <label key={day} className="flex items-center space-x-1.5 cursor-pointer">
+                                <input type="checkbox" checked={newSession.recurring_days.includes(day)} onChange={e => {
+                        const updatedDays = e.target.checked ? [...newSession.recurring_days, day] : newSession.recurring_days.filter(d => d !== day);
+                        setNewSession(prev => ({
+                          ...prev,
+                          recurring_days: updatedDays
+                        }));
+                      }} className="rounded border-gray-300" />
                                 <span className="text-sm capitalize">{day.slice(0, 3)}</span>
-                              </label>
-                            ))}
+                              </label>)}
                           </div>
-                        </div>
-                      )}
+                        </div>}
 
-                      {activeSemester && (
-                        <p className="text-xs text-muted-foreground">
+                      {activeSemester && <p className="text-xs text-muted-foreground">
                           Sessions will respect {activeSemester.exception_dates.length} exception dates from {activeSemester.name}
-                        </p>
-                      )}
-                    </div>
-                  )}
+                        </p>}
+                    </div>}
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => { setCreateDialogOpen(false); resetNewSession(); }}>
+                  <Button variant="outline" onClick={() => {
+                setCreateDialogOpen(false);
+                resetNewSession();
+              }}>
                     Cancel
                   </Button>
                   <Button onClick={handleCreateSession} disabled={creating} className="bg-[#003666]">
@@ -867,7 +857,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                 </CardTitle>
                 <div className="flex items-center gap-2 flex-wrap">
                   {/* View Toggle */}
-                  <ToggleGroup type="single" value={calendarView} onValueChange={(v) => v && setCalendarView(v as 'month' | 'week' | 'day')} className="border rounded-md">
+                  <ToggleGroup type="single" value={calendarView} onValueChange={v => v && setCalendarView(v as 'month' | 'week' | 'day')} className="border rounded-md">
                     <ToggleGroupItem value="month" size="sm" className="text-xs px-2">Month</ToggleGroupItem>
                     <ToggleGroupItem value="week" size="sm" className="text-xs px-2">Week</ToggleGroupItem>
                     <ToggleGroupItem value="day" size="sm" className="text-xs px-2">Day</ToggleGroupItem>
@@ -887,113 +877,82 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               </CardHeader>
               <CardContent>
                 {/* Month View */}
-                {calendarView === 'month' && (
-                  <>
+                {calendarView === 'month' && <>
                     <div className="grid grid-cols-7 gap-1 mb-2">
-                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                        <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
                           {day}
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
                     <div className="grid grid-cols-7 gap-1">
                       {viewDays.map((day, i) => {
-                        const daySessions = getSessionsForDate(day);
-                        const daySpelmanEvents = spelmanEvents.filter(e => {
-                          const eventDate = parseISO(e.start_date);
-                          return isSameDay(eventDate, day);
-                        });
-                        const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
-                        const isToday = isSameDay(day, new Date());
-                        const isSelected = selectedDate && isSameDay(day, selectedDate);
-                        const isCurrentMonth = isSameMonth(day, currentDate);
-                        return (
-                          <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[80px] p-1 rounded-lg border text-left transition-colors", !isCurrentMonth && "opacity-40", isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary", isSelected && "bg-primary/10 border-primary", !isSelected && !isHoliday && "hover:bg-accent")}>
+                    const daySessions = getSessionsForDate(day);
+                    const daySpelmanEvents = spelmanEvents.filter(e => {
+                      const eventDate = parseISO(e.start_date);
+                      return isSameDay(eventDate, day);
+                    });
+                    const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
+                    const isToday = isSameDay(day, new Date());
+                    const isSelected = selectedDate && isSameDay(day, selectedDate);
+                    const isCurrentMonth = isSameMonth(day, currentDate);
+                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[80px] p-1 rounded-lg border text-left transition-colors", !isCurrentMonth && "opacity-40", isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary", isSelected && "bg-primary/10 border-primary", !isSelected && !isHoliday && "hover:bg-accent")}>
                             <div className={cn("text-sm font-medium mb-1 flex items-center gap-1 text-primary-foreground", isToday && "text-primary", isHoliday && "text-amber-600")}>
                               {format(day, 'd')}
                               {isHoliday && <AlertCircle className="h-3 w-3" />}
                             </div>
                             <div className="space-y-0.5">
-                              {daySpelmanEvents.slice(0, 1).map(event => (
-                                <div key={event.id} className="text-xs bg-amber-100 rounded px-1 py-0.5 truncate text-black">
+                              {daySpelmanEvents.slice(0, 1).map(event => <div key={event.id} className="text-xs bg-amber-100 rounded px-1 py-0.5 truncate text-black">
                                   {event.title}
-                                </div>
-                              ))}
+                                </div>)}
                               {daySessions.slice(0, isHoliday ? 1 : 2).map(session => {
-                                const typeConfig = getSessionTypeConfig(session.session_type);
-                                return (
-                                  <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1 py-0.5 truncate flex items-center gap-1">
+                          const typeConfig = getSessionTypeConfig(session.session_type);
+                          return <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1 py-0.5 truncate flex items-center gap-1">
                                     <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
                                     <span className="truncate">{session.title}</span>
-                                  </div>
-                                );
-                              })}
-                              {daySessions.length + daySpelmanEvents.length > 2 && (
-                                <div className="text-xs text-muted-foreground">
+                                  </div>;
+                        })}
+                              {daySessions.length + daySpelmanEvents.length > 2 && <div className="text-xs text-muted-foreground">
                                   +{daySessions.length + daySpelmanEvents.length - 2} more
-                                </div>
-                              )}
+                                </div>}
                             </div>
-                          </button>
-                        );
-                      })}
+                          </button>;
+                  })}
                     </div>
-                  </>
-                )}
+                  </>}
 
                 {/* Week View */}
-                {calendarView === 'week' && (
-                  <>
+                {calendarView === 'week' && <>
                     <div className="grid grid-cols-7 gap-1 mb-2">
                       {viewDays.map((day, i) => {
-                        const isToday = isSameDay(day, new Date());
-                        const isSelected = selectedDate && isSameDay(day, selectedDate);
-                        return (
-                          <div key={i} className={cn("text-center py-2 rounded-t-lg", isToday && "bg-primary/10", isSelected && "bg-primary/20")}>
+                    const isToday = isSameDay(day, new Date());
+                    const isSelected = selectedDate && isSameDay(day, selectedDate);
+                    return <div key={i} className={cn("text-center py-2 rounded-t-lg", isToday && "bg-primary/10", isSelected && "bg-primary/20")}>
                             <div className="text-xs font-medium text-muted-foreground">{format(day, 'EEE')}</div>
                             <div className={cn("text-lg font-bold", isToday && "text-primary")}>{format(day, 'd')}</div>
-                          </div>
-                        );
-                      })}
+                          </div>;
+                  })}
                     </div>
                     <div className="grid grid-cols-7 gap-1">
                       {viewDays.map((day, i) => {
-                        const daySessions = getSessionsForDate(day);
-                        const daySpelmanEvents = spelmanEvents.filter(e => {
-                          const eventDate = parseISO(e.start_date);
-                          return isSameDay(eventDate, day);
-                        });
-                        const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
-                        const isToday = isSameDay(day, new Date());
-                        const isSelected = selectedDate && isSameDay(day, selectedDate);
-                        return (
-                          <button
-                            key={i}
-                            onClick={() => setSelectedDate(day)}
-                            className={cn(
-                              "min-h-[200px] p-2 rounded-lg border text-left transition-colors",
-                              isHoliday && "bg-amber-50 border-amber-300",
-                              isToday && "border-primary",
-                              isSelected && "bg-primary/10 border-primary ring-1 ring-primary",
-                              !isSelected && !isHoliday && "hover:bg-accent"
-                            )}
-                          >
-                            {isHoliday && (
-                              <div className="flex items-center gap-1 text-amber-600 text-xs mb-2">
+                    const daySessions = getSessionsForDate(day);
+                    const daySpelmanEvents = spelmanEvents.filter(e => {
+                      const eventDate = parseISO(e.start_date);
+                      return isSameDay(eventDate, day);
+                    });
+                    const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
+                    const isToday = isSameDay(day, new Date());
+                    const isSelected = selectedDate && isSameDay(day, selectedDate);
+                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[200px] p-2 rounded-lg border text-left transition-colors", isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary", isSelected && "bg-primary/10 border-primary ring-1 ring-primary", !isSelected && !isHoliday && "hover:bg-accent")}>
+                            {isHoliday && <div className="flex items-center gap-1 text-amber-600 text-xs mb-2">
                                 <AlertCircle className="h-3 w-3" />
                                 Holiday
-                              </div>
-                            )}
+                              </div>}
                             <div className="space-y-1">
-                              {daySpelmanEvents.map(event => (
-                                <div key={event.id} className="text-xs bg-amber-100 rounded px-1.5 py-1 text-black">
+                              {daySpelmanEvents.map(event => <div key={event.id} className="text-xs bg-amber-100 rounded px-1.5 py-1 text-black">
                                   {event.title}
-                                </div>
-                              ))}
+                                </div>)}
                               {daySessions.map(session => {
-                                const typeConfig = getSessionTypeConfig(session.session_type);
-                                return (
-                                  <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1.5 py-1">
+                          const typeConfig = getSessionTypeConfig(session.session_type);
+                          return <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1.5 py-1">
                                     <div className="flex items-center gap-1 font-medium">
                                       <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
                                       <span className="truncate">{session.title}</span>
@@ -1001,74 +960,57 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                     <div className="text-[10px] text-muted-foreground mt-0.5">
                                       {session.start_time} - {session.end_time}
                                     </div>
-                                  </div>
-                                );
-                              })}
-                              {daySessions.length === 0 && daySpelmanEvents.length === 0 && !isHoliday && (
-                                <div className="text-xs text-muted-foreground text-center py-4">No sessions</div>
-                              )}
+                                  </div>;
+                        })}
+                              {daySessions.length === 0 && daySpelmanEvents.length === 0 && !isHoliday && <div className="text-xs text-muted-foreground text-center py-4">No sessions</div>}
                             </div>
-                          </button>
-                        );
-                      })}
+                          </button>;
+                  })}
                     </div>
-                  </>
-                )}
+                  </>}
 
                 {/* Day View */}
-                {calendarView === 'day' && (
-                  <div className="space-y-4">
+                {calendarView === 'day' && <div className="space-y-4">
                     {(() => {
-                      const daySessions = getSessionsForDate(currentDate);
-                      const daySpelmanEvents = spelmanEvents.filter(e => {
-                        const eventDate = parseISO(e.start_date);
-                        return isSameDay(eventDate, currentDate);
-                      });
-                      const isHoliday = activeSemester?.exception_dates.includes(format(currentDate, 'yyyy-MM-dd'));
-                      
-                      return (
-                        <>
-                          {isHoliday && (
-                            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-300 rounded-lg text-amber-700">
+                  const daySessions = getSessionsForDate(currentDate);
+                  const daySpelmanEvents = spelmanEvents.filter(e => {
+                    const eventDate = parseISO(e.start_date);
+                    return isSameDay(eventDate, currentDate);
+                  });
+                  const isHoliday = activeSemester?.exception_dates.includes(format(currentDate, 'yyyy-MM-dd'));
+                  return <>
+                          {isHoliday && <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-300 rounded-lg text-amber-700">
                               <AlertCircle className="h-5 w-5" />
                               <span>This is an exception date (holiday/break)</span>
-                            </div>
-                          )}
+                            </div>}
                           
-                          {daySpelmanEvents.length > 0 && (
-                            <div className="space-y-2">
+                          {daySpelmanEvents.length > 0 && <div className="space-y-2">
                               <h4 className="font-medium text-sm text-muted-foreground">Spelman Events</h4>
-                              {daySpelmanEvents.map(event => (
-                                <div key={event.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                              {daySpelmanEvents.map(event => <div key={event.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                                   <div className="font-medium">{event.title}</div>
                                   {event.location && <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="h-3 w-3" />{event.location}</div>}
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                                </div>)}
+                            </div>}
                           
                           <div className="space-y-2">
                             <h4 className="font-medium text-sm text-muted-foreground">Class Sessions ({daySessions.length})</h4>
-                            {daySessions.length === 0 ? (
-                              <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                            {daySessions.length === 0 ? <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
                                 <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-50" />
                                 <p>No classes scheduled for this day</p>
-                                {isInstructor && (
-                                  <Button size="sm" variant="outline" className="mt-3" onClick={() => {
-                                    setNewSession(prev => ({ ...prev, session_date: format(currentDate, 'yyyy-MM-dd') }));
-                                    setCreateDialogOpen(true);
-                                  }}>
+                                {isInstructor && <Button size="sm" variant="outline" className="mt-3" onClick={() => {
+                          setNewSession(prev => ({
+                            ...prev,
+                            session_date: format(currentDate, 'yyyy-MM-dd')
+                          }));
+                          setCreateDialogOpen(true);
+                        }}>
                                     <Plus className="h-4 w-4 mr-2" />
                                     Add Session
-                                  </Button>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="space-y-3">
+                                  </Button>}
+                              </div> : <div className="space-y-3">
                                 {daySessions.map(session => {
-                                  const typeConfig = getSessionTypeConfig(session.session_type);
-                                  return (
-                                    <div key={session.id} className="border rounded-lg overflow-hidden">
+                          const typeConfig = getSessionTypeConfig(session.session_type);
+                          return <div key={session.id} className="border rounded-lg overflow-hidden">
                                       {session.image_url && <img src={session.image_url} alt={session.title} className="w-full h-32 object-cover" />}
                                       <div className="p-4 space-y-3">
                                         <div className="flex items-start justify-between">
@@ -1079,20 +1021,17 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                             </Badge>
                                             <h4 className="font-semibold text-lg">{session.title}</h4>
                                           </div>
-                                          {session.attendance_required && (
-                                            <Badge className="bg-green-500/10 text-green-600">
+                                          {session.attendance_required && <Badge className="bg-green-500/10 text-green-600">
                                               <CheckCircle className="h-3 w-3 mr-1" />
                                               Attendance
-                                            </Badge>
-                                          )}
+                                            </Badge>}
                                         </div>
                                         {session.description && <p className="text-sm text-muted-foreground">{session.description}</p>}
                                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                           <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{session.start_time} - {session.end_time}</span>
                                           {session.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{session.location}</span>}
                                         </div>
-                                        {isInstructor && (
-                                          <div className="flex items-center gap-2 pt-3 border-t">
+                                        {isInstructor && <div className="flex items-center gap-2 pt-3 border-t">
                                             <Button size="sm" variant="outline" onClick={() => generateQRCode(session)} className="flex-1">
                                               <QrCode className="h-4 w-4 mr-2" />
                                               QR Attendance
@@ -1100,20 +1039,15 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                             <Button size="sm" variant="ghost" onClick={() => deleteSession(session.id)} className="text-destructive">
                                               <Trash2 className="h-4 w-4" />
                                             </Button>
-                                          </div>
-                                        )}
+                                          </div>}
                                       </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
+                                    </div>;
+                        })}
+                              </div>}
                           </div>
-                        </>
-                      );
-                    })()}
-                  </div>
-                )}
+                        </>;
+                })()}
+                  </div>}
               </CardContent>
             </Card>
 
@@ -1213,27 +1147,27 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                       <h3 className="font-semibold mb-2">{activeSemester.name}</h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Start:</span>
-                          <p className="font-medium">{format(parseISO(activeSemester.start_date), 'MMM d, yyyy')}</p>
+                          <span className="text-primary-foreground">Start:</span>
+                          <p className="font-medium text-primary-foreground">{format(parseISO(activeSemester.start_date), 'MMM d, yyyy')}</p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Classes End:</span>
-                          <p className="font-medium">{activeSemester.classes_end_date ? format(parseISO(activeSemester.classes_end_date), 'MMM d, yyyy') : 'TBD'}</p>
+                          <span className="text-primary-foreground">Classes End:</span>
+                          <p className="font-medium text-primary-foreground">{activeSemester.classes_end_date ? format(parseISO(activeSemester.classes_end_date), 'MMM d, yyyy') : 'TBD'}</p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Finals:</span>
-                          <p className="font-medium">{activeSemester.academic_events.find(e => e.title.includes('Final'))?.start_date ? format(parseISO(activeSemester.academic_events.find(e => e.title.includes('Final'))?.start_date || ''), 'MMM d') : 'TBD'}</p>
+                          <span className="text-primary-foreground">Finals:</span>
+                          <p className="font-medium text-primary-foreground">{activeSemester.academic_events.find(e => e.title.includes('Final'))?.start_date ? format(parseISO(activeSemester.academic_events.find(e => e.title.includes('Final'))?.start_date || ''), 'MMM d') : 'TBD'}</p>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Semester End:</span>
-                          <p className="font-medium">{format(parseISO(activeSemester.end_date), 'MMM d, yyyy')}</p>
+                          <span className="text-primary-foreground">Semester End:</span>
+                          <p className="font-medium text-primary-foreground">{format(parseISO(activeSemester.end_date), 'MMM d, yyyy')}</p>
                         </div>
                       </div>
                     </div>}
                   
                   {/* Academic Events */}
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Important Dates</h4>
+                    <h4 className="font-medium text-sm uppercase tracking-wide text-destructive">Important Dates</h4>
                     {activeSemester?.academic_events.map((event, idx) => <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center gap-3">
                           <div className={cn("p-2 rounded-lg", event.type === 'holiday' && "bg-red-100 text-red-600", event.type === 'break' && "bg-amber-100 text-amber-600", event.type === 'academic' && "bg-blue-100 text-blue-600")}>
@@ -1242,8 +1176,8 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                             {event.type === 'academic' && <GraduationCap className="h-4 w-4" />}
                           </div>
                           <div>
-                            <p className="font-medium">{event.title}</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="font-medium text-primary-foreground">{event.title}</p>
+                            <p className="text-sm text-sky-50">
                               {event.date ? format(parseISO(event.date), 'EEEE, MMMM d, yyyy') : event.start_date && event.end_date ? `${format(parseISO(event.start_date), 'MMM d')} - ${format(parseISO(event.end_date), 'MMM d, yyyy')}` : 'Date TBD'}
                             </p>
                           </div>
