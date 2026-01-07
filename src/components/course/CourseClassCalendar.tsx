@@ -711,7 +711,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                         )}
                       >
                         <div className={cn(
-                          "text-sm font-medium mb-1 flex items-center gap-1",
+                          "text-sm font-medium mb-1 flex items-center gap-1 text-primary-foreground",
                           isToday && "text-primary",
                           isHoliday && "text-amber-600"
                         )}>
