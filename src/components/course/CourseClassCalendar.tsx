@@ -16,7 +16,8 @@ import { useGleeWorldEvents } from '@/hooks/useGleeWorldEvents';
 import QRCode from 'qrcode';
 import { Calendar as CalendarIcon, Plus, QrCode, Users, Clock, MapPin, ChevronLeft, ChevronRight, Loader2, Download, RefreshCw, BookOpen, Music, Trash2, CheckCircle, Sparkles, GraduationCap, AlertCircle, Repeat } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO, addHours, eachDayOfInterval as dateEachDayOfInterval } from 'date-fns';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO, addHours, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
 import conductingImage from '@/assets/conducting-class-event.jpg';
 interface ClassSession {
@@ -114,9 +115,10 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
   const [sessions, setSessions] = useState<ClassSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedSession, setSelectedSession] = useState<ClassSession | null>(null);
   const [activeTab, setActiveTab] = useState<'class' | 'spelman'>('class');
+  const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('week');
 
   // Semester state
   const [activeSemester, setActiveSemester] = useState<Semester | null>(null);
@@ -313,14 +315,6 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
   };
 
   // Calendar helpers
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const calendarStart = startOfWeek(monthStart);
-  const calendarEnd = endOfWeek(monthEnd);
-  const calendarDays = eachDayOfInterval({
-    start: calendarStart,
-    end: calendarEnd
-  });
   const getSessionsForDate = (date: Date) => {
     return sessions.filter(session => {
       const sessionDate = parseISO(session.session_date);
@@ -496,6 +490,58 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
     
     return sessions;
   };
+
+  // Calendar navigation helpers based on view
+  const navigatePrev = () => {
+    if (calendarView === 'month') {
+      setCurrentDate(subMonths(currentDate, 1));
+    } else if (calendarView === 'week') {
+      setCurrentDate(subWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(subDays(currentDate, 1));
+    }
+  };
+
+  const navigateNext = () => {
+    if (calendarView === 'month') {
+      setCurrentDate(addMonths(currentDate, 1));
+    } else if (calendarView === 'week') {
+      setCurrentDate(addWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(addDays(currentDate, 1));
+    }
+  };
+
+  const getCalendarTitle = () => {
+    if (calendarView === 'month') {
+      return format(currentDate, 'MMMM yyyy');
+    } else if (calendarView === 'week') {
+      const weekStart = startOfWeek(currentDate);
+      const weekEnd = endOfWeek(currentDate);
+      return `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
+    } else {
+      return format(currentDate, 'EEEE, MMMM d, yyyy');
+    }
+  };
+
+  // Get days for current view
+  const getViewDays = () => {
+    if (calendarView === 'month') {
+      const monthStart = startOfMonth(currentDate);
+      const monthEnd = endOfMonth(currentDate);
+      const calendarStart = startOfWeek(monthStart);
+      const calendarEnd = endOfWeek(monthEnd);
+      return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+    } else if (calendarView === 'week') {
+      const weekStart = startOfWeek(currentDate);
+      const weekEnd = endOfWeek(currentDate);
+      return eachDayOfInterval({ start: weekStart, end: weekEnd });
+    } else {
+      return [currentDate];
+    }
+  };
+
+  const viewDays = getViewDays();
 
   // Generate QR Code for session
   const generateQRCode = async (session: ClassSession) => {
@@ -814,67 +860,260 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Calendar */}
             <Card className="lg:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
                 <CardTitle className="flex items-center gap-2">
                   <CalendarIcon className="h-5 w-5" />
-                  {format(currentDate, 'MMMM yyyy')}
+                  {getCalendarTitle()}
                 </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
-                    Today
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* View Toggle */}
+                  <ToggleGroup type="single" value={calendarView} onValueChange={(v) => v && setCalendarView(v as 'month' | 'week' | 'day')} className="border rounded-md">
+                    <ToggleGroupItem value="month" size="sm" className="text-xs px-2">Month</ToggleGroupItem>
+                    <ToggleGroupItem value="week" size="sm" className="text-xs px-2">Week</ToggleGroupItem>
+                    <ToggleGroupItem value="day" size="sm" className="text-xs px-2">Day</ToggleGroupItem>
+                  </ToggleGroup>
+                  <div className="flex items-center gap-1">
+                    <Button variant="outline" size="icon" onClick={navigatePrev}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
+                      Today
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={navigateNext}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Day headers */}
-                <div className="grid grid-cols-7 gap-1 mb-2">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
-                      {day}
-                    </div>)}
-                </div>
-                
-                {/* Calendar grid */}
-                <div className="grid grid-cols-7 gap-1">
-                  {calendarDays.map((day, i) => {
-                  const daySessions = getSessionsForDate(day);
-                  const daySpelmanEvents = spelmanEvents.filter(e => {
-                    const eventDate = parseISO(e.start_date);
-                    return isSameDay(eventDate, day);
-                  });
-                  const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
-                  const isToday = isSameDay(day, new Date());
-                  const isSelected = selectedDate && isSameDay(day, selectedDate);
-                  const isCurrentMonth = isSameMonth(day, currentDate);
-                  return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[80px] p-1 rounded-lg border text-left transition-colors", !isCurrentMonth && "opacity-40", isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary", isSelected && "bg-primary/10 border-primary", !isSelected && !isHoliday && "hover:bg-accent")}>
-                        <div className={cn("text-sm font-medium mb-1 flex items-center gap-1 text-primary-foreground", isToday && "text-primary", isHoliday && "text-amber-600")}>
-                          {format(day, 'd')}
-                          {isHoliday && <AlertCircle className="h-3 w-3" />}
+                {/* Month View */}
+                {calendarView === 'month' && (
+                  <>
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                        <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+                          {day}
                         </div>
-                        <div className="space-y-0.5">
-                          {/* Show Spelman events first */}
-                          {daySpelmanEvents.slice(0, 1).map(event => <div key={event.id} className="text-xs bg-amber-100 rounded px-1 py-0.5 truncate text-black">
-                              {event.title}
-                            </div>)}
-                          {daySessions.slice(0, isHoliday ? 1 : 2).map(session => {
-                        const typeConfig = getSessionTypeConfig(session.session_type);
-                        return <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1 py-0.5 truncate flex items-center gap-1">
-                                <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{session.title}</span>
-                              </div>;
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {viewDays.map((day, i) => {
+                        const daySessions = getSessionsForDate(day);
+                        const daySpelmanEvents = spelmanEvents.filter(e => {
+                          const eventDate = parseISO(e.start_date);
+                          return isSameDay(eventDate, day);
+                        });
+                        const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
+                        const isToday = isSameDay(day, new Date());
+                        const isSelected = selectedDate && isSameDay(day, selectedDate);
+                        const isCurrentMonth = isSameMonth(day, currentDate);
+                        return (
+                          <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[80px] p-1 rounded-lg border text-left transition-colors", !isCurrentMonth && "opacity-40", isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary", isSelected && "bg-primary/10 border-primary", !isSelected && !isHoliday && "hover:bg-accent")}>
+                            <div className={cn("text-sm font-medium mb-1 flex items-center gap-1 text-primary-foreground", isToday && "text-primary", isHoliday && "text-amber-600")}>
+                              {format(day, 'd')}
+                              {isHoliday && <AlertCircle className="h-3 w-3" />}
+                            </div>
+                            <div className="space-y-0.5">
+                              {daySpelmanEvents.slice(0, 1).map(event => (
+                                <div key={event.id} className="text-xs bg-amber-100 rounded px-1 py-0.5 truncate text-black">
+                                  {event.title}
+                                </div>
+                              ))}
+                              {daySessions.slice(0, isHoliday ? 1 : 2).map(session => {
+                                const typeConfig = getSessionTypeConfig(session.session_type);
+                                return (
+                                  <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1 py-0.5 truncate flex items-center gap-1">
+                                    <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
+                                    <span className="truncate">{session.title}</span>
+                                  </div>
+                                );
+                              })}
+                              {daySessions.length + daySpelmanEvents.length > 2 && (
+                                <div className="text-xs text-muted-foreground">
+                                  +{daySessions.length + daySpelmanEvents.length - 2} more
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
                       })}
-                          {daySessions.length + daySpelmanEvents.length > 2 && <div className="text-xs text-muted-foreground">
-                              +{daySessions.length + daySpelmanEvents.length - 2} more
-                            </div>}
-                        </div>
-                      </button>;
-                })}
-                </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Week View */}
+                {calendarView === 'week' && (
+                  <>
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {viewDays.map((day, i) => {
+                        const isToday = isSameDay(day, new Date());
+                        const isSelected = selectedDate && isSameDay(day, selectedDate);
+                        return (
+                          <div key={i} className={cn("text-center py-2 rounded-t-lg", isToday && "bg-primary/10", isSelected && "bg-primary/20")}>
+                            <div className="text-xs font-medium text-muted-foreground">{format(day, 'EEE')}</div>
+                            <div className={cn("text-lg font-bold", isToday && "text-primary")}>{format(day, 'd')}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {viewDays.map((day, i) => {
+                        const daySessions = getSessionsForDate(day);
+                        const daySpelmanEvents = spelmanEvents.filter(e => {
+                          const eventDate = parseISO(e.start_date);
+                          return isSameDay(eventDate, day);
+                        });
+                        const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
+                        const isToday = isSameDay(day, new Date());
+                        const isSelected = selectedDate && isSameDay(day, selectedDate);
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => setSelectedDate(day)}
+                            className={cn(
+                              "min-h-[200px] p-2 rounded-lg border text-left transition-colors",
+                              isHoliday && "bg-amber-50 border-amber-300",
+                              isToday && "border-primary",
+                              isSelected && "bg-primary/10 border-primary ring-1 ring-primary",
+                              !isSelected && !isHoliday && "hover:bg-accent"
+                            )}
+                          >
+                            {isHoliday && (
+                              <div className="flex items-center gap-1 text-amber-600 text-xs mb-2">
+                                <AlertCircle className="h-3 w-3" />
+                                Holiday
+                              </div>
+                            )}
+                            <div className="space-y-1">
+                              {daySpelmanEvents.map(event => (
+                                <div key={event.id} className="text-xs bg-amber-100 rounded px-1.5 py-1 text-black">
+                                  {event.title}
+                                </div>
+                              ))}
+                              {daySessions.map(session => {
+                                const typeConfig = getSessionTypeConfig(session.session_type);
+                                return (
+                                  <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1.5 py-1">
+                                    <div className="flex items-center gap-1 font-medium">
+                                      <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
+                                      <span className="truncate">{session.title}</span>
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                                      {session.start_time} - {session.end_time}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {daySessions.length === 0 && daySpelmanEvents.length === 0 && !isHoliday && (
+                                <div className="text-xs text-muted-foreground text-center py-4">No sessions</div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+
+                {/* Day View */}
+                {calendarView === 'day' && (
+                  <div className="space-y-4">
+                    {(() => {
+                      const daySessions = getSessionsForDate(currentDate);
+                      const daySpelmanEvents = spelmanEvents.filter(e => {
+                        const eventDate = parseISO(e.start_date);
+                        return isSameDay(eventDate, currentDate);
+                      });
+                      const isHoliday = activeSemester?.exception_dates.includes(format(currentDate, 'yyyy-MM-dd'));
+                      
+                      return (
+                        <>
+                          {isHoliday && (
+                            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-300 rounded-lg text-amber-700">
+                              <AlertCircle className="h-5 w-5" />
+                              <span>This is an exception date (holiday/break)</span>
+                            </div>
+                          )}
+                          
+                          {daySpelmanEvents.length > 0 && (
+                            <div className="space-y-2">
+                              <h4 className="font-medium text-sm text-muted-foreground">Spelman Events</h4>
+                              {daySpelmanEvents.map(event => (
+                                <div key={event.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                  <div className="font-medium">{event.title}</div>
+                                  {event.location && <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="h-3 w-3" />{event.location}</div>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <div className="space-y-2">
+                            <h4 className="font-medium text-sm text-muted-foreground">Class Sessions ({daySessions.length})</h4>
+                            {daySessions.length === 0 ? (
+                              <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                                <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                                <p>No classes scheduled for this day</p>
+                                {isInstructor && (
+                                  <Button size="sm" variant="outline" className="mt-3" onClick={() => {
+                                    setNewSession(prev => ({ ...prev, session_date: format(currentDate, 'yyyy-MM-dd') }));
+                                    setCreateDialogOpen(true);
+                                  }}>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Session
+                                  </Button>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                {daySessions.map(session => {
+                                  const typeConfig = getSessionTypeConfig(session.session_type);
+                                  return (
+                                    <div key={session.id} className="border rounded-lg overflow-hidden">
+                                      {session.image_url && <img src={session.image_url} alt={session.title} className="w-full h-32 object-cover" />}
+                                      <div className="p-4 space-y-3">
+                                        <div className="flex items-start justify-between">
+                                          <div>
+                                            <Badge variant="outline" className="mb-1">
+                                              <typeConfig.icon className="h-3 w-3 mr-1" />
+                                              {typeConfig.label}
+                                            </Badge>
+                                            <h4 className="font-semibold text-lg">{session.title}</h4>
+                                          </div>
+                                          {session.attendance_required && (
+                                            <Badge className="bg-green-500/10 text-green-600">
+                                              <CheckCircle className="h-3 w-3 mr-1" />
+                                              Attendance
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        {session.description && <p className="text-sm text-muted-foreground">{session.description}</p>}
+                                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                          <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{session.start_time} - {session.end_time}</span>
+                                          {session.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{session.location}</span>}
+                                        </div>
+                                        {isInstructor && (
+                                          <div className="flex items-center gap-2 pt-3 border-t">
+                                            <Button size="sm" variant="outline" onClick={() => generateQRCode(session)} className="flex-1">
+                                              <QrCode className="h-4 w-4 mr-2" />
+                                              QR Attendance
+                                            </Button>
+                                            <Button size="sm" variant="ghost" onClick={() => deleteSession(session.id)} className="text-destructive">
+                                              <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
