@@ -293,19 +293,6 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                       </CollapsibleTrigger>
                       <CollapsibleContent className="animate-accordion-down data-[state=closed]:animate-accordion-up">
                         <CardContent className="pt-0 pb-4 space-y-4 bg-primary-foreground">
-                          {/* Topics */}
-                          {topicItems.length > 0 && <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground pt-[10px] pb-[10px] pl-[5px]">
-                                <Music className="h-4 w-4" />
-                                Topics
-                              </div>
-                              <ul className="space-y-1.5 ml-6">
-                                {topicItems.map((topic, i) => <li key={i} className="text-sm flex items-start gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                                    {topic}
-                                  </li>)}
-                              </ul>
-                            </div>}
 
                           {/* Readings */}
                           {readings.length > 0 && <div className="space-y-2 bg-primary-foreground">
