@@ -501,7 +501,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             {isAdmin && (
               <div className="fixed bottom-6 right-6 z-50">
                 <Button 
-                  onClick={() => navigate('/mus-240/instructor/console')} 
+                  onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} 
                   variant="default" 
                   className="shadow-lg" 
                   size="lg"
