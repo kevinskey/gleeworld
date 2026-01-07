@@ -15,9 +15,12 @@ interface Calendar {
 }
 interface CalendarFilterStripProps {
   onCalendarsChange: (selectedCalendarIds: string[]) => void;
+  onCalendarColorUpdated?: () => void;
 }
+
 export const CalendarFilterStrip = ({
-  onCalendarsChange
+  onCalendarsChange,
+  onCalendarColorUpdated,
 }: CalendarFilterStripProps) => {
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [selectedCalendarIds, setSelectedCalendarIds] = useState<string[]>([]);
@@ -152,26 +155,30 @@ export const CalendarFilterStrip = ({
   };
   const updateCalendarColor = async (calendarId: string, color: string) => {
     try {
-      const {
-        error
-      } = await supabase.from('gw_calendars').update({
-        color
-      }).eq('id', calendarId);
+      const { error } = await supabase
+        .from('gw_calendars')
+        .update({ color })
+        .eq('id', calendarId);
+
       if (error) throw error;
-      setCalendars(prev => prev.map(cal => cal.id === calendarId ? {
-        ...cal,
-        color
-      } : cal));
+
+      setCalendars((prev) =>
+        prev.map((cal) => (cal.id === calendarId ? { ...cal, color } : cal)),
+      );
+
+      // Ensure event colors refresh immediately (events join gw_calendars.color)
+      onCalendarColorUpdated?.();
+
       toast({
         title: "Success",
-        description: "Calendar color updated"
+        description: "Calendar color updated",
       });
     } catch (error) {
       console.error('Error updating calendar color:', error);
       toast({
         title: "Error",
         description: "Failed to update calendar color",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
