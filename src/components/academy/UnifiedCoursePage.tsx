@@ -220,6 +220,48 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 <span>{item.label}</span>
               </button>)}
           </nav>
+          
+          {/* Course Resources Section */}
+          <div className="p-4 border-t border-border space-y-2">
+            <h3 className="font-bold text-foreground text-sm mb-3">Course Resources</h3>
+            {[{
+              icon: Video,
+              label: 'Video Library',
+              desc: 'Lecture recordings'
+            }, {
+              icon: Headphones,
+              label: 'Audio Examples',
+              desc: 'Listening materials'
+            }, {
+              icon: Music,
+              label: 'Sheet Music',
+              desc: 'Scores and materials'
+            }, {
+              icon: FileText,
+              label: 'Documents',
+              desc: 'Handouts and readings'
+            }].map((item, i) => (
+              <button key={i} className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+          
+          {/* Instructor Control Center Button */}
+          {isAdmin && (
+            <div className="p-4 border-t border-border">
+              <Button 
+                onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} 
+                variant="default" 
+                className="w-full"
+                size="sm"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Instructor Console
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Main Content Area */}
@@ -463,50 +505,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {activeTab === 'calendar' && <CourseCalendarView courseId={course.id} />}
 
-            {/* Instructor Control Center Button */}
-            {isAdmin && <div className="fixed bottom-6 right-6 z-50">
-                <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="shadow-lg" size="lg">
-                  <Settings className="h-5 w-5 mr-2" />
-                  Instructor Control Center
-                </Button>
-              </div>}
-          </div>
-        </div>
-
-        {/* Right Sidebar - Resources */}
-        <div className="w-[20%] min-w-[200px] bg-muted border-l border-border flex-shrink-0 overflow-y-auto hidden xl:block">
-          <div className="p-4 space-y-4">
-            <h3 className="font-bold text-foreground pt-[40px]">Course Resources</h3>
-            
-            {[{
-              icon: Video,
-              label: 'Video Library',
-              desc: 'Lecture recordings'
-            }, {
-              icon: Headphones,
-              label: 'Audio Examples',
-              desc: 'Listening materials'
-            }, {
-              icon: Music,
-              label: 'Sheet Music',
-              desc: 'Scores and materials'
-            }, {
-              icon: FileText,
-              label: 'Documents',
-              desc: 'Handouts and readings'
-            }].map((item, i) => <Card key={i} className="cursor-pointer hover:bg-muted/50 transition-colors border">
-                <CardContent className="p-3">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <item.icon className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-sm">{item.label}</h4>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>)}
           </div>
         </div>
       </div>
