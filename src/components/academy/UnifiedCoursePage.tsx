@@ -420,7 +420,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {activeTab === 'announcements' && <CourseAnnouncements courseId={course.id} />}
 
-            {activeTab === 'messages' && <CourseMessagingInterface courseId={course.id} courseName={course.title} isEnrolled={isEnrolled} />}
+            {activeTab === 'messages' && <CourseMessagingInterface courseId={course.id} courseName={course.title} isEnrolled={isEnrolled} instructorEmail={course.instructor?.email} instructorName={course.instructor?.name} />}
 
             {activeTab === 'assignments' && <CourseAssignments courseId={course.id} isEnrolled={isEnrolled} />}
 

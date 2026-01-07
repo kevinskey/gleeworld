@@ -18,6 +18,8 @@ interface CourseMessagingInterfaceProps {
   courseId: string;
   courseName: string;
   isEnrolled: boolean;
+  instructorEmail?: string;
+  instructorName?: string;
 }
 
 interface CourseMessage {
@@ -39,16 +41,29 @@ interface EnrolledStudent {
   email: string;
 }
 
-// Helper function to fetch enrolled students to avoid TypeScript type depth issues
-async function fetchEnrolledStudents(courseId: string): Promise<EnrolledStudent[]> {
-  // Use type assertion to avoid deep type instantiation
+// Helper function to fetch enrolled students by looking up course by code pattern
+async function fetchEnrolledStudents(courseCode: string): Promise<EnrolledStudent[]> {
   const client = supabase as any;
   
+  // First, find the actual course ID in the database by matching course code
+  const courseResponse = await client
+    .from('gw_courses')
+    .select('id')
+    .ilike('course_code', `%${courseCode.replace(/[^a-zA-Z0-9]/g, '')}%`)
+    .maybeSingle();
+  
+  const dbCourseId = courseResponse.data?.id;
+  if (!dbCourseId) {
+    console.log('Course not found in database for code:', courseCode);
+    return [];
+  }
+  
+  // Get enrollments for this course
   const enrollmentsResponse = await client
     .from('gw_course_enrollments')
     .select('user_id')
-    .eq('course_id', courseId)
-    .eq('status', 'enrolled');
+    .eq('course_id', dbCourseId)
+    .eq('enrollment_status', 'enrolled');
   
   if (enrollmentsResponse.error) throw enrollmentsResponse.error;
   if (!enrollmentsResponse.data || enrollmentsResponse.data.length === 0) return [];
@@ -77,7 +92,9 @@ async function fetchEnrolledStudents(courseId: string): Promise<EnrolledStudent[
 export const CourseMessagingInterface: React.FC<CourseMessagingInterfaceProps> = ({
   courseId,
   courseName,
-  isEnrolled
+  isEnrolled,
+  instructorEmail,
+  instructorName
 }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -86,30 +103,18 @@ export const CourseMessagingInterface: React.FC<CourseMessagingInterfaceProps> =
   const [selectedMessage, setSelectedMessage] = useState<CourseMessage | null>(null);
   const [newMessage, setNewMessage] = useState({ subject: '', content: '', recipientId: '' });
 
-  // Fetch course data including instructor
-  const { data: courseData } = useQuery({
-    queryKey: ['course-instructor', courseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_courses')
-        .select('instructor_email, instructor_name')
-        .eq('id', courseId)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!courseId
-  });
+  // Check if current user is the instructor using the prop
+  const isInstructor = !!instructorEmail && user?.email === instructorEmail;
+  
+  // Extract course code from courseId (e.g., "a0000000-0000-0000-0000-000000000210" -> "210" -> "MUS 210")
+  const courseCodeMatch = courseId.match(/0{10}(\d+)$/);
+  const courseCode = courseCodeMatch ? `MUS${courseCodeMatch[1]}` : courseName;
 
-  // Check if current user is the instructor
-  const isInstructor = user?.email === courseData?.instructor_email;
-
-  // Fetch enrolled students (for instructor view)
-  const { data: enrolledStudents } = useQuery({
-    queryKey: ['course-enrolled-students', courseId],
-    queryFn: () => fetchEnrolledStudents(courseId),
-    enabled: !!courseId && isInstructor
+  // Fetch enrolled students (for instructor view) - search by course code
+  const { data: enrolledStudents, isLoading: studentsLoading } = useQuery({
+    queryKey: ['course-enrolled-students', courseCode],
+    queryFn: () => fetchEnrolledStudents(courseCode),
+    enabled: isInstructor
   });
 
   // Fetch messages
@@ -149,17 +154,17 @@ export const CourseMessagingInterface: React.FC<CourseMessagingInterfaceProps> =
         recipientEmail = student.email;
         recipientUserId = student.user_id;
         recipientName = student.full_name;
-      } else if (!isInstructor && courseData?.instructor_email) {
+      } else if (!isInstructor && instructorEmail) {
         // Student sending to instructor
         const { data: instructorProfile } = await supabase
           .from('gw_profiles')
           .select('user_id')
-          .eq('email', courseData.instructor_email)
+          .eq('email', instructorEmail)
           .single();
         
-        recipientEmail = courseData.instructor_email;
+        recipientEmail = instructorEmail;
         recipientUserId = instructorProfile?.user_id || user.id;
-        recipientName = courseData.instructor_name || 'Instructor';
+        recipientName = instructorName || 'Instructor';
       } else {
         throw new Error('Cannot determine recipient');
       }
@@ -184,7 +189,7 @@ export const CourseMessagingInterface: React.FC<CourseMessagingInterfaceProps> =
           to: recipientEmail,
           subject: `[${courseName}] ${subject}`,
           content,
-          senderName: isInstructor ? (courseData?.instructor_name || 'Instructor') : (user.email?.split('@')[0] || 'Student'),
+          senderName: isInstructor ? (instructorName || 'Instructor') : (user.email?.split('@')[0] || 'Student'),
           courseName
         }
       });
@@ -270,7 +275,7 @@ export const CourseMessagingInterface: React.FC<CourseMessagingInterfaceProps> =
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-primary" />
               <div>
-                <p className="font-medium">Instructor: {courseData?.instructor_name || 'Course Instructor'}</p>
+                <p className="font-medium">Instructor: {instructorName || 'Course Instructor'}</p>
                 <p className="text-sm text-muted-foreground">
                   Send emails directly to your instructor for course-related questions.
                 </p>
@@ -414,7 +419,7 @@ export const CourseMessagingInterface: React.FC<CourseMessagingInterfaceProps> =
                 </Select>
               ) : (
                 <Input 
-                  value={courseData?.instructor_name || courseData?.instructor_email || 'Instructor'} 
+                  value={instructorName || instructorEmail || 'Instructor'} 
                   disabled 
                   className="bg-muted"
                 />
