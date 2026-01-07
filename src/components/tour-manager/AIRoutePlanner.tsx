@@ -79,14 +79,24 @@ export const AIRoutePlanner = ({
         id: tour.id,
         name: tour.name,
         description: tour.description || '',
-        stops: (tour.gw_tour_cities || []).sort((a: any, b: any) => a.city_order - b.city_order).map((city: any) => ({
-          id: city.id,
-          city: city.city_name + (city.state_code ? `, ${city.state_code}` : ''),
-          venue: city.city_notes || 'TBD',
-          date: city.arrival_date || '',
-          address: '',
-          city_order: city.city_order
-        })),
+        stops: (tour.gw_tour_cities || [])
+          .sort((a: any, b: any) => {
+            // Sort by arrival_date chronologically, fallback to city_order
+            if (a.arrival_date && b.arrival_date) {
+              return new Date(a.arrival_date).getTime() - new Date(b.arrival_date).getTime();
+            }
+            if (a.arrival_date && !b.arrival_date) return -1;
+            if (!a.arrival_date && b.arrival_date) return 1;
+            return (a.city_order || 0) - (b.city_order || 0);
+          })
+          .map((city: any, index: number) => ({
+            id: city.id,
+            city: city.city_name + (city.state_code ? `, ${city.state_code}` : ''),
+            venue: city.city_notes || 'TBD',
+            date: city.arrival_date || '',
+            address: '',
+            city_order: index + 1 // Use chronological index as display order
+          })),
         status: tour.status as 'planning' | 'optimized' | 'approved',
         totalDistance: tour.total_distance || 0,
         estimatedDuration: tour.estimated_duration || 'Not calculated',
