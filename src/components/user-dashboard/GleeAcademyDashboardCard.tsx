@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { GraduationCap, ArrowRight, X, Lock, ChevronDown } from 'lucide-react';
+import { GraduationCap, ArrowRight, X, Lock, ChevronDown, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
 import { useCourseContext } from '@/contexts/CourseContext';
 import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,6 +16,8 @@ export const GleeAcademyDashboardCard = () => {
   const {
     user
   } = useAuth();
+  const { profile } = useUserRole();
+  const isAdmin = profile?.is_admin || profile?.is_super_admin;
   const {
     selectedCourseId,
     selectCourse,
@@ -102,6 +105,20 @@ export const GleeAcademyDashboardCard = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {isAdmin && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={e => {
+                        e.stopPropagation();
+                        navigate('/admin/academy-courses');
+                      }} 
+                      className="text-xs text-primary-foreground hover:bg-primary-foreground/10"
+                    >
+                      <Settings className="h-3 w-3 mr-1" />
+                      Edit Courses
+                    </Button>
+                  )}
                   {!isDefaultCourse && <Button variant="ghost" size="sm" onClick={e => {
                   e.stopPropagation();
                   clearCourseSelection();
