@@ -444,6 +444,14 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
           <WeeklyScheduleEditor 
             schedule={syllabus.weekly_schedule}
             onChange={(schedule) => updateField('weekly_schedule', schedule)}
+            courseInfo={{
+              courseCode: courseCode,
+              courseTitle: courseTitle,
+              credits: syllabus.credits,
+              term: syllabus.term,
+              purpose: syllabus.purpose,
+              textbooks: syllabus.textbooks,
+            }}
           />
         </TabsContent>
 
