@@ -217,10 +217,10 @@ export const DashboardStoreSection = () => {
       </div>
 
       {/* My Modules - Edge to Edge */}
-      <Button onClick={() => navigate('/modules')} className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none">
+      <div className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none flex items-center text-white font-medium">
         <BookOpen className="h-5 w-5" />
         My Modules
-      </Button>
+      </div>
 
       {/* Fan Zone - Edge to Edge */}
       
