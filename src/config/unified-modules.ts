@@ -62,7 +62,7 @@ import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { WardrobeModule } from '@/components/modules/WardrobeModule';
 import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
 import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
-import { SchedulingModule } from '@/components/modules/SchedulingModule';
+
 import { CalendarManagementModule } from '@/components/modules/CalendarManagementModule';
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
 
@@ -284,18 +284,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "concert-ticket-requests"
   },
   {
-    id: "scheduling-module",
-    name: "scheduling-module",
-    title: "Scheduling Module",
-    description: "Schedule and manage rehearsals and events",
-    icon: Clock,
-    iconColor: "cyan",
-    category: "communications",
-    isActive: true,
-    component: SchedulingModule,
-    dbFunctionName: "scheduling-module"
-  },
-  {
     id: "service-management",
     name: "service-management",
     title: "Service Management",
@@ -310,8 +298,8 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
   {
     id: "calendar-management",
     name: "calendar-management",
-    title: "Master Calendar",
-    description: "Schedule events, block dates, and manage appointments",
+    title: "Event Scheduler",
+    description: "Create and manage rehearsals, concerts, events, and organizational schedules",
     icon: Calendar,
     iconColor: "purple",
     category: "communications",

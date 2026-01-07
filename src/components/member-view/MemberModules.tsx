@@ -28,7 +28,7 @@ import { KaraokeModule } from '@/components/modules/KaraokeModule';
 import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { PRHubModule } from '@/components/modules/PRHubModule';
 import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
-import { SchedulingModule } from '@/components/modules/SchedulingModule';
+
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
@@ -95,7 +95,7 @@ const getModuleComponent = (moduleName: string) => {
     'pr-hub': PRHubModule,
     'fan-engagement': FanEngagementModule,
     'fans': FanEngagementModule,
-    'scheduling': SchedulingModule,
+    'scheduling': CalendarManagementModule,
     'section-leader': SectionLeaderModule,
     
     // Legacy/alternative naming patterns

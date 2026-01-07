@@ -18,7 +18,6 @@ export const EXECUTIVE_MODULE_IDS = [
   'announcements',
   'pr-coordinator',
   'pr-hub',
-  'scheduling-module',
   'calendar-management',
   'service-management',
   'buckets-of-love',
