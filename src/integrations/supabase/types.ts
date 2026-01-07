@@ -24581,6 +24581,7 @@ export type Database = {
           channel_id: string
           channel_name: string
           channel_url: string
+          course_id: string | null
           created_at: string
           created_by: string | null
           featured_video_count: number | null
@@ -24598,6 +24599,7 @@ export type Database = {
           channel_id: string
           channel_name: string
           channel_url: string
+          course_id?: string | null
           created_at?: string
           created_by?: string | null
           featured_video_count?: number | null
@@ -24615,6 +24617,7 @@ export type Database = {
           channel_id?: string
           channel_name?: string
           channel_url?: string
+          course_id?: string | null
           created_at?: string
           created_by?: string | null
           featured_video_count?: number | null
@@ -24625,13 +24628,22 @@ export type Database = {
           updated_at?: string
           video_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "youtube_channels_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       youtube_videos: {
         Row: {
           category: string | null
           channel_id: string
           comment_count: number | null
+          course_id: string | null
           created_at: string
           description: string | null
           display_order: number | null
@@ -24652,6 +24664,7 @@ export type Database = {
           category?: string | null
           channel_id: string
           comment_count?: number | null
+          course_id?: string | null
           created_at?: string
           description?: string | null
           display_order?: number | null
@@ -24672,6 +24685,7 @@ export type Database = {
           category?: string | null
           channel_id?: string
           comment_count?: number | null
+          course_id?: string | null
           created_at?: string
           description?: string | null
           display_order?: number | null
@@ -24694,6 +24708,13 @@ export type Database = {
             columns: ["channel_id"]
             isOneToOne: false
             referencedRelation: "youtube_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "youtube_videos_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
             referencedColumns: ["id"]
           },
         ]

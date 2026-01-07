@@ -75,24 +75,26 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
   const [newVideoUrl, setNewVideoUrl] = useState('');
   const [addingVideo, setAddingVideo] = useState(false);
 
-  // Fetch videos and channels
+  // Fetch videos and channels for this specific course
   const fetchData = async () => {
     try {
       setLoading(true);
       
-      // Fetch channels
+      // Fetch channels for this course (or global channels with null course_id)
       const { data: channelsData, error: channelsError } = await supabase
         .from('youtube_channels')
         .select('*')
+        .or(`course_id.eq.${courseId},course_id.is.null`)
         .order('channel_name');
       
       if (channelsError) throw channelsError;
       setChannels(channelsData || []);
       
-      // Fetch videos
+      // Fetch videos for this course (or global videos with null course_id)
       const { data: videosData, error: videosError } = await supabase
         .from('youtube_videos')
         .select('*')
+        .or(`course_id.eq.${courseId},course_id.is.null`)
         .order('published_at', { ascending: false })
         .limit(100);
       
@@ -111,14 +113,14 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
     fetchData();
   }, [courseId]);
 
-  // Sync channel videos
+  // Sync channel videos for this course
   const syncChannel = async (channelInput: string) => {
     try {
       setSyncing(true);
       toast.info(`Syncing videos from ${channelInput}...`);
       
       const { data, error } = await supabase.functions.invoke('sync-youtube-videos', {
-        body: { channelInput, maxResults: 25 }
+        body: { channelInput, maxResults: 25, courseId }
       });
       
       if (error) throw error;
@@ -181,19 +183,20 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
         return;
       }
       
-      // Get or create a default channel for manual additions
-      let defaultChannelId = channels[0]?.id;
+      // Get or create a default channel for manual additions for this course
+      let defaultChannelId = channels.find(c => c.channel_id === `manual_additions_${courseId}`)?.id || channels[0]?.id;
       
       if (!defaultChannelId) {
-        // Create a placeholder channel for manual additions
+        // Create a placeholder channel for manual additions specific to this course
         const { data: newChannel, error: channelError } = await supabase
           .from('youtube_channels')
           .insert({
-            channel_id: 'manual_additions',
+            channel_id: `manual_additions_${courseId}`,
             channel_name: 'Manual Additions',
             channel_url: '',
             subscriber_count: 0,
-            video_count: 0
+            video_count: 0,
+            course_id: courseId
           })
           .select('id')
           .single();
@@ -211,7 +214,7 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
         return;
       }
       
-      // Add basic video info (will be enriched by sync later)
+      // Add basic video info with course association
       const { error } = await supabase
         .from('youtube_videos')
         .insert({
@@ -222,7 +225,8 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
           thumbnail_url: getYouTubeThumbnail(videoId, 'high'),
           video_url: `https://www.youtube.com/watch?v=${videoId}`,
           duration: 'PT0S',
-          view_count: 0
+          view_count: 0,
+          course_id: courseId
         });
       
       if (error) throw error;
