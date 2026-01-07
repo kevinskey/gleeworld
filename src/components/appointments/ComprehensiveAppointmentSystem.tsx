@@ -245,7 +245,7 @@ export const ComprehensiveAppointmentSystem = () => {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-sm">{format(currentMonth, 'MMMM yyyy')}</h3>
+                  <h3 className="font-semibold text-sm text-foreground">{format(currentMonth, 'MMMM yyyy')}</h3>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
                       <ChevronLeft className="h-4 w-4" />
@@ -295,7 +295,7 @@ export const ComprehensiveAppointmentSystem = () => {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-sm">Calendars</h3>
+                  <h3 className="font-semibold text-sm text-foreground">Calendars</h3>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="space-y-2">
@@ -303,7 +303,7 @@ export const ComprehensiveAppointmentSystem = () => {
                     <div key={cal.id} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cal.color || '#3b82f6' }} />
-                        <span className="truncate">{cal.name}</span>
+                        <span className="truncate text-foreground">{cal.name}</span>
                       </div>
                       <span className="text-muted-foreground">{cal.todayCount > 0 ? format(new Date(), 'HH:mm') : ''}</span>
                     </div>
@@ -317,7 +317,7 @@ export const ComprehensiveAppointmentSystem = () => {
             {/* Quick Actions */}
             <Card>
               <CardContent className="p-4 space-y-2">
-                <h3 className="font-semibold text-sm mb-3">Quick Actions</h3>
+                <h3 className="font-semibold text-sm mb-3 text-foreground">Quick Actions</h3>
                 <Button variant="outline" className="w-full justify-start text-sm" onClick={() => setMainView('calendar')}>
                   <Calendar className="h-4 w-4 mr-2" />
                   Full Calendar
@@ -340,7 +340,7 @@ export const ComprehensiveAppointmentSystem = () => {
             <Card>
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold">Today's Appointments</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Today's Appointments</h2>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMainView('management')}>
                       <Settings className="h-4 w-4" />
@@ -363,7 +363,7 @@ export const ComprehensiveAppointmentSystem = () => {
                       {todayAppointments.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
                           <CalendarDays className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No {activeTab} appointments for today</p>
+                          <p className="text-muted-foreground">No {activeTab} appointments for today</p>
                         </div>
                       ) : (
                         todayAppointments.sort((a, b) => a.time.localeCompare(b.time)).map(apt => (
@@ -373,7 +373,7 @@ export const ComprehensiveAppointmentSystem = () => {
                                 {apt.time.slice(0, 5).replace(/^0/, '')} {parseInt(apt.time) >= 12 ? 'PM' : 'AM'}
                               </div>
                               <div>
-                                <div className="font-medium">{apt.clientName}</div>
+                                <div className="font-medium text-foreground">{apt.clientName}</div>
                                 <div className="text-sm text-muted-foreground">{apt.service}</div>
                               </div>
                             </div>
@@ -406,7 +406,7 @@ export const ComprehensiveAppointmentSystem = () => {
             <Card>
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold">Upcoming Appointments</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Upcoming Appointments</h2>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMainView('calendar')}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -415,7 +415,7 @@ export const ComprehensiveAppointmentSystem = () => {
                 <div className="space-y-3">
                   {upcomingAppointments.length === 0 ? (
                     <div className="text-center py-6 text-muted-foreground">
-                      <p>No upcoming appointments scheduled</p>
+                      <p className="text-muted-foreground">No upcoming appointments scheduled</p>
                     </div>
                   ) : (
                     upcomingAppointments.map(apt => (
@@ -425,7 +425,7 @@ export const ComprehensiveAppointmentSystem = () => {
                             {apt.time.slice(0, 5).replace(/^0/, '')} {parseInt(apt.time) >= 12 ? 'PM' : 'AM'}
                           </div>
                           <div>
-                            <span className="font-medium">{apt.clientName}</span>
+                            <span className="font-medium text-foreground">{apt.clientName}</span>
                             <span className="text-muted-foreground ml-2">{apt.service}</span>
                           </div>
                         </div>
