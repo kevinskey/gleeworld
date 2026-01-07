@@ -1204,7 +1204,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     const isToday = isSameDay(day, new Date());
                     const isSelected = selectedDate && isSameDay(day, selectedDate);
                     const isCurrentMonth = isSameMonth(day, currentDate);
-                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[80px] p-1 rounded-lg border text-left transition-colors", !isCurrentMonth && "opacity-40", isHoliday && "bg-red-50 border-red-300", academicEvent && !isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary ring-1 ring-primary", isSelected && "bg-primary/10 border-primary", !isSelected && !isHoliday && !academicEvent && "hover:bg-accent")}>
+                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[80px] p-1 rounded-lg border text-left transition-colors bg-card", !isCurrentMonth && "opacity-40", isHoliday && "bg-red-900/30 border-red-500", academicEvent && !isHoliday && "bg-amber-900/30 border-amber-500", isToday && "border-primary ring-1 ring-primary", isSelected && "bg-primary/10 border-primary", !isSelected && !isHoliday && !academicEvent && "hover:bg-accent")}>
                               <div className={cn("text-sm font-medium mb-1 flex items-center gap-1 text-primary-foreground", isToday && "text-primary", isHoliday && "text-red-600")}>
                                 {format(day, 'd')}
                                 {isHoliday && <AlertCircle className="h-3 w-3" />}
@@ -1258,7 +1258,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
                     const isToday = isSameDay(day, new Date());
                     const isSelected = selectedDate && isSameDay(day, selectedDate);
-                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[200px] p-2 rounded-lg border text-left transition-colors", isHoliday && "bg-red-50 border-red-300", academicEvent && !isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary", isSelected && "bg-primary/10 border-primary ring-1 ring-primary", !isSelected && !isHoliday && !academicEvent && "hover:bg-accent")}>
+                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[200px] p-2 rounded-lg border text-left transition-colors bg-card", isHoliday && "bg-red-900/30 border-red-500", academicEvent && !isHoliday && "bg-amber-900/30 border-amber-500", isToday && "border-primary", isSelected && "bg-primary/10 border-primary ring-1 ring-primary", !isSelected && !isHoliday && !academicEvent && "hover:bg-accent")}>
                               {isHoliday && <div className="flex items-center gap-1 text-red-600 text-xs mb-2">
                                   <AlertCircle className="h-3 w-3" />
                                   Holiday
