@@ -71,7 +71,7 @@ import { AlumnaeManagementModule } from '@/components/modules/AlumnaeManagementM
 import { ContractsModule } from '@/components/modules/ContractsModule';
 import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule';
 import { WellnessModule } from '@/components/modules/WellnessModule';
-import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
+
 import { ExecutiveModule } from '@/components/dashboard/modules/ExecutiveModule';
 import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
 import { KaraokeModule } from '@/components/modules/KaraokeModule';
@@ -258,18 +258,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: BucketsOfLoveModule,
     dbFunctionName: "buckets-of-love"
-  },
-  {
-    id: "glee-writing",
-    name: "glee-writing",
-    title: "Glee Writing Widget",
-    description: "Content creation and writing tools",
-    icon: Edit3,
-    iconColor: "indigo",
-    category: "communications",
-    isActive: true,
-    component: GleeWritingWidget,
-    dbFunctionName: "glee-writing"
   },
   {
     id: "fan-engagement",
@@ -946,18 +934,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: SightSingingPreviewModule,
     dbFunctionName: "sight-reading-preview"
-  },
-  {
-    id: "ai-financial",
-    name: "ai-financial",
-    title: "AI Financial Planning",
-    description: "AI-powered financial planning and analysis tools",
-    icon: Brain,
-    iconColor: "green",
-    category: "finances",
-    isActive: true,
-    component: BudgetsModule, // Using existing budget module as placeholder
-    dbFunctionName: "ai-financial"
   },
   {
     id: "glee-academy",

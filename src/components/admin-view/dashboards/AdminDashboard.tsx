@@ -120,7 +120,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         { id: "notifications", title: "Notifications", icon: Bell, color: "yellow" },
         { id: "email-management", title: "Email Management", icon: Mail, color: "blue" },
         { id: "buckets-of-love", title: "Buckets of Love", icon: Heart, color: "pink" },
-        { id: "glee-writing", title: "Glee Writing Widget", icon: Edit3, color: "indigo", isNew: true },
+        
         
         { id: "appointment-scheduling", title: "Appointment Scheduling", icon: Clock, color: "cyan" },
         { id: "calendar-management", title: "Calendar Management", icon: Calendar, color: "purple" }
@@ -171,7 +171,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         { id: "dues-collection", title: "Dues Collection", icon: CreditCard, color: "purple" },
         { id: "student-payments", title: "Student Payments", icon: Wallet, color: "cyan" },
         { id: "receipts-records", title: "Receipts & Records", icon: Receipt, color: "indigo" },
-        { id: "ai-financial", title: "AI Financial Planning", icon: Brain, color: "pink" },
+        
         { id: "approval-system", title: "Approval System", icon: CheckCircle, color: "emerald" },
         { id: "monthly-statements", title: "Monthly Statements", icon: FileText, color: "gray" },
         { id: "check-requests", title: "Reimbursements", icon: Printer, color: "red" },

@@ -30,11 +30,11 @@ import { PRHubModule } from '@/components/modules/PRHubModule';
 import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
 import { SchedulingModule } from '@/components/modules/SchedulingModule';
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
-import { AIFinancialPlanningModule } from '@/components/financial/AIFinancialPlanningModule';
+
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
 import { AlumnaePortalModule } from '@/components/modules/AlumnaePortalModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
-import { GleeWritingWidget } from '@/components/writing/GleeWritingWidget';
+
 import { RadioManagement } from '@/components/admin/RadioManagement';
 import { ReceiptsModule } from '@/components/receipts/ReceiptsModule';
 import { ReimbursementsManager } from '@/components/reimbursements/ReimbursementsManager';
@@ -80,7 +80,7 @@ const getModuleComponent = (moduleName: string) => {
     'booking-forms': TourManagerModule, // Booking is now part of Tour Manager
     
     // Extended modules
-    'ai-financial': AIFinancialPlanningModule,
+    
     'alumnae-portal': AlumnaePortalModule,
     'approval-system': BudgetsModule, // Use budgets as placeholder
     'buckets-of-love': BucketsOfLoveModule,
@@ -115,7 +115,7 @@ const getModuleComponent = (moduleName: string) => {
     
     // Additional missing modules
     'glee-ledger': GleeLedgerModule,
-    'glee-writing': GleeWritingWidget,
+    
     'radio-management': RadioManagement,
     'receipts-records': ReceiptsModule,
     'check-requests': ReimbursementsManager,
@@ -130,7 +130,7 @@ const getModuleComponent = (moduleName: string) => {
     
     'merch-store': PRHubModule, // Placeholder - needs actual component
     'tour-management': TourManagerModule,
-    'ai-tools': AIFinancialPlanningModule, // Reuse for now
+    'ai-tools': BudgetsModule, // Placeholder
     'hero-manager': HeroManagement, // Fixed to use proper HeroManagement component
     'pr-manager': PRHubModule,
     'sight-reading': SightSingingPreviewModule,

@@ -22,7 +22,7 @@ export const EXECUTIVE_MODULE_IDS = [
   'calendar-management',
   'service-management',
   'buckets-of-love',
-  'glee-writing',
+  
   'fan-engagement',
   'concert-ticket-requests',
   
@@ -36,7 +36,7 @@ export const EXECUTIVE_MODULE_IDS = [
   'monthly-statements',
   'check-requests',
   'merch-store',
-  'ai-financial',
+  
   
   // Musical Leadership
   'student-conductor',

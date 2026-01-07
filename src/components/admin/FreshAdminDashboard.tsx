@@ -42,7 +42,7 @@ const adminModules = [
   { id: 'community-hub', name: 'Community Hub', icon: MessageSquare, description: 'Community features hub', route: '/dashboard' },
   { id: 'event-planner', name: 'Event Planner', icon: Calendar, description: 'Plan and manage events', route: '/event-planner' },
   { id: 'tour-planner', name: 'Tour Planner', icon: Calendar, description: 'Plan tours and routes', route: '/tour-planner' },
-  { id: 'glee-writing', name: 'Glee Writing', icon: Edit3, description: 'Rich editor for docs & lyrics' },
+  
   { id: 'shop', name: 'Shop', icon: ShoppingBag, description: 'Public storefront', route: '/shop' },
   { id: 'inventory-products', name: 'Inventory & Products', icon: Package, description: 'Admin product management', route: '/admin/products' },
   { id: 'scholarships', name: 'Scholarships', icon: GraduationCap, description: 'Manage scholarships', route: '/admin/scholarships' },
