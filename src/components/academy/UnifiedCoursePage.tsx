@@ -292,14 +292,12 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-3 mb-2 bg-[#003666]">
                   <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
-                  <Badge variant="outline" className="border-white/30 text-white px-0 pt-[10px]">
-                    {course.level}
-                  </Badge>
+                  
                 </div>
                 <CardTitle className="text-2xl lg:text-3xl font-bold text-white pb-[10px]">{course.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 pt-[10px]">{course.description}</p>
+                <p className="text-white/80 pt-[10px] text-xl">{course.description}</p>
               </CardContent>
             </Card>
 
