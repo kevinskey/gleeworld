@@ -29,10 +29,13 @@ import {
   Users,
   Music,
   Utensils,
-  Hotel
+  Hotel,
+  Trash2,
+  ShieldAlert
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface BookingRequest {
   id: string;
@@ -91,6 +94,9 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
   const [newNote, setNewNote] = useState('');
   const [forwardNote, setForwardNote] = useState('');
   const { toast } = useToast();
+
+  // Check if user is superadmin
+  const isSuperAdmin = user?.role === 'superadmin' || user?.role === 'admin';
 
   const loadBookingRequests = async () => {
     try {
@@ -198,21 +204,66 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
     }
   };
 
-  const forwardToDrJohnson = async (request: BookingRequest, note: string) => {
+  const forwardToSuperAdmin = async (request: BookingRequest, note: string) => {
     try {
-      const forwardNoteText = `[FORWARDED TO DR. JOHNSON] ${note}`;
+      const forwardNoteText = `[FORWARDED TO SUPERADMIN FOR REVIEW] ${note}`;
       await addNoteToRequest(request.id, forwardNoteText);
-      await updateRequestStatus(request.id, 'reviewed', `Forwarded to Dr. Johnson with note: ${note}`);
+      await updateRequestStatus(request.id, 'reviewed');
       
       toast({
         title: "Request forwarded",
-        description: "The booking request has been forwarded to Dr. Johnson with your note",
+        description: "The booking request has been forwarded to the superadmin for review",
       });
     } catch (error) {
-      console.error('Error forwarding to Dr. Johnson:', error);
+      console.error('Error forwarding to superadmin:', error);
       toast({
         title: "Error forwarding request",
         description: "Could not forward request. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteRequest = async (requestId: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_booking_requests')
+        .delete()
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      setRequests(prev => prev.filter(req => req.id !== requestId));
+
+      toast({
+        title: "Request deleted",
+        description: "The booking request has been permanently deleted",
+      });
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      toast({
+        title: "Error deleting request",
+        description: "Could not delete request. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const declineRequest = async (requestId: string, reason?: string) => {
+    try {
+      const declineNote = reason ? `[DECLINED] Reason: ${reason}` : '[DECLINED]';
+      await addNoteToRequest(requestId, declineNote);
+      await updateRequestStatus(requestId, 'declined');
+      
+      toast({
+        title: "Request declined",
+        description: "The booking request has been declined",
+      });
+    } catch (error) {
+      console.error('Error declining request:', error);
+      toast({
+        title: "Error declining request",
+        description: "Could not decline request. Please try again.",
         variant: "destructive"
       });
     }
@@ -581,23 +632,38 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                   
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2 pt-4 border-t">
-                    <Select 
-                      value={request.status} 
-                      onValueChange={(value) => updateRequestStatus(request.id, value as BookingRequest['status'])}
-                    >
-                      <SelectTrigger className="w-[140px] h-8 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="reviewed">Reviewed</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="declined">Declined</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {/* Status Select - Superadmins get full control */}
+                    {isSuperAdmin ? (
+                      <Select 
+                        value={request.status} 
+                        onValueChange={(value) => updateRequestStatus(request.id, value as BookingRequest['status'])}
+                      >
+                        <SelectTrigger className="w-[140px] h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="reviewed">Reviewed</SelectItem>
+                          <SelectItem value="approved">Approved</SelectItem>
+                          <SelectItem value="declined">Declined</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      // Tour managers can only mark as reviewed
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8"
+                        onClick={() => updateRequestStatus(request.id, 'reviewed')}
+                        disabled={request.status === 'reviewed'}
+                      >
+                        <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                        Mark Reviewed
+                      </Button>
+                    )}
                     
-                    {/* Add Note Dialog */}
+                    {/* Add Note Dialog - All users */}
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm" className="h-8">
@@ -631,40 +697,104 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                       </DialogContent>
                     </Dialog>
 
-                    {/* Forward to Dr. Johnson */}
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8">
-                          <Forward className="h-3.5 w-3.5 mr-1" />
-                          Forward to Dr. Johnson
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Forward to Dr. Johnson</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 pt-4">
-                          <Textarea
-                            placeholder="Add a note for Dr. Johnson..."
-                            value={forwardNote}
-                            onChange={(e) => setForwardNote(e.target.value)}
-                            rows={4}
-                          />
-                          <Button 
-                            onClick={() => {
-                              if (forwardNote.trim()) {
-                                forwardToDrJohnson(request, forwardNote);
-                                setForwardNote('');
-                              }
-                            }}
-                            className="w-full"
-                          >
-                            <Send className="h-4 w-4 mr-2" />
-                            Forward Request
+                    {/* Forward to Superadmin - Tour Managers only */}
+                    {!isSuperAdmin && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8">
+                            <Forward className="h-3.5 w-3.5 mr-1" />
+                            Forward to Admin
                           </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Forward to Superadmin</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 pt-4">
+                            <p className="text-sm text-muted-foreground">
+                              Forward this request to the superadmin for final approval or decline.
+                            </p>
+                            <Textarea
+                              placeholder="Add a note explaining your recommendation..."
+                              value={forwardNote}
+                              onChange={(e) => setForwardNote(e.target.value)}
+                              rows={4}
+                            />
+                            <Button 
+                              onClick={() => {
+                                if (forwardNote.trim()) {
+                                  forwardToSuperAdmin(request, forwardNote);
+                                  setForwardNote('');
+                                }
+                              }}
+                              className="w-full"
+                            >
+                              <Send className="h-4 w-4 mr-2" />
+                              Forward Request
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+
+                    {/* Superadmin Only Actions */}
+                    {isSuperAdmin && (
+                      <>
+                        {/* Quick Decline */}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 text-destructive hover:text-destructive">
+                              <XCircle className="h-3.5 w-3.5 mr-1" />
+                              Decline
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Decline Request</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to decline this booking request from {request.organization_name}?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => declineRequest(request.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Decline Request
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+
+                        {/* Delete Request */}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 text-destructive hover:text-destructive">
+                              <Trash2 className="h-3.5 w-3.5 mr-1" />
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Request</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete the booking request from {request.organization_name}. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => deleteRequest(request.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete Permanently
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    )}
                   </div>
                 </div>
               </DialogContent>
