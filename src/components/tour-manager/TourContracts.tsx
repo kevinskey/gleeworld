@@ -13,28 +13,32 @@ import {
   Search, 
   Filter,
   Eye,
+  Edit,
   User,
   Building,
   CheckCircle,
   Clock,
   AlertCircle
 } from 'lucide-react';
-import { useContracts } from '@/hooks/useContracts';
+import { useContracts, Contract } from '@/hooks/useContracts';
 import { useAuth } from '@/contexts/AuthContext';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { ContractTemplates } from '@/components/ContractTemplates';
+import { EditContractDialog } from '@/components/contracts/EditContractDialog';
 import { format } from 'date-fns';
 import { formatContractDisplayName } from '@/lib/contract-utils';
 
 export const TourContracts = () => {
   const { user } = useAuth();
-  const { contracts, loading } = useContracts();
+  const { contracts, loading, refetch } = useContracts();
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [templateContent, setTemplateContent] = useState('');
   const [templateName, setTemplateName] = useState('');
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // Filter contracts created by the current user (tour manager)
   const tourManagerContracts = contracts.filter(contract => 
@@ -87,7 +91,18 @@ export const TourContracts = () => {
     setShowCreateForm(false);
     setTemplateContent('');
     setTemplateName('');
-    // Optionally refetch contracts here
+    refetch();
+  };
+
+  const handleEditContract = (contract: Contract) => {
+    setEditingContract(contract);
+    setEditDialogOpen(true);
+  };
+
+  const handleContractUpdated = (updatedContract: Contract) => {
+    refetch();
+    setEditDialogOpen(false);
+    setEditingContract(null);
   };
 
   if (loading) {
@@ -305,6 +320,14 @@ export const TourContracts = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditContract(contract)}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
                       <Button variant="outline" size="sm">
                         <Eye className="h-4 w-4 mr-2" />
                         View
@@ -373,6 +396,14 @@ export const TourContracts = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Contract Dialog */}
+      <EditContractDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        contract={editingContract}
+        onContractUpdated={handleContractUpdated}
+      />
     </div>
   );
 };
