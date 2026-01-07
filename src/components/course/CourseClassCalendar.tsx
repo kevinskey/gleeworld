@@ -640,87 +640,118 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
-              {format(currentDate, 'MMMM yyyy')}
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
-                Today
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/* Day headers */}
-            <div className="grid grid-cols-7 gap-1 mb-2">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
-                  {day}
+      {/* Tabs for Class Sessions vs Spelman Calendar */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'class' | 'spelman')}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="class" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Class Sessions
+          </TabsTrigger>
+          <TabsTrigger value="spelman" className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
+            Spelman Calendar
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="class">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Calendar */}
+            <Card className="lg:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarIcon className="h-5 w-5" />
+                  {format(currentDate, 'MMMM yyyy')}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
+                    Today
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
-              ))}
-            </div>
-            
-            {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1">
-              {calendarDays.map((day, i) => {
-                const daySessions = getSessionsForDate(day);
-                const isToday = isSameDay(day, new Date());
-                const isSelected = selectedDate && isSameDay(day, selectedDate);
-                const isCurrentMonth = isSameMonth(day, currentDate);
+              </CardHeader>
+              <CardContent>
+                {/* Day headers */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                    <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+                      {day}
+                    </div>
+                  ))}
+                </div>
                 
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedDate(day)}
-                    className={cn(
-                      "min-h-[80px] p-1 rounded-lg border text-left transition-colors",
-                      !isCurrentMonth && "opacity-40",
-                      isToday && "border-primary",
-                      isSelected && "bg-primary/10 border-primary",
-                      !isSelected && "hover:bg-accent"
-                    )}
-                  >
-                    <div className={cn(
-                      "text-sm font-medium mb-1",
-                      isToday && "text-primary"
-                    )}>
-                      {format(day, 'd')}
-                    </div>
-                    <div className="space-y-0.5">
-                      {daySessions.slice(0, 2).map(session => {
-                        const typeConfig = getSessionTypeConfig(session.session_type);
-                        return (
-                          <div
-                            key={session.id}
-                            className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1 py-0.5 truncate flex items-center gap-1"
-                          >
-                            <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
-                            <span className="truncate">{session.title}</span>
-                          </div>
-                        );
-                      })}
-                      {daySessions.length > 2 && (
-                        <div className="text-xs text-muted-foreground">
-                          +{daySessions.length - 2} more
+                {/* Calendar grid */}
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarDays.map((day, i) => {
+                    const daySessions = getSessionsForDate(day);
+                    const daySpelmanEvents = spelmanEvents.filter(e => {
+                      const eventDate = parseISO(e.start_date);
+                      return isSameDay(eventDate, day);
+                    });
+                    const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
+                    const isToday = isSameDay(day, new Date());
+                    const isSelected = selectedDate && isSameDay(day, selectedDate);
+                    const isCurrentMonth = isSameMonth(day, currentDate);
+                    
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedDate(day)}
+                        className={cn(
+                          "min-h-[80px] p-1 rounded-lg border text-left transition-colors",
+                          !isCurrentMonth && "opacity-40",
+                          isHoliday && "bg-amber-50 border-amber-300",
+                          isToday && "border-primary",
+                          isSelected && "bg-primary/10 border-primary",
+                          !isSelected && !isHoliday && "hover:bg-accent"
+                        )}
+                      >
+                        <div className={cn(
+                          "text-sm font-medium mb-1 flex items-center gap-1",
+                          isToday && "text-primary",
+                          isHoliday && "text-amber-600"
+                        )}>
+                          {format(day, 'd')}
+                          {isHoliday && <AlertCircle className="h-3 w-3" />}
                         </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                        <div className="space-y-0.5">
+                          {/* Show Spelman events first */}
+                          {daySpelmanEvents.slice(0, 1).map(event => (
+                            <div
+                              key={event.id}
+                              className="text-xs bg-amber-100 text-amber-800 rounded px-1 py-0.5 truncate"
+                            >
+                              {event.title}
+                            </div>
+                          ))}
+                          {daySessions.slice(0, isHoliday ? 1 : 2).map(session => {
+                            const typeConfig = getSessionTypeConfig(session.session_type);
+                            return (
+                              <div
+                                key={session.id}
+                                className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1 py-0.5 truncate flex items-center gap-1"
+                              >
+                                <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{session.title}</span>
+                              </div>
+                            );
+                          })}
+                          {(daySessions.length + daySpelmanEvents.length) > 2 && (
+                            <div className="text-xs text-muted-foreground">
+                              +{(daySessions.length + daySpelmanEvents.length) - 2} more
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
 
         {/* Selected Date Sessions */}
         <Card>
@@ -843,8 +874,119 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
 
-      {/* QR Code Dialog */}
+        <TabsContent value="spelman">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5" />
+                Spelman Academic Calendar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {spelmanLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Semester Info */}
+                  {activeSemester && (
+                    <div className="bg-muted/50 rounded-lg p-4 mb-4">
+                      <h3 className="font-semibold mb-2">{activeSemester.name}</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Start:</span>
+                          <p className="font-medium">{format(parseISO(activeSemester.start_date), 'MMM d, yyyy')}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Classes End:</span>
+                          <p className="font-medium">{activeSemester.classes_end_date ? format(parseISO(activeSemester.classes_end_date), 'MMM d, yyyy') : 'TBD'}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Finals:</span>
+                          <p className="font-medium">{activeSemester.academic_events.find(e => e.title.includes('Final'))?.start_date ? format(parseISO(activeSemester.academic_events.find(e => e.title.includes('Final'))?.start_date || ''), 'MMM d') : 'TBD'}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Semester End:</span>
+                          <p className="font-medium">{format(parseISO(activeSemester.end_date), 'MMM d, yyyy')}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Academic Events */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Important Dates</h4>
+                    {activeSemester?.academic_events.map((event, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "p-2 rounded-lg",
+                            event.type === 'holiday' && "bg-red-100 text-red-600",
+                            event.type === 'break' && "bg-amber-100 text-amber-600",
+                            event.type === 'academic' && "bg-blue-100 text-blue-600"
+                          )}>
+                            {event.type === 'holiday' && <AlertCircle className="h-4 w-4" />}
+                            {event.type === 'break' && <CalendarIcon className="h-4 w-4" />}
+                            {event.type === 'academic' && <GraduationCap className="h-4 w-4" />}
+                          </div>
+                          <div>
+                            <p className="font-medium">{event.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {event.date 
+                                ? format(parseISO(event.date), 'EEEE, MMMM d, yyyy')
+                                : event.start_date && event.end_date
+                                  ? `${format(parseISO(event.start_date), 'MMM d')} - ${format(parseISO(event.end_date), 'MMM d, yyyy')}`
+                                  : 'Date TBD'
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={cn(
+                          event.type === 'holiday' && "border-red-300 text-red-600",
+                          event.type === 'break' && "border-amber-300 text-amber-600",
+                          event.type === 'academic' && "border-blue-300 text-blue-600"
+                        )}>
+                          {event.type === 'holiday' ? 'No Classes' : event.type === 'break' ? 'Break' : 'Academic'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* GleeWorld Events */}
+                  {spelmanEvents.length > 0 && (
+                    <div className="space-y-2 mt-6">
+                      <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Upcoming Events</h4>
+                      <ScrollArea className="h-[300px]">
+                        <div className="space-y-2">
+                          {spelmanEvents
+                            .filter(e => new Date(e.start_date) >= new Date())
+                            .slice(0, 10)
+                            .map(event => (
+                              <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                <div>
+                                  <p className="font-medium">{event.title}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {format(parseISO(event.start_date), 'EEE, MMM d • h:mm a')}
+                                  </p>
+                                </div>
+                                {event.event_type && (
+                                  <Badge variant="secondary">{event.event_type}</Badge>
+                                )}
+                              </div>
+                            ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
