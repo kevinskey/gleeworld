@@ -16425,6 +16425,98 @@ export type Database = {
           },
         ]
       }
+      gw_tour_hotels: {
+        Row: {
+          address: string | null
+          amenities: string[] | null
+          breakfast_included: boolean | null
+          check_in_date: string | null
+          check_in_time: string | null
+          check_out_date: string | null
+          check_out_time: string | null
+          city: string
+          confirmation_number: string | null
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string | null
+          hotel_name: string
+          id: string
+          notes: string | null
+          parking_info: string | null
+          phone: string | null
+          room_count: number | null
+          room_rate: number | null
+          state: string | null
+          total_cost: number | null
+          tour_city_id: string | null
+          updated_at: string | null
+          website: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          amenities?: string[] | null
+          breakfast_included?: boolean | null
+          check_in_date?: string | null
+          check_in_time?: string | null
+          check_out_date?: string | null
+          check_out_time?: string | null
+          city: string
+          confirmation_number?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string | null
+          hotel_name: string
+          id?: string
+          notes?: string | null
+          parking_info?: string | null
+          phone?: string | null
+          room_count?: number | null
+          room_rate?: number | null
+          state?: string | null
+          total_cost?: number | null
+          tour_city_id?: string | null
+          updated_at?: string | null
+          website?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          amenities?: string[] | null
+          breakfast_included?: boolean | null
+          check_in_date?: string | null
+          check_in_time?: string | null
+          check_out_date?: string | null
+          check_out_time?: string | null
+          city?: string
+          confirmation_number?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string | null
+          hotel_name?: string
+          id?: string
+          notes?: string | null
+          parking_info?: string | null
+          phone?: string | null
+          room_count?: number | null
+          room_rate?: number | null
+          state?: string | null
+          total_cost?: number | null
+          tour_city_id?: string | null
+          updated_at?: string | null
+          website?: string | null
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_hotels_tour_city_id_fkey"
+            columns: ["tour_city_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_tour_logistics: {
         Row: {
           check_in_time: string | null

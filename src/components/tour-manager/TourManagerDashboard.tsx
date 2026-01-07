@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -22,6 +22,7 @@ import { TourRosterSection } from '@/components/tour/TourRosterSection';
 import { TourManagerLanding } from './TourManagerLanding';
 import { TourLogisticsSection } from './TourLogisticsSection';
 import { BusInfoSection } from '@/components/tour/BusInfoSection';
+import { HotelManagement } from './HotelManagement';
 import { supabase } from '@/integrations/supabase/client';
 interface TourManagerDashboardProps {
   user?: {
@@ -232,6 +233,8 @@ export const TourManagerDashboard = ({
         return <AIRoutePlanner user={user} />;
       case 'rooming':
         return <RoomingAssignmentsSection />;
+      case 'hotels':
+        return <HotelManagement />;
       case 'bus-buddies':
         return <BusBuddiesSection />;
       case 'bus-info':
