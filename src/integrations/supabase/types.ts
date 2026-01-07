@@ -23519,6 +23519,42 @@ export type Database = {
           },
         ]
       }
+      tour_milestones: {
+        Row: {
+          completed: boolean
+          created_at: string
+          display_order: number
+          id: string
+          sign_off_date: string | null
+          signed_off_by: string | null
+          synopsis: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          display_order?: number
+          id?: string
+          sign_off_date?: string | null
+          signed_off_by?: string | null
+          synopsis?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          display_order?: number
+          id?: string
+          sign_off_date?: string | null
+          signed_off_by?: string | null
+          synopsis?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       track_likes: {
         Row: {
           created_at: string

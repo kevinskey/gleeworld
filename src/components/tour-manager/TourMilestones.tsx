@@ -7,24 +7,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CheckCircle2, ChevronDown, ChevronUp, Plus, Trash2, Edit2, Check, X, CalendarIcon, User, FileText } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, Plus, Trash2, Edit2, Check, X, CalendarIcon, User, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Milestone {
   id: string;
   title: string;
   completed: boolean;
-  order: number;
-  signedOffBy?: string;
-  signOffDate?: string;
-  synopsis?: string;
+  display_order: number;
+  signed_off_by?: string | null;
+  sign_off_date?: string | null;
+  synopsis?: string | null;
 }
 
 const DEFAULT_MILESTONES = ['Get concerts', 'Create contracts', 'Review contracts', 'Sign contracts', 'Send contracts', 'Receive contract and deposit', 'Final signed contract sent to host', 'Bus contacted', 'Bus secured', 'Route created', 'Route reviewed', 'Route sign off', 'Roster set', 'Singer contract created', 'Singer contract signed', 'Bus assignments', 'Room assignments', 'Budget approved', 'Stipend check requested', 'Stipend check received', 'Bus route/driver safety review', 'Food expenses set', 'Hotel expenses set', 'Singer stipend set', 'Bus food grocery list created', 'Bus food grocery list reviewed', 'Bus food grocery list finalized', 'Bus food grocery list approved', 'Master itinerary created', 'Master itinerary reviewed', 'Master itinerary approved', 'Tour retreat planned', 'Tour retreat approved', 'Tour retreat scheduled'];
-
-const STORAGE_KEY = 'tour_milestones';
 
 export const TourMilestones = () => {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -33,68 +32,122 @@ export const TourMilestones = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [openSignOffId, setOpenSignOffId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadMilestones();
+    
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('tour_milestones_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tour_milestones' },
+        () => {
+          loadMilestones();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  const loadMilestones = () => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setMilestones(JSON.parse(stored));
-      } catch {
-        initializeDefaults();
+  const loadMilestones = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tour_milestones')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setMilestones(data);
+      } else {
+        // Initialize defaults if no milestones exist
+        await initializeDefaults();
       }
-    } else {
-      initializeDefaults();
+    } catch (error) {
+      console.error('Error loading milestones:', error);
+      toast.error('Failed to load milestones');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const initializeDefaults = () => {
-    const defaultData = DEFAULT_MILESTONES.map((title, index) => ({
-      id: `milestone-${index}`,
-      title,
-      completed: false,
-      order: index
-    }));
-    setMilestones(defaultData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+  const initializeDefaults = async () => {
+    try {
+      const defaultData = DEFAULT_MILESTONES.map((title, index) => ({
+        title,
+        completed: false,
+        display_order: index
+      }));
+
+      const { data, error } = await supabase
+        .from('tour_milestones')
+        .insert(defaultData)
+        .select();
+
+      if (error) throw error;
+      if (data) setMilestones(data);
+    } catch (error) {
+      console.error('Error initializing defaults:', error);
+    }
   };
 
-  const saveMilestones = (data: Milestone[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  const toggleMilestone = async (id: string) => {
+    const milestone = milestones.find(m => m.id === id);
+    if (!milestone) return;
+
+    try {
+      const { error } = await supabase
+        .from('tour_milestones')
+        .update({ completed: !milestone.completed })
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error toggling milestone:', error);
+      toast.error('Failed to update milestone');
+    }
   };
 
-  const toggleMilestone = (id: string) => {
-    const updated = milestones.map(m => m.id === id ? {
-      ...m,
-      completed: !m.completed
-    } : m);
-    setMilestones(updated);
-    saveMilestones(updated);
-  };
-
-  const addMilestone = () => {
+  const addMilestone = async () => {
     if (!newMilestone.trim()) return;
-    const newItem: Milestone = {
-      id: `milestone-${Date.now()}`,
-      title: newMilestone.trim(),
-      completed: false,
-      order: milestones.length
-    };
-    const updated = [...milestones, newItem];
-    setMilestones(updated);
-    saveMilestones(updated);
-    setNewMilestone('');
-    toast.success('Milestone added');
+
+    try {
+      const { error } = await supabase
+        .from('tour_milestones')
+        .insert({
+          title: newMilestone.trim(),
+          completed: false,
+          display_order: milestones.length
+        });
+
+      if (error) throw error;
+      setNewMilestone('');
+      toast.success('Milestone added');
+    } catch (error) {
+      console.error('Error adding milestone:', error);
+      toast.error('Failed to add milestone');
+    }
   };
 
-  const deleteMilestone = (id: string) => {
-    const updated = milestones.filter(m => m.id !== id);
-    setMilestones(updated);
-    saveMilestones(updated);
-    toast.success('Milestone removed');
+  const deleteMilestone = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('tour_milestones')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success('Milestone removed');
+    } catch (error) {
+      console.error('Error deleting milestone:', error);
+      toast.error('Failed to delete milestone');
+    }
   };
 
   const startEditing = (milestone: Milestone) => {
@@ -102,16 +155,22 @@ export const TourMilestones = () => {
     setEditingTitle(milestone.title);
   };
 
-  const saveEdit = () => {
-    if (!editingTitle.trim()) return;
-    const updated = milestones.map(m => m.id === editingId ? {
-      ...m,
-      title: editingTitle.trim()
-    } : m);
-    setMilestones(updated);
-    saveMilestones(updated);
-    setEditingId(null);
-    setEditingTitle('');
+  const saveEdit = async () => {
+    if (!editingTitle.trim() || !editingId) return;
+
+    try {
+      const { error } = await supabase
+        .from('tour_milestones')
+        .update({ title: editingTitle.trim() })
+        .eq('id', editingId);
+
+      if (error) throw error;
+      setEditingId(null);
+      setEditingTitle('');
+    } catch (error) {
+      console.error('Error saving edit:', error);
+      toast.error('Failed to update milestone');
+    }
   };
 
   const cancelEdit = () => {
@@ -119,17 +178,32 @@ export const TourMilestones = () => {
     setEditingTitle('');
   };
 
-  const updateSignOff = (id: string, field: 'signedOffBy' | 'signOffDate' | 'synopsis', value: string) => {
-    const updated = milestones.map(m => m.id === id ? {
-      ...m,
-      [field]: value
-    } : m);
-    setMilestones(updated);
-    saveMilestones(updated);
+  const updateSignOff = async (id: string, field: 'signed_off_by' | 'sign_off_date' | 'synopsis', value: string) => {
+    try {
+      const { error } = await supabase
+        .from('tour_milestones')
+        .update({ [field]: value })
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating sign-off:', error);
+      toast.error('Failed to update sign-off');
+    }
   };
 
   const completedCount = milestones.filter(m => m.completed).length;
   const progress = milestones.length > 0 ? completedCount / milestones.length * 100 : 0;
+
+  if (loading) {
+    return (
+      <Card className="mb-4">
+        <CardContent className="py-8 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="mb-4">
@@ -194,14 +268,19 @@ export const TourMilestones = () => {
                       ) : (
                         <>
                           <span className={cn(
-                            "flex-1 text-left text-xs text-white",
+                            "flex-1 text-left text-xs text-foreground",
                             milestone.completed && "line-through text-muted-foreground",
-                            milestone.signedOffBy && "text-green-400"
+                            milestone.signed_off_by && "text-green-500"
                           )}>
                             {milestone.title}
-                            {milestone.signedOffBy && (
-                              <span className="ml-2 text-[10px] text-muted-foreground">
-                                ✓ {milestone.signedOffBy}
+                            {milestone.signed_off_by && (
+                              <span className="ml-2 text-[10px] text-green-600 dark:text-green-400">
+                                ✓ {milestone.signed_off_by}
+                                {milestone.sign_off_date && (
+                                  <span className="ml-1 text-muted-foreground">
+                                    ({format(new Date(milestone.sign_off_date), 'MMM d')})
+                                  </span>
+                                )}
                               </span>
                             )}
                           </span>
@@ -218,7 +297,7 @@ export const TourMilestones = () => {
                       )}
                     </div>
                   </PopoverTrigger>
-                  <PopoverContent className="w-72 p-3 bg-white dark:bg-gray-900 border shadow-lg z-50" align="start">
+                  <PopoverContent className="w-72 p-3 bg-card border shadow-lg z-50" align="start">
                     <div className="space-y-3">
                       <h4 className="font-medium text-sm text-foreground">Sign-off Details</h4>
                       
@@ -230,8 +309,8 @@ export const TourMilestones = () => {
                         </label>
                         <Input
                           placeholder="Enter name..."
-                          value={milestone.signedOffBy || ''}
-                          onChange={(e) => updateSignOff(milestone.id, 'signedOffBy', e.target.value)}
+                          value={milestone.signed_off_by || ''}
+                          onChange={(e) => updateSignOff(milestone.id, 'signed_off_by', e.target.value)}
                           className="h-8 text-xs"
                         />
                       </div>
@@ -248,20 +327,20 @@ export const TourMilestones = () => {
                               variant="outline"
                               className={cn(
                                 "w-full h-8 justify-start text-left font-normal text-xs",
-                                !milestone.signOffDate && "text-muted-foreground"
+                                !milestone.sign_off_date && "text-muted-foreground"
                               )}
                             >
                               <CalendarIcon className="mr-2 h-3 w-3" />
-                              {milestone.signOffDate ? format(new Date(milestone.signOffDate), "PPP") : "Pick a date"}
+                              {milestone.sign_off_date ? format(new Date(milestone.sign_off_date), "PPP") : "Pick a date"}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0 bg-card border z-[60]" align="start">
                             <Calendar
                               mode="single"
-                              selected={milestone.signOffDate ? new Date(milestone.signOffDate) : undefined}
+                              selected={milestone.sign_off_date ? new Date(milestone.sign_off_date) : undefined}
                               onSelect={(date) => {
                                 if (date) {
-                                  updateSignOff(milestone.id, 'signOffDate', date.toISOString());
+                                  updateSignOff(milestone.id, 'sign_off_date', date.toISOString());
                                 }
                               }}
                               initialFocus
