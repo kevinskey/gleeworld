@@ -1,9 +1,12 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ResponsiveContractViewerContent } from "./ResponsiveContractViewerContent";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
+import { Download, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { jsPDF } from "jspdf";
 interface Contract {
   id: string;
   title: string;
@@ -43,6 +46,148 @@ const getStatusText = (status: string) => {
 
 export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerProps) => {
   const [enhancedContract, setEnhancedContract] = useState<Contract | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const generatePdf = async () => {
+    if (!enhancedContract) return;
+    
+    setIsGeneratingPdf(true);
+    try {
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'letter'
+      });
+      
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      const contentWidth = pageWidth - (margin * 2);
+      let yPosition = margin;
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      const titleLines = doc.splitTextToSize(enhancedContract.title, contentWidth);
+      doc.text(titleLines, margin, yPosition);
+      yPosition += (titleLines.length * 8) + 5;
+      
+      // Add status and date
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100);
+      doc.text(`Status: ${getStatusText(enhancedContract.status)} | Created: ${new Date(enhancedContract.created_at).toLocaleDateString()}`, margin, yPosition);
+      yPosition += 10;
+      doc.setTextColor(0);
+      
+      // Add horizontal line
+      doc.setDrawColor(200);
+      doc.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 10;
+      
+      // Process content - remove embedded signatures markers for clean text
+      let cleanContent = enhancedContract.content
+        .replace(/\[EMBEDDED_SIGNATURES\].*?\[\/EMBEDDED_SIGNATURES\]/gs, '')
+        .replace(/\[SIGNATURE_FIELD:\d+\]/g, '')
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/\n{3,}/g, '\n\n') // Reduce multiple newlines
+        .trim();
+      
+      // Add content
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      
+      const lines = doc.splitTextToSize(cleanContent, contentWidth);
+      
+      for (let i = 0; i < lines.length; i++) {
+        if (yPosition > pageHeight - margin - 10) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        doc.text(lines[i], margin, yPosition);
+        yPosition += 5;
+      }
+      
+      // Add signatures section if completed
+      if (enhancedContract.status === 'completed') {
+        const signatureMatch = enhancedContract.content.match(/\[EMBEDDED_SIGNATURES\](.*?)\[\/EMBEDDED_SIGNATURES\]/s);
+        if (signatureMatch) {
+          try {
+            const signatures = JSON.parse(signatureMatch[1]);
+            if (signatures.length > 0) {
+              // Add new page for signatures if needed
+              if (yPosition > pageHeight - 80) {
+                doc.addPage();
+                yPosition = margin;
+              }
+              
+              yPosition += 10;
+              doc.setDrawColor(200);
+              doc.line(margin, yPosition, pageWidth - margin, yPosition);
+              yPosition += 10;
+              
+              doc.setFontSize(14);
+              doc.setFont('helvetica', 'bold');
+              doc.text('Signatures', margin, yPosition);
+              yPosition += 10;
+              
+              for (const sig of signatures) {
+                if (yPosition > pageHeight - 50) {
+                  doc.addPage();
+                  yPosition = margin;
+                }
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                const signerLabel = sig.signerType === 'admin' ? 'Admin Signature' : 'Artist Signature';
+                doc.text(signerLabel, margin, yPosition);
+                yPosition += 5;
+                
+                // Add signature image if it's base64
+                if (sig.signatureData && sig.signatureData.startsWith('data:image')) {
+                  try {
+                    doc.addImage(sig.signatureData, 'PNG', margin, yPosition, 50, 15);
+                    yPosition += 20;
+                  } catch (imgError) {
+                    console.error('Error adding signature image:', imgError);
+                    doc.setFont('helvetica', 'italic');
+                    doc.text('[Digital Signature]', margin, yPosition);
+                    yPosition += 5;
+                  }
+                } else {
+                  doc.setFont('helvetica', 'italic');
+                  doc.text(sig.signatureData || '[Digital Signature]', margin, yPosition);
+                  yPosition += 5;
+                }
+                
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(100);
+                doc.text(`Signed: ${sig.dateSigned} | ${new Date(sig.timestamp).toLocaleString()}`, margin, yPosition);
+                doc.setTextColor(0);
+                yPosition += 15;
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing signatures for PDF:', e);
+          }
+        }
+      }
+      
+      // Save the PDF
+      const fileName = `${enhancedContract.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      doc.save(fileName);
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   useEffect(() => {
     const fetchSignatureData = async () => {
@@ -138,11 +283,27 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
         style={{ backgroundColor: '#ffffff', color: '#1a1a1a' }}
       >
         <DialogHeader className="px-4 md:px-0">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg md:text-xl font-bold" style={{ color: '#000000' }}>{enhancedContract.title}</DialogTitle>
-            <Badge className={getStatusColor(enhancedContract.status)}>
-              {getStatusText(enhancedContract.status)}
-            </Badge>
+          <div className="flex items-center justify-between gap-2">
+            <DialogTitle className="text-lg md:text-xl font-bold flex-1" style={{ color: '#000000' }}>{enhancedContract.title}</DialogTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={generatePdf}
+                disabled={isGeneratingPdf}
+                className="flex items-center gap-1"
+              >
+                {isGeneratingPdf ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">PDF</span>
+              </Button>
+              <Badge className={getStatusColor(enhancedContract.status)}>
+                {getStatusText(enhancedContract.status)}
+              </Badge>
+            </div>
           </div>
           <DialogDescription className="text-sm md:text-base" style={{ color: '#4b5563' }}>
             Created: {new Date(enhancedContract.created_at).toLocaleDateString()}
