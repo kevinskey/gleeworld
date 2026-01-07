@@ -3,7 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Plus, ChevronDown, GraduationCap, BookOpen, Play, Users, Music, Monitor, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useUnifiedModules } from '@/hooks/useUnifiedModules';
+import { UNIFIED_MODULES } from '@/config/unified-modules';
 
 // Course highlights mapping based on course type
 const getCourseHighlights = (title: string): string[] => {
@@ -49,6 +52,7 @@ export const DashboardStoreSection = () => {
   const [activeCategory, setActiveCategory] = useState('(ALL)');
   const [showMore, setShowMore] = useState(false);
   const navigate = useNavigate();
+  const { modules, loading: modulesLoading } = useUnifiedModules();
   useEffect(() => {
     const fetchData = async () => {
       // Fetch products
@@ -222,9 +226,40 @@ export const DashboardStoreSection = () => {
         My Modules
       </Button>
 
-      {/* New Section Below My Modules */}
+      {/* Modules Grid Section */}
       <div className="w-full px-[50px] py-8">
-        {/* Content goes here */}
+        {modulesLoading ? (
+          <div className="text-center py-8 text-muted-foreground">Loading modules...</div>
+        ) : modules.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">No modules available</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {modules.map(module => {
+              const unifiedModule = UNIFIED_MODULES.find(m => m.id === module.id);
+              const IconComponent = unifiedModule?.icon;
+              return (
+                <Card 
+                  key={module.id} 
+                  className="cursor-pointer hover:shadow-lg transition-all duration-300 bg-primary/80 border border-primary-foreground/30 hover:bg-primary/70" 
+                  onClick={() => navigate(`/modules/${module.id}`)}
+                >
+                  <CardHeader className="pb-3 pt-4">
+                    <div className="flex flex-col items-center text-center gap-2">
+                      {IconComponent && (
+                        <div className="p-2 rounded-lg bg-primary-foreground/10">
+                          <IconComponent className="h-5 w-5 text-primary-foreground" />
+                        </div>
+                      )}
+                      <CardTitle className="text-sm font-medium leading-tight line-clamp-2 text-primary-foreground">
+                        {module.title}
+                      </CardTitle>
+                    </div>
+                  </CardHeader>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Fan Zone - Edge to Edge */}
