@@ -492,11 +492,11 @@ export const ProductManager = () => {
               
               <CardContent className="p-4">
                 <div className="space-y-2">
-                  <h3 className="font-semibold line-clamp-1">{product.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{product.description || "No description"}</p>
+                  <h3 className="font-semibold line-clamp-1 text-primary-foreground">{product.title}</h3>
+                  <p className="text-sm line-clamp-2 text-primary-foreground">{product.description || "No description"}</p>
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-lg font-bold text-primary">${product.price.toFixed(2)}</span>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs text-secondary-foreground">
                       {product.inventory_quantity ?? "∞"} in stock
                     </Badge>
                   </div>
