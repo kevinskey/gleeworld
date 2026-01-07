@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Video } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { VideoRecordingSubmission } from '@/components/course/VideoRecordingSubmission';
 
 interface StudentAssignmentViewProps {
   assignmentId: string;
@@ -58,17 +59,29 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
     }
   }, [submission]);
 
+  const isVideoAssignment = assignment?.assignment_type === 'exercise' || 
+    assignment?.title?.toLowerCase().includes('conducting') ||
+    assignment?.title?.toLowerCase().includes('video');
+
   const updateMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, recordingUrl }: { content?: string; recordingUrl?: string }) => {
+      const updateData: any = {
+        assignment_id: assignmentId,
+        user_id: user?.id,
+        status: 'submitted',
+        submitted_at: new Date().toISOString(),
+      };
+      
+      if (content !== undefined) {
+        updateData.notes = content;
+      }
+      if (recordingUrl) {
+        updateData.recording_url = recordingUrl;
+      }
+      
       const { error } = await supabase
         .from('gw_assignment_submissions' as any)
-        .upsert({
-          assignment_id: assignmentId,
-          user_id: user?.id,
-          notes: content,
-          status: 'submitted',
-          submitted_at: new Date().toISOString(),
-        });
+        .upsert(updateData);
       
       if (error) throw error;
     },
@@ -83,6 +96,10 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
       console.error(error);
     },
   });
+
+  const handleVideoUploaded = (videoUrl: string) => {
+    updateMutation.mutate({ recordingUrl: videoUrl });
+  };
 
   if (assignmentLoading || submissionLoading) {
     return <LoadingSpinner size="lg" text="Loading assignment..." />;
@@ -128,32 +145,60 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
             <h3 className="font-semibold mb-2">Description:</h3>
             <p className="text-muted-foreground">{assignment?.description || 'No description provided'}</p>
           </div>
+          {isVideoAssignment && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Video className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold">Video Submission Required</h3>
+              </div>
+              <VideoRecordingSubmission
+                assignmentId={assignmentId}
+                onVideoUploaded={handleVideoUploaded}
+                existingVideoUrl={submission?.recording_url}
+              />
+            </div>
+          )}
+          
           {submission ? (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Your Submission:</h3>
+                <h3 className="font-semibold">Your Notes (optional):</h3>
                 <Button size="sm" variant="outline" onClick={() => setIsEditing(!isEditing)}>
                   {isEditing ? 'Cancel' : 'Edit'}
                 </Button>
               </div>
+              
+              {submission.recording_url && (
+                <div className="mb-4">
+                  <p className="text-sm text-muted-foreground mb-2">Submitted video:</p>
+                  <video 
+                    src={submission.recording_url} 
+                    controls 
+                    className="w-full max-h-[300px] rounded-lg bg-black"
+                  />
+                </div>
+              )}
               
               {isEditing ? (
                 <div className="space-y-2">
                   <Textarea
                     value={editedContent}
                     onChange={(e) => setEditedContent(e.target.value)}
-                    rows={10}
+                    rows={6}
                     className="w-full"
+                    placeholder="Add any notes about your submission..."
                   />
-                  <Button onClick={() => updateMutation.mutate(editedContent)} disabled={updateMutation.isPending}>
-                    {updateMutation.isPending ? 'Saving...' : 'Resubmit'}
+                  <Button onClick={() => updateMutation.mutate({ content: editedContent })} disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? 'Saving...' : 'Update Notes'}
                   </Button>
                 </div>
               ) : (
                 <>
-                  <div className="p-4 bg-muted rounded-lg">
-                    <pre className="whitespace-pre-wrap">{submission.content_text}</pre>
-                  </div>
+                  {submission.notes && (
+                    <div className="p-4 bg-muted rounded-lg">
+                      <pre className="whitespace-pre-wrap">{submission.notes}</pre>
+                    </div>
+                  )}
                   <p className="text-sm text-muted-foreground mt-2">
                     Submitted: {new Date(submission.submitted_at).toLocaleString()}
                   </p>
@@ -161,20 +206,24 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
               )}
             </div>
           ) : (
-            <div className="text-center py-4 space-y-4">
-              <p className="text-muted-foreground">You haven't submitted this assignment yet.</p>
-              <div className="space-y-2">
-                <Textarea
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
-                  rows={10}
-                  placeholder="Start your submission here..."
-                  className="w-full"
-                />
-                <Button onClick={() => updateMutation.mutate(editedContent)} disabled={updateMutation.isPending || !editedContent.trim()}>
-                  {updateMutation.isPending ? 'Submitting...' : 'Submit'}
-                </Button>
-              </div>
+            <div className="space-y-4">
+              {!isVideoAssignment && (
+                <>
+                  <p className="text-muted-foreground">You haven't submitted this assignment yet.</p>
+                  <div className="space-y-2">
+                    <Textarea
+                      value={editedContent}
+                      onChange={(e) => setEditedContent(e.target.value)}
+                      rows={10}
+                      placeholder="Start your submission here..."
+                      className="w-full"
+                    />
+                    <Button onClick={() => updateMutation.mutate({ content: editedContent })} disabled={updateMutation.isPending || !editedContent.trim()}>
+                      {updateMutation.isPending ? 'Submitting...' : 'Submit'}
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </CardContent>
