@@ -263,7 +263,7 @@ export const ComprehensiveAppointmentSystem = () => {
                   const { appointments: dayAppts, events: dayEvents, total } = getItemsForDate(date);
                   const isSelected = isSameDay(date, selectedDate);
                   const isCurrentDay = isToday(date);
-                  return <button key={date.toISOString()} onClick={() => setSelectedDate(date)} className={cn("p-1 text-xs rounded-full relative transition-colors", isSelected && "bg-primary text-primary-foreground", isCurrentDay && !isSelected && "bg-blue-100 text-blue-700 font-bold", !isSelected && !isCurrentDay && "hover:bg-muted")}>
+                  return <button key={date.toISOString()} onClick={() => setSelectedDate(date)} className={cn("p-1 text-xs rounded-full relative transition-colors text-white", isSelected && "bg-primary text-primary-foreground", isCurrentDay && !isSelected && "bg-blue-100 text-blue-700 font-bold", !isSelected && !isCurrentDay && "hover:bg-muted")}>
                         {format(date, 'd')}
                         {total > 0 && !isSelected && (
                           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-0.5">
