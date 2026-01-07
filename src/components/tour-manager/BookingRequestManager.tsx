@@ -25,7 +25,11 @@ import {
   FileSignature,
   StickyNote,
   Forward,
-  PlusCircle
+  PlusCircle,
+  Users,
+  Music,
+  Utensils,
+  Hotel
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -33,22 +37,39 @@ import { useToast } from '@/components/ui/use-toast';
 interface BookingRequest {
   id: string;
   organization_name: string;
-  contact_name: string;
+  contact_person_name: string;
   contact_email: string;
   contact_phone?: string;
-  event_date: string;
-  event_time?: string;
-  event_location: string;
-  event_type: string;
-  event_description: string;
-  estimated_audience: number;
-  budget_range?: string;
-  special_requests?: string;
-  status: 'new' | 'reviewed' | 'approved' | 'declined' | 'completed';
+  contact_title?: string;
+  event_name: string;
+  event_date_start: string;
+  event_date_end?: string;
+  performance_time?: string;
+  performance_duration?: string;
+  venue_name: string;
+  venue_address: string;
+  venue_type?: string;
+  expected_attendance?: number;
+  event_description?: string;
+  honorarium_offered?: boolean;
+  honorarium_amount?: number;
+  travel_expenses_covered?: string[];
+  lodging_provided?: boolean;
+  lodging_nights?: number;
+  meals_provided?: boolean;
+  status: 'pending' | 'reviewed' | 'approved' | 'declined' | 'completed';
   created_at: string;
   updated_at: string;
-  notes?: string;
+  notes_for_director?: string;
+  notes_for_choir?: string;
   assigned_to?: string;
+  piano_available?: boolean;
+  piano_type?: string;
+  sound_system_available?: boolean;
+  lighting_available?: boolean;
+  dressing_rooms_available?: boolean;
+  stage_dimensions?: string;
+  how_heard_about_us?: string;
 }
 
 interface BookingRequestManagerProps {
@@ -76,7 +97,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       setLoading(true);
       
       const { data, error } = await supabase
-        .from('booking_requests')
+        .from('gw_booking_requests')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -101,21 +122,26 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
 
   const updateRequestStatus = async (requestId: string, newStatus: BookingRequest['status'], notes?: string) => {
     try {
+      const updateData: Record<string, unknown> = { 
+        status: newStatus, 
+        assigned_to: user?.id,
+        updated_at: new Date().toISOString()
+      };
+      
+      if (notes) {
+        updateData.notes_for_director = notes;
+      }
+
       const { error } = await supabase
-        .from('booking_requests')
-        .update({ 
-          status: newStatus, 
-          notes: notes,
-          assigned_to: user?.id,
-          updated_at: new Date().toISOString()
-        })
+        .from('gw_booking_requests')
+        .update(updateData)
         .eq('id', requestId);
 
       if (error) throw error;
 
       setRequests(prev => prev.map(req => 
         req.id === requestId 
-          ? { ...req, status: newStatus, notes, assigned_to: user?.id }
+          ? { ...req, status: newStatus, notes_for_director: notes, assigned_to: user?.id }
           : req
       ));
 
@@ -138,14 +164,14 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       const request = requests.find(r => r.id === requestId);
       if (!request) return;
       
-      const existingNotes = request.notes || '';
-      const newNote = `[${new Date().toLocaleDateString()} - ${user?.full_name || 'Tour Manager'}] ${note}`;
-      const updatedNotes = existingNotes ? `${existingNotes}\n\n${newNote}` : newNote;
+      const existingNotes = request.notes_for_director || '';
+      const newNoteText = `[${new Date().toLocaleDateString()} - ${user?.full_name || 'Tour Manager'}] ${note}`;
+      const updatedNotes = existingNotes ? `${existingNotes}\n\n${newNoteText}` : newNoteText;
       
       const { error } = await supabase
-        .from('booking_requests')
+        .from('gw_booking_requests')
         .update({ 
-          notes: updatedNotes,
+          notes_for_director: updatedNotes,
           updated_at: new Date().toISOString()
         })
         .eq('id', requestId);
@@ -154,7 +180,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
 
       setRequests(prev => prev.map(req => 
         req.id === requestId 
-          ? { ...req, notes: updatedNotes }
+          ? { ...req, notes_for_director: updatedNotes }
           : req
       ));
 
@@ -174,11 +200,8 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
 
   const forwardToDrJohnson = async (request: BookingRequest, note: string) => {
     try {
-      // Add note about forwarding
-      const forwardNote = `[FORWARDED TO DR. JOHNSON] ${note}`;
-      await addNoteToRequest(request.id, forwardNote);
-      
-      // Update status to indicate it's been forwarded
+      const forwardNoteText = `[FORWARDED TO DR. JOHNSON] ${note}`;
+      await addNoteToRequest(request.id, forwardNoteText);
       await updateRequestStatus(request.id, 'reviewed', `Forwarded to Dr. Johnson with note: ${note}`);
       
       toast({
@@ -199,8 +222,6 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
     if (!responseMessage.trim()) return;
 
     try {
-      // Here you would integrate with your email system
-      // For now, we'll just update the status and add notes
       await updateRequestStatus(request.id, 'reviewed', responseMessage);
       
       setResponseMessage('');
@@ -208,7 +229,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       
       toast({
         title: "Response sent",
-        description: "Your response has been sent to the organization.",
+        description: "Your response has been recorded.",
       });
     } catch (error) {
       console.error('Error sending response:', error);
@@ -222,7 +243,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
 
   const getStatusColor = (status: BookingRequest['status']) => {
     switch (status) {
-      case 'new':
+      case 'pending':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'reviewed':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -250,9 +271,10 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
 
   const filteredRequests = requests.filter(request => {
     const matchesSearch = 
-      request.organization_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.event_type.toLowerCase().includes(searchTerm.toLowerCase());
+      request.organization_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.contact_person_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.event_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.venue_name?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
     
@@ -267,18 +289,9 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
     });
   };
 
-  const formatTime = (timeString?: string) => {
-    if (!timeString) return 'Time TBD';
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
   const statusCounts = {
     all: requests.length,
-    new: requests.filter(r => r.status === 'new').length,
+    pending: requests.filter(r => r.status === 'pending').length,
     reviewed: requests.filter(r => r.status === 'reviewed').length,
     approved: requests.filter(r => r.status === 'approved').length,
     declined: requests.filter(r => r.status === 'declined').length,
@@ -303,7 +316,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search organizations, contacts, or event types..."
+            placeholder="Search organizations, contacts, events..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 h-9 bg-background border-border"
@@ -316,7 +329,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All ({statusCounts.all})</SelectItem>
-            <SelectItem value="new">New ({statusCounts.new})</SelectItem>
+            <SelectItem value="pending">Pending ({statusCounts.pending})</SelectItem>
             <SelectItem value="reviewed">Reviewed ({statusCounts.reviewed})</SelectItem>
             <SelectItem value="approved">Approved ({statusCounts.approved})</SelectItem>
             <SelectItem value="declined">Declined ({statusCounts.declined})</SelectItem>
@@ -325,48 +338,90 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
         </Select>
       </div>
 
-      {/* Requests List - Clean Cards */}
+      {/* Empty state */}
+      {filteredRequests.length === 0 && (
+        <div className="text-center py-12 bg-card border border-border rounded-lg">
+          <Music className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">No Booking Requests</h3>
+          <p className="text-muted-foreground">
+            {statusFilter === 'all' 
+              ? 'No booking requests have been submitted yet.' 
+              : `No ${statusFilter} requests found.`}
+          </p>
+        </div>
+      )}
+
+      {/* Requests List */}
       <div className="space-y-3">
         {filteredRequests.map((request) => (
           <div 
             key={request.id} 
             className="bg-card border border-border rounded-lg p-4 hover:border-primary/30 transition-colors"
           >
-            {/* Compact Request Row */}
-            <div className="flex items-center justify-between gap-4">
+            {/* Request Row */}
+            <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground truncate">{request.organization_name}</h3>
-                <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                <h3 className="font-semibold text-foreground">{request.event_name}</h3>
+                <p className="text-sm text-muted-foreground">{request.organization_name}</p>
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
-                    {new Date(request.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                    {request.event_time && ` at ${formatTime(request.event_time)}`}
+                    {formatDate(request.event_date_start)}
                   </span>
-                  {request.estimated_audience > 0 && (
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {request.venue_name}
+                  </span>
+                  {request.expected_attendance && (
                     <span className="flex items-center gap-1">
-                      <DollarSign className="h-3.5 w-3.5" />
-                      {request.estimated_audience} attendees
+                      <Users className="h-3.5 w-3.5" />
+                      {request.expected_attendance} attendees
                     </span>
                   )}
                 </div>
               </div>
               
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col items-end gap-2">
                 <Badge 
                   variant="outline" 
                   className={`${getStatusColor(request.status)} text-xs font-medium px-2.5 py-0.5`}
                 >
                   {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                 </Badge>
-                {request.budget_range && (
-                  <span className="text-primary font-semibold text-sm whitespace-nowrap">
-                    {request.budget_range}
+                {request.honorarium_offered && request.honorarium_amount && (
+                  <span className="text-primary font-semibold text-sm whitespace-nowrap flex items-center gap-1">
+                    <DollarSign className="h-3.5 w-3.5" />
+                    {request.honorarium_amount.toLocaleString()}
                   </span>
                 )}
               </div>
             </div>
             
-            {/* Expandable Details - Only show on click/hover */}
+            {/* Quick Info Tags */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {request.lodging_provided && (
+                <Badge variant="secondary" className="text-xs">
+                  <Hotel className="h-3 w-3 mr-1" /> Lodging
+                </Badge>
+              )}
+              {request.meals_provided && (
+                <Badge variant="secondary" className="text-xs">
+                  <Utensils className="h-3 w-3 mr-1" /> Meals
+                </Badge>
+              )}
+              {request.travel_expenses_covered && request.travel_expenses_covered.length > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  Travel Covered
+                </Badge>
+              )}
+              {request.piano_available && (
+                <Badge variant="secondary" className="text-xs">
+                  Piano Available
+                </Badge>
+              )}
+            </div>
+            
+            {/* View Details Dialog */}
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
@@ -380,14 +435,19 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>{request.organization_name}</DialogTitle>
+                  <DialogTitle>{request.event_name}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
-                  {/* Contact Info */}
+                  {/* Organization & Contact */}
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
+                      <span className="text-muted-foreground">Organization:</span>
+                      <p className="font-medium">{request.organization_name}</p>
+                    </div>
+                    <div>
                       <span className="text-muted-foreground">Contact:</span>
-                      <p className="font-medium">{request.contact_name}</p>
+                      <p className="font-medium">{request.contact_person_name}</p>
+                      {request.contact_title && <p className="text-xs text-muted-foreground">{request.contact_title}</p>}
                     </div>
                     <div>
                       <span className="text-muted-foreground">Email:</span>
@@ -399,54 +459,123 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                         <p className="font-medium">{request.contact_phone}</p>
                       </div>
                     )}
-                    <div>
-                      <span className="text-muted-foreground">Event Type:</span>
-                      <p className="font-medium">{request.event_type}</p>
-                    </div>
                   </div>
                   
                   {/* Event Details */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 border-t pt-4">
                     <h4 className="font-medium text-sm">Event Details</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{formatDate(request.event_date)}</span>
+                        <span>{formatDate(request.event_date_start)}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{formatTime(request.event_time)}</span>
+                      {request.performance_time && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span>{request.performance_time}</span>
+                        </div>
+                      )}
+                      {request.performance_duration && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span>Duration: {request.performance_duration}</span>
+                        </div>
+                      )}
+                      {request.expected_attendance && (
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span>{request.expected_attendance} expected attendees</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Venue Details */}
+                  <div className="space-y-2 border-t pt-4">
+                    <h4 className="font-medium text-sm">Venue</h4>
+                    <div className="text-sm">
+                      <p className="font-medium">{request.venue_name}</p>
+                      <p className="text-muted-foreground">{request.venue_address}</p>
+                      {request.venue_type && <p className="text-muted-foreground">Type: {request.venue_type}</p>}
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {request.piano_available && (
+                        <Badge variant="outline" className="text-xs">
+                          Piano: {request.piano_type || 'Available'}
+                        </Badge>
+                      )}
+                      {request.sound_system_available && (
+                        <Badge variant="outline" className="text-xs">Sound System</Badge>
+                      )}
+                      {request.lighting_available && (
+                        <Badge variant="outline" className="text-xs">Lighting</Badge>
+                      )}
+                      {request.dressing_rooms_available && (
+                        <Badge variant="outline" className="text-xs">Dressing Rooms</Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Compensation & Logistics */}
+                  <div className="space-y-2 border-t pt-4">
+                    <h4 className="font-medium text-sm">Compensation & Logistics</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      {request.honorarium_offered && (
+                        <div>
+                          <span className="text-muted-foreground">Honorarium:</span>
+                          <p className="font-medium text-primary">
+                            ${request.honorarium_amount?.toLocaleString() || 'TBD'}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-muted-foreground">Lodging:</span>
+                        <p className="font-medium">
+                          {request.lodging_provided ? `Yes (${request.lodging_nights || '?'} nights)` : 'Not provided'}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{request.event_location}</span>
+                      <div>
+                        <span className="text-muted-foreground">Meals:</span>
+                        <p className="font-medium">{request.meals_provided ? 'Provided' : 'Not provided'}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                        <span>{request.estimated_audience} attendees</span>
-                      </div>
+                      {request.travel_expenses_covered && request.travel_expenses_covered.length > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Travel Covered:</span>
+                          <p className="font-medium">{request.travel_expenses_covered.join(', ')}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
                   {/* Description */}
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Description</h4>
-                    <p className="text-sm text-muted-foreground">{request.event_description}</p>
-                  </div>
-                  
-                  {request.special_requests && (
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Special Requests</h4>
-                      <p className="text-sm text-muted-foreground">{request.special_requests}</p>
+                  {request.event_description && (
+                    <div className="space-y-2 border-t pt-4">
+                      <h4 className="font-medium text-sm">Event Description</h4>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{request.event_description}</p>
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  {request.notes_for_choir && (
+                    <div className="space-y-2 border-t pt-4">
+                      <h4 className="font-medium text-sm">Notes for Choir</h4>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{request.notes_for_choir}</p>
                     </div>
                   )}
                   
-                  {request.notes && (
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Notes</h4>
+                  {request.notes_for_director && (
+                    <div className="space-y-2 border-t pt-4">
+                      <h4 className="font-medium text-sm">Director Notes</h4>
                       <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">
-                        {request.notes}
+                        {request.notes_for_director}
                       </div>
+                    </div>
+                  )}
+
+                  {request.how_heard_about_us && (
+                    <div className="space-y-2 border-t pt-4">
+                      <h4 className="font-medium text-sm">How They Heard About Us</h4>
+                      <p className="text-sm text-muted-foreground">{request.how_heard_about_us}</p>
                     </div>
                   )}
                   
@@ -460,21 +589,82 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="reviewed">Reviewed</SelectItem>
                         <SelectItem value="approved">Approved</SelectItem>
                         <SelectItem value="declined">Declined</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" size="sm" className="h-8 text-xs">
-                      <StickyNote className="h-3.5 w-3.5 mr-1" />
-                      Note
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-8 text-xs">
-                      <MessageSquare className="h-3.5 w-3.5 mr-1" />
-                      Respond
-                    </Button>
+                    
+                    {/* Add Note Dialog */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8">
+                          <StickyNote className="h-3.5 w-3.5 mr-1" />
+                          Add Note
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add Note</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 pt-4">
+                          <Textarea
+                            placeholder="Enter your note..."
+                            value={newNote}
+                            onChange={(e) => setNewNote(e.target.value)}
+                            rows={4}
+                          />
+                          <Button 
+                            onClick={() => {
+                              if (newNote.trim()) {
+                                addNoteToRequest(request.id, newNote);
+                                setNewNote('');
+                              }
+                            }}
+                            className="w-full"
+                          >
+                            Save Note
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* Forward to Dr. Johnson */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8">
+                          <Forward className="h-3.5 w-3.5 mr-1" />
+                          Forward to Dr. Johnson
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Forward to Dr. Johnson</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 pt-4">
+                          <Textarea
+                            placeholder="Add a note for Dr. Johnson..."
+                            value={forwardNote}
+                            onChange={(e) => setForwardNote(e.target.value)}
+                            rows={4}
+                          />
+                          <Button 
+                            onClick={() => {
+                              if (forwardNote.trim()) {
+                                forwardToDrJohnson(request, forwardNote);
+                                setForwardNote('');
+                              }
+                            }}
+                            className="w-full"
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            Forward Request
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
               </DialogContent>
@@ -482,19 +672,6 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
           </div>
         ))}
       </div>
-
-      {filteredRequests.length === 0 && (
-        <div className="border border-dashed border-border rounded-lg p-8 text-center">
-          <FileText className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-          <h3 className="font-medium text-foreground mb-1">No booking requests found</h3>
-          <p className="text-sm text-muted-foreground">
-            {searchTerm || statusFilter !== 'all' 
-              ? 'Try adjusting your search or filter.'
-              : 'Booking requests will appear here when organizations submit performance inquiries.'
-            }
-          </p>
-        </div>
-      )}
     </div>
   );
 };
