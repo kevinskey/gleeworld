@@ -30,6 +30,7 @@ import { ClassNotesManager } from '@/components/course/ClassNotesManager';
 import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 import { CourseClassCalendar } from '@/components/course/CourseClassCalendar';
 import { TestBuilder } from '@/components/test-builder/TestBuilder';
+import { CoursePollManager } from '@/components/course/CoursePollManager';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -290,15 +291,8 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'tests' && dbCourse && (
               <TestBuilder courseId={dbCourse.id} courseName={course.title} />
             )}
-            {activeTab === 'polls' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Polls & Surveys</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Polls feature coming soon.</p>
-                </CardContent>
-              </Card>
+            {activeTab === 'polls' && dbCourse && (
+              <CoursePollManager courseId={dbCourse.id} courseName={course.title} />
             )}
             {activeTab === 'rubrics' && (
               <RubricManager />
