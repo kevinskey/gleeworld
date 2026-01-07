@@ -1,6 +1,6 @@
 // Service Worker for GleeWorld PWA
-// Version: 5.0 - January 2026
-const CACHE_VERSION = 'v5';
+// Version: 5.1 - January 2026
+const CACHE_VERSION = 'v5.1';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
