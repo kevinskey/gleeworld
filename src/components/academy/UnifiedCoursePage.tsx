@@ -290,7 +290,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {/* Course Header - Card on Desktop */}
             <Card className="bg-gradient-to-r from-primary to-primary/80 border-0 hidden lg:block">
               <CardHeader className="pb-2">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3 mb-2 bg-[#003666]">
                   <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
                   <Badge variant="outline" className="border-white/30 text-white px-0 pt-[10px]">
                     {course.level}
