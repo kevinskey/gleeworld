@@ -18,24 +18,24 @@ interface StudentSyllabusViewProps {
 interface SyllabusData {
   id: string;
   name: string;
-  term: string;
-  credits: number;
-  class_time: string;
-  classroom: string;
-  instructor_name: string;
-  instructor_email: string;
-  instructor_office: string;
-  office_hours: string;
-  purpose: string;
+  term: string | null;
+  credits: number | null;
+  class_time: string | null;
+  classroom: string | null;
+  instructor_name: string | null;
+  instructor_email: string | null;
+  instructor_office: string | null;
+  office_hours: string | null;
+  purpose: string | null;
   grading_breakdown: any;
   grading_scale: any;
   weekly_schedule: any;
-  attendance_policy: string;
-  late_assignment_policy: string;
-  academic_honesty_policy: string;
-  disability_statement: string;
+  attendance_policy: string | null;
+  late_assignment_policy: string | null;
+  academic_honesty_policy: string | null;
+  disability_statement: string | null;
   additional_policies: any;
-  status: string;
+  is_published: boolean | null;
 }
 
 interface LearningObjective {
@@ -73,9 +73,9 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
       // Fetch published syllabus template
       const { data: syllabusData, error: syllabusError } = await supabase
         .from('gw_syllabus_templates')
-        .select('id, name, term, credits, class_time, classroom, instructor_name, instructor_email, instructor_office, office_hours, purpose, grading_breakdown, grading_scale, weekly_schedule, attendance_policy, late_assignment_policy, academic_honesty_policy, disability_statement, additional_policies, status')
+        .select('id, name, term, credits, class_time, classroom, instructor_name, instructor_email, instructor_office, office_hours, purpose, grading_breakdown, grading_scale, weekly_schedule, attendance_policy, late_assignment_policy, academic_honesty_policy, disability_statement, additional_policies, is_published')
         .eq('course_id', course.id)
-        .eq('status', 'published')
+        .eq('is_published', true)
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
