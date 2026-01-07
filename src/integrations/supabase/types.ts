@@ -1928,6 +1928,54 @@ export type Database = {
         }
         Relationships: []
       }
+      class_notes: {
+        Row: {
+          content: string | null
+          course_id: string
+          created_at: string
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          is_pinned: boolean | null
+          note_type: string
+          title: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          content?: string | null
+          course_id: string
+          created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          note_type?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          content?: string | null
+          course_id?: string
+          created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          note_type?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       cohort_members: {
         Row: {
           cohort_id: string

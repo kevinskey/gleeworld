@@ -25,6 +25,7 @@ import { StudentCommunications } from '@/components/mus240/instructor/StudentCom
 import { SyllabusTemplateEditor } from '@/components/academy/syllabus/SyllabusTemplateEditor';
 import { ModulesSection } from '@/components/course/ModulesSection';
 import { CalendarSection } from '@/components/course/CalendarSection';
+import { ClassNotesManager } from '@/components/course/ClassNotesManager';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -273,15 +274,8 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'modules' && dbCourse && (
               <ModulesSection courseId={dbCourse.id} />
             )}
-            {activeTab === 'class-notes' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Class Notes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Class notes feature coming soon.</p>
-                </CardContent>
-              </Card>
+            {activeTab === 'class-notes' && dbCourse && (
+              <ClassNotesManager courseId={dbCourse.id} isInstructor={true} />
             )}
             {activeTab === 'calendar' && dbCourse?.id && (
               <CalendarSection courseId={dbCourse.id} />
