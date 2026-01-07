@@ -345,12 +345,12 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                   </Collapsible>;
           })}
             </div> : <Card>
-              <CardContent className="py-12 text-center">
-                <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+              <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+                <Calendar className="h-12 w-12 mb-4 text-muted-foreground/50" />
                 <p className="text-primary-foreground">
                   No course outline available yet.
                 </p>
-                <p className="text-sm mt-1 text-primary-foreground text-center">
+                <p className="text-sm mt-1 text-primary-foreground">
                   Click "Add Week" to create your first module.
                 </p>
               </CardContent>
