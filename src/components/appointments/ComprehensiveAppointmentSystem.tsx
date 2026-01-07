@@ -13,15 +13,8 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMont
 import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  useRealAppointments, 
-  useCreateRealAppointment, 
-  useUpdateRealAppointment, 
-  useDeleteRealAppointment,
-  type Appointment 
-} from '@/hooks/useRealAppointments';
+import { useRealAppointments, useCreateRealAppointment, useUpdateRealAppointment, useDeleteRealAppointment, type Appointment } from '@/hooks/useRealAppointments';
 import { useCalendars } from '@/hooks/useCalendars';
-
 export const ComprehensiveAppointmentSystem = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
@@ -30,22 +23,28 @@ export const ComprehensiveAppointmentSystem = () => {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming');
   const [mainView, setMainView] = useState<'dashboard' | 'calendar' | 'management' | 'services'>('dashboard');
   const navigate = useNavigate();
-  
-  const { user } = useAuth();
-  const { userProfile } = useUserProfile(user);
-  
-  const { data: appointments = [], isLoading, error } = useRealAppointments();
-  const { data: calendars = [] } = useCalendars();
+  const {
+    user
+  } = useAuth();
+  const {
+    userProfile
+  } = useUserProfile(user);
+  const {
+    data: appointments = [],
+    isLoading,
+    error
+  } = useRealAppointments();
+  const {
+    data: calendars = []
+  } = useCalendars();
   const createMutation = useCreateRealAppointment();
   const updateMutation = useUpdateRealAppointment();
   const deleteMutation = useDeleteRealAppointment();
-
   const visibleAppointments = appointments;
 
   // Stats calculations
   const stats = useMemo(() => {
     const todayAppts = visibleAppointments.filter(apt => isToday(apt.date));
-    
     return {
       total: todayAppts.length,
       upcoming: todayAppts.filter(apt => apt.status === 'confirmed' || apt.status === 'pending').length,
@@ -57,7 +56,6 @@ export const ComprehensiveAppointmentSystem = () => {
   // Filter appointments by tab
   const todayAppointments = useMemo(() => {
     const todayAppts = visibleAppointments.filter(apt => isToday(apt.date));
-    
     switch (activeTab) {
       case 'upcoming':
         return todayAppts.filter(apt => apt.status === 'confirmed' || apt.status === 'pending');
@@ -73,20 +71,18 @@ export const ComprehensiveAppointmentSystem = () => {
   // Future appointments
   const upcomingAppointments = useMemo(() => {
     const today = startOfDay(new Date());
-    return visibleAppointments
-      .filter(apt => isAfter(apt.date, today) && !isToday(apt.date))
-      .filter(apt => apt.status === 'confirmed' || apt.status === 'pending')
-      .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .slice(0, 5);
+    return visibleAppointments.filter(apt => isAfter(apt.date, today) && !isToday(apt.date)).filter(apt => apt.status === 'confirmed' || apt.status === 'pending').sort((a, b) => a.date.getTime() - b.date.getTime()).slice(0, 5);
   }, [visibleAppointments]);
 
   // Calendar
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const monthDays = eachDayOfInterval({
+    start: monthStart,
+    end: monthEnd
+  });
   const startDayOfWeek = monthStart.getDay();
   const paddingDays = Array(startDayOfWeek).fill(null);
-
   const getAppointmentsForDate = (date: Date) => {
     return visibleAppointments.filter(apt => isSameDay(new Date(apt.date), date));
   };
@@ -95,31 +91,29 @@ export const ComprehensiveAppointmentSystem = () => {
   const calendarsWithCounts = useMemo(() => {
     return calendars.slice(0, 5).map(cal => ({
       ...cal,
-      todayCount: visibleAppointments.filter(apt => 
-        isToday(apt.date) && apt.calendarId === cal.id
-      ).length
+      todayCount: visibleAppointments.filter(apt => isToday(apt.date) && apt.calendarId === cal.id).length
     }));
   }, [calendars, visibleAppointments]);
-
   const handleCheckIn = async (appointmentId: string) => {
     await updateMutation.mutateAsync({
       id: appointmentId,
-      updates: { status: 'completed' }
+      updates: {
+        status: 'completed'
+      }
     });
   };
-
   const handleAppointmentCreate = (newAppointment: Omit<Appointment, 'id'>) => {
     createMutation.mutate(newAppointment);
   };
-
   const handleAppointmentUpdate = (id: string, updates: Partial<Appointment>) => {
-    updateMutation.mutate({ id, updates });
+    updateMutation.mutate({
+      id,
+      updates
+    });
   };
-
   const handleAppointmentDelete = (id: string) => {
     deleteMutation.mutate(id);
   };
-
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'OPEN_APPOINTMENT_EDIT') {
@@ -130,35 +124,27 @@ export const ComprehensiveAppointmentSystem = () => {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
-
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
+    return <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading appointments...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (error) {
-    return (
-      <div className="text-center py-12">
+    return <div className="text-center py-12">
         <p className="text-destructive mb-4">Error loading appointments: {error.message}</p>
         <button onClick={() => window.location.reload()} className="text-primary hover:underline">
           Try again
         </button>
-      </div>
-    );
+      </div>;
   }
-
   const userName = userProfile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'User';
 
   // Render sub-views
   if (mainView !== 'dashboard') {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <div className="bg-[#1e3a5f] text-white px-4 py-4">
           <div className="max-w-7xl mx-auto flex items-center gap-4">
             <Button variant="ghost" size="sm" className="text-white hover:bg-white/20" onClick={() => setMainView('dashboard')}>
@@ -169,27 +155,13 @@ export const ComprehensiveAppointmentSystem = () => {
           </div>
         </div>
         <div className="max-w-7xl mx-auto p-4 md:p-6">
-          {mainView === 'calendar' && (
-            <EnhancedAppointmentCalendar appointments={visibleAppointments} onAppointmentSelect={setSelectedAppointment} />
-          )}
-          {mainView === 'management' && (
-            <AppointmentManager
-              appointments={visibleAppointments}
-              onAppointmentCreate={handleAppointmentCreate}
-              onAppointmentUpdate={handleAppointmentUpdate}
-              onAppointmentDelete={handleAppointmentDelete}
-              editingAppointmentId={editingAppointmentId}
-              onEditingAppointmentIdChange={setEditingAppointmentId}
-            />
-          )}
+          {mainView === 'calendar' && <EnhancedAppointmentCalendar appointments={visibleAppointments} onAppointmentSelect={setSelectedAppointment} />}
+          {mainView === 'management' && <AppointmentManager appointments={visibleAppointments} onAppointmentCreate={handleAppointmentCreate} onAppointmentUpdate={handleAppointmentUpdate} onAppointmentDelete={handleAppointmentDelete} editingAppointmentId={editingAppointmentId} onEditingAppointmentIdChange={setEditingAppointmentId} />}
           {mainView === 'services' && <AppointmentServiceManager />}
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Blue Header */}
       <div className="bg-[#1e3a5f] text-white px-4 py-6 md:px-8">
         <div className="max-w-7xl mx-auto">
@@ -245,7 +217,7 @@ export const ComprehensiveAppointmentSystem = () => {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-sm text-foreground">{format(currentMonth, 'MMMM yyyy')}</h3>
+                  <h3 className="font-semibold text-sm text-primary-foreground">{format(currentMonth, 'MMMM yyyy')}</h3>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
                       <ChevronLeft className="h-4 w-4" />
@@ -257,36 +229,20 @@ export const ComprehensiveAppointmentSystem = () => {
                 </div>
                 
                 <div className="grid grid-cols-7 gap-1 text-center mb-2">
-                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                    <div key={day} className="text-xs text-muted-foreground font-medium p-1">{day}</div>
-                  ))}
+                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => <div key={day} className="text-xs text-muted-foreground font-medium p-1">{day}</div>)}
                 </div>
                 
                 <div className="grid grid-cols-7 gap-1">
                   {paddingDays.map((_, i) => <div key={`pad-${i}`} className="p-1" />)}
                   {monthDays.map(date => {
-                    const dayAppts = getAppointmentsForDate(date);
-                    const isSelected = isSameDay(date, selectedDate);
-                    const isCurrentDay = isToday(date);
-                    
-                    return (
-                      <button
-                        key={date.toISOString()}
-                        onClick={() => setSelectedDate(date)}
-                        className={cn(
-                          "p-1 text-xs rounded-full relative transition-colors",
-                          isSelected && "bg-primary text-primary-foreground",
-                          isCurrentDay && !isSelected && "bg-blue-100 text-blue-700 font-bold",
-                          !isSelected && !isCurrentDay && "hover:bg-muted"
-                        )}
-                      >
+                  const dayAppts = getAppointmentsForDate(date);
+                  const isSelected = isSameDay(date, selectedDate);
+                  const isCurrentDay = isToday(date);
+                  return <button key={date.toISOString()} onClick={() => setSelectedDate(date)} className={cn("p-1 text-xs rounded-full relative transition-colors", isSelected && "bg-primary text-primary-foreground", isCurrentDay && !isSelected && "bg-blue-100 text-blue-700 font-bold", !isSelected && !isCurrentDay && "hover:bg-muted")}>
                         {format(date, 'd')}
-                        {dayAppts.length > 0 && !isSelected && (
-                          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />
-                        )}
-                      </button>
-                    );
-                  })}
+                        {dayAppts.length > 0 && !isSelected && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />}
+                      </button>;
+                })}
                 </div>
               </CardContent>
             </Card>
@@ -295,21 +251,19 @@ export const ComprehensiveAppointmentSystem = () => {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-sm text-foreground">Calendars</h3>
+                  <h3 className="font-semibold text-sm text-primary-foreground">Calendars</h3>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="space-y-2">
-                  {calendarsWithCounts.length > 0 ? calendarsWithCounts.map(cal => (
-                    <div key={cal.id} className="flex items-center justify-between text-sm">
+                  {calendarsWithCounts.length > 0 ? calendarsWithCounts.map(cal => <div key={cal.id} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cal.color || '#3b82f6' }} />
-                        <span className="truncate text-foreground">{cal.name}</span>
+                        <div className="w-3 h-3 rounded-full" style={{
+                      backgroundColor: cal.color || '#3b82f6'
+                    }} />
+                        <span className="truncate text-primary-foreground">{cal.name}</span>
                       </div>
                       <span className="text-muted-foreground">{cal.todayCount > 0 ? format(new Date(), 'HH:mm') : ''}</span>
-                    </div>
-                  )) : (
-                    <p className="text-sm text-muted-foreground">No calendars</p>
-                  )}
+                    </div>) : <p className="text-sm text-muted-foreground">No calendars</p>}
                 </div>
               </CardContent>
             </Card>
@@ -340,10 +294,10 @@ export const ComprehensiveAppointmentSystem = () => {
             <Card>
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-foreground">Today's Appointments</h2>
+                  <h2 className="text-lg font-semibold text-primary-foreground">Today's Appointments</h2>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMainView('management')}>
-                      <Settings className="h-4 w-4" />
+                      <Settings className="h-4 w-4 text-secondary-foreground" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
                       <ChevronRight className="h-4 w-4" />
@@ -351,7 +305,7 @@ export const ComprehensiveAppointmentSystem = () => {
                   </div>
                 </div>
 
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+                <Tabs value={activeTab} onValueChange={v => setActiveTab(v as any)} className="w-full">
                   <TabsList className="w-full sm:w-auto mb-4">
                     <TabsTrigger value="upcoming" className="text-xs sm:text-sm">Upcoming</TabsTrigger>
                     <TabsTrigger value="completed" className="text-xs sm:text-sm">Completed</TabsTrigger>
@@ -360,14 +314,10 @@ export const ComprehensiveAppointmentSystem = () => {
 
                   <TabsContent value={activeTab} className="mt-0">
                     <div className="space-y-3">
-                      {todayAppointments.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <CalendarDays className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p className="text-muted-foreground">No {activeTab} appointments for today</p>
-                        </div>
-                      ) : (
-                        todayAppointments.sort((a, b) => a.time.localeCompare(b.time)).map(apt => (
-                          <div key={apt.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                      {todayAppointments.length === 0 ? <div className="text-center py-8 text-muted-foreground">
+                          <CalendarDays className="h-12 w-12 mx-auto mb-2 opacity-50 text-secondary" />
+                          <p className="text-muted-foreground bg-zinc-50">No {activeTab} appointments for today</p>
+                        </div> : todayAppointments.sort((a, b) => a.time.localeCompare(b.time)).map(apt => <div key={apt.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                             <div className="flex items-center gap-4">
                               <div className="text-sm font-semibold text-primary min-w-[70px]">
                                 {apt.time.slice(0, 5).replace(/^0/, '')} {parseInt(apt.time) >= 12 ? 'PM' : 'AM'}
@@ -378,24 +328,20 @@ export const ComprehensiveAppointmentSystem = () => {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              {apt.status === 'pending' || apt.status === 'confirmed' ? (
-                                <Button size="sm" className="bg-[#1e88e5] hover:bg-[#1976d2] text-white" onClick={() => handleCheckIn(apt.id)} disabled={updateMutation.isPending}>
+                              {apt.status === 'pending' || apt.status === 'confirmed' ? <Button size="sm" className="bg-[#1e88e5] hover:bg-[#1976d2] text-white" onClick={() => handleCheckIn(apt.id)} disabled={updateMutation.isPending}>
                                   <Check className="h-4 w-4 mr-1" />
                                   Check In
-                                </Button>
-                              ) : (
-                                <Button size="sm" variant="outline" className="text-[#1e88e5] border-[#1e88e5]">
+                                </Button> : <Button size="sm" variant="outline" className="text-[#1e88e5] border-[#1e88e5]">
                                   <Eye className="h-4 w-4 mr-1" />
                                   View
-                                </Button>
-                              )}
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedAppointment(apt); }}>
+                                </Button>}
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                          setSelectedAppointment(apt);
+                        }}>
                                 <ArrowRight className="h-4 w-4" />
                               </Button>
                             </div>
-                          </div>
-                        ))
-                      )}
+                          </div>)}
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -406,20 +352,16 @@ export const ComprehensiveAppointmentSystem = () => {
             <Card>
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-foreground">Upcoming Appointments</h2>
+                  <h2 className="text-lg font-semibold text-primary-foreground">Upcoming Appointments</h2>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMainView('calendar')}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
                 
                 <div className="space-y-3">
-                  {upcomingAppointments.length === 0 ? (
-                    <div className="text-center py-6 text-muted-foreground">
-                      <p className="text-muted-foreground">No upcoming appointments scheduled</p>
-                    </div>
-                  ) : (
-                    upcomingAppointments.map(apt => (
-                      <div key={apt.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                  {upcomingAppointments.length === 0 ? <div className="text-center py-6 text-muted-foreground">
+                      <p className="text-muted-foreground bg-secondary-foreground">No upcoming appointments scheduled</p>
+                    </div> : upcomingAppointments.map(apt => <div key={apt.id} className="flex items-center justify-between py-2 border-b last:border-0">
                         <div className="flex items-center gap-4">
                           <div className="text-sm font-semibold text-primary min-w-[70px]">
                             {apt.time.slice(0, 5).replace(/^0/, '')} {parseInt(apt.time) >= 12 ? 'PM' : 'AM'}
@@ -436,9 +378,7 @@ export const ComprehensiveAppointmentSystem = () => {
                             <ArrowRight className="h-3 w-3" />
                           </Button>
                         </div>
-                      </div>
-                    ))
-                  )}
+                      </div>)}
                 </div>
               </CardContent>
             </Card>
@@ -468,8 +408,7 @@ export const ComprehensiveAppointmentSystem = () => {
           <DialogHeader>
             <DialogTitle>Appointment Details</DialogTitle>
           </DialogHeader>
-          {selectedAppointment && (
-            <div className="space-y-4">
+          {selectedAppointment && <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Client</p>
@@ -493,44 +432,39 @@ export const ComprehensiveAppointmentSystem = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <p className={cn("font-medium capitalize", 
-                    selectedAppointment.status === 'completed' && "text-green-600",
-                    selectedAppointment.status === 'cancelled' && "text-red-600",
-                    selectedAppointment.status === 'pending' && "text-yellow-600"
-                  )}>{selectedAppointment.status}</p>
+                  <p className={cn("font-medium capitalize", selectedAppointment.status === 'completed' && "text-green-600", selectedAppointment.status === 'cancelled' && "text-red-600", selectedAppointment.status === 'pending' && "text-yellow-600")}>{selectedAppointment.status}</p>
                 </div>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Email</p>
                 <p className="font-medium">{selectedAppointment.clientEmail}</p>
               </div>
-              {selectedAppointment.clientPhone && (
-                <div>
+              {selectedAppointment.clientPhone && <div>
                   <p className="text-sm text-muted-foreground">Phone</p>
                   <p className="font-medium">{selectedAppointment.clientPhone}</p>
-                </div>
-              )}
-              {selectedAppointment.notes && (
-                <div>
+                </div>}
+              {selectedAppointment.notes && <div>
                   <p className="text-sm text-muted-foreground">Notes</p>
                   <p className="text-sm bg-muted p-2 rounded">{selectedAppointment.notes}</p>
-                </div>
-              )}
+                </div>}
               <div className="flex gap-2 pt-4">
-                {(selectedAppointment.status === 'pending' || selectedAppointment.status === 'confirmed') && (
-                  <Button className="flex-1 bg-[#1e88e5] hover:bg-[#1976d2]" onClick={() => { handleCheckIn(selectedAppointment.id); setSelectedAppointment(null); }}>
+                {(selectedAppointment.status === 'pending' || selectedAppointment.status === 'confirmed') && <Button className="flex-1 bg-[#1e88e5] hover:bg-[#1976d2]" onClick={() => {
+              handleCheckIn(selectedAppointment.id);
+              setSelectedAppointment(null);
+            }}>
                     <Check className="h-4 w-4 mr-2" />
                     Check In
-                  </Button>
-                )}
-                <Button variant="outline" className="flex-1" onClick={() => { setEditingAppointmentId(selectedAppointment.id); setMainView('management'); setSelectedAppointment(null); }}>
+                  </Button>}
+                <Button variant="outline" className="flex-1" onClick={() => {
+              setEditingAppointmentId(selectedAppointment.id);
+              setMainView('management');
+              setSelectedAppointment(null);
+            }}>
                   Edit
                 </Button>
               </div>
-            </div>
-          )}
+            </div>}
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
