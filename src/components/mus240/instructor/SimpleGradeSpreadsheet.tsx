@@ -333,7 +333,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
                     <div className="flex flex-col items-center justify-center text-primary-foreground">
                       <span className="hidden sm:inline">Assignments</span>
                       <span className="sm:hidden">Assign</span>
-                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.assignments}%)</span>
+                      <span className="text-xs text-primary-foreground">({GRADE_WEIGHTS.assignments}%)</span>
                     </div>
                   </TableHead>
                   <TableHead className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[80px]" onClick={() => handleSort('midterm_pct')}>
