@@ -95,11 +95,14 @@ export const CalendarViews = () => {
                 </div>
               </div>
 
-              {/* Calendar Filters - inline on mobile */}
-              <div className="flex items-center gap-1 mb-2 flex-shrink-0">
-                <CalendarFilterStrip onCalendarsChange={setVisibleCalendarIds} />
-                {isAdmin && (
-                  <>
+               {/* Calendar Filters - inline on mobile */}
+               <div className="flex items-center gap-1 mb-2 flex-shrink-0">
+                 <CalendarFilterStrip
+                   onCalendarsChange={setVisibleCalendarIds}
+                   onCalendarColorUpdated={fetchEvents}
+                 />
+                 {isAdmin && (
+                   <>
                     <Button variant="ghost" size="icon" onClick={() => navigate('/calendar/settings')} className="h-6 w-6 flex-shrink-0">
                       <Settings className="h-3.5 w-3.5" />
                     </Button>
