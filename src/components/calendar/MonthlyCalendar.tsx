@@ -197,7 +197,10 @@ export const MonthlyCalendar = ({
               {hasEvents && (
                 <div className="flex flex-col gap-0.5 mt-0.5 w-full overflow-hidden">
                   {dayEvents.slice(0, 2).map((event) => {
-                    const colorClass = (() => {
+                    // Use calendar color if available, otherwise fall back to event_type colors
+                    const calendarColor = event.gw_calendars?.color;
+                    
+                    const fallbackColorClass = (() => {
                       switch (event.event_type) {
                         case 'performance':
                           return 'bg-primary text-primary-foreground';
@@ -232,9 +235,10 @@ export const MonthlyCalendar = ({
                         <div
                           onClick={(e) => handleEventClick(event, e)}
                           className={cn(
-                            'text-[8px] sm:text-[10px] px-1 py-0.5 rounded truncate cursor-pointer hover:opacity-80 transition-opacity',
-                            colorClass
+                            'text-[8px] sm:text-[10px] px-1 py-0.5 rounded truncate cursor-pointer hover:opacity-80 transition-opacity text-white',
+                            !calendarColor && fallbackColorClass
                           )}
+                          style={calendarColor ? { backgroundColor: calendarColor } : undefined}
                           title={event.title}
                         >
                           {event.title}
