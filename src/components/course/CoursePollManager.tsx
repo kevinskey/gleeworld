@@ -315,7 +315,7 @@ export const CoursePollManager: React.FC<CoursePollManagerProps> = ({ courseId, 
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 rows={2}
-                className="border-purple-200 focus:border-purple-400"
+                className="border-purple-200 focus:border-purple-400 text-base"
               />
             </div>
             <div className="space-y-2">
