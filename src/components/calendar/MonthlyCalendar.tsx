@@ -193,22 +193,22 @@ export const MonthlyCalendar = ({
                 {format(day, 'd')}
               </div>
 
-              {/* Event Lines - Minimalist indicator */}
+              {/* Event Text Labels */}
               {hasEvents && (
-                <div className="flex flex-col items-center gap-0.5 mt-0.5 w-full">
-                  {dayEvents.slice(0, 3).map((event) => {
-                    const lineClass = (() => {
+                <div className="flex flex-col gap-0.5 mt-0.5 w-full overflow-hidden">
+                  {dayEvents.slice(0, 2).map((event) => {
+                    const colorClass = (() => {
                       switch (event.event_type) {
                         case 'performance':
-                          return 'bg-primary';
+                          return 'bg-primary text-primary-foreground';
                         case 'rehearsal':
-                          return 'bg-secondary';
+                          return 'bg-secondary text-secondary-foreground';
                         case 'meeting':
-                          return 'bg-accent';
+                          return 'bg-accent text-accent-foreground';
                         case 'social':
-                          return 'bg-muted-foreground';
+                          return 'bg-muted text-muted-foreground';
                         default:
-                          return 'bg-primary';
+                          return 'bg-primary text-primary-foreground';
                       }
                     })();
 
@@ -232,16 +232,18 @@ export const MonthlyCalendar = ({
                         <div
                           onClick={(e) => handleEventClick(event, e)}
                           className={cn(
-                            'h-1 sm:h-1.5 w-full rounded-full cursor-pointer hover:opacity-80 transition-opacity',
-                            lineClass
+                            'text-[8px] sm:text-[10px] px-1 py-0.5 rounded truncate cursor-pointer hover:opacity-80 transition-opacity',
+                            colorClass
                           )}
                           title={event.title}
-                        />
+                        >
+                          {event.title}
+                        </div>
                       </EventContextMenu>
                     );
                   })}
-                  {dayEvents.length > 3 && (
-                    <span className="text-[10px] text-muted-foreground">+{dayEvents.length - 3}</span>
+                  {dayEvents.length > 2 && (
+                    <span className="text-[8px] sm:text-[10px] text-muted-foreground">+{dayEvents.length - 2}</span>
                   )}
                 </div>
               )}
