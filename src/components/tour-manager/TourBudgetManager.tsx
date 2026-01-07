@@ -177,21 +177,22 @@ export const TourBudgetManager = () => {
     setLoading(true);
     try {
       // Fetch budget items
-      const { data: items, error: itemsError } = await supabase
-        .from('tour_budget_items')
-        .select('*')
-        .order('created_at', { ascending: true });
-
+      const {
+        data: items,
+        error: itemsError
+      } = await supabase.from('tour_budget_items').select('*').order('created_at', {
+        ascending: true
+      });
       if (itemsError) throw itemsError;
 
       // Fetch revenues
-      const { data: revs, error: revsError } = await supabase
-        .from('tour_budget_revenues')
-        .select('*')
-        .order('created_at', { ascending: true });
-
+      const {
+        data: revs,
+        error: revsError
+      } = await supabase.from('tour_budget_revenues').select('*').order('created_at', {
+        ascending: true
+      });
       if (revsError) throw revsError;
-
       setBudgetItems((items || []).map(item => ({
         id: item.id,
         category: item.category,
@@ -203,7 +204,6 @@ export const TourBudgetManager = () => {
         notes: item.notes || undefined,
         status: item.status as 'planned' | 'confirmed' | 'paid'
       })));
-
       setRevenues((revs || []).map(rev => ({
         id: rev.id,
         source: rev.source,
@@ -221,29 +221,20 @@ export const TourBudgetManager = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchBudgetData();
 
     // Subscribe to realtime updates
-    const itemsChannel = supabase
-      .channel('tour-budget-items-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'tour_budget_items' },
-        () => fetchBudgetData()
-      )
-      .subscribe();
-
-    const revenuesChannel = supabase
-      .channel('tour-budget-revenues-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'tour_budget_revenues' },
-        () => fetchBudgetData()
-      )
-      .subscribe();
-
+    const itemsChannel = supabase.channel('tour-budget-items-changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'tour_budget_items'
+    }, () => fetchBudgetData()).subscribe();
+    const revenuesChannel = supabase.channel('tour-budget-revenues-changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'tour_budget_revenues'
+    }, () => fetchBudgetData()).subscribe();
     return () => {
       supabase.removeChannel(itemsChannel);
       supabase.removeChannel(revenuesChannel);
@@ -269,21 +260,18 @@ export const TourBudgetManager = () => {
       });
       return;
     }
-    
     try {
-      const { error } = await supabase
-        .from('tour_budget_items')
-        .insert([{
-          category: newItem.category,
-          description: newItem.description,
-          unit_cost: parseFloat(newItem.unit_cost),
-          quantity: parseInt(newItem.quantity) || 1,
-          notes: newItem.notes || null,
-          status: newItem.status
-        }]);
-
+      const {
+        error
+      } = await supabase.from('tour_budget_items').insert([{
+        category: newItem.category,
+        description: newItem.description,
+        unit_cost: parseFloat(newItem.unit_cost),
+        quantity: parseInt(newItem.quantity) || 1,
+        notes: newItem.notes || null,
+        status: newItem.status
+      }]);
       if (error) throw error;
-
       setNewItem({
         category: 'transportation',
         description: '',
@@ -306,7 +294,6 @@ export const TourBudgetManager = () => {
       });
     }
   };
-
   const handleUpdateItem = async (id: string, updates: Partial<BudgetLineItem>) => {
     try {
       const dbUpdates: Record<string, any> = {};
@@ -316,12 +303,9 @@ export const TourBudgetManager = () => {
       if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
-
-      const { error } = await supabase
-        .from('tour_budget_items')
-        .update(dbUpdates)
-        .eq('id', id);
-
+      const {
+        error
+      } = await supabase.from('tour_budget_items').update(dbUpdates).eq('id', id);
       if (error) throw error;
     } catch (error) {
       console.error('Error updating item:', error);
@@ -332,16 +316,12 @@ export const TourBudgetManager = () => {
       });
     }
   };
-
   const handleDeleteItem = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('tour_budget_items')
-        .delete()
-        .eq('id', id);
-
+      const {
+        error
+      } = await supabase.from('tour_budget_items').delete().eq('id', id);
       if (error) throw error;
-
       toast({
         title: "Item deleted"
       });
@@ -354,7 +334,6 @@ export const TourBudgetManager = () => {
       });
     }
   };
-
   const handleAddRevenue = async () => {
     if (!newRevenue.source || !newRevenue.amount) {
       toast({
@@ -364,18 +343,15 @@ export const TourBudgetManager = () => {
       });
       return;
     }
-
     try {
-      const { error } = await supabase
-        .from('tour_budget_revenues')
-        .insert([{
-          source: newRevenue.source,
-          amount: parseFloat(newRevenue.amount),
-          status: newRevenue.status
-        }]);
-
+      const {
+        error
+      } = await supabase.from('tour_budget_revenues').insert([{
+        source: newRevenue.source,
+        amount: parseFloat(newRevenue.amount),
+        status: newRevenue.status
+      }]);
       if (error) throw error;
-
       setNewRevenue({
         source: '',
         amount: '',
@@ -394,14 +370,11 @@ export const TourBudgetManager = () => {
       });
     }
   };
-
   const handleDeleteRevenue = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('tour_budget_revenues')
-        .delete()
-        .eq('id', id);
-
+      const {
+        error
+      } = await supabase.from('tour_budget_revenues').delete().eq('id', id);
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting revenue:', error);
@@ -412,7 +385,6 @@ export const TourBudgetManager = () => {
       });
     }
   };
-
   const loadDefaultItems = async (category: string) => {
     const defaults = DEFAULT_LINE_ITEMS[category] || [];
     const newItems = defaults.map(d => ({
@@ -422,14 +394,11 @@ export const TourBudgetManager = () => {
       quantity: d.quantity,
       status: 'planned' as const
     }));
-
     try {
-      const { error } = await supabase
-        .from('tour_budget_items')
-        .insert(newItems);
-
+      const {
+        error
+      } = await supabase.from('tour_budget_items').insert(newItems);
       if (error) throw error;
-
       toast({
         title: "Default items added",
         description: `Added ${newItems.length} default items for ${category}`
@@ -688,8 +657,8 @@ export const TourBudgetManager = () => {
                     {items.map(item => <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50">
                         {getStatusIcon(item.status)}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{item.description}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-sm font-medium truncate text-primary-foreground">{item.description}</p>
+                          <p className="text-xs text-primary-foreground">
                             {item.quantity} × {formatCurrency(item.unit_cost)}
                           </p>
                         </div>
