@@ -234,9 +234,9 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className={cn(
-                    'text-sm font-medium',
+                    'text-sm font-medium text-white',
                     isCurrentDay && 'text-primary font-bold',
-                    isSelected && 'text-primary'
+                    isSelected && 'text-primary-foreground'
                   )}>
                     {format(date, 'd')}
                   </span>
