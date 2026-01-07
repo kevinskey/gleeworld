@@ -179,11 +179,12 @@ export const WeeklyScheduleEditor: React.FC<Props> = ({ schedule, onChange, cour
                     <GripVertical className="h-4 w-4 cursor-move" />
                   </div>
                   
-                  <div className="w-28 flex-shrink-0">
-                    <Input
+                  <div className="w-32 flex-shrink-0">
+                    <Textarea
                       value={item.week}
                       onChange={e => updateWeek(index, 'week', e.target.value)}
-                      className="font-medium"
+                      className="font-medium text-sm resize-none"
+                      rows={2}
                     />
                   </div>
                   
