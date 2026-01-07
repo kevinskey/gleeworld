@@ -303,6 +303,7 @@ export const TourBudgetManager = () => {
       if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+      if (updates.category !== undefined) dbUpdates.category = updates.category;
       const {
         error
       } = await supabase.from('tour_budget_items').update(dbUpdates).eq('id', id);
@@ -546,6 +547,95 @@ export const TourBudgetManager = () => {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Expense Dialog */}
+          <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Expense</DialogTitle>
+              </DialogHeader>
+              {editingItem && (
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Select 
+                      value={editingItem.category} 
+                      onValueChange={v => setEditingItem(prev => prev ? {...prev, category: v} : null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BUDGET_CATEGORIES.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Input 
+                      value={editingItem.description} 
+                      onChange={e => setEditingItem(prev => prev ? {...prev, description: e.target.value} : null)} 
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Unit Cost ($)</Label>
+                      <Input 
+                        type="number" 
+                        value={editingItem.unit_cost} 
+                        onChange={e => setEditingItem(prev => prev ? {...prev, unit_cost: parseFloat(e.target.value) || 0} : null)} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Quantity</Label>
+                      <Input 
+                        type="number" 
+                        value={editingItem.quantity} 
+                        onChange={e => setEditingItem(prev => prev ? {...prev, quantity: parseInt(e.target.value) || 1} : null)} 
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Actual Cost ($)</Label>
+                    <Input 
+                      type="number" 
+                      value={editingItem.actual_cost} 
+                      onChange={e => setEditingItem(prev => prev ? {...prev, actual_cost: parseFloat(e.target.value) || 0} : null)} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Notes</Label>
+                    <Textarea 
+                      value={editingItem.notes || ''} 
+                      onChange={e => setEditingItem(prev => prev ? {...prev, notes: e.target.value} : null)} 
+                      rows={2} 
+                    />
+                  </div>
+                  <Button 
+                    onClick={async () => {
+                      if (editingItem) {
+                        await handleUpdateItem(editingItem.id, {
+                          category: editingItem.category,
+                          description: editingItem.description,
+                          unit_cost: editingItem.unit_cost,
+                          quantity: editingItem.quantity,
+                          actual_cost: editingItem.actual_cost,
+                          notes: editingItem.notes
+                        });
+                        setEditingItem(null);
+                        toast({ title: "Expense updated" });
+                      }
+                    }} 
+                    className="w-full"
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -681,6 +771,9 @@ export const TourBudgetManager = () => {
                               <SelectItem value="paid">Paid</SelectItem>
                             </SelectContent>
                           </Select>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingItem(item)}>
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
