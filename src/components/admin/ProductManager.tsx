@@ -211,8 +211,15 @@ export const ProductManager = () => {
   const handleSave = async () => {
     try {
       const uploadedImageUrls = await uploadImages();
-      const existingUrls = formData.images ? formData.images.split(",").map(img => img.trim()).filter(Boolean) : [];
-      const allImageUrls = [...existingUrls, ...uploadedImageUrls];
+      const existingUrls = formData.images
+        ? formData.images.split(",").map(img => img.trim()).filter(Boolean)
+        : [];
+
+      // When editing and new files are uploaded, treat them as a replacement for the primary images
+      // (otherwise the UI keeps showing the old first image at images[0]).
+      const allImageUrls = editingProduct && uploadedImageUrls.length > 0
+        ? [...uploadedImageUrls, ...existingUrls]
+        : [...existingUrls, ...uploadedImageUrls];
       const productData = {
         title: formData.title,
         description: formData.description || null,
