@@ -9,23 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Package, 
-  Save,
-  X,
-  Upload,
-  Image as ImageIcon,
-  Search,
-  Filter,
-  ArrowUpDown,
-  Grid3X3,
-  List
-} from "lucide-react";
+import { Plus, Edit, Trash2, Package, Save, X, Upload, Image as ImageIcon, Search, Filter, ArrowUpDown, Grid3X3, List } from "lucide-react";
 import { ProductMockupGenerator } from './ProductMockupGenerator';
-
 interface Product {
   id: string;
   title: string;
@@ -40,24 +25,47 @@ interface Product {
   weight: number | null;
   requires_shipping: boolean | null;
 }
-
-const PRODUCT_TYPES = [
-  { value: "tshirts", label: "T-Shirts" },
-  { value: "hoodies", label: "Hoodies" },
-  { value: "sweatshirts", label: "Sweatshirts" },
-  { value: "jackets", label: "Jackets" },
-  { value: "hats", label: "Hats" },
-  { value: "polos", label: "Polos" },
-  { value: "drinkware", label: "Drinkware" },
-  { value: "keepsakes", label: "Keepsakes" },
-  { value: "sheet_music", label: "Sheet Music" },
-  { value: "recordings", label: "Recordings" },
-  { value: "performances", label: "Performances" },
-  { value: "musical_lessons", label: "Musical Lessons" }
-];
-
+const PRODUCT_TYPES = [{
+  value: "tshirts",
+  label: "T-Shirts"
+}, {
+  value: "hoodies",
+  label: "Hoodies"
+}, {
+  value: "sweatshirts",
+  label: "Sweatshirts"
+}, {
+  value: "jackets",
+  label: "Jackets"
+}, {
+  value: "hats",
+  label: "Hats"
+}, {
+  value: "polos",
+  label: "Polos"
+}, {
+  value: "drinkware",
+  label: "Drinkware"
+}, {
+  value: "keepsakes",
+  label: "Keepsakes"
+}, {
+  value: "sheet_music",
+  label: "Sheet Music"
+}, {
+  value: "recordings",
+  label: "Recordings"
+}, {
+  value: "performances",
+  label: "Performances"
+}, {
+  value: "musical_lessons",
+  label: "Musical Lessons"
+}];
 export const ProductManager = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -82,49 +90,40 @@ export const ProductManager = () => {
     images: "",
     tags: ""
   });
-
-  const filteredAndSortedProducts = products
-    .filter(product => {
-      const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (product.description?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                          (product.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
-      const matchesCategory = selectedCategory === "all" || product.product_type === selectedCategory;
-      return matchesSearch && matchesCategory;
-    })
-    .sort((a, b) => {
-      let aValue, bValue;
-      switch (sortBy) {
-        case "price":
-          aValue = a.price;
-          bValue = b.price;
-          break;
-        case "inventory":
-          aValue = a.inventory_quantity || 0;
-          bValue = b.inventory_quantity || 0;
-          break;
-        default:
-          aValue = a.title.toLowerCase();
-          bValue = b.title.toLowerCase();
-      }
-      
-      if (sortOrder === "asc") {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-      }
-    });
-
+  const filteredAndSortedProducts = products.filter(product => {
+    const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) || product.description?.toLowerCase().includes(searchTerm.toLowerCase()) || product.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = selectedCategory === "all" || product.product_type === selectedCategory;
+    return matchesSearch && matchesCategory;
+  }).sort((a, b) => {
+    let aValue, bValue;
+    switch (sortBy) {
+      case "price":
+        aValue = a.price;
+        bValue = b.price;
+        break;
+      case "inventory":
+        aValue = a.inventory_quantity || 0;
+        bValue = b.inventory_quantity || 0;
+        break;
+      default:
+        aValue = a.title.toLowerCase();
+        bValue = b.title.toLowerCase();
+    }
+    if (sortOrder === "asc") {
+      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+    } else {
+      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+    }
+  });
   useEffect(() => {
     loadProducts();
   }, []);
-
   const loadProducts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('gw_products')
-        .select('*')
-        .order('title');
-
+      const {
+        data,
+        error
+      } = await supabase.from('gw_products').select('*').order('title');
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
@@ -138,7 +137,6 @@ export const ProductManager = () => {
       setLoading(false);
     }
   };
-
   const resetForm = () => {
     setFormData({
       title: "",
@@ -156,7 +154,6 @@ export const ProductManager = () => {
     setEditingProduct(null);
     setSelectedFiles([]);
   };
-
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setFormData({
@@ -175,33 +172,28 @@ export const ProductManager = () => {
     setSelectedFiles([]);
     setIsDialogOpen(true);
   };
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     setSelectedFiles(files);
   };
-
   const uploadImages = async (): Promise<string[]> => {
     if (selectedFiles.length === 0) return [];
-
     setUploadingImages(true);
     const uploadedUrls: string[] = [];
-
     try {
       for (const file of selectedFiles) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-        
-        const { data, error } = await supabase.storage
-          .from('product-images')
-          .upload(fileName, file);
-
+        const {
+          data,
+          error
+        } = await supabase.storage.from('product-images').upload(fileName, file);
         if (error) throw error;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(data.path);
-
+        const {
+          data: {
+            publicUrl
+          }
+        } = supabase.storage.from('product-images').getPublicUrl(data.path);
         uploadedUrls.push(publicUrl);
       }
     } catch (error) {
@@ -214,16 +206,13 @@ export const ProductManager = () => {
     } finally {
       setUploadingImages(false);
     }
-
     return uploadedUrls;
   };
-
   const handleSave = async () => {
     try {
       const uploadedImageUrls = await uploadImages();
       const existingUrls = formData.images ? formData.images.split(",").map(img => img.trim()).filter(Boolean) : [];
       const allImageUrls = [...existingUrls, ...uploadedImageUrls];
-
       const productData = {
         title: formData.title,
         description: formData.description || null,
@@ -237,24 +226,23 @@ export const ProductManager = () => {
         images: allImageUrls,
         tags: formData.tags ? formData.tags.split(",").map(tag => tag.trim()) : []
       };
-
       if (editingProduct) {
-        const { error } = await supabase
-          .from('gw_products')
-          .update(productData)
-          .eq('id', editingProduct.id);
-
+        const {
+          error
+        } = await supabase.from('gw_products').update(productData).eq('id', editingProduct.id);
         if (error) throw error;
-        toast({ title: "Product updated successfully" });
+        toast({
+          title: "Product updated successfully"
+        });
       } else {
-        const { error } = await supabase
-          .from('gw_products')
-          .insert([productData]);
-
+        const {
+          error
+        } = await supabase.from('gw_products').insert([productData]);
         if (error) throw error;
-        toast({ title: "Product created successfully" });
+        toast({
+          title: "Product created successfully"
+        });
       }
-
       setIsDialogOpen(false);
       resetForm();
       loadProducts();
@@ -267,18 +255,16 @@ export const ProductManager = () => {
       });
     }
   };
-
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
-
     try {
-      const { error } = await supabase
-        .from('gw_products')
-        .delete()
-        .eq('id', id);
-
+      const {
+        error
+      } = await supabase.from('gw_products').delete().eq('id', id);
       if (error) throw error;
-      toast({ title: "Product deleted successfully" });
+      toast({
+        title: "Product deleted successfully"
+      });
       loadProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -289,17 +275,12 @@ export const ProductManager = () => {
       });
     }
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12">
+    return <div className="flex items-center justify-center p-12">
         <Package className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Header Section */}
       <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 md:p-8 text-primary-foreground">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -311,12 +292,7 @@ export const ProductManager = () => {
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button 
-                onClick={resetForm}
-                variant="secondary"
-                size="lg"
-                className="w-full md:w-auto"
-              >
+              <Button onClick={resetForm} variant="secondary" size="lg" className="w-full md:w-auto">
                 <Plus className="h-5 w-5 mr-2" />
                 Add Product
               </Button>
@@ -334,112 +310,86 @@ export const ProductManager = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div className="md:col-span-2">
                   <Label htmlFor="title">Product Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Enter product title"
-                  />
+                  <Input id="title" value={formData.title} onChange={e => setFormData({
+                  ...formData,
+                  title: e.target.value
+                })} placeholder="Enter product title" />
                 </div>
                 
                 <div className="md:col-span-2">
                   <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Enter product description"
-                    rows={3}
-                  />
+                  <Textarea id="description" value={formData.description} onChange={e => setFormData({
+                  ...formData,
+                  description: e.target.value
+                })} placeholder="Enter product description" rows={3} />
                 </div>
                 
                 <div>
                   <Label htmlFor="price">Price *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    placeholder="0.00"
-                  />
+                  <Input id="price" type="number" step="0.01" value={formData.price} onChange={e => setFormData({
+                  ...formData,
+                  price: e.target.value
+                })} placeholder="0.00" />
                 </div>
                 
                 <div>
                   <Label htmlFor="product_type">Category *</Label>
-                  <Select value={formData.product_type} onValueChange={(value) => setFormData({ ...formData, product_type: value })}>
+                  <Select value={formData.product_type} onValueChange={value => setFormData({
+                  ...formData,
+                  product_type: value
+                })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {PRODUCT_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
+                      {PRODUCT_TYPES.map(type => <SelectItem key={type.value} value={type.value}>
                           {type.label}
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div>
                   <Label htmlFor="inventory">Stock Quantity</Label>
-                  <Input
-                    id="inventory"
-                    type="number"
-                    value={formData.inventory_quantity}
-                    onChange={(e) => setFormData({ ...formData, inventory_quantity: e.target.value })}
-                    placeholder="Leave empty for unlimited"
-                  />
+                  <Input id="inventory" type="number" value={formData.inventory_quantity} onChange={e => setFormData({
+                  ...formData,
+                  inventory_quantity: e.target.value
+                })} placeholder="Leave empty for unlimited" />
                 </div>
                 
                 <div>
                   <Label htmlFor="vendor">Vendor</Label>
-                  <Input
-                    id="vendor"
-                    value={formData.vendor}
-                    onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-                    placeholder="Vendor name"
-                  />
+                  <Input id="vendor" value={formData.vendor} onChange={e => setFormData({
+                  ...formData,
+                  vendor: e.target.value
+                })} placeholder="Vendor name" />
                 </div>
                 
                 <div className="md:col-span-2">
                   <Label>Product Images</Label>
                   <div className="mt-2 border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
-                    <Input
-                      id="image_upload"
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
+                    <Input id="image_upload" type="file" multiple accept="image/*" onChange={handleFileSelect} className="hidden" />
                     <label htmlFor="image_upload" className="flex flex-col items-center cursor-pointer">
                       <ImageIcon className="h-10 w-10 text-muted-foreground mb-2" />
                       <span className="text-sm font-medium">Click to upload images</span>
                       <span className="text-xs text-muted-foreground">PNG, JPG up to 10MB</span>
                     </label>
-                    {selectedFiles.length > 0 && (
-                      <p className="text-sm text-primary text-center mt-2">
+                    {selectedFiles.length > 0 && <p className="text-sm text-primary text-center mt-2">
                         {selectedFiles.length} file(s) selected
-                      </p>
-                    )}
+                      </p>}
                   </div>
-                  <Input
-                    value={formData.images}
-                    onChange={(e) => setFormData({ ...formData, images: e.target.value })}
-                    placeholder="Or paste image URLs (comma-separated)"
-                    className="mt-2"
-                  />
+                  <Input value={formData.images} onChange={e => setFormData({
+                  ...formData,
+                  images: e.target.value
+                })} placeholder="Or paste image URLs (comma-separated)" className="mt-2" />
                 </div>
                 
                 <div className="md:col-span-2">
                   <Label htmlFor="tags">Tags</Label>
-                  <Input
-                    id="tags"
-                    value={formData.tags}
-                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                    placeholder="tag1, tag2, tag3"
-                  />
+                  <Input id="tags" value={formData.tags} onChange={e => setFormData({
+                  ...formData,
+                  tags: e.target.value
+                })} placeholder="tag1, tag2, tag3" />
                 </div>
               </div>
               
@@ -448,11 +398,7 @@ export const ProductManager = () => {
                   Cancel
                 </Button>
                 <Button onClick={handleSave} disabled={uploadingImages}>
-                  {uploadingImages ? (
-                    <Upload className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
+                  {uploadingImages ? <Upload className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                   {uploadingImages ? "Uploading..." : editingProduct ? "Update" : "Create"}
                 </Button>
               </div>
@@ -462,7 +408,7 @@ export const ProductManager = () => {
       </div>
 
       {/* Mockup Generator */}
-      <ProductMockupGenerator />
+      
 
       {/* Search & Filters */}
       <div className="bg-card rounded-lg border p-4">
@@ -470,12 +416,7 @@ export const ProductManager = () => {
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
+            <Input placeholder="Search products..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
           </div>
           
           {/* Filters Row */}
@@ -488,11 +429,9 @@ export const ProductManager = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {PRODUCT_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
+                  {PRODUCT_TYPES.map(type => <SelectItem key={type.value} value={type.value}>
                       {type.label}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
               
@@ -508,32 +447,17 @@ export const ProductManager = () => {
                 </SelectContent>
               </Select>
               
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                title={sortOrder === "asc" ? "Ascending" : "Descending"}
-              >
+              <Button variant="outline" size="icon" onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")} title={sortOrder === "asc" ? "Ascending" : "Descending"}>
                 {sortOrder === "asc" ? "↑" : "↓"}
               </Button>
             </div>
             
             {/* View Toggle */}
             <div className="flex border rounded-md">
-              <Button
-                variant={viewMode === "grid" ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-                className="rounded-r-none"
-              >
+              <Button variant={viewMode === "grid" ? "secondary" : "ghost"} size="icon" onClick={() => setViewMode("grid")} className="rounded-r-none">
                 <Grid3X3 className="h-4 w-4" />
               </Button>
-              <Button
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-                className="rounded-l-none"
-              >
+              <Button variant={viewMode === "list" ? "secondary" : "ghost"} size="icon" onClick={() => setViewMode("list")} className="rounded-l-none">
                 <List className="h-4 w-4" />
               </Button>
             </div>
@@ -542,30 +466,17 @@ export const ProductManager = () => {
       </div>
 
       {/* Products Grid/List */}
-      {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredAndSortedProducts.map((product) => (
-            <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-all">
+      {viewMode === "grid" ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredAndSortedProducts.map(product => <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-all">
               {/* Image */}
               <div className="relative aspect-square bg-muted">
-                {product.images && product.images.length > 0 ? (
-                  <img 
-                    src={product.images[0]} 
-                    alt={product.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder.svg';
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                {product.images && product.images.length > 0 ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" onError={e => {
+            e.currentTarget.src = '/placeholder.svg';
+          }} /> : <div className="w-full h-full flex items-center justify-center">
                     <Package className="h-12 w-12 text-muted-foreground/30" />
-                  </div>
-                )}
+                  </div>}
                 {/* Status Badge */}
-                <Badge 
-                  className={`absolute top-2 left-2 ${product.is_active ? 'bg-green-500' : 'bg-muted'}`}
-                >
+                <Badge className={`absolute top-2 left-2 ${product.is_active ? 'bg-green-500' : 'bg-muted'}`}>
                   {product.is_active ? "Active" : "Inactive"}
                 </Badge>
                 {/* Action buttons on hover */}
@@ -591,31 +502,18 @@ export const ProductManager = () => {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filteredAndSortedProducts.map((product) => (
-            <Card key={product.id} className="hover:shadow-md transition-shadow">
+            </Card>)}
+        </div> : <div className="space-y-2">
+          {filteredAndSortedProducts.map(product => <Card key={product.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   {/* Thumbnail */}
                   <div className="w-16 h-16 rounded-md bg-muted overflow-hidden flex-shrink-0">
-                    {product.images && product.images.length > 0 ? (
-                      <img 
-                        src={product.images[0]} 
-                        alt={product.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder.svg';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
+                    {product.images && product.images.length > 0 ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" onError={e => {
+                e.currentTarget.src = '/placeholder.svg';
+              }} /> : <div className="w-full h-full flex items-center justify-center">
                         <Package className="h-6 w-6 text-muted-foreground/30" />
-                      </div>
-                    )}
+                      </div>}
                   </div>
                   
                   {/* Info */}
@@ -649,32 +547,25 @@ export const ProductManager = () => {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+            </Card>)}
+        </div>}
 
       {/* Empty State */}
-      {filteredAndSortedProducts.length === 0 && !loading && (
-        <div className="text-center py-16 bg-muted/30 rounded-xl">
+      {filteredAndSortedProducts.length === 0 && !loading && <div className="text-center py-16 bg-muted/30 rounded-xl">
           <Package className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">
             {products.length === 0 ? "No products yet" : "No products found"}
           </h3>
           <p className="text-muted-foreground mb-6">
-            {products.length === 0 
-              ? "Get started by adding your first product." 
-              : "Try adjusting your search or filter criteria."
-            }
+            {products.length === 0 ? "Get started by adding your first product." : "Try adjusting your search or filter criteria."}
           </p>
-          {products.length === 0 && (
-            <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+          {products.length === 0 && <Button onClick={() => {
+        resetForm();
+        setIsDialogOpen(true);
+      }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Your First Product
-            </Button>
-          )}
-        </div>
-      )}
-    </div>
-  );
+            </Button>}
+        </div>}
+    </div>;
 };
