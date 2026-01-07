@@ -59,10 +59,9 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
   const [loading, setLoading] = useState(true);
   
   const [showObjectives, setShowObjectives] = useState(true);
-  const [showGrading, setShowGrading] = useState(false);
+  const [showGrading, setShowGrading] = useState(true);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showPolicies, setShowPolicies] = useState(false);
-  const [showRequirements, setShowRequirements] = useState(false);
 
   useEffect(() => {
     fetchSyllabusData();
@@ -196,7 +195,6 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
     );
   }
 
-  const gradingBreakdown = syllabus.grading_breakdown || [];
   const gradingScale = syllabus.grading_scale || {};
   const weeklySchedule = syllabus.weekly_schedule || [];
 
@@ -303,41 +301,8 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
         </Card>
       )}
 
-      {/* Course Requirements */}
-      {requirements.length > 0 && (
-        <Card>
-          <Collapsible open={showRequirements} onOpenChange={setShowRequirements}>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5" />
-                    Course Requirements
-                  </span>
-                  {showRequirements ? <ChevronUp /> : <ChevronDown />}
-                </CardTitle>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent>
-                <div className="space-y-4">
-                  {requirements.map((req) => (
-                    <div key={req.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <span className="font-medium">{req.requirement_text}</span>
-                      {req.weight_percentage > 0 && (
-                        <Badge>{req.weight_percentage}%</Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-      )}
-
-      {/* Grading Breakdown */}
-      {gradingBreakdown.length > 0 && (
+      {/* Unified Grading Section */}
+      {(requirements.length > 0 || Object.keys(gradingScale).length > 0) && (
         <Card>
           <Collapsible open={showGrading} onOpenChange={setShowGrading}>
             <CollapsibleTrigger asChild>
@@ -345,30 +310,49 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
-                    Grading Breakdown
+                    Grading
                   </span>
                   {showGrading ? <ChevronUp /> : <ChevronDown />}
                 </CardTitle>
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent>
-                <div className="space-y-2">
-                  {gradingBreakdown.map((item: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <span className="font-medium">{item.item || item.name || item.category}</span>
-                      <Badge variant="secondary">{item.percentage}%</Badge>
+              <CardContent className="space-y-6">
+                {/* Grade Weights from Requirements */}
+                {requirements.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Grade Weights
+                    </h4>
+                    <div className="space-y-2">
+                      {requirements.map((req) => (
+                        <div key={req.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <span className="font-medium">{req.requirement_text}</span>
+                          {req.weight_percentage > 0 && (
+                            <Badge>{req.weight_percentage}%</Badge>
+                          )}
+                        </div>
+                      ))}
+                      {/* Total row */}
+                      <div className="flex items-center justify-between p-3 border-t mt-2 pt-4">
+                        <span className="font-semibold">Total</span>
+                        <Badge variant="secondary" className="text-base">
+                          {requirements.reduce((sum, r) => sum + r.weight_percentage, 0)}%
+                        </Badge>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
 
+                {/* Grading Scale */}
                 {Object.keys(gradingScale).length > 0 && (
-                  <div className="mt-6">
+                  <div>
                     <h4 className="font-semibold mb-3 flex items-center gap-2">
                       <Scale className="h-4 w-4" />
                       Grading Scale
                     </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                       {Object.entries(gradingScale).map(([grade, range]) => (
                         <div key={grade} className="flex items-center justify-between p-2 bg-muted/50 rounded">
                           <span className="font-medium">{grade}</span>
