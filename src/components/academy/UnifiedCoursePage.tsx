@@ -289,7 +289,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 <CardTitle className="text-2xl lg:text-3xl font-bold text-white pb-[10px]">{course.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 pt-[10px] text-xl">{course.description}</p>
+                <p className="text-white/80 pt-[10px] text-lg">{course.description}</p>
               </CardContent>
             </Card>
 
@@ -330,37 +330,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {activeTab === 'home' && <div className="space-y-6">
                 {/* Enrollment Card */}
                 {!isEnrolled && !enrollmentLoading && <Card className="border-primary/50 bg-primary/5">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">Enroll in this Course</h3>
-                          <p className="text-muted-foreground text-lg">Get access to all course materials, assignments, and the course lounge.</p>
-                        </div>
-                        <Button onClick={handleEnroll} size="lg">
-                          <GraduationCap className="h-5 w-5 mr-2" />
-                          Enroll Now
-                        </Button>
-                      </div>
-                    </CardContent>
+                    
                   </Card>}
 
                 {/* Welcome Card */}
-                <Card className="bg-primary border-0">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white py-[5px] text-2xl text-left">
-                      <BookOpen className="h-5 w-5 text-white" />
-                      Welcome to {course.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-white/80 mb-4 text-xl">{course.description}</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {course.highlights.map((highlight, i) => <div key={i} className="bg-white/10 rounded-lg p-3 text-center">
-                          <span className="text-sm font-medium text-white">{highlight}</span>
-                        </div>)}
-                    </div>
-                  </CardContent>
-                </Card>
+                
 
                 {/* Instructor Card */}
                 <Card className="bg-primary border-0">
@@ -475,27 +449,20 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Course Textbook */}
-                  {course.courseCode === 'MUS 210' && (
-                    <div>
+                  {course.courseCode === 'MUS 210' && <div>
                       <h3 className="font-semibold mb-3 flex items-center gap-2">
                         <BookOpen className="h-4 w-4" />
                         Course Textbook
                       </h3>
                       <div className="rounded-lg border overflow-hidden">
-                        <iframe
-                          src="https://conducting.gleeworld.org"
-                          style={{ width: '100%', height: '600px' }}
-                          allow="fullscreen"
-                          title="Course Textbook"
-                          className="bg-background"
-                        />
+                        <iframe src="https://conducting.gleeworld.org" style={{
+                      width: '100%',
+                      height: '600px'
+                    }} allow="fullscreen" title="Course Textbook" className="bg-background" />
                       </div>
-                    </div>
-                  )}
+                    </div>}
                   
-                  {course.courseCode !== 'MUS 210' && (
-                    <p className="text-muted-foreground">No resources uploaded yet.</p>
-                  )}
+                  {course.courseCode !== 'MUS 210' && <p className="text-muted-foreground">No resources uploaded yet.</p>}
                 </CardContent>
               </Card>}
 
