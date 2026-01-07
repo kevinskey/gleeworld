@@ -101,7 +101,7 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
       </div>
 
       <Card className="bg-primary text-primary-foreground">
-        <CardHeader>
+        <CardHeader className="bg-[#003666]">
           <CardTitle className="text-lg text-primary-foreground">Course Schedule</CardTitle>
         </CardHeader>
         <CardContent>
