@@ -71,20 +71,42 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
   const loadEnrollments = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // First get enrollments
+      const { data: enrollmentData, error: enrollmentError } = await supabase
         .from('gw_course_enrollments')
-        .select(`
-          *,
-          gw_profiles!user_id(
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('course_id', courseId)
         .order('enrolled_at', { ascending: false });
 
-      if (error) throw error;
-      setEnrollments((data as any) || []);
+      if (enrollmentError) throw enrollmentError;
+      
+      if (!enrollmentData || enrollmentData.length === 0) {
+        setEnrollments([]);
+        return;
+      }
+
+      // Get unique user IDs and fetch their profiles
+      const userIds = [...new Set(enrollmentData.map(e => e.user_id))];
+      const { data: profileData, error: profileError } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds);
+
+      if (profileError) throw profileError;
+
+      // Create a lookup map for profiles
+      const profileMap = new Map(
+        (profileData || []).map(p => [p.user_id, { full_name: p.full_name, email: p.email }])
+      );
+
+      // Merge enrollment data with profile data
+      const mergedData = enrollmentData.map(enrollment => ({
+        ...enrollment,
+        gw_profiles: profileMap.get(enrollment.user_id) || { full_name: null, email: null }
+      }));
+
+      setEnrollments(mergedData as any);
     } catch (error) {
       console.error('Error loading enrollments:', error);
       toast({
