@@ -6,17 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Save, FileText, BookOpen, Target, ClipboardList, Calendar, 
-  User, GraduationCap, Plus, Trash2, AlertCircle, CheckCircle,
-  Link2
-} from 'lucide-react';
+import { Save, FileText, BookOpen, Target, ClipboardList, Calendar, User, GraduationCap, Plus, Trash2, AlertCircle, CheckCircle, Link2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LearningObjectivesManager } from './LearningObjectivesManager';
 import { WeeklyScheduleEditor } from './WeeklyScheduleEditor';
 import { RequirementsEditor } from './RequirementsEditor';
-
 interface SyllabusTemplate {
   id?: string;
   course_id: string;
@@ -31,18 +26,30 @@ interface SyllabusTemplate {
   instructor_office: string;
   office_hours: string;
   purpose: string;
-  textbooks: { title: string; author: string; isbn?: string }[];
+  textbooks: {
+    title: string;
+    author: string;
+    isbn?: string;
+  }[];
   attendance_policy: string;
   late_assignment_policy: string;
   academic_honesty_policy: string;
   disability_statement: string;
   grading_scale: Record<string, string>;
-  grading_breakdown: { item: string; percentage: number }[];
-  weekly_schedule: { week: string; topics: string }[];
-  additional_policies: { title: string; content: string }[];
+  grading_breakdown: {
+    item: string;
+    percentage: number;
+  }[];
+  weekly_schedule: {
+    week: string;
+    topics: string;
+  }[];
+  additional_policies: {
+    title: string;
+    content: string;
+  }[];
   is_published: boolean;
 }
-
 interface Props {
   courseId: string;
   courseCode: string;
@@ -50,14 +57,12 @@ interface Props {
   instructorName?: string;
   instructorEmail?: string;
 }
-
 const DEFAULT_POLICIES = {
   attendance: `Each student is allowed to miss two classes with no penalty. Any absence, beyond two, lowers the grade by one letter grade. Students who miss four classes will be dropped from the class. Exceptions will be made for extenuating circumstances (chronic illness or family emergencies) to be determined by the professor.`,
   late_assignment: `Students are expected to turn in assignments on time. However, if an assignment is turned in late, the letter grade earned will be reduced by one letter grade for each day it is late.`,
   academic_honesty: `The Spelman College community is committed to maintaining the integrity of the College and its academic programs. Each student is required to abide by Spelman's code of conduct and is expected to produce work that reflects her own ideas. Academic dishonesty will not be tolerated.`,
   disability: `Any student who feels she may need an accommodation based on the impact of a disability should contact the Office of Disability Services privately to discuss her specific needs. Please contact the Office of Disability Services at (404) 223-7590 in MacVicar Hall to coordinate reasonable accommodations.`
 };
-
 export const SyllabusTemplateEditor: React.FC<Props> = ({
   courseId,
   courseCode,
@@ -83,7 +88,13 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
     late_assignment_policy: DEFAULT_POLICIES.late_assignment,
     academic_honesty_policy: DEFAULT_POLICIES.academic_honesty,
     disability_statement: DEFAULT_POLICIES.disability,
-    grading_scale: { 'A': '90-100', 'B': '80-89', 'C': '70-79', 'D': '60-69', 'F': 'Below 60' },
+    grading_scale: {
+      'A': '90-100',
+      'B': '80-89',
+      'C': '70-79',
+      'D': '60-69',
+      'F': 'Below 60'
+    },
     grading_breakdown: [],
     weekly_schedule: [],
     additional_policies: [],
@@ -92,21 +103,16 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
-
   useEffect(() => {
     fetchSyllabus();
   }, [courseId]);
-
   const fetchSyllabus = async () => {
     try {
-      const { data, error } = await supabase
-        .from('gw_syllabus_templates' as any)
-        .select('*')
-        .eq('course_id', courseId)
-        .maybeSingle();
-
+      const {
+        data,
+        error
+      } = await supabase.from('gw_syllabus_templates' as any).select('*').eq('course_id', courseId).maybeSingle();
       if (error) throw error;
-
       if (data) {
         const d = data as any;
         setSyllabus({
@@ -125,7 +131,6 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
       setLoading(false);
     }
   };
-
   const saveSyllabus = async () => {
     setSaving(true);
     try {
@@ -153,23 +158,22 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
         additional_policies: syllabus.additional_policies,
         is_published: syllabus.is_published
       };
-
       if (syllabus.id) {
-        const { error } = await supabase
-          .from('gw_syllabus_templates' as any)
-          .update(syllabusData)
-          .eq('id', syllabus.id);
+        const {
+          error
+        } = await supabase.from('gw_syllabus_templates' as any).update(syllabusData).eq('id', syllabus.id);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase
-          .from('gw_syllabus_templates' as any)
-          .insert(syllabusData)
-          .select()
-          .single();
+        const {
+          data,
+          error
+        } = await supabase.from('gw_syllabus_templates' as any).insert(syllabusData).select().single();
         if (error) throw error;
-        setSyllabus(prev => ({ ...prev, id: (data as any).id }));
+        setSyllabus(prev => ({
+          ...prev,
+          id: (data as any).id
+        }));
       }
-
       toast.success('Syllabus saved successfully');
     } catch (error) {
       console.error('Error saving syllabus:', error);
@@ -178,38 +182,41 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
       setSaving(false);
     }
   };
-
   const updateField = (field: keyof SyllabusTemplate, value: any) => {
-    setSyllabus(prev => ({ ...prev, [field]: value }));
+    setSyllabus(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
-
   const addTextbook = () => {
     setSyllabus(prev => ({
       ...prev,
-      textbooks: [...prev.textbooks, { title: '', author: '', isbn: '' }]
+      textbooks: [...prev.textbooks, {
+        title: '',
+        author: '',
+        isbn: ''
+      }]
     }));
   };
-
   const updateTextbook = (index: number, field: string, value: string) => {
     setSyllabus(prev => ({
       ...prev,
-      textbooks: prev.textbooks.map((t, i) => i === index ? { ...t, [field]: value } : t)
+      textbooks: prev.textbooks.map((t, i) => i === index ? {
+        ...t,
+        [field]: value
+      } : t)
     }));
   };
-
   const removeTextbook = (index: number) => {
     setSyllabus(prev => ({
       ...prev,
       textbooks: prev.textbooks.filter((_, i) => i !== index)
     }));
   };
-
   if (loading) {
     return <div className="p-6 text-center">Loading syllabus...</div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -264,35 +271,19 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Term/Semester</Label>
-                <Input 
-                  value={syllabus.term}
-                  onChange={e => updateField('term', e.target.value)}
-                  placeholder="e.g., Spring 2026"
-                />
+                <Input value={syllabus.term} onChange={e => updateField('term', e.target.value)} placeholder="e.g., Spring 2026" />
               </div>
               <div className="space-y-2">
                 <Label>Credits</Label>
-                <Input 
-                  type="number"
-                  value={syllabus.credits}
-                  onChange={e => updateField('credits', parseInt(e.target.value) || 0)}
-                />
+                <Input type="number" value={syllabus.credits} onChange={e => updateField('credits', parseInt(e.target.value) || 0)} />
               </div>
               <div className="space-y-2">
                 <Label>Class Time</Label>
-                <Input 
-                  value={syllabus.class_time}
-                  onChange={e => updateField('class_time', e.target.value)}
-                  placeholder="e.g., MWF 10:00am - 10:50am"
-                />
+                <Input value={syllabus.class_time} onChange={e => updateField('class_time', e.target.value)} placeholder="e.g., MWF 10:00am - 10:50am" />
               </div>
               <div className="space-y-2">
                 <Label>Classroom</Label>
-                <Input 
-                  value={syllabus.classroom}
-                  onChange={e => updateField('classroom', e.target.value)}
-                  placeholder="e.g., Fine Arts 109"
-                />
+                <Input value={syllabus.classroom} onChange={e => updateField('classroom', e.target.value)} placeholder="e.g., Fine Arts 109" />
               </div>
             </CardContent>
           </Card>
@@ -307,40 +298,23 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Instructor Name</Label>
-                <Input 
-                  value={syllabus.instructor_name}
-                  onChange={e => updateField('instructor_name', e.target.value)}
-                />
+                <Input value={syllabus.instructor_name} onChange={e => updateField('instructor_name', e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input 
-                  type="email"
-                  value={syllabus.instructor_email}
-                  onChange={e => updateField('instructor_email', e.target.value)}
-                />
+                <Input type="email" value={syllabus.instructor_email} onChange={e => updateField('instructor_email', e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Phone</Label>
-                <Input 
-                  value={syllabus.instructor_phone}
-                  onChange={e => updateField('instructor_phone', e.target.value)}
-                />
+                <Input value={syllabus.instructor_phone} onChange={e => updateField('instructor_phone', e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Office</Label>
-                <Input 
-                  value={syllabus.instructor_office}
-                  onChange={e => updateField('instructor_office', e.target.value)}
-                />
+                <Input value={syllabus.instructor_office} onChange={e => updateField('instructor_office', e.target.value)} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Office Hours</Label>
-                <Input 
-                  value={syllabus.office_hours}
-                  onChange={e => updateField('office_hours', e.target.value)}
-                  placeholder="e.g., MWF 3-5pm or by appointment"
-                />
+                <Input value={syllabus.office_hours} onChange={e => updateField('office_hours', e.target.value)} placeholder="e.g., MWF 3-5pm or by appointment" />
               </div>
             </CardContent>
           </Card>
@@ -353,12 +327,7 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Textarea 
-                value={syllabus.purpose}
-                onChange={e => updateField('purpose', e.target.value)}
-                placeholder="Describe the purpose and focus of this course..."
-                rows={4}
-              />
+              <Textarea value={syllabus.purpose} onChange={e => updateField('purpose', e.target.value)} placeholder="Describe the purpose and focus of this course..." rows={4} />
             </CardContent>
           </Card>
 
@@ -374,85 +343,52 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {syllabus.textbooks.map((textbook, index) => (
-                <div key={index} className="grid gap-3 md:grid-cols-4 p-4 border rounded-lg">
+              {syllabus.textbooks.map((textbook, index) => <div key={index} className="grid gap-3 md:grid-cols-4 p-4 border rounded-lg">
                   <div className="md:col-span-2">
                     <Label>Title</Label>
-                    <Input 
-                      value={textbook.title}
-                      onChange={e => updateTextbook(index, 'title', e.target.value)}
-                      placeholder="Book title"
-                    />
+                    <Input value={textbook.title} onChange={e => updateTextbook(index, 'title', e.target.value)} placeholder="Book title" />
                   </div>
                   <div>
                     <Label>Author</Label>
-                    <Input 
-                      value={textbook.author}
-                      onChange={e => updateTextbook(index, 'author', e.target.value)}
-                      placeholder="Author name"
-                    />
+                    <Input value={textbook.author} onChange={e => updateTextbook(index, 'author', e.target.value)} placeholder="Author name" />
                   </div>
                   <div className="flex items-end gap-2">
                     <div className="flex-1">
                       <Label>ISBN (optional)</Label>
-                      <Input 
-                        value={textbook.isbn || ''}
-                        onChange={e => updateTextbook(index, 'isbn', e.target.value)}
-                        placeholder="ISBN"
-                      />
+                      <Input value={textbook.isbn || ''} onChange={e => updateTextbook(index, 'isbn', e.target.value)} placeholder="ISBN" />
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => removeTextbook(index)}
-                      className="text-destructive"
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => removeTextbook(index)} className="text-destructive">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              ))}
-              {syllabus.textbooks.length === 0 && (
-                <p className="text-muted-foreground text-center py-4">
+                </div>)}
+              {syllabus.textbooks.length === 0 && <p className="text-center py-4 text-primary-foreground">
                   No textbooks added yet. Click "Add Textbook" to add one.
-                </p>
-              )}
+                </p>}
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Learning Objectives Tab */}
         <TabsContent value="objectives">
-          <LearningObjectivesManager 
-            courseId={courseId}
-            syllabusId={syllabus.id}
-          />
+          <LearningObjectivesManager courseId={courseId} syllabusId={syllabus.id} />
         </TabsContent>
 
         {/* Grading Tab - Consolidated Requirements + Scale */}
         <TabsContent value="grading">
-          <RequirementsEditor 
-            syllabusId={syllabus.id}
-            gradingScale={syllabus.grading_scale}
-            onScaleChange={(scale) => updateField('grading_scale', scale)}
-            onSave={saveSyllabus}
-          />
+          <RequirementsEditor syllabusId={syllabus.id} gradingScale={syllabus.grading_scale} onScaleChange={scale => updateField('grading_scale', scale)} onSave={saveSyllabus} />
         </TabsContent>
 
         {/* Schedule Tab */}
         <TabsContent value="schedule">
-          <WeeklyScheduleEditor 
-            schedule={syllabus.weekly_schedule}
-            onChange={(schedule) => updateField('weekly_schedule', schedule)}
-            courseInfo={{
-              courseCode: courseCode,
-              courseTitle: courseTitle,
-              credits: syllabus.credits,
-              term: syllabus.term,
-              purpose: syllabus.purpose,
-              textbooks: syllabus.textbooks,
-            }}
-          />
+          <WeeklyScheduleEditor schedule={syllabus.weekly_schedule} onChange={schedule => updateField('weekly_schedule', schedule)} courseInfo={{
+          courseCode: courseCode,
+          courseTitle: courseTitle,
+          credits: syllabus.credits,
+          term: syllabus.term,
+          purpose: syllabus.purpose,
+          textbooks: syllabus.textbooks
+        }} />
         </TabsContent>
 
         {/* Policies Tab */}
@@ -462,11 +398,7 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
               <CardTitle>Attendance Policy</CardTitle>
             </CardHeader>
             <CardContent>
-              <Textarea 
-                value={syllabus.attendance_policy}
-                onChange={e => updateField('attendance_policy', e.target.value)}
-                rows={4}
-              />
+              <Textarea value={syllabus.attendance_policy} onChange={e => updateField('attendance_policy', e.target.value)} rows={4} />
             </CardContent>
           </Card>
 
@@ -475,11 +407,7 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
               <CardTitle>Late Assignment Policy</CardTitle>
             </CardHeader>
             <CardContent>
-              <Textarea 
-                value={syllabus.late_assignment_policy}
-                onChange={e => updateField('late_assignment_policy', e.target.value)}
-                rows={3}
-              />
+              <Textarea value={syllabus.late_assignment_policy} onChange={e => updateField('late_assignment_policy', e.target.value)} rows={3} />
             </CardContent>
           </Card>
 
@@ -488,11 +416,7 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
               <CardTitle>Academic Honesty</CardTitle>
             </CardHeader>
             <CardContent>
-              <Textarea 
-                value={syllabus.academic_honesty_policy}
-                onChange={e => updateField('academic_honesty_policy', e.target.value)}
-                rows={4}
-              />
+              <Textarea value={syllabus.academic_honesty_policy} onChange={e => updateField('academic_honesty_policy', e.target.value)} rows={4} />
             </CardContent>
           </Card>
 
@@ -501,11 +425,7 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
               <CardTitle>Disability Statement</CardTitle>
             </CardHeader>
             <CardContent>
-              <Textarea 
-                value={syllabus.disability_statement}
-                onChange={e => updateField('disability_statement', e.target.value)}
-                rows={3}
-              />
+              <Textarea value={syllabus.disability_statement} onChange={e => updateField('disability_statement', e.target.value)} rows={3} />
             </CardContent>
           </Card>
 
@@ -518,26 +438,17 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
             <CardContent>
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  {syllabus.is_published ? (
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 text-amber-600" />
-                  )}
+                  {syllabus.is_published ? <CheckCircle className="h-5 w-5 text-green-600" /> : <AlertCircle className="h-5 w-5 text-amber-600" />}
                   <div>
                     <p className="font-medium">
                       {syllabus.is_published ? 'Published' : 'Draft'}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {syllabus.is_published 
-                        ? 'Students can view this syllabus' 
-                        : 'Only instructors can view this syllabus'}
+                      {syllabus.is_published ? 'Students can view this syllabus' : 'Only instructors can view this syllabus'}
                     </p>
                   </div>
                 </div>
-                <Button 
-                  variant={syllabus.is_published ? 'outline' : 'default'}
-                  onClick={() => updateField('is_published', !syllabus.is_published)}
-                >
+                <Button variant={syllabus.is_published ? 'outline' : 'default'} onClick={() => updateField('is_published', !syllabus.is_published)}>
                   {syllabus.is_published ? 'Unpublish' : 'Publish'}
                 </Button>
               </div>
@@ -545,6 +456,5 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
