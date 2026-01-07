@@ -620,7 +620,7 @@ export const MetalHeaderDashboard = ({
     }
   }
   // All users get the full metal header dashboard experience
-  return <div className="space-y-4 relative min-h-screen w-full max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 pt-4">
+  return <div className="space-y-4 relative min-h-screen w-full px-[50px] pt-4">
       {/* Advertising Hero - TOP OF DASHBOARD */}
       <AdvertisingHero />
 
