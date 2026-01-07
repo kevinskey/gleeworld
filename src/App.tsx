@@ -2299,12 +2299,12 @@ const App = () => {
                                       } 
                                     />
                                     
-                                      {/* Grading System Routes - Redirect to course-specific admin */}
+                                      {/* Grading System Routes - Redirect to instructor dashboard */}
                                       <Route 
                                         path="/instructor/admin/:courseId" 
                                         element={
                                           <ProtectedRoute>
-                                            <Navigate to="/mus-240/instructor/console" replace />
+                                            <Navigate to="/grading/instructor/dashboard" replace />
                                           </ProtectedRoute>
                                         } 
                                       />
@@ -2312,7 +2312,7 @@ const App = () => {
                                         path="/instructor/admin" 
                                         element={
                                           <ProtectedRoute>
-                                            <Navigate to="/mus-240/instructor/console" replace />
+                                            <Navigate to="/grading/instructor/dashboard" replace />
                                           </ProtectedRoute>
                                         } 
                                       />
