@@ -218,15 +218,15 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               label: 'Calendar',
               tab: 'calendar'
             }].map(item => <button key={item.tab} onClick={() => {
-                if (item.isExternal && item.tab === 'messages') {
-                  // Navigate to messenger with course context
-                  navigate(`/messenger?courseId=${course.id}&courseName=${encodeURIComponent(course.courseCode + ' - ' + course.title)}`);
-                } else {
-                  setActiveTab(item.tab);
-                }
-              }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
+              if (item.isExternal && item.tab === 'messages') {
+                // Navigate to messenger with course context
+                navigate(`/messenger?courseId=${course.id}&courseName=${encodeURIComponent(course.courseCode + ' - ' + course.title)}`);
+              } else {
+                setActiveTab(item.tab);
+              }
+            }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 
-                <span className="text-xl">{item.label}</span>
+                <span className="text-xl pl-[20px]">{item.label}</span>
               </button>)}
           </nav>
           
@@ -325,19 +325,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                   <TabsTrigger value="grades" className="text-xs px-2">Grades</TabsTrigger>
                   <TabsTrigger value="syllabus" className="text-xs px-2">Syllabus</TabsTrigger>
                   <TabsTrigger value="resources" className="text-xs px-2">Resources</TabsTrigger>
-                  {isAdmin && (
-                    <TabsTrigger 
-                      value="instructor" 
-                      className="text-xs px-2"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`);
-                      }}
-                    >
+                  {isAdmin && <TabsTrigger value="instructor" className="text-xs px-2" onClick={e => {
+                    e.preventDefault();
+                    navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`);
+                  }}>
                       <Settings className="h-3 w-3 mr-1" />
                       Instructor
-                    </TabsTrigger>
-                  )}
+                    </TabsTrigger>}
                 </TabsList>
               </Tabs>
             </div>
