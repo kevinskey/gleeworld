@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,12 @@ import {
   Save,
   X,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Search,
+  Filter,
+  ArrowUpDown,
+  Grid3X3,
+  List
 } from "lucide-react";
 import { ProductMockupGenerator } from './ProductMockupGenerator';
 
@@ -63,6 +68,7 @@ export const ProductManager = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("title");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -77,7 +83,6 @@ export const ProductManager = () => {
     tags: ""
   });
 
-  // Filter and sort products
   const filteredAndSortedProducts = products
     .filter(product => {
       const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -97,12 +102,7 @@ export const ProductManager = () => {
           aValue = a.inventory_quantity || 0;
           bValue = b.inventory_quantity || 0;
           break;
-        case "created":
-          // Assuming products have created_at, fallback to title if not
-          aValue = a.title;
-          bValue = b.title;
-          break;
-        default: // title
+        default:
           aValue = a.title.toLowerCase();
           bValue = b.title.toLowerCase();
       }
@@ -174,7 +174,6 @@ export const ProductManager = () => {
     });
     setSelectedFiles([]);
     setIsDialogOpen(true);
-
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,10 +220,7 @@ export const ProductManager = () => {
 
   const handleSave = async () => {
     try {
-      // Upload new images first
       const uploadedImageUrls = await uploadImages();
-      
-      // Combine uploaded URLs with manually entered URLs
       const existingUrls = formData.images ? formData.images.split(",").map(img => img.trim()).filter(Boolean) : [];
       const allImageUrls = [...existingUrls, ...uploadedImageUrls];
 
@@ -296,29 +292,199 @@ export const ProductManager = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Package className="h-8 w-8 animate-spin text-brand-600" />
+      <div className="flex items-center justify-center p-12">
+        <Package className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-      <div className="space-y-6">
-        {/* Search and Filter Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-muted/50 p-4 rounded-lg">
-          <div className="flex flex-col sm:flex-row gap-3 w-full">
-            <div className="flex-1">
-              <Input
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="flex gap-2">
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 md:p-8 text-primary-foreground">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">Product Management</h1>
+            <p className="text-primary-foreground/80 mt-1">
+              {products.length} products • Manage inventory and sync with Square
+            </p>
+          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                onClick={resetForm}
+                variant="secondary"
+                size="lg"
+                className="w-full md:w-auto"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Add Product
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingProduct ? "Edit Product" : "Add New Product"}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingProduct ? "Update product details" : "Create a new product for your shop"}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="md:col-span-2">
+                  <Label htmlFor="title">Product Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Enter product title"
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Enter product description"
+                    rows={3}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="price">Price *</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="product_type">Category *</Label>
+                  <Select value={formData.product_type} onValueChange={(value) => setFormData({ ...formData, product_type: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PRODUCT_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="inventory">Stock Quantity</Label>
+                  <Input
+                    id="inventory"
+                    type="number"
+                    value={formData.inventory_quantity}
+                    onChange={(e) => setFormData({ ...formData, inventory_quantity: e.target.value })}
+                    placeholder="Leave empty for unlimited"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="vendor">Vendor</Label>
+                  <Input
+                    id="vendor"
+                    value={formData.vendor}
+                    onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
+                    placeholder="Vendor name"
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <Label>Product Images</Label>
+                  <div className="mt-2 border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
+                    <Input
+                      id="image_upload"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <label htmlFor="image_upload" className="flex flex-col items-center cursor-pointer">
+                      <ImageIcon className="h-10 w-10 text-muted-foreground mb-2" />
+                      <span className="text-sm font-medium">Click to upload images</span>
+                      <span className="text-xs text-muted-foreground">PNG, JPG up to 10MB</span>
+                    </label>
+                    {selectedFiles.length > 0 && (
+                      <p className="text-sm text-primary text-center mt-2">
+                        {selectedFiles.length} file(s) selected
+                      </p>
+                    )}
+                  </div>
+                  <Input
+                    value={formData.images}
+                    onChange={(e) => setFormData({ ...formData, images: e.target.value })}
+                    placeholder="Or paste image URLs (comma-separated)"
+                    className="mt-2"
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <Label htmlFor="tags">Tags</Label>
+                  <Input
+                    id="tags"
+                    value={formData.tags}
+                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                    placeholder="tag1, tag2, tag3"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} disabled={uploadingImages}>
+                  {uploadingImages ? (
+                    <Upload className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {uploadingImages ? "Uploading..." : editingProduct ? "Update" : "Create"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      {/* Mockup Generator */}
+      <ProductMockupGenerator />
+
+      {/* Search & Filters */}
+      <div className="bg-card rounded-lg border p-4">
+        <div className="flex flex-col gap-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          
+          {/* Filters Row */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 flex gap-2">
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by category" />
+                <SelectTrigger className="flex-1 sm:w-48">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
@@ -331,11 +497,12 @@ export const ProductManager = () => {
               </Select>
               
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Sort by" />
+                <SelectTrigger className="flex-1 sm:w-36">
+                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="title">Title</SelectItem>
+                  <SelectItem value="title">Name</SelectItem>
                   <SelectItem value="price">Price</SelectItem>
                   <SelectItem value="inventory">Stock</SelectItem>
                 </SelectContent>
@@ -343,257 +510,158 @@ export const ProductManager = () => {
               
               <Button 
                 variant="outline" 
-                size="sm"
+                size="icon"
                 onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                title={sortOrder === "asc" ? "Ascending" : "Descending"}
               >
                 {sortOrder === "asc" ? "↑" : "↓"}
               </Button>
             </div>
+            
+            {/* View Toggle */}
+            <div className="flex border rounded-md">
+              <Button
+                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => setViewMode("grid")}
+                className="rounded-r-none"
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => setViewMode("list")}
+                className="rounded-l-none"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-brand-800">Product Management</h2>
-          <p className="text-brand-600">Manage your shop products and sync with Square</p>
+      </div>
+
+      {/* Products Grid/List */}
+      {viewMode === "grid" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredAndSortedProducts.map((product) => (
+            <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-all">
+              {/* Image */}
+              <div className="relative aspect-square bg-muted">
+                {product.images && product.images.length > 0 ? (
+                  <img 
+                    src={product.images[0]} 
+                    alt={product.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Package className="h-12 w-12 text-muted-foreground/30" />
+                  </div>
+                )}
+                {/* Status Badge */}
+                <Badge 
+                  className={`absolute top-2 left-2 ${product.is_active ? 'bg-green-500' : 'bg-muted'}`}
+                >
+                  {product.is_active ? "Active" : "Inactive"}
+                </Badge>
+                {/* Action buttons on hover */}
+                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => handleEdit(product)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => handleDelete(product.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold line-clamp-1">{product.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{product.description || "No description"}</p>
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-lg font-bold text-primary">${product.price.toFixed(2)}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {product.inventory_quantity ?? "∞"} in stock
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <div className="flex gap-2">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Product
-              </Button>
-            </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingProduct ? "Edit Product" : "Add New Product"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingProduct ? "Update product details" : "Create a new product for your shop"}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <Label htmlFor="title">Product Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Enter product title"
-                />
-              </div>
-              
-              <div className="col-span-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Enter product description"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="price">Price *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="product_type">Product Type *</Label>
-                <Select value={formData.product_type} onValueChange={(value) => setFormData({ ...formData, product_type: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PRODUCT_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="inventory">Inventory Quantity</Label>
-                <Input
-                  id="inventory"
-                  type="number"
-                  value={formData.inventory_quantity}
-                  onChange={(e) => setFormData({ ...formData, inventory_quantity: e.target.value })}
-                  placeholder="Stock quantity"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="vendor">Vendor</Label>
-                <Input
-                  id="vendor"
-                  value={formData.vendor}
-                  onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-                  placeholder="Vendor name"
-                />
-              </div>
-              
-              
-              <div className="col-span-2">
-                <Label>Product Images</Label>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="image_upload" className="text-sm text-muted-foreground">Upload Images</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Input
-                        id="image_upload"
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleFileSelect}
-                        className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+      ) : (
+        <div className="space-y-2">
+          {filteredAndSortedProducts.map((product) => (
+            <Card key={product.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  {/* Thumbnail */}
+                  <div className="w-16 h-16 rounded-md bg-muted overflow-hidden flex-shrink-0">
+                    {product.images && product.images.length > 0 ? (
+                      <img 
+                        src={product.images[0]} 
+                        alt={product.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
                       />
-                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    {selectedFiles.length > 0 && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {selectedFiles.length} file(s) selected
-                      </p>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="h-6 w-6 text-muted-foreground/30" />
+                      </div>
                     )}
                   </div>
                   
-                  <div>
-                    <Label htmlFor="images" className="text-sm text-muted-foreground">Or add image URLs (comma-separated)</Label>
-                    <Input
-                      id="images"
-                      value={formData.images}
-                      onChange={(e) => setFormData({ ...formData, images: e.target.value })}
-                      placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-                      className="mt-1"
-                    />
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold truncate">{product.title}</h3>
+                      <Badge variant={product.is_active ? "default" : "secondary"} className="flex-shrink-0">
+                        {product.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate">{product.description || "No description"}</p>
+                    <div className="flex items-center gap-4 mt-1">
+                      <span className="text-sm font-medium text-primary">${product.price.toFixed(2)}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {PRODUCT_TYPES.find(t => t.value === product.product_type)?.label}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        Stock: {product.inventory_quantity ?? "Unlimited"}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Button size="icon" variant="ghost" onClick={() => handleEdit(product)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => handleDelete(product.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
                 </div>
-              </div>
-              
-              <div className="col-span-2">
-                <Label htmlFor="tags">Tags (comma-separated)</Label>
-                <Input
-                  id="tags"
-                  value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  placeholder="tag1, tag2, tag3"
-                />
-              </div>
-            </div>
-            
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={uploadingImages}>
-                {uploadingImages ? (
-                  <Upload className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                {uploadingImages ? "Uploading..." : editingProduct ? "Update" : "Create"} Product
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* Product Mockup Generator */}
-      <ProductMockupGenerator />
-
-      <div className="space-y-6">
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAndSortedProducts.map((product) => (
-          <Card key={product.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <Badge variant={product.is_active ? "default" : "secondary"}>
-                  {product.is_active ? "Active" : "Inactive"}
-                </Badge>
-                <div className="flex space-x-1">
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(product)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDelete(product.id)}>
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
-              </div>
-              <CardTitle className="text-lg">{product.title}</CardTitle>
-              <CardDescription className="line-clamp-2">
-                {product.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {product.images && product.images.length > 0 && (
-                  <div className="mb-3">
-                    <img 
-                      src={product.images[0]} 
-                      alt={product.title}
-                      className="w-full h-32 object-cover rounded-md"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Price:</span>
-                  <span className="font-semibold text-brand-600">${product.price.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Category:</span>
-                  <Badge variant="outline">
-                    {PRODUCT_TYPES.find(type => type.value === product.product_type)?.label || product.product_type}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Stock:</span>
-                  <span className="text-sm">{product.inventory_quantity || "Unlimited"}</span>
-                </div>
-                {product.tags && product.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {product.tags.slice(0, 3).map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {product.tags.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{product.tags.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
+      {/* Empty State */}
       {filteredAndSortedProducts.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {products.length === 0 ? "No products found" : "No products match your filters"}
+        <div className="text-center py-16 bg-muted/30 rounded-xl">
+          <Package className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">
+            {products.length === 0 ? "No products yet" : "No products found"}
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-6">
             {products.length === 0 
               ? "Get started by adding your first product." 
               : "Try adjusting your search or filter criteria."
@@ -607,7 +675,6 @@ export const ProductManager = () => {
           )}
         </div>
       )}
-      </div>
     </div>
   );
 };
