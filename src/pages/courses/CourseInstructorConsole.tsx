@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,12 +15,13 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { supabase } from '@/integrations/supabase/client';
 
 // Import shared components that can work with any course
 import { AssignmentManager } from '@/components/mus240/instructor/AssignmentManager';
 import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
 import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
-import { EnrollmentManager } from '@/components/mus240/admin/EnrollmentManager';
+import { CourseEnrollmentManager } from '@/components/academy/CourseEnrollmentManager';
 import { StudentAnalyticsDashboard } from '@/components/mus240/admin/StudentAnalyticsDashboard';
 import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
 import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
@@ -40,6 +41,8 @@ export const CourseInstructorConsole = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('assignments');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dbCourse, setDbCourse] = useState<{ id: string; term: string | null } | null>(null);
+  const [dbLoading, setDbLoading] = useState(true);
 
   // Find the course from config
   const courseCode = courseSlug ? slugToCourseCode(courseSlug) : '';
@@ -48,10 +51,38 @@ export const CourseInstructorConsole = () => {
     c.courseCode === courseCode
   );
 
+  // Fetch the actual course from database to get the UUID
+  useEffect(() => {
+    const fetchCourse = async () => {
+      if (!courseCode) {
+        setDbLoading(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('gw_courses')
+          .select('id, term')
+          .eq('course_code', courseCode)
+          .maybeSingle();
+        
+        if (!error && data) {
+          setDbCourse(data);
+        }
+      } catch (err) {
+        console.error('Error fetching course:', err);
+      } finally {
+        setDbLoading(false);
+      }
+    };
+    
+    fetchCourse();
+  }, [courseCode]);
+
   // Check if user is TA for this course
   const { isTA, loading: taLoading } = useCourseTA(course?.courseCode.replace(' ', '') || '');
 
-  if (loading || taLoading) {
+  if (loading || taLoading || dbLoading) {
     return <LoadingSpinner size="lg" text="Loading..." />;
   }
 
@@ -245,7 +276,7 @@ export const CourseInstructorConsole = () => {
               </Card>
             )}
 
-            {activeTab === 'students' && (
+            {activeTab === 'students' && dbCourse && (
               <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
@@ -254,7 +285,12 @@ export const CourseInstructorConsole = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4 md:p-6">
-                  <EnrollmentManager />
+                  <CourseEnrollmentManager 
+                    courseId={dbCourse.id}
+                    courseCode={course.courseCode}
+                    courseTitle={course.title}
+                    term={dbCourse.term || undefined}
+                  />
                 </CardContent>
               </Card>
             )}
