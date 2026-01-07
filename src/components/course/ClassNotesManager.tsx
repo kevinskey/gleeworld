@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, FileText, Upload, Trash2, Download, Pin, Eye, EyeOff, BookOpen, GraduationCap, User, Loader2 } from 'lucide-react';
+import { Plus, FileText, Upload, Trash2, Download, Pin, Eye, EyeOff, BookOpen, GraduationCap, User, Loader2, Video, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ClassNote {
@@ -23,6 +23,7 @@ interface ClassNote {
   file_url: string | null;
   file_name: string | null;
   file_type: string | null;
+  video_url: string | null;
   visibility: 'instructor_only' | 'all_students' | 'private';
   note_type: 'lecture' | 'study' | 'personal' | 'resource';
   is_pinned: boolean;
@@ -47,7 +48,7 @@ export const ClassNotesManager = ({ courseId, isInstructor = false }: ClassNotes
   const [visibility, setVisibility] = useState<'instructor_only' | 'all_students' | 'private'>('private');
   const [noteType, setNoteType] = useState<'lecture' | 'study' | 'personal' | 'resource'>('lecture');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
+  const [videoUrl, setVideoUrl] = useState('');
   // Fetch current user
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
@@ -76,7 +77,7 @@ export const ClassNotesManager = ({ courseId, isInstructor = false }: ClassNotes
 
   // Create note mutation
   const createNoteMutation = useMutation({
-    mutationFn: async (noteData: { title: string; content: string; visibility: string; noteType: string; fileUrl?: string; fileName?: string; fileType?: string }) => {
+    mutationFn: async (noteData: { title: string; content: string; visibility: string; noteType: string; fileUrl?: string; fileName?: string; fileType?: string; videoUrl?: string }) => {
       if (!currentUser) throw new Error('Not authenticated');
       
       const { data, error } = await supabase
@@ -90,7 +91,8 @@ export const ClassNotesManager = ({ courseId, isInstructor = false }: ClassNotes
           note_type: noteData.noteType,
           file_url: noteData.fileUrl || null,
           file_name: noteData.fileName || null,
-          file_type: noteData.fileType || null
+          file_type: noteData.fileType || null,
+          video_url: noteData.videoUrl || null
         })
         .select()
         .single();
@@ -149,6 +151,7 @@ export const ClassNotesManager = ({ courseId, isInstructor = false }: ClassNotes
     setVisibility('private');
     setNoteType('lecture');
     setSelectedFile(null);
+    setVideoUrl('');
   };
 
   const handleFileUpload = async (): Promise<{ url: string; name: string; type: string } | null> => {
@@ -200,7 +203,8 @@ export const ClassNotesManager = ({ courseId, isInstructor = false }: ClassNotes
       noteType,
       fileUrl: fileData?.url,
       fileName: fileData?.name,
-      fileType: fileData?.type
+      fileType: fileData?.type,
+      videoUrl: videoUrl.trim() || undefined
     });
   };
 
@@ -308,6 +312,18 @@ export const ClassNotesManager = ({ courseId, isInstructor = false }: ClassNotes
               </div>
               
               <div className="space-y-2">
+                <Label>Video Link (Optional)</Label>
+                <div className="flex items-center gap-2">
+                  <Video className="h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://youtube.com/watch?v=... or Vimeo link"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
                 <Label>Attach File (Optional)</Label>
                 <div className="border-2 border-dashed rounded-lg p-4 text-center">
                   <input
@@ -397,6 +413,19 @@ export const ClassNotesManager = ({ courseId, isInstructor = false }: ClassNotes
                       <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
                         {note.content}
                       </p>
+                    )}
+                    
+                    {note.video_url && (
+                      <a 
+                        href={note.video_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2 bg-red-500/10 text-red-600 dark:text-red-400 rounded-md mb-3 hover:bg-red-500/20 transition-colors"
+                      >
+                        <Video className="h-4 w-4" />
+                        <span className="text-sm truncate flex-1">Watch Video</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
                     )}
                     
                     {note.file_name && (
