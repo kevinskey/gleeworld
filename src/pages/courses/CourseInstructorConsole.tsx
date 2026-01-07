@@ -259,6 +259,119 @@ export const CourseInstructorConsole = () => {
           </Sheet>
 
           {/* Main Content */}
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+            {activeTab === 'syllabus' && dbCourse && (
+              <SyllabusTemplateEditor 
+                courseId={dbCourse.id} 
+                courseCode={course.courseCode} 
+                courseTitle={course.title}
+                instructorName={course.instructor?.name}
+                instructorEmail={course.instructor?.email}
+              />
+            )}
+            {activeTab === 'modules' && dbCourse && (
+              <ModulesSection courseId={dbCourse.id} />
+            )}
+            {activeTab === 'class-notes' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Class Notes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Class notes feature coming soon.</p>
+                </CardContent>
+              </Card>
+            )}
+            {activeTab === 'calendar' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Course Calendar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Calendar integration coming soon.</p>
+                </CardContent>
+              </Card>
+            )}
+            {activeTab === 'assignments' && (
+              <AssignmentManager />
+            )}
+            {activeTab === 'tests' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tests & Quizzes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Test management coming soon.</p>
+                </CardContent>
+              </Card>
+            )}
+            {activeTab === 'polls' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Polls & Surveys</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Polls feature coming soon.</p>
+                </CardContent>
+              </Card>
+            )}
+            {activeTab === 'rubrics' && (
+              <RubricManager />
+            )}
+            {activeTab === 'grades' && (
+              <GradesAdmin />
+            )}
+            {activeTab === 'students' && dbCourse && (
+              <CourseEnrollmentManager 
+                courseId={dbCourse.id} 
+                courseCode={course.courseCode}
+                courseTitle={course.title}
+                term={dbCourse.term || undefined}
+              />
+            )}
+            {activeTab === 'analytics' && (
+              <StudentAnalyticsDashboard />
+            )}
+            {activeTab === 'communications' && (
+              <StudentCommunications />
+            )}
+            {activeTab === 'resources' && (
+              <ResourcesAdmin />
+            )}
+            {activeTab === 'videos' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Video Library</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Video library coming soon.</p>
+                </CardContent>
+              </Card>
+            )}
+            {activeTab === 'audio' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Audio Examples</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Audio library coming soon.</p>
+                </CardContent>
+              </Card>
+            )}
+            {activeTab === 'ai-assistant' && (
+              <AIAssistant />
+            )}
+            {activeTab === 'settings' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Course Settings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Course settings coming soon.</p>
+                </CardContent>
+              </Card>
+            )}
+          </main>
           
         </div>
       </div>
