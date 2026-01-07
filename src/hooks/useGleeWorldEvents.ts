@@ -193,6 +193,18 @@ export const useGleeWorldEvents = () => {
             console.log('Real-time appointment change:', payload);
             fetchEvents();
           }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'gw_calendars'
+          },
+          (payload) => {
+            console.log('Real-time calendar change:', payload);
+            fetchEvents();
+          }
         );
 
       // Store the channel reference before subscribing
