@@ -263,7 +263,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                               </div>
                               <div className="text-left">
                                 <CardTitle className="text-base font-semibold">{weekLabel}</CardTitle>
-                                {topicItems.length > 0 && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
+                                {topicItems.length > 0 && <p className="text-sm mt-0.5 line-clamp-1 text-primary-foreground pt-[10px] pb-[10px]">
                                     {topicItems[0]}
                                   </p>}
                               </div>
