@@ -843,16 +843,16 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
           </div>}
       </div>
 
-      {/* Tabs for Class Sessions vs Spelman Calendar */}
+      {/* Tabs for Class Calendar vs Full Calendar */}
       <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'class' | 'spelman')}>
         <TabsList className="mb-4">
           <TabsTrigger value="class" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
-            Class Sessions
+            Class Calendar
           </TabsTrigger>
           <TabsTrigger value="spelman" className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
-            Spelman Calendar
+            <CalendarIcon className="h-4 w-4" />
+            Full Calendar
           </TabsTrigger>
         </TabsList>
 
