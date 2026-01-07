@@ -150,7 +150,7 @@ export const TourBudgetManager = () => {
     amount: number;
     status: string;
   }>>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [isAddingRevenue, setIsAddingRevenue] = useState(false);
@@ -172,21 +172,83 @@ export const TourBudgetManager = () => {
     status: 'expected'
   });
 
-  // Load from localStorage for now (can be migrated to Supabase later)
-  useEffect(() => {
-    const savedItems = localStorage.getItem('tour_budget_items');
-    const savedRevenues = localStorage.getItem('tour_budget_revenues');
-    if (savedItems) {
-      setBudgetItems(JSON.parse(savedItems));
+  // Load from Supabase
+  const fetchBudgetData = async () => {
+    setLoading(true);
+    try {
+      // Fetch budget items
+      const { data: items, error: itemsError } = await supabase
+        .from('tour_budget_items')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (itemsError) throw itemsError;
+
+      // Fetch revenues
+      const { data: revs, error: revsError } = await supabase
+        .from('tour_budget_revenues')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (revsError) throw revsError;
+
+      setBudgetItems((items || []).map(item => ({
+        id: item.id,
+        category: item.category,
+        description: item.description,
+        estimated_cost: item.unit_cost * item.quantity,
+        actual_cost: item.actual_cost || 0,
+        quantity: item.quantity,
+        unit_cost: item.unit_cost,
+        notes: item.notes || undefined,
+        status: item.status as 'planned' | 'confirmed' | 'paid'
+      })));
+
+      setRevenues((revs || []).map(rev => ({
+        id: rev.id,
+        source: rev.source,
+        amount: rev.amount,
+        status: rev.status
+      })));
+    } catch (error) {
+      console.error('Error fetching budget data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load budget data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-    if (savedRevenues) {
-      setRevenues(JSON.parse(savedRevenues));
-    }
-  }, []);
-  const saveToLocalStorage = (items: BudgetLineItem[], revs: typeof revenues) => {
-    localStorage.setItem('tour_budget_items', JSON.stringify(items));
-    localStorage.setItem('tour_budget_revenues', JSON.stringify(revs));
   };
+
+  useEffect(() => {
+    fetchBudgetData();
+
+    // Subscribe to realtime updates
+    const itemsChannel = supabase
+      .channel('tour-budget-items-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tour_budget_items' },
+        () => fetchBudgetData()
+      )
+      .subscribe();
+
+    const revenuesChannel = supabase
+      .channel('tour-budget-revenues-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tour_budget_revenues' },
+        () => fetchBudgetData()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(itemsChannel);
+      supabase.removeChannel(revenuesChannel);
+    };
+  }, []);
   const calculateSummary = (): TourBudgetSummary => {
     const total_estimated = budgetItems.reduce((sum, item) => sum + item.unit_cost * item.quantity, 0);
     const total_actual = budgetItems.reduce((sum, item) => sum + item.actual_cost, 0);
@@ -198,7 +260,7 @@ export const TourBudgetManager = () => {
       net_balance: total_revenue - (total_actual || total_estimated)
     };
   };
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!newItem.description || !newItem.unit_cost) {
       toast({
         title: "Missing fields",
@@ -207,51 +269,93 @@ export const TourBudgetManager = () => {
       });
       return;
     }
-    const item: BudgetLineItem = {
-      id: crypto.randomUUID(),
-      category: newItem.category,
-      description: newItem.description,
-      unit_cost: parseFloat(newItem.unit_cost),
-      quantity: parseInt(newItem.quantity) || 1,
-      estimated_cost: parseFloat(newItem.unit_cost) * (parseInt(newItem.quantity) || 1),
-      actual_cost: 0,
-      notes: newItem.notes,
-      status: newItem.status
-    };
-    const updated = [...budgetItems, item];
-    setBudgetItems(updated);
-    saveToLocalStorage(updated, revenues);
-    setNewItem({
-      category: 'transportation',
-      description: '',
-      unit_cost: '',
-      quantity: '1',
-      notes: '',
-      status: 'planned'
-    });
-    setIsAddingItem(false);
-    toast({
-      title: "Item added",
-      description: "Budget line item has been added"
-    });
+    
+    try {
+      const { error } = await supabase
+        .from('tour_budget_items')
+        .insert([{
+          category: newItem.category,
+          description: newItem.description,
+          unit_cost: parseFloat(newItem.unit_cost),
+          quantity: parseInt(newItem.quantity) || 1,
+          notes: newItem.notes || null,
+          status: newItem.status
+        }]);
+
+      if (error) throw error;
+
+      setNewItem({
+        category: 'transportation',
+        description: '',
+        unit_cost: '',
+        quantity: '1',
+        notes: '',
+        status: 'planned'
+      });
+      setIsAddingItem(false);
+      toast({
+        title: "Item added",
+        description: "Budget line item has been added"
+      });
+    } catch (error) {
+      console.error('Error adding item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add budget item",
+        variant: "destructive"
+      });
+    }
   };
-  const handleUpdateItem = (id: string, updates: Partial<BudgetLineItem>) => {
-    const updated = budgetItems.map(item => item.id === id ? {
-      ...item,
-      ...updates
-    } : item);
-    setBudgetItems(updated);
-    saveToLocalStorage(updated, revenues);
+
+  const handleUpdateItem = async (id: string, updates: Partial<BudgetLineItem>) => {
+    try {
+      const dbUpdates: Record<string, any> = {};
+      if (updates.status !== undefined) dbUpdates.status = updates.status;
+      if (updates.actual_cost !== undefined) dbUpdates.actual_cost = updates.actual_cost;
+      if (updates.unit_cost !== undefined) dbUpdates.unit_cost = updates.unit_cost;
+      if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+
+      const { error } = await supabase
+        .from('tour_budget_items')
+        .update(dbUpdates)
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update item",
+        variant: "destructive"
+      });
+    }
   };
-  const handleDeleteItem = (id: string) => {
-    const updated = budgetItems.filter(item => item.id !== id);
-    setBudgetItems(updated);
-    saveToLocalStorage(updated, revenues);
-    toast({
-      title: "Item deleted"
-    });
+
+  const handleDeleteItem = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('tour_budget_items')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Item deleted"
+      });
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete item",
+        variant: "destructive"
+      });
+    }
   };
-  const handleAddRevenue = () => {
+
+  const handleAddRevenue = async () => {
     if (!newRevenue.source || !newRevenue.amount) {
       toast({
         title: "Missing fields",
@@ -260,49 +364,84 @@ export const TourBudgetManager = () => {
       });
       return;
     }
-    const rev = {
-      id: crypto.randomUUID(),
-      source: newRevenue.source,
-      amount: parseFloat(newRevenue.amount),
-      status: newRevenue.status
-    };
-    const updated = [...revenues, rev];
-    setRevenues(updated);
-    saveToLocalStorage(budgetItems, updated);
-    setNewRevenue({
-      source: '',
-      amount: '',
-      status: 'expected'
-    });
-    setIsAddingRevenue(false);
-    toast({
-      title: "Revenue added"
-    });
+
+    try {
+      const { error } = await supabase
+        .from('tour_budget_revenues')
+        .insert([{
+          source: newRevenue.source,
+          amount: parseFloat(newRevenue.amount),
+          status: newRevenue.status
+        }]);
+
+      if (error) throw error;
+
+      setNewRevenue({
+        source: '',
+        amount: '',
+        status: 'expected'
+      });
+      setIsAddingRevenue(false);
+      toast({
+        title: "Revenue added"
+      });
+    } catch (error) {
+      console.error('Error adding revenue:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add revenue",
+        variant: "destructive"
+      });
+    }
   };
-  const handleDeleteRevenue = (id: string) => {
-    const updated = revenues.filter(r => r.id !== id);
-    setRevenues(updated);
-    saveToLocalStorage(budgetItems, updated);
+
+  const handleDeleteRevenue = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('tour_budget_revenues')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting revenue:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete revenue",
+        variant: "destructive"
+      });
+    }
   };
-  const loadDefaultItems = (category: string) => {
+
+  const loadDefaultItems = async (category: string) => {
     const defaults = DEFAULT_LINE_ITEMS[category] || [];
-    const newItems: BudgetLineItem[] = defaults.map(d => ({
-      id: crypto.randomUUID(),
+    const newItems = defaults.map(d => ({
       category,
       description: d.description,
       unit_cost: d.unit_cost,
       quantity: d.quantity,
-      estimated_cost: d.unit_cost * d.quantity,
-      actual_cost: 0,
       status: 'planned' as const
     }));
-    const updated = [...budgetItems, ...newItems];
-    setBudgetItems(updated);
-    saveToLocalStorage(updated, revenues);
-    toast({
-      title: "Default items added",
-      description: `Added ${newItems.length} default items for ${category}`
-    });
+
+    try {
+      const { error } = await supabase
+        .from('tour_budget_items')
+        .insert(newItems);
+
+      if (error) throw error;
+
+      toast({
+        title: "Default items added",
+        description: `Added ${newItems.length} default items for ${category}`
+      });
+    } catch (error) {
+      console.error('Error loading default items:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add default items",
+        variant: "destructive"
+      });
+    }
   };
   const summary = calculateSummary();
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', {

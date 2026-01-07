@@ -23422,6 +23422,103 @@ export type Database = {
           },
         ]
       }
+      tour_budget_items: {
+        Row: {
+          actual_cost: number
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string
+          estimated_cost: number | null
+          id: string
+          notes: string | null
+          quantity: number
+          status: string
+          tour_id: string | null
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          actual_cost?: number
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          estimated_cost?: number | null
+          id?: string
+          notes?: string | null
+          quantity?: number
+          status?: string
+          tour_id?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          actual_cost?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          estimated_cost?: number | null
+          id?: string
+          notes?: string | null
+          quantity?: number
+          status?: string
+          tour_id?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tour_budget_items_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tour_budget_revenues: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          source: string
+          status: string
+          tour_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          source: string
+          status?: string
+          tour_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          source?: string
+          status?: string
+          tour_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tour_budget_revenues_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       track_likes: {
         Row: {
           created_at: string
