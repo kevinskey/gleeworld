@@ -1133,7 +1133,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
         <TabsContent value="spelman">
           <Card>
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
-              <CardTitle className="flex items-center gap-2 text-3xl py-[20px]">
+              <CardTitle className="flex items-center gap-2 py-[20px] text-xl">
                 <CalendarIcon className="h-5 w-5" />
                 {getCalendarTitle()}
               </CardTitle>
