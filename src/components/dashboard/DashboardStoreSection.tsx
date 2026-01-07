@@ -154,7 +154,7 @@ export const DashboardStoreSection = () => {
 
 
       {/* Courses Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-[50px] py-8">
         {/* Courses Horizontal Scroll */}
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" style={{
         scrollbarWidth: 'none',
