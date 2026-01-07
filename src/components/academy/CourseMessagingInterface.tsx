@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, UserPlus, ArrowLeft, Search, Users, MessageCircle, Loader2 } from 'lucide-react';
+import { Mail, Send, Inbox, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useCourseMessaging } from '@/hooks/useCourseMessaging';
-import { useCreateDirectMessage } from '@/hooks/useMessaging';
-import { ChatWindow } from '@/components/messaging/ChatWindow';
-import { GroupHeader } from '@/components/messaging/GroupHeader';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 interface CourseMessagingInterfaceProps {
   courseId: string;
@@ -21,15 +19,18 @@ interface CourseMessagingInterfaceProps {
   isEnrolled: boolean;
 }
 
-interface EnrolledMember {
-  user_id: string;
-  full_name: string;
-  avatar_url: string | null;
-  email: string;
-  voice_part?: string;
+interface CourseMessage {
+  id: string;
+  subject: string;
+  content: string;
+  sender_id: string;
+  recipient_id: string;
+  course_id: string;
+  is_read: boolean;
+  created_at: string;
+  sender_name?: string;
+  recipient_name?: string;
 }
-
-const MUS_070_ID = 'a0000000-0000-0000-0000-000000000070';
 
 export const CourseMessagingInterface: React.FC<CourseMessagingInterfaceProps> = ({
   courseId,
@@ -37,301 +38,285 @@ export const CourseMessagingInterface: React.FC<CourseMessagingInterfaceProps> =
   isEnrolled
 }) => {
   const { user } = useAuth();
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [showDMDialog, setShowDMDialog] = useState(false);
-  const [enrolledMembers, setEnrolledMembers] = useState<EnrolledMember[]>([]);
-  const [membersLoading, setMembersLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  const { courseGroup, isMember, loading: groupLoading, joinCourseGroup } = useCourseMessaging(courseId, courseName);
-  const createDirectMessage = useCreateDirectMessage();
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'inbox' | 'sent'>('inbox');
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<CourseMessage | null>(null);
+  const [newMessage, setNewMessage] = useState({ subject: '', content: '' });
 
-  useEffect(() => {
-    if (isEnrolled) {
-      fetchEnrolledMembers();
-    } else {
-      setMembersLoading(false);
-    }
-  }, [courseId, isEnrolled, user]);
-
-  const fetchEnrolledMembers = async () => {
-    try {
-      setMembersLoading(true);
+  // Fetch course instructor
+  const { data: courseData } = useQuery({
+    queryKey: ['course-instructor', courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_courses')
+        .select('instructor_email, instructor_name')
+        .eq('id', courseId)
+        .single();
       
-      if (courseId === MUS_070_ID) {
-        // For MUS 070, get all glee club members
-        const { data } = await supabase
-          .from('gw_profiles')
-          .select('user_id, full_name, avatar_url, email, voice_part')
-          .or('role.eq.member,is_admin.eq.true,is_super_admin.eq.true')
-          .order('full_name');
-        setEnrolledMembers(data || []);
-      } else {
-        // For other courses, get enrolled students
-        const { data: enrollments } = await supabase
-          .from('gw_course_enrollments')
-          .select('user_id')
-          .eq('course_id', courseId);
-        
-        if (enrollments && enrollments.length > 0) {
-          const userIds = enrollments.map(e => e.user_id);
-          const { data: profiles } = await supabase
-            .from('gw_profiles')
-            .select('user_id, full_name, avatar_url, email, voice_part')
-            .in('user_id', userIds)
-            .order('full_name');
-          setEnrolledMembers(profiles || []);
-        }
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!courseId
+  });
+
+  // Fetch messages
+  const { data: messages, isLoading } = useQuery({
+    queryKey: ['course-emails', courseId, user?.id, activeTab],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('course_messages')
+        .select('*')
+        .eq('course_id', courseId)
+        .eq(activeTab === 'inbox' ? 'recipient_id' : 'sender_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as CourseMessage[];
+    },
+    enabled: !!user && isEnrolled
+  });
+
+  // Send email mutation
+  const sendEmail = useMutation({
+    mutationFn: async ({ subject, content }: { subject: string; content: string }) => {
+      if (!user || !courseData?.instructor_email) {
+        throw new Error('Cannot send message');
       }
-    } catch (error) {
-      console.error('Error fetching enrolled members:', error);
-    } finally {
-      setMembersLoading(false);
-    }
-  };
 
-  const handleDirectMessage = async (targetUserId: string) => {
-    if (!user) return;
-    
-    try {
-      const conversation = await createDirectMessage.mutateAsync(targetUserId);
-      setSelectedGroupId(conversation.id);
-      setShowDMDialog(false);
-      toast.success('Direct message started');
-    } catch (error) {
-      console.error('Failed to create direct message:', error);
-      toast.error('Failed to start direct message');
-    }
-  };
+      // Get instructor's user ID from their email
+      const { data: instructorProfile } = await supabase
+        .from('gw_profiles')
+        .select('user_id')
+        .eq('email', courseData.instructor_email)
+        .single();
 
-  const handleJoinGroup = async () => {
-    const success = await joinCourseGroup();
-    if (success && courseGroup) {
-      setSelectedGroupId(courseGroup.id);
-    }
-  };
+      // Save message to database
+      const { error: dbError } = await supabase
+        .from('course_messages')
+        .insert({
+          course_id: courseId,
+          sender_id: user.id,
+          recipient_id: instructorProfile?.user_id || user.id,
+          subject,
+          content,
+          is_read: false
+        });
 
-  const filteredMembers = enrolledMembers.filter(member => {
-    if (!searchTerm) return true;
-    const search = searchTerm.toLowerCase();
-    return (
-      member.full_name?.toLowerCase().includes(search) ||
-      member.email?.toLowerCase().includes(search) ||
-      member.voice_part?.toLowerCase().includes(search)
-    );
-  }).filter(member => member.user_id !== user?.id); // Exclude current user
+      if (dbError) throw dbError;
 
-  const getUserInitials = (name?: string, email?: string) => {
-    if (name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      // Send actual email via edge function
+      const { error: emailError } = await supabase.functions.invoke('send-course-email', {
+        body: {
+          to: courseData.instructor_email,
+          subject: `[${courseName}] ${subject}`,
+          content,
+          senderName: user.email?.split('@')[0] || 'Student',
+          courseName
+        }
+      });
+
+      if (emailError) {
+        console.error('Email send error:', emailError);
+        // Don't throw - message is saved even if email fails
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['course-emails'] });
+      setComposeOpen(false);
+      setNewMessage({ subject: '', content: '' });
+      toast.success('Email sent to instructor');
+    },
+    onError: (error) => {
+      console.error('Send email error:', error);
+      toast.error('Failed to send email');
     }
-    return email?.substring(0, 2).toUpperCase() || 'U';
+  });
+
+  const handleSend = () => {
+    if (!newMessage.subject.trim() || !newMessage.content.trim()) {
+      toast.error('Please fill in subject and message');
+      return;
+    }
+    sendEmail.mutate(newMessage);
   };
 
   if (!isEnrolled) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Course Messages</h3>
+          <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Course Email</h3>
           <p className="text-muted-foreground">
-            Enroll in this course to access messaging with your classmates.
+            Enroll in this course to email your instructor.
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  if (groupLoading || membersLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // If viewing a specific chat
-  if (selectedGroupId) {
-    return (
-      <div className="h-[600px] flex flex-col bg-background rounded-lg border">
-        <GroupHeader
-          groupId={selectedGroupId}
-          groupName={courseGroup?.id === selectedGroupId ? `${courseName} Discussion` : 'Direct Message'}
-          showBackButton
-          onBack={() => setSelectedGroupId(null)}
-        />
-        <div className="flex-1 overflow-hidden">
-          <ChatWindow groupId={selectedGroupId} />
-        </div>
-      </div>
-    );
-  }
-
-  // Main messaging interface
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">{courseName} Messages</h2>
+          <Mail className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">Course Email</h2>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowDMDialog(true)}
-        >
-          <UserPlus className="h-4 w-4 mr-2" />
-          Message Classmate
+        <Button onClick={() => setComposeOpen(true)}>
+          <Send className="h-4 w-4 mr-2" />
+          Email Instructor
         </Button>
       </div>
 
-      {/* Course Discussion Group */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            Class Discussion
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {courseGroup ? (
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {courseName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium">{courseName} Discussion</div>
-                  <div className="text-sm text-muted-foreground">
-                    {enrolledMembers.length} classmates
-                  </div>
-                </div>
-              </div>
-              {isMember ? (
-                <Button onClick={() => setSelectedGroupId(courseGroup.id)}>
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Open Chat
-                </Button>
-              ) : (
-                <Button onClick={handleJoinGroup}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Join Discussion
-                </Button>
-              )}
+      {/* Info Card */}
+      <Card className="bg-muted/30">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <Mail className="h-5 w-5 text-primary" />
+            <div>
+              <p className="font-medium">Instructor: {courseData?.instructor_name || 'Course Instructor'}</p>
+              <p className="text-sm text-muted-foreground">
+                Send emails directly to your instructor for course-related questions.
+              </p>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No discussion group available for this course yet.
-            </p>
-          )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Classmates List */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            Your Classmates ({enrolledMembers.length - 1})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search classmates..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
+      {/* Tabs */}
+      <div className="flex gap-2">
+        <Button
+          variant={activeTab === 'inbox' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setActiveTab('inbox')}
+        >
+          <Inbox className="h-4 w-4 mr-2" />
+          Inbox
+        </Button>
+        <Button
+          variant={activeTab === 'sent' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setActiveTab('sent')}
+        >
+          <Send className="h-4 w-4 mr-2" />
+          Sent
+        </Button>
+      </div>
+
+      {/* Messages List */}
+      <div className="space-y-2">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
-          <ScrollArea className="h-[300px]">
-            <div className="space-y-2">
-              {filteredMembers.map(member => (
-                <div
-                  key={member.user_id}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                >
+        ) : messages && messages.length > 0 ? (
+          messages.map((message) => (
+            <Card
+              key={message.id}
+              className={`cursor-pointer hover:shadow-md transition-shadow ${
+                !message.is_read && activeTab === 'inbox' ? 'border-l-4 border-l-primary' : ''
+              }`}
+              onClick={() => setSelectedMessage(message)}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={member.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {getUserInitials(member.full_name, member.email)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <Mail className="h-4 w-4 text-primary" />
                     <div>
-                      <div className="font-medium text-sm">{member.full_name}</div>
-                      {member.voice_part && (
-                        <Badge variant="secondary" className="text-xs">
-                          {member.voice_part}
-                        </Badge>
-                      )}
+                      <CardTitle className="text-sm">{message.subject}</CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
+                      </p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDirectMessage(member.user_id)}
-                    disabled={createDirectMessage.isPending}
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                  </Button>
+                  {!message.is_read && activeTab === 'inbox' && (
+                    <Badge variant="secondary" className="text-xs">New</Badge>
+                  )}
                 </div>
-              ))}
-              {filteredMembers.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No classmates found
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-muted-foreground line-clamp-2">{message.content}</p>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>No emails in {activeTab}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
-      {/* DM Dialog */}
-      <Dialog open={showDMDialog} onOpenChange={setShowDMDialog}>
-        <DialogContent className="max-w-md">
+      {/* Compose Dialog */}
+      <Dialog open={composeOpen} onOpenChange={setComposeOpen}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Message a Classmate</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Email Instructor
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+            <div>
+              <Label>To</Label>
+              <Input 
+                value={courseData?.instructor_name || courseData?.instructor_email || 'Instructor'} 
+                disabled 
+                className="bg-muted"
               />
             </div>
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-2">
-                {filteredMembers.map(member => (
-                  <div
-                    key={member.user_id}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => handleDirectMessage(member.user_id)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={member.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {getUserInitials(member.full_name, member.email)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{member.full_name}</div>
-                        <div className="text-sm text-muted-foreground">{member.email}</div>
-                      </div>
-                    </div>
-                    <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+            <div>
+              <Label>Subject</Label>
+              <Input
+                placeholder="Enter subject..."
+                value={newMessage.subject}
+                onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>Message</Label>
+              <Textarea
+                placeholder="Type your message..."
+                value={newMessage.content}
+                onChange={(e) => setNewMessage(prev => ({ ...prev, content: e.target.value }))}
+                rows={6}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setComposeOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSend} disabled={sendEmail.isPending}>
+                {sendEmail.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
+                Send Email
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Message Dialog */}
+      <Dialog open={!!selectedMessage} onOpenChange={() => setSelectedMessage(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{selectedMessage?.subject}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              {selectedMessage && format(new Date(selectedMessage.created_at), 'MMMM d, yyyy h:mm a')}
+            </div>
+            <div className="prose prose-sm max-w-none">
+              <p className="whitespace-pre-wrap">{selectedMessage?.content}</p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
