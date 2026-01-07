@@ -85,6 +85,7 @@ serve(async (req) => {
     // Parse the CSV/TSV data (handles Banner-style exports with control chars)
     const normalized = String(csvData)
       .replace(/\u0000/g, '')
+      .replace(/^\uFEFF/, '') // strip BOM
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n')
       // remove most non-printable characters but keep tabs/newlines
@@ -98,30 +99,74 @@ serve(async (req) => {
     const students: StudentRow[] = [];
     const errors: { row: number; error: string }[] = [];
 
-    const detectDelimiter = (line: string): ',' | '\t' => {
-      const commaCols = line.split(',').length;
-      const tabCols = line.split('\t').length;
-      return tabCols > commaCols ? '\t' : ',';
+    type Delimiter = ',' | '\t' | ';';
+
+    const detectDelimiter = (line: string): Delimiter => {
+      const candidates: Delimiter[] = ['\t', ',', ';'];
+      let best: Delimiter = ',';
+      let bestCols = 0;
+
+      for (const d of candidates) {
+        const cols = parseDelimitedLine(line, d).length;
+        if (cols > bestCols) {
+          bestCols = cols;
+          best = d;
+        }
+      }
+
+      return best;
     };
 
-    const splitRow = (line: string, delimiter: ',' | '\t') => {
-      const parts = line
-        .split(delimiter)
-        .map((v) => v.trim().replace(/"/g, '').replace(/\*\*/g, ''));
-      return parts;
+    const parseDelimitedLine = (line: string, delimiter: Delimiter): string[] => {
+      // Quote-aware parser for CSV/semicolon; tabs are treated as plain separators.
+      const out: string[] = [];
+      let cur = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+
+        if (delimiter !== '\t' && ch === '"') {
+          // Toggle quotes; supports escaped quotes ""
+          const next = line[i + 1];
+          if (inQuotes && next === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+          continue;
+        }
+
+        if (!inQuotes && ch === delimiter) {
+          out.push(cur.trim().replace(/\*\*/g, ''));
+          cur = '';
+          continue;
+        }
+
+        cur += ch;
+      }
+
+      out.push(cur.trim().replace(/\*\*/g, ''));
+      return out;
     };
 
-    // Find the header row (contains "Student Name" and "ID"/"Student ID")
+    // Find the header row (flexible: Banner exports vary)
     let headerRowIndex = -1;
     let headers: string[] = [];
-    let delimiter: ',' | '\t' = ',';
+    let delimiter: Delimiter = ',';
 
     for (let i = 0; i < lines.length; i++) {
-      const lower = lines[i].toLowerCase();
-      if (lower.includes('student name') && (lower.includes('\tid\t') || lower.includes('student id') || lower.includes('banner id') || lower.includes(' id'))) {
+      const d = detectDelimiter(lines[i]);
+      const cols = parseDelimitedLine(lines[i], d).map((h) => h.toLowerCase().trim());
+
+      const hasName = cols.some((h) => h === 'student name' || h.includes('student name') || h === 'name' || h.includes('full name'));
+      const hasId = cols.some((h) => h === 'id' || h === 'id#' || h === 'sid' || h.includes('student id') || h.includes('banner id') || h.includes('spelman id') || h.endsWith(' id'));
+
+      if (hasName && hasId) {
         headerRowIndex = i;
-        delimiter = detectDelimiter(lines[i]);
-        headers = splitRow(lines[i], delimiter).map((h) => h.toLowerCase());
+        delimiter = d;
+        headers = cols;
         break;
       }
     }
@@ -130,16 +175,16 @@ serve(async (req) => {
       // Fallback: assume first row is headers
       headerRowIndex = 0;
       delimiter = detectDelimiter(lines[0] ?? '');
-      headers = splitRow(lines[0] ?? '', delimiter).map((h) => h.toLowerCase());
+      headers = parseDelimitedLine(lines[0] ?? '', delimiter).map((h) => h.toLowerCase().trim());
     }
 
     // Find column indices - flexible matching
     const nameIndex = headers.findIndex((h) =>
-      h.includes('student name') || h.includes('student_name') || h === 'name' || h === 'full name' || h === 'full_name'
+      h.includes('student name') || h.includes('student_name') || h === 'name' || h.includes('full name') || h.includes('full_name')
     );
     const idIndex = headers.findIndex((h) =>
-      h === 'id' || h === 'sid' || h.includes('student id') || h.includes('student_id') ||
-      h.includes('banner id') || h.includes('banner_id') || h.includes('spelman id')
+      h === 'id' || h === 'id#' || h === 'sid' || h.includes('student id') || h.includes('student_id') ||
+      h.includes('banner id') || h.includes('banner_id') || h.includes('spelman id') || h.includes('student number')
     );
     const statusIndex = headers.findIndex((h) =>
       h.includes('registration status') || h.includes('registration_status') ||
@@ -152,7 +197,8 @@ serve(async (req) => {
       h === 'year' || h.includes('class year')
     );
 
-    console.log('Detected delimiter:', delimiter === '\t' ? 'TAB' : 'COMMA');
+    const delimiterLabel = delimiter === '\t' ? 'TAB' : delimiter === ';' ? 'SEMICOLON' : 'COMMA';
+    console.log('Detected delimiter:', delimiterLabel);
     console.log('Raw headers:', headers);
     console.log('Headers found:', { nameIndex, idIndex, statusIndex, levelIndex, creditIndex, classIndex });
 
@@ -165,7 +211,7 @@ serve(async (req) => {
         continue;
       }
 
-      const values = splitRow(line, delimiter);
+      const values = parseDelimitedLine(line, delimiter);
 
       const name = nameIndex !== -1 ? values[nameIndex] : null;
       const studentId = idIndex !== -1 ? values[idIndex] : null;
@@ -188,9 +234,16 @@ serve(async (req) => {
 
     if (students.length === 0) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'No valid student records found in CSV',
-          hint: 'Make sure your CSV has columns: Student Name, ID, Registration Status, Level, Credit Hours, Class'
+          hint: 'Make sure your CSV has columns: Student Name, ID, Registration Status, Level, Credit Hours, Class',
+          debug: {
+            delimiter: delimiterLabel,
+            headerRowIndex,
+            headers,
+            indices: { nameIndex, idIndex, statusIndex, levelIndex, creditIndex, classIndex },
+            sampleLines: lines.slice(0, Math.min(5, lines.length)),
+          },
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
