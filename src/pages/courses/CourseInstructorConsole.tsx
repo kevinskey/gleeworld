@@ -23,6 +23,7 @@ import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
 import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
 import { StudentCommunications } from '@/components/mus240/instructor/StudentCommunications';
 import { SyllabusTemplateEditor } from '@/components/academy/syllabus/SyllabusTemplateEditor';
+import { ModulesSection } from '@/components/course/ModulesSection';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -328,8 +329,10 @@ export const CourseInstructorConsole = () => {
 
             {activeTab === 'syllabus' && <SyllabusTemplateEditor courseId={dbCourse?.id || course.id} courseCode={course.courseCode} courseTitle={course.title} />}
 
+            {activeTab === 'modules' && <ModulesSection courseId={dbCourse?.id || course.id} />}
+
             {/* Placeholder panels for other tabs */}
-            {['modules', 'class-notes', 'calendar', 'tests', 'polls', 'videos', 'audio', 'settings'].includes(activeTab) && <Card>
+            {['class-notes', 'calendar', 'tests', 'polls', 'videos', 'audio', 'settings'].includes(activeTab) && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
                     {navItems.find(item => item.value === activeTab)?.label}
