@@ -64,12 +64,32 @@ function parseTimeString(timeStr: string): { hours: number; minutes: number } | 
 function parseDateString(dateStr: string): Date | null {
   if (!dateStr) return null;
   
-  // Try parsing formats like "January 15, 2025" or "2025-01-15"
-  const date = new Date(dateStr);
+  // Remove ordinal suffixes (1st, 2nd, 3rd, 4th, etc.)
+  const cleanedDateStr = dateStr.replace(/(\d+)(st|nd|rd|th)/gi, '$1');
+  
+  // Try parsing the cleaned string
+  const date = new Date(cleanedDateStr);
   if (!isNaN(date.getTime())) {
+    console.log(`Parsed date "${dateStr}" -> ${date.toISOString()}`);
     return date;
   }
   
+  // Try manual parsing for formats like "March 7, 2025" or "March 7 2025"
+  const monthNames = ['january', 'february', 'march', 'april', 'may', 'june', 
+                      'july', 'august', 'september', 'october', 'november', 'december'];
+  const monthMatch = cleanedDateStr.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);
+  if (monthMatch) {
+    const monthIndex = monthNames.indexOf(monthMatch[1].toLowerCase());
+    if (monthIndex !== -1) {
+      const parsedDate = new Date(parseInt(monthMatch[3]), monthIndex, parseInt(monthMatch[2]));
+      if (!isNaN(parsedDate.getTime())) {
+        console.log(`Manually parsed date "${dateStr}" -> ${parsedDate.toISOString()}`);
+        return parsedDate;
+      }
+    }
+  }
+  
+  console.log(`Failed to parse date: "${dateStr}"`);
   return null;
 }
 
