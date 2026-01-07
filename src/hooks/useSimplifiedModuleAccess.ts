@@ -80,7 +80,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'service-management': 'service-management',
           'calendar-management': 'calendar-management',
           'buckets-of-love': 'buckets-of-love',
-          'glee-writing': 'glee-writing',
+          
           'fan-engagement': 'fan-engagement',
           
           // Member Management
@@ -118,7 +118,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'monthly-statements': 'monthly-statements',
           'check-requests': 'check-requests',
           'merch-store': 'merch-store',
-          'ai-financial': 'ai-financial',
+          
           
           // Tools & Utilities
           'ai-tools': 'ai-tools',
