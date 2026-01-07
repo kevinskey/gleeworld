@@ -117,29 +117,29 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
         </Badge>
       </div>
 
-      <Card>
+      <Card className="bg-primary text-primary-foreground">
         <CardHeader>
-          <CardTitle className="text-lg">Course Schedule</CardTitle>
+          <CardTitle className="text-lg text-primary-foreground">Course Schedule</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm mb-4 text-muted-foreground">
+          <p className="text-sm mb-4 text-primary-foreground/90">
             View Spelman College events and important academic dates integrated with {courseId.toUpperCase()}.
           </p>
           
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline" className={getEventColor('class')}>
+            <Badge variant="outline" className="bg-white/10 text-white border-white/20">
               <BookOpen className="h-3 w-3 mr-1" />
               Classes
             </Badge>
-            <Badge variant="outline" className={getEventColor('performance')}>
+            <Badge variant="outline" className="bg-white/10 text-white border-white/20">
               <CalendarIcon className="h-3 w-3 mr-1" />
               Performances
             </Badge>
-            <Badge variant="outline" className={getEventColor('meeting')}>
+            <Badge variant="outline" className="bg-white/10 text-white border-white/20">
               <Users className="h-3 w-3 mr-1" />
               Meetings
             </Badge>
-            <Badge variant="outline" className={getEventColor('deadline')}>
+            <Badge variant="outline" className="bg-white/10 text-white border-white/20">
               <Clock className="h-3 w-3 mr-1" />
               Deadlines
             </Badge>
