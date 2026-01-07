@@ -295,6 +295,17 @@ export const TourBudgetManager = () => {
     }
   };
   const handleUpdateItem = async (id: string, updates: Partial<BudgetLineItem>) => {
+    // Optimistically update local state immediately
+    setBudgetItems(prev => prev.map(item => 
+      item.id === id 
+        ? { 
+            ...item, 
+            ...updates,
+            estimated_cost: (updates.unit_cost ?? item.unit_cost) * (updates.quantity ?? item.quantity)
+          } 
+        : item
+    ));
+
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.status !== undefined) dbUpdates.status = updates.status;
@@ -308,8 +319,11 @@ export const TourBudgetManager = () => {
         error
       } = await supabase.from('tour_budget_items').update(dbUpdates).eq('id', id);
       if (error) throw error;
+      toast({ title: "Updated", description: "Budget item saved" });
     } catch (error) {
       console.error('Error updating item:', error);
+      // Revert on error by refetching
+      fetchBudgetData();
       toast({
         title: "Error",
         description: "Failed to update item",
