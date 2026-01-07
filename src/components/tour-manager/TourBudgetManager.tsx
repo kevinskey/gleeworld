@@ -344,12 +344,23 @@ export const TourBudgetManager = () => {
       });
       return;
     }
+
+    const amount = parseFloat(String(newRevenue.amount).replace(/[^0-9.-]/g, ''));
+    if (Number.isNaN(amount)) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid number (e.g., 5000)",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const {
         error
       } = await supabase.from('tour_budget_revenues').insert([{
         source: newRevenue.source,
-        amount: parseFloat(newRevenue.amount),
+        amount,
         status: newRevenue.status
       }]);
       if (error) throw error;
