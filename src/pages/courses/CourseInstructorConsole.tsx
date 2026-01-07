@@ -259,15 +259,11 @@ export const CourseInstructorConsole = () => {
           </Sheet>
 
           {/* Main Content */}
-          <main className="flex-1 p-2 sm:p-3 md:p-4 lg:p-6 xl:p-8">
+          <main className="flex-1 p-2 sm:p-3 md:p-4 lg:p-6 xl:p-8 pt-0">
             {/* Page Header */}
             <div className="mb-4 sm:mb-6 md:mb-8">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1 sm:mb-2">
-                {navItems.find(item => item.value === activeTab)?.label || 'Console'}
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Manage your course content, track student progress, and analyze performance
-              </p>
+              
+              
             </div>
 
             {/* Content Panels */}
