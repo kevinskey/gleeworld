@@ -51,6 +51,31 @@ export const useGleeWorldEvents = () => {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isSubscribedRef = useRef(false);
 
+  // Update already-loaded events when a calendar color changes
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ calendarId: string; color: string }>).detail;
+      if (!detail?.calendarId || !detail?.color) return;
+
+      setEvents((prev) =>
+        prev.map((ev) => {
+          if (ev.calendar_id !== detail.calendarId) return ev;
+          if (!ev.gw_calendars) return ev;
+          return {
+            ...ev,
+            gw_calendars: {
+              ...ev.gw_calendars,
+              color: detail.color,
+            },
+          };
+        }),
+      );
+    };
+
+    window.addEventListener('gw:calendar-color-updated', handler);
+    return () => window.removeEventListener('gw:calendar-color-updated', handler);
+  }, []);
+
   const fetchEvents = async () => {
     try {
       setLoading(true);
