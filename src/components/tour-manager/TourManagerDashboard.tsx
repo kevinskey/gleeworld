@@ -23,6 +23,7 @@ import { TourManagerLanding } from './TourManagerLanding';
 import { TourLogisticsSection } from './TourLogisticsSection';
 import { BusInfoSection } from '@/components/tour/BusInfoSection';
 import { HotelManagement } from './HotelManagement';
+import { TourBudgetManager } from './TourBudgetManager';
 import { supabase } from '@/integrations/supabase/client';
 interface TourManagerDashboardProps {
   user?: {
@@ -87,6 +88,10 @@ const navItems = [{
   value: 'wardrobe',
   label: 'Wardrobe',
   icon: Shirt
+}, {
+  value: 'budget',
+  label: 'Budget',
+  icon: DollarSign
 }];
 const contentConfig: Record<string, {
   title: string;
@@ -243,6 +248,8 @@ export const TourManagerDashboard = ({
         return <TourDocumentsSection />;
       case 'wardrobe':
         return <WardrobeMistressHub />;
+      case 'budget':
+        return <TourBudgetManager />;
       default:
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
     }
