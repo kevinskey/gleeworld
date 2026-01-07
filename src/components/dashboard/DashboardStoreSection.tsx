@@ -94,7 +94,7 @@ export const DashboardStoreSection = () => {
       {/* Section Header - Edge to Edge */}
       <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground px-4 sm:px-6 lg:px-8 w-full pt-[20px] py-[20px] pb-[20px]">Shop</h2>
       
-      <div className="w-full px-[50px]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pl-[30px] pt-[2px] pb-[2px]">
         
 
         {/* Product Horizontal Scroll */}
@@ -128,7 +128,7 @@ export const DashboardStoreSection = () => {
                           +{product.images.length - 1}
                         </span>}
                     </div>
-                    <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors text-xl">
+                    <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
                       {product.title}
                     </h3>
                   </div>
@@ -154,7 +154,7 @@ export const DashboardStoreSection = () => {
 
 
       {/* Courses Section */}
-      <div className="w-full px-[50px] py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Courses Horizontal Scroll */}
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" style={{
         scrollbarWidth: 'none',
@@ -217,10 +217,10 @@ export const DashboardStoreSection = () => {
       </div>
 
       {/* My Modules - Edge to Edge */}
-      <div className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none flex items-center text-white font-medium">
+      <Button onClick={() => navigate('/modules')} className="w-full gap-2 text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 rounded-none lg:px-[3px] py-[30px]">
         <BookOpen className="h-5 w-5" />
         My Modules
-      </div>
+      </Button>
 
       {/* Fan Zone - Edge to Edge */}
       
