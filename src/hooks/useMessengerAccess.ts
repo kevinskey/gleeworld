@@ -63,7 +63,8 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
   }, [userProfile]);
 
   const hasAccess = messengerRole !== 'fan' && messengerRole !== 'none';
-  const canMessageAnyone = messengerRole === 'super-admin';
+  // Allow everyone with access to message anyone
+  const canMessageAnyone = hasAccess;
   const canSendSMS = messengerRole === 'super-admin' || messengerRole === 'admin';
 
   const noAccessReason = useMemo(() => {
@@ -90,24 +91,24 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
       const groups: MessengerCourseGroup[] = [];
       const seenUserIds = new Set<string>();
 
-      // SUPER-ADMIN: Access to everyone
-      if (messengerRole === 'super-admin') {
-        const { data: allUsers } = await supabase
-          .from('gw_profiles')
-          .select('user_id, full_name, email, phone_number, role')
-          .neq('user_id', user.id)
-          .order('full_name');
-        
-        if (allUsers) {
-          allUsers.forEach(u => {
-            if (!seenUserIds.has(u.user_id)) {
-              seenUserIds.add(u.user_id);
-              allContacts.push({ ...u, source: 'all' });
-            }
-          });
-        }
+      // ALL users with access can see everyone in the dropdown
+      const { data: allUsers } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email, phone_number, role')
+        .neq('user_id', user.id)
+        .order('full_name');
+      
+      if (allUsers) {
+        allUsers.forEach(u => {
+          if (!seenUserIds.has(u.user_id)) {
+            seenUserIds.add(u.user_id);
+            allContacts.push({ ...u, source: 'all' });
+          }
+        });
+      }
 
-        // Load all courses for super-admin
+      // Load course groups for admins and super-admins
+      if (messengerRole === 'super-admin' || messengerRole === 'admin') {
         const { data: allCourses } = await supabase
           .from('gw_courses')
           .select('id, title')
@@ -131,68 +132,8 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
         }
       }
 
-      // ADMIN: Access to courses they administer (instructor role OR explicit admin)
-      else if (messengerRole === 'admin') {
-        // Get courses where admin is instructor
-        const { data: instructorCourses } = await supabase
-          .from('gw_course_enrollments')
-          .select('course_id, gw_courses!inner(id, title, is_active)')
-          .eq('user_id', user.id)
-          .eq('role', 'instructor')
-          .eq('gw_courses.is_active', true);
-
-        const courseIds = new Set<string>();
-        
-        if (instructorCourses) {
-          instructorCourses.forEach((c: any) => {
-            if (c.gw_courses?.id) {
-              courseIds.add(c.gw_courses.id);
-            }
-          });
-        }
-
-        // Get students from admin's courses
-        for (const courseId of courseIds) {
-          const { data: courseInfo } = await supabase
-            .from('gw_courses')
-            .select('title')
-            .eq('id', courseId)
-            .single();
-
-          const { data: enrollments, count } = await supabase
-            .from('gw_course_enrollments')
-            .select('user_id, gw_profiles!inner(user_id, full_name, email, phone_number, role)', { count: 'exact' })
-            .eq('course_id', courseId)
-            .eq('enrollment_status', 'enrolled');
-
-          if (enrollments) {
-            enrollments.forEach((e: any) => {
-              const profile = e.gw_profiles;
-              if (profile && !seenUserIds.has(profile.user_id) && profile.user_id !== user.id) {
-                seenUserIds.add(profile.user_id);
-                allContacts.push({
-                  user_id: profile.user_id,
-                  full_name: profile.full_name,
-                  email: profile.email,
-                  phone_number: profile.phone_number,
-                  role: profile.role,
-                  source: 'course'
-                });
-              }
-            });
-          }
-
-          groups.push({
-            id: courseId,
-            title: courseInfo?.title || 'Unknown Course',
-            studentCount: count || 0
-          });
-        }
-      }
-
-      // STUDENT: Access to classmates + instructors in enrolled courses
+      // Course groups for students (enrolled courses)
       else if (messengerRole === 'student') {
-        // Get all courses the student is enrolled in
         const { data: enrolledCourses } = await supabase
           .from('gw_course_enrollments')
           .select('course_id, gw_courses!inner(id, title, is_active)')
@@ -205,84 +146,17 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
             const course = (enrollment as any).gw_courses;
             if (!course?.id) continue;
 
-            // Get all students and instructors in this course
-            const { data: classmates, count } = await supabase
+            const { count } = await supabase
               .from('gw_course_enrollments')
-              .select('user_id, role, gw_profiles!inner(user_id, full_name, email, phone_number, role)', { count: 'exact' })
+              .select('*', { count: 'exact', head: true })
               .eq('course_id', course.id)
+              .eq('role', 'student')
               .eq('enrollment_status', 'enrolled');
 
-            if (classmates) {
-              classmates.forEach((c: any) => {
-                const profile = c.gw_profiles;
-                if (profile && !seenUserIds.has(profile.user_id) && profile.user_id !== user.id) {
-                  seenUserIds.add(profile.user_id);
-                  allContacts.push({
-                    user_id: profile.user_id,
-                    full_name: profile.full_name,
-                    email: profile.email,
-                    phone_number: profile.phone_number,
-                    role: c.role === 'instructor' ? 'Instructor' : profile.role,
-                    source: 'course'
-                  });
-                }
-              });
-            }
-
-            // Count only students for the group
-            const studentCount = classmates?.filter((c: any) => c.role === 'student').length || 0;
             groups.push({
               id: course.id,
               title: course.title,
-              studentCount
-            });
-          }
-        }
-      }
-
-      // ALUMNA: Access to other alumnae + mentees
-      else if (messengerRole === 'alumna') {
-        // Get all alumnae
-        const { data: alumnae } = await supabase
-          .from('gw_profiles')
-          .select('user_id, full_name, email, phone_number, role')
-          .in('role', ['alumna', 'alumnae', 'Alumna', 'Alumnae'])
-          .neq('user_id', user.id)
-          .order('full_name');
-
-        if (alumnae) {
-          alumnae.forEach(a => {
-            if (!seenUserIds.has(a.user_id)) {
-              seenUserIds.add(a.user_id);
-              allContacts.push({ ...a, source: 'alumna' });
-            }
-          });
-        }
-
-        // Get mentees (students this alumna is mentoring)
-        const { data: mentorships } = await supabase
-          .from('alumnae_users')
-          .select('user_id')
-          .eq('user_id', user.id)
-          .eq('is_mentor', true)
-          .single();
-
-        if (mentorships) {
-          // If this alumna is a mentor, get students who opted in for mentorship
-          const { data: mentees } = await supabase
-            .from('gw_profiles')
-            .select('user_id, full_name, email, phone_number, role')
-            .eq('role', 'student')
-            .order('full_name');
-
-          // Note: A full mentorship system would have a mentor_mentee table
-          // For now, we show students who may be interested in mentorship
-          if (mentees) {
-            mentees.forEach(m => {
-              if (!seenUserIds.has(m.user_id)) {
-                seenUserIds.add(m.user_id);
-                allContacts.push({ ...m, source: 'mentee' });
-              }
+              studentCount: count || 0
             });
           }
         }
