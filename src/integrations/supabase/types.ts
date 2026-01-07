@@ -4441,15 +4441,21 @@ export type Database = {
           created_at: string | null
           credits: number | null
           description: string | null
+          display_order: number | null
+          duration: string | null
+          highlights: string[] | null
+          icon_name: string | null
           id: string
           instructor_email: string | null
           instructor_name: string | null
           instructor_office: string | null
           instructor_office_hours: string | null
           is_active: boolean | null
+          level: string | null
           location: string | null
           max_students: number | null
           meeting_times: string | null
+          route: string | null
           semester: string | null
           syllabus_data: Json | null
           title: string
@@ -4460,15 +4466,21 @@ export type Database = {
           created_at?: string | null
           credits?: number | null
           description?: string | null
+          display_order?: number | null
+          duration?: string | null
+          highlights?: string[] | null
+          icon_name?: string | null
           id?: string
           instructor_email?: string | null
           instructor_name?: string | null
           instructor_office?: string | null
           instructor_office_hours?: string | null
           is_active?: boolean | null
+          level?: string | null
           location?: string | null
           max_students?: number | null
           meeting_times?: string | null
+          route?: string | null
           semester?: string | null
           syllabus_data?: Json | null
           title: string
@@ -4479,15 +4491,21 @@ export type Database = {
           created_at?: string | null
           credits?: number | null
           description?: string | null
+          display_order?: number | null
+          duration?: string | null
+          highlights?: string[] | null
+          icon_name?: string | null
           id?: string
           instructor_email?: string | null
           instructor_name?: string | null
           instructor_office?: string | null
           instructor_office_hours?: string | null
           is_active?: boolean | null
+          level?: string | null
           location?: string | null
           max_students?: number | null
           meeting_times?: string | null
+          route?: string | null
           semester?: string | null
           syllabus_data?: Json | null
           title?: string
