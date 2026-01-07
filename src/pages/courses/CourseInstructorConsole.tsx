@@ -337,7 +337,7 @@ export const CourseInstructorConsole = () => {
             )}
 
             {activeTab === 'syllabus' && (
-              <SyllabusTemplateEditor courseId={course.id} courseCode={course.courseCode} courseTitle={course.title} />
+              <SyllabusTemplateEditor courseId={dbCourse?.id || course.id} courseCode={course.courseCode} courseTitle={course.title} />
             )}
 
             {/* Placeholder panels for other tabs */}
