@@ -3,11 +3,7 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, 
-  ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, 
-  ListChecks, Calendar, Video, Headphones, FolderOpen, Mail 
-} from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Mail } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCourseTA } from '@/hooks/useCourseTA';
 import { cn } from '@/lib/utils';
@@ -35,22 +31,28 @@ const slugToCourseCode = (slug: string): string => {
   const number = parts.slice(1).join('-');
   return `${prefix} ${number}`;
 };
-
 export const CourseInstructorConsole = () => {
-  const { courseCode: courseSlug } = useParams<{ courseCode: string }>();
-  const { isAdmin, loading } = useUserRole();
+  const {
+    courseCode: courseSlug
+  } = useParams<{
+    courseCode: string;
+  }>();
+  const {
+    isAdmin,
+    loading
+  } = useUserRole();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('assignments');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [dbCourse, setDbCourse] = useState<{ id: string; term: string | null } | null>(null);
+  const [dbCourse, setDbCourse] = useState<{
+    id: string;
+    term: string | null;
+  } | null>(null);
   const [dbLoading, setDbLoading] = useState(true);
 
   // Find the course from config
   const courseCode = courseSlug ? slugToCourseCode(courseSlug) : '';
-  const course = ACADEMY_COURSES.find(c => 
-    c.courseCode.toLowerCase().replace(' ', '-') === courseSlug?.toLowerCase() ||
-    c.courseCode === courseCode
-  );
+  const course = ACADEMY_COURSES.find(c => c.courseCode.toLowerCase().replace(' ', '-') === courseSlug?.toLowerCase() || c.courseCode === courseCode);
 
   // Fetch the actual course from database to get the UUID
   useEffect(() => {
@@ -59,14 +61,11 @@ export const CourseInstructorConsole = () => {
         setDbLoading(false);
         return;
       }
-      
       try {
-        const { data, error } = await supabase
-          .from('gw_courses')
-          .select('id, term')
-          .eq('course_code', courseCode)
-          .maybeSingle();
-        
+        const {
+          data,
+          error
+        } = await supabase.from('gw_courses').select('id, term').eq('course_code', courseCode).maybeSingle();
         if (!error && data) {
           setDbCourse(data);
         }
@@ -76,17 +75,17 @@ export const CourseInstructorConsole = () => {
         setDbLoading(false);
       }
     };
-    
     fetchCourse();
   }, [courseCode]);
 
   // Check if user is TA for this course
-  const { isTA, loading: taLoading } = useCourseTA(course?.courseCode.replace(' ', '') || '');
-
+  const {
+    isTA,
+    loading: taLoading
+  } = useCourseTA(course?.courseCode.replace(' ', '') || '');
   if (loading || taLoading || dbLoading) {
     return <LoadingSpinner size="lg" text="Loading..." />;
   }
-
   if (!course) {
     return <Navigate to="/glee-academy" replace />;
   }
@@ -95,91 +94,113 @@ export const CourseInstructorConsole = () => {
   if (!isAdmin() && !isTA) {
     return <Navigate to={`/academy/${courseSlug}`} replace />;
   }
-
-  const navCategories = [
-    {
-      label: 'Content',
-      items: [
-        { value: 'syllabus', label: 'Syllabus', icon: FileText },
-        { value: 'modules', label: 'Modules', icon: FolderOpen },
-        { value: 'class-notes', label: 'Class Notes', icon: BookOpen },
-        { value: 'calendar', label: 'Calendar', icon: Calendar },
-      ]
-    },
-    {
-      label: 'Assessment',
-      items: [
-        { value: 'assignments', label: 'Assignments', icon: BookOpen },
-        { value: 'tests', label: 'Tests', icon: ClipboardCheck },
-        { value: 'polls', label: 'Polls', icon: BarChart3 },
-        { value: 'rubrics', label: 'Rubrics', icon: ListChecks },
-        { value: 'grades', label: 'Grades', icon: Trophy },
-      ]
-    },
-    {
-      label: 'Students',
-      items: [
-        { value: 'students', label: 'Enrollment', icon: UserPlus },
-        { value: 'analytics', label: 'Analytics', icon: BarChart },
-        { value: 'communications', label: 'Communications', icon: Mail },
-      ]
-    },
-    {
-      label: 'Resources',
-      items: [
-        { value: 'resources', label: 'Course Materials', icon: BookOpen },
-        { value: 'videos', label: 'Video Library', icon: Video },
-        { value: 'audio', label: 'Audio Examples', icon: Headphones },
-      ]
-    },
-    {
-      label: 'Tools',
-      items: [
-        { value: 'ai-assistant', label: 'AI Assistant', icon: Brain },
-        { value: 'settings', label: 'Settings', icon: Settings },
-      ]
-    }
-  ];
-
+  const navCategories = [{
+    label: 'Content',
+    items: [{
+      value: 'syllabus',
+      label: 'Syllabus',
+      icon: FileText
+    }, {
+      value: 'modules',
+      label: 'Modules',
+      icon: FolderOpen
+    }, {
+      value: 'class-notes',
+      label: 'Class Notes',
+      icon: BookOpen
+    }, {
+      value: 'calendar',
+      label: 'Calendar',
+      icon: Calendar
+    }]
+  }, {
+    label: 'Assessment',
+    items: [{
+      value: 'assignments',
+      label: 'Assignments',
+      icon: BookOpen
+    }, {
+      value: 'tests',
+      label: 'Tests',
+      icon: ClipboardCheck
+    }, {
+      value: 'polls',
+      label: 'Polls',
+      icon: BarChart3
+    }, {
+      value: 'rubrics',
+      label: 'Rubrics',
+      icon: ListChecks
+    }, {
+      value: 'grades',
+      label: 'Grades',
+      icon: Trophy
+    }]
+  }, {
+    label: 'Students',
+    items: [{
+      value: 'students',
+      label: 'Enrollment',
+      icon: UserPlus
+    }, {
+      value: 'analytics',
+      label: 'Analytics',
+      icon: BarChart
+    }, {
+      value: 'communications',
+      label: 'Communications',
+      icon: Mail
+    }]
+  }, {
+    label: 'Resources',
+    items: [{
+      value: 'resources',
+      label: 'Course Materials',
+      icon: BookOpen
+    }, {
+      value: 'videos',
+      label: 'Video Library',
+      icon: Video
+    }, {
+      value: 'audio',
+      label: 'Audio Examples',
+      icon: Headphones
+    }]
+  }, {
+    label: 'Tools',
+    items: [{
+      value: 'ai-assistant',
+      label: 'AI Assistant',
+      icon: Brain
+    }, {
+      value: 'settings',
+      label: 'Settings',
+      icon: Settings
+    }]
+  }];
   const navItems = navCategories.flatMap(cat => cat.items);
-
-  const SidebarNav = ({ isMobile = false }) => (
-    <nav className="space-y-4">
-      {navCategories.map(category => (
-        <div key={category.label}>
+  const SidebarNav = ({
+    isMobile = false
+  }) => <nav className="space-y-4">
+      {navCategories.map(category => <div key={category.label}>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-3">
             {category.label}
           </h3>
           <div className="space-y-0.5">
             {category.items.map(item => {
-              const Icon = item.icon;
-              return (
-                <button 
-                  key={item.value} 
-                  onClick={() => {
-                    setActiveTab(item.value);
-                    if (isMobile) setSidebarOpen(false);
-                  }} 
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    activeTab === item.value 
-                      ? "bg-primary text-primary-foreground" 
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
+          const Icon = item.icon;
+          return <button key={item.value} onClick={() => {
+            setActiveTab(item.value);
+            if (isMobile) setSidebarOpen(false);
+          }} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors", activeTab === item.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground")}>
                   <Icon className="h-4 w-4 flex-shrink-0" />
                   <span>{item.label}</span>
-                </button>
-              );
-            })}
+                </button>;
+        })}
           </div>
-        </div>
-      ))}
-    </nav>
-  );
-
-  return (
-    <UniversalLayout containerized={false}>
+        </div>)}
+    </nav>;
+  return <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-background">
         {/* Stats Bar */}
         <div className="border-b bg-card">
@@ -215,7 +236,7 @@ export const CourseInstructorConsole = () => {
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-56 xl:w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-[132px]">
             <div className="p-4 xl:p-6">
-              <div className="mb-6 xl:mb-8 pb-4 xl:pb-6 border-b">
+              <div className="mb-6 xl:mb-8 pb-4 xl:pb-6 border-b text-primary-foreground px-[10px] py-[10px] bg-orange-200">
                 <h2 className="text-lg xl:text-xl font-bold text-foreground">{course.courseCode}</h2>
                 <p className="text-xs xl:text-sm text-muted-foreground mt-1 xl:mt-1.5">{course.title}</p>
                 <p className="text-[10px] xl:text-xs text-muted-foreground mt-0.5 xl:mt-1">{course.instructor?.name}</p>
@@ -249,8 +270,7 @@ export const CourseInstructorConsole = () => {
             </div>
 
             {/* Content Panels */}
-            {activeTab === 'assignments' && (
-              <Card>
+            {activeTab === 'assignments' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
                     <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
@@ -260,11 +280,9 @@ export const CourseInstructorConsole = () => {
                 <CardContent className="p-2 sm:p-4 md:p-6">
                   <AssignmentManager />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'grades' && (
-              <Card>
+            {activeTab === 'grades' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
                     <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -274,11 +292,9 @@ export const CourseInstructorConsole = () => {
                 <CardContent className="p-2 sm:p-4 md:p-6">
                   <GradesAdmin />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'students' && dbCourse && (
-              <Card>
+            {activeTab === 'students' && dbCourse && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
                     <UserPlus className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -286,26 +302,15 @@ export const CourseInstructorConsole = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4 md:p-6">
-                  <CourseEnrollmentManager 
-                    courseId={dbCourse.id}
-                    courseCode={course.courseCode}
-                    courseTitle={course.title}
-                    term={dbCourse.term || undefined}
-                  />
+                  <CourseEnrollmentManager courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} term={dbCourse.term || undefined} />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'analytics' && (
-              <StudentAnalyticsDashboard />
-            )}
+            {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
 
-            {activeTab === 'resources' && (
-              <ResourcesAdmin />
-            )}
+            {activeTab === 'resources' && <ResourcesAdmin />}
 
-            {activeTab === 'rubrics' && (
-              <Card>
+            {activeTab === 'rubrics' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
                     <ListChecks className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -315,11 +320,9 @@ export const CourseInstructorConsole = () => {
                 <CardContent className="p-2 sm:p-4 md:p-6">
                   <RubricManager />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'communications' && (
-              <Card>
+            {activeTab === 'communications' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
                     <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -329,20 +332,14 @@ export const CourseInstructorConsole = () => {
                 <CardContent className="p-2 sm:p-4 md:p-6">
                   <StudentCommunications />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'ai-assistant' && (
-              <AIAssistant />
-            )}
+            {activeTab === 'ai-assistant' && <AIAssistant />}
 
-            {activeTab === 'syllabus' && (
-              <SyllabusTemplateEditor courseId={dbCourse?.id || course.id} courseCode={course.courseCode} courseTitle={course.title} />
-            )}
+            {activeTab === 'syllabus' && <SyllabusTemplateEditor courseId={dbCourse?.id || course.id} courseCode={course.courseCode} courseTitle={course.title} />}
 
             {/* Placeholder panels for other tabs */}
-            {['modules', 'class-notes', 'calendar', 'tests', 'polls', 'videos', 'audio', 'settings'].includes(activeTab) && (
-              <Card>
+            {['modules', 'class-notes', 'calendar', 'tests', 'polls', 'videos', 'audio', 'settings'].includes(activeTab) && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
                     {navItems.find(item => item.value === activeTab)?.label}
@@ -351,13 +348,10 @@ export const CourseInstructorConsole = () => {
                 <CardContent className="p-6 text-center text-muted-foreground">
                   <p>This feature is coming soon for {course.courseCode}.</p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </main>
         </div>
       </div>
-    </UniversalLayout>
-  );
+    </UniversalLayout>;
 };
-
 export default CourseInstructorConsole;
