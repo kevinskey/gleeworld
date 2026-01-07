@@ -8737,7 +8737,14 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "gw_events_parent_event_id_fkey"
