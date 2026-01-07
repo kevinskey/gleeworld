@@ -3,7 +3,7 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Mail } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Mail, PenTool } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCourseTA } from '@/hooks/useCourseTA';
 import { cn } from '@/lib/utils';
@@ -29,6 +29,7 @@ import { CalendarSection } from '@/components/course/CalendarSection';
 import { ClassNotesManager } from '@/components/course/ClassNotesManager';
 import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 import { CourseClassCalendar } from '@/components/course/CourseClassCalendar';
+import { TestBuilder } from '@/components/test-builder/TestBuilder';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -286,15 +287,8 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'assignments' && dbCourse?.id && (
               <CourseAssignmentManager courseId={dbCourse.id} courseName={course.title} />
             )}
-            {activeTab === 'tests' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tests & Quizzes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Test management coming soon.</p>
-                </CardContent>
-              </Card>
+            {activeTab === 'tests' && dbCourse && (
+              <TestBuilder courseId={dbCourse.id} courseName={course.title} />
             )}
             {activeTab === 'polls' && (
               <Card>
