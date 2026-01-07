@@ -18836,6 +18836,7 @@ export type Database = {
       }
       messenger_groups: {
         Row: {
+          course_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -18846,6 +18847,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          course_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -18856,6 +18858,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          course_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -25510,6 +25513,14 @@ export type Database = {
       }
       sync_all_messenger_groups: { Args: never; Returns: undefined }
       sync_auditioner_names_from_applications: { Args: never; Returns: number }
+      sync_course_messenger_group: {
+        Args: {
+          p_course_code: string
+          p_course_id: string
+          p_course_title: string
+        }
+        Returns: string
+      }
       sync_exec_board_messenger_group: { Args: never; Returns: undefined }
       toggle_love_message_like: {
         Args: { message_id_param: string }

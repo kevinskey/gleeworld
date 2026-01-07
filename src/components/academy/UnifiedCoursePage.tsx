@@ -167,7 +167,8 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             }, {
               icon: MessagesSquare,
               label: 'Messages',
-              tab: 'messages'
+              tab: 'messages',
+              isExternal: true
             }, {
               icon: ClipboardList,
               label: 'Assignments',
@@ -216,7 +217,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: Calendar,
               label: 'Calendar',
               tab: 'calendar'
-            }].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
+            }].map(item => <button key={item.tab} onClick={() => {
+                if (item.isExternal && item.tab === 'messages') {
+                  // Navigate to messenger with course context
+                  navigate(`/messenger?courseId=${course.id}&courseName=${encodeURIComponent(course.courseCode + ' - ' + course.title)}`);
+                } else {
+                  setActiveTab(item.tab);
+                }
+              }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 
                 <span className="text-xl">{item.label}</span>
               </button>)}
@@ -299,7 +307,12 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             <div className="lg:hidden relative z-10 -mx-4 px-4">
               <Tabs value={activeTab} onValueChange={val => {
                 console.log('Tab changed to:', val);
-                setActiveTab(val);
+                if (val === 'messages') {
+                  // Navigate to messenger with course context
+                  navigate(`/messenger?courseId=${course.id}&courseName=${encodeURIComponent(course.courseCode + ' - ' + course.title)}`);
+                } else {
+                  setActiveTab(val);
+                }
               }}>
                 <TabsList className="w-full grid grid-cols-4 h-auto">
                   <TabsTrigger value="home" className="text-xs px-2">Home</TabsTrigger>

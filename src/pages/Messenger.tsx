@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle } from "lucide-react";
+import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft } from "lucide-react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { BackNavigation } from "@/components/shared/BackNavigation";
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +20,8 @@ import { VideoSessionViewer } from '@/components/glee-lounge/video-sessions/Vide
 import { MobileVideoInterface } from '@/components/messenger/MobileVideoInterface';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { syncCourseMessengerGroup } from '@/hooks/useCourseMessengerSync';
 
 interface RecipientGroup {
   id: string;
@@ -31,6 +33,13 @@ interface RecipientGroup {
 const Messenger = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
+  // Course context from query params
+  const courseId = searchParams.get('courseId');
+  const courseName = searchParams.get('courseName');
+  
   const { 
     hasAccess, 
     messengerRole, 
@@ -42,6 +51,21 @@ const Messenger = () => {
     noAccessReason 
   } = useMessengerAccess();
   const { toast } = useToast();
+  
+  // Sync course group when coming from a course page
+  useEffect(() => {
+    if (courseId && courseName) {
+      const [code, ...titleParts] = decodeURIComponent(courseName).split(' - ');
+      syncCourseMessengerGroup(courseId, code, titleParts.join(' - ')).then(result => {
+        if (result.groupId) {
+          toast({
+            title: `Course Group Ready`,
+            description: `${decodeURIComponent(courseName)} messaging synced`
+          });
+        }
+      });
+    }
+  }, [courseId, courseName]);
 
   // Composer state
   const [composerMode, setComposerMode] = useState<'email' | 'sms' | 'video'>('email');
