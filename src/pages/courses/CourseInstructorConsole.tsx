@@ -26,6 +26,7 @@ import { StudentAnalyticsDashboard } from '@/components/mus240/admin/StudentAnal
 import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
 import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
 import { StudentCommunications } from '@/components/mus240/instructor/StudentCommunications';
+import { SyllabusTemplateEditor } from '@/components/academy/syllabus/SyllabusTemplateEditor';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -335,8 +336,12 @@ export const CourseInstructorConsole = () => {
               <AIAssistant />
             )}
 
+            {activeTab === 'syllabus' && (
+              <SyllabusTemplateEditor courseId={course.id} courseCode={course.courseCode} courseTitle={course.title} />
+            )}
+
             {/* Placeholder panels for other tabs */}
-            {['syllabus', 'modules', 'class-notes', 'calendar', 'tests', 'polls', 'videos', 'audio', 'settings'].includes(activeTab) && (
+            {['modules', 'class-notes', 'calendar', 'tests', 'polls', 'videos', 'audio', 'settings'].includes(activeTab) && (
               <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">

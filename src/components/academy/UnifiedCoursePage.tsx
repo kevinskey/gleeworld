@@ -21,6 +21,7 @@ import { CourseTestsSection } from './CourseTestsSection';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { CourseMessagingInterface } from './CourseMessagingInterface';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
+import { StudentSyllabusView } from './syllabus/StudentSyllabusView';
 
 // Lazy loaded components for performance
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
@@ -405,14 +406,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </div>
               </div>}
 
-            {activeTab === 'syllabus' && <Card>
-                <CardHeader>
-                  <CardTitle>Course Syllabus</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Syllabus content will be available here.</p>
-                </CardContent>
-              </Card>}
+            {activeTab === 'syllabus' && <StudentSyllabusView course={course} />}
 
             {activeTab === 'announcements' && <CourseAnnouncements courseId={course.id} />}
 
