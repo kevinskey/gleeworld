@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import * as XLSX from "npm:xlsx@0.18.5";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -73,17 +74,51 @@ serve(async (req) => {
       )
     }
 
-    const { csvData, courseId, courseInfo } = await req.json();
+    const { csvData, fileBase64, fileName, courseId, courseInfo } = await req.json();
 
-    if (!csvData) {
+    const hasCsv = typeof csvData === 'string' && csvData.trim().length > 0;
+    const hasFile = typeof fileBase64 === 'string' && fileBase64.trim().length > 0;
+
+    if (!hasCsv && !hasFile) {
       return new Response(
         JSON.stringify({ error: 'CSV data is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    let effectiveCsvData = hasCsv ? String(csvData) : '';
+
+    if (!hasCsv && hasFile) {
+      try {
+        const bytes = Uint8Array.from(atob(fileBase64), (c) => c.charCodeAt(0));
+        const workbook = XLSX.read(bytes, { type: 'array' });
+        const sheetName = workbook.SheetNames?.[0];
+
+        if (!sheetName) {
+          return new Response(
+            JSON.stringify({ error: 'Excel file contained no sheets', hint: 'Export as CSV from Banner/Excel and try again.' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const worksheet = workbook.Sheets[sheetName];
+        // Convert to CSV; keep commas (we parse commas/semicolons/tabs below)
+        effectiveCsvData = XLSX.utils.sheet_to_csv(worksheet, { FS: ',', RS: '\n' });
+      } catch (e) {
+        console.error('Failed to parse Excel file:', e);
+        return new Response(
+          JSON.stringify({
+            error: 'Unable to read Excel file',
+            hint: 'Please export the classlist as CSV (not XLS) or try downloading the CSV template and re-upload.',
+            debug: { fileName },
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // Parse the CSV/TSV data (handles Banner-style exports with control chars)
-    const normalized = String(csvData)
+    const normalized = String(effectiveCsvData)
       .replace(/\u0000/g, '')
       .replace(/^\uFEFF/, '') // strip BOM
       .replace(/\r\n/g, '\n')
@@ -100,22 +135,6 @@ serve(async (req) => {
     const errors: { row: number; error: string }[] = [];
 
     type Delimiter = ',' | '\t' | ';';
-
-    const detectDelimiter = (line: string): Delimiter => {
-      const candidates: Delimiter[] = ['\t', ',', ';'];
-      let best: Delimiter = ',';
-      let bestCols = 0;
-
-      for (const d of candidates) {
-        const cols = parseDelimitedLine(line, d).length;
-        if (cols > bestCols) {
-          bestCols = cols;
-          best = d;
-        }
-      }
-
-      return best;
-    };
 
     const parseDelimitedLine = (line: string, delimiter: Delimiter): string[] => {
       // Quote-aware parser for CSV/semicolon; tabs are treated as plain separators.
@@ -149,6 +168,22 @@ serve(async (req) => {
 
       out.push(cur.trim().replace(/\*\*/g, ''));
       return out;
+    };
+
+    const detectDelimiter = (line: string): Delimiter => {
+      const candidates: Delimiter[] = ['\t', ',', ';'];
+      let best: Delimiter = ',';
+      let bestCols = 0;
+
+      for (const d of candidates) {
+        const cols = parseDelimitedLine(line, d).length;
+        if (cols > bestCols) {
+          bestCols = cols;
+          best = d;
+        }
+      }
+
+      return best;
     };
 
     // Find the header row (flexible: Banner exports vary)
