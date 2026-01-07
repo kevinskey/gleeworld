@@ -216,14 +216,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               label: 'Calendar',
               tab: 'calendar'
             }].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
-                <item.icon className="h-4 w-4" />
-                <span>{item.label}</span>
+                
+                <span className="text-xl">{item.label}</span>
               </button>)}
           </nav>
           
           {/* Course Resources Section */}
           <div className="p-4 border-t border-border space-y-2">
-            <h3 className="font-bold text-foreground text-sm mb-3">Course Resources</h3>
+            <h3 className="font-bold text-foreground text-sm mb-3">Resources</h3>
             {[{
               icon: Video,
               label: 'Video Library',
@@ -240,28 +240,19 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: FileText,
               label: 'Documents',
               desc: 'Handouts and readings'
-            }].map((item, i) => (
-              <button key={i} className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
+            }].map((item, i) => <button key={i} className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
                 <item.icon className="h-4 w-4" />
                 <span>{item.label}</span>
-              </button>
-            ))}
+              </button>)}
           </div>
           
           {/* Instructor Control Center Button */}
-          {isAdmin && (
-            <div className="p-4 border-t border-border">
-              <Button 
-                onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} 
-                variant="default" 
-                className="w-full"
-                size="sm"
-              >
+          {isAdmin && <div className="p-4 border-t border-border">
+              <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="w-full" size="sm">
                 <Settings className="h-4 w-4 mr-2" />
                 Instructor Console
               </Button>
-            </div>
-          )}
+            </div>}
         </div>
 
         {/* Main Content Area */}
