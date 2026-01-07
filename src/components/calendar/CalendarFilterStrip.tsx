@@ -166,7 +166,14 @@ export const CalendarFilterStrip = ({
         prev.map((cal) => (cal.id === calendarId ? { ...cal, color } : cal)),
       );
 
-      // Ensure event colors refresh immediately (events join gw_calendars.color)
+      // Immediately update any already-loaded events in the UI
+      window.dispatchEvent(
+        new CustomEvent('gw:calendar-color-updated', {
+          detail: { calendarId, color },
+        }),
+      );
+
+      // Also refetch events (for any server-side joins)
       onCalendarColorUpdated?.();
 
       toast({
