@@ -104,7 +104,7 @@ export const RubricManager = () => {
                     <div>Total</div>
                     <div></div>
                     <div className="text-right">100%</div>
-                    <div className="text-right pr-[10px]">{totalPoints}</div>
+                    <div className="text-right">{totalPoints}</div>
                   </div>
                 </div>
               </CardContent>
