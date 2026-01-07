@@ -20,7 +20,17 @@ export const AlumniMemoriesCard = () => {
   }];
   return <RoleCard title="Alumni Memories" icon={Heart} accentColor="text-pink-500">
       <div className="space-y-2">
-        {alumniLinks.map(link => {})}
+        {alumniLinks.map(link => (
+          <Button
+            key={link.label}
+            variant="ghost"
+            className="w-full justify-start gap-2"
+            onClick={() => navigate(link.path)}
+          >
+            <link.icon className="h-4 w-4" />
+            {link.label}
+          </Button>
+        ))}
       </div>
     </RoleCard>;
 };
