@@ -7,77 +7,78 @@ import { ChevronDown, FolderOpen, FileText, Video, ClipboardList, Link as LinkIc
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ModuleCreator } from './ModuleCreator';
-
 interface ModulesSectionProps {
   courseId: string;
 }
-
 interface WeekItem {
   week: string;
   topics: string;
   readings?: string;
   assignments?: string;
 }
-
-export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
+export const ModulesSection: React.FC<ModulesSectionProps> = ({
+  courseId
+}) => {
   // Fetch course modules from database
-  const { data: modules, isLoading: modulesLoading } = useQuery({
+  const {
+    data: modules,
+    isLoading: modulesLoading
+  } = useQuery({
     queryKey: ['course-modules', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('course_modules')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('course_modules').select(`
           *,
           module_items (*)
-        `)
-        .eq('course_id', courseId)
-        .order('display_order', { ascending: true });
-      
+        `).eq('course_id', courseId).order('display_order', {
+        ascending: true
+      });
       if (error) throw error;
       return data;
     }
   });
 
   // Fetch weekly schedule from syllabus template
-  const { data: syllabusData, isLoading: syllabusLoading } = useQuery({
+  const {
+    data: syllabusData,
+    isLoading: syllabusLoading
+  } = useQuery({
     queryKey: ['syllabus-weekly-schedule', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_syllabus_templates')
-        .select('weekly_schedule, course_id, name')
-        .eq('course_id', courseId)
-        .maybeSingle();
-      
+      const {
+        data,
+        error
+      } = await supabase.from('gw_syllabus_templates').select('weekly_schedule, course_id, name').eq('course_id', courseId).maybeSingle();
       if (error) {
         console.error('Error fetching syllabus:', error);
         return null;
       }
-      
       return data;
     }
   });
-
-  const weeklySchedule: WeekItem[] = Array.isArray(syllabusData?.weekly_schedule) 
-    ? (syllabusData.weekly_schedule as unknown as WeekItem[]) 
-    : [];
-
+  const weeklySchedule: WeekItem[] = Array.isArray(syllabusData?.weekly_schedule) ? syllabusData.weekly_schedule as unknown as WeekItem[] : [];
   const getItemIcon = (type: string) => {
     switch (type) {
-      case 'video': return Video;
-      case 'document': return FileText;
-      case 'assignment': return ClipboardList;
-      case 'link': return LinkIcon;
-      default: return FileText;
+      case 'video':
+        return Video;
+      case 'document':
+        return FileText;
+      case 'assignment':
+        return ClipboardList;
+      case 'link':
+        return LinkIcon;
+      default:
+        return FileText;
     }
   };
-
   const parseTopicsContent = (topics: string) => {
     // Parse topics string into structured content
     const lines = topics.split('\n').filter(line => line.trim());
     const readings: string[] = [];
     const assignments: string[] = [];
     const topicItems: string[] = [];
-
     lines.forEach(line => {
       const lower = line.toLowerCase();
       if (lower.includes('read:') || lower.includes('reading:') || lower.includes('readings:')) {
@@ -88,21 +89,19 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
         topicItems.push(line.trim());
       }
     });
-
-    return { readings, assignments, topicItems };
+    return {
+      readings,
+      assignments,
+      topicItems
+    };
   };
-
   const isLoading = modulesLoading || syllabusLoading;
-
   if (isLoading) {
     return <div className="p-6">Loading modules...</div>;
   }
-
   const hasWeeklySchedule = weeklySchedule.length > 0;
   const hasModules = modules && modules.length > 0;
-
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <h2 className="text-2xl font-bold">Course Modules</h2>
 
       <Tabs defaultValue="outline" className="w-full">
@@ -114,14 +113,15 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
 
         {/* Course Outline (Weekly Schedule) Tab */}
         <TabsContent value="outline" className="space-y-4 mt-4">
-          {hasWeeklySchedule ? (
-            <div className="space-y-3">
+          {hasWeeklySchedule ? <div className="space-y-3">
               {weeklySchedule.map((week, index) => {
-                const { readings, assignments, topicItems } = parseTopicsContent(week.topics || '');
-                const weekLabel = week.week || `Week ${index + 1}`;
-                
-                return (
-                  <Collapsible key={index} defaultOpen={index < 3}>
+            const {
+              readings,
+              assignments,
+              topicItems
+            } = parseTopicsContent(week.topics || '');
+            const weekLabel = week.week || `Week ${index + 1}`;
+            return <Collapsible key={index} defaultOpen={index < 3}>
                     <Card className="overflow-hidden">
                       <CollapsibleTrigger className="w-full">
                         <CardHeader className="py-4">
@@ -132,95 +132,74 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                               </div>
                               <div className="text-left">
                                 <CardTitle className="text-base font-semibold">{weekLabel}</CardTitle>
-                                {topicItems.length > 0 && (
-                                  <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
+                                {topicItems.length > 0 && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
                                     {topicItems[0]}
-                                  </p>
-                                )}
+                                  </p>}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              {assignments.length > 0 && (
-                                <Badge variant="secondary" className="text-xs">
+                              {assignments.length > 0 && <Badge variant="secondary" className="text-xs">
                                   {assignments.length} due
-                                </Badge>
-                              )}
+                                </Badge>}
                               <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform" />
                             </div>
                           </div>
                         </CardHeader>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <CardContent className="pt-0 pb-4 space-y-4">
+                        <CardContent className="pt-0 pb-4 space-y-4 bg-primary-foreground">
                           {/* Topics */}
-                          {topicItems.length > 0 && (
-                            <div className="space-y-2">
+                          {topicItems.length > 0 && <div className="space-y-2">
                               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                 <Music className="h-4 w-4" />
                                 Topics
                               </div>
                               <ul className="space-y-1.5 ml-6">
-                                {topicItems.map((topic, i) => (
-                                  <li key={i} className="text-sm flex items-start gap-2">
+                                {topicItems.map((topic, i) => <li key={i} className="text-sm flex items-start gap-2">
                                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
                                     {topic}
-                                  </li>
-                                ))}
+                                  </li>)}
                               </ul>
-                            </div>
-                          )}
+                            </div>}
 
                           {/* Readings */}
-                          {readings.length > 0 && (
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                          {readings.length > 0 && <div className="space-y-2 bg-primary-foreground">
+                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground pt-[20px] pl-[10px]">
                                 <BookOpen className="h-4 w-4" />
                                 Readings
                               </div>
                               <ul className="space-y-1.5 ml-6">
-                                {readings.map((reading, i) => (
-                                  <li key={i} className="text-sm flex items-start gap-2">
+                                {readings.map((reading, i) => <li key={i} className="text-sm flex items-start gap-2 bg-primary-foreground pb-[10px]">
                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
                                     {reading}
-                                  </li>
-                                ))}
+                                  </li>)}
                               </ul>
-                            </div>
-                          )}
+                            </div>}
 
                           {/* Assignments */}
-                          {assignments.length > 0 && (
-                            <div className="space-y-2">
+                          {assignments.length > 0 && <div className="space-y-2">
                               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                 <ClipboardList className="h-4 w-4" />
                                 Assignments Due
                               </div>
                               <ul className="space-y-1.5 ml-6">
-                                {assignments.map((assignment, i) => (
-                                  <li key={i} className="text-sm flex items-start gap-2">
+                                {assignments.map((assignment, i) => <li key={i} className="text-sm flex items-start gap-2">
                                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 flex-shrink-0" />
                                     {assignment}
-                                  </li>
-                                ))}
+                                  </li>)}
                               </ul>
-                            </div>
-                          )}
+                            </div>}
 
                           {/* Show raw content if no structured data */}
-                          {topicItems.length === 0 && readings.length === 0 && assignments.length === 0 && week.topics && (
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {topicItems.length === 0 && readings.length === 0 && assignments.length === 0 && week.topics && <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                               {week.topics}
-                            </p>
-                          )}
+                            </p>}
                         </CardContent>
                       </CollapsibleContent>
                     </Card>
-                  </Collapsible>
-                );
-              })}
-            </div>
-          ) : (
-            <Card>
+                  </Collapsible>;
+          })}
+            </div> : <Card>
               <CardContent className="py-12 text-center">
                 <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
                 <p className="text-muted-foreground">
@@ -230,15 +209,12 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                   The instructor will publish the weekly schedule soon.
                 </p>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </TabsContent>
 
         {/* Resources (Modules) Tab */}
         <TabsContent value="modules" className="space-y-4 mt-4">
-          {hasModules ? (
-            modules.map((module) => (
-              <Collapsible key={module.id} defaultOpen>
+          {hasModules ? modules.map(module => <Collapsible key={module.id} defaultOpen>
                 <Card>
                   <CollapsibleTrigger className="w-full">
                     <CardHeader>
@@ -248,15 +224,11 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                           <div className="text-left">
                             <div className="flex items-center gap-2">
                               <CardTitle className="text-lg">{module.title}</CardTitle>
-                              {!module.is_published && (
-                                <Badge variant="secondary">Draft</Badge>
-                              )}
+                              {!module.is_published && <Badge variant="secondary">Draft</Badge>}
                             </div>
-                            {module.description && (
-                              <p className="text-sm text-muted-foreground mt-1">
+                            {module.description && <p className="text-sm text-muted-foreground mt-1">
                                 {module.description}
-                              </p>
-                            )}
+                              </p>}
                           </div>
                         </div>
                         <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform" />
@@ -266,50 +238,32 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                   <CollapsibleContent>
                     <CardContent>
                       <div className="space-y-2">
-                        {module.module_items && module.module_items.length > 0 ? (
-                          module.module_items
-                            .sort((a: any, b: any) => a.display_order - b.display_order)
-                            .map((item: any) => {
-                              const ItemIcon = getItemIcon(item.item_type);
-                              return (
-                                <div
-                                  key={item.id}
-                                  className="flex items-center justify-between p-3 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
-                                >
+                        {module.module_items && module.module_items.length > 0 ? module.module_items.sort((a: any, b: any) => a.display_order - b.display_order).map((item: any) => {
+                    const ItemIcon = getItemIcon(item.item_type);
+                    return <div key={item.id} className="flex items-center justify-between p-3 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
                                   <div className="flex items-center gap-3">
                                     <ItemIcon className="h-4 w-4 text-muted-foreground" />
                                     <span className="text-sm">{item.title}</span>
                                   </div>
-                                  {item.points && (
-                                    <Badge variant="outline">{item.points} pts</Badge>
-                                  )}
-                                </div>
-                              );
-                            })
-                        ) : (
-                          <p className="text-sm text-muted-foreground text-center py-4">
+                                  {item.points && <Badge variant="outline">{item.points} pts</Badge>}
+                                </div>;
+                  }) : <p className="text-sm text-muted-foreground text-center py-4">
                             No items in this module
-                          </p>
-                        )}
+                          </p>}
                       </div>
                     </CardContent>
                   </CollapsibleContent>
                 </Card>
-              </Collapsible>
-            ))
-          ) : (
-            <Card>
+              </Collapsible>) : <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
                 No resource modules created yet. Switch to "Create Module" tab to add one.
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </TabsContent>
 
         <TabsContent value="create" className="mt-4">
           <ModuleCreator courseId={courseId} />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
