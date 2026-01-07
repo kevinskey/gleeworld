@@ -307,11 +307,24 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                   <TabsTrigger value="assignments" className="text-xs px-2">Assignments</TabsTrigger>
                   <TabsTrigger value="tests" className="text-xs px-2">Tests</TabsTrigger>
                 </TabsList>
-                <TabsList className="w-full grid grid-cols-4 h-auto mt-1">
+                <TabsList className={`w-full grid h-auto mt-1 ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'}`}>
                   <TabsTrigger value="lounge" className="text-xs px-2">Lounge</TabsTrigger>
                   <TabsTrigger value="grades" className="text-xs px-2">Grades</TabsTrigger>
                   <TabsTrigger value="syllabus" className="text-xs px-2">Syllabus</TabsTrigger>
                   <TabsTrigger value="resources" className="text-xs px-2">Resources</TabsTrigger>
+                  {isAdmin && (
+                    <TabsTrigger 
+                      value="instructor" 
+                      className="text-xs px-2"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`);
+                      }}
+                    >
+                      <Settings className="h-3 w-3 mr-1" />
+                      Instructor
+                    </TabsTrigger>
+                  )}
                 </TabsList>
               </Tabs>
             </div>
