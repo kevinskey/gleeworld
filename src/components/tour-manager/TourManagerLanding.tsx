@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { TourMilestones } from './TourMilestones';
+import { TourRouteTimeline } from './TourRouteTimeline';
 interface TourManagerLandingProps {
   onNavigate: (section: string) => void;
   stats?: {
@@ -150,8 +151,10 @@ export const TourManagerLanding = ({
           </button>)}
       </div>
 
-      {/* Two Column Layout: Personnel & Upcoming Dates */}
+      {/* Two Column Layout: Route & Upcoming Dates */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Tour Route Timeline */}
+        <TourRouteTimeline onNavigate={onNavigate} limit={8} />
         {/* Key Personnel */}
         <Card>
           <CardHeader className="py-3 px-4">
@@ -166,7 +169,7 @@ export const TourManagerLanding = ({
                 <p className="text-sm text-primary-foreground">No personnel assigned</p>
                 <p className="text-xs mt-1 text-primary-foreground">Configure tour personnel in settings</p>
               </div> : <div className="grid grid-cols-2 gap-2">
-                {keyPersonnel.map(person => <div key={person.role} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
+                {keyPersonnel.map(person => <div key={`${person.role}-${person.name}`} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
                     <Avatar className="h-7 w-7">
                       <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                         {person.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -195,8 +198,6 @@ export const TourManagerLanding = ({
               </div>}
           </CardContent>
         </Card>
-
-        {/* Upcoming Tour Dates */}
         <Card>
           <CardHeader className="py-3 px-4">
             <div className="flex items-center justify-between">
