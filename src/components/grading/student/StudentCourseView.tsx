@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft } from 'lucide-react';
+import { FileText, ArrowLeft, BarChart3, BookOpen } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
+import { StudentPollInterface } from '@/components/course/StudentPollInterface';
 
 interface StudentCourseViewProps {
   courseId: string;
@@ -16,6 +18,7 @@ interface StudentCourseViewProps {
 export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('assignments');
 
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ['gw-course', courseId],
@@ -111,61 +114,80 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         </Card>
       )}
 
-      <div className="grid gap-4">
-        {assignments?.map((assignment) => {
-          const assignmentGrade = grades?.find(g => g.assignment_id === assignment.id);
-          
-          return (
-            <Card key={assignment.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    {assignment.title}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={assignment.submissionStatus === 'graded' ? 'default' : assignment.submissionStatus === 'submitted' ? 'secondary' : 'outline'}>
-                      {assignment.submissionStatus}
-                    </Badge>
-                    <span className="text-sm font-normal text-muted-foreground">
-                      {assignment.points} pts
-                    </span>
-                  </div>
-                </CardTitle>
-                <CardDescription>
-                  Due: {assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : 'No due date'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {assignmentGrade && (
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm font-semibold">
-                      Grade: {assignmentGrade.points_awarded} / {assignment.points} 
-                      ({((assignmentGrade.points_awarded / assignment.points) * 100).toFixed(1)}%)
-                    </p>
-                    {assignmentGrade.feedback && (
-                      <p className="text-sm text-muted-foreground mt-1">{assignmentGrade.feedback}</p>
-                    )}
-                  </div>
-                )}
-                <Button
-                  onClick={() => navigate(`/grading/student/assignment/${assignment.id}`)}
-                >
-                  View Assignment
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="assignments" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Assignments
+          </TabsTrigger>
+          <TabsTrigger value="polls" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Polls
+          </TabsTrigger>
+        </TabsList>
 
-      {!assignments || assignments.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">No assignments yet.</p>
-          </CardContent>
-        </Card>
-      ) : null}
+        <TabsContent value="assignments" className="mt-6">
+          <div className="grid gap-4">
+            {assignments?.map((assignment) => {
+              const assignmentGrade = grades?.find(g => g.assignment_id === assignment.id);
+              
+              return (
+                <Card key={assignment.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        {assignment.title}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={assignment.submissionStatus === 'graded' ? 'default' : assignment.submissionStatus === 'submitted' ? 'secondary' : 'outline'}>
+                          {assignment.submissionStatus}
+                        </Badge>
+                        <span className="text-sm font-normal text-muted-foreground">
+                          {assignment.points} pts
+                        </span>
+                      </div>
+                    </CardTitle>
+                    <CardDescription>
+                      Due: {assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : 'No due date'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {assignmentGrade && (
+                      <div className="p-3 bg-muted rounded-lg">
+                        <p className="text-sm font-semibold">
+                          Grade: {assignmentGrade.points_awarded} / {assignment.points} 
+                          ({((assignmentGrade.points_awarded / assignment.points) * 100).toFixed(1)}%)
+                        </p>
+                        {assignmentGrade.feedback && (
+                          <p className="text-sm text-muted-foreground mt-1">{assignmentGrade.feedback}</p>
+                        )}
+                      </div>
+                    )}
+                    <Button
+                      onClick={() => navigate(`/grading/student/assignment/${assignment.id}`)}
+                    >
+                      View Assignment
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            {!assignments || assignments.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center">
+                  <p className="text-muted-foreground">No assignments yet.</p>
+                </CardContent>
+              </Card>
+            ) : null}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="polls" className="mt-6">
+          <StudentPollInterface courseId={courseId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -50,6 +50,11 @@ export const CoursePollManager: React.FC<CoursePollManagerProps> = ({ courseId, 
   const [newPollDescription, setNewPollDescription] = useState('');
   const [editingPoll, setEditingPoll] = useState<Poll | null>(null);
   const [expandedPoll, setExpandedPoll] = useState<string | null>(null);
+  
+  // AI generation state
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [numQuestions, setNumQuestions] = useState(3);
+  const [generatingAI, setGeneratingAI] = useState(false);
 
   const currentSemester = 'Spring 2025'; // Could be made dynamic
 
@@ -195,6 +200,82 @@ export const CoursePollManager: React.FC<CoursePollManagerProps> = ({ courseId, 
     }
   };
 
+  const generateWithAI = async () => {
+    if (!aiPrompt.trim()) {
+      toast.error('Please enter a prompt for AI poll generation');
+      return;
+    }
+
+    setGeneratingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('mus240-instructor-assistant', {
+        body: { 
+          task: 'poll_creation', 
+          prompt: `For the course "${courseName}": ${aiPrompt.trim()}. Create exactly ${numQuestions} questions.`
+        }
+      });
+
+      if (error) throw error;
+
+      if (!data || !data.response) {
+        throw new Error('No response data received');
+      }
+
+      // Parse the AI response
+      let pollData;
+      const response = data.response;
+      
+      if (typeof response === 'object') {
+        pollData = response;
+      } else if (typeof response === 'string') {
+        try {
+          pollData = JSON.parse(response);
+        } catch {
+          const jsonMatch = response.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            pollData = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error('No valid JSON found in response');
+          }
+        }
+      }
+
+      if (!pollData.title || !pollData.questions) {
+        throw new Error('Invalid poll data structure');
+      }
+
+      // Create the poll with AI-generated content
+      const { data: newPoll, error: insertError } = await supabase
+        .from('gw_academy_polls')
+        .insert({
+          course_id: courseId,
+          semester: currentSemester,
+          title: pollData.title,
+          description: pollData.description || '',
+          questions: pollData.questions,
+          is_active: false,
+          created_by: user?.id
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      setPolls(prev => [{
+        ...newPoll,
+        questions: pollData.questions
+      }, ...prev]);
+      
+      setAiPrompt('');
+      toast.success('AI-generated poll created successfully!');
+    } catch (error) {
+      console.error('Error generating poll with AI:', error);
+      toast.error('Failed to generate poll with AI. Please try again.');
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
   if (editingPoll) {
     return (
       <PollQuestionEditor
@@ -218,12 +299,63 @@ export const CoursePollManager: React.FC<CoursePollManagerProps> = ({ courseId, 
         </Button>
       </div>
 
+      {/* AI Poll Generator */}
+      <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+            <Brain className="h-5 w-5" />
+            AI Poll Generator
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-3">
+              <Textarea
+                placeholder={`Describe the poll you want to create (e.g., "Create a quiz about ${courseName} key concepts")`}
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                rows={2}
+                className="border-purple-200 focus:border-purple-400"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Questions</label>
+              <Input
+                type="number"
+                min="1"
+                max="10"
+                value={numQuestions}
+                onChange={(e) => setNumQuestions(parseInt(e.target.value) || 3)}
+                className="border-purple-200 focus:border-purple-400"
+              />
+            </div>
+          </div>
+          <Button 
+            onClick={generateWithAI}
+            disabled={generatingAI || !aiPrompt.trim()}
+            className="w-full bg-purple-600 hover:bg-purple-700"
+          >
+            {generatingAI ? (
+              <>
+                <Brain className="h-4 w-4 mr-2 animate-pulse" />
+                Generating Poll...
+              </>
+            ) : (
+              <>
+                <Brain className="h-4 w-4 mr-2" />
+                Generate Poll with AI
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Create New Poll */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            Create New Poll
+            Create New Poll Manually
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
