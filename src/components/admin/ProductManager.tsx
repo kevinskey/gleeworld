@@ -282,7 +282,7 @@ export const ProductManager = () => {
   }
   return <div className="space-y-6">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 md:p-8 text-primary-foreground">
+      <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 md:p-8 text-primary-foreground bg-[#010f1d]">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Product Management</h1>
