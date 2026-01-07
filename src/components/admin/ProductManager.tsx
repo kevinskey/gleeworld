@@ -467,7 +467,7 @@ export const ProductManager = () => {
 
       {/* Products Grid/List */}
       {viewMode === "grid" ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredAndSortedProducts.map(product => <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-all">
+          {filteredAndSortedProducts.map(product => <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-all cursor-pointer" onClick={() => handleEdit(product)}>
               {/* Image */}
               <div className="relative aspect-square bg-muted">
                 {product.images && product.images.length > 0 ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" onError={e => {
@@ -481,10 +481,10 @@ export const ProductManager = () => {
                 </Badge>
                 {/* Action buttons on hover */}
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => handleEdit(product)}>
+                  <Button size="icon" variant="secondary" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(product); }}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => handleDelete(product.id)}>
+                  <Button size="icon" variant="destructive" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleDelete(product.id); }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -504,7 +504,7 @@ export const ProductManager = () => {
               </CardContent>
             </Card>)}
         </div> : <div className="space-y-2">
-          {filteredAndSortedProducts.map(product => <Card key={product.id} className="hover:shadow-md transition-shadow">
+          {filteredAndSortedProducts.map(product => <Card key={product.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleEdit(product)}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   {/* Thumbnail */}
@@ -538,10 +538,10 @@ export const ProductManager = () => {
                   
                   {/* Actions */}
                   <div className="flex gap-1 flex-shrink-0">
-                    <Button size="icon" variant="ghost" onClick={() => handleEdit(product)}>
+                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleEdit(product); }}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => handleDelete(product.id)}>
+                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(product.id); }}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
