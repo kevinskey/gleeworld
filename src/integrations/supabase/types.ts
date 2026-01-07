@@ -5989,6 +5989,7 @@ export type Database = {
           assignment_id: string | null
           context_type: string | null
           course_code: string | null
+          course_id: string | null
           created_at: string
           custom_data: Json | null
           event_id: string
@@ -6008,6 +6009,7 @@ export type Database = {
           assignment_id?: string | null
           context_type?: string | null
           course_code?: string | null
+          course_id?: string | null
           created_at?: string
           custom_data?: Json | null
           event_id: string
@@ -6027,6 +6029,7 @@ export type Database = {
           assignment_id?: string | null
           context_type?: string | null
           course_code?: string | null
+          course_id?: string | null
           created_at?: string
           custom_data?: Json | null
           event_id?: string
@@ -6042,7 +6045,15 @@ export type Database = {
           scan_count?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gw_attendance_qr_codes_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_attendance_qr_scans: {
         Row: {
@@ -7401,6 +7412,75 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_class_sessions: {
+        Row: {
+          attendance_required: boolean | null
+          course_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_time: string
+          id: string
+          image_url: string | null
+          location: string | null
+          qr_code_id: string | null
+          session_date: string
+          session_type: string | null
+          start_time: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          attendance_required?: boolean | null
+          course_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          qr_code_id?: string | null
+          session_date: string
+          session_type?: string | null
+          start_time: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          attendance_required?: boolean | null
+          course_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          qr_code_id?: string | null
+          session_date?: string
+          session_type?: string | null
+          start_time?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_class_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_course_class_sessions_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "gw_attendance_qr_codes"
             referencedColumns: ["id"]
           },
         ]
