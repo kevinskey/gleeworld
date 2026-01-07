@@ -42,7 +42,10 @@ export const TourManagerLanding = ({
   const navigate = useNavigate();
   const [tourEvents, setTourEvents] = useState<TourEvent[]>([]);
   const [tourTitle, setTourTitle] = useState<string | null>(null);
-  const [keyPersonnel, setKeyPersonnel] = useState<KeyPerson[]>([]);
+  const [keyPersonnel, setKeyPersonnel] = useState<KeyPerson[]>([
+    { role: 'Tour Manager', name: 'Aaliyah Deere', icon: Users },
+    { role: 'Tour Manager', name: 'Onnesty Peele', icon: Users },
+  ]);
   const [sectionLeaders, setSectionLeaders] = useState<KeyPerson[]>([]);
   const defaultStats = {
     upcomingDates: stats?.upcomingDates ?? 0,
