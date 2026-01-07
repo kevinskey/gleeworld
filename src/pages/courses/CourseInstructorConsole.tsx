@@ -194,7 +194,7 @@ export const CourseInstructorConsole = () => {
           return <button key={item.value} onClick={() => {
             setActiveTab(item.value);
             if (isMobile) setSidebarOpen(false);
-          }} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors", activeTab === item.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground")}>
+          }} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors", activeTab === item.value ? "bg-[#003666] text-white" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground")}>
                   <Icon className="h-4 w-4 flex-shrink-0" />
                   <span>{item.label}</span>
                 </button>;
