@@ -193,13 +193,13 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
                     <div className="flex items-start gap-2">
                       {getEventIcon(event.event_type)}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm">{event.title}</h4>
-                        <p className="text-xs opacity-80 mt-0.5">
+                        <h4 className="font-semibold text-sm text-primary-foreground">{event.title}</h4>
+                        <p className="text-xs opacity-80 mt-0.5 text-primary-foreground pt-[5px]">
                           <Clock className="h-3 w-3 inline mr-1" />
                           {format(parseISO(event.start_date), 'h:mm a')}
                         </p>
-                        {event.location && <p className="text-xs opacity-80 mt-1">{event.location}</p>}
-                        {event.description && <p className="text-xs opacity-80 mt-1 line-clamp-2">{event.description}</p>}
+                        {event.location && <p className="text-xs opacity-80 mt-1 pt-[5px] text-primary-foreground">{event.location}</p>}
+                        {event.description && <p className="text-xs opacity-80 mt-1 line-clamp-2 text-primary-foreground">{event.description}</p>}
                       </div>
                     </div>
                   </div>)}
