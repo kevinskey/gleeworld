@@ -22,10 +22,21 @@ interface ClasslistUploadDialogProps {
   onUploadComplete?: () => void;
 }
 
-export const ClasslistUploadDialog = ({ 
-  courses, 
+const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
+  // Convert to a binary string first to avoid stack overflow on large buffers
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+};
+
+export const ClasslistUploadDialog = ({
+  courses,
   selectedCourseId,
-  onUploadComplete 
+  onUploadComplete,
 }: ClasslistUploadDialogProps) => {
   const [open, setOpen] = useState(false);
   const [courseId, setCourseId] = useState(selectedCourseId || '');
@@ -40,14 +51,20 @@ export const ClasslistUploadDialog = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
-      
-      if (validTypes.includes(selectedFile.type) || 
-          selectedFile.name.endsWith('.csv') || 
-          selectedFile.name.endsWith('.xls') || 
-          selectedFile.name.endsWith('.xlsx')) {
+      const validTypes = [
+        'text/csv',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ];
+
+      if (
+        validTypes.includes(selectedFile.type) ||
+        selectedFile.name.endsWith('.csv') ||
+        selectedFile.name.endsWith('.xls') ||
+        selectedFile.name.endsWith('.xlsx')
+      ) {
         setFile(selectedFile);
-        
+
         // Try to extract info from filename
         const match = selectedFile.name.match(/(\d{6})_(\d+)_classlist/);
         if (match) {
@@ -77,19 +94,43 @@ export const ClasslistUploadDialog = ({
     setUploading(true);
 
     try {
-      const csvData = await file.text();
+      const filename = file.name.toLowerCase();
+      const isExcel = filename.endsWith('.xls') || filename.endsWith('.xlsx');
+
+      // IMPORTANT:
+      // If this is an Excel file, reading it as text produces "Root Entry@Workbook" garbage.
+      // We send base64 bytes and let the edge function convert it to CSV.
+      const payload: {
+        csvData?: string;
+        fileBase64?: string;
+        fileName?: string;
+        courseId: string;
+        courseInfo: {
+          crn: string | null;
+          term: string | null;
+          startDate: string | null;
+          endDate: string | null;
+        };
+      } = {
+        courseId,
+        courseInfo: {
+          crn: crn || null,
+          term: term || null,
+          startDate: startDate || null,
+          endDate: endDate || null,
+        },
+      };
+
+      if (isExcel) {
+        const buffer = await file.arrayBuffer();
+        payload.fileBase64 = arrayBufferToBase64(buffer);
+        payload.fileName = file.name;
+      } else {
+        payload.csvData = await file.text();
+      }
 
       const { data, error } = await supabase.functions.invoke('upload-classlist-csv', {
-        body: {
-          csvData,
-          courseId,
-          courseInfo: {
-            crn: crn || null,
-            term: term || null,
-            startDate: startDate || null,
-            endDate: endDate || null
-          }
-        },
+        body: payload,
       });
 
       if (error) throw error;
@@ -126,10 +167,11 @@ export const ClasslistUploadDialog = ({
   };
 
   const downloadTemplate = () => {
-    const template = 'Student Name,ID,Registration Status,Level,Credit Hours,Class\n' +
-                    '"Lastname, Firstname M.",900123456,Registered,Undergraduate,4,Sophomore\n' +
-                    '"Smith, Jane A.",900789012,Web Registered,Undergraduate,4,Junior';
-    
+    const template =
+      'Student Name,ID,Registration Status,Level,Credit Hours,Class\n' +
+      '"Lastname, Firstname M.",900123456,Registered,Undergraduate,4,Sophomore\n' +
+      '"Smith, Jane A.",900789012,Web Registered,Undergraduate,4,Junior';
+
     const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
