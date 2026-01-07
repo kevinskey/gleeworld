@@ -183,7 +183,7 @@ export const WeeklyScheduleEditor: React.FC<Props> = ({ schedule, onChange, cour
                     <Textarea
                       value={item.week}
                       onChange={e => updateWeek(index, 'week', e.target.value)}
-                      className="font-medium text-sm resize-none"
+                      className="font-medium text-sm resize-none text-center"
                       rows={2}
                     />
                   </div>
