@@ -8,13 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { 
   Save, FileText, BookOpen, Target, ClipboardList, Calendar, 
-  User, GraduationCap, Scale, Plus, Trash2, AlertCircle, CheckCircle,
+  User, GraduationCap, Plus, Trash2, AlertCircle, CheckCircle,
   Link2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LearningObjectivesManager } from './LearningObjectivesManager';
-import { GradingBreakdownEditor } from './GradingBreakdownEditor';
 import { WeeklyScheduleEditor } from './WeeklyScheduleEditor';
 import { RequirementsEditor } from './RequirementsEditor';
 
@@ -230,7 +229,7 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-6 w-full">
+        <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="info" className="flex items-center gap-1">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Course Info</span>
@@ -239,12 +238,8 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
             <Target className="h-4 w-4" />
             <span className="hidden sm:inline">Objectives</span>
           </TabsTrigger>
-          <TabsTrigger value="requirements" className="flex items-center gap-1">
-            <ClipboardList className="h-4 w-4" />
-            <span className="hidden sm:inline">Requirements</span>
-          </TabsTrigger>
           <TabsTrigger value="grading" className="flex items-center gap-1">
-            <Scale className="h-4 w-4" />
+            <ClipboardList className="h-4 w-4" />
             <span className="hidden sm:inline">Grading</span>
           </TabsTrigger>
           <TabsTrigger value="schedule" className="flex items-center gap-1">
@@ -434,21 +429,13 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
           />
         </TabsContent>
 
-        {/* Requirements Tab */}
-        <TabsContent value="requirements">
+        {/* Grading Tab - Consolidated Requirements + Scale */}
+        <TabsContent value="grading">
           <RequirementsEditor 
             syllabusId={syllabus.id}
-            onSave={saveSyllabus}
-          />
-        </TabsContent>
-
-        {/* Grading Tab */}
-        <TabsContent value="grading">
-          <GradingBreakdownEditor 
-            gradingBreakdown={syllabus.grading_breakdown}
             gradingScale={syllabus.grading_scale}
-            onChange={(breakdown) => updateField('grading_breakdown', breakdown)}
             onScaleChange={(scale) => updateField('grading_scale', scale)}
+            onSave={saveSyllabus}
           />
         </TabsContent>
 
