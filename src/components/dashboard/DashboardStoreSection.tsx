@@ -222,6 +222,11 @@ export const DashboardStoreSection = () => {
         My Modules
       </Button>
 
+      {/* New Section Below My Modules */}
+      <div className="w-full px-[50px] py-8">
+        {/* Content goes here */}
+      </div>
+
       {/* Fan Zone - Edge to Edge */}
       
     </div>;
