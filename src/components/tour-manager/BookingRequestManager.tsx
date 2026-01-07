@@ -210,9 +210,36 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       await addNoteToRequest(request.id, forwardNoteText);
       await updateRequestStatus(request.id, 'reviewed');
       
+      // Send SMS notification to superadmins
+      try {
+        const { data: superadmins } = await supabase
+          .from('gw_profiles')
+          .select('phone_number, full_name')
+          .eq('role', 'superadmin');
+        
+        if (superadmins && superadmins.length > 0) {
+          const phoneNumbers = superadmins
+            .map(s => s.phone_number)
+            .filter(Boolean);
+          
+          if (phoneNumbers.length > 0) {
+            await supabase.functions.invoke('send-sms-notification', {
+              body: {
+                phoneNumbers,
+                message: `Booking request needs approval: "${request.event_name}" from ${request.organization_name} on ${new Date(request.event_date_start).toLocaleDateString()}. Tour Manager note: ${note}`,
+                senderName: user?.full_name || 'Tour Manager'
+              }
+            });
+          }
+        }
+      } catch (smsError) {
+        console.error('Error sending SMS notification:', smsError);
+        // Don't fail the whole operation if SMS fails
+      }
+      
       toast({
         title: "Request forwarded",
-        description: "The booking request has been forwarded to the superadmin for review",
+        description: "The booking request has been forwarded to the superadmin for review. SMS notification sent.",
       });
     } catch (error) {
       console.error('Error forwarding to superadmin:', error);
@@ -249,21 +276,86 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
     }
   };
 
+  const notifyTourManagers = async (message: string, requestId: string) => {
+    try {
+      // Get tour managers from executive board
+      const { data: tourManagers } = await supabase
+        .from('gw_executive_board_members')
+        .select('user_id')
+        .eq('position', 'tour_manager')
+        .eq('is_active', true);
+      
+      if (tourManagers && tourManagers.length > 0) {
+        // Create in-app notifications for each tour manager
+        for (const tm of tourManagers) {
+          await supabase.from('gw_notifications').insert({
+            user_id: tm.user_id,
+            title: 'Booking Request Update',
+            message: message,
+            type: 'info',
+            category: 'booking',
+            action_url: `/dashboard?module=tour-management&section=booking-requests`,
+            metadata: { request_id: requestId }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error notifying tour managers:', error);
+    }
+  };
+
   const declineRequest = async (requestId: string, reason?: string) => {
     try {
+      const request = requests.find(r => r.id === requestId);
       const declineNote = reason ? `[DECLINED] Reason: ${reason}` : '[DECLINED]';
       await addNoteToRequest(requestId, declineNote);
       await updateRequestStatus(requestId, 'declined');
       
+      // Notify tour managers to inform the requestor
+      if (request) {
+        await notifyTourManagers(
+          `Booking request "${request.event_name}" from ${request.organization_name} has been DECLINED. Please contact ${request.contact_person_name} at ${request.contact_email} to inform them of the decision.${reason ? ` Reason: ${reason}` : ''}`,
+          requestId
+        );
+      }
+      
       toast({
         title: "Request declined",
-        description: "The booking request has been declined",
+        description: "The booking request has been declined. Tour managers have been notified to inform the requestor.",
       });
     } catch (error) {
       console.error('Error declining request:', error);
       toast({
         title: "Error declining request",
         description: "Could not decline request. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const approveRequest = async (requestId: string) => {
+    try {
+      const request = requests.find(r => r.id === requestId);
+      await addNoteToRequest(requestId, '[APPROVED BY SUPERADMIN]');
+      await updateRequestStatus(requestId, 'approved');
+      
+      // Notify tour managers to create contract
+      if (request) {
+        await notifyTourManagers(
+          `🎉 Booking request "${request.event_name}" from ${request.organization_name} has been APPROVED! Please create a contract for this event. Event date: ${new Date(request.event_date_start).toLocaleDateString()}`,
+          requestId
+        );
+      }
+      
+      toast({
+        title: "Request approved",
+        description: "The booking request has been approved. Tour managers have been notified to create a contract.",
+      });
+    } catch (error) {
+      console.error('Error approving request:', error);
+      toast({
+        title: "Error approving request",
+        description: "Could not approve request. Please try again.",
         variant: "destructive"
       });
     }
@@ -740,6 +832,33 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                     {/* Superadmin Only Actions */}
                     {isSuperAdmin && (
                       <>
+                        {/* Quick Approve */}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 text-green-600 hover:text-green-700 border-green-200 hover:border-green-300">
+                              <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                              Approve
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Approve Request</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Approve this booking request from {request.organization_name}? Tour managers will be notified to create a contract.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => approveRequest(request.id)}
+                                className="bg-green-600 text-white hover:bg-green-700"
+                              >
+                                Approve & Notify
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+
                         {/* Quick Decline */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -752,7 +871,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Decline Request</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to decline this booking request from {request.organization_name}?
+                                Decline this booking request from {request.organization_name}? Tour managers will be notified to inform the requestor.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -761,7 +880,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                                 onClick={() => declineRequest(request.id)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
-                                Decline Request
+                                Decline & Notify
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
