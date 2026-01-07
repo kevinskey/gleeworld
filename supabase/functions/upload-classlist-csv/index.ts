@@ -106,14 +106,26 @@ serve(async (req) => {
       headerRowIndex = 0;
     }
 
-    // Find column indices
-    const nameIndex = headers.findIndex(h => h.includes('student name') || h.includes('name'));
-    const idIndex = headers.findIndex(h => h === 'id' || h.includes('student id') || h.includes('student_id'));
-    const statusIndex = headers.findIndex(h => h.includes('registration status') || h.includes('status'));
-    const levelIndex = headers.findIndex(h => h.includes('level'));
-    const creditIndex = headers.findIndex(h => h.includes('credit'));
-    const classIndex = headers.findIndex(h => h.includes('class') && !h.includes('classlist'));
+    // Find column indices - more flexible matching
+    const nameIndex = headers.findIndex(h => 
+      h.includes('student name') || h.includes('student_name') || h === 'name' || h === 'full name' || h === 'full_name'
+    );
+    const idIndex = headers.findIndex(h => 
+      h === 'id' || h === 'sid' || h.includes('student id') || h.includes('student_id') || 
+      h.includes('banner id') || h.includes('banner_id') || h.includes('spelman id')
+    );
+    const statusIndex = headers.findIndex(h => 
+      h.includes('registration status') || h.includes('registration_status') || 
+      h.includes('reg status') || h === 'status'
+    );
+    const levelIndex = headers.findIndex(h => h.includes('level') || h === 'class level' || h === 'academic level');
+    const creditIndex = headers.findIndex(h => h.includes('credit') || h.includes('hours') || h === 'cr hrs');
+    const classIndex = headers.findIndex(h => 
+      (h.includes('class') && !h.includes('classlist') && !h.includes('class level')) || 
+      h === 'year' || h.includes('class year')
+    );
 
+    console.log('Raw headers:', headers);
     console.log('Headers found:', { nameIndex, idIndex, statusIndex, levelIndex, creditIndex, classIndex });
 
     // Process student rows
