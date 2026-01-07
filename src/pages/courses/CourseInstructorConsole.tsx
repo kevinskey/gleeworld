@@ -280,7 +280,7 @@ export const CourseInstructorConsole = () => {
               <ClassNotesManager courseId={dbCourse.id} isInstructor={true} />
             )}
             {activeTab === 'calendar' && dbCourse?.id && (
-              <CalendarSection courseId={dbCourse.id} />
+              <CourseClassCalendar courseId={dbCourse.id} courseCode={course.courseCode} isInstructor={true} />
             )}
             {activeTab === 'assignments' && (
               <AssignmentManager />
