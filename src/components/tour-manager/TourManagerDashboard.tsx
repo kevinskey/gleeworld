@@ -256,7 +256,7 @@ export const TourManagerDashboard = ({
   };
   return <div className="min-h-screen bg-background flex flex-col lg:flex-row">
       {/* Sidebar - hidden on mobile, shown on desktop */}
-      <aside className={cn("fixed inset-y-0 left-0 z-40 w-56 bg-blue-700 dark:bg-blue-900 border-r border-blue-600 dark:border-blue-800 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
+      <aside className={cn("fixed inset-y-0 left-0 z-40 w-56 border-r border-border transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
         <div className="flex flex-col h-full px-0">
           {/* Sidebar Header */}
           
