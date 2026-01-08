@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCourseTA } from '@/hooks/useCourseTA';
@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
+import { SemesterManager } from '@/components/admin/SemesterManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 export const InstructorConsole = () => {
   const {
@@ -166,6 +167,7 @@ export const InstructorConsole = () => {
     {
       label: 'Tools',
       items: [
+        { value: 'semesters', label: 'Semesters', icon: CalendarDays },
         { value: 'ai-groups', label: 'AI Group Project', icon: Brain },
         { value: 'ai-assistant', label: 'AI Assistant', icon: Brain },
         { value: 'settings', label: 'Settings', icon: Settings },
@@ -396,6 +398,21 @@ export const InstructorConsole = () => {
                   </div>
                 </CardContent>
               </Card>}
+
+            {activeTab === 'semesters' && (
+              <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Semester Management
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Set the active semester and archive past semesters</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <SemesterManager />
+                </CardContent>
+              </Card>
+            )}
 
             {activeTab === 'ai-groups' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
