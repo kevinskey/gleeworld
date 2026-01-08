@@ -51,7 +51,23 @@ export const EnrollmentManager = () => {
   const [gradeFilter, setGradeFilter] = useState('all');
   const [sortBy, setSortBy] = useState('enrolled_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [courseId, setCourseId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Fetch the actual course UUID from the database
+  useEffect(() => {
+    const fetchCourseId = async () => {
+      const { data } = await supabase
+        .from('gw_courses')
+        .select('id')
+        .eq('course_code', 'MUS 240')
+        .maybeSingle();
+      if (data?.id) {
+        setCourseId(data.id);
+      }
+    };
+    fetchCourseId();
+  }, []);
 
   useEffect(() => {
     loadEnrollments();
@@ -295,11 +311,13 @@ export const EnrollmentManager = () => {
           <p className="text-muted-foreground">Manage student enrollments for MUS 240</p>
         </div>
         <div className="flex gap-2">
-          <ClasslistUploadDialog 
-            courses={[{ id: 'a0000000-0000-0000-0000-000000000240', title: 'MUS 240', course_code: 'MUS 240' }]}
-            selectedCourseId="a0000000-0000-0000-0000-000000000240"
-            onUploadComplete={loadEnrollments}
-          />
+          {courseId && (
+            <ClasslistUploadDialog 
+              courses={[{ id: courseId, title: 'MUS 240', course_code: 'MUS 240' }]}
+              selectedCourseId={courseId}
+              onUploadComplete={loadEnrollments}
+            />
+          )}
           
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
