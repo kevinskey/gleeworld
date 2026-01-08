@@ -11,6 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AdvertisingHeroManager } from "./AdvertisingHeroManager";
+import { AmazonProductSuggester } from "./AmazonProductSuggester";
 
 interface HeroSlide {
   id: string;
@@ -457,6 +458,9 @@ export const HeroManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* AI Amazon Product Suggester */}
+      <AmazonProductSuggester />
+
       {/* Advertising Hero Manager - Top Priority */}
       <AdvertisingHeroManager />
 
