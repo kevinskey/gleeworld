@@ -47,6 +47,7 @@ import { ComprehensiveAppointmentSystem } from '@/components/appointments/Compre
 import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 import { MessengerAdminModule } from '../modules/MessengerAdminModule';
+import { AmazonAffiliateModule } from '../modules/AmazonAffiliateModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -166,6 +167,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <SectionAssignmentModule />;
       case 'messenger-admin':
         return <MessengerAdminModule />;
+      case 'amazon-affiliate':
+        return <AmazonAffiliateModule />;
       default:
         return (
           <div className="p-6">
