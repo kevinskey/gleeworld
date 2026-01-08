@@ -121,80 +121,63 @@ export const DashboardStoreSection = () => {
         Glee Academy
       </Button>
 
-      {/* Courses Section */}
-      <div className="w-full px-[50px] py-8">
-        {/* Courses Horizontal Scroll */}
+      {/* Courses Section - Academic Black & White Design */}
+      <div className="w-full">
+        {/* Courses Horizontal Scroll - No Gap, Full Width */}
         <div 
-          className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" 
+          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth" 
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch'
           }}
         >
-          {courses.length > 0 ? courses.map(course => {
+          {courses.length > 0 ? courses.map((course, index) => {
             const CourseIcon = getCourseIcon(course.title);
-            const highlights = getCourseHighlights(course.title);
             const level = getCourseLevel(course.title);
             return (
-              <div key={course.id} className="flex-shrink-0 w-80 snap-start rounded-lg overflow-hidden shadow-lg">
-                {/* Blue Header Section */}
-                <div className="p-4 bg-[#53baee]">
-                  {/* Top row with icon, code, and level */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <CourseIcon className="h-5 w-5 text-white/80" />
-                      {course.course_code && (
-                        <span className="px-3 py-1 bg-[#003366] text-white text-sm font-medium rounded">
-                          {course.course_code}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-white text-sm font-medium">{level}</span>
+              <div 
+                key={course.id} 
+                onClick={() => navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`)}
+                className="flex-shrink-0 w-72 snap-start cursor-pointer group bg-white border-r border-gray-200 last:border-r-0 hover:bg-gray-50 transition-colors"
+              >
+                <div className="p-6 h-full flex flex-col">
+                  {/* Course Code Badge */}
+                  <div className="flex items-center justify-between mb-4">
+                    {course.course_code && (
+                      <span className="font-mono text-xs tracking-widest text-gray-500 uppercase border border-gray-300 px-2 py-1">
+                        {course.course_code}
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-400 uppercase tracking-wide">{level}</span>
                   </div>
                   
-                  {/* Course title and duration */}
-                  <h4 className="text-white font-semibold text-lg leading-tight">
+                  {/* Course Title - Academic Font */}
+                  <h4 className="font-serif text-xl font-bold text-gray-900 leading-tight mb-2 group-hover:text-gray-700 transition-colors">
                     {course.title}
                   </h4>
-                  <p className="text-white/70 text-sm mt-1">Semester</p>
-                </div>
-                
-                {/* White Content Section */}
-                <div className="bg-white p-4 flex flex-col min-h-[200px]">
+                  
+                  {/* Duration */}
+                  <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">Semester</p>
+                  
+                  {/* Description */}
                   {course.description && (
-                    <p className="text-gray-700 text-sm leading-relaxed mb-4 pb-[20px]">
+                    <p className="text-sm text-gray-600 leading-relaxed line-clamp-3 flex-1">
                       {course.description}
                     </p>
                   )}
                   
-                  {/* Course Highlights */}
-                  <div className="mb-4 flex-1">
-                    <h5 className="font-semibold text-gray-900 mb-2">Course Highlights:</h5>
-                    <ul className="space-y-1">
-                      {highlights.map((highlight, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
-                          <ChevronRight className="h-3 w-3 text-gray-400" />
-                          {highlight}
-                        </li>
-                      ))}
-                    </ul>
+                  {/* Enter Arrow */}
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-900 uppercase tracking-wide">Enter Course</span>
+                    <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-1 transition-all" />
                   </div>
-                  
-                  {/* Enter Button */}
-                  <button 
-                    onClick={() => navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`)} 
-                    className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <span className="font-medium">Enter {course.course_code || course.title}</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
                 </div>
               </div>
             );
           }) : (
-            <div className="flex-shrink-0 w-80 snap-start bg-muted/30 border border-dashed border-border rounded-lg p-4 flex items-center justify-center min-h-[300px]">
-              <p className="text-sm text-muted-foreground">No courses available yet</p>
+            <div className="flex-shrink-0 w-72 snap-start bg-white p-6 flex items-center justify-center min-h-[200px]">
+              <p className="text-sm text-gray-400 uppercase tracking-wide">No courses available</p>
             </div>
           )}
         </div>
