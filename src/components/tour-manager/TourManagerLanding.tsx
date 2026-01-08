@@ -146,9 +146,9 @@ export const TourManagerLanding = ({
 
       {/* Compact Stats Row */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-        {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="text-center p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-            <div className="text-xl font-bold text-foreground">{section.stat}</div>
-            <div className="text-[10px] capitalize text-slate-950">{section.statLabel}</div>
+        {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="text-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+            <div className="text-xl font-bold text-slate-900 dark:text-white">{section.stat}</div>
+            <div className="text-[10px] capitalize text-slate-600 dark:text-slate-400">{section.statLabel}</div>
           </button>)}
       </div>
 
@@ -267,10 +267,10 @@ export const TourManagerLanding = ({
 
       {/* Section Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors text-left">
+        {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left shadow-sm">
             <section.icon className={cn("h-5 w-5 mb-2", section.color.replace('bg-', 'text-'))} />
-            <div className="text-sm font-medium">{section.title}</div>
-            <div className="text-xs text-muted-foreground">{section.stat} {section.statLabel}</div>
+            <div className="text-sm font-medium text-slate-900 dark:text-white">{section.title}</div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">{section.stat} {section.statLabel}</div>
           </button>)}
       </div>
     </div>;
