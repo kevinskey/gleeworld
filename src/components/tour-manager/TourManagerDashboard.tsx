@@ -254,77 +254,68 @@ export const TourManagerDashboard = ({
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
     }
   };
-  return <div className="min-h-screen bg-background flex flex-col lg:flex-row">
-      {/* Sidebar - hidden on mobile, shown on desktop */}
-      <aside className={cn("fixed inset-y-0 left-0 z-40 w-56 border-r border-border transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
-        <div className="flex flex-col h-full px-0">
-          {/* Sidebar Header */}
-          
-
-          {/* Navigation */}
-          <div className="flex-1 flex items-center">
-            <nav className="flex flex-col space-y-1 px-2 w-full">
-              {navItems.map(item => (
-                <button 
-                  key={item.value} 
-                  onClick={() => {
-                    setActiveSection(item.value);
-                    setSidebarOpen(false);
-                  }} 
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-left",
-                    activeSection === item.value 
-                      ? "bg-primary/10 text-primary font-medium" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </nav>
+  return <div className="min-h-screen bg-background flex flex-col">
+      {/* Top Bar - Full Width */}
+      <header className="sticky top-0 z-50 bg-background border-b border-border">
+        <div className="flex items-center justify-between px-3 lg:px-4 h-12 bg-brand-900">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 flex-shrink-0 text-primary-foreground" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              <Menu className="w-6 h-6" />
+            </Button>
+            <h1 className="font-medium truncate text-primary-foreground text-xl">
+              {currentContent.title}
+            </h1>
+            <span className="text-xs hidden sm:inline text-primary-foreground/70">—</span>
+            <span className="text-xs hidden sm:inline truncate text-primary-foreground/70">{currentContent.description}</span>
           </div>
-
-          {/* Sidebar Footer */}
-          <div className="p-3 border-t border-blue-600 dark:border-blue-800">
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-100 hover:text-white rounded-md hover:bg-white/10 transition-colors">
-              <Search className="h-4 w-4" />
-              <span>Search</span>
-            </button>
+          <div className="relative w-48 hidden md:block">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input placeholder="Search" className="pl-8 h-8 text-sm bg-background border focus-visible:ring-1" />
           </div>
         </div>
-      </aside>
+      </header>
 
-      {/* Mobile Overlay */}
-      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
-        {/* Top Bar - Compact */}
-        <header className="sticky top-0 z-20 bg-background border-b border-border">
-          <div className="flex items-center justify-between px-3 lg:px-4 h-10 bg-[sidebar-primary-foreground] bg-brand-900 py-[2px]">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 flex-shrink-0" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                <Menu className="w-[32px] h-[32px]" />
-              </Button>
-              <h1 className="font-medium truncate text-primary-foreground text-2xl py-0">
-                {currentContent.title}
-              </h1>
-              <span className="text-xs hidden sm:inline text-primary-foreground bg-primary-foreground">—</span>
-              <span className="text-xs hidden sm:inline truncate text-primary-foreground">{currentContent.description}</span>
-            </div>
-            <div className="relative w-48 hidden md:block">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input placeholder="Search" className="pl-8 h-8 text-sm bg-background border focus-visible:ring-1" />
+      {/* Content Area with Sidebar */}
+      <div className="flex-1 flex flex-row">
+        {/* Sidebar - hidden on mobile, shown on desktop */}
+        <aside className={cn("fixed inset-y-12 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:relative lg:inset-y-0 lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
+          <div className="flex flex-col h-full px-0">
+            {/* Navigation */}
+            <div className="flex-1 flex items-center">
+              <nav className="flex flex-col space-y-1 px-2 w-full">
+                {navItems.map(item => (
+                  <button 
+                    key={item.value} 
+                    onClick={() => {
+                      setActiveSection(item.value);
+                      setSidebarOpen(false);
+                    }} 
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-left",
+                      activeSection === item.value 
+                        ? "bg-primary/10 text-primary font-medium" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </nav>
             </div>
           </div>
-        </header>
+        </aside>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-auto p-4">
-          {renderContent()}
-        </div>
-      </main>
+        {/* Mobile Overlay */}
+        {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
+          <div className="flex-1 overflow-auto p-4">
+            {renderContent()}
+          </div>
+        </main>
+      </div>
 
       {/* Mobile Bottom Navigation - Scrollable */}
       <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-30 safe-area-inset-bottom">
