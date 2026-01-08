@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MessageSquare, Eye, Bell, User, Settings, LogOut, ChevronDown, GraduationCap } from "lucide-react";
+import { Clock, MessageSquare, Eye, Bell, User, Settings, LogOut, ChevronDown, GraduationCap, Landmark } from "lucide-react";
 import { format } from "date-fns";
 import { 
   DropdownMenu, 
@@ -101,6 +101,16 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
 
         {/* Right Section - User Actions */}
         <div className="flex items-center gap-2 md:gap-3 lg:gap-5">
+          {/* Institute Button */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="shrink-0"
+            onClick={() => navigate('/institute')}
+          >
+            <Landmark className="w-7 h-7 stroke-[1.5]" />
+          </Button>
+
           {/* Glee Academy Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
