@@ -268,7 +268,7 @@ export const TourManagerDashboard = ({
             <span className="text-xs hidden sm:inline text-primary-foreground/70">—</span>
             <span className="text-xs hidden sm:inline truncate text-primary-foreground/70">{currentContent.description}</span>
           </div>
-          <div className="relative w-48 hidden md:block">
+          <div className="relative w-96 hidden md:block">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input placeholder="Search" className="pl-8 h-8 text-sm bg-background border focus-visible:ring-1" />
           </div>
