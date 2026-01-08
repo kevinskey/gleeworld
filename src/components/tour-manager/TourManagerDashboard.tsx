@@ -263,14 +263,25 @@ export const TourManagerDashboard = ({
 
           {/* Navigation */}
           <ScrollArea className="flex-1 py-2">
-            <nav className="px-2 space-y-0.5 bg-black">
-              {navItems.map(item => <button key={item.value} onClick={() => {
-              setActiveSection(item.value);
-              setSidebarOpen(false);
-            }} className="">
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  <span className="text-primary-foreground">{item.label}</span>
-                </button>)}
+            <nav className="flex flex-col space-y-1 px-2">
+              {navItems.map(item => (
+                <button 
+                  key={item.value} 
+                  onClick={() => {
+                    setActiveSection(item.value);
+                    setSidebarOpen(false);
+                  }} 
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-left",
+                    activeSection === item.value 
+                      ? "bg-primary/10 text-primary font-medium" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
             </nav>
           </ScrollArea>
 
