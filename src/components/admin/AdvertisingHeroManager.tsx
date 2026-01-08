@@ -11,6 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface AdvertisingHero {
   id: string;
@@ -23,6 +26,7 @@ interface AdvertisingHero {
   link_target: string | null;
   is_active: boolean;
   amazon_affiliate_tag: string | null;
+  display_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -51,6 +55,143 @@ const emptyFormData: FormData = {
   amazon_affiliate_tag: ""
 };
 
+// Sortable Hero Item Component
+interface SortableHeroItemProps {
+  hero: AdvertisingHero;
+  index: number;
+  expandedId: string | null;
+  setExpandedId: (id: string | null) => void;
+  editingHero: string | null;
+  toggleActive: (hero: AdvertisingHero) => void;
+  startEditing: (hero: AdvertisingHero) => void;
+  handleDelete: (id: string) => void;
+  renderForm: (heroId?: string) => JSX.Element;
+}
+
+const SortableHeroItem = ({
+  hero,
+  index,
+  expandedId,
+  setExpandedId,
+  editingHero,
+  toggleActive,
+  startEditing,
+  handleDelete,
+  renderForm,
+}: SortableHeroItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: hero.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Collapsible
+        open={expandedId === hero.id}
+        onOpenChange={() => setExpandedId(expandedId === hero.id ? null : hero.id)}
+      >
+        <Card className={`border ${hero.is_active ? 'border-green-500/30' : 'border-muted'}`}>
+          <CollapsibleTrigger asChild>
+            <div className="flex items-center gap-4 p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+              {/* Drag Handle */}
+              <div
+                {...attributes}
+                {...listeners}
+                className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GripVertical className="h-5 w-5 text-muted-foreground" />
+              </div>
+
+              {/* Order Number */}
+              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                {index + 1}
+              </div>
+
+              {/* Thumbnail */}
+              <div className="w-24 h-16 rounded overflow-hidden bg-muted flex-shrink-0">
+                {hero.image_url && (
+                  <img src={hero.image_url} alt="" className="w-full h-full object-cover" />
+                )}
+              </div>
+              
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium truncate">{hero.title || 'Untitled Ad'}</h3>
+                  {hero.is_active ? (
+                    <Badge className="bg-green-500/20 text-green-700 dark:text-green-400">Active</Badge>
+                  ) : (
+                    <Badge variant="secondary">Inactive</Badge>
+                  )}
+                </div>
+                {hero.description && (
+                  <p className="text-sm text-muted-foreground truncate">{hero.description}</p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <Switch
+                  checked={hero.is_active}
+                  onCheckedChange={() => toggleActive(hero)}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => startEditing(hero)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDelete(hero.id)}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+                {expandedId === hero.id ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </div>
+            </div>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent>
+            {editingHero === hero.id ? (
+              <div className="border-t">
+                {renderForm(hero.id)}
+              </div>
+            ) : (
+              <div className="border-t p-4">
+                <div className="aspect-[3/1] rounded-lg overflow-hidden mb-4">
+                  <img src={hero.image_url} alt="" className="w-full h-full object-cover" />
+                </div>
+                <Button onClick={() => startEditing(hero)} className="w-full">
+                  Edit This Ad
+                </Button>
+              </div>
+            )}
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+    </div>
+  );
+};
+
 export const AdvertisingHeroManager = () => {
   const [heroes, setHeroes] = useState<AdvertisingHero[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,12 +209,19 @@ export const AdvertisingHeroManager = () => {
     fetchHeroes();
   }, []);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const fetchHeroes = async () => {
     try {
       const { data, error } = await supabase
         .from('advertising_hero')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('display_order', { ascending: true });
 
       if (error) throw error;
       setHeroes((data || []) as AdvertisingHero[]);
@@ -86,6 +234,46 @@ export const AdvertisingHeroManager = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = heroes.findIndex((h) => h.id === active.id);
+    const newIndex = heroes.findIndex((h) => h.id === over.id);
+
+    const newOrder = arrayMove(heroes, oldIndex, newIndex);
+    setHeroes(newOrder);
+
+    // Update display_order in database
+    try {
+      const updates = newOrder.map((hero, index) => ({
+        id: hero.id,
+        display_order: index + 1,
+      }));
+
+      for (const update of updates) {
+        await supabase
+          .from('advertising_hero')
+          .update({ display_order: update.display_order })
+          .eq('id', update.id);
+      }
+
+      toast({
+        title: "Order Updated",
+        description: "Ad hero order has been saved",
+      });
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save new order",
+        variant: "destructive",
+      });
+      fetchHeroes(); // Revert on error
     }
   };
 
@@ -655,88 +843,30 @@ export const AdvertisingHeroManager = () => {
             <p>No ad heroes yet. Click "Add New Ad" to create one.</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {heroes.map((hero) => (
-              <Collapsible
-                key={hero.id}
-                open={expandedId === hero.id}
-                onOpenChange={() => setExpandedId(expandedId === hero.id ? null : hero.id)}
-              >
-                <Card className={`border ${hero.is_active ? 'border-green-500/30' : 'border-muted'}`}>
-                  <CollapsibleTrigger asChild>
-                    <div className="flex items-center gap-4 p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                      {/* Thumbnail */}
-                      <div className="w-24 h-16 rounded overflow-hidden bg-muted flex-shrink-0">
-                        {hero.image_url && (
-                          <img src={hero.image_url} alt="" className="w-full h-full object-cover" />
-                        )}
-                      </div>
-                      
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium truncate">{hero.title || 'Untitled Ad'}</h3>
-                          {hero.is_active ? (
-                            <Badge className="bg-green-500/20 text-green-700 dark:text-green-400">Active</Badge>
-                          ) : (
-                            <Badge variant="secondary">Inactive</Badge>
-                          )}
-                        </div>
-                        {hero.description && (
-                          <p className="text-sm text-muted-foreground truncate">{hero.description}</p>
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <Switch
-                          checked={hero.is_active}
-                          onCheckedChange={() => toggleActive(hero)}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => startEditing(hero)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(hero.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                        {expandedId === hero.id ? (
-                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
-                    </div>
-                  </CollapsibleTrigger>
-                  
-                  <CollapsibleContent>
-                    {editingHero === hero.id ? (
-                      <div className="border-t">
-                        {renderForm(hero.id)}
-                      </div>
-                    ) : (
-                      <div className="border-t p-4">
-                        <div className="aspect-[3/1] rounded-lg overflow-hidden mb-4">
-                          <img src={hero.image_url} alt="" className="w-full h-full object-cover" />
-                        </div>
-                        <Button onClick={() => startEditing(hero)} className="w-full">
-                          Edit This Ad
-                        </Button>
-                      </div>
-                    )}
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={heroes.map(h => h.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-3">
+                {heroes.map((hero, index) => (
+                  <SortableHeroItem
+                    key={hero.id}
+                    hero={hero}
+                    index={index}
+                    expandedId={expandedId}
+                    setExpandedId={setExpandedId}
+                    editingHero={editingHero}
+                    toggleActive={toggleActive}
+                    startEditing={startEditing}
+                    handleDelete={handleDelete}
+                    renderForm={renderForm}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </CardContent>
     </Card>

@@ -29,8 +29,8 @@ export const AdvertisingHero: React.FC<AdvertisingHeroProps> = ({
       const {
         data,
         error
-      } = await supabase.from('advertising_hero').select('*').eq('is_active', true).order('created_at', {
-        ascending: false
+      } = await supabase.from('advertising_hero').select('*').eq('is_active', true).order('display_order', {
+        ascending: true
       });
       if (error) throw error;
       setHeroes(data || []);
