@@ -3,7 +3,7 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Mail, PenTool } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Mail, PenTool, CalendarDays } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCourseTA } from '@/hooks/useCourseTA';
 import { cn } from '@/lib/utils';
@@ -31,6 +31,7 @@ import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 import { CourseClassCalendar } from '@/components/course/CourseClassCalendar';
 import { TestBuilder } from '@/components/test-builder/TestBuilder';
 import { CoursePollManager } from '@/components/course/CoursePollManager';
+import { SemesterManager } from '@/components/admin/SemesterManager';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -177,6 +178,10 @@ export const CourseInstructorConsole = () => {
   }, {
     label: 'Tools',
     items: [{
+      value: 'semesters',
+      label: 'Semesters',
+      icon: CalendarDays
+    }, {
       value: 'ai-assistant',
       label: 'AI Assistant',
       icon: Brain
@@ -329,6 +334,9 @@ export const CourseInstructorConsole = () => {
                   <p className="text-muted-foreground">Audio library coming soon.</p>
                 </CardContent>
               </Card>
+            )}
+            {activeTab === 'semesters' && (
+              <SemesterManager />
             )}
             {activeTab === 'ai-assistant' && (
               <AIAssistant />
