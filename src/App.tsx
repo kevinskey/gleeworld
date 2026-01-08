@@ -25,6 +25,7 @@ import { MessengerProvider } from "@/contexts/MessengerContext";
 import { MessengerModal } from "@/components/messenger/MessengerModal";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
+import { ModuleRouteRedirect } from "@/components/routing/module-route-redirect";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import MusicTheoryFundamentals from "./pages/MusicTheoryFundamentals";
 import ChoralConductingLiterature from "./pages/ChoralConductingLiterature";
@@ -1768,6 +1769,14 @@ const App = () => {
                                         </UniversalLayout>
                                       </ProtectedRoute>
                                     } 
+                                  />
+                                  <Route
+                                    path="/modules/:moduleId"
+                                    element={
+                                      <ProtectedRoute>
+                                        <ModuleRouteRedirect />
+                                      </ProtectedRoute>
+                                    }
                                   />
                                   <Route 
                                     path="/pr-hub" 
