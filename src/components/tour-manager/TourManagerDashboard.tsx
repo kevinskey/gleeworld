@@ -254,9 +254,9 @@ export const TourManagerDashboard = ({
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
     }
   };
-  return <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col lg:flex-row">
+  return <div className="min-h-screen bg-slate-200/70 dark:bg-slate-900 flex flex-col lg:flex-row">
       {/* Sidebar - hidden on mobile, shown on desktop */}
-      <aside className={cn("fixed inset-y-0 left-0 z-40 w-56 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0 shadow-sm", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
+      <aside className={cn("fixed inset-y-0 left-0 z-40 w-56 bg-slate-100 dark:bg-slate-800 border-r border-slate-300 dark:border-slate-700 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="px-4 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-[#003666]">
@@ -294,8 +294,8 @@ export const TourManagerDashboard = ({
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
-        {/* Top Bar - Clean white header with blue accent */}
-        <header className="sticky top-0 z-20 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+        {/* Top Bar */}
+        <header className="sticky top-0 z-20 bg-slate-100 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700">
           <div className="flex items-center justify-between px-4 lg:px-6 h-14">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9 flex-shrink-0 text-slate-700 dark:text-slate-300" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -310,19 +310,19 @@ export const TourManagerDashboard = ({
             </div>
             <div className="relative w-56 hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input placeholder="Search..." className="pl-9 h-9 text-sm bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600" />
+              <Input placeholder="Search..." className="pl-9 h-9 text-sm bg-slate-200/70 dark:bg-slate-700 border-slate-300 dark:border-slate-600" />
             </div>
           </div>
         </header>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto p-4 lg:p-6 bg-slate-50 dark:bg-slate-900">
+        <div className="flex-1 overflow-auto p-4 lg:p-6 bg-slate-200/70 dark:bg-slate-900">
           {renderContent()}
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 lg:hidden z-30 safe-area-inset-bottom shadow-lg">
+      <nav className="fixed bottom-0 left-0 right-0 bg-slate-100 dark:bg-slate-800 border-t border-slate-300 dark:border-slate-700 lg:hidden z-30 safe-area-inset-bottom">
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex items-center h-16 px-2 min-w-max">
             {navItems.map(item => <button key={item.value} onClick={() => setActiveSection(item.value)} className={cn("flex flex-col items-center gap-1 px-4 py-2 rounded-md transition-colors flex-shrink-0", activeSection === item.value ? "text-[#003666]" : "text-slate-500")}>

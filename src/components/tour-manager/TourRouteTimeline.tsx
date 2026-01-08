@@ -142,7 +142,7 @@ export const TourRouteTimeline = ({
         </CardContent>
       </Card>;
   }
-  return <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
+  return <Card className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600">
       <CardHeader className="py-4 px-5">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
