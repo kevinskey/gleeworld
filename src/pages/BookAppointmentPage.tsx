@@ -324,13 +324,13 @@ export default function BookAppointmentPage() {
                       <Label className="text-lg">Date & Time *</Label>
                       <div className="flex items-center gap-3 flex-wrap">
                         {/* Date Picker */}
-                        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={true}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
                               disabled={!selectedType}
                               className={cn(
-                                "w-[140px] justify-start text-left font-normal h-12 rounded-full text-lg shadow-md hover:shadow-lg transition-all",
+                                "w-[160px] justify-start text-left font-normal h-12 rounded-lg text-base border-2 hover:border-primary transition-all",
                                 !selectedDate && "text-muted-foreground"
                               )}
                             >
@@ -338,7 +338,13 @@ export default function BookAppointmentPage() {
                               {selectedDate ? format(selectedDate, "MMM d") : "Date"}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-background border shadow-xl z-[100]" align="start">
+                          <PopoverContent 
+                            className="w-auto p-0 bg-popover border-2 shadow-2xl z-[9999]" 
+                            align="start"
+                            side="bottom"
+                            sideOffset={8}
+                            avoidCollisions={true}
+                          >
                             <Calendar
                               mode="single"
                               selected={selectedDate}
@@ -352,7 +358,7 @@ export default function BookAppointmentPage() {
                               }}
                               disabled={(date) => date < new Date()}
                               initialFocus
-                              className="p-3 pointer-events-auto"
+                              className="p-3 pointer-events-auto bg-popover"
                             />
                           </PopoverContent>
                         </Popover>
@@ -360,13 +366,13 @@ export default function BookAppointmentPage() {
                         <ArrowRight className="h-5 w-5 text-muted-foreground" />
 
                         {/* Time Picker */}
-                        <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen}>
+                        <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen} modal={true}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
                               disabled={!selectedType || !selectedDateStr}
                               className={cn(
-                                "w-[140px] justify-start text-left font-normal h-12 rounded-full text-lg shadow-md hover:shadow-lg transition-all",
+                                "w-[140px] justify-start text-left font-normal h-12 rounded-lg text-base border-2 hover:border-primary transition-all",
                                 !selectedTime && "text-muted-foreground"
                               )}
                             >
@@ -374,7 +380,13 @@ export default function BookAppointmentPage() {
                               {selectedTime || "Time"}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-[180px] p-0 bg-background border shadow-xl z-[100]" align="start" sideOffset={4}>
+                          <PopoverContent 
+                            className="w-[200px] p-2 bg-popover border-2 shadow-2xl z-[9999]" 
+                            align="start" 
+                            side="bottom"
+                            sideOffset={8}
+                            avoidCollisions={true}
+                          >
                             <div
                               className="max-h-[280px] overflow-y-auto overscroll-contain pointer-events-auto"
                               onWheelCapture={(e) => e.stopPropagation()}
