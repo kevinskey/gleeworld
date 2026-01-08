@@ -275,7 +275,7 @@ export default function BookAppointmentPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="book">
-              <TabsList className="grid w-full grid-cols-3 h-14 bg-[#003666] p-1 rounded-b-none">
+              <TabsList className="grid w-full grid-cols-3 h-14 bg-[#003666] p-1 rounded-b-none relative z-10">
                 <TabsTrigger value="book" className="gap-2 text-lg text-white data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-none data-[state=active]:rounded-b-none">
                   <Calendar className="h-5 w-5" /> Book
                 </TabsTrigger>
@@ -288,7 +288,7 @@ export default function BookAppointmentPage() {
               </TabsList>
 
               {/* Book Appointment Tab */}
-              <TabsContent value="book" className="mt-0 space-y-4 bg-white border border-t-0 border-border rounded-b-lg p-4">
+              <TabsContent value="book" className="mt-0 space-y-4 bg-white border border-t-0 border-border rounded-b-lg p-4 relative -top-[1px]">
                 {/* Booking Form */}
                 <Card>
                   <CardContent className="p-5 space-y-5 bg-primary-foreground">
@@ -373,7 +373,7 @@ export default function BookAppointmentPage() {
               </TabsContent>
 
               {/* History Tab */}
-              <TabsContent value="history" className="mt-0 bg-white border border-t-0 border-border rounded-b-lg p-4">
+              <TabsContent value="history" className="mt-0 bg-white border border-t-0 border-border rounded-b-lg p-4 relative -top-[1px]">
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -422,7 +422,7 @@ export default function BookAppointmentPage() {
               </TabsContent>
 
               {/* Contact Tab */}
-              <TabsContent value="contact" className="mt-0 space-y-4 bg-white border border-t-0 border-border rounded-b-lg p-4">
+              <TabsContent value="contact" className="mt-0 space-y-4 bg-white border border-t-0 border-border rounded-b-lg p-4 relative -top-[1px]">
                 {/* Quick Contact Links */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <a href="mailto:docjohnson@spelman.edu" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-accent transition-colors text-center">
