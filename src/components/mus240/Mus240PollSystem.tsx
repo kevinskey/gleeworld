@@ -46,12 +46,17 @@ export const Mus240PollSystem = () => {
   const hasAdminAccess = isAdmin() || isSuperAdmin() || isTA;
 
   useEffect(() => {
-    if (!roleLoading && !taLoading) {
+    if (!roleLoading && !taLoading && currentSemester) {
       fetchPolls();
     }
   }, [roleLoading, taLoading, currentSemester]);
 
   const fetchPolls = async () => {
+    if (!currentSemester) {
+      setPolls([]);
+      return;
+    }
+    
     setLoading(true);
     try {
       const { data, error } = await supabase

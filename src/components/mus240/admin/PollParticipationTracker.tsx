@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Trophy, TrendingUp, Award } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 interface Poll {
   id: string;
@@ -23,6 +24,7 @@ interface ParticipationStat {
 }
 
 export const PollParticipationTracker = () => {
+  const { currentSemester } = useMus240SemesterSafe();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [selectedPoll, setSelectedPoll] = useState<string>('');
   const [participationStats, setParticipationStats] = useState<ParticipationStat[]>([]);
@@ -30,8 +32,10 @@ export const PollParticipationTracker = () => {
   const [totalParticipation, setTotalParticipation] = useState(0);
 
   useEffect(() => {
-    loadPolls();
-  }, []);
+    if (currentSemester) {
+      loadPolls();
+    }
+  }, [currentSemester]);
 
   useEffect(() => {
     if (selectedPoll) {
@@ -40,10 +44,16 @@ export const PollParticipationTracker = () => {
   }, [selectedPoll]);
 
   const loadPolls = async () => {
+    if (!currentSemester) {
+      setPolls([]);
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('mus240_polls')
         .select('id, title, created_at, is_active')
+        .eq('semester', currentSemester)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
