@@ -117,6 +117,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'monthly-statements': 'monthly-statements',
           'check-requests': 'check-requests',
           'merch-store': 'merch-store',
+          'amazon-affiliate': 'amazon-affiliate',
           
           
           // Tools & Utilities
