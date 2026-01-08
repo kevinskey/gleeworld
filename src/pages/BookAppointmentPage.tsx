@@ -360,7 +360,7 @@ export default function BookAppointmentPage() {
 
                     <div className="space-y-2">
                       <Label className="text-sm">Additional Notes</Label>
-                      <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional context..." rows={2} />
+                      <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional context..." rows={4} />
                     </div>
 
                     <Button onClick={handleBookAppointment} disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic} className="w-full h-12 text-lg font-semibold text-white shadow-lg hover:shadow-xl transition-all" style={{
