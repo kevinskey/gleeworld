@@ -257,21 +257,9 @@ export const TourManagerDashboard = ({
   return <div className="min-h-screen bg-background flex flex-col lg:flex-row">
       {/* Sidebar - hidden on mobile, shown on desktop */}
       <aside className={cn("fixed inset-y-0 left-0 z-40 w-56 bg-blue-700 dark:bg-blue-900 border-r border-blue-600 dark:border-blue-800 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full px-0">
           {/* Sidebar Header */}
-          <div className="px-3 py-3 border-b border-blue-600 dark:border-blue-800 flex items-center justify-between bg-slate-700 mt-[100px]">
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
-              </div>
-              <span className="text-sm font-medium whitespace-nowrap text-primary-foreground">Tour Manager</span>
-            </div>
-            <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 text-white hover:bg-blue-600" onClick={() => setSidebarOpen(false)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          
 
           {/* Navigation */}
           <ScrollArea className="flex-1 py-2">
@@ -279,7 +267,7 @@ export const TourManagerDashboard = ({
               {navItems.map(item => <button key={item.value} onClick={() => {
               setActiveSection(item.value);
               setSidebarOpen(false);
-            }} className={cn("w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors text-left", activeSection === item.value ? "bg-white/20 text-white" : "text-blue-100 hover:text-white hover:bg-white/10")}>
+            }} className="">
                   <item.icon className="h-5 w-5 flex-shrink-0" />
                   <span className="text-primary-foreground">{item.label}</span>
                 </button>)}
@@ -303,12 +291,12 @@ export const TourManagerDashboard = ({
       <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
         {/* Top Bar - Compact */}
         <header className="sticky top-0 z-20 bg-background border-b border-border">
-          <div className="flex items-center justify-between px-3 lg:px-4 h-10 bg-[sidebar-primary-foreground] bg-brand-900">
+          <div className="flex items-center justify-between px-3 lg:px-4 h-10 bg-[sidebar-primary-foreground] bg-brand-900 py-[2px]">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 flex-shrink-0" onClick={() => setSidebarOpen(!sidebarOpen)}>
                 <Menu className="w-[32px] h-[32px]" />
               </Button>
-              <h1 className="font-medium truncate text-primary-foreground text-2xl">
+              <h1 className="font-medium truncate text-primary-foreground text-2xl py-0">
                 {currentContent.title}
               </h1>
               <span className="text-xs hidden sm:inline text-primary-foreground bg-primary-foreground">—</span>
