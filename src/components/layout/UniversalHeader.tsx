@@ -264,9 +264,9 @@ export const UniversalHeader = ({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64 bg-popover border border-border shadow-xl z-[100]">
-                    <DropdownMenuItem onClick={() => navigate('/institute')} className="cursor-pointer font-medium">
+                    <DropdownMenuItem onClick={() => navigate('/glee-academy')} className="cursor-pointer font-medium">
                       <Landmark className="w-4 h-4 mr-2" />
-                      Institute Home
+                      Glee Academy Home
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Glee Academy Courses</DropdownMenuLabel>
