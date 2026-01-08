@@ -215,13 +215,13 @@ export default function BookAppointmentPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30"><CheckCircle2 className="h-3 w-3 mr-1" /> Confirmed</Badge>;
+        return <Badge className="bg-green-500 text-white border-green-600"><CheckCircle2 className="h-3 w-3 mr-1" /> Confirmed</Badge>;
       case 'cancelled':
         return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Cancelled</Badge>;
       case 'pending':
-        return <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" /> Pending</Badge>;
+        return <Badge className="bg-amber-500 text-white border-amber-600"><AlertCircle className="h-3 w-3 mr-1" /> Pending</Badge>;
       case 'completed':
-        return <Badge className="bg-blue-500/20 text-blue-700 border-blue-500/30"><CheckCircle2 className="h-3 w-3 mr-1" /> Completed</Badge>;
+        return <Badge className="bg-blue-600 text-white border-blue-700"><CheckCircle2 className="h-3 w-3 mr-1" /> Completed</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -240,38 +240,38 @@ export default function BookAppointmentPage() {
         </h1>
       </div>
       
-      <PageContainer maxWidth="7xl" className="py-6 space-y-6">
+      <div className="w-full px-4 md:px-8 py-8 space-y-8">
         {/* Hero Section */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-8">
           {/* Office Card */}
           <Card className="lg:col-span-1 overflow-hidden">
-          <div className="relative aspect-[4/3] bg-muted">
+            <div className="relative aspect-[4/3] bg-muted">
               <img 
                 src={drJohnsonOffice}
                 alt="Dr. Johnson's Office"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                <h2 className="text-lg font-bold">Dr. Kevin Johnson</h2>
-                <p className="text-sm opacity-90 flex items-center gap-1.5 mt-1">
-                  <MapPin className="h-3.5 w-3.5" /> Fine Arts Building, Room 204
+              <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                <h2 className="text-xl font-bold">Dr. Kevin Johnson</h2>
+                <p className="text-base opacity-90 flex items-center gap-2 mt-1">
+                  <MapPin className="h-4 w-4" /> Fine Arts Building, Room 204
                 </p>
               </div>
             </div>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-3 gap-3 text-center">
+            <CardContent className="p-5">
+              <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-primary">{completedCount}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Completed</div>
+                  <div className="text-3xl font-bold text-white" style={{ color: '#003666' }}>{completedCount}</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">Completed</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">{upcomingCount}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Upcoming</div>
+                  <div className="text-3xl font-bold text-green-600">{upcomingCount}</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">Upcoming</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-amber-600">{pendingCount}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Pending</div>
+                  <div className="text-3xl font-bold text-amber-600">{pendingCount}</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">Pending</div>
                 </div>
               </div>
             </CardContent>
@@ -279,16 +279,16 @@ export default function BookAppointmentPage() {
 
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <Tabs defaultValue="book" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3 h-11">
-                <TabsTrigger value="book" className="gap-2 text-sm">
-                  <Calendar className="h-4 w-4" /> Book
+            <Tabs defaultValue="book" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-3 h-12">
+                <TabsTrigger value="book" className="gap-2 text-base">
+                  <Calendar className="h-5 w-5" /> Book
                 </TabsTrigger>
-                <TabsTrigger value="history" className="gap-2 text-sm">
-                  <History className="h-4 w-4" /> History
+                <TabsTrigger value="history" className="gap-2 text-base">
+                  <History className="h-5 w-5" /> History
                 </TabsTrigger>
-                <TabsTrigger value="contact" className="gap-2 text-sm">
-                  <Mail className="h-4 w-4" /> Contact
+                <TabsTrigger value="contact" className="gap-2 text-base">
+                  <Mail className="h-5 w-5" /> Contact
                 </TabsTrigger>
               </TabsList>
 
@@ -584,7 +584,7 @@ export default function BookAppointmentPage() {
             </Tabs>
           </div>
         </div>
-      </PageContainer>
+      </div>
     </UniversalLayout>
   );
 }
