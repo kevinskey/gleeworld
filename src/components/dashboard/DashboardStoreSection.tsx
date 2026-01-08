@@ -128,21 +128,21 @@ export const DashboardStoreSection = () => {
                   </div>
                   
                   {/* Course Title - Academic Font */}
-                  <h4 className="font-serif text-xl font-bold text-gray-900 leading-tight mb-2 group-hover:text-gray-700 transition-colors">
+                  <h4 className="font-serif text-xl font-bold text-gray-900 leading-tight mb-2 group-hover:text-gray-700 transition-colors pb-[10px]">
                     {course.title}
                   </h4>
                   
                   {/* Duration */}
-                  <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">Semester</p>
+                  
                   
                   {/* Description */}
-                  {course.description && <p className="text-xs text-gray-600 leading-snug line-clamp-3 flex-1 pb-[30px]">
+                  {course.description && <p className="text-xs text-gray-600 leading-snug line-clamp-3 flex-1 pb-[30px] pt-0">
                       {course.description}
                     </p>}
                   
                   {/* Enter Arrow */}
-                  <div className="mt-4 border-t border-gray-100 flex items-center justify-between pt-0">
-                    <span className="text-xs font-medium text-gray-900 uppercase tracking-wide">Enter Course</span>
+                  <div className="mt-4 border-t border-gray-100 flex items-center justify-between pt-0 text-primary-foreground bg-black">
+                    <span className="text-xs font-medium uppercase tracking-wide text-primary-foreground text-center">Enter Course</span>
                     <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-1 transition-all" />
                   </div>
                 </div>
