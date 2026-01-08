@@ -23,7 +23,8 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { action, category } = await req.json();
+    const body = await req.json();
+    const { action, category, title, description, searchUrl, imageUrl } = body;
 
     if (action === 'suggest') {
       // Generate AI suggestions for Amazon products
@@ -118,8 +119,6 @@ Return ONLY valid JSON in this exact format:
 
     if (action === 'add') {
       // Add a suggested product to advertising_hero
-      const { title, description, searchUrl, imageUrl } = await req.json();
-      
       // Add affiliate tag to URL
       let affiliateUrl = searchUrl;
       if (searchUrl.includes('amazon.com')) {
