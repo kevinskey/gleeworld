@@ -272,7 +272,7 @@ export const UniversalHeader = ({
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Glee Academy Courses</DropdownMenuLabel>
                     {courses.map(course => <DropdownMenuItem key={course.id} onClick={() => {
                         if (course.course_code === 'MUS 000') {
-                          window.open('https://readmusic.gleeworld.com', '_blank');
+                          window.open('https://readmusic.gleeworld.org', '_blank');
                         } else {
                           navigate(`/academy/${course.course_code?.toLowerCase().replace(' ', '-')}`);
                         }
