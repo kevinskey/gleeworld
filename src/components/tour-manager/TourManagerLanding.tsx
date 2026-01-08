@@ -146,8 +146,8 @@ export const TourManagerLanding = ({
 
       {/* Compact Stats Row */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-        {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="text-center p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
-            <div className="text-2xl font-bold text-slate-900 dark:text-white">{section.stat}</div>
+        {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="text-center p-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <div className="text-2xl font-bold text-slate-800 dark:text-white">{section.stat}</div>
             <div className="text-xs capitalize text-slate-600 dark:text-slate-400 mt-1">{section.statLabel}</div>
           </button>)}
       </div>
@@ -157,7 +157,7 @@ export const TourManagerLanding = ({
         {/* Tour Route Timeline */}
         <TourRouteTimeline onNavigate={onNavigate} limit={8} />
         {/* Key Personnel */}
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
+        <Card className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600">
           <CardHeader className="py-4 px-5">
             <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
               <Users className="h-5 w-5 text-[#003666]" />
@@ -199,7 +199,7 @@ export const TourManagerLanding = ({
               </div>}
           </CardContent>
         </Card>
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
+        <Card className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600">
           <CardHeader className="py-4 px-5">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
@@ -267,9 +267,9 @@ export const TourManagerLanding = ({
 
       {/* Section Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left shadow-sm">
+        {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="p-4 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-left">
             <section.icon className={cn("h-6 w-6 mb-2", section.color.replace('bg-', 'text-'))} />
-            <div className="text-sm font-semibold text-slate-900 dark:text-white">{section.title}</div>
+            <div className="text-sm font-semibold text-slate-800 dark:text-white">{section.title}</div>
             <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{section.stat} {section.statLabel}</div>
           </button>)}
       </div>
