@@ -361,19 +361,17 @@ serve(async (req) => {
             userId = nameMatch.user_id || nameMatch.id;
           } else {
             console.log(`No name match, creating new profile...`);
-            // Create a placeholder profile for this student with a generated UUID
-            const newUserId = crypto.randomUUID();
+            // Create a placeholder profile for this student (user_id is NULL until they sign up)
             const { data: newProfile, error: createError } = await supabaseClient
               .from('gw_profiles')
               .insert({
-                user_id: newUserId,
                 student_id: student.studentId,
                 full_name: student.name,
                 academic_year: student.classYear,
                 role: 'student',
                 status: 'active',
               })
-              .select('user_id')
+              .select('id')
               .maybeSingle();
 
             if (createError) {
@@ -382,8 +380,8 @@ serve(async (req) => {
               continue;
             }
 
-            console.log(`Created new profile with user_id: ${newProfile?.user_id || newUserId}`);
-            userId = newProfile?.user_id || newUserId;
+            console.log(`Created new profile with id: ${newProfile?.id}`);
+            userId = newProfile?.id;
             enrollmentResults.profilesCreated++;
           }
         } else {
