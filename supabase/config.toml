@@ -333,3 +333,6 @@ verify_jwt = false
 
 [functions.public-courses-api]
 verify_jwt = false
+
+[functions.receive-grade-webhook]
+verify_jwt = false
