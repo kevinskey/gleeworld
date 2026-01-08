@@ -262,8 +262,8 @@ export const TourManagerDashboard = ({
           
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 py-2">
-            <nav className="flex flex-col space-y-1 px-2">
+          <div className="flex-1 flex items-center">
+            <nav className="flex flex-col space-y-1 px-2 w-full">
               {navItems.map(item => (
                 <button 
                   key={item.value} 
@@ -283,7 +283,7 @@ export const TourManagerDashboard = ({
                 </button>
               ))}
             </nav>
-          </ScrollArea>
+          </div>
 
           {/* Sidebar Footer */}
           <div className="p-3 border-t border-blue-600 dark:border-blue-800">
