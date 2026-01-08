@@ -233,6 +233,13 @@ export default function BookAppointmentPage() {
 
   return (
     <UniversalLayout>
+      {/* Header Banner */}
+      <div className="w-full py-6" style={{ backgroundColor: '#003666' }}>
+        <h1 className="text-2xl md:text-3xl font-bold text-white text-center tracking-wide">
+          OFFICE HOURS
+        </h1>
+      </div>
+      
       <PageContainer maxWidth="7xl" className="py-6 space-y-6">
         {/* Hero Section */}
         <div className="grid lg:grid-cols-3 gap-6">
