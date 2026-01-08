@@ -44,39 +44,35 @@ const GleeAcademy = () => {
   return (
     <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
       <div className="min-h-screen bg-background">
-        {/* Hero Section - Dark with gold accent */}
-        <div className="bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDF6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-50"></div>
-          <div className="container mx-auto px-4 py-20 md:py-28 relative z-10">
-            <div className="max-w-4xl mx-auto text-center">
-              <Badge className="mb-6 bg-[#DAA520]/20 text-[#FFD700] border-[#DAA520]/50 hover:bg-[#DAA520]/30">
-                <GraduationCap className="w-4 h-4 mr-2" />
-                Spelman College Glee Club
-              </Badge>
-              <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 text-transparent bg-clip-text bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#B8860B]">
-                GLEE ACADEMY
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                Explore our comprehensive music education programs designed to nurture excellence in choral performance and musicianship.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
-                  size="lg" 
-                  className="bg-[#DAA520] text-black hover:bg-[#FFD700] font-semibold"
-                  onClick={() => document.getElementById('courses')?.scrollIntoView({ behavior: 'smooth' })}
-                >
-                  Browse Courses
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10"
-                  onClick={() => navigate('/booking')}
-                >
-                  Schedule Consultation
-                </Button>
-              </div>
+        {/* Header Banner - Matching other pages */}
+        <div className="w-full py-6" style={{ backgroundColor: '#003666' }}>
+          <h1 className="text-2xl md:text-3xl font-bold text-white text-center tracking-wide">
+            GLEE ACADEMY
+          </h1>
+        </div>
+
+        {/* Intro Section */}
+        <div className="bg-background py-12 border-b border-border">
+          <div className="container mx-auto px-4 text-center max-w-3xl">
+            <p className="text-lg md:text-xl text-muted-foreground mb-6">
+              Explore our comprehensive music education programs designed to nurture excellence in choral performance and musicianship.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => document.getElementById('courses')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Browse Courses
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={() => navigate('/booking')}
+              >
+                Schedule Consultation
+              </Button>
             </div>
           </div>
         </div>
