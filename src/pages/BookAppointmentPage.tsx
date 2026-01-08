@@ -282,13 +282,13 @@ export default function BookAppointmentPage() {
           <div className="lg:col-span-2">
             <Tabs defaultValue="book">
               <TabsList className="grid w-full grid-cols-3 h-20 bg-gradient-to-b from-[#004080] to-[#003666] text-white p-0 pb-0 rounded-t-xl rounded-b-none relative z-10 shadow-lg">
-                <TabsTrigger value="book" className="gap-2 text-2xl font-['Bebas_Neue'] tracking-wide text-white data-[state=inactive]:text-white rounded-none rounded-tl-xl data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] h-full hover:bg-white/20 transition-all duration-200 border-r border-white/20">
+                <TabsTrigger value="book" className="gap-2 text-2xl font-['Bebas_Neue'] tracking-wide text-white data-[state=inactive]:text-white data-[state=inactive]:bg-[#004080] rounded-none rounded-tl-xl data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] h-full hover:bg-white/20 transition-all duration-200 border-r border-white/20">
                   <CalendarDays className="h-6 w-6" /> Book
                 </TabsTrigger>
-                <TabsTrigger value="history" className="gap-2 text-2xl font-['Bebas_Neue'] tracking-wide text-white data-[state=inactive]:text-white rounded-none data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] h-full hover:bg-white/20 transition-all duration-200 border-r border-white/20">
+                <TabsTrigger value="history" className="gap-2 text-2xl font-['Bebas_Neue'] tracking-wide text-white data-[state=inactive]:text-white data-[state=inactive]:bg-[#004080] rounded-none data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] h-full hover:bg-white/20 transition-all duration-200 border-r border-white/20">
                   <History className="h-6 w-6" /> History
                 </TabsTrigger>
-                <TabsTrigger value="contact" className="gap-2 text-2xl font-['Bebas_Neue'] tracking-wide text-white data-[state=inactive]:text-white rounded-none rounded-tr-xl data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] h-full hover:bg-white/20 transition-all duration-200">
+                <TabsTrigger value="contact" className="gap-2 text-2xl font-['Bebas_Neue'] tracking-wide text-white data-[state=inactive]:text-white data-[state=inactive]:bg-[#004080] rounded-none rounded-tr-xl data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] h-full hover:bg-white/20 transition-all duration-200">
                   <Mail className="h-6 w-6" /> Contact
                 </TabsTrigger>
               </TabsList>
