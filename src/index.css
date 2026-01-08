@@ -204,9 +204,22 @@
   }
   
   .bg-primary h1, .bg-primary h2, .bg-primary h3, .bg-primary h4, .bg-primary h5, .bg-primary h6,
-  .bg-primary p, .bg-primary span, .bg-primary label, .bg-primary a,
+  .bg-primary p, .bg-primary span, .bg-primary label, .bg-primary a, .bg-primary button,
   .bg-secondary h1, .bg-secondary h2, .bg-secondary h3, .bg-secondary h4, .bg-secondary h5, .bg-secondary h6,
-  .bg-secondary p, .bg-secondary span, .bg-secondary label, .bg-secondary a {
+  .bg-secondary p, .bg-secondary span, .bg-secondary label, .bg-secondary a, .bg-secondary button {
+    color: hsl(0 0% 100%) !important;
+  }
+  
+  /* Ensure buttons with bg-primary always have white text and icons */
+  button.bg-primary,
+  button[class*="bg-primary"],
+  .bg-primary svg,
+  .bg-secondary svg {
+    color: hsl(0 0% 100%) !important;
+  }
+  
+  /* Force text-primary-foreground to always be white */
+  .text-primary-foreground {
     color: hsl(0 0% 100%) !important;
   }
   
