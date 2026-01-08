@@ -285,31 +285,29 @@ export const TourManagerDashboard = ({
       {/* Content Area with Sidebar */}
       <div className="flex-1 flex flex-row">
         {/* Sidebar - hidden on mobile, shown on desktop */}
-        <aside className={cn("fixed inset-y-12 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:relative lg:inset-y-0 lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
-          <div className="flex flex-col h-full px-0">
+        <aside className={cn("fixed inset-y-12 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:h-[calc(100vh-48px)] lg:inset-y-0 lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
+          <div className="flex flex-col h-full px-0 pt-4">
             {/* Navigation */}
-            <div className="flex-1 flex items-center">
-              <nav className="flex flex-col space-y-1 px-2 w-full">
-                {navItems.map(item => (
-                  <button 
-                    key={item.value} 
-                    onClick={() => {
-                      setActiveSection(item.value);
-                      setSidebarOpen(false);
-                    }} 
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-left",
-                      activeSection === item.value 
-                        ? "bg-primary/10 text-primary font-medium" 
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </nav>
-            </div>
+            <nav className="flex flex-col space-y-1 px-2 w-full">
+              {navItems.map(item => (
+                <button 
+                  key={item.value} 
+                  onClick={() => {
+                    setActiveSection(item.value);
+                    setSidebarOpen(false);
+                  }} 
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-left",
+                    activeSection === item.value 
+                      ? "bg-primary/10 text-primary font-medium" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </nav>
           </div>
         </aside>
 
