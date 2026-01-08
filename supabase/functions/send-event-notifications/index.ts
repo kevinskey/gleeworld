@@ -34,11 +34,11 @@ serve(async (req) => {
 
     console.log('Sending notifications for event:', { eventId, eventTitle, userIds });
 
-    // Get user details
+    // Get user details from gw_profiles
     const { data: users, error: usersError } = await supabase
-      .from('profiles')
-      .select('id, email, full_name')
-      .in('id', userIds);
+      .from('gw_profiles')
+      .select('user_id, email, full_name')
+      .in('user_id', userIds);
 
     if (usersError) {
       console.error('Error fetching users:', usersError);
@@ -51,23 +51,23 @@ serve(async (req) => {
 
     // Get user phone numbers for SMS
     const { data: userProfiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, phone_number')
-      .in('id', userIds);
+      .from('gw_profiles')
+      .select('user_id, phone_number')
+      .in('user_id', userIds);
 
     if (profilesError) {
       console.error('Error fetching user profiles:', profilesError);
     }
 
-    const phoneMap = new Map(userProfiles?.map(p => [p.id, p.phone_number]) || []);
+    const phoneMap = new Map(userProfiles?.map(p => [p.user_id, p.phone_number]) || []);
 
     // Create database notifications for each user
-    for (const user of users) {
+    for (const user of users || []) {
       // Insert notification record
       const { data: notification, error: notificationError } = await supabase
         .from('gw_notifications')
         .insert({
-          user_id: user.id,
+          user_id: user.user_id,
           title: `Event Invitation: ${eventTitle}`,
           message: message || `You've been invited to ${eventTitle}`,
           type: 'info',
@@ -115,7 +115,7 @@ serve(async (req) => {
       }
 
       // Send SMS notification if user has phone number
-      const userPhone = phoneMap.get(user.id);
+      const userPhone = phoneMap.get(user.user_id);
       if (userPhone) {
         const smsMessage = `Event Invitation: ${eventTitle} on ${new Date(eventDate).toLocaleDateString()}. ${message || 'Check GleeWorld for details.'}`;
         
