@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, Camera, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -61,14 +61,17 @@ export const UniversalHeader = ({
   } = useTheme();
 
   // Fetch courses for Institute dropdown
-  const { data: courses = [] } = useQuery({
+  const {
+    data: courses = []
+  } = useQuery({
     queryKey: ['glee-academy-courses-header'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_courses')
-        .select('id, title, course_code')
-        .eq('is_active', true)
-        .order('title', { ascending: true });
+      const {
+        data,
+        error
+      } = await supabase.from('gw_courses').select('id, title, course_code').eq('is_active', true).order('title', {
+        ascending: true
+      });
       if (error) throw error;
       return data || [];
     }
@@ -261,25 +264,16 @@ export const UniversalHeader = ({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64 bg-popover border border-border shadow-xl z-[100]">
-                    <DropdownMenuItem 
-                      onClick={() => navigate('/institute')} 
-                      className="cursor-pointer font-medium"
-                    >
+                    <DropdownMenuItem onClick={() => navigate('/institute')} className="cursor-pointer font-medium">
                       <Landmark className="w-4 h-4 mr-2" />
                       Institute Home
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Glee Academy Courses</DropdownMenuLabel>
-                    {courses.map((course) => (
-                      <DropdownMenuItem 
-                        key={course.id}
-                        onClick={() => navigate(`/glee-academy/course/${course.id}`)}
-                        className="cursor-pointer"
-                      >
+                    {courses.map(course => <DropdownMenuItem key={course.id} onClick={() => navigate(`/glee-academy/course/${course.id}`)} className="cursor-pointer">
                         <span className="text-xs text-muted-foreground mr-2">{course.course_code}</span>
                         {course.title}
-                      </DropdownMenuItem>
-                    ))}
+                      </DropdownMenuItem>)}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>}
@@ -288,9 +282,7 @@ export const UniversalHeader = ({
                 {/* Keep dashboard switcher as secondary navigation - Super Admin only */}
                 {userProfile?.is_super_admin && <DropdownMenu>
                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                        <Shield className={HEADER_ICON_SIZES.icon} />
-                      </Button>
+                      
                    </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64 bg-popover border border-border shadow-xl z-[100]">
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Quick Access</DropdownMenuLabel>
