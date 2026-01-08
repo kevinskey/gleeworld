@@ -302,11 +302,12 @@ export const CalendarFilterStrip = ({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="grid grid-cols-6 gap-1.5 p-1 pt-2">
-                  {presetColors.map(color => (
+                  {presetColors.map((color) => (
                     <button
                       key={color}
                       type="button"
-                      onClick={(e) => {
+                      onPointerDown={(e) => {
+                        // Radix closes menus on pointer down; update before it closes
                         e.preventDefault();
                         e.stopPropagation();
                         updateCalendarColor(calendar.id, color);
@@ -318,6 +319,7 @@ export const CalendarFilterStrip = ({
                           : "border-transparent"
                       )}
                       style={{ backgroundColor: color }}
+                      aria-label={`Set ${calendar.name} color to ${color}`}
                     />
                   ))}
                 </div>
