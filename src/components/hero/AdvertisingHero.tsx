@@ -111,8 +111,8 @@ export const AdvertisingHero: React.FC<AdvertisingHeroProps> = ({
       }} />
         </div>)}
 
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-20 pointer-events-none" />
+      {/* Gradient Overlay - subtle for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-20 pointer-events-none" />
 
       {/* Content */}
       {(hero.title || hero.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 text-white z-30 pointer-events-none">
