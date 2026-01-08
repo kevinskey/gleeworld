@@ -301,6 +301,21 @@ serve(async (req) => {
       }
     }
 
+    // Determine if this is a Glee Club course (MUS-070) or a general course (MUS-240, etc.)
+    // Glee Club courses use gw_profiles (full member profiles with wardrobe, dues, etc.)
+    // General courses use gw_student_profiles (simple student profiles)
+    const { data: courseData } = await supabaseClient
+      .from('gw_courses')
+      .select('course_number, title')
+      .eq('id', courseId)
+      .single();
+    
+    const isGleeClubCourse = courseData?.course_number?.includes('070') || 
+                             courseData?.title?.toLowerCase().includes('glee club');
+    
+    console.log(`Course: ${courseData?.course_number} - ${courseData?.title}`);
+    console.log(`Is Glee Club course: ${isGleeClubCourse}`);
+
     const enrollmentResults = {
       enrolled: 0,
       skipped: 0,
@@ -313,130 +328,158 @@ serve(async (req) => {
       try {
         console.log(`Processing student: ${student.name} (ID: ${student.studentId})`);
         
-        // Look up student by student_id
-        const { data: existingProfile, error: existingProfileError } = await supabaseClient
-          .from('gw_profiles')
-          .select('user_id, id, full_name')
-          .eq('student_id', student.studentId)
-          .maybeSingle();
+        // Parse name parts for search
+        const nameParts = student.name.split(',').map((p) => p.trim());
+        const lastName = nameParts[0];
+        const firstName = nameParts[1]?.split(' ')[0];
+        console.log(`Parsed name: firstName="${firstName}", lastName="${lastName}"`);
 
-        if (existingProfileError) {
-          console.error(`DB error for ${student.name}:`, existingProfileError.message);
-          errors.push({ row: students.indexOf(student) + 1, error: existingProfileError.message });
-          continue;
-        }
-
+        let studentProfileId: string | undefined;
         let userId: string | undefined;
 
-        if (!existingProfile) {
-          console.log(`No existing profile by student_id, searching by name...`);
-          // Try to find by name first (student may exist but without student_id)
-          const nameParts = student.name.split(',').map((p) => p.trim());
-          const lastName = nameParts[0];
-          const firstName = nameParts[1]?.split(' ')[0];
-          console.log(`Parsed name: firstName="${firstName}", lastName="${lastName}"`);
-
-          const { data: nameMatch, error: nameMatchError } = await supabaseClient
+        if (isGleeClubCourse) {
+          // Glee Club course: use gw_profiles (full member profiles)
+          const { data: existingProfile } = await supabaseClient
             .from('gw_profiles')
             .select('user_id, id')
-            .or(`full_name.ilike.%${firstName}%${lastName}%,full_name.ilike.%${lastName}%${firstName}%`)
-            .limit(1)
+            .eq('student_id', student.studentId)
             .maybeSingle();
 
-          if (nameMatchError) {
-            console.error(`Name match error:`, nameMatchError.message);
-          }
-
-          if (nameMatch) {
-            console.log(`Found name match: id=${nameMatch.id}, user_id=${nameMatch.user_id}`);
-            // Update existing profile with student_id
-            await supabaseClient
-              .from('gw_profiles')
-              .update({
-                student_id: student.studentId,
-                academic_year: student.classYear,
-              })
-              .eq('id', nameMatch.id);
-
-            userId = nameMatch.user_id || nameMatch.id;
+          if (existingProfile) {
+            console.log(`Found existing gw_profile: id=${existingProfile.id}`);
+            userId = existingProfile.user_id || existingProfile.id;
           } else {
-            console.log(`No name match, creating new profile...`);
-            // Create a placeholder profile for this student (user_id is NULL until they sign up)
-            const { data: newProfile, error: createError } = await supabaseClient
+            // Try name match
+            const { data: nameMatch } = await supabaseClient
               .from('gw_profiles')
-              .insert({
-                student_id: student.studentId,
-                full_name: student.name,
-                academic_year: student.classYear,
-                role: 'student',
-                status: 'active',
-              })
-              .select('id')
+              .select('user_id, id')
+              .or(`full_name.ilike.%${firstName}%${lastName}%,full_name.ilike.%${lastName}%${firstName}%`)
+              .limit(1)
               .maybeSingle();
 
-            if (createError) {
-              console.error(`Create profile error:`, createError.message);
-              errors.push({ row: students.indexOf(student) + 1, error: `Could not create profile for ${student.name}: ${createError.message}` });
+            if (nameMatch) {
+              console.log(`Found name match in gw_profiles: id=${nameMatch.id}`);
+              await supabaseClient
+                .from('gw_profiles')
+                .update({ student_id: student.studentId, academic_year: student.classYear })
+                .eq('id', nameMatch.id);
+              userId = nameMatch.user_id || nameMatch.id;
+            } else {
+              // For Glee Club, they need a full profile - skip for now, they need to sign up
+              console.log(`No profile found for Glee Club student - they need to sign up first`);
+              errors.push({ row: students.indexOf(student) + 1, error: `Glee Club student ${student.name} needs to sign up first` });
               continue;
             }
-
-            console.log(`Created new profile with id: ${newProfile?.id}`);
-            userId = newProfile?.id;
-            enrollmentResults.profilesCreated++;
           }
         } else {
-          console.log(`Found existing profile: id=${existingProfile.id}, user_id=${existingProfile.user_id}`);
-          // Use user_id if available, otherwise fall back to id
-          userId = existingProfile.user_id || existingProfile.id;
-        }
+          // General course (MUS-240, etc.): use gw_student_profiles (simple profiles)
+          const { data: existingProfile } = await supabaseClient
+            .from('gw_student_profiles')
+            .select('id, user_id')
+            .eq('student_id', student.studentId)
+            .maybeSingle();
 
-        if (!userId) {
-          console.error(`No userId resolved for ${student.name}`);
-          errors.push({ row: students.indexOf(student) + 1, error: `No user_id for ${student.name}` });
-          continue;
+          if (existingProfile) {
+            console.log(`Found existing gw_student_profile: id=${existingProfile.id}`);
+            studentProfileId = existingProfile.id;
+            userId = existingProfile.user_id;
+          } else {
+            // Try name match
+            const { data: nameMatch } = await supabaseClient
+              .from('gw_student_profiles')
+              .select('id, user_id')
+              .or(`full_name.ilike.%${firstName}%${lastName}%,full_name.ilike.%${lastName}%${firstName}%`)
+              .limit(1)
+              .maybeSingle();
+
+            if (nameMatch) {
+              console.log(`Found name match in gw_student_profiles: id=${nameMatch.id}`);
+              await supabaseClient
+                .from('gw_student_profiles')
+                .update({ student_id: student.studentId, academic_year: student.classYear })
+                .eq('id', nameMatch.id);
+              studentProfileId = nameMatch.id;
+              userId = nameMatch.user_id;
+            } else {
+              // Create new simple student profile
+              console.log(`Creating new gw_student_profile...`);
+              const { data: newProfile, error: createError } = await supabaseClient
+                .from('gw_student_profiles')
+                .insert({
+                  student_id: student.studentId,
+                  full_name: student.name,
+                  first_name: firstName,
+                  last_name: lastName,
+                  academic_year: student.classYear,
+                  status: 'active',
+                })
+                .select('id')
+                .single();
+
+              if (createError) {
+                console.error(`Create student profile error:`, createError.message);
+                errors.push({ row: students.indexOf(student) + 1, error: createError.message });
+                continue;
+              }
+
+              console.log(`Created new gw_student_profile: id=${newProfile.id}`);
+              studentProfileId = newProfile.id;
+              enrollmentResults.profilesCreated++;
+            }
+          }
         }
-        
-        console.log(`Using userId: ${userId}`);
 
         // Check for existing enrollment
-        const { data: existingEnrollment, error: existingEnrollmentError } = await supabaseClient
+        const enrollmentQuery = supabaseClient
           .from('gw_course_enrollments')
           .select('id')
-          .eq('course_id', courseId)
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        if (existingEnrollmentError) {
-          errors.push({ row: students.indexOf(student) + 1, error: existingEnrollmentError.message });
-          continue;
+          .eq('course_id', courseId);
+        
+        if (userId) {
+          enrollmentQuery.eq('user_id', userId);
+        } else if (studentProfileId) {
+          enrollmentQuery.eq('student_profile_id', studentProfileId);
         }
 
+        const { data: existingEnrollment } = await enrollmentQuery.maybeSingle();
+
         if (existingEnrollment?.id) {
-          // Skip duplicate - student already enrolled
+          console.log(`Student already enrolled, skipping`);
           enrollmentResults.skipped++;
           continue;
         }
 
         // Create new enrollment
+        const enrollmentData: Record<string, unknown> = {
+          course_id: courseId,
+          role: 'student',
+          enrollment_status: 'enrolled',
+          registration_status: student.registrationStatus,
+          academic_level: student.level,
+          credit_hours: student.creditHours,
+          enrolled_at: new Date().toISOString(),
+        };
+
+        if (userId) {
+          enrollmentData.user_id = userId;
+        }
+        if (studentProfileId) {
+          enrollmentData.student_profile_id = studentProfileId;
+        }
+
         const { error: insertError } = await supabaseClient
           .from('gw_course_enrollments')
-          .insert({
-            course_id: courseId,
-            user_id: userId,
-            role: 'student',
-            enrollment_status: 'enrolled',
-            registration_status: student.registrationStatus,
-            academic_level: student.level,
-            credit_hours: student.creditHours,
-            enrolled_at: new Date().toISOString(),
-          });
+          .insert(enrollmentData);
 
         if (insertError) {
+          console.error(`Enrollment insert error:`, insertError.message);
           errors.push({ row: students.indexOf(student) + 1, error: insertError.message });
         } else {
+          console.log(`Successfully enrolled student`);
           enrollmentResults.enrolled++;
         }
       } catch (err) {
+        console.error(`Error processing student:`, err);
         errors.push({ row: students.indexOf(student) + 1, error: String(err) });
       }
     }

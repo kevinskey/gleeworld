@@ -7524,6 +7524,7 @@ export type Database = {
           payment_id: string | null
           registration_status: string | null
           role: string | null
+          student_profile_id: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -7541,6 +7542,7 @@ export type Database = {
           payment_id?: string | null
           registration_status?: string | null
           role?: string | null
+          student_profile_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -7558,6 +7560,7 @@ export type Database = {
           payment_id?: string | null
           registration_status?: string | null
           role?: string | null
+          student_profile_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -7567,6 +7570,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_course_enrollments_student_profile_id_fkey"
+            columns: ["student_profile_id"]
+            isOneToOne: false
+            referencedRelation: "gw_student_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -16235,6 +16245,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gw_student_profiles: {
+        Row: {
+          academic_year: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          full_name: string
+          id: string
+          last_name: string | null
+          major: string | null
+          status: string | null
+          student_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          academic_year?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          full_name: string
+          id?: string
+          last_name?: string | null
+          major?: string | null
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          academic_year?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          full_name?: string
+          id?: string
+          last_name?: string | null
+          major?: string | null
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       gw_study_score_collaborators: {
         Row: {
