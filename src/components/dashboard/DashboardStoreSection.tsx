@@ -99,7 +99,7 @@ export const DashboardStoreSection = () => {
   }
   return <div className="w-full bg-background">
       {/* Glee Academy - Edge to Edge (FIRST on desktop) */}
-      <Button onClick={() => navigate('/glee-academy')} className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none mt-[10px]">
+      <Button onClick={() => navigate('/glee-academy')} className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none mt-[10px] pb-[35px] pt-[35px] my-[5px]">
         <GraduationCap className="h-5 w-5" />
         Glee Academy
       </Button>
@@ -119,7 +119,9 @@ export const DashboardStoreSection = () => {
                 <div className="p-6 h-full flex flex-col">
                   {/* Course Code Badge */}
                   <div className="flex items-center justify-between mb-4">
-                    {course.course_code && <span style={{ fontFamily: "'Cinzel', serif" }} className="tracking-wide text-gray-500 uppercase border border-gray-300 px-2 py-1 text-2xl whitespace-nowrap">
+                    {course.course_code && <span style={{
+                  fontFamily: "'Cinzel', serif"
+                }} className="tracking-wide text-gray-500 uppercase border border-gray-300 px-2 py-1 text-2xl whitespace-nowrap">
                         {course.course_code}
                       </span>}
                     
