@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MessageSquare, Eye, Bell, User, Settings, LogOut, ChevronDown } from "lucide-react";
+import { Clock, MessageSquare, Eye, Bell, User, Settings, LogOut, ChevronDown, GraduationCap } from "lucide-react";
 import { format } from "date-fns";
 import { 
   DropdownMenu, 
@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 interface PersistentHeaderProps {
   activeTab: string;
@@ -30,6 +31,20 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
   const [currentTime, setCurrentTime] = useState(new Date());
   const [viewCount, setViewCount] = useState(1247);
   const navigate = useNavigate();
+
+  // Fetch courses for Glee Academy dropdown
+  const { data: courses = [] } = useQuery({
+    queryKey: ['glee-academy-courses-header'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_courses')
+        .select('id, title, course_code')
+        .eq('is_active', true)
+        .order('title', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   // Update clock every second
   useEffect(() => {
@@ -86,6 +101,35 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
 
         {/* Right Section - User Actions */}
         <div className="flex items-center gap-2 md:gap-3 lg:gap-5">
+          {/* Glee Academy Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="shrink-0">
+                <GraduationCap className="w-7 h-7 stroke-[1.5]" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-background">
+              <DropdownMenuItem 
+                onClick={() => navigate('/glee-academy')} 
+                className="cursor-pointer font-medium"
+              >
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Glee Academy Home
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {courses.map((course) => (
+                <DropdownMenuItem 
+                  key={course.id}
+                  onClick={() => navigate(`/glee-academy/course/${course.id}`)}
+                  className="cursor-pointer"
+                >
+                  <span className="text-xs text-muted-foreground mr-2">{course.course_code}</span>
+                  {course.title}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Notifications */}
           <Button variant="ghost" size="sm" className="relative shrink-0">
             <Bell className="w-7 h-7 stroke-[1.5]" />
