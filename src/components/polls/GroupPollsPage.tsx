@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PollBubble } from '@/components/messaging/PollBubble';
 import { PollCreator } from '@/components/messaging/PollCreator';
-import { BarChart3, Plus, Users } from 'lucide-react';
+import { BarChart3, Plus, Users, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 interface Group {
   id: string;
   name: string;
@@ -23,6 +23,7 @@ interface PollMessage {
 
 export const GroupPollsPage = () => {
   const { user } = useAuth();
+  const { currentSemester, availableSemesters } = useMus240SemesterSafe();
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [pollMessages, setPollMessages] = useState<PollMessage[]>([]);
@@ -70,10 +71,28 @@ export const GroupPollsPage = () => {
     fetchGroups();
   }, [user]);
 
-  // Fetch polls for selected group
+  // Get semester date range for filtering
+  const getSemesterDateRange = () => {
+    const semester = availableSemesters.find(s => s.id === currentSemester);
+    if (semester) {
+      return { startDate: semester.startDate, endDate: semester.endDate };
+    }
+    // Default to current semester approximate dates if not found
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    // Fall: Aug-Dec, Spring: Jan-May
+    if (month >= 7) { // Fall
+      return { startDate: `${year}-08-01`, endDate: `${year}-12-31` };
+    } else { // Spring
+      return { startDate: `${year}-01-01`, endDate: `${year}-05-31` };
+    }
+  };
+
+  // Fetch polls for selected group filtered by semester
   useEffect(() => {
     const fetchPolls = async () => {
-      if (!selectedGroupId) {
+      if (!selectedGroupId || !currentSemester) {
         setPollMessages([]);
         return;
       }
@@ -81,11 +100,15 @@ export const GroupPollsPage = () => {
       try {
         setPollsLoading(true);
         
+        const { startDate, endDate } = getSemesterDateRange();
+        
         const { data, error } = await supabase
           .from('gw_group_messages')
           .select('id, user_id, created_at')
           .eq('group_id', selectedGroupId)
           .eq('message_type', 'poll')
+          .gte('created_at', startDate)
+          .lte('created_at', endDate + 'T23:59:59')
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -98,7 +121,7 @@ export const GroupPollsPage = () => {
     };
 
     fetchPolls();
-  }, [selectedGroupId]);
+  }, [selectedGroupId, currentSemester, availableSemesters]);
 
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
 
@@ -141,10 +164,18 @@ export const GroupPollsPage = () => {
         <Card className="bg-card/95 backdrop-blur-sm border-border/50">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                {selectedGroup?.name} Polls
-              </CardTitle>
+              <div>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  {selectedGroup?.name} Polls
+                </CardTitle>
+                {currentSemester && (
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {currentSemester}
+                  </p>
+                )}
+              </div>
               <Button
                 onClick={() => setShowPollCreator(!showPollCreator)}
                 size="sm"
@@ -164,13 +195,16 @@ export const GroupPollsPage = () => {
                   inline={true}
                   onPollCreated={() => {
                     setShowPollCreator(false);
-                    // Refresh polls
+                    // Refresh polls with semester filter
                     const fetchPolls = async () => {
+                      const { startDate, endDate } = getSemesterDateRange();
                       const { data } = await supabase
                         .from('gw_group_messages')
                         .select('id, user_id, created_at')
                         .eq('group_id', selectedGroupId)
                         .eq('message_type', 'poll')
+                        .gte('created_at', startDate)
+                        .lte('created_at', endDate + 'T23:59:59')
                         .order('created_at', { ascending: false });
                       setPollMessages(data || []);
                     };
