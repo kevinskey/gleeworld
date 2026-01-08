@@ -306,9 +306,13 @@ export const CalendarFilterStrip = ({
                     <button
                       key={color}
                       type="button"
-                      onClick={() => updateCalendarColor(calendar.id, color)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        updateCalendarColor(calendar.id, color);
+                      }}
                       className={cn(
-                        "w-5 h-5 rounded border-2 transition-all hover:scale-110",
+                        "w-5 h-5 rounded border-2 transition-all hover:scale-110 cursor-pointer",
                         calendar.color === color
                           ? "border-primary ring-2 ring-primary/30"
                           : "border-transparent"
