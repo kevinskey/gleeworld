@@ -339,3 +339,9 @@ verify_jwt = false
 
 [functions.public-students-api]
 verify_jwt = false
+
+[functions.receive-assignment-webhook]
+verify_jwt = false
+
+[functions.public-course-schedule-api]
+verify_jwt = false
