@@ -61,7 +61,10 @@ export const AmazonProductSuggester = () => {
           title: product.title,
           description: product.description,
           searchUrl: product.searchUrl,
-          imageUrl: product.imageUrl
+          imageUrl: product.imageUrl,
+          price: product.price,
+          asin: product.asin,
+          category: category || undefined
         }
       });
 
@@ -71,7 +74,7 @@ export const AmazonProductSuggester = () => {
         setSuggestions(prev => 
           prev.map((s, i) => i === index ? { ...s, added: true } : s)
         );
-        toast.success(`Added "${product.title}" to your product slider!`);
+        toast.success(`Added "${product.title}" to Amazon Affiliate Products!`);
       } else {
         throw new Error(data.error || 'Failed to add product');
       }
