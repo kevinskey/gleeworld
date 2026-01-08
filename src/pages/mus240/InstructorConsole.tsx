@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCourseTA } from '@/hooks/useCourseTA';
@@ -38,6 +38,7 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 import { SemesterManager } from '@/components/admin/SemesterManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 export const InstructorConsole = () => {
   const {
     isAdmin,
@@ -63,6 +64,20 @@ export const InstructorConsole = () => {
     data: tests,
     isLoading: testsLoading
   } = useTests('mus240');
+
+  // Fetch available courses for admin navigation
+  const { data: courses } = useQuery({
+    queryKey: ['admin-courses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_courses')
+        .select('id, course_code, title, instructor_name')
+        .eq('is_active', true)
+        .order('course_code');
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   // Fetch original midterm config
   const {
@@ -272,9 +287,32 @@ export const InstructorConsole = () => {
           <aside className="hidden lg:block w-56 xl:w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-[132px]">
             <div className="p-4 xl:p-6">
               <div className="mb-6 xl:mb-8 pb-4 xl:pb-6 border-b">
-                <h2 className="text-lg xl:text-xl font-bold text-foreground">MUS 240</h2>
-                <p className="text-xs xl:text-sm text-muted-foreground mt-1 xl:mt-1.5">Survey of African American Music</p>
-                <p className="text-[10px] xl:text-xs text-muted-foreground mt-0.5 xl:mt-1">Dr. Kevin Phillip Johnson</p>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="w-full text-left group hover:bg-accent/50 rounded-lg p-2 -m-2 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-lg xl:text-xl font-bold text-foreground">MUS 240</h2>
+                          <p className="text-xs xl:text-sm text-muted-foreground mt-1 xl:mt-1.5">Survey of African American Music</p>
+                          <p className="text-[10px] xl:text-xs text-muted-foreground mt-0.5 xl:mt-1">Dr. Kevin Phillip Johnson</p>
+                        </div>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    {courses?.map((course) => (
+                      <DropdownMenuItem 
+                        key={course.id}
+                        onClick={() => navigate(`/courses/${course.id}/instructor`)}
+                        className="flex flex-col items-start py-2"
+                      >
+                        <span className="font-semibold">{course.course_code}</span>
+                        <span className="text-xs text-muted-foreground">{course.title}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               <SidebarNav />
             </div>
@@ -284,9 +322,35 @@ export const InstructorConsole = () => {
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetContent side="left" className="w-64 sm:w-72 p-4 sm:p-6">
               <div className="mb-6 sm:mb-8 pb-4 sm:pb-6 border-b">
-                <h2 className="text-lg sm:text-xl font-bold text-foreground">MUS 240</h2>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-1.5">Survey of African American Music</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Dr. Kevin Phillip Johnson</p>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="w-full text-left group hover:bg-accent/50 rounded-lg p-2 -m-2 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-lg sm:text-xl font-bold text-foreground">MUS 240</h2>
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-1.5">Survey of African American Music</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Dr. Kevin Phillip Johnson</p>
+                        </div>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    {courses?.map((course) => (
+                      <DropdownMenuItem 
+                        key={course.id}
+                        onClick={() => {
+                          navigate(`/courses/${course.id}/instructor`);
+                          setSidebarOpen(false);
+                        }}
+                        className="flex flex-col items-start py-2"
+                      >
+                        <span className="font-semibold">{course.course_code}</span>
+                        <span className="text-xs text-muted-foreground">{course.title}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               <SidebarNav isMobile />
             </SheetContent>
