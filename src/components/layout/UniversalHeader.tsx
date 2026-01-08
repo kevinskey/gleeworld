@@ -288,10 +288,12 @@ export const UniversalHeader = ({
                 {/* Keep dashboard switcher as secondary navigation - Super Admin only */}
                 {userProfile?.is_super_admin && <DropdownMenu>
                    <DropdownMenuTrigger asChild>
-                      
+                      <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                        <Shield className={HEADER_ICON_SIZES.icon} />
+                      </Button>
                    </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-popover text-popover-foreground border border-border shadow-2xl z-[1100]" align="center" sideOffset={8}>
-                    <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
+                  <DropdownMenuContent align="end" className="w-64 bg-popover border border-border shadow-xl z-[100]">
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Quick Access</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
                     {/* Main Dashboard Views */}
@@ -321,8 +323,8 @@ export const UniversalHeader = ({
                       </DropdownMenuItem>}
                     
                     <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Public Pages</DropdownMenuLabel>
                     
-                    {/* Public Pages */}
                     <DropdownMenuItem onClick={() => navigate('/')} className="cursor-pointer">
                       <Globe className="mr-2 h-4 w-4" />
                       Landing Page
@@ -340,7 +342,10 @@ export const UniversalHeader = ({
                     </DropdownMenuItem>
                     
                     {/* Executive Board Dropdown */}
-                    {hasExecBoardPerms && <ExecutiveBoardDropdown />}
+                    {hasExecBoardPerms && <>
+                      <DropdownMenuSeparator />
+                      <ExecutiveBoardDropdown />
+                    </>}
                   </DropdownMenuContent>
                 </DropdownMenu>}
 
@@ -391,9 +396,9 @@ export const UniversalHeader = ({
                         </Button>
                       </DropdownMenuTrigger>
                    </EnhancedTooltip>
-                    <DropdownMenuContent className="w-48 py-1 bg-popover text-popover-foreground shadow-2xl border border-border z-[1100]" align="end" sideOffset={8} forceMount>
-                      <div className="flex flex-col space-y-1 p-1.5">
-                         <p className="text-xs font-medium leading-none truncate">
+                    <DropdownMenuContent align="end" className="w-64 bg-popover border border-border shadow-xl z-[100]">
+                      <div className="flex flex-col space-y-1 p-2">
+                         <p className="text-sm font-medium leading-none truncate">
                            {userProfile?.full_name || user.email}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
@@ -404,27 +409,21 @@ export const UniversalHeader = ({
                           </span>}
                       </div>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="py-1.5 text-xs">
-                        <Link to="/profile" className="flex items-center" onClick={e => {
-                        console.log('🔗 Profile link clicked in header');
-                        console.log('🔗 Event details:', e);
-                        console.log('🔗 Current location:', location.pathname);
-                        console.log('🔗 User:', user);
-                        console.log('🔗 UserProfile:', userProfile);
-                      }}>
-                          <User className="mr-1.5 h-3 w-3" />
+                      <DropdownMenuItem asChild className="cursor-pointer">
+                        <Link to="/profile" className="flex items-center">
+                          <User className="mr-2 h-4 w-4" />
                           Profile
                         </Link>
                       </DropdownMenuItem>
-                       <DropdownMenuItem asChild className="py-1.5 text-xs">
+                       <DropdownMenuItem asChild className="cursor-pointer">
                          <Link to="/settings" className="flex items-center">
-                           <Settings className="mr-1.5 h-3 w-3" />
+                           <Settings className="mr-2 h-4 w-4" />
                            Settings
                          </Link>
                        </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleSignOut} className="py-1.5 text-xs">
-                       <LogOut className="mr-1.5 h-3 w-3" />
+                      <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                       <LogOut className="mr-2 h-4 w-4" />
                        Sign out
                      </DropdownMenuItem>
                   </DropdownMenuContent>
