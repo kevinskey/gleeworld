@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -57,6 +59,20 @@ export const UniversalHeader = ({
   const {
     themeName
   } = useTheme();
+
+  // Fetch courses for Institute dropdown
+  const { data: courses = [] } = useQuery({
+    queryKey: ['glee-academy-courses-header'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_courses')
+        .select('id, title, course_code')
+        .eq('is_active', true)
+        .order('title', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   // Quick Capture state
   const [showCategorySelector, setShowCategorySelector] = useState(false);
@@ -236,13 +252,36 @@ export const UniversalHeader = ({
                 </EnhancedTooltip>
               </div>}
 
-            {/* Institute Quick Access */}
+            {/* Institute Dropdown with Courses */}
             {user && <div className="hidden sm:block">
-                <EnhancedTooltip content="Institute">
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/institute')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                    <Landmark className={HEADER_ICON_SIZES.icon} />
-                  </Button>
-                </EnhancedTooltip>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                      <Landmark className={HEADER_ICON_SIZES.icon} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64 bg-popover border border-border shadow-xl z-[100]">
+                    <DropdownMenuItem 
+                      onClick={() => navigate('/institute')} 
+                      className="cursor-pointer font-medium"
+                    >
+                      <Landmark className="w-4 h-4 mr-2" />
+                      Institute Home
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Glee Academy Courses</DropdownMenuLabel>
+                    {courses.map((course) => (
+                      <DropdownMenuItem 
+                        key={course.id}
+                        onClick={() => navigate(`/glee-academy/course/${course.id}`)}
+                        className="cursor-pointer"
+                      >
+                        <span className="text-xs text-muted-foreground mr-2">{course.course_code}</span>
+                        {course.title}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>}
             
             {user && <>
