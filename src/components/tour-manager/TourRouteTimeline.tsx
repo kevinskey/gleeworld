@@ -142,53 +142,53 @@ export const TourRouteTimeline = ({
         </CardContent>
       </Card>;
   }
-  return <Card>
-      <CardHeader className="py-3 px-4">
+  return <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
+      <CardHeader className="py-4 px-5">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Route className="h-4 w-4 text-primary" />
+          <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
+            <Route className="h-5 w-5 text-[#003666]" />
             Tour Route
           </CardTitle>
-          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onNavigate('route-planning')}>
+          <Button variant="outline" size="sm" className="h-8 text-sm text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600" onClick={() => onNavigate('route-planning')}>
             Plan Route
-            <ChevronRight className="h-3 w-3 ml-1" />
+            <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-4 pt-0">
-        {events.length === 0 ? <div className="text-center py-6">
-            <Route className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">No upcoming stops</p>
-            <Button variant="outline" size="sm" className="mt-2" onClick={() => onNavigate('tour-dates')}>
+      <CardContent className="px-5 pb-5 pt-0">
+        {events.length === 0 ? <div className="text-center py-8">
+            <Route className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+            <p className="text-sm text-slate-600 dark:text-slate-400">No upcoming stops</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={() => onNavigate('tour-dates')}>
               Add Tour Dates
             </Button>
           </div> : <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-border" />
+            <div className="absolute left-[11px] top-3 bottom-3 w-0.5 bg-slate-200 dark:bg-slate-700" />
             
             <div className="space-y-3">
-              {events.map((event, index) => <div key={event.id} className="relative flex gap-3 pl-1">
+              {events.map((event, index) => <div key={event.id} className="relative flex gap-4 pl-0">
                   {/* Timeline dot */}
-                  <div className={`relative z-10 w-[10px] h-[10px] rounded-full mt-1.5 flex-shrink-0 ${getStatusColor(event.status)}`} />
+                  <div className={`relative z-10 w-[14px] h-[14px] rounded-full mt-1 flex-shrink-0 border-2 border-white dark:border-slate-800 shadow-sm ${getStatusColor(event.status)}`} />
                   
-                  <div className="flex-1 min-w-0 p-2 rounded-lg border hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => onNavigate(event.type === 'contract' ? 'contracts' : 'tour-dates')}>
+                  <div className="flex-1 min-w-0 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer" onClick={() => onNavigate(event.type === 'contract' ? 'contracts' : 'tour-dates')}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                          <span className="text-xs font-medium text-primary-foreground">
+                          <Calendar className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                             {format(event.date, 'EEE, MMM d, yyyy')}
                           </span>
                         </div>
-                        <p className="text-sm font-medium truncate text-primary-foreground">{event.title}</p>
-                        {(event.venue || event.location) && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <MapPin className="h-3 w-3 flex-shrink-0 text-primary" />
-                            <span className="truncate text-primary-foreground">
-                              {event.venue ? `${event.venue}${event.location ? `, ${event.location}` : ''}` : event.location}
+                        <p className="text-base font-semibold text-slate-900 dark:text-white truncate">{event.title}</p>
+                        {(event.venue || event.location) && <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mt-1">
+                            <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-[#003666]" />
+                            <span className="truncate">
+                              {event.venue ? `${event.venue}${event.location ? ` - ${event.location}` : ''}` : event.location}
                             </span>
                           </p>}
                       </div>
-                      <Badge variant="outline" className="text-[10px] flex-shrink-0 capitalize text-primary-foreground">
+                      <Badge variant="secondary" className="text-xs flex-shrink-0 capitalize bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200">
                         {getStatusBadge(event.status, event.type)}
                       </Badge>
                     </div>
@@ -197,9 +197,9 @@ export const TourRouteTimeline = ({
             </div>
           </div>}
         
-        {events.length > 0 && <div className="mt-3 pt-3 border-t">
-            <p className="text-[10px] flex items-center gap-1 text-muted-foreground">
-              <Clock className="h-3 w-3" />
+        {events.length > 0 && <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
+            <p className="text-xs flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+              <Clock className="h-3.5 w-3.5" />
               {events.length} stops in chronological order
             </p>
           </div>}
