@@ -171,6 +171,67 @@
     --status-completed: 210 20% 92%; /* Light gray */
     --status-completed-fg: 210 20% 25%; /* Dark gray */
   }
+
+  /* ========================================
+     AUTOMATIC CONTRAST ENFORCEMENT
+     Ensures readable text on colored backgrounds
+     ======================================== */
+  
+  /* Primary backgrounds (blue) always get white text */
+  .bg-primary,
+  [class*="bg-primary"],
+  .bg-secondary,
+  [class*="bg-secondary"],
+  .bg-spelman-blue-dark,
+  .bg-spelman-blue-light,
+  .bg-brand-600,
+  .bg-brand-700,
+  .bg-brand-800,
+  .bg-brand-900 {
+    color: hsl(0 0% 100%) !important;
+  }
+  
+  /* Ensure nested elements also get white text on primary backgrounds */
+  .bg-primary *,
+  .bg-secondary *,
+  .bg-spelman-blue-dark *,
+  .bg-spelman-blue-light *,
+  .bg-brand-600 *,
+  .bg-brand-700 *,
+  .bg-brand-800 *,
+  .bg-brand-900 * {
+    --tw-text-opacity: 1;
+  }
+  
+  .bg-primary h1, .bg-primary h2, .bg-primary h3, .bg-primary h4, .bg-primary h5, .bg-primary h6,
+  .bg-primary p, .bg-primary span, .bg-primary label, .bg-primary a,
+  .bg-secondary h1, .bg-secondary h2, .bg-secondary h3, .bg-secondary h4, .bg-secondary h5, .bg-secondary h6,
+  .bg-secondary p, .bg-secondary span, .bg-secondary label, .bg-secondary a {
+    color: hsl(0 0% 100%) !important;
+  }
+  
+  /* Destructive backgrounds get white text */
+  .bg-destructive,
+  [class*="bg-destructive"] {
+    color: hsl(0 0% 100%) !important;
+  }
+  
+  .bg-destructive h1, .bg-destructive h2, .bg-destructive h3, .bg-destructive h4, .bg-destructive h5, .bg-destructive h6,
+  .bg-destructive p, .bg-destructive span, .bg-destructive label, .bg-destructive a {
+    color: hsl(0 0% 100%) !important;
+  }
+  
+  /* Muted backgrounds get dark text */
+  .bg-muted h1, .bg-muted h2, .bg-muted h3, .bg-muted h4, .bg-muted h5, .bg-muted h6,
+  .bg-muted p, .bg-muted span, .bg-muted label {
+    color: hsl(var(--foreground));
+  }
+  
+  /* Card backgrounds get proper foreground */
+  .bg-card h1, .bg-card h2, .bg-card h3, .bg-card h4, .bg-card h5, .bg-card h6,
+  .bg-card p, .bg-card span, .bg-card label {
+    color: hsl(var(--card-foreground));
+  }
 }
 
 /* Glass Theme Styles - DISABLED for cleaner look */
