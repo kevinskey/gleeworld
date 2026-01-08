@@ -206,29 +206,29 @@ export const TourMilestones = () => {
   }
 
   return (
-    <Card className="mb-4">
-      <CardHeader className="py-3 px-4">
+    <Card className="mb-4 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
+      <CardHeader className="py-4 px-5">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-primary" />
+          <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
             Tour Milestones
-            <span className="text-xs font-normal text-secondary-foreground">
+            <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
               ({completedCount}/{milestones.length})
             </span>
           </CardTitle>
-          <Button variant="ghost" size="sm" className="h-7" onClick={() => setIsExpanded(!isExpanded)}>
+          <Button variant="outline" size="sm" className="h-8 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600" onClick={() => setIsExpanded(!isExpanded)}>
             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
         </div>
         
         {/* Progress Bar */}
-        <div className="mt-2">
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-primary transition-all duration-300" style={{
+        <div className="mt-3">
+          <div className="h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-500 transition-all duration-300" style={{
               width: `${progress}%`
             }} />
           </div>
-          <p className="text-[10px] mt-1 text-secondary-foreground">
+          <p className="text-xs mt-1.5 text-slate-600 dark:text-slate-400">
             {Math.round(progress)}% complete
           </p>
         </div>
