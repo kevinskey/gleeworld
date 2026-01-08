@@ -130,7 +130,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
               {courses.map((course) => (
                 <DropdownMenuItem 
                   key={course.id}
-                  onClick={() => navigate(`/glee-academy/course/${course.id}`)}
+                  onClick={() => navigate(`/academy/${course.course_code?.toLowerCase().replace(' ', '-')}`)}
                   className="cursor-pointer"
                 >
                   <span className="text-xs text-muted-foreground mr-2">{course.course_code}</span>

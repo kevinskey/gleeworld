@@ -270,7 +270,7 @@ export const UniversalHeader = ({
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Glee Academy Courses</DropdownMenuLabel>
-                    {courses.map(course => <DropdownMenuItem key={course.id} onClick={() => navigate(`/glee-academy/course/${course.id}`)} className="cursor-pointer">
+                    {courses.map(course => <DropdownMenuItem key={course.id} onClick={() => navigate(`/academy/${course.course_code?.toLowerCase().replace(' ', '-')}`)} className="cursor-pointer">
                         <span className="text-xs text-muted-foreground mr-2">{course.course_code}</span>
                         {course.title}
                       </DropdownMenuItem>)}
