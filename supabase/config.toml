@@ -330,3 +330,6 @@ verify_jwt = true
 
 [functions.suggest-amazon-products]
 verify_jwt = false
+
+[functions.public-courses-api]
+verify_jwt = false
