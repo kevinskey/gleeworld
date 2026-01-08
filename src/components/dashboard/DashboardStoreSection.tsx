@@ -141,9 +141,8 @@ export const DashboardStoreSection = () => {
                     </p>}
                   
                   {/* Enter Arrow */}
-                  <div className="mt-4 border-t border-gray-100 text-primary-foreground bg-black py-[10px] pt-[10px] pl-0 flex items-center justify-between px-[2px] pb-px">
-                    <span className="font-medium uppercase tracking-wide text-primary-foreground text-center pl-[50px] text-lg">Enter Course</span>
-                    <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-1 transition-all" />
+                  <div className="mt-4 border-t border-gray-100 text-primary-foreground bg-black py-2.5 flex items-center justify-center px-2">
+                    <span className="font-medium uppercase tracking-wide text-primary-foreground text-center text-lg">Enter Course</span>
                   </div>
                 </div>
               </div>;
