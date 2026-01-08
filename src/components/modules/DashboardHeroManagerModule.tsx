@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AdvertisingHeroManager } from "@/components/admin/AdvertisingHeroManager";
+import { AmazonProductSuggester } from "@/components/admin/AmazonProductSuggester";
 interface HeroSlide {
   id: string;
   title: string | null;
@@ -1066,5 +1067,8 @@ export const DashboardHeroManagerModule = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Amazon Product Suggester */}
+      <AmazonProductSuggester />
     </div>;
 };
