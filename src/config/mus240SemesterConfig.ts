@@ -1,5 +1,6 @@
 // MUS240 Semester Configuration
-// Available semesters for the course
+// Now fetched from gw_semesters database table
+// This file provides legacy support and type definitions
 
 export interface Semester {
   id: string;
@@ -9,32 +10,26 @@ export interface Semester {
   isActive: boolean;
 }
 
-export const MUS240_SEMESTERS: Semester[] = [
-  {
-    id: 'Fall 2025',
-    label: 'Fall 2025',
-    startDate: '2025-08-15',
-    endDate: '2025-12-15',
-    isActive: true, // Current active semester
-  },
-  {
-    id: 'Spring 2026',
-    label: 'Spring 2026',
-    startDate: '2026-01-14',
-    endDate: '2026-05-15',
-    isActive: false, // Upcoming - fresh start
-  },
-];
+// Legacy support - these are now managed in the database via gw_semesters table
+// Use useSemesters hook or Mus240SemesterContext for dynamic semester data
 
-// Get the current active semester
+// Default semester for fallback (should match an active semester in DB)
+export const DEFAULT_SEMESTER = 'Spring 2026';
+
+// Legacy function - kept for backwards compatibility
+// Components should use useMus240Semester() hook instead
 export const getCurrentSemester = (): Semester => {
-  return MUS240_SEMESTERS.find(s => s.isActive) || MUS240_SEMESTERS[0];
+  return {
+    id: DEFAULT_SEMESTER,
+    label: DEFAULT_SEMESTER,
+    startDate: '2026-01-14',
+    endDate: '2026-05-08',
+    isActive: true
+  };
 };
 
-// Get all available semesters for selection
+// Legacy function - kept for backwards compatibility
+// Components should use useMus240Semester() hook instead
 export const getAvailableSemesters = (): Semester[] => {
-  return MUS240_SEMESTERS;
+  return [getCurrentSemester()];
 };
-
-// Default semester ID for queries
-export const DEFAULT_SEMESTER = 'Fall 2025';
