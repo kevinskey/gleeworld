@@ -260,13 +260,13 @@ export const TourManagerDashboard = ({
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="px-3 py-3 border-b border-blue-600 dark:border-blue-800 flex items-center justify-between bg-slate-700">
-            <div className="flex items-center gap-2 text-primary-foreground">
+            <div className="flex items-center gap-2">
               <div className="flex gap-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                 <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
               </div>
-              <span className="text-sm font-medium text-white whitespace-nowrap">Tour Manager</span>
+              <span className="text-sm font-medium whitespace-nowrap text-primary-foreground">Tour Manager</span>
             </div>
             <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 text-white hover:bg-blue-600" onClick={() => setSidebarOpen(false)}>
               <X className="h-4 w-4" />
@@ -274,7 +274,7 @@ export const TourManagerDashboard = ({
           </div>
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 py-2 text-primary-foreground">
+          <ScrollArea className="flex-1 py-2">
             <nav className="px-2 space-y-0.5 bg-black">
               {navItems.map(item => <button key={item.value} onClick={() => {
               setActiveSection(item.value);
