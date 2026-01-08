@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Calendar as CalendarIcon, Clock, User, MessageSquare, Mail, Phone, Video, Loader2, MapPin, History, CheckCircle2, XCircle, AlertCircle, Send, BookOpen, GraduationCap, Music, Check, ArrowRight } from 'lucide-react';
+import { Calendar as CalendarIcon, CalendarDays, Clock, User, MessageSquare, Mail, Phone, Video, Loader2, MapPin, History, CheckCircle2, XCircle, AlertCircle, Send, BookOpen, GraduationCap, Music, Check, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useServices } from '@/hooks/useServices';
@@ -283,7 +283,7 @@ export default function BookAppointmentPage() {
             <Tabs defaultValue="book">
               <TabsList className="grid w-full grid-cols-3 h-20 bg-gradient-to-b from-[#004080] to-[#003666] p-0 pb-0 rounded-t-xl rounded-b-none relative z-10 shadow-lg">
                 <TabsTrigger value="book" className="gap-3 text-2xl text-white/90 rounded-none rounded-tl-xl data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] data-[state=active]:font-semibold h-full hover:bg-white/10 transition-all duration-200 border-r border-white/10">
-                  <Calendar className="h-7 w-7" /> Book
+                  <CalendarDays className="h-7 w-7" /> Book
                 </TabsTrigger>
                 <TabsTrigger value="history" className="gap-3 text-2xl text-white/90 rounded-none data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] data-[state=active]:font-semibold h-full hover:bg-white/10 transition-all duration-200 border-r border-white/10">
                   <History className="h-7 w-7" /> History
@@ -440,7 +440,7 @@ export default function BookAppointmentPage() {
                     <Button onClick={handleBookAppointment} disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic} className="w-full h-16 text-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all" style={{
                     backgroundColor: '#003666'
                   }}>
-                      {loading ? <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Booking...</> : <><Calendar className="h-5 w-5 mr-2" /> Book Appointment</>}
+                      {loading ? <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Booking...</> : <><CalendarDays className="h-5 w-5 mr-2" /> Book Appointment</>}
                     </Button>
                   </CardContent>
                 </Card>
