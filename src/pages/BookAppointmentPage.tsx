@@ -280,14 +280,14 @@ export default function BookAppointmentPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="book" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 h-14">
-                <TabsTrigger value="book" className="gap-2 text-lg">
+              <TabsList className="grid w-full grid-cols-3 h-14 bg-[#003666] p-1">
+                <TabsTrigger value="book" className="gap-2 text-lg text-white data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-md">
                   <Calendar className="h-5 w-5" /> Book
                 </TabsTrigger>
-                <TabsTrigger value="history" className="gap-2 text-lg">
+                <TabsTrigger value="history" className="gap-2 text-lg text-white data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-md">
                   <History className="h-5 w-5" /> History
                 </TabsTrigger>
-                <TabsTrigger value="contact" className="gap-2 text-lg">
+                <TabsTrigger value="contact" className="gap-2 text-lg text-white data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-md">
                   <Mail className="h-5 w-5" /> Contact
                 </TabsTrigger>
               </TabsList>
@@ -411,7 +411,8 @@ export default function BookAppointmentPage() {
                     <Button 
                       onClick={handleBookAppointment}
                       disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic}
-                      className="w-full h-11"
+                      className="w-full h-12 text-lg font-semibold text-white shadow-lg hover:shadow-xl transition-all"
+                      style={{ backgroundColor: '#003666' }}
                     >
                       {loading ? (
                         <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Booking...</>
@@ -570,7 +571,8 @@ export default function BookAppointmentPage() {
                     <Button 
                       onClick={handleSendEmail}
                       disabled={sendingEmail || !emailSubject || !emailBody}
-                      className="w-full h-10"
+                      className="w-full h-12 text-lg font-semibold text-white shadow-lg hover:shadow-xl transition-all"
+                      style={{ backgroundColor: '#003666' }}
                     >
                       {sendingEmail ? (
                         <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
