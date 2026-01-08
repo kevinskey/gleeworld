@@ -336,3 +336,6 @@ verify_jwt = false
 
 [functions.receive-grade-webhook]
 verify_jwt = false
+
+[functions.public-students-api]
+verify_jwt = false
