@@ -11,9 +11,9 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  ArrowLeft, Calendar, Clock, User, MessageSquare, Mail, Phone, 
+  Calendar, Clock, User, MessageSquare, Mail, Phone, 
   Video, Loader2, MapPin, History, CheckCircle2, XCircle, 
-  AlertCircle, Send, BookOpen
+  AlertCircle, Send, BookOpen, GraduationCap, Music
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -23,6 +23,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, addDays } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { PageContainer } from '@/components/layout/PageContainer';
 
 // Appointment types students can book
 const appointmentTypes = [
@@ -30,22 +32,25 @@ const appointmentTypes = [
     id: 'office-hours', 
     name: 'Office Hours', 
     duration: 15, 
-    description: 'Quick check-in or question session with Dr. Johnson',
-    icon: '📚'
+    description: 'Quick check-in or question session',
+    icon: GraduationCap,
+    color: 'text-blue-600 bg-blue-500/10'
   },
   { 
     id: 'lesson', 
     name: 'Private Lesson', 
     duration: 30, 
     description: 'One-on-one vocal or music instruction',
-    icon: '🎵'
+    icon: Music,
+    color: 'text-purple-600 bg-purple-500/10'
   },
   { 
     id: 'general-meeting', 
     name: 'General Meeting', 
     duration: 15, 
-    description: 'Discuss academic, personal, or organizational matters',
-    icon: '💬'
+    description: 'Discuss academic or organizational matters',
+    icon: MessageSquare,
+    color: 'text-amber-600 bg-amber-500/10'
   },
 ];
 
@@ -221,418 +226,360 @@ export default function BookAppointmentPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b">
-        <div className="container mx-auto px-4 py-6">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back
-          </Button>
-          
-          <div className="flex flex-col lg:flex-row gap-6 items-start">
-            {/* Office Photo */}
-            <div className="w-full lg:w-1/3">
-              <div className="relative rounded-xl overflow-hidden shadow-lg aspect-video lg:aspect-square bg-muted">
-                <img 
-                  src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/media/office/dr-johnson-office.jpg"
-                  alt="Dr. Johnson's Office"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=60';
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <h2 className="text-xl font-bold">Dr. Kevin Johnson's Office</h2>
-                  <p className="text-sm opacity-90 flex items-center gap-1">
-                    <MapPin className="h-3 w-3" /> Fine Arts Building, Room 204
-                  </p>
-                </div>
-              </div>
-            </div>
+  const completedCount = appointmentHistory.filter(a => a.status === 'completed').length;
+  const upcomingCount = appointmentHistory.filter(a => a.status === 'confirmed').length;
+  const pendingCount = appointmentHistory.filter(a => a.status === 'pending').length;
 
-            {/* Welcome Info */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Schedule Time with Dr. Johnson</h1>
-                <p className="text-muted-foreground mt-2">
-                  Book office hours, private lessons, or a general meeting. View your appointment history 
-                  and track your progress throughout the semester.
+  return (
+    <UniversalLayout>
+      <PageContainer maxWidth="7xl" className="py-6 space-y-6">
+        {/* Hero Section */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Office Card */}
+          <Card className="lg:col-span-1 overflow-hidden">
+            <div className="relative aspect-[4/3] bg-muted">
+              <img 
+                src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/media/office/dr-johnson-office.jpg"
+                alt="Dr. Johnson's Office"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=60';
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <h2 className="text-lg font-bold">Dr. Kevin Johnson</h2>
+                <p className="text-sm opacity-90 flex items-center gap-1.5 mt-1">
+                  <MapPin className="h-3.5 w-3.5" /> Fine Arts Building, Room 204
                 </p>
               </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-card/50">
-                  <CardContent className="pt-4 text-center">
-                    <div className="text-2xl font-bold text-primary">{appointmentHistory.filter(a => a.status === 'completed').length}</div>
-                    <div className="text-xs text-muted-foreground">Completed Sessions</div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-card/50">
-                  <CardContent className="pt-4 text-center">
-                    <div className="text-2xl font-bold text-primary">{appointmentHistory.filter(a => a.status === 'confirmed').length}</div>
-                    <div className="text-xs text-muted-foreground">Upcoming</div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-card/50">
-                  <CardContent className="pt-4 text-center">
-                    <div className="text-2xl font-bold text-primary">{appointmentHistory.filter(a => a.status === 'pending').length}</div>
-                    <div className="text-xs text-muted-foreground">Pending</div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-card/50">
-                  <CardContent className="pt-4 text-center">
-                    <div className="text-2xl font-bold text-primary">{appointmentHistory.length}</div>
-                    <div className="text-xs text-muted-foreground">Total Meetings</div>
-                  </CardContent>
-                </Card>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
+            <CardContent className="p-4">
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-primary">{completedCount}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Completed</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-green-600">{upcomingCount}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Upcoming</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-amber-600">{pendingCount}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Pending</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="book" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
-            <TabsTrigger value="book" className="gap-2">
-              <Calendar className="h-4 w-4" /> Book
-            </TabsTrigger>
-            <TabsTrigger value="history" className="gap-2">
-              <History className="h-4 w-4" /> History
-            </TabsTrigger>
-            <TabsTrigger value="contact" className="gap-2">
-              <Mail className="h-4 w-4" /> Contact
-            </TabsTrigger>
-          </TabsList>
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            <Tabs defaultValue="book" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-3 h-11">
+                <TabsTrigger value="book" className="gap-2 text-sm">
+                  <Calendar className="h-4 w-4" /> Book
+                </TabsTrigger>
+                <TabsTrigger value="history" className="gap-2 text-sm">
+                  <History className="h-4 w-4" /> History
+                </TabsTrigger>
+                <TabsTrigger value="contact" className="gap-2 text-sm">
+                  <Mail className="h-4 w-4" /> Contact
+                </TabsTrigger>
+              </TabsList>
 
-          {/* Book Appointment Tab */}
-          <TabsContent value="book" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Appointment Type Selection */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Select Appointment Type</CardTitle>
-                  <CardDescription>Choose the type of meeting you need</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {appointmentTypes.map(type => (
-                    <div
-                      key={type.id}
-                      onClick={() => {
-                        setSelectedType(type.id);
-                        setSelectedTime('');
-                      }}
-                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        selectedType === type.id 
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl">{type.icon}</span>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-semibold">{type.name}</h4>
-                            <Badge variant="outline">{type.duration} min</Badge>
+              {/* Book Appointment Tab */}
+              <TabsContent value="book" className="mt-4 space-y-4">
+                {/* Appointment Type Cards */}
+                <div className="grid sm:grid-cols-3 gap-3">
+                  {appointmentTypes.map(type => {
+                    const Icon = type.icon;
+                    const isSelected = selectedType === type.id;
+                    return (
+                      <Card
+                        key={type.id}
+                        onClick={() => {
+                          setSelectedType(type.id);
+                          setSelectedTime('');
+                        }}
+                        className={`cursor-pointer transition-all hover:shadow-md ${
+                          isSelected 
+                            ? 'ring-2 ring-primary border-primary bg-primary/5' 
+                            : 'hover:border-primary/50'
+                        }`}
+                      >
+                        <CardContent className="p-4">
+                          <div className={`h-10 w-10 rounded-lg flex items-center justify-center mb-3 ${type.color}`}>
+                            <Icon className="h-5 w-5" />
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">{type.description}</p>
-                        </div>
+                          <h4 className="font-semibold text-sm">{type.name}</h4>
+                          <p className="text-xs text-muted-foreground mt-1">{type.description}</p>
+                          <Badge variant="outline" className="mt-2 text-[10px]">{type.duration} min</Badge>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Booking Form */}
+                <Card>
+                  <CardContent className="p-4 space-y-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm">Date *</Label>
+                        <Select value={selectedDateStr} onValueChange={(val) => {
+                          setSelectedDateStr(val);
+                          setSelectedTime('');
+                        }} disabled={!selectedType}>
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder={selectedType ? "Select date" : "Select type first"} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
+                            {availableDates.map(date => (
+                              <SelectItem key={date.value} value={date.value}>
+                                {date.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm">Time *</Label>
+                        <Select 
+                          value={selectedTime} 
+                          onValueChange={setSelectedTime}
+                          disabled={!selectedType || !selectedDateStr}
+                        >
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder={
+                              !selectedType || !selectedDateStr 
+                                ? "Select date first" 
+                                : slotsLoading 
+                                  ? "Loading..." 
+                                  : "Select time"
+                            } />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
+                            {slotsLoading ? (
+                              <div className="flex items-center justify-center py-4">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              </div>
+                            ) : timeSlots && timeSlots.length > 0 ? (
+                              timeSlots.map((slot: any) => (
+                                <SelectItem key={slot.start_time} value={slot.start_time}>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-3 w-3" />
+                                    {slot.start_time} - {slot.end_time}
+                                  </div>
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="text-center py-4 text-sm text-muted-foreground">
+                                No available times
+                              </div>
+                            )}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
 
-              {/* Date & Time Selection */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Select Date & Time</CardTitle>
-                  <CardDescription>Choose an available slot</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Date *</Label>
-                    <Select value={selectedDateStr} onValueChange={(val) => {
-                      setSelectedDateStr(val);
-                      setSelectedTime('');
-                    }} disabled={!selectedType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={selectedType ? "Select a date" : "Select appointment type first"} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
-                        {availableDates.map(date => (
-                          <SelectItem key={date.value} value={date.value}>
-                            {date.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Time *</Label>
-                    <Select 
-                      value={selectedTime} 
-                      onValueChange={setSelectedTime}
-                      disabled={!selectedType || !selectedDateStr}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={
-                          !selectedType || !selectedDateStr 
-                            ? "Select type and date first" 
-                            : slotsLoading 
-                              ? "Loading..." 
-                              : "Select a time"
-                        } />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
-                        {slotsLoading ? (
-                          <div className="flex items-center justify-center py-4">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          </div>
-                        ) : timeSlots && timeSlots.length > 0 ? (
-                          timeSlots.map((slot: any) => (
-                            <SelectItem key={slot.start_time} value={slot.start_time}>
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-3 w-3" />
-                                {slot.start_time} - {slot.end_time}
-                              </div>
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <div className="text-center py-4 text-sm text-muted-foreground">
-                            No available times
-                          </div>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Label>Topic/Purpose *</Label>
-                    <Input
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      placeholder="What would you like to discuss?"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Additional Notes</Label>
-                    <Textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Any additional context or preparation needed..."
-                      rows={3}
-                    />
-                  </div>
-
-                  <Button 
-                    onClick={handleBookAppointment}
-                    disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {loading ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Booking...</>
-                    ) : (
-                      <><Calendar className="h-4 w-4 mr-2" /> Book Appointment</>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* History Tab */}
-          <TabsContent value="history" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" /> Your Meeting History
-                </CardTitle>
-                <CardDescription>
-                  Track your sessions, notes, and progress with Dr. Johnson
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {historyLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : appointmentHistory.length === 0 ? (
-                  <div className="text-center py-12">
-                    <History className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                    <p className="text-muted-foreground">No appointment history yet.</p>
-                    <p className="text-sm text-muted-foreground">Book your first session to get started!</p>
-                  </div>
-                ) : (
-                  <ScrollArea className="h-[500px]">
-                    <div className="space-y-4 pr-4">
-                      {appointmentHistory.map((apt: any) => (
-                        <div 
-                          key={apt.id} 
-                          className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                {getStatusBadge(apt.status)}
-                                <span className="text-sm text-muted-foreground">
-                                  {format(new Date(apt.appointment_date), 'EEEE, MMMM d, yyyy')}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {apt.start_time} - {apt.end_time}
-                                </span>
-                                <span className="text-muted-foreground">
-                                  {apt.duration_minutes} min
-                                </span>
-                              </div>
-                              {apt.special_requests && (
-                                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                                  {apt.special_requests}
-                                </p>
-                              )}
-                              {apt.notes && (
-                                <div className="mt-2 p-2 rounded bg-muted/50 text-sm">
-                                  <strong className="text-xs text-muted-foreground">Session Notes:</strong>
-                                  <p className="mt-1">{apt.notes}</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="space-y-2">
+                      <Label className="text-sm">Topic/Purpose *</Label>
+                      <Input
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                        placeholder="What would you like to discuss?"
+                        className="h-10"
+                      />
                     </div>
-                  </ScrollArea>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          {/* Contact Tab */}
-          <TabsContent value="contact" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Quick Contact */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Quick Contact</CardTitle>
-                  <CardDescription>Reach Dr. Johnson directly</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm">Additional Notes</Label>
+                      <Textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Any additional context..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <Button 
+                      onClick={handleBookAppointment}
+                      disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic}
+                      className="w-full h-11"
+                    >
+                      {loading ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Booking...</>
+                      ) : (
+                        <><Calendar className="h-4 w-4 mr-2" /> Book Appointment</>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* History Tab */}
+              <TabsContent value="history" className="mt-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" /> Meeting History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {historyLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      </div>
+                    ) : appointmentHistory.length === 0 ? (
+                      <div className="text-center py-12">
+                        <History className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+                        <p className="text-muted-foreground text-sm">No appointment history yet.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Book your first session to get started!</p>
+                      </div>
+                    ) : (
+                      <ScrollArea className="h-[400px]">
+                        <div className="space-y-3 pr-4">
+                          {appointmentHistory.map((apt: any) => (
+                            <div 
+                              key={apt.id} 
+                              className="p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {getStatusBadge(apt.status)}
+                                    <span className="text-xs text-muted-foreground">
+                                      {format(new Date(apt.appointment_date), 'MMM d, yyyy')}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-3 text-xs mt-2 text-muted-foreground">
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      {apt.start_time}
+                                    </span>
+                                    <span>{apt.duration_minutes} min</span>
+                                  </div>
+                                  {apt.special_requests && (
+                                    <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                                      {apt.special_requests}
+                                    </p>
+                                  )}
+                                  {apt.notes && (
+                                    <div className="mt-2 p-2 rounded bg-muted/50 text-xs">
+                                      <strong className="text-muted-foreground">Notes:</strong>
+                                      <p className="mt-0.5">{apt.notes}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Contact Tab */}
+              <TabsContent value="contact" className="mt-4 space-y-4">
+                {/* Quick Contact Links */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <a 
                     href="mailto:docjohnson@spelman.edu"
-                    className="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors"
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-accent transition-colors text-center"
                   >
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <Mail className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
-                      <div className="font-medium">Email</div>
-                      <div className="text-sm text-muted-foreground">docjohnson@spelman.edu</div>
-                    </div>
+                    <span className="text-xs font-medium">Email</span>
                   </a>
 
                   <a 
                     href="tel:+14706221392"
-                    className="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors"
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-accent transition-colors text-center"
                   >
                     <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
                       <Phone className="h-5 w-5 text-green-600" />
                     </div>
-                    <div>
-                      <div className="font-medium">Phone</div>
-                      <div className="text-sm text-muted-foreground">(470) 622-1392</div>
-                    </div>
+                    <span className="text-xs font-medium">Call</span>
                   </a>
 
                   <a 
                     href="https://zoom.us/j/drjohnson"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors"
+                    className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-accent transition-colors text-center"
                   >
                     <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                       <Video className="h-5 w-5 text-blue-600" />
                     </div>
-                    <div>
-                      <div className="font-medium">Virtual Office</div>
-                      <div className="text-sm text-muted-foreground">Join Zoom Meeting</div>
-                    </div>
+                    <span className="text-xs font-medium">Zoom</span>
                   </a>
 
-                  <div className="flex items-center gap-3 p-4 rounded-lg border bg-muted/50">
-                    <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                      <MapPin className="h-5 w-5 text-orange-600" />
+                  <div className="flex flex-col items-center gap-2 p-4 rounded-lg border bg-muted/30 text-center">
+                    <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                      <MapPin className="h-5 w-5 text-amber-600" />
                     </div>
-                    <div>
-                      <div className="font-medium">In-Person</div>
-                      <div className="text-sm text-muted-foreground">Fine Arts Building, Room 204</div>
+                    <span className="text-xs font-medium">Room 204</span>
+                  </div>
+                </div>
+
+                {/* Send Message */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Send a Message</CardTitle>
+                    <CardDescription className="text-xs">
+                      Send Dr. Johnson a direct message
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-2">
+                      <Label className="text-sm">Subject</Label>
+                      <Input
+                        value={emailSubject}
+                        onChange={(e) => setEmailSubject(e.target.value)}
+                        placeholder="What is this about?"
+                        className="h-10"
+                      />
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
 
-              {/* Send Message */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Send a Message</CardTitle>
-                  <CardDescription>
-                    Send Dr. Johnson a message directly
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Subject</Label>
-                    <Input
-                      value={emailSubject}
-                      onChange={(e) => setEmailSubject(e.target.value)}
-                      placeholder="What is this about?"
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">Message</Label>
+                      <Textarea
+                        value={emailBody}
+                        onChange={(e) => setEmailBody(e.target.value)}
+                        placeholder="Type your message here..."
+                        rows={4}
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label>Message</Label>
-                    <Textarea
-                      value={emailBody}
-                      onChange={(e) => setEmailBody(e.target.value)}
-                      placeholder="Type your message here..."
-                      rows={6}
-                    />
-                  </div>
+                    <div className="bg-muted/50 rounded-lg p-2.5 text-xs flex items-center gap-2">
+                      <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        From: <strong className="text-foreground">{profile?.full_name || user?.email}</strong>
+                      </span>
+                    </div>
 
-                  <div className="bg-muted rounded-lg p-3 text-sm flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      Sending as: <strong className="text-foreground">{profile?.full_name || user?.email}</strong>
-                    </span>
-                  </div>
-
-                  <Button 
-                    onClick={handleSendEmail}
-                    disabled={sendingEmail || !emailSubject || !emailBody}
-                    className="w-full"
-                  >
-                    {sendingEmail ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
-                    ) : (
-                      <><Send className="h-4 w-4 mr-2" /> Send Message</>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+                    <Button 
+                      onClick={handleSendEmail}
+                      disabled={sendingEmail || !emailSubject || !emailBody}
+                      className="w-full h-10"
+                    >
+                      {sendingEmail ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
+                      ) : (
+                        <><Send className="h-4 w-4 mr-2" /> Send Message</>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </PageContainer>
+    </UniversalLayout>
   );
 }
