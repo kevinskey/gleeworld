@@ -18,15 +18,40 @@ interface OfficeHoursBookingProps {
   selectedDate?: Date;
 }
 
+// Define the specific appointment types students can book
+const appointmentTypes = [
+  { 
+    id: 'office-hours', 
+    name: 'Office Hours', 
+    duration: 15, 
+    description: 'Quick check-in or question session with Dr. Johnson',
+    icon: '📚'
+  },
+  { 
+    id: 'lesson', 
+    name: 'Private Lesson', 
+    duration: 30, 
+    description: 'One-on-one vocal or music instruction',
+    icon: '🎵'
+  },
+  { 
+    id: 'general-meeting', 
+    name: 'General Meeting', 
+    duration: 15, 
+    description: 'Discuss academic, personal, or organizational matters',
+    icon: '💬'
+  },
+];
+
 export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { profile } = useProfile();
-  const { data: services, isLoading: servicesLoading } = useServices();
+  const { data: services } = useServices();
 
   // Form state
-  const [selectedService, setSelectedService] = useState('');
+  const [selectedType, setSelectedType] = useState('');
   const [selectedDateStr, setSelectedDateStr] = useState(
     selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
   );
@@ -34,9 +59,27 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
   const [topic, setTopic] = useState('');
   const [notes, setNotes] = useState('');
 
+  const selectedTypeData = appointmentTypes.find(t => t.id === selectedType);
+
+  // Map selected appointment type to a real service
+  const getServiceIdForType = (typeId: string): string | null => {
+    if (!typeId) return null;
+    
+    // Try to find a matching service from the database
+    const matchingService = services?.find(s => 
+      (typeId === 'office-hours' && s.name?.toLowerCase().includes('office')) ||
+      (typeId === 'lesson' && (s.category?.toLowerCase().includes('coaching') || s.name?.toLowerCase().includes('lesson') || s.name?.toLowerCase().includes('teaching'))) ||
+      (typeId === 'general-meeting' && s.category?.toLowerCase().includes('general'))
+    );
+    
+    return matchingService?.id || services?.[0]?.id || null;
+  };
+
+  const resolvedServiceId = getServiceIdForType(selectedType) || '';
+
   // Fetch available time slots when service and date are selected
   const { data: timeSlots, isLoading: slotsLoading } = useAvailableTimeSlots(
-    selectedService,
+    resolvedServiceId,
     selectedDateStr
   );
 
@@ -52,27 +95,29 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
     };
   }).filter(Boolean) as { value: string; label: string }[];
 
-  // Get selected service details
-  const selectedServiceData = services?.find(s => s.id === selectedService);
-
   const handleSubmit = async () => {
-    if (!selectedService || !selectedDateStr || !selectedTime || !topic) {
+    if (!selectedType || !selectedDateStr || !selectedTime || !topic) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    const serviceId = getServiceIdForType(selectedType);
+    if (!serviceId) {
+      toast.error('Service configuration not available. Please contact support.');
       return;
     }
 
     setLoading(true);
     try {
-      // Use the book_appointment RPC function from the appointment module
       const { data, error } = await supabase.rpc('book_appointment', {
-        p_service_id: selectedService,
+        p_service_id: serviceId,
         p_appointment_date: selectedDateStr,
         p_start_time: selectedTime,
         p_customer_name: profile?.full_name || user?.email || 'Student',
         p_customer_email: user?.email || '',
         p_customer_phone: null,
         p_attendee_count: 1,
-        p_special_requests: `Topic: ${topic}${notes ? `\n\nNotes: ${notes}` : ''}`
+        p_special_requests: `Type: ${selectedTypeData?.name}\nTopic: ${topic}${notes ? `\n\nNotes: ${notes}` : ''}`
       });
 
       if (error) throw error;
@@ -84,7 +129,7 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
         setOpen(false);
         
         // Reset form
-        setSelectedService('');
+        setSelectedType('');
         setSelectedDateStr('');
         setSelectedTime('');
         setTopic('');
@@ -99,15 +144,6 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
       setLoading(false);
     }
   };
-
-  // Filter services that are likely "Office Hours" type (you can adjust this filter)
-  const officeHourServices = services?.filter(s => 
-    s.category?.toLowerCase().includes('office') || 
-    s.name?.toLowerCase().includes('office') ||
-    s.category?.toLowerCase().includes('advising') ||
-    s.category?.toLowerCase().includes('consultation') ||
-    true // Show all services for now
-  ) || [];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -128,36 +164,39 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
             Schedule Appointment
           </DialogTitle>
           <DialogDescription>
-            Book time for office hours, advising, or consultation.
+            Book time for office hours, lessons, or a general meeting.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Service Selection */}
+          {/* Appointment Type Selection */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Service Type *</Label>
-            <Select value={selectedService} onValueChange={(val) => {
-              setSelectedService(val);
-              setSelectedTime(''); // Reset time when service changes
+            <Label className="text-sm font-medium">Appointment Type *</Label>
+            <Select value={selectedType} onValueChange={(val) => {
+              setSelectedType(val);
+              setSelectedTime(''); // Reset time when type changes
             }}>
-              <SelectTrigger>
-                <SelectValue placeholder={servicesLoading ? "Loading..." : "Select service"} />
+              <SelectTrigger className="h-12">
+                <SelectValue placeholder="Select appointment type" />
               </SelectTrigger>
-              <SelectContent>
-                {officeHourServices.map(service => (
-                  <SelectItem key={service.id} value={service.id}>
-                    <div className="flex items-center gap-2">
-                      <span>{service.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        ({service.duration_minutes} min)
-                      </span>
+              <SelectContent className="w-[var(--radix-select-trigger-width)] bg-popover border border-border shadow-xl z-[100]">
+                {appointmentTypes.map(type => (
+                  <SelectItem key={type.id} value={type.id} className="py-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{type.icon}</span>
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{type.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {type.duration} minutes
+                        </span>
+                      </div>
                     </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {selectedServiceData?.description && (
-              <p className="text-xs text-muted-foreground">{selectedServiceData.description}</p>
+            {selectedTypeData?.description && (
+              <p className="text-xs text-muted-foreground">{selectedTypeData.description}</p>
             )}
           </div>
 
@@ -171,7 +210,7 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
               <SelectTrigger>
                 <SelectValue placeholder="Select a date" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
                 {availableDates.map(date => (
                   <SelectItem key={date.value} value={date.value}>
                     {date.label}
@@ -187,18 +226,18 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
             <Select 
               value={selectedTime} 
               onValueChange={setSelectedTime}
-              disabled={!selectedService || !selectedDateStr}
+              disabled={!selectedType || !selectedDateStr}
             >
               <SelectTrigger>
                 <SelectValue placeholder={
-                  !selectedService || !selectedDateStr 
-                    ? "Select service and date first" 
+                  !selectedType || !selectedDateStr 
+                    ? "Select type and date first" 
                     : slotsLoading 
                       ? "Loading available times..." 
                       : "Select a time"
                 } />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
                 {slotsLoading ? (
                   <div className="flex items-center justify-center py-4">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -249,10 +288,10 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
 
           {/* User Info Display */}
           {user && (
-            <div className="bg-slate-50 rounded-lg p-3 text-sm">
-              <div className="flex items-center gap-2 text-slate-600">
+            <div className="bg-muted rounded-lg p-3 text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <User className="h-4 w-4" />
-                <span>Booking as: <strong>{profile?.full_name || user.email}</strong></span>
+                <span>Booking as: <strong className="text-foreground">{profile?.full_name || user.email}</strong></span>
               </div>
             </div>
           )}
@@ -264,7 +303,7 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={loading || !selectedService || !selectedDateStr || !selectedTime || !topic}
+            disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic}
             className="flex-1"
           >
             {loading ? (
