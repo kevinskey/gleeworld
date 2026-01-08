@@ -132,7 +132,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
                   key={course.id}
                   onClick={() => {
                     if (course.course_code === 'MUS 000') {
-                      window.open('https://readmusic.gleeworld.com', '_blank');
+                      window.open('https://readmusic.gleeworld.org', '_blank');
                     } else {
                       navigate(`/academy/${course.course_code?.toLowerCase().replace(' ', '-')}`);
                     }
