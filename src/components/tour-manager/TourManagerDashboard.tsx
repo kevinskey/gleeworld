@@ -259,7 +259,7 @@ export const TourManagerDashboard = ({
       <aside className={cn("fixed inset-y-0 left-0 z-40 w-56 bg-blue-700 dark:bg-blue-900 border-r border-blue-600 dark:border-blue-800 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="px-3 py-3 border-b border-blue-600 dark:border-blue-800 flex items-center justify-between bg-slate-700">
+          <div className="px-3 py-3 border-b border-blue-600 dark:border-blue-800 flex items-center justify-between bg-slate-700 mt-[100px]">
             <div className="flex items-center gap-2">
               <div className="flex gap-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
@@ -275,7 +275,7 @@ export const TourManagerDashboard = ({
 
           {/* Navigation */}
           <ScrollArea className="flex-1 py-2">
-            <nav className="px-2 space-y-0.5">
+            <nav className="px-2 space-y-0.5 bg-black">
               {navItems.map(item => <button key={item.value} onClick={() => {
               setActiveSection(item.value);
               setSidebarOpen(false);
@@ -303,16 +303,16 @@ export const TourManagerDashboard = ({
       <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
         {/* Top Bar - Compact */}
         <header className="sticky top-0 z-20 bg-background border-b border-border">
-          <div className="flex items-center justify-between px-3 lg:px-4 h-10 bg-primary-foreground">
+          <div className="flex items-center justify-between px-3 lg:px-4 h-10 bg-[sidebar-primary-foreground] bg-brand-900">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 flex-shrink-0" onClick={() => setSidebarOpen(!sidebarOpen)}>
                 <Menu className="w-[32px] h-[32px]" />
               </Button>
-              <h1 className="text-sm font-medium truncate text-primary-foreground">
+              <h1 className="font-medium truncate text-primary-foreground text-2xl">
                 {currentContent.title}
               </h1>
-              <span className="text-xs hidden sm:inline text-primary-foreground bg-blue-950">—</span>
-              <span className="text-xs text-muted-foreground hidden sm:inline truncate">{currentContent.description}</span>
+              <span className="text-xs hidden sm:inline text-primary-foreground bg-primary-foreground">—</span>
+              <span className="text-xs hidden sm:inline truncate text-primary-foreground">{currentContent.description}</span>
             </div>
             <div className="relative w-48 hidden md:block">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
