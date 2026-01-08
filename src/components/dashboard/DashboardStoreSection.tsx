@@ -154,7 +154,8 @@ export const DashboardStoreSection = () => {
       </div>
 
       {/* Shop Section Header - Edge to Edge */}
-      <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground px-4 sm:px-6 lg:px-8 w-full pt-[20px] py-[20px] pb-[20px]">
+      <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground px-4 sm:px-6 lg:px-8 w-full pt-[20px] py-[20px] pb-[20px] flex items-center gap-3">
+        <ShoppingBag className="w-6 h-6" />
         Shop
       </h2>
       
