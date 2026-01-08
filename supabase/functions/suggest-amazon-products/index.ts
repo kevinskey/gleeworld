@@ -140,12 +140,34 @@ Return ONLY valid JSON in this exact format:
       
       const nextOrder = (maxOrder?.[0]?.display_order || 0) + 1;
 
+      // Use a product-relevant placeholder if no image provided
+      const defaultImages: Record<string, string> = {
+        voice: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400',
+        music: 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=400',
+        sheet: 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=400',
+        choir: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400',
+        performance: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400',
+        theory: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400',
+        book: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400',
+        hbcu: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400',
+        accessory: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400',
+        default: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400'
+      };
+      
+      let selectedImage = imageUrl;
+      if (!selectedImage) {
+        const lowerTitle = (title || '').toLowerCase();
+        selectedImage = Object.entries(defaultImages).find(([key]) => 
+          lowerTitle.includes(key)
+        )?.[1] || defaultImages.default;
+      }
+
       const { data, error } = await supabase
         .from('advertising_hero')
         .insert({
           title,
           description,
-          image_url: imageUrl || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
+          image_url: selectedImage,
           link_url: affiliateUrl,
           link_target: '_blank',
           is_active: true,
