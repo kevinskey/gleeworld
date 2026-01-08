@@ -280,15 +280,15 @@ export default function BookAppointmentPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="book" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 h-12">
-                <TabsTrigger value="book" className="gap-2 text-base">
-                  <Calendar className="h-5 w-5" /> Book
+              <TabsList className="grid w-full grid-cols-3 h-14">
+                <TabsTrigger value="book" className="gap-2 text-xl">
+                  <Calendar className="h-6 w-6" /> Book
                 </TabsTrigger>
-                <TabsTrigger value="history" className="gap-2 text-base">
-                  <History className="h-5 w-5" /> History
+                <TabsTrigger value="history" className="gap-2 text-xl">
+                  <History className="h-6 w-6" /> History
                 </TabsTrigger>
-                <TabsTrigger value="contact" className="gap-2 text-base">
-                  <Mail className="h-5 w-5" /> Contact
+                <TabsTrigger value="contact" className="gap-2 text-xl">
+                  <Mail className="h-6 w-6" /> Contact
                 </TabsTrigger>
               </TabsList>
 
