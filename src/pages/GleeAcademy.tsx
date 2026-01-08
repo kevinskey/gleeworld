@@ -46,7 +46,7 @@ const GleeAcademy = () => {
       <div className="min-h-screen bg-background">
         {/* Header Banner - Matching other pages */}
         <div className="w-full py-6" style={{ backgroundColor: '#003666' }}>
-          <h1 className="text-2xl md:text-3xl font-bold text-white text-center tracking-wide">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center tracking-wide">
             GLEE ACADEMY
           </h1>
         </div>
