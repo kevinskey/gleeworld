@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { BarChart3, PieChart as PieChartIcon, RefreshCw, Download, Users, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 interface PollResult {
   id: string;
@@ -29,6 +30,7 @@ interface VoteOption {
 const CHART_COLORS = ['#f59e0b', '#f97316', '#ef4444', '#84cc16', '#06b6d4', '#8b5cf6'];
 
 export const PollResultsViewer = () => {
+  const { currentSemester } = useMus240SemesterSafe();
   const [polls, setPolls] = useState<PollResult[]>([]);
   const [selectedPoll, setSelectedPoll] = useState<string>('');
   const [pollDetails, setPollDetails] = useState<PollResult | null>(null);
@@ -38,8 +40,10 @@ export const PollResultsViewer = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadPolls();
-  }, []);
+    if (currentSemester) {
+      loadPolls();
+    }
+  }, [currentSemester]);
 
   useEffect(() => {
     if (selectedPoll) {
@@ -48,10 +52,16 @@ export const PollResultsViewer = () => {
   }, [selectedPoll]);
 
   const loadPolls = async () => {
+    if (!currentSemester) {
+      setPolls([]);
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('mus240_polls')
         .select('*')
+        .eq('semester', currentSemester)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
