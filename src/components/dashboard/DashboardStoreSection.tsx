@@ -115,7 +115,7 @@ export const DashboardStoreSection = () => {
       {/* Glee Academy - Edge to Edge (FIRST on desktop) */}
       <Button 
         onClick={() => navigate('/glee-academy')} 
-        className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none mt-[20px]"
+        className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none mt-[10px]"
       >
         <GraduationCap className="h-5 w-5" />
         Glee Academy
