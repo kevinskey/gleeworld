@@ -221,7 +221,7 @@ export const DashboardStoreSection = () => {
           const unifiedModule = UNIFIED_MODULES.find(m => m.id === module.id);
           const IconComponent = unifiedModule?.icon;
           return <Card key={module.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 bg-primary/80 border border-primary-foreground/30 hover:bg-primary/70" onClick={() => navigate(`/modules/${module.id}`)}>
-                  <CardHeader className="pb-3 pt-4">
+                  <CardHeader className="pb-3 pt-4 bg-slate-500">
                     <div className="flex flex-col items-center text-center gap-2">
                       {IconComponent && <div className="p-2 rounded-lg bg-primary-foreground/10">
                           <IconComponent className="h-5 w-5 text-primary-foreground" />
