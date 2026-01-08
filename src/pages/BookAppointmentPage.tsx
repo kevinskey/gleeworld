@@ -25,6 +25,7 @@ import { format, addDays } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { PageContainer } from '@/components/layout/PageContainer';
+import drJohnsonOffice from '@/assets/dr-johnson-office.jpg';
 
 // Appointment types students can book
 const appointmentTypes = [
@@ -237,14 +238,11 @@ export default function BookAppointmentPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Office Card */}
           <Card className="lg:col-span-1 overflow-hidden">
-            <div className="relative aspect-[4/3] bg-muted">
+          <div className="relative aspect-[4/3] bg-muted">
               <img 
-                src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/media/office/dr-johnson-office.jpg"
+                src={drJohnsonOffice}
                 alt="Dr. Johnson's Office"
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=60';
-                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
