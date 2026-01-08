@@ -119,7 +119,7 @@ export const DashboardStoreSection = () => {
                 <div className="p-6 h-full flex flex-col">
                   {/* Course Code Badge */}
                   <div className="flex items-center justify-between mb-4">
-                    {course.course_code && <span className="font-mono tracking-widest text-gray-500 uppercase border border-gray-300 px-3 py-2 text-4xl">
+                    {course.course_code && <span style={{ fontFamily: "'Cinzel', serif" }} className="tracking-wide text-gray-500 uppercase border border-gray-300 px-3 py-2 text-4xl">
                         {course.course_code}
                       </span>}
                     
