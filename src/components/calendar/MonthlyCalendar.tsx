@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
@@ -36,11 +34,9 @@ export const MonthlyCalendar = ({
   const [userPermissions, setUserPermissions] = useState<{isAdmin: boolean, isSuperAdmin: boolean} | null>(null);
   const [createEventDate, setCreateEventDate] = useState<Date | null>(null);
 
-  // Use external state if provided, otherwise use internal
   const currentDate = externalCurrentDate ?? internalCurrentDate;
   const selectedDate = externalSelectedDate ?? internalSelectedDate;
 
-  // Fetch user permissions
   useEffect(() => {
     const fetchUserPermissions = async () => {
       if (!user) {
@@ -68,7 +64,6 @@ export const MonthlyCalendar = ({
     fetchUserPermissions();
   }, [user]);
 
-  // Calendar grid calculation
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -120,42 +115,16 @@ export const MonthlyCalendar = ({
     }
   };
 
-  // Show internal navigation only if external control not provided
   const showInternalNav = !externalCurrentDate;
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Internal Navigation - only show if not externally controlled */}
-      {showInternalNav && (
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">
-            {format(currentDate, 'MMMM yyyy')}
-          </h3>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => {
-              if (onMonthChange) onMonthChange(new Date());
-              else setInternalCurrentDate(new Date());
-              if (onDateSelect) onDateSelect(new Date());
-              else setInternalSelectedDate(new Date());
-            }}>
-              Today
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
+    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Day Headers */}
-      <div className="grid grid-cols-7 gap-px bg-border rounded-t-lg overflow-hidden flex-shrink-0 border border-border">
-        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+      <div className="grid grid-cols-7 bg-slate-800 text-white flex-shrink-0">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
           <div
             key={idx}
-            className="p-1.5 sm:p-2 text-center text-[10px] sm:text-xs font-bold text-foreground bg-muted/80"
+            className="py-3 text-center text-sm font-semibold tracking-wide"
           >
             {day}
           </div>
@@ -163,8 +132,8 @@ export const MonthlyCalendar = ({
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-px bg-border border border-t-0 border-border rounded-b-lg overflow-hidden -mt-4 flex-1 auto-rows-fr">
-        {days.map(day => {
+      <div className="grid grid-cols-7 flex-1 auto-rows-fr">
+        {days.map((day, idx) => {
           const dayEvents = getEventsForDate(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
           const isToday = isSameDay(day, new Date());
@@ -176,69 +145,54 @@ export const MonthlyCalendar = ({
               key={day.toString()}
               onClick={() => handleDateClick(day)}
               className={cn(
-                "min-h-0 p-1.5 sm:p-2 cursor-pointer transition-colors flex flex-col",
-                isCurrentMonth ? "bg-card" : "bg-muted/70",
-                isToday && "bg-primary/20 border-l-2 border-l-primary",
-                isSelected && "bg-primary/25 ring-2 ring-inset ring-primary",
-                "hover:bg-accent/50"
+                "min-h-[80px] sm:min-h-[100px] p-2 cursor-pointer transition-all border-b border-r border-slate-200 flex flex-col",
+                isCurrentMonth ? "bg-white" : "bg-slate-50",
+                isToday && "bg-blue-50",
+                isSelected && "bg-primary/10 ring-2 ring-inset ring-primary",
+                "hover:bg-slate-100"
               )}
             >
               {/* Date Number */}
               <div className={cn(
-                "text-[10px] sm:text-xs font-medium",
-                !isCurrentMonth && "text-muted-foreground/50",
+                "text-sm font-medium mb-1",
+                !isCurrentMonth && "text-slate-400",
                 isToday && "text-primary font-bold",
-                isSelected && "text-primary"
+                isSelected && "text-primary font-bold"
               )}>
-                {format(day, 'd')}
+                <span className={cn(
+                  "inline-flex items-center justify-center w-7 h-7 rounded-full",
+                  isToday && "bg-primary text-white"
+                )}>
+                  {format(day, 'd')}
+                </span>
               </div>
 
-              {/* Event Text Labels */}
+              {/* Events */}
               {hasEvents && (
-                <div className="flex flex-col gap-0.5 mt-0.5 w-full overflow-hidden">
-                  {dayEvents.slice(0, 2).map((event) => {
-                    // Use calendar color if available, otherwise fall back to event_type colors
-                    const calendarColor = event.gw_calendars?.color;
+                <div className="flex flex-col gap-1 flex-1 overflow-hidden">
+                  {dayEvents.slice(0, 3).map((event) => {
+                    const calendarColor = event.gw_calendars?.color || '#3b82f6';
                     
-                    const fallbackColorClass = (() => {
-                      switch (event.event_type) {
-                        case 'performance':
-                          return 'bg-primary text-primary-foreground';
-                        case 'rehearsal':
-                          return 'bg-secondary text-secondary-foreground';
-                        case 'meeting':
-                          return 'bg-accent text-accent-foreground';
-                        case 'social':
-                          return 'bg-muted text-muted-foreground';
-                        default:
-                          return 'bg-primary text-primary-foreground';
-                      }
-                    })();
-
                     const canEdit = userPermissions && (
                       userPermissions.isSuperAdmin || 
                       userPermissions.isAdmin || 
                       user?.id === event.created_by
                     );
-                    const canDelete = canEdit;
 
                     return (
                       <EventContextMenu
                         key={event.id}
                         event={event}
                         canEdit={!!canEdit}
-                        canDelete={!!canDelete}
+                        canDelete={!!canEdit}
                         onView={() => setSelectedEvent(event)}
                         onEdit={() => setEditingEvent(event)}
                         onDeleted={onEventUpdated}
                       >
                         <div
                           onClick={(e) => handleEventClick(event, e)}
-                          className={cn(
-                            'text-[8px] sm:text-[10px] px-1 py-0.5 rounded truncate cursor-pointer hover:opacity-80 transition-opacity text-white',
-                            !calendarColor && fallbackColorClass
-                          )}
-                          style={calendarColor ? { backgroundColor: calendarColor } : undefined}
+                          className="text-xs px-2 py-1 rounded font-medium truncate cursor-pointer hover:opacity-80 transition-opacity text-white shadow-sm"
+                          style={{ backgroundColor: calendarColor }}
                           title={event.title}
                         >
                           {event.title}
@@ -246,8 +200,10 @@ export const MonthlyCalendar = ({
                       </EventContextMenu>
                     );
                   })}
-                  {dayEvents.length > 2 && (
-                    <span className="text-[8px] sm:text-[10px] text-muted-foreground">+{dayEvents.length - 2}</span>
+                  {dayEvents.length > 3 && (
+                    <span className="text-xs text-slate-500 font-medium pl-1">
+                      +{dayEvents.length - 3} more
+                    </span>
                   )}
                 </div>
               )}
