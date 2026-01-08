@@ -293,7 +293,7 @@ Return ONLY valid JSON in this exact format:
 
       // Get the max display order
       const { data: maxOrder } = await supabase
-        .from('advertising_hero')
+        .from('amazon_affiliate_products')
         .select('display_order')
         .order('display_order', { ascending: false })
         .limit(1);
@@ -323,16 +323,18 @@ Return ONLY valid JSON in this exact format:
       }
 
       const { data, error } = await supabase
-        .from('advertising_hero')
+        .from('amazon_affiliate_products')
         .insert({
           title,
           description,
           image_url: selectedImage,
-          link_url: affiliateUrl,
-          link_target: '_blank',
-          is_active: true,
-          amazon_affiliate_tag: AMAZON_ASSOCIATE_TAG,
-          display_order: nextOrder
+          product_url: affiliateUrl,
+          price: body.price || null,
+          asin: body.asin || null,
+          category: body.category || category || null,
+          affiliate_tag: AMAZON_ASSOCIATE_TAG,
+          display_order: nextOrder,
+          is_active: true
         })
         .select()
         .single();

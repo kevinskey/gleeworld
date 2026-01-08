@@ -846,6 +846,57 @@ export type Database = {
         }
         Relationships: []
       }
+      amazon_affiliate_products: {
+        Row: {
+          affiliate_tag: string | null
+          asin: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          price: string | null
+          product_url: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_tag?: string | null
+          asin?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          price?: string | null
+          product_url: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_tag?: string | null
+          asin?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          price?: string | null
+          product_url?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_roles: {
         Row: {
           granted_at: string | null
