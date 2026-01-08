@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Calendar, Clock, User, MessageSquare, Mail, Phone, Video, Loader2, MapPin, History, CheckCircle2, XCircle, AlertCircle, Send, BookOpen, GraduationCap, Music } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, MessageSquare, Mail, Phone, Video, Loader2, MapPin, History, CheckCircle2, XCircle, AlertCircle, Send, BookOpen, GraduationCap, Music, Check, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useServices } from '@/hooks/useServices';
@@ -21,6 +21,9 @@ import { format, addDays } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import drJohnsonOffice from '@/assets/dr-johnson-office.jpg';
 
 // Appointment types students can book
@@ -63,11 +66,14 @@ export default function BookAppointmentPage() {
 
   // Form state
   const [selectedType, setSelectedType] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedDateStr, setSelectedDateStr] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [topic, setTopic] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
 
   // Communication state
   const [emailSubject, setEmailSubject] = useState('');
@@ -313,43 +319,99 @@ export default function BookAppointmentPage() {
                       </Select>
                     </div>
 
-                    <div className="grid sm:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <Label className="text-lg">Date *</Label>
-                        <Select value={selectedDateStr} onValueChange={val => {
-                        setSelectedDateStr(val);
-                        setSelectedTime('');
-                      }} disabled={!selectedType}>
-                          <SelectTrigger className="h-14 text-lg">
-                            <SelectValue placeholder={selectedType ? "Select date" : "Select type first"} />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
-                            {availableDates.map(date => <SelectItem key={date.value} value={date.value} className="text-lg py-3">
-                                {date.label}
-                              </SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    {/* Date & Time Row - Zoom-style pill design */}
+                    <div className="space-y-3">
+                      <Label className="text-lg">Date & Time *</Label>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {/* Date Picker */}
+                        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              disabled={!selectedType}
+                              className={cn(
+                                "w-[140px] justify-start text-left font-normal h-12 rounded-full text-lg shadow-md hover:shadow-lg transition-all",
+                                !selectedDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-5 w-5" />
+                              {selectedDate ? format(selectedDate, "MMM d") : "Date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 bg-background border shadow-xl z-[100]" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={selectedDate}
+                              onSelect={(date) => {
+                                setSelectedDate(date);
+                                if (date) {
+                                  setSelectedDateStr(format(date, 'yyyy-MM-dd'));
+                                }
+                                setSelectedTime('');
+                                setDatePickerOpen(false);
+                              }}
+                              disabled={(date) => date < new Date()}
+                              initialFocus
+                              className="p-3 pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
 
-                      <div className="space-y-3">
-                        <Label className="text-lg">Time *</Label>
-                        <Select value={selectedTime} onValueChange={setSelectedTime} disabled={!selectedType || !selectedDateStr}>
-                          <SelectTrigger className="h-14 text-lg">
-                            <SelectValue placeholder={!selectedType || !selectedDateStr ? "Select date first" : slotsLoading ? "Loading..." : "Select time"} />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
-                            {slotsLoading ? <div className="flex items-center justify-center py-4">
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                              </div> : timeSlots && timeSlots.length > 0 ? timeSlots.map((slot: any) => <SelectItem key={slot.start_time} value={slot.start_time} className="text-lg py-3">
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="h-4 w-4" />
-                                    {slot.start_time} - {slot.end_time}
-                                  </div>
-                                </SelectItem>) : <div className="text-center py-4 text-lg text-muted-foreground">
-                                No available times
-                              </div>}
-                          </SelectContent>
-                        </Select>
+                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
+
+                        {/* Time Picker */}
+                        <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              disabled={!selectedType || !selectedDateStr}
+                              className={cn(
+                                "w-[140px] justify-start text-left font-normal h-12 rounded-full text-lg shadow-md hover:shadow-lg transition-all",
+                                !selectedTime && "text-muted-foreground"
+                              )}
+                            >
+                              <Clock className="mr-2 h-5 w-5" />
+                              {selectedTime || "Time"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[180px] p-0 bg-background border shadow-xl z-[100]" align="start" sideOffset={4}>
+                            <div
+                              className="max-h-[280px] overflow-y-auto overscroll-contain pointer-events-auto"
+                              onWheelCapture={(e) => e.stopPropagation()}
+                              onTouchMove={(e) => e.stopPropagation()}
+                            >
+                              {slotsLoading ? (
+                                <div className="flex items-center justify-center py-8">
+                                  <Loader2 className="h-5 w-5 animate-spin" />
+                                </div>
+                              ) : timeSlots && timeSlots.length > 0 ? (
+                                <div className="p-2">
+                                  {timeSlots.map((slot: any) => (
+                                    <button
+                                      key={slot.start_time}
+                                      type="button"
+                                      className={cn(
+                                        "w-full flex items-center justify-between h-11 px-4 text-base font-normal rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors",
+                                        slot.start_time === selectedTime && "bg-primary/10 text-primary font-medium"
+                                      )}
+                                      onClick={() => {
+                                        setSelectedTime(slot.start_time);
+                                        setTimePickerOpen(false);
+                                      }}
+                                    >
+                                      <span>{slot.start_time} - {slot.end_time}</span>
+                                      {slot.start_time === selectedTime && <Check className="h-5 w-5" />}
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center py-8 text-muted-foreground">
+                                  No available times
+                                </div>
+                              )}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     </div>
 
