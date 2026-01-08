@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { ExternalLink, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+const AMAZON_ASSOCIATE_TAG = 'kevinskey-20';
+
 interface AmazonProduct {
   id: string;
   title: string | null;
@@ -14,6 +16,21 @@ interface AmazonProduct {
 interface AmazonProductSliderProps {
   className?: string;
 }
+
+// Helper to add affiliate tag to Amazon URLs
+const addAffiliateTag = (url: string | null): string | null => {
+  if (!url) return null;
+  if (url.includes('amazon.com') || url.includes('amzn.to')) {
+    try {
+      const urlObj = new URL(url);
+      urlObj.searchParams.set('tag', AMAZON_ASSOCIATE_TAG);
+      return urlObj.toString();
+    } catch {
+      return `${url}${url.includes('?') ? '&' : '?'}tag=${AMAZON_ASSOCIATE_TAG}`;
+    }
+  }
+  return url;
+};
 
 export const AmazonProductSlider: React.FC<AmazonProductSliderProps> = ({ className }) => {
   const [products, setProducts] = useState<AmazonProduct[]>([]);
@@ -30,14 +47,9 @@ export const AmazonProductSlider: React.FC<AmazonProductSliderProps> = ({ classN
           .order('display_order', { ascending: true });
 
         if (error) throw error;
-        
-        // Filter to only Amazon links
-        const amazonProducts = (data || []).filter(p => 
-          p.link_url?.includes('amazon.com') || p.link_url?.includes('amzn.to')
-        );
-        setProducts(amazonProducts);
+        setProducts(data || []);
       } catch (e) {
-        console.error('Failed to load Amazon products:', e);
+        console.error('Failed to load products:', e);
       } finally {
         setLoading(false);
       }
@@ -109,7 +121,7 @@ export const AmazonProductSlider: React.FC<AmazonProductSliderProps> = ({ classN
             {products.map((product) => (
               <a
                 key={product.id}
-                href={product.link_url || '#'}
+                href={addAffiliateTag(product.link_url) || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-shrink-0 w-36 bg-card rounded-lg border shadow-sm overflow-hidden hover:shadow-md transition-all hover:scale-[1.02] group/card"
