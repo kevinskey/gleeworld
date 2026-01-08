@@ -311,15 +311,17 @@ serve(async (req) => {
     // Process each student
     for (const student of students) {
       try {
+        console.log(`Processing student: ${student.name} (ID: ${student.studentId})`);
+        
         // Look up student by student_id
         const { data: existingProfile, error: existingProfileError } = await supabaseClient
           .from('gw_profiles')
-          .select('user_id, full_name')
+          .select('user_id, id, full_name')
           .eq('student_id', student.studentId)
           .maybeSingle();
 
         if (existingProfileError) {
-          // Unexpected DB error
+          console.error(`DB error for ${student.name}:`, existingProfileError.message);
           errors.push({ row: students.indexOf(student) + 1, error: existingProfileError.message });
           continue;
         }
@@ -327,19 +329,26 @@ serve(async (req) => {
         let userId: string | undefined;
 
         if (!existingProfile) {
+          console.log(`No existing profile by student_id, searching by name...`);
           // Try to find by name first (student may exist but without student_id)
           const nameParts = student.name.split(',').map((p) => p.trim());
           const lastName = nameParts[0];
           const firstName = nameParts[1]?.split(' ')[0];
+          console.log(`Parsed name: firstName="${firstName}", lastName="${lastName}"`);
 
-          const { data: nameMatch } = await supabaseClient
+          const { data: nameMatch, error: nameMatchError } = await supabaseClient
             .from('gw_profiles')
             .select('user_id, id')
             .or(`full_name.ilike.%${firstName}%${lastName}%,full_name.ilike.%${lastName}%${firstName}%`)
             .limit(1)
             .maybeSingle();
 
+          if (nameMatchError) {
+            console.error(`Name match error:`, nameMatchError.message);
+          }
+
           if (nameMatch) {
+            console.log(`Found name match: id=${nameMatch.id}, user_id=${nameMatch.user_id}`);
             // Update existing profile with student_id
             await supabaseClient
               .from('gw_profiles')
@@ -351,6 +360,7 @@ serve(async (req) => {
 
             userId = nameMatch.user_id || nameMatch.id;
           } else {
+            console.log(`No name match, creating new profile...`);
             // Create a placeholder profile for this student with a generated UUID
             const newUserId = crypto.randomUUID();
             const { data: newProfile, error: createError } = await supabaseClient
@@ -367,21 +377,28 @@ serve(async (req) => {
               .maybeSingle();
 
             if (createError) {
+              console.error(`Create profile error:`, createError.message);
               errors.push({ row: students.indexOf(student) + 1, error: `Could not create profile for ${student.name}: ${createError.message}` });
               continue;
             }
 
+            console.log(`Created new profile with user_id: ${newProfile?.user_id || newUserId}`);
             userId = newProfile?.user_id || newUserId;
             enrollmentResults.profilesCreated++;
           }
         } else {
-          userId = existingProfile.user_id;
+          console.log(`Found existing profile: id=${existingProfile.id}, user_id=${existingProfile.user_id}`);
+          // Use user_id if available, otherwise fall back to id
+          userId = existingProfile.user_id || existingProfile.id;
         }
 
         if (!userId) {
+          console.error(`No userId resolved for ${student.name}`);
           errors.push({ row: students.indexOf(student) + 1, error: `No user_id for ${student.name}` });
           continue;
         }
+        
+        console.log(`Using userId: ${userId}`);
 
         // Check for existing enrollment
         const { data: existingEnrollment, error: existingEnrollmentError } = await supabaseClient
