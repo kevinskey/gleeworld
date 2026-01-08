@@ -303,15 +303,15 @@ export const TourManagerDashboard = ({
       <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
         {/* Top Bar - Compact */}
         <header className="sticky top-0 z-20 bg-background border-b border-border">
-          <div className="flex items-center justify-between px-3 lg:px-4 h-10">
+          <div className="flex items-center justify-between px-3 lg:px-4 h-10 bg-primary-foreground">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 flex-shrink-0" onClick={() => setSidebarOpen(!sidebarOpen)}>
                 <Menu className="w-[32px] h-[32px]" />
               </Button>
-              <h1 className="text-sm font-medium text-foreground truncate">
+              <h1 className="text-sm font-medium truncate text-primary-foreground">
                 {currentContent.title}
               </h1>
-              <span className="text-xs text-muted-foreground hidden sm:inline">—</span>
+              <span className="text-xs hidden sm:inline text-primary-foreground bg-blue-950">—</span>
               <span className="text-xs text-muted-foreground hidden sm:inline truncate">{currentContent.description}</span>
             </div>
             <div className="relative w-48 hidden md:block">
