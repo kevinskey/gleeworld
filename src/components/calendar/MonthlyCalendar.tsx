@@ -118,7 +118,7 @@ export const MonthlyCalendar = ({
   const showInternalNav = !externalCurrentDate;
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="flex flex-col h-full bg-slate-100 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Day Headers */}
       <div className="grid grid-cols-7 bg-slate-800 text-white flex-shrink-0">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
@@ -146,7 +146,7 @@ export const MonthlyCalendar = ({
               onClick={() => handleDateClick(day)}
               className={cn(
                 "min-h-[80px] sm:min-h-[100px] p-2 cursor-pointer transition-all border-b border-r border-slate-200 flex flex-col",
-                isCurrentMonth ? "bg-white" : "bg-slate-50",
+                isCurrentMonth ? "bg-slate-50" : "bg-slate-100",
                 isToday && "bg-blue-50",
                 isSelected && "bg-primary/10 ring-2 ring-inset ring-primary",
                 "hover:bg-slate-100"

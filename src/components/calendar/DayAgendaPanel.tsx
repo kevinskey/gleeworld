@@ -31,7 +31,7 @@ export const DayAgendaPanel = ({
   const myEvents = events.filter(e => !e.is_public && e.created_by === user?.id);
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="h-full flex flex-col bg-slate-100 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Header */}
       <div className="bg-slate-800 text-white px-4 py-4 flex-shrink-0">
         <h2 className="text-lg font-bold">
@@ -118,7 +118,7 @@ const EventCard = ({
   return (
     <div 
       onClick={() => onEventClick?.(event)} 
-      className="p-3 rounded-lg border-l-4 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors"
+      className="p-3 rounded-lg border-l-4 bg-slate-50 hover:bg-slate-200 cursor-pointer transition-colors"
       style={{ borderLeftColor: calendarColor }}
     >
       <h3 className="font-semibold text-slate-900 text-sm">{event.title}</h3>
