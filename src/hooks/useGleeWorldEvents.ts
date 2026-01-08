@@ -21,6 +21,7 @@ export interface GleeWorldEvent {
   is_appointment?: boolean;
   image_url?: string | null;
   calendar_id: string;
+  course_id?: string | null; // For class events
   created_by: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -40,6 +41,11 @@ export interface GleeWorldEvent {
     name: string;
     color: string;
     is_visible: boolean;
+  };
+  // Course information from join (for class events)
+  gw_courses?: {
+    title: string;
+    course_code: string;
   };
 }
 
@@ -90,6 +96,10 @@ export const useGleeWorldEvents = () => {
             name,
             color,
             is_visible
+          ),
+          gw_courses (
+            title,
+            course_code
           )
         `)
         .order('start_date', { ascending: true });
@@ -116,10 +126,25 @@ export const useGleeWorldEvents = () => {
       if (appointmentsResult.error) throw appointmentsResult.error;
 
       // Transform events to match the interface
-      const transformedEvents: GleeWorldEvent[] = (eventsResult.data || []).map(event => ({
-        ...event,
-        source: 'event' as const
-      }));
+      // For course events without calendar info, provide a default purple color
+      const transformedEvents: GleeWorldEvent[] = (eventsResult.data || []).map(event => {
+        // If this is a course event without calendar info, add synthetic calendar styling
+        if (event.course_id && !event.gw_calendars) {
+          return {
+            ...event,
+            source: 'event' as const,
+            gw_calendars: {
+              name: event.gw_courses?.course_code || 'Class',
+              color: '#8b5cf6', // Purple for courses
+              is_visible: true
+            }
+          };
+        }
+        return {
+          ...event,
+          source: 'event' as const
+        };
+      });
 
       // Transform appointments to match the interface (assign to default calendar)
       const { data: defaultCalendar } = await supabase
