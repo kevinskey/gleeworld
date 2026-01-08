@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState, useEffect, useMemo } from "react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sparkles, Upload, X, Users, ChevronDown, ArrowRight, Paperclip, Info, Maximize2 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sparkles, Upload, X, Paperclip, Info, Maximize2, ArrowRight, ChevronDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +17,9 @@ import { useUsers } from "@/hooks/useUsers";
 import { AddressInput } from "@/components/shared/AddressInput";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { format, getDay } from "date-fns";
 
 interface CreateEventDialogProps {
   onEventCreated: () => void;
@@ -22,6 +27,41 @@ interface CreateEventDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
+
+// Generate time slots in 15-minute increments
+const generateTimeSlots = () => {
+  const slots: string[] = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      const h = hour % 12 || 12;
+      const ampm = hour < 12 ? 'AM' : 'PM';
+      const m = minute.toString().padStart(2, '0');
+      slots.push(`${h}:${m} ${ampm}`);
+    }
+  }
+  return slots;
+};
+
+const TIME_SLOTS = generateTimeSlots();
+
+// Convert 12-hour time to 24-hour format for form data
+const to24Hour = (time12: string): string => {
+  const [time, period] = time12.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
+
+// Convert 24-hour time to 12-hour format for display
+const to12Hour = (time24: string): string => {
+  const [hours, minutes] = time24.split(':').map(Number);
+  const h = hours % 12 || 12;
+  const ampm = hours < 12 ? 'AM' : 'PM';
+  return `${h}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+};
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export const CreateEventDialog = ({
   onEventCreated,
@@ -44,14 +84,15 @@ export const CreateEventDialog = ({
   };
 
   const [loading, setLoading] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [startTime, setStartTime] = useState('9:00 AM');
+  const [endTime, setEndTime] = useState('10:00 AM');
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     event_type: 'meeting',
-    start_date: '',
-    start_time: '09:00',
-    end_time: '10:00',
-    end_date: '',
     timezone: 'America/New_York',
     venue_name: '',
     address: '',
@@ -59,7 +100,6 @@ export const CreateEventDialog = ({
     registration_required: false,
     is_public: false,
     attendance_required: false,
-    is_recurring: false,
     recurrence_type: 'never',
     recurrence_interval: 1,
     recurrence_end_date: '',
@@ -76,6 +116,12 @@ export const CreateEventDialog = ({
   const [calendars, setCalendars] = useState<{ id: string; name: string; color: string; }[]>([]);
   const [selectedCalendarId, setSelectedCalendarId] = useState('');
   const { users, loading: usersLoading } = useUsers();
+
+  // Popover states
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+  const [startTimeOpen, setStartTimeOpen] = useState(false);
+  const [endTimeOpen, setEndTimeOpen] = useState(false);
 
   const eventTypes = [
     { value: 'performance', label: 'Performance' },
@@ -99,6 +145,22 @@ export const CreateEventDialog = ({
     { value: 'America/Los_Angeles', label: '(GMT-08:00) Pacific Time' },
     { value: 'UTC', label: '(GMT+00:00) UTC' },
   ];
+
+  // Dynamic recurrence options based on selected date/time
+  const recurrenceOptions = useMemo(() => {
+    const dayOfWeek = startDate ? DAY_NAMES[getDay(startDate)] : 'Monday';
+    const dayOfMonth = startDate ? startDate.getDate() : 1;
+    const ordinal = dayOfMonth === 1 ? 'st' : dayOfMonth === 2 ? 'nd' : dayOfMonth === 3 ? 'rd' : 'th';
+    
+    return [
+      { value: 'never', label: 'Never' },
+      { value: 'daily', label: `Daily at ${startTime}` },
+      { value: 'weekly', label: `Weekly on ${dayOfWeek}` },
+      { value: 'monthly', label: `Monthly on the ${dayOfMonth}${ordinal}` },
+      { value: 'weekdays', label: 'Every weekday (Monday to Friday)' },
+      { value: 'custom', label: 'Custom...' },
+    ];
+  }, [startDate, startTime]);
 
   const generatePasscode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -192,19 +254,12 @@ export const CreateEventDialog = ({
     if (open) {
       loadCalendars();
       if (initialDate) {
-        const dateStr = initialDate.toISOString().split('T')[0];
-        setFormData(prev => ({
-          ...prev,
-          start_date: dateStr,
-          end_date: dateStr
-        }));
+        setStartDate(initialDate);
+        setEndDate(initialDate);
       } else {
-        const today = new Date().toISOString().split('T')[0];
-        setFormData(prev => ({
-          ...prev,
-          start_date: today,
-          end_date: today
-        }));
+        const today = new Date();
+        setStartDate(today);
+        setEndDate(today);
       }
     }
   }, [open, initialDate]);
@@ -255,7 +310,7 @@ export const CreateEventDialog = ({
       });
       return;
     }
-    if (!formData.start_date) {
+    if (!startDate) {
       toast({
         title: "Validation Error",
         description: "Start date is required",
@@ -275,9 +330,24 @@ export const CreateEventDialog = ({
     setLoading(true);
     try {
       // Construct start and end dates with times
-      const startDateTime = new Date(`${formData.start_date}T${formData.start_time}:00`);
-      const endDate = formData.end_date || formData.start_date;
-      const endDateTime = new Date(`${endDate}T${formData.end_time}:00`);
+      const startTime24 = to24Hour(startTime);
+      const endTime24 = to24Hour(endTime);
+      const startDateStr = format(startDate, 'yyyy-MM-dd');
+      const endDateStr = endDate ? format(endDate, 'yyyy-MM-dd') : startDateStr;
+      
+      const startDateTime = new Date(`${startDateStr}T${startTime24}:00`);
+      const endDateTime = new Date(`${endDateStr}T${endTime24}:00`);
+
+      // Determine actual recurrence type
+      let recurrenceType = formData.recurrence_type;
+      let recurrenceDays: number[] = [];
+      
+      if (recurrenceType === 'weekdays') {
+        recurrenceType = 'weekly';
+        recurrenceDays = [1, 2, 3, 4, 5]; // Mon-Fri
+      } else if (recurrenceType === 'weekly' && startDate) {
+        recurrenceDays = [getDay(startDate)];
+      }
 
       const eventData = {
         title: formData.title.trim(),
@@ -296,7 +366,7 @@ export const CreateEventDialog = ({
         status: 'scheduled',
         calendar_id: selectedCalendarId,
         is_recurring: formData.recurrence_type !== 'never',
-        recurrence_type: formData.recurrence_type !== 'never' ? formData.recurrence_type : null,
+        recurrence_type: formData.recurrence_type !== 'never' ? recurrenceType : null,
         recurrence_interval: formData.recurrence_type !== 'never' ? formData.recurrence_interval : null,
         recurrence_end_date: formData.recurrence_type !== 'never' && formData.recurrence_end_date 
           ? new Date(formData.recurrence_end_date + 'T23:59:59').toISOString() 
@@ -329,11 +399,9 @@ export const CreateEventDialog = ({
         try {
           const { data: recurrenceCount, error: recurrenceError } = await supabase.rpc('create_recurring_event_instances', {
             parent_event_id_param: newEvent.id,
-            recurrence_type_param: formData.recurrence_type,
+            recurrence_type_param: recurrenceType,
             recurrence_interval_param: formData.recurrence_interval,
-            recurrence_days_of_week_param: formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0 
-              ? formData.recurrence_days_of_week 
-              : null,
+            recurrence_days_of_week_param: recurrenceDays.length > 0 ? recurrenceDays : null,
             recurrence_end_date_param: formData.recurrence_end_date 
               ? new Date(formData.recurrence_end_date + 'T23:59:59').toISOString() 
               : null,
@@ -399,10 +467,6 @@ export const CreateEventDialog = ({
       title: '',
       description: '',
       event_type: 'meeting',
-      start_date: '',
-      start_time: '09:00',
-      end_time: '10:00',
-      end_date: '',
       timezone: 'America/New_York',
       venue_name: '',
       address: '',
@@ -410,7 +474,6 @@ export const CreateEventDialog = ({
       registration_required: false,
       is_public: false,
       attendance_required: false,
-      is_recurring: false,
       recurrence_type: 'never',
       recurrence_interval: 1,
       recurrence_end_date: '',
@@ -419,6 +482,10 @@ export const CreateEventDialog = ({
       passcode: '',
       passcode_enabled: false,
     });
+    setStartDate(new Date());
+    setEndDate(new Date());
+    setStartTime('9:00 AM');
+    setEndTime('10:00 AM');
     setSelectedUserIds([]);
     setImageFile(null);
     setImagePreview('');
@@ -436,10 +503,9 @@ export const CreateEventDialog = ({
     setSelectedUserIds(prev => prev.filter(id => id !== userId));
   };
 
-  const formatDateDisplay = (dateStr: string) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr + 'T00:00:00');
-    return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
+  const formatDateDisplay = (date: Date | undefined) => {
+    if (!date) return '';
+    return format(date, 'M/d/yy');
   };
 
   return (
@@ -448,7 +514,7 @@ export const CreateEventDialog = ({
         <></>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-        {/* Header with expand/close buttons */}
+        {/* Header */}
         <div className="flex items-center justify-end gap-2 p-3 pb-0">
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
             <Maximize2 className="h-4 w-4" />
@@ -467,33 +533,137 @@ export const CreateEventDialog = ({
             />
           </div>
 
-          {/* Date/Time Row */}
+          {/* Date/Time Row - Zoom Style */}
           <div className="flex items-center gap-2 mb-4 flex-wrap">
-            <Input
-              type="date"
-              value={formData.start_date}
-              onChange={e => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-              className="h-10 w-28 text-sm border rounded-lg"
-            />
-            <Input
-              type="time"
-              value={formData.start_time}
-              onChange={e => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
-              className="h-10 w-28 text-sm border rounded-lg"
-            />
+            {/* Start Date */}
+            <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[100px] justify-start text-left font-normal h-10 rounded-full",
+                    !startDate && "text-muted-foreground"
+                  )}
+                >
+                  {startDate ? formatDateDisplay(startDate) : "Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-background border shadow-lg z-50" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={(date) => {
+                    setStartDate(date);
+                    if (date && (!endDate || date > endDate)) {
+                      setEndDate(date);
+                    }
+                    setStartDateOpen(false);
+                  }}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Start Time */}
+            <Popover open={startTimeOpen} onOpenChange={setStartTimeOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-[100px] justify-start text-left font-normal h-10 rounded-full"
+                >
+                  {startTime}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[140px] p-0 bg-background border shadow-lg z-50" align="start">
+                <ScrollArea className="h-[240px]">
+                  <div className="p-1">
+                    {TIME_SLOTS.map((time) => (
+                      <Button
+                        key={time}
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-between h-9 px-3 font-normal",
+                          time === startTime && "bg-muted"
+                        )}
+                        onClick={() => {
+                          setStartTime(time);
+                          setStartTimeOpen(false);
+                        }}
+                      >
+                        {time}
+                        {time === startTime && <Check className="h-4 w-4" />}
+                      </Button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
             <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Input
-              type="time"
-              value={formData.end_time}
-              onChange={e => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
-              className="h-10 w-28 text-sm border rounded-lg"
-            />
-            <Input
-              type="date"
-              value={formData.end_date || formData.start_date}
-              onChange={e => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-              className="h-10 w-28 text-sm border rounded-lg"
-            />
+
+            {/* End Time */}
+            <Popover open={endTimeOpen} onOpenChange={setEndTimeOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-[100px] justify-start text-left font-normal h-10 rounded-full"
+                >
+                  {endTime}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[140px] p-0 bg-background border shadow-lg z-50" align="start">
+                <ScrollArea className="h-[240px]">
+                  <div className="p-1">
+                    {TIME_SLOTS.map((time) => (
+                      <Button
+                        key={time}
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-between h-9 px-3 font-normal",
+                          time === endTime && "bg-muted"
+                        )}
+                        onClick={() => {
+                          setEndTime(time);
+                          setEndTimeOpen(false);
+                        }}
+                      >
+                        {time}
+                        {time === endTime && <Check className="h-4 w-4" />}
+                      </Button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
+            {/* End Date */}
+            <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[100px] justify-start text-left font-normal h-10 rounded-full",
+                    !endDate && "text-muted-foreground"
+                  )}
+                >
+                  {endDate ? formatDateDisplay(endDate) : "Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-background border shadow-lg z-50" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={(date) => {
+                    setEndDate(date);
+                    setEndDateOpen(false);
+                  }}
+                  disabled={(date) => startDate ? date < startDate : false}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Timezone */}
@@ -502,10 +672,11 @@ export const CreateEventDialog = ({
               value={formData.timezone} 
               onValueChange={value => setFormData(prev => ({ ...prev, timezone: value }))}
             >
-              <SelectTrigger className="w-64 h-9 text-sm">
+              <SelectTrigger className="w-64 h-9 text-sm border-0 p-0 shadow-none hover:bg-transparent focus:ring-0">
                 <SelectValue />
+                <ChevronDown className="h-4 w-4 ml-1 opacity-50" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border shadow-lg z-50">
                 {timezones.map(tz => (
                   <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
                 ))}
@@ -520,14 +691,18 @@ export const CreateEventDialog = ({
               value={formData.recurrence_type} 
               onValueChange={value => setFormData(prev => ({ ...prev, recurrence_type: value }))}
             >
-              <SelectTrigger className="w-32 h-9 text-sm">
+              <SelectTrigger className="w-auto min-w-[140px] h-9 text-sm rounded-full">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="never">Never</SelectItem>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectContent className="bg-background border shadow-lg z-50">
+                {recurrenceOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <div className="flex items-center justify-between w-full">
+                      {option.label}
+                      {formData.recurrence_type === option.value && <Check className="h-4 w-4 ml-2" />}
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -555,7 +730,7 @@ export const CreateEventDialog = ({
                 <SelectTrigger className="h-10 border-2 border-primary/30 rounded-lg">
                   <SelectValue placeholder="Add invitees" />
                 </SelectTrigger>
-                <SelectContent className="max-h-48">
+                <SelectContent className="max-h-48 bg-background border shadow-lg z-50">
                   {usersLoading ? (
                     <SelectItem value="loading" disabled>Loading...</SelectItem>
                   ) : (
@@ -580,7 +755,7 @@ export const CreateEventDialog = ({
                 <SelectTrigger className="flex-1 h-10">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border shadow-lg z-50">
                   {eventTypes.map(type => (
                     <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                   ))}
@@ -591,7 +766,7 @@ export const CreateEventDialog = ({
                   <SelectTrigger className="w-40 h-10">
                     <SelectValue placeholder="Calendar" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border shadow-lg z-50">
                     {calendars.map(calendar => (
                       <SelectItem key={calendar.id} value={calendar.id}>
                         <div className="flex items-center gap-2">
@@ -743,14 +918,8 @@ export const CreateEventDialog = ({
             </p>
           </div>
 
-          {/* Quick Toggles in More Options */}
+          {/* More Options Collapsible */}
           <Collapsible open={showMoreOptions} onOpenChange={setShowMoreOptions}>
-            <CollapsibleTrigger asChild>
-              <Button type="button" variant="ghost" className="w-full justify-between h-10 px-0">
-                <span className="text-sm font-medium">More Options</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${showMoreOptions ? 'rotate-180' : ''}`} />
-              </Button>
-            </CollapsibleTrigger>
             <CollapsibleContent className="pt-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
@@ -776,10 +945,10 @@ export const CreateEventDialog = ({
                 </div>
               </div>
 
-              {/* Recurrence Settings */}
-              {formData.recurrence_type !== 'never' && (
+              {/* Custom Recurrence Settings */}
+              {formData.recurrence_type === 'custom' && (
                 <div className="p-4 border rounded-lg space-y-3 bg-muted/20">
-                  <Label className="text-sm font-medium">Recurrence Settings</Label>
+                  <Label className="text-sm font-medium">Custom Recurrence</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs text-muted-foreground">Repeat every</Label>
@@ -792,9 +961,19 @@ export const CreateEventDialog = ({
                           onChange={e => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(e.target.value) || 1 }))}
                           className="h-8 w-16 text-sm"
                         />
-                        <span className="text-sm text-muted-foreground">
-                          {formData.recurrence_type === 'daily' ? 'day(s)' : formData.recurrence_type === 'weekly' ? 'week(s)' : 'month(s)'}
-                        </span>
+                        <Select 
+                          value={formData.recurrence_type === 'custom' ? 'weekly' : formData.recurrence_type}
+                          onValueChange={value => setFormData(prev => ({ ...prev, recurrence_type: value }))}
+                        >
+                          <SelectTrigger className="h-8 w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border shadow-lg z-50">
+                            <SelectItem value="daily">days</SelectItem>
+                            <SelectItem value="weekly">weeks</SelectItem>
+                            <SelectItem value="monthly">months</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     <div>
@@ -808,30 +987,28 @@ export const CreateEventDialog = ({
                       />
                     </div>
                   </div>
-                  {formData.recurrence_type === 'weekly' && (
-                    <div>
-                      <Label className="text-xs text-muted-foreground mb-2 block">Repeat on</Label>
-                      <div className="flex gap-1">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-                          <Button
-                            key={i}
-                            type="button"
-                            variant={formData.recurrence_days_of_week.includes(i) ? "default" : "outline"}
-                            size="sm"
-                            className="w-8 h-8 p-0 text-xs"
-                            onClick={() => setFormData(prev => ({
-                              ...prev,
-                              recurrence_days_of_week: prev.recurrence_days_of_week.includes(i)
-                                ? prev.recurrence_days_of_week.filter(x => x !== i)
-                                : [...prev.recurrence_days_of_week, i].sort((a, b) => a - b)
-                            }))}
-                          >
-                            {d}
-                          </Button>
-                        ))}
-                      </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">Repeat on</Label>
+                    <div className="flex gap-1">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                        <Button
+                          key={i}
+                          type="button"
+                          variant={formData.recurrence_days_of_week.includes(i) ? "default" : "outline"}
+                          size="sm"
+                          className="w-8 h-8 p-0 text-xs rounded-full"
+                          onClick={() => setFormData(prev => ({
+                            ...prev,
+                            recurrence_days_of_week: prev.recurrence_days_of_week.includes(i)
+                              ? prev.recurrence_days_of_week.filter(x => x !== i)
+                              : [...prev.recurrence_days_of_week, i].sort((a, b) => a - b)
+                          }))}
+                        >
+                          {d}
+                        </Button>
+                      ))}
                     </div>
-                  )}
+                  </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">End date (optional)</Label>
                     <Input
@@ -849,10 +1026,15 @@ export const CreateEventDialog = ({
 
         {/* Footer Actions */}
         <div className="flex items-center justify-end gap-3 p-4 border-t bg-background">
-          <Button type="button" variant="ghost" onClick={() => setShowMoreOptions(!showMoreOptions)}>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            onClick={() => setShowMoreOptions(!showMoreOptions)}
+            className="text-primary"
+          >
             More Options
           </Button>
-          <Button type="submit" onClick={handleSubmit} disabled={loading} className="px-6">
+          <Button type="submit" onClick={handleSubmit} disabled={loading} className="px-6 rounded-full">
             {loading ? 'Saving...' : 'Save'}
           </Button>
         </div>
