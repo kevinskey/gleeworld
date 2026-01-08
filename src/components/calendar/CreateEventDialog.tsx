@@ -113,8 +113,9 @@ export const CreateEventDialog = ({
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
-  const [calendars, setCalendars] = useState<{ id: string; name: string; color: string; }[]>([]);
+  const [calendars, setCalendars] = useState<{ id: string; name: string; color: string; isCourse?: boolean }[]>([]);
   const [selectedCalendarId, setSelectedCalendarId] = useState('');
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const { users, loading: usersLoading } = useUsers();
 
   // Popover states
@@ -208,15 +209,36 @@ export const CreateEventDialog = ({
 
   const loadCalendars = async () => {
     try {
-      const { data, error } = await supabase
-        .from('gw_calendars')
-        .select('id, name, color, is_default')
-        .eq('is_visible', true)
-        .order('is_default', { ascending: false });
+      // Fetch both calendars and courses in parallel
+      const [calendarsResult, coursesResult] = await Promise.all([
+        supabase
+          .from('gw_calendars')
+          .select('id, name, color, is_default')
+          .eq('is_visible', true)
+          .order('is_default', { ascending: false }),
+        supabase
+          .from('gw_courses')
+          .select('id, title, course_code')
+          .eq('is_active', true)
+          .order('title', { ascending: true })
+      ]);
 
-      if (error) throw error;
+      if (calendarsResult.error) throw calendarsResult.error;
 
-      if (!data || data.length === 0) {
+      const calendarData = calendarsResult.data || [];
+      
+      // Convert courses to calendar format with a distinct color
+      const courseCalendars = (coursesResult.data || []).map(course => ({
+        id: course.id,
+        name: `📚 ${course.course_code}: ${course.title}`,
+        color: '#8b5cf6', // Purple for courses
+        isCourse: true
+      }));
+
+      // Combine calendars and courses
+      const allCalendars = [...calendarData, ...courseCalendars];
+
+      if (allCalendars.length === 0 && calendarData.length === 0) {
         if (!user) throw new Error('You must be signed in to create a calendar.');
         const { data: newCal, error: createCalError } = await supabase
           .from('gw_calendars')
@@ -235,9 +257,10 @@ export const CreateEventDialog = ({
         setSelectedCalendarId(newCal.id);
         return;
       }
-      setCalendars(data || []);
-      if (!selectedCalendarId && data && data.length > 0) {
-        const defaultCal = data.find(cal => (cal as any).is_default) || data[0];
+      
+      setCalendars(allCalendars);
+      if (!selectedCalendarId && calendarData.length > 0) {
+        const defaultCal = calendarData.find(cal => (cal as any).is_default) || calendarData[0];
         setSelectedCalendarId(defaultCal.id);
       }
     } catch (error) {
@@ -318,10 +341,10 @@ export const CreateEventDialog = ({
       });
       return;
     }
-    if (!selectedCalendarId) {
+    if (!selectedCalendarId && !selectedCourseId) {
       toast({
         title: "Validation Error",
-        description: "Please select a calendar for this event",
+        description: "Please select a calendar or class for this event",
         variant: "destructive"
       });
       return;
@@ -349,6 +372,11 @@ export const CreateEventDialog = ({
         recurrenceDays = [getDay(startDate)];
       }
 
+      // For course events, we still need a calendar_id, so use the default or first calendar
+      const actualCalendarId = selectedCourseId 
+        ? (calendars.find(c => !c.isCourse && (c as any).is_default)?.id || calendars.find(c => !c.isCourse)?.id || null)
+        : selectedCalendarId;
+
       const eventData = {
         title: formData.title.trim(),
         description: formData.description?.trim() || null,
@@ -364,7 +392,8 @@ export const CreateEventDialog = ({
         attendance_required: formData.attendance_required,
         created_by: user.id,
         status: 'scheduled',
-        calendar_id: selectedCalendarId,
+        calendar_id: actualCalendarId,
+        course_id: selectedCourseId, // Link to course if selected
         is_recurring: formData.recurrence_type !== 'never',
         recurrence_type: formData.recurrence_type !== 'never' ? recurrenceType : null,
         recurrence_interval: formData.recurrence_type !== 'never' ? formData.recurrence_interval : null,
@@ -490,6 +519,7 @@ export const CreateEventDialog = ({
     setImageFile(null);
     setImagePreview('');
     setSelectedCalendarId('');
+    setSelectedCourseId(null);
     setShowMoreOptions(false);
   };
 
@@ -770,19 +800,47 @@ export const CreateEventDialog = ({
                 </SelectContent>
               </Select>
               {calendars.length > 0 && (
-                <Select value={selectedCalendarId} onValueChange={setSelectedCalendarId}>
-                  <SelectTrigger className="w-40 h-10">
+                <Select 
+                  value={selectedCalendarId} 
+                  onValueChange={(value) => {
+                    const selected = calendars.find(c => c.id === value);
+                    setSelectedCalendarId(value);
+                    // Track if this is a course selection
+                    setSelectedCourseId(selected?.isCourse ? value : null);
+                  }}
+                >
+                  <SelectTrigger className="w-48 h-10">
                     <SelectValue placeholder="Calendar" />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {calendars.map(calendar => (
-                      <SelectItem key={calendar.id} value={calendar.id}>
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: calendar.color }} />
-                          <span>{calendar.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="bg-background border shadow-lg z-50 max-h-[300px]">
+                    {/* Regular calendars first */}
+                    {calendars.filter(c => !c.isCourse).length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Calendars</div>
+                        {calendars.filter(c => !c.isCourse).map(calendar => (
+                          <SelectItem key={calendar.id} value={calendar.id}>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: calendar.color }} />
+                              <span>{calendar.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                    {/* Courses section */}
+                    {calendars.filter(c => c.isCourse).length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-1 border-t pt-2">Classes</div>
+                        {calendars.filter(c => c.isCourse).map(calendar => (
+                          <SelectItem key={calendar.id} value={calendar.id}>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: calendar.color }} />
+                              <span className="truncate max-w-[160px]">{calendar.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               )}
