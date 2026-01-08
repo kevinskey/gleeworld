@@ -262,7 +262,7 @@ export const TourManagerDashboard = ({
             <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 flex-shrink-0 text-primary-foreground" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <Menu className="w-6 h-6" />
             </Button>
-            <h1 className="font-medium truncate text-primary-foreground text-xl">
+            <h1 className="font-medium truncate text-primary-foreground text-xl py-5 pl-5">
               {currentContent.title}
             </h1>
             <span className="text-xs hidden sm:inline text-primary-foreground/70">—</span>
