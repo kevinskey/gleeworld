@@ -296,8 +296,8 @@ export const EnrollmentManager = () => {
         </div>
         <div className="flex gap-2">
           <ClasslistUploadDialog 
-            courses={[{ id: 'mus240', title: 'MUS 240', course_code: 'MUS 240' }]}
-            selectedCourseId="mus240"
+            courses={[{ id: 'a0000000-0000-0000-0000-000000000240', title: 'MUS 240', course_code: 'MUS 240' }]}
+            selectedCourseId="a0000000-0000-0000-0000-000000000240"
             onUploadComplete={loadEnrollments}
           />
           
