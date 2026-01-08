@@ -327,3 +327,6 @@ verify_jwt = false
 
 [functions.generate-course-outline]
 verify_jwt = true
+
+[functions.suggest-amazon-products]
+verify_jwt = false
