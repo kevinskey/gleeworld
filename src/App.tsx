@@ -186,6 +186,7 @@ import BookingPage from "./pages/BookingPage";
 import { MessagingInterface } from "./components/messaging/MessagingInterface";
 
 import UnifiedBookingPage from "./pages/UnifiedBookingPage";
+import BookAppointmentPage from "./pages/BookAppointmentPage";
 import ServiceSelection from "./pages/booking/ServiceSelection";
 import DateTimeSelection from "./pages/booking/DateTimeSelection";
 import RecurringOptions from "./pages/booking/RecurringOptions";
@@ -498,6 +499,16 @@ const App = () => {
               {/* Course Lounge Redirect - maps course IDs to academy routes */}
               <Route path="/course-lounge/:courseId" element={<CourseLoungeRedirect />} />
               
+              {/* Book Appointment Page */}
+              <Route 
+                path="/book-appointment" 
+                element={
+                  <ProtectedRoute>
+                    <BookAppointmentPage />
+                  </ProtectedRoute>
+                } 
+              />
+
               {/* Legacy redirects to new academy structure */}
               <Route path="/glee-club-course" element={<Navigate to="/academy/mus-070" replace />} />
               <Route path="/mus-070" element={<Navigate to="/academy/mus-070" replace />} />
