@@ -275,7 +275,7 @@ export default function BookAppointmentPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="book">
-              <TabsList className="grid w-full grid-cols-3 h-14 bg-[#003666] p-0 pb-0 rounded-t-lg rounded-b-none relative z-10">
+              <TabsList className="grid w-full grid-cols-3 h-20 bg-[#003666] p-0 pb-0 rounded-t-lg rounded-b-none relative z-10">
                 <TabsTrigger value="book" className="gap-2 text-lg text-white rounded-none rounded-tl-lg data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-none h-full">
                   <Calendar className="h-5 w-5" /> Book
                 </TabsTrigger>
