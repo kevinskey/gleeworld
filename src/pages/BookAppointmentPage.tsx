@@ -275,20 +275,20 @@ export default function BookAppointmentPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="book">
-              <TabsList className="grid w-full grid-cols-3 h-20 bg-[#003666] p-0 pb-0 rounded-t-lg rounded-b-none relative z-10">
-                <TabsTrigger value="book" className="gap-2 text-lg text-white rounded-none rounded-tl-lg data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-none h-full">
+              <TabsList className="grid w-full grid-cols-3 h-20 bg-gradient-to-b from-[#004080] to-[#003666] p-0 pb-0 rounded-t-xl rounded-b-none relative z-10 shadow-lg">
+                <TabsTrigger value="book" className="gap-2 text-lg text-white/90 rounded-none rounded-tl-xl data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] data-[state=active]:font-semibold h-full hover:bg-white/10 transition-all duration-200 border-r border-white/10">
                   <Calendar className="h-5 w-5" /> Book
                 </TabsTrigger>
-                <TabsTrigger value="history" className="gap-2 text-lg text-white rounded-none data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-none h-full">
+                <TabsTrigger value="history" className="gap-2 text-lg text-white/90 rounded-none data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] data-[state=active]:font-semibold h-full hover:bg-white/10 transition-all duration-200 border-r border-white/10">
                   <History className="h-5 w-5" /> History
                 </TabsTrigger>
-                <TabsTrigger value="contact" className="gap-2 text-lg text-white rounded-none rounded-tr-lg data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-none h-full">
+                <TabsTrigger value="contact" className="gap-2 text-lg text-white/90 rounded-none rounded-tr-xl data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-[0_4px_12px_rgba(0,0,0,0.15)] data-[state=active]:font-semibold h-full hover:bg-white/10 transition-all duration-200">
                   <Mail className="h-5 w-5" /> Contact
                 </TabsTrigger>
               </TabsList>
 
               {/* Book Appointment Tab */}
-              <TabsContent value="book" className="mt-0 space-y-4 bg-white border border-t-0 border-border rounded-b-lg p-4 relative -top-[1px]">
+              <TabsContent value="book" className="mt-0 space-y-4 bg-gradient-to-b from-white to-gray-50 border border-t-0 border-border rounded-b-xl p-6 relative shadow-xl">
                 {/* Booking Form */}
                 <Card>
                   <CardContent className="p-5 space-y-5 bg-primary-foreground">
@@ -373,7 +373,7 @@ export default function BookAppointmentPage() {
               </TabsContent>
 
               {/* History Tab */}
-              <TabsContent value="history" className="mt-0 bg-white border border-t-0 border-border rounded-b-lg p-4 relative -top-[1px]">
+              <TabsContent value="history" className="mt-0 bg-gradient-to-b from-white to-gray-50 border border-t-0 border-border rounded-b-xl p-6 relative shadow-xl">
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -422,7 +422,7 @@ export default function BookAppointmentPage() {
               </TabsContent>
 
               {/* Contact Tab */}
-              <TabsContent value="contact" className="mt-0 space-y-4 bg-white border border-t-0 border-border rounded-b-lg p-4 relative -top-[1px]">
+              <TabsContent value="contact" className="mt-0 space-y-4 bg-gradient-to-b from-white to-gray-50 border border-t-0 border-border rounded-b-xl p-6 relative shadow-xl">
                 {/* Quick Contact Links */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <a href="mailto:docjohnson@spelman.edu" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-accent transition-colors text-center">
