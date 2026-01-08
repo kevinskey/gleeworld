@@ -94,17 +94,17 @@ export const AdvertisingHero: React.FC<AdvertisingHeroProps> = ({
         if (!e.currentTarget.src.includes('unsplash.com')) {
           e.currentTarget.src = fallbackImage;
         }
-      }} className="hidden md:block w-full h-full rounded-none object-cover" />
+      }} className="hidden md:block w-full h-full rounded-none object-contain" />
           
           {/* iPad/Tablet Image */}
-          <img src={h.ipad_image_url || h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} className="hidden sm:block md:hidden w-full h-full object-cover" onError={e => {
+          <img src={h.ipad_image_url || h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} className="hidden sm:block md:hidden w-full h-full object-contain" onError={e => {
         if (!e.currentTarget.src.includes('unsplash.com')) {
           e.currentTarget.src = fallbackImage;
         }
       }} />
           
           {/* Mobile Image */}
-          <img src={h.mobile_image_url || h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} className="block sm:hidden w-full h-full object-cover" onError={e => {
+          <img src={h.mobile_image_url || h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} className="block sm:hidden w-full h-full object-contain" onError={e => {
         if (!e.currentTarget.src.includes('unsplash.com')) {
           e.currentTarget.src = fallbackImage;
         }
