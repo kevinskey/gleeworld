@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2 } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -24,6 +24,7 @@ import { TourLogisticsSection } from './TourLogisticsSection';
 import { BusInfoSection } from '@/components/tour/BusInfoSection';
 import { HotelManagement } from './HotelManagement';
 import { TourBudgetManager } from './TourBudgetManager';
+import { TourMilestones } from './TourMilestones';
 import { supabase } from '@/integrations/supabase/client';
 interface TourManagerDashboardProps {
   user?: {
@@ -92,6 +93,10 @@ const navItems = [{
   value: 'budget',
   label: 'Budget',
   icon: DollarSign
+}, {
+  value: 'milestones',
+  label: 'Milestones',
+  icon: CheckCircle2
 }];
 const contentConfig: Record<string, {
   title: string;
@@ -250,6 +255,8 @@ export const TourManagerDashboard = ({
         return <WardrobeMistressHub />;
       case 'budget':
         return <TourBudgetManager />;
+      case 'milestones':
+        return <TourMilestones />;
       default:
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
     }
