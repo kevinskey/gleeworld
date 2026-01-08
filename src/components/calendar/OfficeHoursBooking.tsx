@@ -113,11 +113,12 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
-          className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
-          size="lg"
+          variant="secondary"
+          size="sm"
+          className="gap-2 h-9 text-sm font-medium"
         >
           <MessageSquare className="h-4 w-4" />
-          Book Appointment
+          <span className="hidden sm:inline">Book Appointment</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

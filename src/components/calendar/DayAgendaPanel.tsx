@@ -3,7 +3,6 @@ import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { Clock, MapPin, CalendarDays, Lock, Globe } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
-import { OfficeHoursBooking } from "./OfficeHoursBooking";
 interface DayAgendaPanelProps {
   selectedDate: Date;
   events: GleeWorldEvent[];
@@ -43,11 +42,6 @@ export const DayAgendaPanel = ({
         <div className="mt-2 text-sm text-slate-400">
           {events.length} {events.length === 1 ? 'event' : 'events'}
         </div>
-      </div>
-
-      {/* Office Hours Booking */}
-      <div className="px-4 py-3 border-b border-slate-300 flex-shrink-0">
-        <OfficeHoursBooking selectedDate={selectedDate} />
       </div>
 
       {/* Events List */}

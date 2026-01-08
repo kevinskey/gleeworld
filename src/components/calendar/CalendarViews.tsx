@@ -7,6 +7,7 @@ import { CalendarManager } from "./CalendarManager";
 import { CalendarFilterStrip } from "./CalendarFilterStrip";
 import { CreateEventDialog } from "./CreateEventDialog";
 import { DayAgendaPanel } from "./DayAgendaPanel";
+import { OfficeHoursBooking } from "./OfficeHoursBooking";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -88,6 +89,7 @@ export const CalendarViews = () => {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <OfficeHoursBooking selectedDate={selectedDate} />
           <Button 
             variant="secondary" 
             size="sm" 
