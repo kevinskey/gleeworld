@@ -116,6 +116,7 @@ import { TheLabModule } from '@/components/modules/TheLabModule';
 import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 import { MessengerAdminModule } from '@/components/modules/MessengerAdminModule';
+import { AmazonAffiliateModule } from '@/components/modules/AmazonAffiliateModule';
 
 // Import alumni-specific modules
 import {
@@ -751,6 +752,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: HeroManagerModule,
     dbFunctionName: "hero-manager"
+  },
+  {
+    id: "amazon-affiliate",
+    name: "amazon-affiliate",
+    title: "Amazon Affiliate",
+    description: "Manage Amazon affiliate products displayed across the site",
+    icon: ShoppingCart,
+    iconColor: "orange",
+    category: "finances",
+    isActive: true,
+    requiredRoles: ["admin", "super-admin"],
+    component: AmazonAffiliateModule,
+    dbFunctionName: "amazon-affiliate"
   },
   {
     id: "youtube-management",
