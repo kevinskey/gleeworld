@@ -18,12 +18,17 @@ import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 interface Enrollment {
   id: string;
-  student_id: string;
-  semester: string;
+  student_profile_id: string | null;
+  user_id: string | null;
   enrollment_status: string;
   enrolled_at: string;
-  final_grade?: string;
-  instructor_notes?: string;
+  grade?: string;
+  gw_student_profiles?: {
+    full_name: string;
+    email: string | null;
+    student_id: string;
+    academic_year: string;
+  } | null;
   gw_profiles?: {
     full_name: string;
     email: string;
@@ -79,22 +84,37 @@ export const EnrollmentManager = () => {
   }, []);
 
   useEffect(() => {
-    loadEnrollments();
+    if (courseId) {
+      loadEnrollments();
+    }
     loadAvailableUsers();
-  }, [selectedSemester]);
+  }, [selectedSemester, courseId]);
 
   const loadEnrollments = async () => {
+    if (!courseId) {
+      setLoading(false);
+      return;
+    }
+    
     try {
+      // Query gw_course_enrollments for MUS 240 course
       const { data, error } = await supabase
-        .from('mus240_enrollments')
+        .from('gw_course_enrollments')
         .select(`
-          *,
-          gw_profiles!student_id(
+          id,
+          student_profile_id,
+          user_id,
+          enrollment_status,
+          enrolled_at,
+          grade,
+          gw_student_profiles!student_profile_id(
             full_name,
-            email
+            email,
+            student_id,
+            academic_year
           )
         `)
-        .eq('semester', selectedSemester)
+        .eq('course_id', courseId)
         .order('enrolled_at', { ascending: false });
 
       if (error) throw error;
@@ -126,14 +146,14 @@ export const EnrollmentManager = () => {
   };
 
   const addEnrollment = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser || !courseId) return;
 
     try {
       const { error } = await supabase
-        .from('mus240_enrollments')
+        .from('gw_course_enrollments')
         .insert({
-          student_id: selectedUser,
-          semester: selectedSemester,
+          user_id: selectedUser,
+          course_id: courseId,
           enrollment_status: 'enrolled'
         });
 
@@ -162,7 +182,7 @@ export const EnrollmentManager = () => {
   const updateEnrollmentStatus = async (enrollmentId: string, status: string) => {
     try {
       const { error } = await supabase
-        .from('mus240_enrollments')
+        .from('gw_course_enrollments')
         .update({ enrollment_status: status })
         .eq('id', enrollmentId);
 
@@ -184,11 +204,11 @@ export const EnrollmentManager = () => {
     }
   };
 
-  const updateFinalGrade = async (enrollmentId: string, grade: string) => {
+  const updateFinalGrade = async (enrollmentId: string, gradeValue: string) => {
     try {
       const { error } = await supabase
-        .from('mus240_enrollments')
-        .update({ final_grade: grade })
+        .from('gw_course_enrollments')
+        .update({ grade: gradeValue })
         .eq('id', enrollmentId);
 
       if (error) throw error;
@@ -214,7 +234,7 @@ export const EnrollmentManager = () => {
 
     try {
       const { error } = await supabase
-        .from('mus240_enrollments')
+        .from('gw_course_enrollments')
         .delete()
         .eq('id', enrollmentId);
 
@@ -238,17 +258,19 @@ export const EnrollmentManager = () => {
 
   const filteredAndSortedEnrollments = enrollments
     .filter(enrollment => {
-      // Search filter
-      const matchesSearch = enrollment.gw_profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        enrollment.gw_profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      // Search filter - check both gw_student_profiles and gw_profiles
+      const studentName = enrollment.gw_student_profiles?.full_name || enrollment.gw_profiles?.full_name || '';
+      const studentEmail = enrollment.gw_student_profiles?.email || enrollment.gw_profiles?.email || '';
+      const matchesSearch = studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        studentEmail.toLowerCase().includes(searchTerm.toLowerCase());
       
       // Status filter
       const matchesStatus = statusFilter === 'all' || enrollment.enrollment_status === statusFilter;
       
       // Grade filter
       const matchesGrade = gradeFilter === 'all' || 
-        (gradeFilter === 'graded' && enrollment.final_grade) ||
-        (gradeFilter === 'ungraded' && !enrollment.final_grade);
+        (gradeFilter === 'graded' && enrollment.grade) ||
+        (gradeFilter === 'ungraded' && !enrollment.grade);
       
       return matchesSearch && matchesStatus && matchesGrade;
     })
@@ -257,25 +279,25 @@ export const EnrollmentManager = () => {
       
       switch (sortBy) {
         case 'name':
-          aValue = a.gw_profiles?.full_name || '';
-          bValue = b.gw_profiles?.full_name || '';
+          aValue = a.gw_student_profiles?.full_name || a.gw_profiles?.full_name || '';
+          bValue = b.gw_student_profiles?.full_name || b.gw_profiles?.full_name || '';
           break;
         case 'last_name':
           // Extract last name more reliably by trimming and splitting
-          aValue = (a.gw_profiles?.full_name || '').trim().split(/\s+/).slice(-1)[0] || '';
-          bValue = (b.gw_profiles?.full_name || '').trim().split(/\s+/).slice(-1)[0] || '';
+          aValue = (a.gw_student_profiles?.full_name || a.gw_profiles?.full_name || '').trim().split(/\s+/).slice(-1)[0] || '';
+          bValue = (b.gw_student_profiles?.full_name || b.gw_profiles?.full_name || '').trim().split(/\s+/).slice(-1)[0] || '';
           break;
         case 'email':
-          aValue = a.gw_profiles?.email || '';
-          bValue = b.gw_profiles?.email || '';
+          aValue = a.gw_student_profiles?.email || a.gw_profiles?.email || '';
+          bValue = b.gw_student_profiles?.email || b.gw_profiles?.email || '';
           break;
         case 'status':
           aValue = a.enrollment_status;
           bValue = b.enrollment_status;
           break;
         case 'grade':
-          aValue = a.final_grade || '';
-          bValue = b.final_grade || '';
+          aValue = a.grade || '';
+          bValue = b.grade || '';
           break;
         case 'enrolled_at':
         default:
@@ -483,26 +505,26 @@ export const EnrollmentManager = () => {
             <Card 
               key={enrollment.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate(`/mus-240/instructor/student/${enrollment.student_id}`)}
+              onClick={() => navigate(`/mus-240/instructor/student/${enrollment.student_profile_id || enrollment.user_id}`)}
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h4 className="font-semibold">
-                        {enrollment.gw_profiles?.full_name || 'Unknown Student'}
+                        {enrollment.gw_student_profiles?.full_name || enrollment.gw_profiles?.full_name || 'Unknown Student'}
                       </h4>
                       <Badge variant={getStatusBadgeVariant(enrollment.enrollment_status)}>
                         {enrollment.enrollment_status}
                       </Badge>
-                      {enrollment.final_grade && (
+                      {enrollment.grade && (
                         <Badge variant="outline">
-                          Grade: {enrollment.final_grade}
+                          Grade: {enrollment.grade}
                         </Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground mb-1">
-                      {enrollment.gw_profiles?.email}
+                      {enrollment.gw_student_profiles?.email || enrollment.gw_profiles?.email}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
@@ -527,7 +549,7 @@ export const EnrollmentManager = () => {
                     
                     <Input
                       placeholder="Final Grade"
-                      value={enrollment.final_grade || ''}
+                      value={enrollment.grade || ''}
                       onChange={(e) => updateFinalGrade(enrollment.id, e.target.value)}
                       className="w-24"
                     />
