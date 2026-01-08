@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -232,6 +232,15 @@ export const UniversalHeader = ({
                 <EnhancedTooltip content="View Calendar">
                   <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                     <CalendarDays className={HEADER_ICON_SIZES.icon} />
+                  </Button>
+                </EnhancedTooltip>
+              </div>}
+
+            {/* Institute Quick Access */}
+            {user && <div className="hidden sm:block">
+                <EnhancedTooltip content="Institute">
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/institute')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                    <Landmark className={HEADER_ICON_SIZES.icon} />
                   </Button>
                 </EnhancedTooltip>
               </div>}
