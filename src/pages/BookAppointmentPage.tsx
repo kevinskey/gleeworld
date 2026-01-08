@@ -29,30 +29,12 @@ import drJohnsonOffice from '@/assets/dr-johnson-office.jpg';
 
 // Appointment types students can book
 const appointmentTypes = [
-  { 
-    id: 'office-hours', 
-    name: 'Office Hours', 
-    duration: 15, 
-    description: 'Quick check-in or question session',
-    icon: GraduationCap,
-    color: 'text-blue-600 bg-blue-500/10'
-  },
-  { 
-    id: 'lesson', 
-    name: 'Private Lesson', 
-    duration: 30, 
-    description: 'One-on-one vocal or music instruction',
-    icon: Music,
-    color: 'text-purple-600 bg-purple-500/10'
-  },
-  { 
-    id: 'general-meeting', 
-    name: 'General Meeting', 
-    duration: 15, 
-    description: 'Discuss academic or organizational matters',
-    icon: MessageSquare,
-    color: 'text-amber-600 bg-amber-500/10'
-  },
+  { id: 'office-hours', name: 'Office Hours', duration: 15 },
+  { id: 'voice-lesson', name: 'Voice Lesson', duration: 30 },
+  { id: 'tutoring', name: 'Tutoring', duration: 30 },
+  { id: 'solo-audition', name: 'Solo Audition', duration: 15 },
+  { id: 'general-meeting-15', name: 'General Meeting (15 min)', duration: 15 },
+  { id: 'general-meeting-30', name: 'General Meeting (30 min)', duration: 30 },
 ];
 
 export default function BookAppointmentPage() {
@@ -294,40 +276,32 @@ export default function BookAppointmentPage() {
 
               {/* Book Appointment Tab */}
               <TabsContent value="book" className="mt-4 space-y-4">
-                {/* Appointment Type Cards */}
-                <div className="grid sm:grid-cols-3 gap-3">
-                  {appointmentTypes.map(type => {
-                    const Icon = type.icon;
-                    const isSelected = selectedType === type.id;
-                    return (
-                      <Card
-                        key={type.id}
-                        onClick={() => {
-                          setSelectedType(type.id);
-                          setSelectedTime('');
-                        }}
-                        className={`cursor-pointer transition-all hover:shadow-md ${
-                          isSelected 
-                            ? 'ring-2 ring-primary border-primary bg-primary/5' 
-                            : 'hover:border-primary/50'
-                        }`}
-                      >
-                        <CardContent className="p-4">
-                          <div className={`h-10 w-10 rounded-lg flex items-center justify-center mb-3 ${type.color}`}>
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          <h4 className="font-semibold text-sm">{type.name}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">{type.description}</p>
-                          <Badge variant="outline" className="mt-2 text-[10px]">{type.duration} min</Badge>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-
                 {/* Booking Form */}
                 <Card>
-                  <CardContent className="p-4 space-y-4">
+                  <CardContent className="p-5 space-y-5">
+                    {/* Service Selection */}
+                    <div className="space-y-2">
+                      <Label className="text-base font-semibold">Service Type *</Label>
+                      <Select value={selectedType} onValueChange={(val) => {
+                        setSelectedType(val);
+                        setSelectedTime('');
+                      }}>
+                        <SelectTrigger className="h-12 text-base">
+                          <SelectValue placeholder="Select a service..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover border border-border shadow-xl z-[100] max-h-[300px]">
+                          {appointmentTypes.map(type => (
+                            <SelectItem key={type.id} value={type.id} className="py-3 text-base">
+                              <div className="flex items-center justify-between w-full gap-4">
+                                <span>{type.name}</span>
+                                <Badge variant="secondary" className="ml-2">{type.duration} min</Badge>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-sm">Date *</Label>
