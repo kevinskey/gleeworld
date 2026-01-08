@@ -12,6 +12,9 @@ interface ProductSuggestion {
   title: string;
   description: string;
   searchUrl: string;
+  imageUrl?: string;
+  price?: string;
+  asin?: string;
   added?: boolean;
 }
 
@@ -57,7 +60,8 @@ export const AmazonProductSuggester = () => {
           action: 'add',
           title: product.title,
           description: product.description,
-          searchUrl: product.searchUrl
+          searchUrl: product.searchUrl,
+          imageUrl: product.imageUrl
         }
       });
 
@@ -145,10 +149,39 @@ export const AmazonProductSuggester = () => {
                   key={index}
                   className={`p-4 border rounded-lg ${product.added ? 'bg-green-50 border-green-200' : 'bg-card'}`}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h5 className="font-medium">{product.title}</h5>
-                      <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
+                  <div className="flex items-start gap-4">
+                    {product.imageUrl && (
+                      <img 
+                        src={product.imageUrl} 
+                        alt={product.title}
+                        className="w-16 h-16 object-contain rounded border bg-white flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h5 className="font-medium line-clamp-2">{product.title}</h5>
+                          {product.price && (
+                            <span className="text-sm font-semibold text-[#FF9900]">{product.price}</span>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={product.added ? "outline" : "default"}
+                          disabled={product.added || addingIndex === index}
+                          onClick={() => addProduct(index)}
+                          className={product.added ? "text-green-600 border-green-600 flex-shrink-0" : "flex-shrink-0"}
+                        >
+                          {addingIndex === index ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : product.added ? (
+                            <><Check className="h-4 w-4 mr-1" /> Added</>
+                          ) : (
+                            <><Plus className="h-4 w-4 mr-1" /> Add</>
+                          )}
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
                       <a 
                         href={product.searchUrl}
                         target="_blank"
@@ -156,24 +189,9 @@ export const AmazonProductSuggester = () => {
                         className="text-xs text-[#FF9900] hover:underline flex items-center gap-1 mt-2"
                       >
                         <ExternalLink className="h-3 w-3" />
-                        Preview on Amazon
+                        View on Amazon
                       </a>
                     </div>
-                    <Button
-                      size="sm"
-                      variant={product.added ? "outline" : "default"}
-                      disabled={product.added || addingIndex === index}
-                      onClick={() => addProduct(index)}
-                      className={product.added ? "text-green-600 border-green-600" : ""}
-                    >
-                      {addingIndex === index ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : product.added ? (
-                        <><Check className="h-4 w-4 mr-1" /> Added</>
-                      ) : (
-                        <><Plus className="h-4 w-4 mr-1" /> Add</>
-                      )}
-                    </Button>
                   </div>
                 </div>
               ))}
