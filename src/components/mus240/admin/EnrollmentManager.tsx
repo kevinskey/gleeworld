@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCourseTA } from '@/hooks/useCourseTA';
 import { useUserRole } from '@/hooks/useUserRole';
 import { ClasslistUploadDialog } from '@/components/academy/ClasslistUploadDialog';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 interface Enrollment {
   id: string;
@@ -40,11 +41,12 @@ export const EnrollmentManager = () => {
   const { user } = useAuth();
   const { isTA } = useCourseTA('MUS240');
   const { isAdmin } = useUserRole();
+  const { currentSemester, availableSemesters } = useMus240SemesterSafe();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [availableUsers, setAvailableUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSemester, setSelectedSemester] = useState('Fall 2025');
+  const [selectedSemester, setSelectedSemester] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -53,6 +55,13 @@ export const EnrollmentManager = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [courseId, setCourseId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Sync selectedSemester with context
+  useEffect(() => {
+    if (currentSemester && !selectedSemester) {
+      setSelectedSemester(currentSemester);
+    }
+  }, [currentSemester, selectedSemester]);
 
   // Fetch the actual course UUID from the database
   useEffect(() => {
@@ -374,12 +383,21 @@ export const EnrollmentManager = () => {
           </div>
           <Select value={selectedSemester} onValueChange={setSelectedSemester}>
             <SelectTrigger className="w-48">
-              <SelectValue />
+              <SelectValue placeholder="Select semester" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Fall 2025">Fall 2025</SelectItem>
-              <SelectItem value="Spring 2025">Spring 2025</SelectItem>
-              <SelectItem value="Fall 2025">Fall 2025</SelectItem>
+            <SelectContent className="bg-background border z-50">
+              {availableSemesters.map((semester) => (
+                <SelectItem key={semester.id} value={semester.id}>
+                  <div className="flex items-center gap-2">
+                    <span>{semester.label}</span>
+                    {semester.isActive && (
+                      <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
