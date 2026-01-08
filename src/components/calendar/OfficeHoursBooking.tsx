@@ -5,25 +5,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar, Clock, User, MessageSquare } from 'lucide-react';
+import { Calendar, Clock, User, MessageSquare, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useServices } from '@/hooks/useServices';
+import { useAvailableTimeSlots } from '@/hooks/useAppointments';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, addDays } from 'date-fns';
-
-const OFFICE_HOUR_TYPES = [
-  { id: 'general', name: 'General Discussion', duration: 15 },
-  { id: 'academic', name: 'Academic Advising', duration: 30 },
-  { id: 'performance', name: 'Performance Feedback', duration: 30 },
-  { id: 'career', name: 'Career/Graduate School', duration: 30 },
-  { id: 'personal', name: 'Personal Matter', duration: 20 },
-];
-
-const TIME_SLOTS = [
-  '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
-  '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM'
-];
 
 interface OfficeHoursBookingProps {
   selectedDate?: Date;
@@ -34,15 +23,22 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { data: services, isLoading: servicesLoading } = useServices();
 
   // Form state
-  const [meetingType, setMeetingType] = useState('');
+  const [selectedService, setSelectedService] = useState('');
   const [selectedDateStr, setSelectedDateStr] = useState(
     selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
   );
   const [selectedTime, setSelectedTime] = useState('');
   const [topic, setTopic] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Fetch available time slots when service and date are selected
+  const { data: timeSlots, isLoading: slotsLoading } = useAvailableTimeSlots(
+    selectedService,
+    selectedDateStr
+  );
 
   // Generate next 14 days (weekdays only)
   const availableDates = Array.from({ length: 21 }, (_, i) => {
@@ -56,61 +52,62 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
     };
   }).filter(Boolean) as { value: string; label: string }[];
 
+  // Get selected service details
+  const selectedServiceData = services?.find(s => s.id === selectedService);
+
   const handleSubmit = async () => {
-    if (!meetingType || !selectedDateStr || !selectedTime || !topic) {
+    if (!selectedService || !selectedDateStr || !selectedTime || !topic) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     setLoading(true);
     try {
-      // Parse time
-      const [time, period] = selectedTime.split(' ');
-      const [hours, minutes] = time.split(':');
-      let hour = parseInt(hours);
-      if (period === 'PM' && hour !== 12) hour += 12;
-      if (period === 'AM' && hour === 12) hour = 0;
-
-      const appointmentDate = new Date(selectedDateStr);
-      appointmentDate.setHours(hour, parseInt(minutes), 0, 0);
-
-      const selectedType = OFFICE_HOUR_TYPES.find(t => t.id === meetingType);
-
-      const appointmentData = {
-        title: `Office Hours: ${selectedType?.name}`,
-        description: topic,
-        appointment_date: appointmentDate.toISOString(),
-        duration_minutes: selectedType?.duration || 30,
-        appointment_type: 'Office Hours',
-        client_name: profile?.full_name || user?.email || 'Student',
-        client_email: user?.email || '',
-        status: 'pending_approval',
-        notes: notes,
-        created_by: user?.id,
-      };
-
-      const { error } = await supabase
-        .from('gw_appointments')
-        .insert(appointmentData);
+      // Use the book_appointment RPC function from the appointment module
+      const { data, error } = await supabase.rpc('book_appointment', {
+        p_service_id: selectedService,
+        p_appointment_date: selectedDateStr,
+        p_start_time: selectedTime,
+        p_customer_name: profile?.full_name || user?.email || 'Student',
+        p_customer_email: user?.email || '',
+        p_customer_phone: null,
+        p_attendee_count: 1,
+        p_special_requests: `Topic: ${topic}${notes ? `\n\nNotes: ${notes}` : ''}`
+      });
 
       if (error) throw error;
 
-      toast.success('Office hours request submitted! You will receive confirmation once approved.');
-      setOpen(false);
+      const result = data as { success: boolean; message?: string; error?: string };
       
-      // Reset form
-      setMeetingType('');
-      setSelectedDateStr('');
-      setSelectedTime('');
-      setTopic('');
-      setNotes('');
-    } catch (error) {
-      console.error('Error booking office hours:', error);
-      toast.error('Failed to submit request. Please try again.');
+      if (result.success) {
+        toast.success(result.message || 'Appointment booked successfully!');
+        setOpen(false);
+        
+        // Reset form
+        setSelectedService('');
+        setSelectedDateStr('');
+        setSelectedTime('');
+        setTopic('');
+        setNotes('');
+      } else {
+        toast.error(result.error || 'Failed to book appointment');
+      }
+    } catch (error: any) {
+      console.error('Error booking appointment:', error);
+      toast.error(error.message || 'Failed to submit request. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  // Filter services that are likely "Office Hours" type (you can adjust this filter)
+  const officeHourServices = services?.filter(s => 
+    s.category?.toLowerCase().includes('office') || 
+    s.name?.toLowerCase().includes('office') ||
+    s.category?.toLowerCase().includes('advising') ||
+    s.category?.toLowerCase().includes('consultation') ||
+    true // Show all services for now
+  ) || [];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -120,45 +117,56 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
           size="lg"
         >
           <MessageSquare className="h-4 w-4" />
-          Book Office Hours
+          Book Appointment
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
-            Schedule Office Hours
+            Schedule Appointment
           </DialogTitle>
           <DialogDescription>
-            Book time with Dr. Johnson for advising, feedback, or discussion.
+            Book time for office hours, advising, or consultation.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Meeting Type */}
+          {/* Service Selection */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Meeting Type *</Label>
-            <Select value={meetingType} onValueChange={setMeetingType}>
+            <Label className="text-sm font-medium">Service Type *</Label>
+            <Select value={selectedService} onValueChange={(val) => {
+              setSelectedService(val);
+              setSelectedTime(''); // Reset time when service changes
+            }}>
               <SelectTrigger>
-                <SelectValue placeholder="Select meeting type" />
+                <SelectValue placeholder={servicesLoading ? "Loading..." : "Select service"} />
               </SelectTrigger>
               <SelectContent>
-                {OFFICE_HOUR_TYPES.map(type => (
-                  <SelectItem key={type.id} value={type.id}>
+                {officeHourServices.map(service => (
+                  <SelectItem key={service.id} value={service.id}>
                     <div className="flex items-center gap-2">
-                      <span>{type.name}</span>
-                      <span className="text-xs text-muted-foreground">({type.duration} min)</span>
+                      <span>{service.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({service.duration_minutes} min)
+                      </span>
                     </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {selectedServiceData?.description && (
+              <p className="text-xs text-muted-foreground">{selectedServiceData.description}</p>
+            )}
           </div>
 
           {/* Date Selection */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Date *</Label>
-            <Select value={selectedDateStr} onValueChange={setSelectedDateStr}>
+            <Select value={selectedDateStr} onValueChange={(val) => {
+              setSelectedDateStr(val);
+              setSelectedTime(''); // Reset time when date changes
+            }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a date" />
               </SelectTrigger>
@@ -175,19 +183,44 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
           {/* Time Selection */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Time *</Label>
-            <Select value={selectedTime} onValueChange={setSelectedTime}>
+            <Select 
+              value={selectedTime} 
+              onValueChange={setSelectedTime}
+              disabled={!selectedService || !selectedDateStr}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Select a time" />
+                <SelectValue placeholder={
+                  !selectedService || !selectedDateStr 
+                    ? "Select service and date first" 
+                    : slotsLoading 
+                      ? "Loading available times..." 
+                      : "Select a time"
+                } />
               </SelectTrigger>
               <SelectContent>
-                {TIME_SLOTS.map(time => (
-                  <SelectItem key={time} value={time}>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-3 w-3" />
-                      {time}
-                    </div>
-                  </SelectItem>
-                ))}
+                {slotsLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
+                ) : timeSlots && timeSlots.length > 0 ? (
+                  timeSlots.map((slot: any) => (
+                    <SelectItem key={slot.start_time} value={slot.start_time}>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3 w-3" />
+                        {slot.start_time} - {slot.end_time}
+                        {slot.available_spots && (
+                          <span className="text-xs text-muted-foreground">
+                            ({slot.available_spots} spots)
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-sm text-muted-foreground">
+                    No available times for this date
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -230,10 +263,17 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={loading}
+            disabled={loading || !selectedService || !selectedDateStr || !selectedTime || !topic}
             className="flex-1"
           >
-            {loading ? 'Submitting...' : 'Request Meeting'}
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Booking...
+              </>
+            ) : (
+              'Book Appointment'
+            )}
           </Button>
         </div>
       </DialogContent>
