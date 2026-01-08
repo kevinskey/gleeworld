@@ -69,7 +69,7 @@ const GleeAcademy = () => {
               <Button 
                 size="lg" 
                 variant="outline"
-                onClick={() => navigate('/appointments')}
+                onClick={() => navigate('/book-appointment')}
               >
                 Schedule Consultation
               </Button>
