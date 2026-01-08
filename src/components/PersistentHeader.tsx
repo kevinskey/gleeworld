@@ -130,7 +130,13 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
               {courses.map((course) => (
                 <DropdownMenuItem 
                   key={course.id}
-                  onClick={() => navigate(`/academy/${course.course_code?.toLowerCase().replace(' ', '-')}`)}
+                  onClick={() => {
+                    if (course.course_code === 'MUS 000') {
+                      window.open('https://readmusic.gleeworld.com', '_blank');
+                    } else {
+                      navigate(`/academy/${course.course_code?.toLowerCase().replace(' ', '-')}`);
+                    }
+                  }}
                   className="cursor-pointer"
                 >
                   <span className="text-xs text-muted-foreground mr-2">{course.course_code}</span>
