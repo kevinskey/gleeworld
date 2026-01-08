@@ -153,7 +153,7 @@ export const TourManagerLanding = ({
       {/* Two Column Layout: Route & Upcoming Dates */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Tour Route Timeline */}
-        <TourRouteTimeline onNavigate={onNavigate} limit={8} />
+        
         {/* Key Personnel */}
         <Card>
           <CardHeader className="py-3 px-4">
