@@ -275,7 +275,7 @@ export const TourManagerDashboard = ({
 
           {/* Navigation */}
           <ScrollArea className="flex-1 py-2">
-            <nav className="px-2 space-y-0.5 bg-black">
+            <nav className="px-2 space-y-0.5">
               {navItems.map(item => <button key={item.value} onClick={() => {
               setActiveSection(item.value);
               setSidebarOpen(false);
