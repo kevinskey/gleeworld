@@ -293,59 +293,59 @@ export default function BookAppointmentPage() {
                 <Card>
                   <CardContent className="p-5 space-y-5 bg-primary-foreground">
                     {/* Service Selection */}
-                    <div className="space-y-2 bg-primary-foreground">
-                      <Label className="text-base font-semibold">Service Type *</Label>
+                    <div className="space-y-3 bg-primary-foreground">
+                      <Label className="text-xl font-semibold">Service Type *</Label>
                       <Select value={selectedType} onValueChange={val => {
                       setSelectedType(val);
                       setSelectedTime('');
                     }}>
-                        <SelectTrigger className="h-12 text-base">
+                        <SelectTrigger className="h-14 text-xl">
                           <SelectValue placeholder="Select a service..." />
                         </SelectTrigger>
                         <SelectContent className="bg-popover border border-border shadow-xl z-[100] max-h-[300px]">
-                          {appointmentTypes.map(type => <SelectItem key={type.id} value={type.id} className="py-3 text-base">
+                          {appointmentTypes.map(type => <SelectItem key={type.id} value={type.id} className="py-4 text-xl">
                               <div className="flex items-center justify-between w-full gap-4">
                                 <span>{type.name}</span>
-                                <Badge variant="secondary" className="ml-2">{type.duration} min</Badge>
+                                <Badge variant="secondary" className="ml-2 text-base">{type.duration} min</Badge>
                               </div>
                             </SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
 
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm">Date *</Label>
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <Label className="text-lg">Date *</Label>
                         <Select value={selectedDateStr} onValueChange={val => {
                         setSelectedDateStr(val);
                         setSelectedTime('');
                       }} disabled={!selectedType}>
-                          <SelectTrigger className="h-10">
+                          <SelectTrigger className="h-14 text-lg">
                             <SelectValue placeholder={selectedType ? "Select date" : "Select type first"} />
                           </SelectTrigger>
                           <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
-                            {availableDates.map(date => <SelectItem key={date.value} value={date.value}>
+                            {availableDates.map(date => <SelectItem key={date.value} value={date.value} className="text-lg py-3">
                                 {date.label}
                               </SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-sm">Time *</Label>
+                      <div className="space-y-3">
+                        <Label className="text-lg">Time *</Label>
                         <Select value={selectedTime} onValueChange={setSelectedTime} disabled={!selectedType || !selectedDateStr}>
-                          <SelectTrigger className="h-10">
+                          <SelectTrigger className="h-14 text-lg">
                             <SelectValue placeholder={!selectedType || !selectedDateStr ? "Select date first" : slotsLoading ? "Loading..." : "Select time"} />
                           </SelectTrigger>
                           <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
                             {slotsLoading ? <div className="flex items-center justify-center py-4">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              </div> : timeSlots && timeSlots.length > 0 ? timeSlots.map((slot: any) => <SelectItem key={slot.start_time} value={slot.start_time}>
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                              </div> : timeSlots && timeSlots.length > 0 ? timeSlots.map((slot: any) => <SelectItem key={slot.start_time} value={slot.start_time} className="text-lg py-3">
                                   <div className="flex items-center gap-2">
-                                    <Clock className="h-3 w-3" />
+                                    <Clock className="h-4 w-4" />
                                     {slot.start_time} - {slot.end_time}
                                   </div>
-                                </SelectItem>) : <div className="text-center py-4 text-sm text-muted-foreground">
+                                </SelectItem>) : <div className="text-center py-4 text-lg text-muted-foreground">
                                 No available times
                               </div>}
                           </SelectContent>
@@ -353,20 +353,20 @@ export default function BookAppointmentPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-sm">Topic/Purpose *</Label>
-                      <Input value={topic} onChange={e => setTopic(e.target.value)} placeholder="What would you like to discuss?" className="h-10" />
+                    <div className="space-y-3">
+                      <Label className="text-lg">Topic/Purpose *</Label>
+                      <Input value={topic} onChange={e => setTopic(e.target.value)} placeholder="What would you like to discuss?" className="h-14 text-lg" />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-sm">Additional Notes</Label>
-                      <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional context..." rows={4} />
+                    <div className="space-y-3">
+                      <Label className="text-lg">Additional Notes</Label>
+                      <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional context..." rows={4} className="text-lg" />
                     </div>
 
-                    <Button onClick={handleBookAppointment} disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic} className="w-full h-12 text-lg font-semibold text-white shadow-lg hover:shadow-xl transition-all" style={{
+                    <Button onClick={handleBookAppointment} disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic} className="w-full h-16 text-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all" style={{
                     backgroundColor: '#003666'
                   }}>
-                      {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Booking...</> : <><Calendar className="h-4 w-4 mr-2" /> Book Appointment</>}
+                      {loading ? <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Booking...</> : <><Calendar className="h-5 w-5 mr-2" /> Book Appointment</>}
                     </Button>
                   </CardContent>
                 </Card>
