@@ -57,7 +57,7 @@ import { CalendarControlsAdmin } from "@/components/admin/CalendarControlsAdmin"
 import { SystemSettings } from "@/components/admin/SystemSettings";
 import { UnifiedUserManagement } from "@/components/admin/UnifiedUserManagement";
 import { AuditionsManagement } from "@/components/admin/AuditionsManagement";
-import { AppointmentSchedulingModule } from "@/components/modules/AppointmentSchedulingModule";
+
 import { WardrobeManagementHub } from "@/components/wardrobe/WardrobeManagementHub";
 import { StudentIntakeProcessor } from "@/components/admin/StudentIntakeProcessor";
 import { DashboardHeroManagerModule } from "@/components/modules/DashboardHeroManagerModule";

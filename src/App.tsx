@@ -87,9 +87,7 @@ import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
 import Calendar from "./pages/Calendar";
-import CalendarSettings from "./pages/CalendarSettings";
 import Messenger from "./pages/Messenger";
-import { AppointmentAdminDashboard } from "./components/admin/AppointmentAdminDashboard";
 
 import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
@@ -182,28 +180,16 @@ import AssignmentCreatorPage from "./pages/AssignmentCreator";
 import KaraokeChallenge from "./pages/KaraokeChallenge";
 import PracticeStudioPage from "./pages/PracticeStudioPage";
 import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPage";
-import SchedulingPage from "./pages/SchedulingPage";
-import BookingPage from "./pages/BookingPage";
 import { MessagingInterface } from "./components/messaging/MessagingInterface";
 
-import UnifiedBookingPage from "./pages/UnifiedBookingPage";
 import BookAppointmentPage from "./pages/BookAppointmentPage";
-import ServiceSelection from "./pages/booking/ServiceSelection";
-import DateTimeSelection from "./pages/booking/DateTimeSelection";
-import RecurringOptions from "./pages/booking/RecurringOptions";
-import CustomerInfo from "./pages/booking/CustomerInfo";
-import BookingConfirmation from "./pages/booking/BookingConfirmation";
-import ExecutiveBoardDashboard from "./pages/ExecutiveBoardDashboard";
 import ExecutiveBoardMemberDashboard from "./pages/ExecutiveBoardMemberDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import LibrarianDashboardPage from "./pages/LibrarianDashboardPage";
 import QRGeneratorPage from "./pages/QRGenerator";
 import QRAnalytics from "./pages/QRAnalytics";
 import ModuleAccess from "./pages/admin/ModuleAccess";
-import Appointments from "./pages/Appointments";
 import WardrobeAppointments from "./pages/WardrobeAppointments";
-import ProviderAppointments from "./pages/ProviderAppointments";
-import { ProviderRoutes } from "./routes/ProviderRoutes";
 import SearchPage from "./pages/SearchPage";
 import FirstYearHub from "./pages/FirstYearHub";
 import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
@@ -685,18 +671,6 @@ const App = () => {
                      </ProtectedRoute>
                    } 
                  />
-                 <Route 
-                   path="/admin/appointments"
-                   element={
-                     <ProtectedRoute>
-                       <AdminOnlyRoute>
-                         <UniversalLayout>
-                           <AppointmentAdminDashboard />
-                         </UniversalLayout>
-                       </AdminOnlyRoute>
-                     </ProtectedRoute>
-                    } 
-                  />
                 <Route 
                   path="/dashboard" 
                   element={
@@ -997,14 +971,6 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <Calendar />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/calendar/settings" 
-                  element={
-                    <ProtectedRoute>
-                      <CalendarSettings />
                     </ProtectedRoute>
                   } 
                 />
@@ -1558,14 +1524,6 @@ const App = () => {
                                  } 
                                />
                                <Route 
-                                 path="/appointments" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <Appointments />
-                                   </ProtectedRoute>
-                                 } 
-                                />
-                                <Route 
                                   path="/wardrobe-appointments" 
                                   element={
                                     <ProtectedRoute>
@@ -1573,24 +1531,6 @@ const App = () => {
                                     </ProtectedRoute>
                                   } 
                                 />
-                                 {/* Provider Routes - Protected for service providers only */}
-                                 <Route 
-                                   path="/appointments/provider/*" 
-                                   element={<ProviderRoutes />} 
-                                 />
-                                 {/* Alias for plural path to prevent 404s */}
-                                 <Route 
-                                   path="/appointments/providers/*" 
-                                   element={<ProviderRoutes />} 
-                                 />
-                                 <Route 
-                                   path="/provider-appointments" 
-                                   element={
-                                     <ProtectedRoute>
-                                       <ProviderAppointments />
-                                     </ProtectedRoute>
-                                   } 
-                                 />
                                 <Route 
                                   path="/provider-dashboard" 
                                   element={
@@ -1842,70 +1782,10 @@ const App = () => {
                                           </ProtectedRoute>
                                         } 
                                       />
-                                     <Route 
-                                       path="/scheduling" 
-                                       element={
-                                         <ProtectedRoute>
-                                           <SchedulingPage />
-                                         </ProtectedRoute>
-                                       } 
-                                      />
-                                      <Route 
-                                        path="/booking" 
-                                        element={
-                                          <PublicRoute>
-                                            <UnifiedBookingPage />
-                                          </PublicRoute>
-                                        } 
-                                      />
-                                      <Route 
-                                        path="/booking-old" 
-                                        element={
-                                          <PublicRoute>
-                                            <BookingPage />
-                                          </PublicRoute>
-                                        } 
-                                      />
-                                     <Route 
-                                       path="/booking/service-selection" 
-                                       element={
-                                         <PublicRoute>
-                                           <ServiceSelection />
-                                         </PublicRoute>
-                                       } 
-                                     />
-                                     <Route 
-                                       path="/booking/datetime" 
-                                       element={
-                                         <PublicRoute>
-                                           <DateTimeSelection />
-                                         </PublicRoute>
-                                       } 
-                                     />
-                                     <Route 
-                                       path="/booking/recurring" 
-                                       element={
-                                         <PublicRoute>
-                                           <RecurringOptions />
-                                         </PublicRoute>
-                                       } 
-                                      />
-                                      <Route 
-                                         path="/booking/customer-info" 
-                                         element={
-                                           <PublicRoute>
-                                             <CustomerInfo />
-                                           </PublicRoute>
-                                         } 
-                                      />
-                                      <Route 
-                                         path="/booking/confirmation" 
-                                         element={
-                                           <PublicRoute>
-                                             <BookingConfirmation />
-                                           </PublicRoute>
-                                         } 
-                                       />
+                                           <Route 
+                                            path="/executive-board-dashboard" 
+                                            element={<Navigate to="/dashboard" replace />} 
+                                          />
                                            <Route 
                                              path="/executive-board-dashboard" 
                                              element={<Navigate to="/dashboard" replace />} 

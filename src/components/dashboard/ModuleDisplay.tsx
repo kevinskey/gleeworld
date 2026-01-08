@@ -43,7 +43,7 @@ import { TourManagerDashboard } from '../tour-manager/TourManagerDashboard';
 import TreeLightingSurveyModule from '../modules/TreeLightingSurveyModule';
 import ExitInterviewsModule from '../modules/ExitInterviewsModule';
 import { TheLabModule } from '@/components/modules/TheLabModule';
-import { ComprehensiveAppointmentSystem } from '@/components/appointments/ComprehensiveAppointmentSystem';
+
 import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 import { MessengerAdminModule } from '../modules/MessengerAdminModule';
@@ -162,7 +162,7 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <TheLabModule />;
       case 'appointments':
       case 'assignable-appointments':
-        return <ComprehensiveAppointmentSystem />;
+        return <div className="p-4 text-muted-foreground">Use /book-appointment for Office Hours booking.</div>;
       case 'section-assignment':
         return <SectionAssignmentModule />;
       case 'messenger-admin':

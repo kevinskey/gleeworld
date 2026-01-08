@@ -82,7 +82,7 @@ import { FirstYearConsoleModule } from '@/components/modules/FirstYearConsoleMod
 import { AIToolsModule } from '@/components/modules/AIToolsModule';
 import { LibrarianModule } from '@/components/modules/LibrarianModule';
 import { AppointmentServiceManager } from '@/components/appointments/AppointmentServiceManager';
-import { AppointmentSchedulingModule } from '@/components/modules/AppointmentSchedulingModule';
+
 import MediaLibrary from '@/pages/admin/MediaLibrary';
 import { RadioManagement } from '@/components/admin/RadioManagement';
 import { TheoryPollModule } from '@/components/modules/TheoryPollModule';
@@ -94,7 +94,7 @@ import { MemberSightReadingModule } from '@/components/modules/MemberSightReadin
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import GleeAcademy from '@/pages/GleeAcademy';
 import { QRCodeManagementModule } from '@/components/modules/QRCodeManagementModule';
-import { ProviderAppointmentModule } from '@/components/modules/ProviderAppointmentModule';
+
 import { AssignableAppointmentModule } from '@/components/modules/AssignableAppointmentModule';
 import { ServiceProviderManagementModule } from '@/components/modules/ServiceProviderManagementModule';
 import { Mus240GroupsModule } from '@/components/modules/Mus240GroupsModule';
