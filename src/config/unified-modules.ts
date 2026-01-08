@@ -309,30 +309,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "calendar-management"
   },
   {
-    id: "appointments",
-    name: "appointments",
-    title: "Appointment System",
-    description: "Comprehensive appointment booking and management system",
-    icon: Calendar,
-    iconColor: "blue",
-    category: "communications",
-    isActive: true,
-    component: AppointmentSchedulingModule,
-    dbFunctionName: "appointments"
-  },
-  {
-    id: "provider-appointments",
-    name: "provider-appointments",
-    title: "Provider Calendar",
-    description: "Personal appointment calendar for service providers with external sync capabilities",
-    icon: Calendar,
-    iconColor: "green",
-    category: "communications",
-    isActive: true,
-    component: ProviderAppointmentModule,
-    dbFunctionName: "provider-appointments"
-  },
-  {
     id: "assignable-appointments",
     name: "assignable-appointments", 
     title: "My Appointments",

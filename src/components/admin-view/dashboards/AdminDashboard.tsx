@@ -358,7 +358,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       case "auditions":
         return <AuditionsManagement />;
       case "appointment-scheduling":
-        return <AppointmentSchedulingModule user={user} isFullPage={true} />;
+        return <div className="p-4 text-center text-muted-foreground">Appointment scheduling available at /book-appointment</div>;
       case "wardrobe-management":
         return <WardrobeManagementHub />;
       case "student-intake":
