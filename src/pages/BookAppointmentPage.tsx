@@ -25,6 +25,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import drJohnsonOffice from '@/assets/dr-johnson-office.jpg';
+import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
 
 // Appointment types students can book
 const appointmentTypes = [{
@@ -564,6 +565,11 @@ export default function BookAppointmentPage() {
               </TabsContent>
             </Tabs>
           </div>
+        </div>
+        
+        {/* Amazon Ad Slider */}
+        <div className="mt-8">
+          <AdvertisingHero className="rounded-xl overflow-hidden" />
         </div>
       </div>
     </UniversalLayout>;
