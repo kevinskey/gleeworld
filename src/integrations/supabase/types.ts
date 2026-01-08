@@ -4084,6 +4084,42 @@ export type Database = {
         }
         Relationships: []
       }
+      external_grades: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          exercise_title: string
+          external_attempt_id: string | null
+          id: string
+          pitch_score: number | null
+          rhythm_score: number | null
+          source: string
+          student_email: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          exercise_title: string
+          external_attempt_id?: string | null
+          id?: string
+          pitch_score?: number | null
+          rhythm_score?: number | null
+          source?: string
+          student_email: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          exercise_title?: string
+          external_attempt_id?: string | null
+          id?: string
+          pitch_score?: number | null
+          rhythm_score?: number | null
+          source?: string
+          student_email?: string
+        }
+        Relationships: []
+      }
       finance_records: {
         Row: {
           amount: number
