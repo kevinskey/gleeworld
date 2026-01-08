@@ -327,59 +327,51 @@ serve(async (req) => {
         let userId: string | undefined;
 
         if (!existingProfile) {
-          // Create a placeholder profile for this student
-          const { data: newProfile, error: createError } = await supabaseClient
+          // Try to find by name first (student may exist but without student_id)
+          const nameParts = student.name.split(',').map((p) => p.trim());
+          const lastName = nameParts[0];
+          const firstName = nameParts[1]?.split(' ')[0];
+
+          const { data: nameMatch } = await supabaseClient
             .from('gw_profiles')
-            .insert({
-              student_id: student.studentId,
-              full_name: student.name,
-              academic_year: student.classYear,
-              role: 'student',
-              status: 'active',
-            })
-            .select('user_id')
+            .select('user_id, id')
+            .or(`full_name.ilike.%${firstName}%${lastName}%,full_name.ilike.%${lastName}%${firstName}%`)
+            .limit(1)
             .maybeSingle();
 
-          if (createError || !newProfile?.user_id) {
-            // Profile might exist without student_id - try to find by name
-            const nameParts = student.name.split(',').map((p) => p.trim());
-            const lastName = nameParts[0];
-            const firstName = nameParts[1]?.split(' ')[0];
-
-            const { data: nameMatch, error: nameMatchError } = await supabaseClient
+          if (nameMatch) {
+            // Update existing profile with student_id
+            await supabaseClient
               .from('gw_profiles')
+              .update({
+                student_id: student.studentId,
+                academic_year: student.classYear,
+              })
+              .eq('id', nameMatch.id);
+
+            userId = nameMatch.user_id || nameMatch.id;
+          } else {
+            // Create a placeholder profile for this student with a generated UUID
+            const newUserId = crypto.randomUUID();
+            const { data: newProfile, error: createError } = await supabaseClient
+              .from('gw_profiles')
+              .insert({
+                user_id: newUserId,
+                student_id: student.studentId,
+                full_name: student.name,
+                academic_year: student.classYear,
+                role: 'student',
+                status: 'active',
+              })
               .select('user_id')
-              .ilike('full_name', `%${firstName}%${lastName}%`)
-              .limit(1)
               .maybeSingle();
 
-            if (nameMatchError) {
-              errors.push({ row: students.indexOf(student) + 1, error: nameMatchError.message });
+            if (createError) {
+              errors.push({ row: students.indexOf(student) + 1, error: `Could not create profile for ${student.name}: ${createError.message}` });
               continue;
             }
 
-            if (nameMatch?.user_id) {
-              // Update existing profile with student_id
-              const { error: updateError } = await supabaseClient
-                .from('gw_profiles')
-                .update({
-                  student_id: student.studentId,
-                  academic_year: student.classYear,
-                })
-                .eq('user_id', nameMatch.user_id);
-
-              if (updateError) {
-                errors.push({ row: students.indexOf(student) + 1, error: updateError.message });
-                continue;
-              }
-
-              userId = nameMatch.user_id;
-            } else {
-              errors.push({ row: students.indexOf(student) + 1, error: `Could not create or match profile for ${student.name}` });
-              continue;
-            }
-          } else {
-            userId = newProfile.user_id;
+            userId = newProfile?.user_id || newUserId;
             enrollmentResults.profilesCreated++;
           }
         } else {
