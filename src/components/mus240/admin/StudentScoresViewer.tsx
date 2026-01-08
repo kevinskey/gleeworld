@@ -146,32 +146,39 @@ export const StudentScoresViewer = () => {
   };
 
   const loadAssignmentStats = async () => {
+    if (!semester) {
+      setAssignmentStats([]);
+      return;
+    }
+    
     try {
-      const { data, error } = await supabase
-        .from('assignment_submissions')
-        .select('assignment_id, grade')
-        .not('grade', 'is', null);
+      // Get enrolled students for this semester first
+      const { data: enrollments } = await supabase
+        .from('mus240_enrollments')
+        .select('student_id')
+        .eq('semester', semester)
+        .eq('enrollment_status', 'enrolled');
+      
+      const studentIds = enrollments?.map(e => e.student_id) || [];
+      if (studentIds.length === 0) {
+        setAssignmentStats([]);
+        return;
+      }
 
-      if (error) throw error;
+      // Get assignments for current semester
+      const { data: assignments } = await supabase
+        .from('mus240_assignments')
+        .select('id, title')
+        .eq('semester', semester)
+        .eq('is_active', true);
 
-      const stats: Record<string, number[]> = {};
-      data?.forEach(submission => {
-        const assignmentName = submission.assignment_id || 'Unknown Assignment';
-        if (!stats[assignmentName]) {
-          stats[assignmentName] = [];
-        }
-        stats[assignmentName].push(Number(submission.grade));
-      });
-
-      const assignmentStats = Object.entries(stats).map(([name, grades]) => ({
-        assignment_name: name,
-        submissions_count: grades.length,
-        average_grade: Math.round(grades.reduce((sum, grade) => sum + grade, 0) / grades.length),
-        highest_grade: Math.max(...grades),
-        lowest_grade: Math.min(...grades)
-      }));
-
-      setAssignmentStats(assignmentStats);
+      setAssignmentStats((assignments || []).map(a => ({
+        assignment_name: a.title,
+        submissions_count: 0,
+        average_grade: 0,
+        highest_grade: 0,
+        lowest_grade: 0
+      })));
     } catch (error) {
       console.error('Error loading assignment stats:', error);
     }
