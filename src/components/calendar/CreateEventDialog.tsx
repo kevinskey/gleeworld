@@ -576,7 +576,11 @@ export const CreateEventDialog = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[140px] p-0 bg-background border shadow-lg z-[100]" align="start" sideOffset={4}>
-                <ScrollArea className="h-[240px] pointer-events-auto">
+                <div
+                  className="max-h-[240px] overflow-y-auto overscroll-contain pointer-events-auto"
+                  onWheelCapture={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
+                >
                   <div className="p-1">
                     {TIME_SLOTS.map((time) => (
                       <button
@@ -596,7 +600,7 @@ export const CreateEventDialog = ({
                       </button>
                     ))}
                   </div>
-                </ScrollArea>
+                </div>
               </PopoverContent>
             </Popover>
 
@@ -613,7 +617,11 @@ export const CreateEventDialog = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[140px] p-0 bg-background border shadow-lg z-[100]" align="start" sideOffset={4}>
-                <ScrollArea className="h-[240px] pointer-events-auto">
+                <div
+                  className="max-h-[240px] overflow-y-auto overscroll-contain pointer-events-auto"
+                  onWheelCapture={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
+                >
                   <div className="p-1">
                     {TIME_SLOTS.map((time) => (
                       <button
@@ -633,7 +641,7 @@ export const CreateEventDialog = ({
                       </button>
                     ))}
                   </div>
-                </ScrollArea>
+                </div>
               </PopoverContent>
             </Popover>
 
