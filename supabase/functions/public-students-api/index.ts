@@ -2,8 +2,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+interface RequestBody {
+  secret: string;
+}
+
+interface StudentRecord {
+  id: string;
+  email: string;
+  full_name: string;
+  class?: string;
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -11,8 +22,9 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Only accept GET requests
-  if (req.method !== 'GET') {
+  // Only accept POST requests
+  if (req.method !== 'POST') {
+    console.log(`[PUBLIC-STUDENTS-API] Invalid method: ${req.method}`);
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -20,25 +32,31 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate webhook secret
-    const webhookSecret = req.headers.get('x-webhook-secret');
-    const expectedSecret = Deno.env.get('GRADE_WEBHOOK_SECRET');
+    console.log('[PUBLIC-STUDENTS-API] Function started');
 
-    if (!expectedSecret) {
-      console.error('GRADE_WEBHOOK_SECRET not configured');
+    // Parse request body
+    const body: RequestBody = await req.json();
+    console.log('[PUBLIC-STUDENTS-API] Request received', { hasSecret: !!body.secret });
+
+    // Validate secret
+    const webhookSecret = Deno.env.get('GLEEWORLD_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      console.error('[PUBLIC-STUDENTS-API] GLEEWORLD_WEBHOOK_SECRET not configured');
       return new Response(
-        JSON.stringify({ error: 'API not configured' }),
+        JSON.stringify({ error: 'Server configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (webhookSecret !== expectedSecret) {
-      console.error('Invalid webhook secret provided');
+    if (!body.secret || body.secret !== webhookSecret) {
+      console.error('[PUBLIC-STUDENTS-API] Invalid secret provided');
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('[PUBLIC-STUDENTS-API] Secret validated successfully');
 
     // Initialize Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -61,7 +79,7 @@ Deno.serve(async (req) => {
       .eq('role', 'student');
 
     if (enrollmentError) {
-      console.error('Error fetching enrollments:', enrollmentError);
+      console.error('[PUBLIC-STUDENTS-API] Error fetching enrollments:', enrollmentError);
       return new Response(
         JSON.stringify({ error: 'Failed to fetch enrollments', details: enrollmentError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -100,37 +118,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Build the response
-    const students = enrollments?.map(enrollment => {
+    // Build the response with expected format
+    const students: StudentRecord[] = enrollments?.map(enrollment => {
       const course = enrollment.gw_courses as { course_code: string; title: string } | null;
       let studentInfo = { email: '', full_name: '' };
+      let id = '';
       
       if (enrollment.user_id && profiles[enrollment.user_id]) {
         studentInfo = profiles[enrollment.user_id];
+        id = enrollment.user_id;
       } else if (enrollment.student_profile_id && studentProfiles[enrollment.student_profile_id]) {
         studentInfo = studentProfiles[enrollment.student_profile_id];
+        id = enrollment.student_profile_id;
       }
 
       return {
+        id,
         email: studentInfo.email,
-        fullName: studentInfo.full_name,
-        class: course?.course_code || course?.title || 'Unknown'
+        full_name: studentInfo.full_name,
+        class: course?.course_code || course?.title || undefined
       };
-    }).filter(s => s.email) || [];
+    }).filter(s => s.email && s.id) || [];
 
-    console.log(`Returning ${students.length} enrolled students`);
+    console.log(`[PUBLIC-STUDENTS-API] Returning ${students.length} enrolled students`);
 
     return new Response(
-      JSON.stringify({
-        students,
-        total: students.length,
-        timestamp: new Date().toISOString()
-      }),
+      JSON.stringify({ students }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('API error:', error);
+    console.error('[PUBLIC-STUDENTS-API] Error:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
