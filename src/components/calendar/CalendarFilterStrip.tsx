@@ -303,24 +303,27 @@ export const CalendarFilterStrip = ({
                 <DropdownMenuSeparator />
                 <div className="grid grid-cols-6 gap-1.5 p-1 pt-2">
                   {presetColors.map((color) => (
-                    <button
+                    <DropdownMenuItem
                       key={color}
-                      type="button"
-                      onPointerDown={(e) => {
-                        // Radix closes menus on pointer down; update before it closes
+                      asChild
+                      onSelect={(e) => {
                         e.preventDefault();
-                        e.stopPropagation();
                         updateCalendarColor(calendar.id, color);
                       }}
-                      className={cn(
-                        "w-5 h-5 rounded border-2 transition-all hover:scale-110 cursor-pointer",
-                        calendar.color === color
-                          ? "border-primary ring-2 ring-primary/30"
-                          : "border-transparent"
-                      )}
-                      style={{ backgroundColor: color }}
-                      aria-label={`Set ${calendar.name} color to ${color}`}
-                    />
+                      className="p-0 h-auto focus:bg-transparent"
+                    >
+                      <button
+                        type="button"
+                        className={cn(
+                          "w-5 h-5 rounded border-2 transition-all hover:scale-110 cursor-pointer",
+                          calendar.color?.toLowerCase() === color.toLowerCase()
+                            ? "border-primary ring-2 ring-primary/30"
+                            : "border-transparent"
+                        )}
+                        style={{ backgroundColor: color }}
+                        aria-label={`Set ${calendar.name} color to ${color}`}
+                      />
+                    </DropdownMenuItem>
                   ))}
                 </div>
               </DropdownMenuContent>
