@@ -115,7 +115,7 @@ export const DashboardStoreSection = () => {
           {courses.length > 0 ? courses.map((course, index) => {
           const CourseIcon = getCourseIcon(course.title);
           const level = getCourseLevel(course.title);
-          return <div key={course.id} onClick={() => navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`)} className="flex-shrink-0 w-72 snap-start cursor-pointer group bg-white border-r border-gray-200 last:border-r-0 hover:bg-gray-50 transition-colors min-h-[320px]">
+          return <div key={course.id} onClick={() => navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`)} className="flex-shrink-0 w-72 snap-start cursor-pointer group bg-white border-r-2 border-r-black border-b border-b-gray-300 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all min-h-[320px]">
                 <div className="p-6 h-full flex flex-col">
                   {/* Course Code Badge */}
                   <div className="flex items-center justify-between mb-4">
