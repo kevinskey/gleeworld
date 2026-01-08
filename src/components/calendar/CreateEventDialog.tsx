@@ -575,15 +575,15 @@ export const CreateEventDialog = ({
                   {startTime}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[140px] p-0 bg-background border shadow-lg z-50" align="start">
-                <ScrollArea className="h-[240px]">
+              <PopoverContent className="w-[140px] p-0 bg-background border shadow-lg z-[100]" align="start" sideOffset={4}>
+                <ScrollArea className="h-[240px] pointer-events-auto">
                   <div className="p-1">
                     {TIME_SLOTS.map((time) => (
-                      <Button
+                      <button
                         key={time}
-                        variant="ghost"
+                        type="button"
                         className={cn(
-                          "w-full justify-between h-9 px-3 font-normal",
+                          "w-full flex items-center justify-between h-9 px-3 text-sm font-normal rounded-md hover:bg-accent hover:text-accent-foreground transition-colors",
                           time === startTime && "bg-muted"
                         )}
                         onClick={() => {
@@ -593,7 +593,7 @@ export const CreateEventDialog = ({
                       >
                         {time}
                         {time === startTime && <Check className="h-4 w-4" />}
-                      </Button>
+                      </button>
                     ))}
                   </div>
                 </ScrollArea>
@@ -612,15 +612,15 @@ export const CreateEventDialog = ({
                   {endTime}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[140px] p-0 bg-background border shadow-lg z-50" align="start">
-                <ScrollArea className="h-[240px]">
+              <PopoverContent className="w-[140px] p-0 bg-background border shadow-lg z-[100]" align="start" sideOffset={4}>
+                <ScrollArea className="h-[240px] pointer-events-auto">
                   <div className="p-1">
                     {TIME_SLOTS.map((time) => (
-                      <Button
+                      <button
                         key={time}
-                        variant="ghost"
+                        type="button"
                         className={cn(
-                          "w-full justify-between h-9 px-3 font-normal",
+                          "w-full flex items-center justify-between h-9 px-3 text-sm font-normal rounded-md hover:bg-accent hover:text-accent-foreground transition-colors",
                           time === endTime && "bg-muted"
                         )}
                         onClick={() => {
@@ -630,7 +630,7 @@ export const CreateEventDialog = ({
                       >
                         {time}
                         {time === endTime && <Check className="h-4 w-4" />}
-                      </Button>
+                      </button>
                     ))}
                   </div>
                 </ScrollArea>
