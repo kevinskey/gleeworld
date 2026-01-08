@@ -134,7 +134,7 @@ export const DashboardStoreSection = () => {
                   <p className="text-xs text-gray-400 uppercase tracking-widest mb-4">Semester</p>
                   
                   {/* Description */}
-                  {course.description && <p className="text-sm text-gray-600 leading-relaxed line-clamp-3 flex-1">
+                  {course.description && <p className="text-xs text-gray-600 leading-snug line-clamp-3 flex-1">
                       {course.description}
                     </p>}
                   
