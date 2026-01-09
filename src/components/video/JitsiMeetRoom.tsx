@@ -66,10 +66,17 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
         if (!window.JitsiMeetExternalAPI) {
           await new Promise<void>((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = 'https://8x8.vc/vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9/external_api.js';
+            // Use the appId from the token response for the correct tenant
+            script.src = `https://8x8.vc/${tokenData.appId}/external_api.js`;
             script.async = true;
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error('Failed to load Jitsi API'));
+            script.onload = () => {
+              console.log('Jitsi API script loaded successfully');
+              resolve();
+            };
+            script.onerror = (e) => {
+              console.error('Failed to load Jitsi API script:', e);
+              reject(new Error('Failed to load Jitsi API'));
+            };
             document.head.appendChild(script);
           });
         }
@@ -143,10 +150,22 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
           }
         };
 
+        console.log('Creating JitsiMeetExternalAPI with options:', { domain, roomName: options.roomName });
         apiRef.current = new window.JitsiMeetExternalAPI(domain, options);
+        console.log('JitsiMeetExternalAPI created');
+
+        // Fallback timeout - if videoConferenceJoined doesn't fire within 15 seconds, hide loader anyway
+        const fallbackTimeout = setTimeout(() => {
+          if (mounted && isLoading) {
+            console.log('Jitsi fallback timeout - hiding loader');
+            setIsLoading(false);
+          }
+        }, 15000);
 
         // Event listeners
         apiRef.current.addListener('videoConferenceJoined', () => {
+          console.log('videoConferenceJoined event fired');
+          clearTimeout(fallbackTimeout);
           if (mounted) {
             setIsLoading(false);
             toast({
