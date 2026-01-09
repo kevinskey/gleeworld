@@ -148,145 +148,142 @@ export const HeaderRadioControls = () => {
           </Button>
         </EnhancedTooltip>
 
-        {/* Full-Width Radio Bar - Rendered in Portal */}
+        {/* Full-Screen Radio Dropdown - Rendered in Portal */}
         {isOpen && createPortal(
           <>
+            {/* Backdrop overlay */}
+            <div 
+              className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsOpen(false)}
+            />
             
-            {/* Horizontal Radio Bar - Connected directly to header */}
+            {/* Full-Screen Radio Panel */}
             <div
-              className="fixed left-0 right-0 z-[9999]"
-              style={{ top: `var(--gw-header-h, ${headerHeight}px)` }}
+              className="fixed inset-x-0 top-0 bottom-0 z-[9999] flex flex-col"
+              style={{ paddingTop: `var(--gw-header-h, ${headerHeight}px)` }}
             >
-              <div className="max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8">
-                <div
-                  ref={radioBarRef}
-                  className="bg-popover border-b-2 border-primary/40 shadow-lg rounded-b-lg px-2 sm:px-4 md:px-6 lg:px-8 pt-1.5 pb-4 relative"
-                >
+              <div
+                ref={radioBarRef}
+                className="flex-1 bg-popover/95 backdrop-blur-md border-b-2 border-primary/40 shadow-2xl overflow-y-auto"
+              >
                 {/* Close Button - Top Right */}
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsOpen(false)}
-                  className="absolute top-1 right-2 h-5 w-5 p-0 text-popover-foreground/70 hover:text-popover-foreground hover:bg-white/10"
+                  className="absolute top-4 right-4 h-10 w-10 p-0 text-popover-foreground/70 hover:text-popover-foreground hover:bg-white/10 z-10"
                   type="button"
                 >
-                  <ChevronUp className="h-4 w-4" />
+                  <X className="h-6 w-6" />
                 </Button>
 
-                {/* Top Row: Channel Scroller - Single Line */}
-                <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-popover-foreground/20 scrollbar-track-transparent pr-8">
-                  <div className="flex items-center gap-1.5 pb-1">
-                    {channels.length > 0 && channels.map((channel) => {
-                      const isSelected = selectedChannel?.id === channel.id;
-                      const isThisLoading = isLoading && isSelected;
-                      return (
-                        <button
-                          key={channel.id}
-                          onClick={() => handleChannelChange(channel)}
-                          disabled={isLoading}
-                          className={cn(
-                            "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0",
-                            isSelected
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground",
-                            isLoading && "opacity-70 cursor-wait"
-                          )}
-                        >
-                          {isThisLoading ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : null}
-                          {channel.name}
-                        </button>
-                      );
-                    })}
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  {/* Header */}
+                  <div className="text-center mb-8">
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                      <Radio className="h-8 w-8 text-primary" />
+                      <h2 className="text-2xl sm:text-3xl font-bold text-popover-foreground">Glee World Radio</h2>
+                    </div>
+                    <p className="text-popover-foreground/60 text-sm">Select a channel and enjoy the music</p>
                   </div>
-                </div>
 
-                {/* Bottom Row: Logo, Status, Play Button, Listener Count, Now Playing, Volume */}
-                <div className="flex items-center gap-3 mt-2 flex-wrap lg:flex-nowrap pr-8">
-                  {/* Logo & Status with Play Button */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Radio className="h-4 w-4 text-primary" />
+                  {/* Status & Controls Row */}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
                     <Badge 
                       variant={isOnline ? (isLive ? "default" : "secondary") : "outline"}
                       className={cn(
-                        "text-[9px] h-4 px-1.5",
+                        "text-sm h-8 px-4",
                         isLive ? "bg-red-500 hover:bg-red-600 text-white" : 
                         isOnline ? "bg-green-500 hover:bg-green-600 text-white" : "bg-popover-foreground/20 text-popover-foreground/70"
                       )}
                     >
-                      {isLive ? 'LIVE' : isOnline ? 'ON' : 'OFF'}
+                      {isLive ? '🔴 LIVE' : isOnline ? '🟢 ON AIR' : '⚫ OFFLINE'}
                     </Badge>
                     
-                    {/* Play/Pause - Horizontal Pill */}
+                    {/* Large Play/Pause Button */}
                     <Button
                       variant={isPlaying ? "secondary" : "default"}
-                      size="sm"
+                      size="lg"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         togglePlayPause();
                       }}
                       disabled={isLoading || !isOnline}
-                      className="h-7 px-4 rounded-full"
+                      className="h-14 w-14 rounded-full p-0"
                       type="button"
                     >
                       {isLoading ? (
-                        <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <div className="h-6 w-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       ) : isPlaying ? (
-                        <Pause className="h-4 w-4" />
+                        <Pause className="h-7 w-7" />
                       ) : (
-                        <Play className="h-4 w-4 ml-0.5" />
+                        <Play className="h-7 w-7 ml-1" />
                       )}
                     </Button>
 
-                    <span className="text-[10px] text-popover-foreground/60 items-center gap-0.5 hidden sm:flex">
-                      <Users className="h-2.5 w-2.5" />
-                      {listenerCount}
-                    </span>
+                    <div className="flex items-center gap-2 text-popover-foreground/60">
+                      <Users className="h-4 w-4" />
+                      <span className="text-sm">{listenerCount} listeners</span>
+                    </div>
                   </div>
 
-                  {/* Divider */}
-                  <div className="hidden lg:block h-5 w-px bg-popover-foreground/20" />
+                  {/* Channel Grid */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold text-popover-foreground mb-4 text-center">Channels</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {channels.length > 0 && channels.map((channel) => {
+                        const isSelected = selectedChannel?.id === channel.id;
+                        const isThisLoading = isLoading && isSelected;
+                        const ChannelIcon = getChannelIcon(channel.icon);
+                        return (
+                          <button
+                            key={channel.id}
+                            onClick={() => handleChannelChange(channel)}
+                            disabled={isLoading}
+                            className={cn(
+                              "flex flex-col items-center gap-2 p-4 rounded-xl text-sm font-medium transition-all",
+                              isSelected
+                                ? "bg-primary text-primary-foreground shadow-lg scale-105"
+                                : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground hover:scale-102",
+                              isLoading && "opacity-70 cursor-wait"
+                            )}
+                          >
+                            {isThisLoading ? (
+                              <Loader2 className="h-6 w-6 animate-spin" />
+                            ) : (
+                              <ChannelIcon className="h-6 w-6" />
+                            )}
+                            <span className="text-center line-clamp-2">{channel.name}</span>
+                            {isSelected && <Check className="h-4 w-4" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                  {/* Scrolling Now Playing Ticker */}
+                  {/* Now Playing Section */}
                   {currentTrack && isOnline && (
-                    <div className="relative overflow-hidden flex-1 h-6 bg-popover-foreground/10 px-2">
-                      <div 
-                        className="absolute whitespace-nowrap flex items-center h-full gap-8"
-                        style={{ animation: 'marquee 90s linear infinite' }}
-                      >
-                        <span className="text-xs">
-                          <span className="text-primary font-semibold">Now Playing:</span>{' '}
-                          <span className="text-popover-foreground">{currentTrack.title}</span>
-                          {currentTrack.artist && <span className="text-popover-foreground/60"> — {currentTrack.artist}</span>}
-                        </span>
-                        <span className="text-xs text-popover-foreground/40">•</span>
-                        <span className="text-xs">
-                          <span className="text-primary/70 font-semibold">Up Next:</span>{' '}
-                          <span className="text-popover-foreground/60">More from {selectedChannel?.name || 'Glee World Radio'}</span>
-                        </span>
-                        <span className="text-xs text-popover-foreground/40">•</span>
-                        <span className="text-xs">
-                          <span className="text-primary font-semibold">Now Playing:</span>{' '}
-                          <span className="text-popover-foreground">{currentTrack.title}</span>
-                          {currentTrack.artist && <span className="text-popover-foreground/60"> — {currentTrack.artist}</span>}
-                        </span>
-                        <span className="text-xs text-popover-foreground/40">•</span>
-                        <span className="text-xs">
-                          <span className="text-primary/70 font-semibold">Up Next:</span>{' '}
-                          <span className="text-popover-foreground/60">More from {selectedChannel?.name || 'Glee World Radio'}</span>
-                        </span>
+                    <div className="bg-popover-foreground/10 rounded-xl p-6 mb-8">
+                      <h3 className="text-lg font-semibold text-popover-foreground mb-4 flex items-center gap-2">
+                        <Music2 className="h-5 w-5 text-primary" />
+                        Now Playing
+                      </h3>
+                      <div className="text-center">
+                        <p className="text-xl font-bold text-popover-foreground mb-1">{currentTrack.title}</p>
+                        {currentTrack.artist && (
+                          <p className="text-popover-foreground/60">{currentTrack.artist}</p>
+                        )}
                       </div>
                     </div>
                   )}
 
                   {/* Volume Control */}
-                  <div className="items-center gap-1.5 flex ml-auto shrink-0">
+                  <div className="flex items-center justify-center gap-4">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 text-popover-foreground/70 hover:text-popover-foreground hover:bg-white/10"
+                      className="h-10 w-10 p-0 text-popover-foreground/70 hover:text-popover-foreground hover:bg-white/10"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -295,9 +292,9 @@ export const HeaderRadioControls = () => {
                       type="button"
                     >
                       {isMuted ? (
-                        <VolumeX className="h-3 w-3" />
+                        <VolumeX className="h-5 w-5" />
                       ) : (
-                        <Volume2 className="h-3 w-3" />
+                        <Volume2 className="h-5 w-5" />
                       )}
                     </Button>
                     <Slider
@@ -305,13 +302,15 @@ export const HeaderRadioControls = () => {
                       onValueChange={([value]) => setVolume(value)}
                       max={1}
                       step={0.05}
-                      className="w-16"
+                      className="w-48"
                     />
+                    <span className="text-sm text-popover-foreground/60 w-12 text-right">
+                      {Math.round(volume * 100)}%
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
           </>,
           document.body
         )}
