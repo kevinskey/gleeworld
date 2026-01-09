@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { 
   Search, Printer, Book, MessageSquare, History, User, Users, 
@@ -15,8 +16,11 @@ import { getVisibleHandbookSections, HandbookSection } from '@/config/handbookSe
 import { useHandbookEdit } from '@/hooks/useHandbookEdit';
 import { HandbookEditHistory } from './HandbookEditHistory';
 import { HandbookEditor } from './HandbookEditor';
+import { HandbookAppendixNav } from './HandbookAppendixNav';
+import { HandbookAppendixView } from './HandbookAppendixView';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'react-router-dom';
 
 const iconMap: Record<string, React.ElementType> = {
   MessageSquare, History, User, Users, Briefcase, ClipboardCheck, Vote,
@@ -90,6 +94,7 @@ interface CourseHandbookProps {
 type SidebarView = 'sections' | 'history';
 
 export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) => {
+  const location = useLocation();
   const sections = getVisibleHandbookSections();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -97,7 +102,21 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
   const [sidebarView, setSidebarView] = useState<SidebarView>('sections');
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selectedAppendixSlug, setSelectedAppendixSlug] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Check URL for appendix slug on mount
+  useEffect(() => {
+    if (location.pathname.includes('/handbook/appendix-')) {
+      const match = location.pathname.match(/\/handbook\/(appendix-[^/]+)/);
+      if (match) {
+        setSelectedAppendixSlug(match[1]);
+      }
+    }
+  }, [location.pathname]);
+
+  // Get course ID for appendix queries (MUS070 format)
+  const courseId = courseCode.replace(' ', '').toUpperCase();
   
   // Use custom sections state that can be updated
   const [customSections, setCustomSections] = useState<HandbookSection[]>(sections);
@@ -298,10 +317,13 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
                     return (
                       <button
                         key={section.id}
-                        onClick={() => goToSection(actualIndex)}
+                        onClick={() => {
+                          goToSection(actualIndex);
+                          setSelectedAppendixSlug(null);
+                        }}
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm transition-colors text-left",
-                          actualIndex === selectedIndex
+                          actualIndex === selectedIndex && !selectedAppendixSlug
                             ? "bg-primary text-primary-foreground"
                             : "hover:bg-muted text-muted-foreground hover:text-foreground"
                         )}
@@ -311,6 +333,18 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
                       </button>
                     );
                   })}
+                  
+                  {/* Mobile Appendices */}
+                  <div className="pt-2 mt-2 border-t">
+                    <HandbookAppendixNav
+                      courseId={courseId}
+                      onSelectAppendix={(slug) => {
+                        setSelectedAppendixSlug(slug);
+                        setMobileNavOpen(false);
+                      }}
+                      selectedSlug={selectedAppendixSlug || undefined}
+                    />
+                  </div>
                 </div>
               </ScrollArea>
             )}
@@ -384,10 +418,13 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
                   return (
                     <button
                       key={section.id}
-                      onClick={() => goToSection(actualIndex)}
+                      onClick={() => {
+                        goToSection(actualIndex);
+                        setSelectedAppendixSlug(null);
+                      }}
                       className={cn(
                         "w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-xs transition-colors text-left",
-                        actualIndex === selectedIndex
+                        actualIndex === selectedIndex && !selectedAppendixSlug
                           ? "bg-primary text-primary-foreground font-medium"
                           : "hover:bg-muted text-muted-foreground hover:text-foreground"
                       )}
@@ -397,6 +434,18 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
                     </button>
                   );
                 })}
+                
+                {/* Appendices Section */}
+                <div className="pt-2 mt-2 border-t">
+                  <HandbookAppendixNav
+                    courseId={courseId}
+                    onSelectAppendix={(slug) => {
+                      setSelectedAppendixSlug(slug);
+                      setMobileNavOpen(false);
+                    }}
+                    selectedSlug={selectedAppendixSlug || undefined}
+                  />
+                </div>
               </div>
             </ScrollArea>
           )}
@@ -404,7 +453,16 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
-          {isEditing && currentSection ? (
+          {/* Appendix View */}
+          {selectedAppendixSlug ? (
+            <div className="p-6 overflow-auto">
+              <HandbookAppendixView
+                courseId={courseId}
+                slug={selectedAppendixSlug}
+                onBack={() => setSelectedAppendixSlug(null)}
+              />
+            </div>
+          ) : isEditing && currentSection ? (
             <HandbookEditor
               content={currentSection.content}
               sectionTitle={currentSection.title}
