@@ -62,6 +62,21 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
           throw new Error('Invalid token response');
         }
 
+        // Debug (safe): verify the browser is using the expected kid/sub from the JWT
+        try {
+          const [headerB64, payloadB64] = String(tokenData.token).split('.');
+          const header = JSON.parse(atob(headerB64));
+          const payload = JSON.parse(atob(payloadB64));
+          console.log('JaaS JWT debug:', {
+            kid: header?.kid,
+            sub: payload?.sub,
+            room: payload?.room,
+            appId: tokenData.appId,
+          });
+        } catch (e) {
+          console.warn('Failed to decode JWT for debug:', e);
+        }
+
         // Load Jitsi API script if not already loaded
         if (!window.JitsiMeetExternalAPI) {
           await new Promise<void>((resolve, reject) => {
