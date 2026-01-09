@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
+import { setupMobileAudioUnlock, forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 
 export type NotificationSoundType = 'poll' | 'message' | 'announcement' | 'success' | 'warning';
 
@@ -30,15 +30,14 @@ export const useNotificationSounds = (): UseNotificationSoundsReturn => {
     const stored = localStorage.getItem('notification-sounds-volume');
     return stored !== null ? parseFloat(stored) : 0.7;
   });
-  const audioContextRef = useRef<AudioContext | null>(null);
 
   // Initialize audio context and preload sounds
   useEffect(() => {
+    // Setup mobile audio unlock and store cleanup function
+    const cleanupAudioUnlock = setupMobileAudioUnlock();
+
     const loadSounds = async () => {
       try {
-        // Setup mobile audio unlock
-        setupMobileAudioUnlock();
-
         // Fetch available sounds from database
         const { data: soundRecords, error } = await supabase
           .from('notification_sounds')
@@ -92,6 +91,11 @@ export const useNotificationSounds = (): UseNotificationSoundsReturn => {
     };
 
     loadSounds();
+
+    // Cleanup
+    return () => {
+      cleanupAudioUnlock();
+    };
   }, []);
 
   // Update volume on all loaded sounds
@@ -117,12 +121,24 @@ export const useNotificationSounds = (): UseNotificationSoundsReturn => {
     }
 
     try {
+      // Try to unlock audio context first (important for mobile)
+      forceUnlockAudio();
+      
       // Reset to beginning if already playing
       audio.currentTime = 0;
       audio.volume = volume;
       await audio.play();
     } catch (error) {
       console.error(`Error playing notification sound (${type}):`, error);
+      // Try one more time after a brief delay
+      try {
+        forceUnlockAudio();
+        await new Promise(resolve => setTimeout(resolve, 100));
+        audio.currentTime = 0;
+        await audio.play();
+      } catch (retryError) {
+        console.error(`Retry also failed for sound (${type}):`, retryError);
+      }
     }
   }, [sounds, soundEnabled, volume]);
 
