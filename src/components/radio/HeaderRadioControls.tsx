@@ -148,165 +148,170 @@ export const HeaderRadioControls = () => {
           </Button>
         </EnhancedTooltip>
 
-        {/* Full-Screen Radio Dropdown - Rendered in Portal */}
+        {/* Radio Tuner Strip - Rendered in Portal */}
         {isOpen && createPortal(
           <>
-            {/* Backdrop overlay */}
-            <div 
-              className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm"
-              onClick={() => setIsOpen(false)}
-            />
-            
-            {/* Full-Screen Radio Panel */}
+            {/* Radio Tuner Bar - Sleek horizontal strip */}
             <div
-              className="fixed inset-x-0 top-0 bottom-0 z-[9999] flex flex-col"
-              style={{ paddingTop: `var(--gw-header-h, ${headerHeight}px)` }}
+              className="fixed left-0 right-0 z-[9999]"
+              style={{ top: `var(--gw-header-h, ${headerHeight}px)` }}
             >
               <div
                 ref={radioBarRef}
-                className="flex-1 bg-popover/95 backdrop-blur-md border-b-2 border-primary/40 shadow-2xl overflow-y-auto"
+                className="bg-gradient-to-b from-zinc-200 via-zinc-300 to-zinc-400 dark:from-zinc-700 dark:via-zinc-800 dark:to-zinc-900 border-b border-zinc-500/50 shadow-lg"
+                style={{
+                  background: 'linear-gradient(180deg, #d4d4d8 0%, #a1a1aa 50%, #71717a 100%)',
+                }}
               >
-                {/* Close Button - Top Right */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsOpen(false)}
-                  className="absolute top-4 right-4 h-10 w-10 p-0 text-popover-foreground/70 hover:text-popover-foreground hover:bg-white/10 z-10"
-                  type="button"
-                >
-                  <X className="h-6 w-6" />
-                </Button>
-
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                  {/* Header */}
-                  <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-3 mb-2">
-                      <Radio className="h-8 w-8 text-primary" />
-                      <h2 className="text-2xl sm:text-3xl font-bold text-popover-foreground">Glee World Radio</h2>
-                    </div>
-                    <p className="text-popover-foreground/60 text-sm">Select a channel and enjoy the music</p>
-                  </div>
-
-                  {/* Status & Controls Row */}
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-                    <Badge 
-                      variant={isOnline ? (isLive ? "default" : "secondary") : "outline"}
-                      className={cn(
-                        "text-sm h-8 px-4",
-                        isLive ? "bg-red-500 hover:bg-red-600 text-white" : 
-                        isOnline ? "bg-green-500 hover:bg-green-600 text-white" : "bg-popover-foreground/20 text-popover-foreground/70"
-                      )}
-                    >
-                      {isLive ? '🔴 LIVE' : isOnline ? '🟢 ON AIR' : '⚫ OFFLINE'}
-                    </Badge>
+                <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     
-                    {/* Large Play/Pause Button */}
-                    <Button
-                      variant={isPlaying ? "secondary" : "default"}
-                      size="lg"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        togglePlayPause();
-                      }}
-                      disabled={isLoading || !isOnline}
-                      className="h-14 w-14 rounded-full p-0"
-                      type="button"
+                    {/* Power/Close Button */}
+                    <button
+                      onClick={() => setIsOpen(false)}
+                      className="w-6 h-6 rounded-full bg-gradient-to-b from-zinc-600 to-zinc-800 border border-zinc-500 shadow-inner flex items-center justify-center hover:from-zinc-500 hover:to-zinc-700 transition-all"
                     >
-                      {isLoading ? (
-                        <div className="h-6 w-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : isPlaying ? (
-                        <Pause className="h-7 w-7" />
-                      ) : (
-                        <Play className="h-7 w-7 ml-1" />
-                      )}
-                    </Button>
+                      <div className={cn(
+                        "w-2 h-2 rounded-full transition-colors",
+                        isPlaying ? "bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]" : "bg-zinc-400"
+                      )} />
+                    </button>
 
-                    <div className="flex items-center gap-2 text-popover-foreground/60">
-                      <Users className="h-4 w-4" />
-                      <span className="text-sm">{listenerCount} listeners</span>
-                    </div>
-                  </div>
+                    {/* Brand */}
+                    <span className="text-[10px] font-bold tracking-widest text-zinc-700 dark:text-zinc-300 uppercase hidden sm:block">
+                      GleeWorld
+                    </span>
 
-                  {/* Channel Grid */}
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-popover-foreground mb-4 text-center">Channels</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {channels.length > 0 && channels.map((channel) => {
+                    {/* Channel Preset Buttons */}
+                    <div className="flex items-center gap-1">
+                      {channels.slice(0, 6).map((channel, idx) => {
                         const isSelected = selectedChannel?.id === channel.id;
-                        const isThisLoading = isLoading && isSelected;
-                        const ChannelIcon = getChannelIcon(channel.icon);
                         return (
                           <button
                             key={channel.id}
                             onClick={() => handleChannelChange(channel)}
                             disabled={isLoading}
                             className={cn(
-                              "flex flex-col items-center gap-2 p-4 rounded-xl text-sm font-medium transition-all",
+                              "w-6 h-6 sm:w-7 sm:h-7 rounded-full text-[9px] sm:text-[10px] font-bold transition-all",
+                              "bg-gradient-to-b border shadow-sm",
                               isSelected
-                                ? "bg-primary text-primary-foreground shadow-lg scale-105"
-                                : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground hover:scale-102",
-                              isLoading && "opacity-70 cursor-wait"
+                                ? "from-amber-400 to-amber-600 border-amber-700 text-amber-900 shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                                : "from-zinc-500 to-zinc-700 border-zinc-600 text-zinc-200 hover:from-zinc-400 hover:to-zinc-600"
                             )}
                           >
-                            {isThisLoading ? (
-                              <Loader2 className="h-6 w-6 animate-spin" />
-                            ) : (
-                              <ChannelIcon className="h-6 w-6" />
-                            )}
-                            <span className="text-center line-clamp-2">{channel.name}</span>
-                            {isSelected && <Check className="h-4 w-4" />}
+                            {idx + 1}
                           </button>
                         );
                       })}
                     </div>
-                  </div>
 
-                  {/* Now Playing Section */}
-                  {currentTrack && isOnline && (
-                    <div className="bg-popover-foreground/10 rounded-xl p-6 mb-8">
-                      <h3 className="text-lg font-semibold text-popover-foreground mb-4 flex items-center gap-2">
-                        <Music2 className="h-5 w-5 text-primary" />
-                        Now Playing
-                      </h3>
-                      <div className="text-center">
-                        <p className="text-xl font-bold text-popover-foreground mb-1">{currentTrack.title}</p>
-                        {currentTrack.artist && (
-                          <p className="text-popover-foreground/60">{currentTrack.artist}</p>
+                    {/* LCD Display */}
+                    <div className="flex-1 mx-2 sm:mx-4">
+                      <div 
+                        className="bg-[#1a2a1a] border-2 border-zinc-600 rounded px-2 py-1 shadow-inner"
+                        style={{
+                          background: 'linear-gradient(180deg, #0f1a0f 0%, #1a2a1a 50%, #0f1a0f 100%)',
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            {isLive && (
+                              <span className="text-red-400 text-[8px] font-mono animate-pulse">●REC</span>
+                            )}
+                            <div className="truncate">
+                              <span className="text-[10px] sm:text-xs font-mono text-green-400 tracking-wide">
+                                {currentTrack?.title || selectedChannel?.name || 'No Signal'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 text-green-400/70 flex-shrink-0">
+                            <span className="text-[8px] font-mono">{listenerCount}</span>
+                            <Users className="h-2.5 w-2.5" />
+                          </div>
+                        </div>
+                        {currentTrack?.artist && (
+                          <div className="text-[8px] sm:text-[9px] font-mono text-green-400/60 truncate">
+                            {currentTrack.artist}
+                          </div>
                         )}
                       </div>
                     </div>
-                  )}
 
-                  {/* Volume Control */}
-                  <div className="flex items-center justify-center gap-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-10 w-10 p-0 text-popover-foreground/70 hover:text-popover-foreground hover:bg-white/10"
+                    {/* Play/Pause Button */}
+                    <button
                       onClick={(e) => {
                         e.preventDefault();
-                        e.stopPropagation();
-                        setVolume(isMuted ? 0.7 : 0);
+                        togglePlayPause();
                       }}
-                      type="button"
-                    >
-                      {isMuted ? (
-                        <VolumeX className="h-5 w-5" />
-                      ) : (
-                        <Volume2 className="h-5 w-5" />
+                      disabled={isLoading || !isOnline}
+                      className={cn(
+                        "w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all",
+                        "bg-gradient-to-b border shadow-md",
+                        isPlaying
+                          ? "from-green-500 to-green-700 border-green-800"
+                          : "from-zinc-500 to-zinc-700 border-zinc-600 hover:from-zinc-400 hover:to-zinc-600"
                       )}
-                    </Button>
-                    <Slider
-                      value={[volume]}
-                      onValueChange={([value]) => setVolume(value)}
-                      max={1}
-                      step={0.05}
-                      className="w-48"
-                    />
-                    <span className="text-sm text-popover-foreground/60 w-12 text-right">
-                      {Math.round(volume * 100)}%
-                    </span>
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 text-white animate-spin" />
+                      ) : isPlaying ? (
+                        <Pause className="h-3.5 w-3.5 text-white" />
+                      ) : (
+                        <Play className="h-3.5 w-3.5 text-white ml-0.5" />
+                      )}
+                    </button>
+
+                    {/* Volume Knob Section */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setVolume(isMuted ? 0.7 : 0);
+                        }}
+                        className="text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                      >
+                        {isMuted ? (
+                          <VolumeX className="h-3.5 w-3.5" />
+                        ) : (
+                          <Volume2 className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                      
+                      {/* Volume Knob Visual */}
+                      <div 
+                        className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-b from-zinc-400 via-zinc-500 to-zinc-600 border-2 border-zinc-700 shadow-lg cursor-pointer"
+                        style={{
+                          background: 'radial-gradient(ellipse at 30% 30%, #a1a1aa 0%, #52525b 50%, #27272a 100%)',
+                        }}
+                        onClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const centerX = rect.left + rect.width / 2;
+                          const centerY = rect.top + rect.height / 2;
+                          const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+                          const normalizedAngle = ((angle + Math.PI) / (2 * Math.PI));
+                          setVolume(Math.max(0, Math.min(1, normalizedAngle)));
+                        }}
+                      >
+                        {/* Knob indicator line */}
+                        <div 
+                          className="absolute w-0.5 h-3 bg-zinc-300 left-1/2 -translate-x-1/2 top-1 rounded-full"
+                          style={{
+                            transformOrigin: 'center bottom',
+                            transform: `translateX(-50%) rotate(${(volume - 0.5) * 270}deg)`,
+                          }}
+                        />
+                        {/* Center cap */}
+                        <div className="absolute inset-2 sm:inset-3 rounded-full bg-gradient-to-b from-zinc-500 to-zinc-700 border border-zinc-600" />
+                      </div>
+                    </div>
+
+                    {/* Close button */}
+                    <button
+                      onClick={() => setIsOpen(false)}
+                      className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 ml-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </div>
