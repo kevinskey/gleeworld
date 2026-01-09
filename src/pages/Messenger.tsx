@@ -326,39 +326,36 @@ const Messenger = () => {
         </div>
       </UniversalLayout>;
   }
-  return <UniversalLayout showHeader={true} showFooter={false}>
-      <div className="flex flex-col h-[calc(100dvh-var(--gw-header-h,4rem))]">
+  return <UniversalLayout showHeader={false} showFooter={false}>
+      <div className="flex flex-col h-dvh">
         {/* Header section */}
-        <div className="flex-shrink-0 border-b border-border bg-background">
-          <div className="max-w-5xl mx-auto">
-            <BackNavigation className="mb-2" />
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg p-2 bg-primary">
-                  <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">GleeWorld Messenger</h1>
-                    <Badge variant="outline" className="text-xs capitalize">{messengerRole}</Badge>
-                  </div>
-                  <p className="text-xs md:text-sm text-muted-foreground py-[10px]">
-                    {canMessageAnyone ? 'Full access - message anyone' : messengerRole === 'alumna' ? 'Message alumnae and mentees' : `Message your ${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`}
-                  </p>
-                </div>
+        <div className="flex-shrink-0 border-b border-border bg-background px-4 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <BackNavigation />
+              <div className="rounded-lg p-2 bg-primary">
+                <Mail className="h-5 w-5 text-primary-foreground" />
               </div>
-              <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-2">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline text-sm text-black">Groups ({recipientGroups.length})</span>
-              </Button>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-lg font-bold text-foreground">Messenger</h1>
+                  <Badge variant="outline" className="text-xs capitalize">{messengerRole}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground hidden sm:block">
+                  {canMessageAnyone ? 'Full access' : messengerRole === 'alumna' ? 'Alumnae & mentees' : `${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`}
+                </p>
+              </div>
             </div>
+            <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-2">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Groups ({recipientGroups.length})</span>
+            </Button>
           </div>
         </div>
         
         {/* Main Content */}
         <div className="flex-1 min-h-0 overflow-hidden">
-          <div className="h-full flex max-w-5xl mx-auto w-full">
+          <div className="h-full flex w-full">
             {/* Composer Area */}
             <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
               {/* Tabs */}
