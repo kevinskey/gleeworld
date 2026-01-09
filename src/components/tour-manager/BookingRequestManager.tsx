@@ -564,18 +564,20 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
               )}
             </div>
             
-            {/* View Details Dialog */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="mt-3 h-7 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  <Eye className="h-3.5 w-3.5 mr-1" />
-                  View Details
-                </Button>
-              </DialogTrigger>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 mt-3">
+              {/* View Details Dialog */}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <Eye className="h-3.5 w-3.5 mr-1" />
+                    View Details
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{request.event_name}</DialogTitle>
@@ -918,6 +920,38 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                 </div>
               </DialogContent>
             </Dialog>
+
+              {/* Delete Request Button */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Booking Request</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the booking request from {request.organization_name}. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => deleteRequest(request.id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete Permanently
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         ))}
       </div>
