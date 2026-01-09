@@ -43,13 +43,12 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   const {
     currentSemester
   } = useMus240SemesterSafe();
-  
+
   // Detect if URL contains /handbook to auto-switch tab
   const getInitialTab = () => {
     if (location.pathname.includes('/handbook')) return 'handbook';
     return 'home';
   };
-  
   const [activeTab, setActiveTab] = useState(getInitialTab);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollmentLoading, setEnrollmentLoading] = useState(true);
@@ -222,14 +221,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: Calendar,
               label: 'Calendar',
               tab: 'calendar'
-            }, 
+            },
             // Handbook - only for MUS 070
             ...(course.courseCode === 'MUS 070' ? [{
               icon: Book,
               label: 'Handbook',
               tab: 'handbook'
-            }] : [])
-            ].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
+            }] : [])].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 
                 <span className="text-xl pl-[20px]">{item.label}</span>
               </button>)}
@@ -299,10 +297,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                   <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
                   
                 </div>
-                <CardTitle className="text-2xl lg:text-3xl font-bold text-white pb-[10px]">{course.title}</CardTitle>
+                <CardTitle className="text-2xl lg:text-3xl font-bold pb-[10px] text-primary-foreground">{course.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-white/80 pt-[10px] text-lg">{course.description}</p>
+                
               </CardContent>
             </Card>
 
@@ -497,9 +495,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {activeTab === 'calendar' && <CourseCalendarView courseId={course.id} />}
 
             {/* Handbook Tab - Only for MUS 070 */}
-            {activeTab === 'handbook' && course.courseCode === 'MUS 070' && (
-              <CourseHandbook courseCode={course.courseCode} />
-            )}
+            {activeTab === 'handbook' && course.courseCode === 'MUS 070' && <CourseHandbook courseCode={course.courseCode} />}
 
           </div>
         </div>
