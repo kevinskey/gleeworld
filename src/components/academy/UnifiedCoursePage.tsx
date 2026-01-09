@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare } from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +20,7 @@ import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { CourseMessagingInterface } from './CourseMessagingInterface';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 import { StudentSyllabusView } from './syllabus/StudentSyllabusView';
+import { CourseHandbook } from './handbook/CourseHandbook';
 
 // Lazy loaded components for performance
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
@@ -206,7 +207,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: Calendar,
               label: 'Calendar',
               tab: 'calendar'
-            }].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
+            }, 
+            // Handbook - only for MUS 070
+            ...(course.courseCode === 'MUS 070' ? [{
+              icon: Book,
+              label: 'Handbook',
+              tab: 'handbook'
+            }] : [])
+            ].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 
                 <span className="text-xl pl-[20px]">{item.label}</span>
               </button>)}
@@ -472,6 +480,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </Card>}
 
             {activeTab === 'calendar' && <CourseCalendarView courseId={course.id} />}
+
+            {/* Handbook Tab - Only for MUS 070 */}
+            {activeTab === 'handbook' && course.courseCode === 'MUS 070' && (
+              <CourseHandbook courseCode={course.courseCode} />
+            )}
 
           </div>
         </div>
