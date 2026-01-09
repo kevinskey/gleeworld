@@ -99,8 +99,8 @@ export const DashboardStoreSection = () => {
   }
   return <div className="w-full bg-background">
       {/* Glee Academy - Edge to Edge (FIRST on desktop) */}
-      <Button onClick={() => navigate('/glee-academy')} className="w-full gap-2 text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none mt-[10px] pb-[35px] pt-[35px] my-[5px] py-[25px]">
-        <GraduationCap className="h-5 w-5" />
+      <Button onClick={() => navigate('/glee-academy')} className="w-full h-12 sm:h-14 gap-2 text-sm sm:text-xl bg-[#003666] justify-center text-center px-3 sm:px-6 lg:px-8 rounded-none">
+        <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
         Glee Academy
       </Button>
 
