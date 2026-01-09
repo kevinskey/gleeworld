@@ -28,12 +28,15 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
 
   return (
     <header 
-      className={`min-h-20 backdrop-blur-sm border-b border-border px-6 flex items-center justify-between relative overflow-hidden z-40 ${
+      className={`backdrop-blur-sm border-b border-border px-6 flex items-center justify-between relative overflow-hidden z-40 ${
         isSpelmanBlue 
           ? 'bg-gradient-to-r from-[#0066CC] via-[#0077DD] to-[#0088EE]' 
           : 'bg-gradient-to-r from-primary/10 via-background to-destructive/10'
       }`}
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      style={{ 
+        paddingTop: 'max(env(safe-area-inset-top), 0.5rem)',
+        minHeight: 'calc(5rem + env(safe-area-inset-top, 0px))'
+      }}
     >
       {/* Holiday sparkle accents - hide for Spelman Blue */}
       {!isSpelmanBlue && (
