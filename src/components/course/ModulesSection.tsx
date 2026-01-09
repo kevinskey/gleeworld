@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { format, addWeeks, parseISO } from 'date-fns';
+
 interface ModulesSectionProps {
   courseId: string;
 }
@@ -21,6 +23,40 @@ interface WeekItem {
   readings?: string;
   assignments?: string;
 }
+
+// Helper to parse week ranges like "Week 2-3" or "Week 1"
+const parseWeekRange = (weekLabel: string): { start: number; end: number } => {
+  const match = weekLabel.match(/(\d+)(?:\s*-\s*(\d+))?/);
+  if (match) {
+    const start = parseInt(match[1], 10);
+    const end = match[2] ? parseInt(match[2], 10) : start;
+    return { start, end };
+  }
+  return { start: 1, end: 1 };
+};
+
+// Calculate date range for a week based on course start date
+const getWeekDateRange = (weekLabel: string, courseStartDate: string | null, weekIndex: number): string | null => {
+  if (!courseStartDate) return null;
+  
+  try {
+    const startDate = parseISO(courseStartDate);
+    const { start, end } = parseWeekRange(weekLabel);
+    
+    // Calculate the start of this week (0-indexed, so Week 1 = index 0)
+    const weekStart = addWeeks(startDate, start - 1);
+    const weekEnd = addWeeks(startDate, end);
+    
+    // Format: "Jan 13 - Jan 19" or "Jan 13 - Feb 2" for multi-week
+    const startFormatted = format(weekStart, 'MMM d');
+    const endFormatted = format(addWeeks(weekEnd, 0), 'MMM d');
+    
+    return `${startFormatted} - ${endFormatted}`;
+  } catch (e) {
+    return null;
+  }
+};
+
 export const ModulesSection: React.FC<ModulesSectionProps> = ({
   courseId
 }) => {
@@ -46,6 +82,24 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
         ascending: true
       });
       if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch course data for start_date
+  const {
+    data: courseData
+  } = useQuery({
+    queryKey: ['course-data', courseId],
+    queryFn: async () => {
+      const {
+        data,
+        error
+      } = await supabase.from('gw_courses').select('start_date, end_date').eq('id', courseId).maybeSingle();
+      if (error) {
+        console.error('Error fetching course:', error);
+        return null;
+      }
       return data;
     }
   });
@@ -252,6 +306,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                       </CardHeader>
                     </Card>;
             }
+            const dateRange = getWeekDateRange(weekLabel, courseData?.start_date || null, index);
             return <Collapsible key={index} defaultOpen={index < 3} className="group/collapsible">
                     <Card className="overflow-hidden group">
                       <CollapsibleTrigger className="w-full [&[data-state=open]>div>div:last-child>svg:last-child]:rotate-180">
@@ -262,7 +317,15 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                                 {index + 1}
                               </div>
                               <div className="text-left">
-                                <CardTitle className="text-base font-semibold">{weekLabel}</CardTitle>
+                                <div className="flex items-center gap-2">
+                                  <CardTitle className="text-base font-semibold">{weekLabel}</CardTitle>
+                                  {dateRange && (
+                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {dateRange}
+                                    </span>
+                                  )}
+                                </div>
                                 {topicItems.length > 0 && <p className="text-sm mt-0.5 line-clamp-3 text-primary-foreground pt-[10px] pb-[10px] leading-relaxed">
                                     {topicItems[0]}
                                   </p>}
