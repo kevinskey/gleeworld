@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { MessageSquare, UserPlus, Phone, Search, Send, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -112,7 +112,8 @@ export const MeetingInviteDialog: React.FC<MeetingInviteDialogProps> = ({
   };
 
   const getDefaultMessage = () => {
-    const meetingTime = format(new Date(meeting.scheduled_at), "PPP 'at' p");
+    const timezone = 'America/New_York';
+    const meetingTime = formatInTimeZone(new Date(meeting.scheduled_at), timezone, "PPP 'at' p zzz");
     return `You're invited to "${meeting.title}" on ${meetingTime}. Join here: ${getMeetingLink()}`;
   };
 
