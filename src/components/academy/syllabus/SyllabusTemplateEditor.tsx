@@ -105,20 +105,34 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
 
-  // Fetch course data for start_date
-  const { data: courseData } = useQuery({
-    queryKey: ['course-start-date', courseId],
+  // Fetch semester start_date via course's semester_id link
+  const { data: semesterData } = useQuery({
+    queryKey: ['course-semester-date', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get the course's semester_id
+      const { data: course, error: courseError } = await supabase
         .from('gw_courses')
-        .select('start_date')
+        .select('semester_id')
         .eq('id', courseId)
         .maybeSingle();
-      if (error) {
-        console.error('Error fetching course:', error);
+      
+      if (courseError || !course?.semester_id) {
+        console.error('Error fetching course semester:', courseError);
         return null;
       }
-      return data;
+      
+      // Then get the semester's start_date
+      const { data: semester, error: semesterError } = await supabase
+        .from('gw_semesters')
+        .select('start_date')
+        .eq('id', course.semester_id)
+        .maybeSingle();
+      
+      if (semesterError) {
+        console.error('Error fetching semester:', semesterError);
+        return null;
+      }
+      return semester;
     }
   });
 
@@ -403,7 +417,7 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
           <WeeklyScheduleEditor 
             schedule={syllabus.weekly_schedule} 
             onChange={schedule => updateField('weekly_schedule', schedule)} 
-            courseStartDate={courseData?.start_date}
+            courseStartDate={semesterData?.start_date}
             courseInfo={{
               courseCode: courseCode,
               courseTitle: courseTitle,
