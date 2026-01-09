@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -336,16 +336,21 @@ export const useDirectMessages = () => {
   };
 
   // Real-time subscription
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  
   useEffect(() => {
     if (!user) return;
 
     fetchConversations();
 
-    // Use consistent channel name - one per user
-    const channelName = `dm-updates-${user.id}`;
-    
-    // Remove any existing channel with this name first
-    supabase.removeAllChannels();
+    // Clean up existing channel first (only this specific channel, not all channels)
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Use unique channel name to avoid conflicts
+    const channelName = `dm-updates-${user.id}-${Date.now()}`;
     
     const channel = supabase
       .channel(channelName)
@@ -398,9 +403,13 @@ export const useDirectMessages = () => {
       )
       .subscribe();
 
+    channelRef.current = channel;
+
     return () => {
-      channel.unsubscribe();
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [user?.id]);
 
