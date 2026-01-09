@@ -7,10 +7,11 @@ import { Video, Plus, Users, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useQueryClient } from '@tanstack/react-query';
-import { JitsiMeetRoom } from './JitsiMeetRoom';
+import { MeetingWithNotes } from './MeetingWithNotes';
 import { ScheduleMeetingDialog } from './ScheduleMeetingDialog';
 import { ScheduledMeetingsList } from './ScheduledMeetingsList';
 import { MeetingWaitingRoom } from './MeetingWaitingRoom';
+import { MeetingNotesHistory } from './MeetingNotesHistory';
 import { supabase } from '@/integrations/supabase/client';
 
 interface VideoSessionManagerProps {
@@ -130,7 +131,7 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
   if (isInMeeting && activeRoom) {
     return (
       <div className={`w-full h-[600px] ${className}`}>
-        <JitsiMeetRoom
+        <MeetingWithNotes
           roomName={activeRoom}
           userName={userProfile?.full_name || userProfile?.display_name || user?.email || 'Guest'}
           userEmail={user?.email}
@@ -236,6 +237,9 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
 
       {/* Scheduled Meetings */}
       <ScheduledMeetingsList onJoinMeeting={handleJoinScheduledMeeting} />
+
+      {/* Past Meeting Notes */}
+      <MeetingNotesHistory className="max-w-2xl mx-auto" />
     </div>
   );
 };
