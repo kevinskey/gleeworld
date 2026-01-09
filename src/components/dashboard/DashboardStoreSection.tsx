@@ -134,7 +134,7 @@ export const DashboardStoreSection = () => {
                   </div>
                   
                   {/* Course Title - Academic Font */}
-                  <h4 className="font-serif text-xl font-bold text-gray-900 leading-tight mb-2 group-hover:text-gray-700 transition-colors pb-[10px]">
+                  <h4 className="font-serif text-xl font-bold text-gray-900 leading-tight mb-2 group-hover:text-gray-700 transition-colors pb-[10px] line-clamp-2 min-h-[56px]">
                     {course.title}
                   </h4>
                   
@@ -142,7 +142,7 @@ export const DashboardStoreSection = () => {
                   
                   
                   {/* Description */}
-                  {course.description && <p className="text-gray-600 leading-snug line-clamp-3 flex-1 pt-0 pb-[40px] text-base">
+                  {course.description && <p className="text-gray-600 leading-snug line-clamp-3 pt-[15px] pb-[40px] text-base">
                       {course.description}
                     </p>}
                   
