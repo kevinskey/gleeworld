@@ -99,8 +99,13 @@ export const DashboardStoreSection = () => {
   }
   return <div className="w-full bg-background">
       {/* Glee Academy - Edge to Edge (FIRST on desktop) */}
-      <div className="h-[25px] bg-white w-full" />
-      <Button onClick={() => navigate('/glee-academy')} variant="ghost" style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#0B5A8B] to-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-[0_6px_14px_rgba(0,0,0,0.35)] border-t border-t-white/25 hover:brightness-105">
+      <div className="h-[25px] bg-background w-full" />
+      <Button
+        onClick={() => navigate('/glee-academy')}
+        variant="ghost"
+        style={{ fontFamily: "'Cinzel', serif" }}
+        className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-primary to-primary/80 text-primary-foreground [&_svg]:text-primary-foreground justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-lg border-t border-t-primary-foreground/20 hover:brightness-105"
+      >
         <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
         Glee Academy
       </Button>
@@ -151,12 +156,15 @@ export const DashboardStoreSection = () => {
               <p className="text-sm text-gray-400 uppercase tracking-wide">No courses available</p>
             </div>}
         </div>
-        <div className="h-[25px] bg-[#003666] w-full" />
+        <div className="h-[25px] bg-primary w-full" />
       </div>
 
       {/* Shop Section Header - Edge to Edge */}
-      <div className="h-[25px] bg-white w-full" />
-      <h2 style={{ fontFamily: "'Cinzel', serif" }} className="relative z-10 h-12 text-sm sm:text-xl font-bold bg-gradient-to-b from-[#0B5A8B] to-[#003666] text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-[0_6px_14px_rgba(0,0,0,0.35)] border-t border-t-white/25">
+      <div className="h-[25px] bg-background w-full" />
+      <h2
+        style={{ fontFamily: "'Cinzel', serif" }}
+        className="relative z-10 h-12 text-sm sm:text-xl font-bold bg-gradient-to-b from-primary to-primary/80 text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-lg border-t border-t-primary-foreground/20"
+      >
         <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
         Shop
       </h2>
@@ -209,12 +217,17 @@ export const DashboardStoreSection = () => {
               Visit Shop
             </Button>
           </div>}
-        <div className="h-[25px] bg-[#003666] w-full" />
+        <div className="h-[25px] bg-primary w-full" />
       </div>
 
       {/* My Modules - Edge to Edge */}
-      <div className="h-[25px] bg-white w-full" />
-      <Button onClick={() => navigate('/modules')} variant="ghost" style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#0B5A8B] to-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-[0_6px_14px_rgba(0,0,0,0.35)] border-t border-t-white/25 hover:brightness-105">
+      <div className="h-[25px] bg-background w-full" />
+      <Button
+        onClick={() => navigate('/modules')}
+        variant="ghost"
+        style={{ fontFamily: "'Cinzel', serif" }}
+        className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-primary to-primary/80 text-primary-foreground [&_svg]:text-primary-foreground justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-lg border-t border-t-primary-foreground/20 hover:brightness-105"
+      >
         <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
         My Modules
       </Button>
