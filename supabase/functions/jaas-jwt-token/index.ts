@@ -122,13 +122,13 @@ serve(async (req) => {
     const exp = now + 7200; // 2 hours
 
     // JaaS JWT payload
-    // IMPORTANT: The `room` claim must match the full room name used by the client (including tenant prefix).
-    // Our client joins `roomName: ${appId}/${roomName}`, so we mirror that here.
+    // IMPORTANT: For 8x8 JaaS the `room` claim should match the room slug passed to the client
+    // (the tenant is represented by `sub` and by loading external_api.js from the tenant path).
     const payload = {
       aud: "jitsi",
       iss: "chat",
       sub: appId,
-      room: roomName ? `${appId}/${roomName}` : "*",
+      room: roomName || "*",
       exp: exp,
       nbf: now,
       iat: now,
