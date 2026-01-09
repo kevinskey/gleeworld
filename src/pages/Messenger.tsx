@@ -129,11 +129,16 @@ const Messenger = () => {
 
   // Filter contacts based on search query
   useEffect(() => {
+    console.log('[Messenger Search] searchQuery:', searchQuery, 'contacts count:', contacts.length);
     if (!searchQuery.trim()) {
       setFilteredContacts([]);
       return;
     }
-    const filtered = contacts.filter(c => c.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || c.email?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 20);
+    const filtered = contacts.filter(c => 
+      c.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      c.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 20);
+    console.log('[Messenger Search] filtered count:', filtered.length, 'first few:', filtered.slice(0, 3).map(c => c.full_name));
     setFilteredContacts(filtered);
   }, [searchQuery, contacts]);
 
