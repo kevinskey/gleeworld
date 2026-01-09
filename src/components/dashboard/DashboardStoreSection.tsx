@@ -151,6 +151,7 @@ export const DashboardStoreSection = () => {
               <p className="text-sm text-gray-400 uppercase tracking-wide">No courses available</p>
             </div>}
         </div>
+        <div className="h-[5px] bg-[#003666] w-full" />
       </div>
 
       {/* Shop Section Header - Edge to Edge */}
@@ -208,6 +209,7 @@ export const DashboardStoreSection = () => {
               Visit Shop
             </Button>
           </div>}
+        <div className="h-[5px] bg-[#003666] w-full" />
       </div>
 
       {/* My Modules - Edge to Edge */}
@@ -237,6 +239,7 @@ export const DashboardStoreSection = () => {
                 </Card>;
         })}
           </div>}
+        <div className="h-[5px] bg-[#003666] w-full" />
       </div>
 
       {/* Fan Zone - Edge to Edge */}
