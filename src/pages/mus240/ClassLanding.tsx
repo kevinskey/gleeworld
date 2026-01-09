@@ -26,8 +26,9 @@ export default function ClassLanding() {
     checkActivePoll();
 
     // Listen for poll changes
-    const subscription = supabase
-      .channel('poll-status')
+    const channelName = `poll-status-${Date.now()}-${Math.random()}`;
+    const channel = supabase
+      .channel(channelName)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -38,7 +39,7 @@ export default function ClassLanding() {
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, []);
 

@@ -69,8 +69,9 @@ export const ComprehensiveJournalAdmin = () => {
     loadAllData();
     
     // Set up real-time subscriptions
+    const channelName = `admin-journal-entries-${Date.now()}-${Math.random()}`;
     const journalChannel = supabase
-      .channel('admin-journal-entries')
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'mus240_journal_entries' }, handleJournalChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'mus240_journal_comments' }, handleCommentChange)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'assignment_submissions' }, handleSubmissionChange)

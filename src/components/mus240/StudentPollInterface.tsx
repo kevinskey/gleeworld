@@ -33,10 +33,11 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
 
   useEffect(() => {
     fetchActivePoll();
-    
+
     // Subscribe to real-time poll updates
+    const channelName = `poll-updates-${Date.now()}-${Math.random()}`;
     const channel = supabase
-      .channel('poll-updates')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -53,9 +54,16 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
               setCurrentQuestion(0);
               setSelectedAnswers({});
               setSubmittedAnswers({});
-            } else if (poll.id === activePoll?.id && !poll.is_active) {
-              setActivePoll(null);
+              return;
             }
+
+            // If a poll ended, clear it only if it was the one we were showing
+            setActivePoll((prev) => {
+              if (prev && poll.id === prev.id && !poll.is_active) {
+                return null;
+              }
+              return prev;
+            });
           }
         }
       )
@@ -64,7 +72,7 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activePoll?.id]);
+  }, []);
 
   const fetchActivePoll = async () => {
     try {
