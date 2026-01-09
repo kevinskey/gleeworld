@@ -172,19 +172,42 @@ const Messenger = () => {
         // Extract course ID from group id (format: "course:uuid")
         const courseId = group.id.replace('course:', '');
 
-        // Fetch all enrolled students' emails
-        const {
-          data: enrollments,
-          error
-        } = await supabase.from('gw_course_enrollments').select('user_id, gw_profiles!inner(email)').eq('course_id', courseId).eq('role', 'student').eq('enrollment_status', 'enrolled');
-        if (error) throw error;
+        // Step 1: Fetch all enrolled students' user_ids
+        const { data: enrollments, error: enrollError } = await supabase
+          .from('gw_course_enrollments')
+          .select('user_id')
+          .eq('course_id', courseId)
+          .eq('role', 'student')
+          .eq('enrollment_status', 'enrolled');
+        
+        if (enrollError) throw enrollError;
+        
         if (enrollments && enrollments.length > 0) {
-          const emails = enrollments.map((e: any) => e.gw_profiles?.email).filter((email: string | null) => email && !recipients.includes(email));
-          setRecipients([...recipients, ...emails]);
-          toast({
-            title: `Added ${emails.length} students`,
-            description: `From ${group.name.replace('📚 ', '')}`
-          });
+          // Step 2: Fetch emails for those user_ids from gw_profiles
+          const userIds = enrollments.map(e => e.user_id);
+          const { data: profiles, error: profileError } = await supabase
+            .from('gw_profiles')
+            .select('email')
+            .in('user_id', userIds);
+          
+          if (profileError) throw profileError;
+          
+          const emails = (profiles || [])
+            .map(p => p.email)
+            .filter((email): email is string => !!email && !recipients.includes(email));
+          
+          if (emails.length > 0) {
+            setRecipients([...recipients, ...emails]);
+            toast({
+              title: `Added ${emails.length} students`,
+              description: `From ${group.name.replace('📚 ', '')}`
+            });
+          } else {
+            toast({
+              title: "No new students to add",
+              description: "All students already added or no emails found",
+            });
+          }
         } else {
           toast({
             title: "No students found",
