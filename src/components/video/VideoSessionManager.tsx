@@ -11,83 +11,67 @@ import { useQueryClient } from '@tanstack/react-query';
 import { JitsiMeetRoom } from './JitsiMeetRoom';
 import { ScheduleMeetingDialog } from './ScheduleMeetingDialog';
 import { ScheduledMeetingsList } from './ScheduledMeetingsList';
-
 interface VideoSessionManagerProps {
   className?: string;
 }
-
-export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ className }) => {
-  const { user } = useAuth();
-  const { userProfile } = useUserProfile(user);
+export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
+  className
+}) => {
+  const {
+    user
+  } = useAuth();
+  const {
+    userProfile
+  } = useUserProfile(user);
   const queryClient = useQueryClient();
   const [roomName, setRoomName] = useState('');
   const [isInMeeting, setIsInMeeting] = useState(false);
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-
   const handleJoinScheduledMeeting = (scheduledRoomName: string) => {
     setActiveRoom(scheduledRoomName);
     setIsInMeeting(true);
   };
-
   const handleMeetingScheduled = () => {
-    queryClient.invalidateQueries({ queryKey: ['scheduled-meetings'] });
+    queryClient.invalidateQueries({
+      queryKey: ['scheduled-meetings']
+    });
   };
-
   const handleStartMeeting = () => {
     if (!roomName.trim()) return;
-    
+
     // Sanitize room name - replace spaces with dashes, remove special chars
-    const sanitizedRoom = roomName
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-    
+    const sanitizedRoom = roomName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     setActiveRoom(sanitizedRoom);
     setIsInMeeting(true);
     setShowCreateDialog(false);
   };
-
   const handleJoinQuickMeeting = () => {
     // Generate a quick meeting room name
     const quickRoom = `glee-meeting-${Date.now().toString(36)}`;
     setActiveRoom(quickRoom);
     setIsInMeeting(true);
   };
-
   const handleLeaveMeeting = () => {
     setIsInMeeting(false);
     setActiveRoom(null);
     setRoomName('');
   };
-
   if (isInMeeting && activeRoom) {
-    return (
-      <div className={`w-full h-[600px] ${className}`}>
-      <JitsiMeetRoom
-          roomName={activeRoom}
-          userName={userProfile?.full_name || userProfile?.display_name || user?.email || 'Guest'}
-          userEmail={user?.email}
-          userId={user?.id}
-          isModerator={userProfile?.is_admin || userProfile?.is_super_admin || false}
-          onClose={handleLeaveMeeting}
-        />
-      </div>
-    );
+    return <div className={`w-full h-[600px] ${className}`}>
+      <JitsiMeetRoom roomName={activeRoom} userName={userProfile?.full_name || userProfile?.display_name || user?.email || 'Guest'} userEmail={user?.email} userId={user?.id} isModerator={userProfile?.is_admin || userProfile?.is_super_admin || false} onClose={handleLeaveMeeting} />
+      </div>;
   }
-
-  return (
-    <div className={`space-y-6 ${className}`}>
+  return <div className={`space-y-6 ${className}`}>
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="cursor-pointer hover:border-primary transition-colors" onClick={handleJoinQuickMeeting}>
-          <CardContent className="pt-4 text-center">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
-              <Video className="h-5 w-5 text-primary" />
+          <CardContent className="pt-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Video className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="font-medium text-sm mb-0.5">Start Instant Meeting</h3>
-            <p className="text-xs text-muted-foreground">Start a video call right now</p>
+            <h3 className="font-semibold mb-1">Start Instant Meeting</h3>
+            <p className="text-sm text-muted-foreground">Start a video call right now</p>
           </CardContent>
         </Card>
 
@@ -96,12 +80,12 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ classN
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Card className="cursor-pointer hover:border-primary transition-colors">
-              <CardContent className="pt-4 text-center">
-                <div className="w-10 h-10 rounded-full bg-secondary/50 flex items-center justify-center mx-auto mb-2">
-                  <Plus className="h-5 w-5 text-foreground" />
+              <CardContent className="pt-6 text-center">
+                <div className="w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center mx-auto mb-4">
+                  <Plus className="h-6 w-6 text-foreground" />
                 </div>
-                <h3 className="font-medium text-sm mb-0.5">Create Named Room</h3>
-                <p className="text-xs text-muted-foreground">Create a room with a custom name</p>
+                <h3 className="font-semibold mb-1">Create Named Room</h3>
+                <p className="text-sm text-muted-foreground">Create a room with a custom name</p>
               </CardContent>
             </Card>
           </DialogTrigger>
@@ -115,13 +99,7 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ classN
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label htmlFor="room-name">Room Name</Label>
-                <Input
-                  id="room-name"
-                  placeholder="e.g., rehearsal-room, soprano-section"
-                  value={roomName}
-                  onChange={(e) => setRoomName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleStartMeeting()}
-                />
+                <Input id="room-name" placeholder="e.g., rehearsal-room, soprano-section" value={roomName} onChange={e => setRoomName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleStartMeeting()} />
                 <p className="text-xs text-muted-foreground">
                   Room names are converted to lowercase with dashes
                 </p>
@@ -142,18 +120,11 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ classN
             <Users className="h-5 w-5" />
             Join Existing Room
           </CardTitle>
-          <CardDescription>
-            Enter a room name to join an existing meeting
-          </CardDescription>
+          
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
-            <Input
-              placeholder="Enter room name..."
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleStartMeeting()}
-            />
+            <Input placeholder="Enter room name..." value={roomName} onChange={e => setRoomName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleStartMeeting()} />
             <Button onClick={handleStartMeeting} disabled={!roomName.trim()}>
               Join
             </Button>
@@ -174,26 +145,16 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ classN
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {['director-office', 'soprano-section', 'alto-section', 'rehearsal-room', 'exec-board'].map((room) => (
-              <Button
-                key={room}
-                variant="outline"
-                size="sm"
-                className="justify-start"
-                onClick={() => {
-                  setActiveRoom(room);
-                  setIsInMeeting(true);
-                }}
-              >
+            {['director-office', 'soprano-section', 'alto-section', 'rehearsal-room', 'exec-board'].map(room => <Button key={room} variant="outline" size="sm" className="justify-start" onClick={() => {
+            setActiveRoom(room);
+            setIsInMeeting(true);
+          }}>
                 <Video className="h-3 w-3 mr-2" />
                 {room}
-              </Button>
-            ))}
+              </Button>)}
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default VideoSessionManager;
