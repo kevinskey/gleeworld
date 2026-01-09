@@ -291,17 +291,19 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </Button>
 
             {/* Course Header - Card on Desktop */}
-            <Card className="bg-gradient-to-r from-primary to-primary/80 border-0 hidden lg:block">
-              <CardHeader className="pb-2 bg-[#003666]">
-                <div className="flex items-center gap-3 mb-2 bg-[#003666]">
+            <Card className="bg-[#003666] border-0 hidden lg:block">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3 mb-2">
                   <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
-                  
                 </div>
-                <CardTitle className="text-2xl lg:text-3xl font-bold pb-[10px] text-primary-foreground">{course.title}</CardTitle>
+                <CardTitle className="text-2xl lg:text-3xl font-bold text-primary-foreground">{course.title}</CardTitle>
+                <div className="flex items-center gap-6 mt-3 text-sm text-primary-foreground/80">
+                  <span className="font-medium text-primary-foreground">Dr. Kevin Johnson</span>
+                  <span>kjohns10@spelman.edu</span>
+                  <span>Office: Fine Arts 105</span>
+                  <span>Office Hours: MWF 3-5 PM</span>
+                </div>
               </CardHeader>
-              <CardContent>
-                
-              </CardContent>
             </Card>
 
             {/* Mobile Tab Navigation - Below Welcome Card */}
