@@ -519,7 +519,7 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
 
               {/* Content Area */}
               <ScrollArea className="flex-1">
-                <div className="p-6 max-w-3xl">
+                <div className="p-6 max-w-4xl lg:max-w-5xl">
                   {currentSection && <MarkdownContent content={currentSection.content} />}
                 </div>
               </ScrollArea>
