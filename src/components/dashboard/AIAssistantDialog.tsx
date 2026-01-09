@@ -83,8 +83,10 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
     fetchMessages();
 
     // Subscribe to real-time updates
+    // Use a unique channel name per mounted instance to avoid "subscribe multiple times" errors
+    const channelName = `internal-messages-${user.id}-${Date.now()}-${Math.random()}`;
     const channel = supabase
-      .channel('internal-messages')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
