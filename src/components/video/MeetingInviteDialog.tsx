@@ -108,8 +108,7 @@ export const MeetingInviteDialog: React.FC<MeetingInviteDialogProps> = ({
   };
 
   const getMeetingLink = () => {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/messenger?join=${meeting.room_name}`;
+    return `https://gleeworld.org/messenger?join=${meeting.room_name}`;
   };
 
   const getDefaultMessage = () => {
