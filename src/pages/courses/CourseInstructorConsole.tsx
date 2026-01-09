@@ -245,9 +245,9 @@ export const CourseInstructorConsole = () => {
         </div>
 
         {/* Main Layout */}
-        <div className="flex max-w-[1800px] mx-auto">
+        <div className="flex max-w-[1800px] mx-auto min-h-0">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-56 xl:w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-[132px]">
+          <aside className="hidden lg:block w-56 xl:w-64 border-r bg-card sticky top-[132px] self-start max-h-[calc(100vh-132px)] overflow-y-auto">
             <div className="p-4 xl:p-6">
               <div className="mb-6 xl:mb-8 pb-4 xl:pb-6 border-b text-primary-foreground px-[10px] py-[10px] bg-orange-200">
                 <h2 className="text-lg xl:text-xl font-bold text-foreground">{course.courseCode}</h2>
@@ -271,7 +271,7 @@ export const CourseInstructorConsole = () => {
           </Sheet>
 
           {/* Main Content */}
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24">
             {activeTab === 'syllabus' && dbCourse && (
               <SyllabusTemplateEditor 
                 courseId={dbCourse.id} 
