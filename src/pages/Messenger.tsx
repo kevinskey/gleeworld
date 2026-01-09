@@ -106,7 +106,7 @@ const Messenger = () => {
       setFilteredContacts([]);
       return;
     }
-    const filtered = contacts.filter(c => c.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || c.email?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 8);
+    const filtered = contacts.filter(c => c.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || c.email?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 20);
     setFilteredContacts(filtered);
   }, [searchQuery, contacts]);
 
