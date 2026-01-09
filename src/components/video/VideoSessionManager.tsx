@@ -82,12 +82,12 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ classN
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="cursor-pointer hover:border-primary transition-colors" onClick={handleJoinQuickMeeting}>
-          <CardContent className="pt-6 text-center">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Video className="h-6 w-6 text-primary" />
+          <CardContent className="pt-4 text-center">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+              <Video className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="font-semibold mb-1">Start Instant Meeting</h3>
-            <p className="text-sm text-muted-foreground">Start a video call right now</p>
+            <h3 className="font-medium text-sm mb-0.5">Start Instant Meeting</h3>
+            <p className="text-xs text-muted-foreground">Start a video call right now</p>
           </CardContent>
         </Card>
 
@@ -96,12 +96,12 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ classN
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Card className="cursor-pointer hover:border-primary transition-colors">
-              <CardContent className="pt-6 text-center">
-                <div className="w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center mx-auto mb-4">
-                  <Plus className="h-6 w-6 text-foreground" />
+              <CardContent className="pt-4 text-center">
+                <div className="w-10 h-10 rounded-full bg-secondary/50 flex items-center justify-center mx-auto mb-2">
+                  <Plus className="h-5 w-5 text-foreground" />
                 </div>
-                <h3 className="font-semibold mb-1">Create Named Room</h3>
-                <p className="text-sm text-muted-foreground">Create a room with a custom name</p>
+                <h3 className="font-medium text-sm mb-0.5">Create Named Room</h3>
+                <p className="text-xs text-muted-foreground">Create a room with a custom name</p>
               </CardContent>
             </Card>
           </DialogTrigger>
