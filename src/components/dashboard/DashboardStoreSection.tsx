@@ -104,7 +104,7 @@ export const DashboardStoreSection = () => {
         onClick={() => navigate('/glee-academy')}
         variant="ghost"
         style={{ fontFamily: "'Cinzel', serif" }}
-        className="w-full h-12 gap-2 text-sm sm:text-xl bg-[#003666] text-white [&_svg]:text-white justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-lg border-t border-t-white/20 hover:brightness-110"
+        className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] text-white [&_svg]:text-white justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-lg border-t border-t-white/20 hover:brightness-110"
       >
         <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
         Glee Academy
@@ -163,7 +163,7 @@ export const DashboardStoreSection = () => {
       <div className="h-[25px] bg-background w-full" />
       <h2
         style={{ fontFamily: "'Cinzel', serif" }}
-        className="relative z-10 h-12 text-sm sm:text-xl font-bold bg-[#003666] text-white px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-lg border-t border-t-white/20"
+        className="relative z-10 h-12 text-sm sm:text-xl font-bold bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] text-white px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-lg border-t border-t-white/20"
       >
         <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
         Shop
@@ -226,7 +226,7 @@ export const DashboardStoreSection = () => {
         onClick={() => navigate('/modules')}
         variant="ghost"
         style={{ fontFamily: "'Cinzel', serif" }}
-        className="w-full h-12 gap-2 text-sm sm:text-xl bg-[#003666] text-white [&_svg]:text-white justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-lg border-t border-t-white/20 hover:brightness-110"
+        className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] text-white [&_svg]:text-white justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-lg border-t border-t-white/20 hover:brightness-110"
       >
         <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
         My Modules
