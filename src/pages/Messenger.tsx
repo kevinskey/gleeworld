@@ -329,26 +329,26 @@ const Messenger = () => {
   return <UniversalLayout showHeader={true} showFooter={false}>
       <div className="flex flex-col h-[calc(100dvh-var(--gw-header-h,4rem))]">
         {/* Persistent Header */}
-        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 lg:px-10 py-3">
+        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 lg:px-10 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <BackNavigation />
-              <div className="rounded-lg p-2 bg-primary">
-                <Mail className="h-5 w-5 text-primary-foreground" />
+              <div className="rounded-lg p-4 bg-primary">
+                <Mail className="h-10 w-10 text-primary-foreground" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-bold text-foreground">Messenger</h1>
-                  <Badge variant="outline" className="text-xs capitalize">{messengerRole}</Badge>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-bold text-foreground">Messenger</h1>
+                  <Badge variant="outline" className="text-base capitalize px-3 py-1">{messengerRole}</Badge>
                 </div>
-                <p className="text-xs text-muted-foreground hidden sm:block">
+                <p className="text-base text-muted-foreground hidden sm:block">
                   {canMessageAnyone ? 'Full access' : messengerRole === 'alumna' ? 'Alumnae & mentees' : `${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`}
                 </p>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline text-sm">Groups ({recipientGroups.length})</span>
+            <Button variant="outline" size="lg" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-3">
+              <Users className="h-8 w-8" />
+              <span className="hidden sm:inline text-lg">Groups ({recipientGroups.length})</span>
             </Button>
           </div>
         </header>
