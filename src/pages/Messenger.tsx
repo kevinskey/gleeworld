@@ -328,8 +328,8 @@ const Messenger = () => {
   }
   return <UniversalLayout showHeader={false} showFooter={false}>
       <div className="flex flex-col h-dvh">
-        {/* Header section */}
-        <div className="flex-shrink-0 border-b border-border bg-background px-4 py-2">
+        {/* Persistent Header */}
+        <header className="sticky top-0 z-50 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 lg:px-10 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <BackNavigation />
@@ -351,11 +351,11 @@ const Messenger = () => {
               <span className="hidden sm:inline text-sm">Groups ({recipientGroups.length})</span>
             </Button>
           </div>
-        </div>
+        </header>
         
-        {/* Main Content */}
-        <div className="flex-1 min-h-0 overflow-hidden px-4 lg:px-8">
-          <div className="h-full flex w-full border-x border-border">
+        {/* Main Content with L/R padding */}
+        <div className="flex-1 min-h-0 overflow-hidden px-6 lg:px-10">
+          <div className="h-full flex w-full">
             {/* Composer Area */}
             <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
               {/* Tabs */}
@@ -377,7 +377,7 @@ const Messenger = () => {
 
                 {/* Email Tab */}
                 <TabsContent value="email" className="flex-1 overflow-auto mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-                  <div className="flex-1 bg-muted/50 p-4 sm:p-6 space-y-4 px-[10px] py-[10px]">
+                  <div className="flex-1 bg-muted/50 p-6 space-y-4">
                     {/* Recipients */}
                     <div className="space-y-1">
                       <Label className="text-sm font-medium text-foreground">To:</Label>
