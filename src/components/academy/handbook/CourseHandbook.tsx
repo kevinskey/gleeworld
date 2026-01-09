@@ -12,12 +12,70 @@ import {
 } from 'lucide-react';
 import { HANDBOOK_SECTIONS, getVisibleHandbookSections, HandbookSection } from '@/config/handbookSections';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 const iconMap: Record<string, React.ElementType> = {
   MessageSquare, History, User, Users, Briefcase, ClipboardCheck, Vote,
   Calendar, Shirt, MapPin, Shield, ShoppingBag, FileText, GraduationCap, FileSignature
+};
+
+// Simple markdown renderer that doesn't require external dependencies
+const SimpleMarkdown: React.FC<{ content: string }> = ({ content }) => {
+  const renderContent = (text: string) => {
+    const blocks = text.split(/\n\n+/);
+    
+    return blocks.map((block, index) => {
+      const trimmed = block.trim();
+      if (!trimmed) return null;
+      
+      // Headers
+      if (trimmed.startsWith('### ')) {
+        return <h3 key={index} className="text-lg font-semibold mt-6 mb-3">{trimmed.slice(4)}</h3>;
+      }
+      if (trimmed.startsWith('## ')) {
+        return <h2 key={index} className="text-xl font-bold mt-8 mb-4">{trimmed.slice(3)}</h2>;
+      }
+      if (trimmed.startsWith('# ')) {
+        return <h1 key={index} className="text-2xl font-bold mt-8 mb-4">{trimmed.slice(2)}</h1>;
+      }
+      
+      // Bullet lists
+      if (trimmed.includes('\n- ') || trimmed.startsWith('- ')) {
+        const items = trimmed.split('\n').filter(line => line.startsWith('- '));
+        return (
+          <ul key={index} className="list-disc list-inside space-y-1 my-4 ml-4">
+            {items.map((item, i) => (
+              <li key={i} className="text-muted-foreground">{item.slice(2)}</li>
+            ))}
+          </ul>
+        );
+      }
+      
+      // Numbered lists
+      if (/^\d+\.\s/.test(trimmed)) {
+        const items = trimmed.split('\n').filter(line => /^\d+\.\s/.test(line));
+        return (
+          <ol key={index} className="list-decimal list-inside space-y-1 my-4 ml-4">
+            {items.map((item, i) => (
+              <li key={i} className="text-muted-foreground">{item.replace(/^\d+\.\s/, '')}</li>
+            ))}
+          </ol>
+        );
+      }
+      
+      // Bold text handling
+      const formattedText = trimmed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      return (
+        <p 
+          key={index} 
+          className="text-muted-foreground leading-relaxed my-3"
+          dangerouslySetInnerHTML={{ __html: formattedText }}
+        />
+      );
+    });
+  };
+
+  return <div>{renderContent(content)}</div>;
 };
 
 interface CourseHandbookProps {
@@ -180,10 +238,8 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
         {/* Section Content */}
         {currentSection && !searchResults && (
           <Card className="print:shadow-none print:border-0">
-            <CardContent className="pt-6 prose prose-sm max-w-none dark:prose-invert">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {currentSection.content}
-              </ReactMarkdown>
+            <CardContent className="pt-6">
+              <SimpleMarkdown content={currentSection.content} />
             </CardContent>
           </Card>
         )}
