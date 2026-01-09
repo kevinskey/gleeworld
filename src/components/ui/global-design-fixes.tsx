@@ -1,121 +1,257 @@
 /**
  * Global Design System Fixes
- * This component applies comprehensive design fixes across the application
+ * Applies comprehensive design corrections across the application
+ * Uses only design tokens from index.css - no hardcoded colors
  */
 
 import { useEffect } from 'react';
 
 export const GlobalDesignFixes = () => {
   useEffect(() => {
-    // Apply global design fixes
     const style = document.createElement('style');
+    style.id = 'global-design-fixes';
     style.textContent = `
-      /* Override hardcoded colors globally */
-      .text-gray-900, .text-gray-800, .text-gray-700, .text-gray-600 {
+      /* =========================================
+         COLOR TOKEN ENFORCEMENT
+         Map hardcoded colors to theme tokens
+         ========================================= */
+      
+      /* Text colors - map grays to semantic tokens */
+      .text-gray-900, .text-gray-800, .text-gray-700 {
         color: hsl(var(--foreground)) !important;
       }
       
-      .text-gray-500, .text-gray-400 {
+      .text-gray-600, .text-gray-500, .text-gray-400 {
         color: hsl(var(--muted-foreground)) !important;
       }
       
-      .bg-gray-50, .bg-gray-100, .bg-gray-200 {
+      .text-gray-300, .text-gray-200, .text-gray-100 {
+        color: hsl(var(--muted-foreground) / 0.6) !important;
+      }
+      
+      /* Background colors - map to semantic tokens */
+      .bg-gray-50, .bg-gray-100 {
         background-color: hsl(var(--muted)) !important;
+      }
+      
+      .bg-gray-200, .bg-gray-300 {
+        background-color: hsl(var(--muted) / 0.8) !important;
       }
       
       .bg-white {
         background-color: hsl(var(--background)) !important;
       }
       
-      .text-white {
-        color: hsl(var(--primary-foreground)) !important;
+      .bg-black {
+        background-color: hsl(var(--foreground)) !important;
       }
       
-      .border-gray-200, .border-gray-300 {
+      /* Border colors */
+      .border-gray-100, .border-gray-200, .border-gray-300 {
         border-color: hsl(var(--border)) !important;
       }
       
-      /* Default heading styling via CSS variables (allow overrides) */
+      /* =========================================
+         TYPOGRAPHY SYSTEM
+         Consistent heading styles with CSS vars
+         ========================================= */
+      
       h1, h2, h3, h4, h5, h6 {
-        font-family: var(--heading-font, 'Bebas Neue', cursive);
+        font-family: var(--heading-font, 'Bebas Neue', system-ui, sans-serif);
         font-weight: var(--heading-weight, 400);
-        letter-spacing: var(--heading-letter-spacing, 0.025em);
-      }
-      
-      /* Fix dropdown visibility issues */
-      [data-radix-popper-content-wrapper] {
-        z-index: 1000 !important;
-      }
-      
-      /* Ensure consistent button styling */
-      button[data-radix-dropdown-menu-trigger] {
-        background: hsl(var(--background));
-        border: 1px solid hsl(var(--border));
+        letter-spacing: var(--heading-letter-spacing, 0.02em);
+        line-height: 1.2;
         color: hsl(var(--foreground));
       }
       
-      button[data-radix-dropdown-menu-trigger]:hover {
-        background: hsl(var(--accent));
-        color: hsl(var(--accent-foreground));
+      /* =========================================
+         Z-INDEX & LAYERING FIXES
+         Ensure popovers/dropdowns always visible
+         ========================================= */
+      
+      [data-radix-popper-content-wrapper] {
+        z-index: 9999 !important;
       }
       
-      /* Mobile-first responsive improvements */
+      [data-radix-menu-content],
+      [data-radix-select-content],
+      [data-radix-popover-content],
+      [data-radix-dropdown-menu-content] {
+        z-index: 9999 !important;
+      }
+      
+      /* =========================================
+         RESPONSIVE TYPOGRAPHY
+         Mobile-first sizing with clamp
+         ========================================= */
+      
       @media (max-width: 640px) {
-        .text-4xl {
-          font-size: 1.5rem !important;
-        }
-        
-        .text-3xl {
-          font-size: 1.375rem !important;
-        }
-        
-        .text-2xl {
-          font-size: 1.25rem !important;
-        }
-        
-        .text-xl {
-          font-size: 1.125rem !important;
-        }
+        .text-5xl { font-size: clamp(1.75rem, 5vw, 2.25rem) !important; }
+        .text-4xl { font-size: clamp(1.5rem, 4vw, 2rem) !important; }
+        .text-3xl { font-size: clamp(1.375rem, 3.5vw, 1.75rem) !important; }
+        .text-2xl { font-size: clamp(1.25rem, 3vw, 1.5rem) !important; }
+        .text-xl { font-size: clamp(1.125rem, 2.5vw, 1.25rem) !important; }
       }
       
-      @media (min-width: 641px) and (max-width: 768px) {
-        .text-4xl {
-          font-size: 2rem !important;
-        }
-        
-        .text-3xl {
-          font-size: 1.75rem !important;
-        }
-        
-        .text-2xl {
-          font-size: 1.5rem !important;
-        }
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .text-5xl { font-size: 2.5rem !important; }
+        .text-4xl { font-size: 2rem !important; }
+        .text-3xl { font-size: 1.75rem !important; }
+        .text-2xl { font-size: 1.5rem !important; }
       }
       
-      /* Ensure all containers are responsive */
+      /* =========================================
+         OVERFLOW PREVENTION
+         Prevent horizontal scroll globally
+         ========================================= */
+      
+      html, body {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+      }
+      
+      /* Prevent any element from causing overflow */
       * {
         max-width: 100%;
       }
       
-      /* Fix horizontal overflow */
-      body, html {
-        overflow-x: hidden !important;
+      /* Allow tables and code blocks to scroll */
+      pre, code, table {
+        max-width: none;
       }
       
-      /* Make tables responsive */
+      /* =========================================
+         RESPONSIVE TABLES
+         Horizontal scroll on mobile only
+         ========================================= */
+      
       @media (max-width: 768px) {
-        table {
+        .table-responsive,
+        table:not([class*="inline"]) {
           display: block;
           overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
           white-space: nowrap;
+        }
+        
+        .table-responsive table,
+        table:not([class*="inline"]) {
+          min-width: 600px;
+        }
+      }
+      
+      /* =========================================
+         FORM ELEMENT CONSISTENCY
+         Unified input/select/textarea styling
+         ========================================= */
+      
+      input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+      select,
+      textarea {
+        font-size: 16px !important; /* Prevents iOS zoom */
+      }
+      
+      @media (min-width: 768px) {
+        input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+        select,
+        textarea {
+          font-size: inherit !important;
+        }
+      }
+      
+      /* =========================================
+         TOUCH TARGET ACCESSIBILITY
+         Minimum 44x44px for interactive elements
+         ========================================= */
+      
+      @media (pointer: coarse) {
+        button,
+        [role="button"],
+        a,
+        input[type="checkbox"],
+        input[type="radio"] {
+          min-height: 44px;
+          min-width: 44px;
+        }
+      }
+      
+      /* =========================================
+         FOCUS STATES
+         Consistent, accessible focus rings
+         ========================================= */
+      
+      :focus-visible {
+        outline: none !important;
+        box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring)) !important;
+      }
+      
+      /* =========================================
+         CARD CONSISTENCY
+         Unified card styling across themes
+         ========================================= */
+      
+      [data-component="card"],
+      .card,
+      [class*="Card"]:not([class*="CardHeader"]):not([class*="CardContent"]):not([class*="CardFooter"]):not([class*="CardTitle"]):not([class*="CardDescription"]) {
+        background-color: hsl(var(--card));
+        color: hsl(var(--card-foreground));
+        border-color: hsl(var(--border));
+      }
+      
+      /* =========================================
+         SCROLLBAR STYLING
+         Consistent, minimal scrollbars
+         ========================================= */
+      
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: hsl(var(--muted) / 0.3);
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: hsl(var(--muted-foreground) / 0.3);
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--muted-foreground) / 0.5);
+      }
+      
+      /* =========================================
+         ANIMATION PERFORMANCE
+         Respect reduced motion preference
+         ========================================= */
+      
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
         }
       }
     `;
     
+    // Remove existing style if present
+    const existing = document.getElementById('global-design-fixes');
+    if (existing) {
+      existing.remove();
+    }
+    
     document.head.appendChild(style);
     
     return () => {
-      document.head.removeChild(style);
+      const styleEl = document.getElementById('global-design-fixes');
+      if (styleEl) {
+        styleEl.remove();
+      }
     };
   }, []);
   
