@@ -388,18 +388,18 @@ const Messenger = () => {
             <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
               {/* Tabs */}
               <Tabs value={composerMode} onValueChange={v => setComposerMode(v as 'email' | 'sms' | 'video')} className="flex flex-col flex-1 overflow-hidden">
-                <TabsList className={`grid w-full ${canSendSMS ? 'grid-cols-3' : 'grid-cols-2'} rounded-none bg-muted/50 h-11 p-0 gap-0`}>
-                  <TabsTrigger value="email" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-foreground">
+                <TabsList className={`grid w-full ${canSendSMS ? 'grid-cols-3' : 'grid-cols-2'} rounded-none bg-muted h-11 p-0 gap-0`}>
+                  <TabsTrigger value="email" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-muted data-[state=inactive]:text-foreground">
                     <Mail className="h-4 w-4" />
                     <span>Email</span>
                   </TabsTrigger>
                   {canSendSMS && (
-                    <TabsTrigger value="sms" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-foreground">
+                    <TabsTrigger value="sms" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-muted data-[state=inactive]:text-foreground">
                       <Smartphone className="h-4 w-4" />
                       <span>SMS</span>
                     </TabsTrigger>
                   )}
-                  <TabsTrigger value="video" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-foreground">
+                  <TabsTrigger value="video" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-muted data-[state=inactive]:text-foreground">
                     <Video className="h-4 w-4" />
                     <span>Video</span>
                   </TabsTrigger>
