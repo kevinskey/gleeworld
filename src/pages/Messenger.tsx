@@ -143,16 +143,7 @@ const Messenger = () => {
     setFilteredContacts(filtered);
   }, [searchQuery, contacts]);
 
-  // Build groups from course groups
-  useEffect(() => {
-    const groups: RecipientGroup[] = courseGroups.map(cg => ({
-      id: `course:${cg.id}`,
-      name: `📚 ${cg.title}`,
-      count: cg.studentCount,
-      type: 'course' as const
-    }));
-    setRecipientGroups(groups);
-  }, [courseGroups]);
+  // NOTE: recipientGroups are now built in the useEffect that combines courseGroups and manualGroups (see below)
   const addRecipient = (email: string) => {
     if (email && !recipients.includes(email)) {
       setRecipients([...recipients, email]);
