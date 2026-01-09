@@ -7,7 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Video, Plus, Users, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useQueryClient } from '@tanstack/react-query';
 import { JitsiMeetRoom } from './JitsiMeetRoom';
+import { ScheduleMeetingDialog } from './ScheduleMeetingDialog';
+import { ScheduledMeetingsList } from './ScheduledMeetingsList';
 
 interface VideoSessionManagerProps {
   className?: string;
@@ -16,10 +19,20 @@ interface VideoSessionManagerProps {
 export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ className }) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
+  const queryClient = useQueryClient();
   const [roomName, setRoomName] = useState('');
   const [isInMeeting, setIsInMeeting] = useState(false);
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  const handleJoinScheduledMeeting = (scheduledRoomName: string) => {
+    setActiveRoom(scheduledRoomName);
+    setIsInMeeting(true);
+  };
+
+  const handleMeetingScheduled = () => {
+    queryClient.invalidateQueries({ queryKey: ['scheduled-meetings'] });
+  };
 
   const handleStartMeeting = () => {
     if (!roomName.trim()) return;
@@ -67,7 +80,7 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ classN
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="cursor-pointer hover:border-primary transition-colors" onClick={handleJoinQuickMeeting}>
           <CardContent className="pt-6 text-center">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -77,6 +90,8 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ classN
             <p className="text-sm text-muted-foreground">Start a video call right now</p>
           </CardContent>
         </Card>
+
+        <ScheduleMeetingDialog onMeetingScheduled={handleMeetingScheduled} />
 
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
@@ -146,11 +161,14 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({ classN
         </CardContent>
       </Card>
 
-      {/* Recent Rooms - placeholder for future */}
+      {/* Scheduled Meetings */}
+      <ScheduledMeetingsList onJoinMeeting={handleJoinScheduledMeeting} />
+
+      {/* Quick Rooms */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-5 w-5" />
+            <Users className="h-5 w-5" />
             Quick Rooms
           </CardTitle>
         </CardHeader>
