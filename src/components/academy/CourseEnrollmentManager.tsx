@@ -81,19 +81,23 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
         return;
       }
 
-      // Get unique user IDs and fetch their profiles
-      const userIds = [...new Set(enrollmentData.map(e => e.user_id))];
-      const {
-        data: profileData,
-        error: profileError
-      } = await supabase.from('gw_profiles').select('user_id, full_name, email').in('user_id', userIds);
-      if (profileError) throw profileError;
-
-      // Create a lookup map for profiles
-      const profileMap = new Map((profileData || []).map(p => [p.user_id, {
-        full_name: p.full_name,
-        email: p.email
-      }]));
+      // Get unique user IDs (filter out nulls) and fetch their profiles
+      const userIds = [...new Set(enrollmentData.map(e => e.user_id).filter((id): id is string => id !== null && id !== undefined))];
+      
+      let profileMap = new Map<string, { full_name: string | null; email: string | null }>();
+      
+      if (userIds.length > 0) {
+        const {
+          data: profileData,
+          error: profileError
+        } = await supabase.from('gw_profiles').select('user_id, full_name, email').in('user_id', userIds);
+        if (profileError) throw profileError;
+        
+        profileMap = new Map((profileData || []).map(p => [p.user_id, {
+          full_name: p.full_name,
+          email: p.email
+        }]));
+      }
 
       // Merge enrollment data with profile data
       const mergedData = enrollmentData.map(enrollment => ({
