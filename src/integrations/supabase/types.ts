@@ -19078,6 +19078,54 @@ export type Database = {
           },
         ]
       }
+      meeting_notes: {
+        Row: {
+          action_items: string | null
+          additional_notes: string | null
+          agenda: string | null
+          attendees: string[] | null
+          created_at: string
+          created_by: string | null
+          decisions: string | null
+          discussion: string | null
+          id: string
+          is_active: boolean
+          room_name: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          action_items?: string | null
+          additional_notes?: string | null
+          agenda?: string | null
+          attendees?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          decisions?: string | null
+          discussion?: string | null
+          id?: string
+          is_active?: boolean
+          room_name: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action_items?: string | null
+          additional_notes?: string | null
+          agenda?: string | null
+          attendees?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          decisions?: string | null
+          discussion?: string | null
+          id?: string
+          is_active?: boolean
+          room_name?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       member_check_ins: {
         Row: {
           check_in_time: string
