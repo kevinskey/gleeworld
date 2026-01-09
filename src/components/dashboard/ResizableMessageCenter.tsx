@@ -96,23 +96,32 @@ export const ResizableMessageCenter = ({
     fetchMessages();
 
     // Subscribe to real-time updates
-    const channel = supabase.channel('internal-messages').on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'gw_internal_messages'
-    }, async payload => {
-      // Fetch the profile for the new message
-      const {
-        data: profileData
-      } = await supabase.from('gw_profiles').select('user_id, full_name, avatar_url').eq('user_id', payload.new.user_id).single();
-      const enrichedMessage = {
-        ...payload.new,
-        gw_profiles: profileData || {
-          full_name: 'Unknown User'
+    // Use a unique channel name per mounted instance to avoid "subscribe multiple times" errors
+    const channelName = `internal-messages-${user.id}-${Date.now()}-${Math.random()}`;
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'gw_internal_messages'
+        },
+        async payload => {
+          // Fetch the profile for the new message
+          const {
+            data: profileData
+          } = await supabase.from('gw_profiles').select('user_id, full_name, avatar_url').eq('user_id', payload.new.user_id).single();
+          const enrichedMessage = {
+            ...payload.new,
+            gw_profiles: profileData || {
+              full_name: 'Unknown User'
+            }
+          };
+          setInternalMessages(prev => [...prev, enrichedMessage as any]);
         }
-      };
-      setInternalMessages(prev => [...prev, enrichedMessage as any]);
-    }).subscribe();
+      )
+      .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
