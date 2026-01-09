@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,6 +34,10 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [participantCount, setParticipantCount] = useState(1);
   const { toast } = useToast();
+  
+  // Stabilize callbacks to prevent useEffect re-runs
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     let mounted = true;
@@ -220,8 +224,8 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
         });
 
         apiRef.current.addListener('videoConferenceLeft', () => {
-          if (mounted && onClose) {
-            onClose();
+          if (mounted && onCloseRef.current) {
+            onCloseRef.current();
           }
         });
 
@@ -238,8 +242,8 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
         });
 
         apiRef.current.addListener('readyToClose', () => {
-          if (mounted && onClose) {
-            onClose();
+          if (mounted && onCloseRef.current) {
+            onCloseRef.current();
           }
         });
 
@@ -261,7 +265,8 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
         apiRef.current = null;
       }
     };
-  }, [roomName, userName, userEmail, userId, isModerator, onClose, toast]);
+  // Only re-init if essential props change - NOT callbacks
+  }, [roomName, userName, userEmail, userId, isModerator]);
 
   if (error) {
     return (
