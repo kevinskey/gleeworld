@@ -12,7 +12,7 @@ const Handbook = () => {
 
   return (
     <UniversalLayout maxWidth="full" containerized={false}>
-      <div className="mx-5">
+      <div className="px-6 md:px-12 lg:px-16 py-6 w-full">
         <HandbookModule />
       </div>
     </UniversalLayout>
