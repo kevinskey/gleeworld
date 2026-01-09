@@ -644,10 +644,20 @@ const Messenger = () => {
                     <Users className="h-4 w-4" />
                     Quick Add Groups
                   </h3>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     {canEditGroups && (
-                      <Button variant="ghost" size="sm" onClick={() => { setEditingGroup(null); setGroupFormData({ name: '', description: '' }); setShowGroupEditor(true); }}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => {
+                          setEditingGroup(null);
+                          setGroupFormData({ name: '', description: '' });
+                          setShowGroupEditor(true);
+                        }}
+                      >
                         <Plus className="h-4 w-4" />
+                        <span className="text-xs">Add</span>
                       </Button>
                     )}
                     <button onClick={() => setShowGroupsPanel(false)} className="p-2 hover:bg-muted rounded-lg sm:hidden">
