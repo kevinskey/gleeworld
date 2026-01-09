@@ -121,7 +121,7 @@ export const DashboardStoreSection = () => {
                   <div className="flex items-center justify-between mb-4">
                     {course.course_code && <span style={{
                   fontFamily: "'Cinzel', serif"
-                }} className="tracking-wide text-gray-500 uppercase border border-gray-300 px-2 py-1 text-2xl whitespace-nowrap">
+                }} className="tracking-wide text-gray-500 uppercase border border-gray-300 px-2 py-1 whitespace-nowrap text-3xl">
                         {course.course_code}
                       </span>}
                     
@@ -136,7 +136,7 @@ export const DashboardStoreSection = () => {
                   
                   
                   {/* Description */}
-                  {course.description && <p className="text-xs text-gray-600 leading-snug line-clamp-3 flex-1 pt-0 pb-[80px]">
+                  {course.description && <p className="text-gray-600 leading-snug line-clamp-3 flex-1 pt-0 pb-[80px] text-base">
                       {course.description}
                     </p>}
                   
