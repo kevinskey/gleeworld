@@ -99,9 +99,11 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
         if (!mounted || !containerRef.current) return;
 
         // Initialize Jitsi Meet
+        // For JaaS (8x8.vc), load external_api.js from the tenant path and pass ONLY the room slug here.
+        // Passing `${appId}/${roomName}` can cause "Room and token mismatched".
         const domain = '8x8.vc';
         const options = {
-          roomName: `${tokenData.appId}/${roomName}`,
+          roomName: roomName,
           jwt: tokenData.token,
           parentNode: containerRef.current,
           width: '100%',
@@ -193,13 +195,17 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
         // When auth fails, JaaS often triggers one of these events.
         const handleConferenceFailure = (payload: any) => {
           console.error('Jitsi conference failed:', payload);
+
+          const pretty =
+            payload?.message ||
+            payload?.error?.params?.join(' ') ||
+            payload?.error?.name ||
+            payload?.error ||
+            payload?.name ||
+            'Conference failed to start';
+
           if (mounted) {
-            setError(
-              payload?.message ||
-                payload?.error ||
-                payload?.name ||
-                'Conference failed to start (possible JWT/key mismatch)'
-            );
+            setError(String(pretty));
             setIsLoading(false);
           }
         };
