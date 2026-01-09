@@ -146,9 +146,14 @@ export const DashboardStoreSection = () => {
                       {course.description}
                     </p>}
                   
-                  {/* Enter Arrow */}
-                  <div className="mt-2 border-t border-border/60 bg-background/80 py-1 flex items-center justify-center px-2">
-                    <span className="font-medium uppercase tracking-wide text-foreground text-center text-sm">Enter Course</span>
+                  {/* Enter Script */}
+                  <div className="mt-2 py-3 flex items-center justify-center">
+                    <span 
+                      style={{ fontFamily: "'Dancing Script', cursive" }}
+                      className="text-2xl text-[#003666] italic drop-shadow-[1px_1px_1px_rgba(0,0,0,0.15)] hover:drop-shadow-[2px_2px_2px_rgba(0,0,0,0.2)] transition-all"
+                    >
+                      Enter Course
+                    </span>
                   </div>
                 </div>
               </div>;
