@@ -249,10 +249,10 @@ export const CourseInstructorConsole = () => {
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-56 xl:w-64 border-r bg-card sticky top-[132px] self-start max-h-[calc(100vh-132px)] overflow-y-auto">
             <div className="p-4 xl:p-6">
-              <div className="mb-6 xl:mb-8 pb-4 xl:pb-6 border-b text-primary-foreground px-[10px] py-[10px] bg-orange-200">
-                <h2 className="text-lg xl:text-xl font-bold text-foreground">{course.courseCode}</h2>
-                <p className="text-xs xl:text-sm text-muted-foreground mt-1 xl:mt-1.5">{course.title}</p>
-                <p className="text-[10px] xl:text-xs text-muted-foreground mt-0.5 xl:mt-1">{course.instructor?.name}</p>
+              <div className="mb-6 xl:mb-8 pb-4 xl:pb-6 border-b px-[10px] py-[10px] bg-orange-700 text-primary-foreground">
+                <h2 className="text-lg xl:text-xl font-bold text-primary-foreground">{course.courseCode}</h2>
+                <p className="text-xs mt-1 xl:mt-1.5 text-primary-foreground xl:text-base">{course.title}</p>
+                <p className="text-[10px] mt-0.5 xl:mt-1 text-primary-foreground xl:text-sm">{course.instructor?.name}</p>
               </div>
               <SidebarNav />
             </div>
@@ -272,85 +272,38 @@ export const CourseInstructorConsole = () => {
 
           {/* Main Content */}
           <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24">
-            {activeTab === 'syllabus' && dbCourse && (
-              <SyllabusTemplateEditor 
-                courseId={dbCourse.id} 
-                courseCode={course.courseCode} 
-                courseTitle={course.title}
-                instructorName={course.instructor?.name}
-                instructorEmail={course.instructor?.email}
-              />
-            )}
-            {activeTab === 'modules' && dbCourse && (
-              <ModulesSection courseId={dbCourse.id} />
-            )}
-            {activeTab === 'class-notes' && dbCourse && (
-              <ClassNotesManager courseId={dbCourse.id} isInstructor={true} />
-            )}
-            {activeTab === 'calendar' && dbCourse?.id && (
-              <CourseClassCalendar courseId={dbCourse.id} courseCode={course.courseCode} isInstructor={true} />
-            )}
-            {activeTab === 'assignments' && dbCourse?.id && (
-              <CourseAssignmentManager courseId={dbCourse.id} courseName={course.title} />
-            )}
-            {activeTab === 'tests' && dbCourse && (
-              <TestBuilder courseId={dbCourse.id} courseName={course.title} />
-            )}
-            {activeTab === 'polls' && dbCourse && (
-              <CoursePollManager courseId={dbCourse.id} courseName={course.title} />
-            )}
-            {activeTab === 'rubrics' && (
-              <RubricManager />
-            )}
-            {activeTab === 'grades' && (
-              <GradesAdmin />
-            )}
-            {activeTab === 'students' && dbCourse && (
-              <CourseEnrollmentManager 
-                courseId={dbCourse.id} 
-                courseCode={course.courseCode}
-                courseTitle={course.title}
-                term={dbCourse.term || undefined}
-              />
-            )}
-            {activeTab === 'analytics' && (
-              <StudentAnalyticsDashboard />
-            )}
-            {activeTab === 'communications' && (
-              <StudentCommunications />
-            )}
-            {activeTab === 'resources' && (
-              <ResourcesAdmin />
-            )}
-            {activeTab === 'videos' && dbCourse && (
-              <CourseVideoLibrary courseId={dbCourse.id} isInstructor={true} />
-            )}
-            {activeTab === 'audio' && (
-              <Card>
+            {activeTab === 'syllabus' && dbCourse && <SyllabusTemplateEditor courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} instructorName={course.instructor?.name} instructorEmail={course.instructor?.email} />}
+            {activeTab === 'modules' && dbCourse && <ModulesSection courseId={dbCourse.id} />}
+            {activeTab === 'class-notes' && dbCourse && <ClassNotesManager courseId={dbCourse.id} isInstructor={true} />}
+            {activeTab === 'calendar' && dbCourse?.id && <CourseClassCalendar courseId={dbCourse.id} courseCode={course.courseCode} isInstructor={true} />}
+            {activeTab === 'assignments' && dbCourse?.id && <CourseAssignmentManager courseId={dbCourse.id} courseName={course.title} />}
+            {activeTab === 'tests' && dbCourse && <TestBuilder courseId={dbCourse.id} courseName={course.title} />}
+            {activeTab === 'polls' && dbCourse && <CoursePollManager courseId={dbCourse.id} courseName={course.title} />}
+            {activeTab === 'rubrics' && <RubricManager />}
+            {activeTab === 'grades' && <GradesAdmin />}
+            {activeTab === 'students' && dbCourse && <CourseEnrollmentManager courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} term={dbCourse.term || undefined} />}
+            {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
+            {activeTab === 'communications' && <StudentCommunications />}
+            {activeTab === 'resources' && <ResourcesAdmin />}
+            {activeTab === 'videos' && dbCourse && <CourseVideoLibrary courseId={dbCourse.id} isInstructor={true} />}
+            {activeTab === 'audio' && <Card>
                 <CardHeader>
                   <CardTitle>Audio Examples</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">Audio library coming soon.</p>
                 </CardContent>
-              </Card>
-            )}
-            {activeTab === 'semesters' && (
-              <SemesterManager />
-            )}
-            {activeTab === 'ai-assistant' && (
-              <AIAssistant />
-            )}
-            {activeTab === 'settings' && (
-              <Card>
+              </Card>}
+            {activeTab === 'semesters' && <SemesterManager />}
+            {activeTab === 'ai-assistant' && <AIAssistant />}
+            {activeTab === 'settings' && <Card>
                 <CardHeader>
                   <CardTitle>Course Settings</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">Course settings coming soon.</p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </main>
           
         </div>
