@@ -16,42 +16,44 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-
 import { MobileVideoInterface } from '@/components/messenger/MobileVideoInterface';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { syncCourseMessengerGroup } from '@/hooks/useCourseMessengerSync';
-
 interface RecipientGroup {
   id: string;
   name: string;
   count: number;
   type: 'manual' | 'course';
 }
-
 const Messenger = () => {
-  const { user } = useAuth();
-  const { userProfile } = useUserProfile(user);
+  const {
+    user
+  } = useAuth();
+  const {
+    userProfile
+  } = useUserProfile(user);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
   // Course context from query params
   const courseId = searchParams.get('courseId');
   const courseName = searchParams.get('courseName');
-  
-  const { 
-    hasAccess, 
-    messengerRole, 
-    isLoading: accessLoading, 
-    contacts, 
+  const {
+    hasAccess,
+    messengerRole,
+    isLoading: accessLoading,
+    contacts,
     courseGroups,
     canMessageAnyone,
     canSendSMS,
-    noAccessReason 
+    noAccessReason
   } = useMessengerAccess();
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
+
   // Sync course group when coming from a course page
   useEffect(() => {
     if (courseId && courseName) {
@@ -103,12 +105,7 @@ const Messenger = () => {
       setFilteredContacts([]);
       return;
     }
-    
-    const filtered = contacts.filter(c => 
-      c.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.email?.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 8);
-    
+    const filtered = contacts.filter(c => c.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || c.email?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 8);
     setFilteredContacts(filtered);
   }, [searchQuery, contacts]);
 
@@ -122,18 +119,15 @@ const Messenger = () => {
     }));
     setRecipientGroups(groups);
   }, [courseGroups]);
-
   const addRecipient = (email: string) => {
     if (email && !recipients.includes(email)) {
       setRecipients([...recipients, email]);
       setSearchQuery('');
     }
   };
-
   const removeRecipient = (email: string) => {
     setRecipients(recipients.filter(r => r !== email));
   };
-
   const addSmsRecipient = (recipient: {
     user_id: string;
     full_name: string;
@@ -144,32 +138,23 @@ const Messenger = () => {
       setSearchQuery('');
     }
   };
-
   const removeSmsRecipient = (userId: string) => {
     setSmsRecipients(smsRecipients.filter(r => r.user_id !== userId));
   };
-
   const handleAddGroup = async (group: RecipientGroup) => {
     try {
       if (group.type === 'course') {
         // Extract course ID from group id (format: "course:uuid")
         const courseId = group.id.replace('course:', '');
-        
+
         // Fetch all enrolled students' emails
-        const { data: enrollments, error } = await supabase
-          .from('gw_course_enrollments')
-          .select('user_id, gw_profiles!inner(email)')
-          .eq('course_id', courseId)
-          .eq('role', 'student')
-          .eq('enrollment_status', 'enrolled');
-        
+        const {
+          data: enrollments,
+          error
+        } = await supabase.from('gw_course_enrollments').select('user_id, gw_profiles!inner(email)').eq('course_id', courseId).eq('role', 'student').eq('enrollment_status', 'enrolled');
         if (error) throw error;
-        
         if (enrollments && enrollments.length > 0) {
-          const emails = enrollments
-            .map((e: any) => e.gw_profiles?.email)
-            .filter((email: string | null) => email && !recipients.includes(email));
-          
+          const emails = enrollments.map((e: any) => e.gw_profiles?.email).filter((email: string | null) => email && !recipients.includes(email));
           setRecipients([...recipients, ...emails]);
           toast({
             title: `Added ${emails.length} students`,
@@ -287,7 +272,6 @@ const Messenger = () => {
       // Prepend sender name to message
       const senderName = userProfile?.full_name || user?.email?.split('@')[0] || 'GleeWorld';
       const messageWithSender = `[From: ${senderName}]\n\n${smsContent}`;
-      
       const {
         error
       } = await supabase.functions.invoke('send-sms', {
@@ -316,19 +300,16 @@ const Messenger = () => {
   };
   // Show loading state
   if (accessLoading) {
-    return (
-      <UniversalLayout showHeader={true} showFooter={false}>
+    return <UniversalLayout showHeader={true} showFooter={false}>
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </UniversalLayout>
-    );
+      </UniversalLayout>;
   }
 
   // Show no-access message for fans
   if (!hasAccess) {
-    return (
-      <UniversalLayout showHeader={true} showFooter={false}>
+    return <UniversalLayout showHeader={true} showFooter={false}>
         <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] p-6">
           <div className="max-w-md text-center space-y-4">
             <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
@@ -341,12 +322,9 @@ const Messenger = () => {
             </Button>
           </div>
         </div>
-      </UniversalLayout>
-    );
+      </UniversalLayout>;
   }
-
-  return (
-    <UniversalLayout showHeader={true} showFooter={false}>
+  return <UniversalLayout showHeader={true} showFooter={false}>
       <div className="flex flex-col h-[calc(100dvh-var(--gw-header-h,4rem))]">
         {/* Header section */}
         <div className="flex-shrink-0 border-b border-border bg-background">
@@ -363,19 +341,14 @@ const Messenger = () => {
                     <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">GleeWorld Messenger</h1>
                     <Badge variant="outline" className="text-xs capitalize">{messengerRole}</Badge>
                   </div>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    {canMessageAnyone 
-                      ? 'Full access - message anyone' 
-                      : messengerRole === 'alumna' 
-                        ? 'Message alumnae and mentees'
-                        : `Message your ${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`
-                    }
+                  <p className="text-xs md:text-sm text-muted-foreground py-[10px]">
+                    {canMessageAnyone ? 'Full access - message anyone' : messengerRole === 'alumna' ? 'Message alumnae and mentees' : `Message your ${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`}
                   </p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-2">
                 <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Groups ({recipientGroups.length})</span>
+                <span className="hidden sm:inline text-sm text-black">Groups ({recipientGroups.length})</span>
               </Button>
             </div>
           </div>
@@ -393,12 +366,10 @@ const Messenger = () => {
                     <Mail className="h-4 w-4" />
                     <span>Email</span>
                   </TabsTrigger>
-                  {canSendSMS && (
-                    <TabsTrigger value="sms" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-muted data-[state=inactive]:text-foreground">
+                  {canSendSMS && <TabsTrigger value="sms" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-muted data-[state=inactive]:text-foreground">
                       <Smartphone className="h-4 w-4" />
                       <span>SMS</span>
-                    </TabsTrigger>
-                  )}
+                    </TabsTrigger>}
                   <TabsTrigger value="video" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-muted data-[state=inactive]:text-foreground">
                     <Video className="h-4 w-4" />
                     <span>Video</span>
@@ -451,20 +422,8 @@ const Messenger = () => {
                   
                   {/* Send Button - Fixed at bottom */}
                   <div className="p-4 bg-primary/80 border-t border-primary-foreground/10">
-                    <Button 
-                      onClick={handleSendEmail} 
-                      disabled={isSending || recipients.length === 0 || !subject.trim()} 
-                      className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSending ? (
-                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
-                      ) : recipients.length === 0 ? (
-                        <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</>
-                      ) : !subject.trim() ? (
-                        <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</>
-                      ) : (
-                        <><Send className="h-4 w-4 mr-2" /> Send Email</>
-                      )}
+                    <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed">
+                      {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
                     </Button>
                   </div>
                 </TabsContent>
@@ -528,22 +487,18 @@ const Messenger = () => {
 
                 {/* Video Tab */}
                 <TabsContent value="video" className="flex-1 overflow-hidden mt-0 bg-background data-[state=active]:flex data-[state=active]:flex-col">
-                  <MobileVideoInterface 
-                    onJoinSession={(sessionId, roomName, isRecording) => setActiveVideoSession({
-                      id: sessionId,
-                      roomName: roomName,
-                      isRecording: isRecording
-                    })} 
-                  />
+                  <MobileVideoInterface onJoinSession={(sessionId, roomName, isRecording) => setActiveVideoSession({
+                  id: sessionId,
+                  roomName: roomName,
+                  isRecording: isRecording
+                })} />
                   
-                  {activeVideoSession && (
-                    <Card>
+                  {activeVideoSession && <Card>
                       <CardContent className="py-8 text-center">
                         <p className="text-muted-foreground">Video session active</p>
                         <Button variant="outline" onClick={() => setActiveVideoSession(null)} className="mt-4">Close</Button>
                       </CardContent>
-                    </Card>
-                  )}
+                    </Card>}
                 </TabsContent>
               </Tabs>
             </div>
@@ -560,71 +515,44 @@ const Messenger = () => {
                   </button>
                 </div>
                 
-                {loadingGroups ? (
-                  <div className="flex items-center justify-center py-4">
+                {loadingGroups ? <div className="flex items-center justify-center py-4">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : (
-                  <ScrollArea className="h-[300px]">
+                  </div> : <ScrollArea className="h-[300px]">
                     {/* Course Groups */}
-                    {recipientGroups.filter(g => g.type === 'course').length > 0 && (
-                      <div className="mb-4">
+                    {recipientGroups.filter(g => g.type === 'course').length > 0 && <div className="mb-4">
                         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
                           <GraduationCap className="h-3 w-3" />
                           My Courses
                         </h4>
                         <div className="space-y-1">
-                          {recipientGroups.filter(g => g.type === 'course').map(group => (
-                            <Button 
-                              key={group.id} 
-                              variant="outline" 
-                              size="sm" 
-                              className="w-full justify-start text-left h-auto py-2" 
-                              onClick={() => handleAddGroup(group)}
-                            >
+                          {recipientGroups.filter(g => g.type === 'course').map(group => <Button key={group.id} variant="outline" size="sm" className="w-full justify-start text-left h-auto py-2" onClick={() => handleAddGroup(group)}>
                               <span className="flex-1 truncate text-xs">{group.name}</span>
                               <Badge variant="secondary" className="ml-2 text-xs">{group.count}</Badge>
-                            </Button>
-                          ))}
+                            </Button>)}
                         </div>
-                      </div>
-                    )}
+                      </div>}
                     
                     {/* Manual Groups */}
-                    {recipientGroups.filter(g => g.type === 'manual').length > 0 && (
-                      <div className="mb-4">
+                    {recipientGroups.filter(g => g.type === 'manual').length > 0 && <div className="mb-4">
                         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
                           <Users className="h-3 w-3" />
                           Saved Groups
                         </h4>
                         <div className="space-y-1">
-                          {recipientGroups.filter(g => g.type === 'manual').map(group => (
-                            <Button 
-                              key={group.id} 
-                              variant="outline" 
-                              size="sm" 
-                              className="w-full justify-start text-left h-auto py-2" 
-                              onClick={() => handleAddGroup(group)}
-                            >
+                          {recipientGroups.filter(g => g.type === 'manual').map(group => <Button key={group.id} variant="outline" size="sm" className="w-full justify-start text-left h-auto py-2" onClick={() => handleAddGroup(group)}>
                               <span className="flex-1 truncate text-xs">{group.name}</span>
                               <Badge variant="secondary" className="ml-2 text-xs">{group.count}</Badge>
-                            </Button>
-                          ))}
+                            </Button>)}
                         </div>
-                      </div>
-                    )}
+                      </div>}
                     
-                    {recipientGroups.length === 0 && (
-                      <p className="text-sm text-muted-foreground text-center py-4">
+                    {recipientGroups.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">
                         No groups available
-                      </p>
-                    )}
-                  </ScrollArea>
-                )}
+                      </p>}
+                  </ScrollArea>}
 
                 {/* Email Preview */}
-                {composerMode === 'email' && subject && (
-                  <div className="mt-6">
+                {composerMode === 'email' && subject && <div className="mt-6">
                     <h3 className="font-semibold mb-3 text-sm">Preview</h3>
                     <div className="bg-gradient-to-br from-primary to-primary/70 rounded-t-lg p-3 text-center">
                       <h4 className="text-primary-foreground font-bold text-sm">✨ GleeWorld</h4>
@@ -636,13 +564,11 @@ const Messenger = () => {
                         {content || 'Your message will appear here...'}
                       </p>
                     </div>
-                  </div>
-                )}
+                  </div>}
               </div>}
           </div>
         </div>
       </div>
-    </UniversalLayout>
-  );
+    </UniversalLayout>;
 };
 export default Messenger;
