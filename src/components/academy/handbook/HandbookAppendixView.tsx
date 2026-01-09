@@ -124,7 +124,7 @@ export const HandbookAppendixView: React.FC<HandbookAppendixViewProps> = ({
       if (trimmed.startsWith('# ')) {
         const id = trimmed.slice(2).toLowerCase().replace(/[^a-z0-9]+/g, '-');
         elements.push(
-          <h1 key={i} id={id} className="text-3xl font-bold mt-8 mb-4 text-foreground scroll-mt-20">
+          <h1 key={i} id={id} className="text-2xl md:text-3xl font-bold mt-8 mb-4 text-foreground scroll-mt-20">
             {trimmed.slice(2)}
           </h1>
         );
@@ -135,7 +135,7 @@ export const HandbookAppendixView: React.FC<HandbookAppendixViewProps> = ({
       if (trimmed.startsWith('## ')) {
         const id = trimmed.slice(3).toLowerCase().replace(/[^a-z0-9]+/g, '-');
         elements.push(
-          <h2 key={i} id={id} className="text-2xl font-semibold mt-6 mb-3 text-foreground scroll-mt-20 border-b pb-2">
+          <h2 key={i} id={id} className="text-xl md:text-2xl font-semibold mt-6 mb-3 text-foreground scroll-mt-20 border-b pb-2">
             {trimmed.slice(3)}
           </h2>
         );
@@ -145,7 +145,7 @@ export const HandbookAppendixView: React.FC<HandbookAppendixViewProps> = ({
 
       if (trimmed.startsWith('### ')) {
         elements.push(
-          <h3 key={i} className="text-xl font-medium mt-4 mb-2 text-foreground">
+          <h3 key={i} className="text-lg md:text-xl font-medium mt-4 mb-2 text-foreground">
             {trimmed.slice(4)}
           </h3>
         );
@@ -436,7 +436,7 @@ export const HandbookAppendixView: React.FC<HandbookAppendixViewProps> = ({
           {/* Main Content */}
           <Card className="lg:col-span-3">
             <CardHeader>
-              <CardTitle className="text-2xl">{currentVersion.title}</CardTitle>
+              <CardTitle className="text-xl md:text-2xl">{currentVersion.title}</CardTitle>
               <p className="text-sm text-muted-foreground">
                 Last updated: {format(new Date(currentVersion.updated_at), 'MMMM d, yyyy')}
               </p>
