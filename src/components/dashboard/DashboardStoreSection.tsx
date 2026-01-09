@@ -156,7 +156,7 @@ export const DashboardStoreSection = () => {
 
       {/* Shop Section Header - Edge to Edge */}
       <div className="h-[25px] bg-white w-full" />
-      <h2 style={{ fontFamily: "'Cinzel', serif" }} className="h-12 text-sm sm:text-xl font-bold bg-gradient-to-b from-[#004080] to-[#002244] text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-[0_4px_8px_rgba(0,0,0,0.4)] border-t border-t-white/20">
+      <h2 style={{ fontFamily: "'Cinzel', serif" }} className="relative z-10 h-12 text-sm sm:text-xl font-bold bg-gradient-to-b from-[#004080] to-[#002244] text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-[0_4px_8px_rgba(0,0,0,0.4)] border-t border-t-white/20">
         <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
         Shop
       </h2>
