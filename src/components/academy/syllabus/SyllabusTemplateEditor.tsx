@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Save, FileText, BookOpen, Target, ClipboardList, Calendar, User, GraduationCap, Plus, Trash2, AlertCircle, CheckCircle, Link2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import { LearningObjectivesManager } from './LearningObjectivesManager';
 import { WeeklyScheduleEditor } from './WeeklyScheduleEditor';
 import { RequirementsEditor } from './RequirementsEditor';
@@ -103,6 +104,24 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
+
+  // Fetch course data for start_date
+  const { data: courseData } = useQuery({
+    queryKey: ['course-start-date', courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_courses')
+        .select('start_date')
+        .eq('id', courseId)
+        .maybeSingle();
+      if (error) {
+        console.error('Error fetching course:', error);
+        return null;
+      }
+      return data;
+    }
+  });
+
   useEffect(() => {
     fetchSyllabus();
   }, [courseId]);
@@ -381,14 +400,19 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
 
         {/* Schedule Tab */}
         <TabsContent value="schedule">
-          <WeeklyScheduleEditor schedule={syllabus.weekly_schedule} onChange={schedule => updateField('weekly_schedule', schedule)} courseInfo={{
-          courseCode: courseCode,
-          courseTitle: courseTitle,
-          credits: syllabus.credits,
-          term: syllabus.term,
-          purpose: syllabus.purpose,
-          textbooks: syllabus.textbooks
-        }} />
+          <WeeklyScheduleEditor 
+            schedule={syllabus.weekly_schedule} 
+            onChange={schedule => updateField('weekly_schedule', schedule)} 
+            courseStartDate={courseData?.start_date}
+            courseInfo={{
+              courseCode: courseCode,
+              courseTitle: courseTitle,
+              credits: syllabus.credits,
+              term: syllabus.term,
+              purpose: syllabus.purpose,
+              textbooks: syllabus.textbooks
+            }} 
+          />
         </TabsContent>
 
         {/* Policies Tab */}

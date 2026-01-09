@@ -8,13 +8,17 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { format, addWeeks, parseISO } from 'date-fns';
+
 interface WeekItem {
   week: string;
   topics: string;
 }
+
 interface Props {
   schedule: WeekItem[];
   onChange: (schedule: WeekItem[]) => void;
+  courseStartDate?: string | null;
   courseInfo?: {
     courseCode?: string;
     courseTitle?: string;
@@ -32,9 +36,29 @@ interface Props {
     }[];
   };
 }
+
+// Helper to parse week number from week label
+const parseWeekNumber = (weekLabel: string): number | null => {
+  const match = weekLabel.match(/week\s*(\d+)/i);
+  return match ? parseInt(match[1], 10) : null;
+};
+
+// Helper to get date range for a week
+const getWeekDateRange = (weekIndex: number, startDate: string): string => {
+  try {
+    const start = parseISO(startDate);
+    const weekStart = addWeeks(start, weekIndex);
+    const weekEnd = addWeeks(start, weekIndex + 1);
+    weekEnd.setDate(weekEnd.getDate() - 1);
+    return `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`;
+  } catch {
+    return '';
+  }
+};
 export const WeeklyScheduleEditor: React.FC<Props> = ({
   schedule,
   onChange,
+  courseStartDate,
   courseInfo
 }) => {
   const [showAIDialog, setShowAIDialog] = useState(false);
@@ -159,28 +183,43 @@ export const WeeklyScheduleEditor: React.FC<Props> = ({
               <p>No weekly schedule defined yet.</p>
               <p className="text-sm mt-1">Click "AI Generate" for an AI-powered outline or add weeks manually.</p>
             </div> : <div className="space-y-3">
-              {schedule.map((item, index) => <div key={index} className="flex items-start gap-3 p-4 border rounded-lg hover:bg-accent/30 transition-colors">
-                  <div className="flex items-center gap-2 text-muted-foreground pt-2">
-                    <GripVertical className="h-4 w-4 cursor-move" />
+              {schedule.map((item, index) => {
+                const weekNum = parseWeekNumber(item.week);
+                const dateRange = courseStartDate && weekNum !== null 
+                  ? getWeekDateRange(weekNum - 1, courseStartDate) 
+                  : null;
+                
+                return (
+                  <div key={index} className="flex items-start gap-3 p-4 border rounded-lg hover:bg-accent/30 transition-colors">
+                    <div className="flex items-center gap-2 text-muted-foreground pt-2">
+                      <GripVertical className="h-4 w-4 cursor-move" />
+                    </div>
+                    
+                    <div className="w-40 flex-shrink-0 space-y-1">
+                      <Textarea value={item.week} onChange={e => updateWeek(index, 'week', e.target.value)} className="font-medium text-sm resize-none text-center" rows={2} />
+                      {dateRange && (
+                        <div className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {dateRange}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <Textarea value={item.topics} onChange={e => updateWeek(index, 'topics', e.target.value)} placeholder="Topics, activities, readings, assignments due..." rows={3} className="resize-none" />
+                    </div>
+                    
+                    <div className="flex flex-col gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => duplicateWeek(index)} title="Duplicate week">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => removeWeek(index)} className="text-destructive" title="Remove week">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  
-                  <div className="w-32 flex-shrink-0">
-                    <Textarea value={item.week} onChange={e => updateWeek(index, 'week', e.target.value)} className="font-medium text-sm resize-none text-center" rows={2} />
-                  </div>
-                  
-                  <div className="flex-1">
-                    <Textarea value={item.topics} onChange={e => updateWeek(index, 'topics', e.target.value)} placeholder="Topics, activities, readings, assignments due..." rows={3} className="resize-none" />
-                  </div>
-                  
-                  <div className="flex flex-col gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => duplicateWeek(index)} title="Duplicate week">
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => removeWeek(index)} className="text-destructive" title="Remove week">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>)}
+                );
+              })}
             </div>}
 
           {schedule.length > 0 && <div className="flex items-center justify-between pt-4 border-t text-sm text-muted-foreground">
