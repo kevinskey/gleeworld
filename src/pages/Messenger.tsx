@@ -354,8 +354,8 @@ const Messenger = () => {
         </div>
         
         {/* Main Content */}
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <div className="h-full flex w-full">
+        <div className="flex-1 min-h-0 overflow-hidden px-4 lg:px-8">
+          <div className="h-full flex w-full border-x border-border">
             {/* Composer Area */}
             <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
               {/* Tabs */}
