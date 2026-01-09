@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,22 +10,67 @@ import { useQueryClient } from '@tanstack/react-query';
 import { JitsiMeetRoom } from './JitsiMeetRoom';
 import { ScheduleMeetingDialog } from './ScheduleMeetingDialog';
 import { ScheduledMeetingsList } from './ScheduledMeetingsList';
+import { MeetingWaitingRoom } from './MeetingWaitingRoom';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VideoSessionManagerProps {
   className?: string;
+  joinRoomName?: string | null;
 }
 
 export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
-  className
+  className,
+  joinRoomName
 }) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   const queryClient = useQueryClient();
   const [roomName, setRoomName] = useState('');
   const [isInMeeting, setIsInMeeting] = useState(false);
+  const [isInWaitingRoom, setIsInWaitingRoom] = useState(false);
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [showQuickRoomsDialog, setShowQuickRoomsDialog] = useState(false);
+
+  // Handle auto-join from URL parameter
+  useEffect(() => {
+    if (joinRoomName) {
+      handleJoinFromLink(joinRoomName);
+    }
+  }, [joinRoomName]);
+
+  const handleJoinFromLink = async (room: string) => {
+    try {
+      // Check if this is a scheduled meeting
+      const { data: meeting } = await supabase
+        .from('scheduled_meetings')
+        .select('scheduled_at, status')
+        .eq('room_name', room)
+        .maybeSingle();
+
+      if (meeting) {
+        const scheduledTime = new Date(meeting.scheduled_at);
+        const now = new Date();
+        
+        // If meeting hasn't started yet (more than 5 min before scheduled time), show waiting room
+        const fiveMinutesBefore = new Date(scheduledTime.getTime() - 5 * 60 * 1000);
+        if (now < fiveMinutesBefore) {
+          setActiveRoom(room);
+          setIsInWaitingRoom(true);
+          return;
+        }
+      }
+
+      // Otherwise, join directly
+      setActiveRoom(room);
+      setIsInMeeting(true);
+    } catch (error) {
+      console.error('Error checking meeting status:', error);
+      // On error, just join the meeting
+      setActiveRoom(room);
+      setIsInMeeting(true);
+    }
+  };
 
   const handleJoinScheduledMeeting = (scheduledRoomName: string) => {
     setActiveRoom(scheduledRoomName);
@@ -54,9 +99,33 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
 
   const handleLeaveMeeting = () => {
     setIsInMeeting(false);
+    setIsInWaitingRoom(false);
     setActiveRoom(null);
     setRoomName('');
   };
+
+  const handleWaitingRoomStart = () => {
+    setIsInWaitingRoom(false);
+    setIsInMeeting(true);
+  };
+
+  const handleLeaveWaitingRoom = () => {
+    setIsInWaitingRoom(false);
+    setActiveRoom(null);
+  };
+
+  // Show waiting room
+  if (isInWaitingRoom && activeRoom) {
+    return (
+      <div className={`w-full ${className}`}>
+        <MeetingWaitingRoom
+          roomName={activeRoom}
+          onMeetingStart={handleWaitingRoomStart}
+          onCancel={handleLeaveWaitingRoom}
+        />
+      </div>
+    );
+  }
 
   if (isInMeeting && activeRoom) {
     return (
