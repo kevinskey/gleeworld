@@ -304,22 +304,24 @@ export const HandbookAppendixView: React.FC<HandbookAppendixViewProps> = ({
           </CardContent>
         </Card> : (/* View Mode */
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Table of Contents - Sidebar */}
-          <Card className="lg:col-span-1 h-fit sticky top-20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Contents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <nav className="space-y-1">
-                {tableOfContents.map((item, i) => <a key={i} href={`#${item.id}`} className="block text-sm text-muted-foreground hover:text-primary transition-colors py-1">
-                    {item.text}
-                  </a>)}
-              </nav>
-            </CardContent>
-          </Card>
+          {/* Table of Contents - Left Column */}
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            <Card className="h-fit sticky top-20">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Contents</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <nav className="space-y-1">
+                  {tableOfContents.map((item, i) => <a key={i} href={`#${item.id}`} className="block text-sm text-muted-foreground hover:text-primary transition-colors py-1">
+                      {item.text}
+                    </a>)}
+                </nav>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Main Content */}
-          <Card className="lg:col-span-3">
+          {/* Main Content - Right Column */}
+          <Card className="lg:col-span-3 order-1 lg:order-2">
             <CardHeader>
               <CardTitle className="text-lg">{currentVersion.title}</CardTitle>
               <p className="text-sm text-muted-foreground">
