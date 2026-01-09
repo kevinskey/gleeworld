@@ -254,8 +254,8 @@ export const HeaderRadioControls = () => {
                       )}
                     </button>
 
-                    {/* Volume Knob Section */}
-                    <div className="flex items-center gap-1">
+                    {/* Volume Slider Section */}
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
@@ -270,31 +270,76 @@ export const HeaderRadioControls = () => {
                         )}
                       </button>
                       
-                      {/* Volume Knob Visual */}
-                      <div 
-                        className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-b from-zinc-400 via-zinc-500 to-zinc-600 border border-zinc-700 shadow-md cursor-pointer"
-                        style={{
-                          background: 'radial-gradient(ellipse at 30% 30%, #a1a1aa 0%, #52525b 50%, #27272a 100%)',
-                        }}
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const centerX = rect.left + rect.width / 2;
-                          const centerY = rect.top + rect.height / 2;
-                          const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
-                          const normalizedAngle = ((angle + Math.PI) / (2 * Math.PI));
-                          setVolume(Math.max(0, Math.min(1, normalizedAngle)));
-                        }}
-                      >
-                        {/* Knob indicator line */}
+                      {/* African Wood Style Volume Slider */}
+                      <div className="relative w-16 sm:w-20 h-3 flex items-center">
+                        {/* Slider track - brushed metal groove */}
                         <div 
-                          className="absolute w-0.5 h-2 bg-zinc-300 left-1/2 -translate-x-1/2 top-0.5 rounded-full"
+                          className="absolute inset-x-0 h-1.5 rounded-full border border-zinc-500/50"
                           style={{
-                            transformOrigin: 'center bottom',
-                            transform: `translateX(-50%) rotate(${(volume - 0.5) * 270}deg)`,
+                            background: 'linear-gradient(180deg, #3f3f46 0%, #52525b 50%, #71717a 100%)',
+                            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4)',
                           }}
-                        />
-                        {/* Center cap */}
-                        <div className="absolute inset-1.5 sm:inset-2 rounded-full bg-gradient-to-b from-zinc-500 to-zinc-700 border border-zinc-600" />
+                        >
+                          {/* Active fill */}
+                          <div 
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${volume * 100}%`,
+                              background: 'linear-gradient(180deg, #4ade80 0%, #22c55e 50%, #16a34a 100%)',
+                            }}
+                          />
+                        </div>
+                        
+                        {/* African Blackwood Handle */}
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 w-4 h-5 rounded-sm cursor-grab active:cursor-grabbing shadow-lg"
+                          style={{
+                            left: `calc(${volume * 100}% - 8px)`,
+                            background: `
+                              linear-gradient(135deg, 
+                                #1a1209 0%, 
+                                #2d1f12 15%, 
+                                #1f1610 30%, 
+                                #3d2817 45%,
+                                #1a1209 55%,
+                                #2a1c10 70%,
+                                #1f1610 85%,
+                                #251a0e 100%
+                              )
+                            `,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1)',
+                            border: '1px solid #0f0a05',
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            const slider = e.currentTarget.parentElement;
+                            if (!slider) return;
+                            
+                            const updateVolume = (clientX: number) => {
+                              const rect = slider.getBoundingClientRect();
+                              const x = clientX - rect.left;
+                              const newVolume = Math.max(0, Math.min(1, x / rect.width));
+                              setVolume(newVolume);
+                            };
+                            
+                            const onMouseMove = (moveEvent: MouseEvent) => {
+                              updateVolume(moveEvent.clientX);
+                            };
+                            
+                            const onMouseUp = () => {
+                              document.removeEventListener('mousemove', onMouseMove);
+                              document.removeEventListener('mouseup', onMouseUp);
+                            };
+                            
+                            document.addEventListener('mousemove', onMouseMove);
+                            document.addEventListener('mouseup', onMouseUp);
+                          }}
+                        >
+                          {/* Wood grain texture lines */}
+                          <div className="absolute inset-x-1 top-1 h-[1px] bg-gradient-to-r from-transparent via-amber-900/30 to-transparent" />
+                          <div className="absolute inset-x-0.5 top-2 h-[1px] bg-gradient-to-r from-transparent via-amber-800/20 to-transparent" />
+                          <div className="absolute inset-x-1 bottom-1.5 h-[1px] bg-gradient-to-r from-transparent via-amber-900/25 to-transparent" />
+                        </div>
                       </div>
                     </div>
 
