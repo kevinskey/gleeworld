@@ -646,7 +646,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     if (isMobile) {
       return createPortal(
         <div 
-          className="fixed inset-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
           onTouchStart={handleUserInteraction}
           onClick={handleUserInteraction}
         >
@@ -654,7 +654,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             className={`bg-background overflow-hidden shadow-2xl ${
               isLandscape 
                 ? 'w-full h-full' 
-                : 'w-full rounded-t-xl max-h-[85vh]'
+                : 'w-full max-w-lg rounded-xl max-h-[85vh]'
             }`}
             onClick={(e) => e.stopPropagation()}
           >
