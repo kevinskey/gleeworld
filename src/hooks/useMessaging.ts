@@ -219,9 +219,12 @@ export const useRealtimeMessaging = (groupId?: string) => {
 
     console.log('Setting up realtime for group:', groupId);
 
+    // Use a unique channel name per mounted instance to avoid "subscribe multiple times" errors
+    const channelName = `group-${groupId}-${Date.now()}-${Math.random()}`;
+
     // Single channel for all message-related updates
     const channel = supabase
-      .channel(`group-${groupId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
