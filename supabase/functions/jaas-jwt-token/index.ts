@@ -37,12 +37,10 @@ serve(async (req) => {
       throw new Error('JAAS_KEY_ID not configured');
     }
 
-    const keyId = keyIdRaw.startsWith('vpaas-magic-cookie-')
-      ? keyIdRaw.replace(/^vpaas-magic-cookie-/, '')
-      : keyIdRaw;
+    const keyId = keyIdRaw;
 
     // Basic config validation to avoid generating tokens that JaaS will reject
-    console.log('DEBUG: JAAS_APP_ID value:', JSON.stringify(appId), 'JAAS_KEY_ID value:', JSON.stringify(keyIdRaw), 'normalized kid:', JSON.stringify(keyId));
+    console.log('DEBUG: JAAS_APP_ID value:', JSON.stringify(appId), 'JAAS_KEY_ID value:', JSON.stringify(keyIdRaw), 'kid:', JSON.stringify(keyId));
 
     if (!appId.startsWith('vpaas-magic-cookie-') || appId.includes(':') || appId.includes(' ')) {
       throw new Error(`JAAS_APP_ID invalid. Got: "${appId}". Expected like: vpaas-magic-cookie-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`);
@@ -147,7 +145,8 @@ serve(async (req) => {
       { 
         alg: "RS256", 
         typ: "JWT",
-        kid: keyId
+        // JaaS expects the full key id from the JaaS Console (often includes vpaas-magic-cookie- prefix)
+        kid: keyId,
       },
       payload,
       privateKey
