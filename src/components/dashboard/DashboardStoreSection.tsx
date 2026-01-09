@@ -99,7 +99,8 @@ export const DashboardStoreSection = () => {
   }
   return <div className="w-full bg-background">
       {/* Glee Academy - Edge to Edge (FIRST on desktop) */}
-      <Button onClick={() => navigate('/glee-academy')} style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-9 sm:h-10 gap-2 text-sm sm:text-xl bg-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none">
+      <div className="h-[5px] bg-white w-full" />
+      <Button onClick={() => navigate('/glee-academy')} style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-10 gap-2 text-sm sm:text-xl bg-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none">
         <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
         Glee Academy
       </Button>
@@ -153,7 +154,8 @@ export const DashboardStoreSection = () => {
       </div>
 
       {/* Shop Section Header - Edge to Edge */}
-      <h2 style={{ fontFamily: "'Cinzel', serif" }} className="h-9 sm:h-10 text-sm sm:text-xl font-bold bg-accent-foreground text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2">
+      <div className="h-[5px] bg-white w-full" />
+      <h2 style={{ fontFamily: "'Cinzel', serif" }} className="h-10 text-sm sm:text-xl font-bold bg-[#003666] text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2">
         <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
         Shop
       </h2>
@@ -209,7 +211,8 @@ export const DashboardStoreSection = () => {
       </div>
 
       {/* My Modules - Edge to Edge */}
-      <Button onClick={() => navigate('/modules')} style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-9 sm:h-10 gap-2 text-sm sm:text-xl bg-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none">
+      <div className="h-[5px] bg-white w-full" />
+      <Button onClick={() => navigate('/modules')} style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-10 gap-2 text-sm sm:text-xl bg-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none">
         <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
         My Modules
       </Button>
