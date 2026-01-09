@@ -32,9 +32,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Mail, Smartphone, X, Send, Users, Search, Loader2, Maximize2, Minimize2, Video } from 'lucide-react';
-import { ActiveVideoSessions } from '@/components/glee-lounge/video-sessions/ActiveVideoSessions';
-import { CreateVideoSessionDialog } from '@/components/glee-lounge/video-sessions/CreateVideoSessionDialog';
-import { VideoSessionViewer } from '@/components/glee-lounge/video-sessions/VideoSessionViewer';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RecipientGroup {
@@ -664,36 +661,12 @@ export const MessengerModal: React.FC = () => {
 
                 {/* Video Conferencing Tab */}
                 <TabsContent value="video" className="space-y-4 mt-0">
-                  <ActiveVideoSessions
-                    onJoinSession={(sessionId, roomName, isRecording) => setActiveVideoSession({
-                      id: sessionId,
-                      roomName: roomName,
-                      isRecording: isRecording
-                    })}
-                    onCreateSession={() => setShowCreateSession(true)}
-                  />
-                  
-                  <CreateVideoSessionDialog
-                    open={showCreateSession}
-                    onOpenChange={setShowCreateSession}
-                    onSessionCreated={(sessionId, roomName) => {
-                      setActiveVideoSession({
-                        id: sessionId,
-                        roomName: roomName,
-                        isRecording: false
-                      });
-                      setShowCreateSession(false);
-                    }}
-                  />
-                  
-                  {activeVideoSession && (
-                    <VideoSessionViewer
-                      sessionId={activeVideoSession.id}
-                      roomName={activeVideoSession.roomName}
-                      isRecordingEnabled={activeVideoSession.isRecording}
-                      onClose={() => setActiveVideoSession(null)}
-                    />
-                  )}
+                  <Card>
+                    <CardContent className="py-8 text-center">
+                      <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground">Video conferencing coming soon</p>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
               </Tabs>
             </div>
@@ -1055,36 +1028,12 @@ export const MessengerModal: React.FC = () => {
                 </TabsContent>
 
                 <TabsContent value="video" className="space-y-4 mt-0">
-                  <ActiveVideoSessions
-                    onJoinSession={(sessionId, roomName, isRecording) => setActiveVideoSession({
-                      id: sessionId,
-                      roomName: roomName,
-                      isRecording: isRecording
-                    })}
-                    onCreateSession={() => setShowCreateSession(true)}
-                  />
-                  
-                  <CreateVideoSessionDialog
-                    open={showCreateSession}
-                    onOpenChange={setShowCreateSession}
-                    onSessionCreated={(sessionId, roomName) => {
-                      setActiveVideoSession({
-                        id: sessionId,
-                        roomName: roomName,
-                        isRecording: false
-                      });
-                      setShowCreateSession(false);
-                    }}
-                  />
-                  
-                  {activeVideoSession && (
-                    <VideoSessionViewer
-                      sessionId={activeVideoSession.id}
-                      roomName={activeVideoSession.roomName}
-                      isRecordingEnabled={activeVideoSession.isRecording}
-                      onClose={() => setActiveVideoSession(null)}
-                    />
-                  )}
+                  <Card>
+                    <CardContent className="py-8 text-center">
+                      <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground">Video conferencing coming soon</p>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
               </Tabs>
 
