@@ -82,11 +82,28 @@ export const usePushNotifications = () => {
         }
       }
 
-      // Register service worker
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      await navigator.serviceWorker.ready;
+      // Check if service workers are supported
+      if (!('serviceWorker' in navigator)) {
+        throw new Error('Service workers not supported');
+      }
 
-      console.log('Service worker registered');
+      // Try to get existing registration or register new one
+      let registration = await navigator.serviceWorker.getRegistration('/');
+      
+      if (!registration) {
+        try {
+          registration = await navigator.serviceWorker.register('/sw.js', {
+            scope: '/'
+          });
+          console.log('Service worker registered');
+        } catch (regError) {
+          console.warn('Service worker registration failed:', regError);
+          // Continue without service worker for push - some browsers support this
+          throw new Error('Could not register service worker. Push notifications may not work in this environment.');
+        }
+      }
+
+      await navigator.serviceWorker.ready;
 
       // Subscribe to push notifications
       const subscription = await registration.pushManager.subscribe({
@@ -118,7 +135,8 @@ export const usePushNotifications = () => {
       toast.success('Push notifications enabled!');
     } catch (error) {
       console.error('Error subscribing to push notifications:', error);
-      toast.error('Failed to enable push notifications');
+      const message = error instanceof Error ? error.message : 'Failed to enable push notifications';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
