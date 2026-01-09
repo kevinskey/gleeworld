@@ -100,7 +100,7 @@ export const DashboardStoreSection = () => {
   return <div className="w-full bg-background">
       {/* Glee Academy - Edge to Edge (FIRST on desktop) */}
       <div className="h-[25px] bg-white w-full" />
-      <Button onClick={() => navigate('/glee-academy')} style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#004080] to-[#002244] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-[0_4px_8px_rgba(0,0,0,0.4)] border-t border-t-white/20">
+      <Button onClick={() => navigate('/glee-academy')} variant="ghost" style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#0B5A8B] to-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-[0_6px_14px_rgba(0,0,0,0.35)] border-t border-t-white/25 hover:brightness-105">
         <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
         Glee Academy
       </Button>
@@ -156,7 +156,7 @@ export const DashboardStoreSection = () => {
 
       {/* Shop Section Header - Edge to Edge */}
       <div className="h-[25px] bg-white w-full" />
-      <h2 style={{ fontFamily: "'Cinzel', serif" }} className="relative z-10 h-12 text-sm sm:text-xl font-bold bg-gradient-to-b from-[#004080] to-[#002244] text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-[0_4px_8px_rgba(0,0,0,0.4)] border-t border-t-white/20">
+      <h2 style={{ fontFamily: "'Cinzel', serif" }} className="relative z-10 h-12 text-sm sm:text-xl font-bold bg-gradient-to-b from-[#0B5A8B] to-[#003666] text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-[0_6px_14px_rgba(0,0,0,0.35)] border-t border-t-white/25">
         <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
         Shop
       </h2>
@@ -214,7 +214,7 @@ export const DashboardStoreSection = () => {
 
       {/* My Modules - Edge to Edge */}
       <div className="h-[25px] bg-white w-full" />
-      <Button onClick={() => navigate('/modules')} style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#004080] to-[#002244] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-[0_4px_8px_rgba(0,0,0,0.4)] border-t border-t-white/20">
+      <Button onClick={() => navigate('/modules')} variant="ghost" style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#0B5A8B] to-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-[0_6px_14px_rgba(0,0,0,0.35)] border-t border-t-white/25 hover:brightness-105">
         <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
         My Modules
       </Button>
