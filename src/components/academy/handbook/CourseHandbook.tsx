@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -84,12 +84,12 @@ interface CourseHandbookProps {
 
 export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) => {
   const navigate = useNavigate();
-  const { sectionSlug } = useParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [currentSectionSlug, setCurrentSectionSlug] = useState<string | null>(null);
 
   const sections = getVisibleHandbookSections();
-  const currentSection = sections.find(s => s.slug === sectionSlug) || sections[0];
+  const currentSection = sections.find(s => s.slug === currentSectionSlug) || sections[0];
   const currentIndex = sections.findIndex(s => s.id === currentSection?.id);
 
   // Search filtering
@@ -107,7 +107,7 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
   };
 
   const navigateToSection = (slug: string) => {
-    navigate(`/academy/mus-070/handbook/${slug}`);
+    setCurrentSectionSlug(slug);
     setMobileNavOpen(false);
   };
 
@@ -159,9 +159,7 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
         {/* Breadcrumbs & Controls */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <button onClick={() => navigate('/academy/mus-070')} className="hover:text-foreground">
-              MUS 070
-            </button>
+            <span className="text-muted-foreground">MUS 070</span>
             <ChevronRight className="h-4 w-4" />
             <span className="text-foreground font-medium">Handbook</span>
             {currentSection && (
