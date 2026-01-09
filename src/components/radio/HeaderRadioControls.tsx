@@ -163,27 +163,27 @@ export const HeaderRadioControls = () => {
                   background: 'linear-gradient(180deg, #d4d4d8 0%, #a1a1aa 50%, #71717a 100%)',
                 }}
               >
-                <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
-                  <div className="flex items-center gap-2 sm:gap-3">
+                <div className="max-w-7xl mx-auto px-2 sm:px-3 py-1">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
                     
                     {/* Power/Close Button */}
                     <button
                       onClick={() => setIsOpen(false)}
-                      className="w-6 h-6 rounded-full bg-gradient-to-b from-zinc-600 to-zinc-800 border border-zinc-500 shadow-inner flex items-center justify-center hover:from-zinc-500 hover:to-zinc-700 transition-all"
+                      className="w-5 h-5 rounded-full bg-gradient-to-b from-zinc-600 to-zinc-800 border border-zinc-500 shadow-inner flex items-center justify-center hover:from-zinc-500 hover:to-zinc-700 transition-all"
                     >
                       <div className={cn(
-                        "w-2 h-2 rounded-full transition-colors",
+                        "w-1.5 h-1.5 rounded-full transition-colors",
                         isPlaying ? "bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]" : "bg-zinc-400"
                       )} />
                     </button>
 
                     {/* Brand */}
-                    <span className="text-[10px] font-bold tracking-widest text-zinc-700 dark:text-zinc-300 uppercase hidden sm:block">
+                    <span className="text-[8px] font-bold tracking-widest text-zinc-700 dark:text-zinc-300 uppercase hidden sm:block">
                       GleeWorld
                     </span>
 
                     {/* Channel Preset Buttons */}
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5">
                       {channels.slice(0, 6).map((channel, idx) => {
                         const isSelected = selectedChannel?.id === channel.id;
                         return (
@@ -192,10 +192,10 @@ export const HeaderRadioControls = () => {
                             onClick={() => handleChannelChange(channel)}
                             disabled={isLoading}
                             className={cn(
-                              "w-6 h-6 sm:w-7 sm:h-7 rounded-full text-[9px] sm:text-[10px] font-bold transition-all",
+                              "w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[8px] sm:text-[9px] font-bold transition-all",
                               "bg-gradient-to-b border shadow-sm",
                               isSelected
-                                ? "from-amber-400 to-amber-600 border-amber-700 text-amber-900 shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                                ? "from-amber-400 to-amber-600 border-amber-700 text-amber-900 shadow-[0_0_6px_rgba(251,191,36,0.5)]"
                                 : "from-zinc-500 to-zinc-700 border-zinc-600 text-zinc-200 hover:from-zinc-400 hover:to-zinc-600"
                             )}
                           >
@@ -206,34 +206,27 @@ export const HeaderRadioControls = () => {
                     </div>
 
                     {/* LCD Display */}
-                    <div className="flex-1 mx-2 sm:mx-4">
+                    <div className="flex-1 mx-1 sm:mx-2">
                       <div 
-                        className="bg-[#1a2a1a] border-2 border-zinc-600 rounded px-2 py-1 shadow-inner"
+                        className="bg-[#1a2a1a] border border-zinc-600 rounded px-1.5 py-0.5 shadow-inner"
                         style={{
                           background: 'linear-gradient(180deg, #0f1a0f 0%, #1a2a1a 50%, #0f1a0f 100%)',
                         }}
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center gap-1 min-w-0 flex-1">
                             {isLive && (
-                              <span className="text-red-400 text-[8px] font-mono animate-pulse">●REC</span>
+                              <span className="text-red-400 text-[7px] font-mono animate-pulse">●</span>
                             )}
-                            <div className="truncate">
-                              <span className="text-[10px] sm:text-xs font-mono text-green-400 tracking-wide">
-                                {currentTrack?.title || selectedChannel?.name || 'No Signal'}
-                              </span>
-                            </div>
+                            <span className="text-[9px] sm:text-[10px] font-mono text-green-400 tracking-wide truncate">
+                              {currentTrack?.title || selectedChannel?.name || 'No Signal'}
+                            </span>
                           </div>
-                          <div className="flex items-center gap-1 text-green-400/70 flex-shrink-0">
-                            <span className="text-[8px] font-mono">{listenerCount}</span>
-                            <Users className="h-2.5 w-2.5" />
+                          <div className="flex items-center gap-0.5 text-green-400/70 flex-shrink-0">
+                            <span className="text-[7px] font-mono">{listenerCount}</span>
+                            <Users className="h-2 w-2" />
                           </div>
                         </div>
-                        {currentTrack?.artist && (
-                          <div className="text-[8px] sm:text-[9px] font-mono text-green-400/60 truncate">
-                            {currentTrack.artist}
-                          </div>
-                        )}
                       </div>
                     </div>
 
@@ -245,7 +238,7 @@ export const HeaderRadioControls = () => {
                       }}
                       disabled={isLoading || !isOnline}
                       className={cn(
-                        "w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all",
+                        "w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition-all",
                         "bg-gradient-to-b border shadow-md",
                         isPlaying
                           ? "from-green-500 to-green-700 border-green-800"
@@ -253,16 +246,16 @@ export const HeaderRadioControls = () => {
                       )}
                     >
                       {isLoading ? (
-                        <Loader2 className="h-3.5 w-3.5 text-white animate-spin" />
+                        <Loader2 className="h-3 w-3 text-white animate-spin" />
                       ) : isPlaying ? (
-                        <Pause className="h-3.5 w-3.5 text-white" />
+                        <Pause className="h-3 w-3 text-white" />
                       ) : (
-                        <Play className="h-3.5 w-3.5 text-white ml-0.5" />
+                        <Play className="h-3 w-3 text-white ml-0.5" />
                       )}
                     </button>
 
                     {/* Volume Knob Section */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
@@ -271,15 +264,15 @@ export const HeaderRadioControls = () => {
                         className="text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
                       >
                         {isMuted ? (
-                          <VolumeX className="h-3.5 w-3.5" />
+                          <VolumeX className="h-3 w-3" />
                         ) : (
-                          <Volume2 className="h-3.5 w-3.5" />
+                          <Volume2 className="h-3 w-3" />
                         )}
                       </button>
                       
                       {/* Volume Knob Visual */}
                       <div 
-                        className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-b from-zinc-400 via-zinc-500 to-zinc-600 border-2 border-zinc-700 shadow-lg cursor-pointer"
+                        className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-b from-zinc-400 via-zinc-500 to-zinc-600 border border-zinc-700 shadow-md cursor-pointer"
                         style={{
                           background: 'radial-gradient(ellipse at 30% 30%, #a1a1aa 0%, #52525b 50%, #27272a 100%)',
                         }}
@@ -294,23 +287,23 @@ export const HeaderRadioControls = () => {
                       >
                         {/* Knob indicator line */}
                         <div 
-                          className="absolute w-0.5 h-3 bg-zinc-300 left-1/2 -translate-x-1/2 top-1 rounded-full"
+                          className="absolute w-0.5 h-2 bg-zinc-300 left-1/2 -translate-x-1/2 top-0.5 rounded-full"
                           style={{
                             transformOrigin: 'center bottom',
                             transform: `translateX(-50%) rotate(${(volume - 0.5) * 270}deg)`,
                           }}
                         />
                         {/* Center cap */}
-                        <div className="absolute inset-2 sm:inset-3 rounded-full bg-gradient-to-b from-zinc-500 to-zinc-700 border border-zinc-600" />
+                        <div className="absolute inset-1.5 sm:inset-2 rounded-full bg-gradient-to-b from-zinc-500 to-zinc-700 border border-zinc-600" />
                       </div>
                     </div>
 
                     {/* Close button */}
                     <button
                       onClick={() => setIsOpen(false)}
-                      className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 ml-1"
+                      className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
