@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { MobileVideoInterface } from '@/components/messenger/MobileVideoInterface';
+import { VideoSessionManager } from '@/components/video/VideoSessionManager';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -486,19 +486,8 @@ const Messenger = () => {
                 </TabsContent>
 
                 {/* Video Tab */}
-                <TabsContent value="video" className="flex-1 overflow-hidden mt-0 bg-background data-[state=active]:flex data-[state=active]:flex-col">
-                  <MobileVideoInterface onJoinSession={(sessionId, roomName, isRecording) => setActiveVideoSession({
-                  id: sessionId,
-                  roomName: roomName,
-                  isRecording: isRecording
-                })} />
-                  
-                  {activeVideoSession && <Card>
-                      <CardContent className="py-8 text-center">
-                        <p className="text-muted-foreground">Video session active</p>
-                        <Button variant="outline" onClick={() => setActiveVideoSession(null)} className="mt-4">Close</Button>
-                      </CardContent>
-                    </Card>}
+                <TabsContent value="video" className="flex-1 overflow-auto mt-0 bg-background data-[state=active]:flex data-[state=active]:flex-col p-4">
+                  <VideoSessionManager />
                 </TabsContent>
               </Tabs>
             </div>
