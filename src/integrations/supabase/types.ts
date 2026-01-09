@@ -24078,6 +24078,39 @@ export type Database = {
           },
         ]
       }
+      tour_documents: {
+        Row: {
+          created_at: string | null
+          document_name: string
+          document_type: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_name: string
+          document_type?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_name?: string
+          document_type?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       tour_milestones: {
         Row: {
           completed: boolean
