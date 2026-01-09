@@ -10,7 +10,7 @@ import { DayAgendaPanel } from "./DayAgendaPanel";
 import { OfficeHoursBooking } from "./OfficeHoursBooking";
 import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/hooks/useProfile";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useNavigate } from "react-router-dom";
 import { format, isSameDay, addMonths, subMonths } from "date-fns";
 
@@ -22,8 +22,8 @@ export const CalendarViews = () => {
   const navigate = useNavigate();
   const { events, loading, fetchEvents } = useGleeWorldEvents();
   const { user } = useAuth();
-  const { profile } = useProfile();
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
+  const { isAdmin, isExecutiveBoard } = useUserRole();
+  const canManageEvents = isAdmin() || isExecutiveBoard();
 
   // Filter events based on visible calendars
   const filteredEvents = events.filter(event => {
@@ -101,7 +101,7 @@ export const CalendarViews = () => {
           >
             Today
           </Button>
-          {isAdmin && (
+          {canManageEvents && (
             <Button 
               size="sm" 
               className="gap-2 h-9 text-sm font-medium bg-primary hover:bg-primary/90" 
@@ -121,7 +121,7 @@ export const CalendarViews = () => {
             onCalendarsChange={setVisibleCalendarIds}
             onCalendarColorUpdated={fetchEvents}
           />
-          {isAdmin && (
+          {canManageEvents && (
             <>
               <Button 
                 variant="ghost" 
