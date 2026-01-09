@@ -326,7 +326,7 @@ const Messenger = () => {
         </div>
       </UniversalLayout>;
   }
-  return <UniversalLayout showHeader={false} showFooter={false}>
+  return <UniversalLayout showHeader={false} showFooter={false} className="pt-0">
       <div className="flex flex-col h-dvh">
         {/* Persistent Header */}
         <header className="flex-shrink-0 border-b border-border bg-background px-6 lg:px-10 py-3">
