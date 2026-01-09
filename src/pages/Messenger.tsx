@@ -40,6 +40,7 @@ const Messenger = () => {
   // Course context from query params
   const courseId = searchParams.get('courseId');
   const courseName = searchParams.get('courseName');
+  const joinRoomName = searchParams.get('join');
   const {
     hasAccess,
     messengerRole,
@@ -69,8 +70,8 @@ const Messenger = () => {
     }
   }, [courseId, courseName]);
 
-  // Composer state
-  const [composerMode, setComposerMode] = useState<'email' | 'sms' | 'video'>('email');
+  // Composer state - default to video tab if joining from link
+  const [composerMode, setComposerMode] = useState<'email' | 'sms' | 'video'>(joinRoomName ? 'video' : 'email');
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [recipients, setRecipients] = useState<string[]>([]);
@@ -487,7 +488,7 @@ const Messenger = () => {
 
                 {/* Video Tab */}
                 <TabsContent value="video" className="flex-1 overflow-auto mt-0 bg-background data-[state=active]:flex data-[state=active]:flex-col p-4">
-                  <VideoSessionManager />
+                  <VideoSessionManager joinRoomName={joinRoomName} />
                 </TabsContent>
               </Tabs>
             </div>
