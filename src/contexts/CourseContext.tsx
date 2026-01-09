@@ -81,7 +81,6 @@ export const useCourseDisplayInfo = () => {
   const { selectedCourseId, selectedCourseCode, selectedCourseName, isDefaultCourse } = useCourseContext();
   
   return {
-    loungeTitle: isDefaultCourse ? 'Glee Lounge' : `${selectedCourseCode} Lounge`,
     camTitle: isDefaultCourse ? 'Glee Cam' : `${selectedCourseCode} Cam`,
     courseLabel: selectedCourseName || 'Glee Club',
     isInCourseView: !isDefaultCourse && selectedCourseId !== null,

@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { VideoSessionViewer } from '@/components/glee-lounge/video-sessions/VideoSessionViewer';
+
 import { MobileVideoInterface } from '@/components/messenger/MobileVideoInterface';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -537,12 +537,12 @@ const Messenger = () => {
                   />
                   
                   {activeVideoSession && (
-                    <VideoSessionViewer 
-                      sessionId={activeVideoSession.id} 
-                      roomName={activeVideoSession.roomName} 
-                      isRecordingEnabled={activeVideoSession.isRecording} 
-                      onClose={() => setActiveVideoSession(null)} 
-                    />
+                    <Card>
+                      <CardContent className="py-8 text-center">
+                        <p className="text-muted-foreground">Video session active</p>
+                        <Button variant="outline" onClick={() => setActiveVideoSession(null)} className="mt-4">Close</Button>
+                      </CardContent>
+                    </Card>
                   )}
                 </TabsContent>
               </Tabs>

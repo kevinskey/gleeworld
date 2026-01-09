@@ -21,7 +21,7 @@ import NotFound from "@/pages/NotFound";
 import UserManagement from "@/pages/UserManagement";
 
 import AlumnaeLanding from "@/pages/AlumnaeLanding";
-import AlumnaeLegacyLounge from "@/pages/AlumnaeLegacyLounge";
+
 import AlumnaeStorySubmission from "@/pages/AlumnaeStorySubmission";
 import AlumnaeMessages from "@/pages/AlumnaeMessages";
 import AlumnaeAdmin from "@/pages/admin/AlumnaeAdmin";
@@ -167,7 +167,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/alumnae/legacy-lounge",
-    element: <AlumnaeLegacyLounge />,
+    element: <Navigate to="/messenger" replace />,
   },
   {
     path: "/alumnae/story-submission",

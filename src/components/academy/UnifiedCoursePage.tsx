@@ -10,8 +10,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AcademyCourse } from '@/config/academyCourses';
-import { CourseLounge } from './CourseLounge';
-import { CourseGroupsPanel } from './course-lounge/CourseGroupsPanel';
 import { CourseAssignments } from './CourseAssignments';
 import { CourseGradebook } from './CourseGradebook';
 import { CourseAttendance } from './CourseAttendance';
@@ -188,14 +186,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: Brain,
               label: 'AI Groups',
               tab: 'ai-groups'
-            }, {
-              icon: Users,
-              label: 'Groups',
-              tab: 'groups'
-            }, {
-              icon: MessageSquare,
-              label: 'Lounge',
-              tab: 'lounge'
             }, {
               icon: Library,
               label: 'Resources',
@@ -374,9 +364,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                   label: 'Tests',
                   tab: 'tests'
                 }, {
-                  icon: MessageSquare,
-                  label: 'Lounge',
-                  tab: 'lounge'
+                  icon: MessagesSquare,
+                  label: 'Messages',
+                  tab: 'messages'
                 }, {
                   icon: Trophy,
                   label: 'Grades',
@@ -436,8 +426,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </CardContent>
               </Card>}
 
-            {/* Groups Tab */}
-            {activeTab === 'groups' && <CourseGroupsPanel courseId={course.id} />}
 
             {/* Resources Tab - Available for all courses */}
             {activeTab === 'resources' && <Card>
@@ -466,7 +454,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </CardContent>
               </Card>}
 
-            {activeTab === 'lounge' && <CourseLounge courseId={course.id} courseName={course.title} isEnrolled={isEnrolled} instructorEmail={course.instructor.email} isAdmin={isAdmin} />}
+            
 
             {activeTab === 'grades' && (isAdmin ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
                   <GradesAdmin />

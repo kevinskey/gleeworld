@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 
-import { LiveInvitePopup } from "@/components/glee-lounge/LiveInvitePopup";
+
 import { GleeAssistant } from "@/components/assistant/GleeAssistant";
 import { AssistantProvider } from "@/contexts/AssistantContext";
 import { MessengerProvider } from "@/contexts/MessengerContext";
@@ -46,7 +46,7 @@ import Glee101Page from "./pages/courses/Glee101Page";
 import AcademyCoursePage from "./pages/academy/AcademyCoursePage";
 import AcademyCoursesAdmin from "./pages/admin/AcademyCoursesAdmin";
 import CourseInstructorConsole from "./pages/courses/CourseInstructorConsole";
-import CourseLoungeRedirect from "./pages/CourseLoungeRedirect";
+
 
 import Index from "./pages/Index";
 import YouTubeChannel from "./pages/YouTubeChannel";
@@ -336,7 +336,7 @@ const App = () => {
                   <div>
                   <Toaster />
                   <Sonner />
-                  <LiveInvitePopup />
+                  
                   <GleeAssistant />
                   <MessengerModal />
                   <DesignSystemEnforcer />
@@ -483,8 +483,8 @@ const App = () => {
                 }
               />
               
-              {/* Course Lounge Redirect - maps course IDs to academy routes */}
-              <Route path="/course-lounge/:courseId" element={<CourseLoungeRedirect />} />
+              {/* Legacy course lounge redirect - now goes to dashboard */}
+              <Route path="/course-lounge/:courseId" element={<Navigate to="/dashboard" replace />} />
               
               {/* Book Appointment Page */}
               <Route 

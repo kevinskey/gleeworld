@@ -33,7 +33,7 @@ import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, Ch
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
 import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
 
-import { GleeLoungeStrip } from "@/components/glee-lounge/GleeLoungeStrip";
+
 import { DashboardHeroCarousel } from "@/components/hero/DashboardHeroCarousel";
 import { AdvertisingHero } from "@/components/hero/AdvertisingHero";
 import { GleeAcademyDashboardCard } from "@/components/user-dashboard/GleeAcademyDashboardCard";
@@ -624,8 +624,6 @@ export const MetalHeaderDashboard = ({
       {/* Advertising Hero - TOP OF DASHBOARD */}
       <AdvertisingHero />
 
-      {/* Glee Lounge Strip - Social Hub Access */}
-      <GleeLoungeStrip />
 
       {/* Glee Academy Card - Course shortcuts */}
       <GleeAcademyDashboardCard />
