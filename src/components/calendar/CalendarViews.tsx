@@ -22,8 +22,8 @@ export const CalendarViews = () => {
   const navigate = useNavigate();
   const { events, loading, fetchEvents } = useGleeWorldEvents();
   const { user } = useAuth();
-  const { isAdmin, isExecutiveBoard } = useUserRole();
-  const canManageEvents = isAdmin() || isExecutiveBoard();
+  const { isAdmin, isExecutiveBoard, loading: roleLoading } = useUserRole();
+  const canManageEvents = !roleLoading && (isAdmin() || isExecutiveBoard());
 
   // Filter events based on visible calendars
   const filteredEvents = events.filter(event => {
