@@ -99,7 +99,7 @@ export const DashboardStoreSection = () => {
   }
   return <div className="w-full bg-background">
       {/* Glee Academy - Edge to Edge (FIRST on desktop) */}
-      <Button onClick={() => navigate('/glee-academy')} className="w-full gap-2 py-[40px] text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none mt-[10px] pb-[35px] pt-[35px] my-[5px]">
+      <Button onClick={() => navigate('/glee-academy')} className="w-full gap-2 text-2xl bg-[#003666] justify-start text-left px-4 sm:px-6 lg:px-8 rounded-none mt-[10px] pb-[35px] pt-[35px] my-[5px] py-[25px]">
         <GraduationCap className="h-5 w-5" />
         Glee Academy
       </Button>
@@ -153,7 +153,7 @@ export const DashboardStoreSection = () => {
       </div>
 
       {/* Shop Section Header - Edge to Edge */}
-      <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground px-4 sm:px-6 lg:px-8 w-full pt-[20px] py-[20px] pb-[20px] flex items-center gap-3">
+      <h2 className="text-2xl font-bold mb-6 bg-accent-foreground text-primary-foreground px-4 sm:px-6 lg:px-8 w-full pt-[20px] pb-[20px] flex items-center gap-3 py-[35px]">
         <ShoppingBag className="w-6 h-6" />
         Shop
       </h2>
