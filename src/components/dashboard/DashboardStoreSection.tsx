@@ -243,13 +243,13 @@ export const DashboardStoreSection = () => {
             {modules.map(module => {
           const unifiedModule = UNIFIED_MODULES.find(m => m.id === module.id);
           const IconComponent = unifiedModule?.icon;
-          return <Card key={module.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 bg-primary/80 border border-primary-foreground/30 hover:bg-primary/70" onClick={() => navigate(`/modules/${module.id}`)}>
-                  <CardHeader className="pb-3 pt-4 bg-slate-500">
+          return <Card key={module.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 bg-[#003666] border border-white/20 hover:bg-[#002244]" onClick={() => navigate(`/modules/${module.id}`)}>
+                  <CardHeader className="pb-3 pt-4">
                     <div className="flex flex-col items-center text-center gap-2">
-                      {IconComponent && <div className="p-2 rounded-lg bg-primary-foreground/10">
-                          <IconComponent className="h-5 w-5 text-primary-foreground" />
+                      {IconComponent && <div className="p-2 rounded-lg bg-white/10">
+                          <IconComponent className="h-5 w-5 text-white" />
                         </div>}
-                      <CardTitle className="text-sm font-medium leading-tight line-clamp-2 text-primary-foreground">
+                      <CardTitle className="text-sm font-medium leading-tight line-clamp-2 text-white">
                         {module.title}
                       </CardTitle>
                     </div>
