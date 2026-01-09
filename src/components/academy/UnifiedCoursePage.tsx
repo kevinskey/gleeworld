@@ -283,7 +283,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 space-y-6 max-w-6xl mx-auto py-6">
+          <div className="px-4 sm:px-6 md:px-10 lg:px-16 space-y-6 w-full py-6">
             {/* Back Button - Desktop only */}
             <Button variant="ghost" onClick={() => navigate('/glee-academy')} className="hidden lg:flex -mb-2">
               <ArrowLeft className="h-4 w-4 mr-2" />
