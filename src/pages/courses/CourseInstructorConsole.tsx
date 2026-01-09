@@ -207,7 +207,7 @@ export const CourseInstructorConsole = () => {
             if (isMobile) setSidebarOpen(false);
           }} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border", activeTab === item.value ? "bg-[#003666] text-white border-[#003666]" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground border-border")}>
                   <Icon className="h-4 w-4 flex-shrink-0" />
-                  <span className="text-primary-foreground">{item.label}</span>
+                  <span className={activeTab === item.value ? "text-white" : "text-foreground"}>{item.label}</span>
                 </button>;
         })}
           </div>
