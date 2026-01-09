@@ -184,7 +184,7 @@ export const DashboardStoreSection = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs text-muted-foreground">Glee Merch</span>
+                      
                       {product.images && product.images.length > 1 && <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                           <span className="w-3 h-3 border border-muted-foreground/50 rounded-sm" />
                           +{product.images.length - 1}
