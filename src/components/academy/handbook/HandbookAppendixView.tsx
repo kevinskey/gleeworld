@@ -303,37 +303,29 @@ export const HandbookAppendixView: React.FC<HandbookAppendixViewProps> = ({
             </div>
           </CardContent>
         </Card> : (/* View Mode */
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-8">
           {/* Table of Contents - Left Column */}
-          <div className="lg:col-span-1 order-2 lg:order-1">
-            <Card className="h-fit sticky top-20">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Contents</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <nav className="space-y-1">
-                  {tableOfContents.map((item, i) => <a key={i} href={`#${item.id}`} className="block text-sm text-muted-foreground hover:text-primary transition-colors py-1">
-                      {item.text}
-                    </a>)}
-                </nav>
-              </CardContent>
-            </Card>
+          <div className="hidden lg:block">
+            <div className="sticky top-20">
+              <h3 className="text-sm font-medium mb-3 text-foreground">Contents</h3>
+              <nav className="space-y-1">
+                {tableOfContents.map((item, i) => <a key={i} href={`#${item.id}`} className="block text-sm text-muted-foreground hover:text-primary transition-colors py-1">
+                    {item.text}
+                  </a>)}
+              </nav>
+            </div>
           </div>
 
           {/* Main Content - Right Column */}
-          <Card className="lg:col-span-3 order-1 lg:order-2">
-            <CardHeader>
-              <CardTitle className="text-lg">{currentVersion.title}</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Last updated: {format(new Date(currentVersion.updated_at), 'MMMM d, yyyy')}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-slate max-w-none">
-                {renderMarkdown(currentVersion.markdown_content)}
-              </div>
-            </CardContent>
-          </Card>
+          <div>
+            <h1 className="text-2xl font-bold mb-1 text-foreground">{currentVersion.title}</h1>
+            <p className="text-sm text-muted-foreground mb-6">
+              Last updated: {format(new Date(currentVersion.updated_at), 'MMMM d, yyyy')}
+            </p>
+            <div className="prose prose-slate max-w-none">
+              {renderMarkdown(currentVersion.markdown_content)}
+            </div>
+          </div>
         </div>)}
     </div>;
 };
