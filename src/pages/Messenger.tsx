@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft } from "lucide-react";
+import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2 } from "lucide-react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { BackNavigation } from "@/components/shared/BackNavigation";
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { VideoSessionManager } from '@/components/video/VideoSessionManager';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { syncCourseMessengerGroup } from '@/hooks/useCourseMessengerSync';
 import { SMSHistoryPanel } from '@/components/messaging/SMSHistoryPanel';
@@ -93,7 +94,32 @@ const Messenger = () => {
   const [recipientGroups, setRecipientGroups] = useState<RecipientGroup[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [showGroupsPanel, setShowGroupsPanel] = useState(false);
-
+  
+  // Group editing for admins/exec-board
+  const [showGroupEditor, setShowGroupEditor] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<{id: string; name: string; description: string} | null>(null);
+  const [groupFormData, setGroupFormData] = useState({ name: '', description: '' });
+  const [savingGroup, setSavingGroup] = useState(false);
+  
+  const [isExecBoard, setIsExecBoard] = useState(false);
+  
+  // Check for exec-board role from app_roles
+  useEffect(() => {
+    const checkExecBoard = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('app_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'exec-board')
+        .eq('is_active', true)
+        .maybeSingle();
+      setIsExecBoard(!!data);
+    };
+    checkExecBoard();
+  }, [user]);
+  
+  const canEditGroups = messengerRole === 'admin' || messengerRole === 'super-admin' || isExecBoard;
   // Video state
   const [activeVideoSession, setActiveVideoSession] = useState<{
     id: string;
@@ -184,6 +210,110 @@ const Messenger = () => {
       });
     }
   };
+
+  // Group management functions for admins/exec-board
+  const handleCreateGroup = async () => {
+    if (!groupFormData.name.trim()) {
+      toast({ title: 'Error', description: 'Group name is required', variant: 'destructive' });
+      return;
+    }
+    try {
+      setSavingGroup(true);
+      const { error } = await supabase
+        .from('messenger_groups')
+        .insert({
+          name: groupFormData.name,
+          description: groupFormData.description || null,
+          is_active: true,
+          member_count: 0
+        });
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Group created successfully' });
+      setShowGroupEditor(false);
+      setGroupFormData({ name: '', description: '' });
+      // Refresh groups
+      loadManualGroups();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSavingGroup(false);
+    }
+  };
+
+  const handleUpdateGroup = async () => {
+    if (!editingGroup || !groupFormData.name.trim()) return;
+    try {
+      setSavingGroup(true);
+      const { error } = await supabase
+        .from('messenger_groups')
+        .update({
+          name: groupFormData.name,
+          description: groupFormData.description || null
+        })
+        .eq('id', editingGroup.id);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Group updated successfully' });
+      setEditingGroup(null);
+      setShowGroupEditor(false);
+      setGroupFormData({ name: '', description: '' });
+      loadManualGroups();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSavingGroup(false);
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string) => {
+    try {
+      const { error } = await supabase
+        .from('messenger_groups')
+        .delete()
+        .eq('id', groupId);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Group deleted' });
+      loadManualGroups();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const [manualGroups, setManualGroups] = useState<{id: string; name: string; description: string | null; member_count: number}[]>([]);
+  
+  const loadManualGroups = async () => {
+    const { data } = await supabase
+      .from('messenger_groups')
+      .select('id, name, description, member_count')
+      .eq('is_active', true)
+      .order('name');
+    if (data) {
+      setManualGroups(data);
+      // Also add to recipient groups
+      const groups: RecipientGroup[] = [
+        ...courseGroups.map(cg => ({
+          id: `course:${cg.id}`,
+          name: `📚 ${cg.title}`,
+          count: cg.studentCount,
+          type: 'course' as const
+        })),
+        ...data.map(g => ({
+          id: `manual:${g.id}`,
+          name: g.name,
+          count: g.member_count || 0,
+          type: 'manual' as const
+        }))
+      ];
+      setRecipientGroups(groups);
+    }
+  };
+
+  // Load manual groups on mount
+  useEffect(() => {
+    if (canEditGroups || hasAccess) {
+      loadManualGroups();
+    }
+  }, [canEditGroups, hasAccess]);
+
   const handleSendEmail = async () => {
     if (recipients.length === 0 || !subject.trim()) return;
     setIsSending(true);
@@ -326,7 +456,7 @@ const Messenger = () => {
         </div>
       </UniversalLayout>;
   }
-  return <UniversalLayout showHeader={true} showFooter={false}>
+  return <><UniversalLayout showHeader={true} showFooter={false}>
       <div className="flex flex-col h-[calc(100dvh-var(--gw-header-h,4rem))]">
         {/* Persistent Header */}
         <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border backdrop-blur px-6 lg:px-10 py-6 bg-slate-300 shadow-lg">
@@ -508,9 +638,16 @@ const Messenger = () => {
                     <Users className="h-4 w-4" />
                     Quick Add Groups
                   </h3>
-                  <button onClick={() => setShowGroupsPanel(false)} className="p-2 hover:bg-muted rounded-lg sm:hidden">
-                    <X className="h-5 w-5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {canEditGroups && (
+                      <Button variant="ghost" size="sm" onClick={() => { setEditingGroup(null); setGroupFormData({ name: '', description: '' }); setShowGroupEditor(true); }}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <button onClick={() => setShowGroupsPanel(false)} className="p-2 hover:bg-muted rounded-lg sm:hidden">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
                 
                 {loadingGroups ? <div className="flex items-center justify-center py-4">
@@ -537,10 +674,26 @@ const Messenger = () => {
                           Saved Groups
                         </h4>
                         <div className="space-y-1">
-                          {recipientGroups.filter(g => g.type === 'manual').map(group => <Button key={group.id} variant="outline" size="sm" className="w-full justify-start text-left h-auto py-2" onClick={() => handleAddGroup(group)}>
-                              <span className="flex-1 truncate text-xs">{group.name}</span>
-                              <Badge variant="secondary" className="ml-2 text-xs">{group.count}</Badge>
-                            </Button>)}
+                          {recipientGroups.filter(g => g.type === 'manual').map(group => (
+                            <div key={group.id} className="flex items-center gap-1">
+                              <Button variant="outline" size="sm" className="flex-1 justify-start text-left h-auto py-2" onClick={() => handleAddGroup(group)}>
+                                <span className="flex-1 truncate text-xs">{group.name}</span>
+                                <Badge variant="secondary" className="ml-2 text-xs">{group.count}</Badge>
+                              </Button>
+                              {canEditGroups && (
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => {
+                                  const g = manualGroups.find(mg => `manual:${mg.id}` === group.id);
+                                  if (g) {
+                                    setEditingGroup({ id: g.id, name: g.name, description: g.description || '' });
+                                    setGroupFormData({ name: g.name, description: g.description || '' });
+                                    setShowGroupEditor(true);
+                                  }
+                                }}>
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>}
                     
@@ -567,6 +720,38 @@ const Messenger = () => {
           </div>
         </div>
       </div>
-    </UniversalLayout>;
+    </UniversalLayout>
+    
+    {/* Group Editor Dialog */}
+    <Dialog open={showGroupEditor} onOpenChange={setShowGroupEditor}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{editingGroup ? 'Edit Group' : 'Create New Group'}</DialogTitle>
+          <DialogDescription>Manage messenger groups for quick recipient selection.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div>
+            <Label>Group Name</Label>
+            <Input value={groupFormData.name} onChange={(e) => setGroupFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="Enter group name" />
+          </div>
+          <div>
+            <Label>Description</Label>
+            <Textarea value={groupFormData.description} onChange={(e) => setGroupFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Optional description" />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          {editingGroup && (
+            <Button variant="destructive" onClick={() => { handleDeleteGroup(editingGroup.id); setShowGroupEditor(false); }}>
+              <Trash2 className="h-4 w-4 mr-2" /> Delete
+            </Button>
+          )}
+          <Button onClick={editingGroup ? handleUpdateGroup : handleCreateGroup} disabled={savingGroup}>
+            {savingGroup ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            {editingGroup ? 'Save Changes' : 'Create Group'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </>;
 };
 export default Messenger;
