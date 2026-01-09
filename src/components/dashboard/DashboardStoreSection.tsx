@@ -136,12 +136,12 @@ export const DashboardStoreSection = () => {
                   
                   
                   {/* Description */}
-                  {course.description && <p className="text-gray-600 leading-snug line-clamp-3 flex-1 pt-0 pb-[80px] text-base">
+                  {course.description && <p className="text-gray-600 leading-snug line-clamp-3 flex-1 pt-0 pb-[40px] text-base">
                       {course.description}
                     </p>}
                   
                   {/* Enter Arrow */}
-                  <div className="mt-4 border-t border-border/60 bg-background/80 py-2 flex items-center justify-center px-2">
+                  <div className="mt-2 border-t border-border/60 bg-background/80 py-1 flex items-center justify-center px-2">
                     <span className="font-medium uppercase tracking-wide text-foreground text-center text-sm">Enter Course</span>
                   </div>
                 </div>
