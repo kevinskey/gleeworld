@@ -46,9 +46,9 @@ export const UniversalLayout = ({
           : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />
       )}
       
-      {/* Main Content - padded by header height and safe areas to prevent overlap */}
+      {/* Main Content - padded by header height only when header is shown */}
       <main 
-        className={`w-full min-h-dvh pt-[var(--gw-header-h,4rem)] ${shellBg} text-foreground ${className}`}
+        className={`w-full min-h-dvh ${showHeader ? 'pt-[var(--gw-header-h,4rem)]' : ''} ${shellBg} text-foreground ${className}`}
         style={{ 
           paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
           paddingLeft: 'env(safe-area-inset-left)',
