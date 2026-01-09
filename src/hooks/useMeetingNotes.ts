@@ -79,28 +79,49 @@ export const useMeetingNotes = (roomName: string) => {
   }, [roomName, user?.id, toast]);
 
   // Subscribe to realtime updates
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
   useEffect(() => {
-    if (!notesIdRef.current) return;
+    const notesId = notesIdRef.current;
+    if (!notesId) return;
+
+    // In dev (React.StrictMode) effects can mount/unmount quickly; also avoid reusing
+    // a channel instance with the same name.
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    const channelName = `meeting-notes-${notesId}-${Date.now()}-${Math.random()}`;
+    console.log('Meeting notes: subscribing to realtime channel', channelName);
 
     const channel = supabase
-      .channel(`meeting-notes-${notesIdRef.current}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'meeting_notes',
-          filter: `id=eq.${notesIdRef.current}`
+          filter: `id=eq.${notesId}`,
         },
         (payload) => {
-          console.log('Realtime update received:', payload);
+          console.log('Meeting notes: realtime update received', payload);
           setNotes(payload.new as MeetingNotes);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Meeting notes: realtime status', status);
+      });
+
+    channelRef.current = channel;
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        console.log('Meeting notes: cleaning up realtime channel');
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [notes?.id]);
 
