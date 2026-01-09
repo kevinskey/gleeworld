@@ -18298,6 +18298,45 @@ export type Database = {
           },
         ]
       }
+      handbook_appendices: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          is_published: boolean
+          markdown_content: string
+          slug: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          markdown_content: string
+          slug: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          markdown_content?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       handbook_edit_logs: {
         Row: {
           created_at: string
