@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Search, Plus, Star, Calendar, MapPin, Mail, Users } from 'lucide-react';
+import { Building2, Search, Plus, Star, Calendar, MapPin, Mail, Users, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 interface Host {
@@ -52,7 +52,9 @@ export const HostManager = ({
   const [filterPriority, setFilterPriority] = useState('all');
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedHost, setSelectedHost] = useState<Host | null>(null);
+  const [editingHost, setEditingHost] = useState<Partial<Host> | null>(null);
 
   // New host form state
   const [newHost, setNewHost] = useState({
@@ -141,6 +143,61 @@ export const HostManager = ({
     } catch (error) {
       console.error('Error adding host:', error);
       toast.error('Failed to add host');
+    }
+  };
+
+  const handleEditHost = (host: Host, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingHost({
+      id: host.id,
+      contact_name: host.contact_name || '',
+      organization_name: host.organization_name || '',
+      organization_type: host.organization_type || 'venue',
+      contact_email: host.contact_email || '',
+      contact_phone: host.contact_phone || '',
+      website_url: host.website_url || '',
+      street_address: host.street_address || '',
+      city: host.city || '',
+      state: host.state || '',
+      zip_code: host.zip_code || '',
+      priority_level: host.priority_level || 3,
+      notes: host.notes || '',
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateHost = async () => {
+    if (!editingHost?.id) return;
+    try {
+      const { data, error } = await supabase
+        .from('hosts')
+        .update({
+          contact_name: editingHost.contact_name,
+          organization_name: editingHost.organization_name,
+          organization_type: editingHost.organization_type,
+          contact_email: editingHost.contact_email,
+          contact_phone: editingHost.contact_phone,
+          website_url: editingHost.website_url,
+          street_address: editingHost.street_address,
+          city: editingHost.city,
+          state: editingHost.state,
+          zip_code: editingHost.zip_code,
+          priority_level: editingHost.priority_level,
+          notes: editingHost.notes,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingHost.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setHosts(prev => prev.map(h => h.id === data.id ? data : h));
+      setShowEditDialog(false);
+      setEditingHost(null);
+      toast.success('Host updated successfully');
+    } catch (error) {
+      console.error('Error updating host:', error);
+      toast.error('Failed to update host');
     }
   };
   const getPriorityColor = (priority: number | undefined) => {
@@ -407,51 +464,222 @@ export const HostManager = ({
 
       {/* Hosts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredHosts.map(host => <Card key={host.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedHost(host)}>
+        {filteredHosts.map(host => (
+          <Card key={host.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedHost(host)}>
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <CardTitle className="text-xl">{host.organization_name || host.venue_name || 'Unnamed Organization'}</CardTitle>
                   <div className="flex items-center gap-2 mt-2">
-                    {host.organization_type && <Badge className={getTypeColor(host.organization_type)}>
+                    {host.organization_type && (
+                      <Badge className={getTypeColor(host.organization_type)}>
                         {host.organization_type}
-                      </Badge>}
-                    
+                      </Badge>
+                    )}
                   </div>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => handleEditHost(host, e)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {host.contact_name && <div className="flex items-center gap-2 text-sm text-primary-foreground">
+              {host.contact_name && (
+                <div className="flex items-center gap-2 text-sm text-primary-foreground">
                   <Users className="h-3 w-3" />
                   {host.contact_name}
-                </div>}
-              {host.contact_email && <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                </div>
+              )}
+              {host.contact_email && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Mail className="h-3 w-3" />
                   {host.contact_email}
-                </div>}
-              {host.city && host.state && <div className="flex items-center gap-2 text-sm text-primary-foreground">
+                </div>
+              )}
+              {host.city && host.state && (
+                <div className="flex items-center gap-2 text-sm text-primary-foreground">
                   <MapPin className="h-3 w-3" />
                   {host.city}, {host.state}
-                </div>}
+                </div>
+              )}
               <div className="flex items-center justify-between text-sm">
                 <span className="text-primary-foreground">Performances:</span>
                 <span className="font-medium text-secondary-foreground">{host.total_performances || 0}</span>
               </div>
-              {host.last_performance_date && <div className="flex items-center justify-between text-sm">
+              {host.last_performance_date && (
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Last performance:</span>
                   <span className="font-medium">
                     {new Date(host.last_performance_date).toLocaleDateString()}
                   </span>
-                </div>}
+                </div>
+              )}
             </CardContent>
-          </Card>)}
+          </Card>
+        ))}
       </div>
 
-      {filteredHosts.length === 0 && <div className="text-center py-8">
+      {filteredHosts.length === 0 && (
+        <div className="text-center py-8">
           <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-muted-foreground">No hosts found</h3>
           <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
-        </div>}
+        </div>
+      )}
+
+      {/* Edit Host Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Host</DialogTitle>
+            <DialogDescription>
+              Update host information
+            </DialogDescription>
+          </DialogHeader>
+          {editingHost && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit_organization_name">Organization Name *</Label>
+                <Input
+                  id="edit_organization_name"
+                  value={editingHost.organization_name || ''}
+                  onChange={e => setEditingHost(prev => ({ ...prev!, organization_name: e.target.value }))}
+                  placeholder="Enter organization name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_type">Organization Type</Label>
+                <Select
+                  value={editingHost.organization_type || 'venue'}
+                  onValueChange={value => setEditingHost(prev => ({ ...prev!, organization_type: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="venue">Venue</SelectItem>
+                    <SelectItem value="organization">Organization</SelectItem>
+                    <SelectItem value="church">Church</SelectItem>
+                    <SelectItem value="school">School</SelectItem>
+                    <SelectItem value="corporate">Corporate</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_contact_name">Contact Name *</Label>
+                <Input
+                  id="edit_contact_name"
+                  value={editingHost.contact_name || ''}
+                  onChange={e => setEditingHost(prev => ({ ...prev!, contact_name: e.target.value }))}
+                  placeholder="Enter contact person name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_contact_email">Contact Email</Label>
+                <Input
+                  id="edit_contact_email"
+                  type="email"
+                  value={editingHost.contact_email || ''}
+                  onChange={e => setEditingHost(prev => ({ ...prev!, contact_email: e.target.value }))}
+                  placeholder="Enter contact email"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_contact_phone">Contact Phone</Label>
+                <Input
+                  id="edit_contact_phone"
+                  value={editingHost.contact_phone || ''}
+                  onChange={e => setEditingHost(prev => ({ ...prev!, contact_phone: e.target.value }))}
+                  placeholder="Enter contact phone"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_website_url">Website</Label>
+                <Input
+                  id="edit_website_url"
+                  value={editingHost.website_url || ''}
+                  onChange={e => setEditingHost(prev => ({ ...prev!, website_url: e.target.value }))}
+                  placeholder="Enter website URL"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="edit_street_address">Address</Label>
+                <Input
+                  id="edit_street_address"
+                  value={editingHost.street_address || ''}
+                  onChange={e => setEditingHost(prev => ({ ...prev!, street_address: e.target.value }))}
+                  placeholder="Enter street address"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_city">City</Label>
+                <Input
+                  id="edit_city"
+                  value={editingHost.city || ''}
+                  onChange={e => setEditingHost(prev => ({ ...prev!, city: e.target.value }))}
+                  placeholder="Enter city"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_state">State</Label>
+                <Input
+                  id="edit_state"
+                  value={editingHost.state || ''}
+                  onChange={e => setEditingHost(prev => ({ ...prev!, state: e.target.value }))}
+                  placeholder="Enter state"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_zip_code">ZIP Code</Label>
+                <Input
+                  id="edit_zip_code"
+                  value={editingHost.zip_code || ''}
+                  onChange={e => setEditingHost(prev => ({ ...prev!, zip_code: e.target.value }))}
+                  placeholder="Enter ZIP code"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_priority_level">Priority Level</Label>
+                <Select
+                  value={(editingHost.priority_level || 3).toString()}
+                  onValueChange={value => setEditingHost(prev => ({ ...prev!, priority_level: parseInt(value) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">High Priority</SelectItem>
+                    <SelectItem value="3">Medium Priority</SelectItem>
+                    <SelectItem value="5">Low Priority</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="edit_notes">Notes</Label>
+                <Textarea
+                  id="edit_notes"
+                  value={editingHost.notes || ''}
+                  onChange={e => setEditingHost(prev => ({ ...prev!, notes: e.target.value }))}
+                  placeholder="Enter any additional notes or preferences"
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateHost} disabled={!editingHost?.contact_name}>
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>;
 };
