@@ -67,27 +67,27 @@ export const PageHeader = ({
   };
 
   return (
-    <div className={`${getBackgroundClass()} rounded-3xl shadow-lg p-4 sm:p-6`}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+    <div className={`${getBackgroundClass()} rounded-3xl shadow-lg h-12 sm:h-14 px-3 sm:px-6 flex items-center`}>
+      <div className="flex items-center justify-between w-full gap-2">
+        <div className="flex items-center gap-2 sm:gap-4">
           {showBackButton && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate(backTo)}
-              className={`flex items-center gap-2 ${getButtonClass()}`}
+              className={`flex items-center gap-1 h-8 px-2 ${getButtonClass()}`}
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="hidden sm:inline">Back</span>
             </Button>
           )}
           
           <div>
-            <h1 className={`text-xl sm:text-2xl md:text-3xl font-medium ${getTextColorClass()}`}>
+            <h1 className={`text-sm sm:text-xl md:text-2xl font-medium ${getTextColorClass()}`}>
               {title}
             </h1>
             {description && (
-              <p className={`text-sm sm:text-base mt-1 ${getDescriptionColorClass()}`}>
+              <p className={`text-xs sm:text-sm ${getDescriptionColorClass()}`}>
                 {description}
               </p>
             )}
