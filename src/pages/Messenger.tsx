@@ -286,39 +286,48 @@ const Messenger = () => {
 
   const [manualGroups, setManualGroups] = useState<{id: string; name: string; description: string | null; member_count: number}[]>([]);
   
-  const loadManualGroups = async () => {
-    const { data } = await supabase
+  const loadManualGroups = useCallback(async () => {
+    console.log('[Messenger] Loading manual groups...');
+    const { data, error } = await supabase
       .from('messenger_groups')
       .select('id, name, description, member_count')
       .eq('is_active', true)
       .order('name');
+    
+    if (error) {
+      console.error('[Messenger] Error loading groups:', error);
+      return;
+    }
+    
+    console.log('[Messenger] Loaded manual groups:', data?.length);
     if (data) {
       setManualGroups(data);
-      // Also add to recipient groups
-      const groups: RecipientGroup[] = [
-        ...courseGroups.map(cg => ({
-          id: `course:${cg.id}`,
-          name: `📚 ${cg.title}`,
-          count: cg.studentCount,
-          type: 'course' as const
-        })),
-        ...data.map(g => ({
-          id: `manual:${g.id}`,
-          name: g.name,
-          count: g.member_count || 0,
-          type: 'manual' as const
-        }))
-      ];
-      setRecipientGroups(groups);
     }
-  };
+  }, []);
+
+  // Combine course groups and manual groups into recipientGroups
+  useEffect(() => {
+    const groups: RecipientGroup[] = [
+      ...courseGroups.map(cg => ({
+        id: `course:${cg.id}`,
+        name: `📚 ${cg.title}`,
+        count: cg.studentCount,
+        type: 'course' as const
+      })),
+      ...manualGroups.map(g => ({
+        id: `manual:${g.id}`,
+        name: g.name,
+        count: g.member_count || 0,
+        type: 'manual' as const
+      }))
+    ];
+    setRecipientGroups(groups);
+  }, [courseGroups, manualGroups]);
 
   // Load manual groups on mount
   useEffect(() => {
-    if (canEditGroups || hasAccess) {
-      loadManualGroups();
-    }
-  }, [canEditGroups, hasAccess]);
+    loadManualGroups();
+  }, [loadManualGroups]);
 
   const handleSendEmail = async () => {
     if (recipients.length === 0 || !subject.trim()) return;
