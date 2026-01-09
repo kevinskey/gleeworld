@@ -153,6 +153,27 @@ export const BookingForm: React.FC = () => {
         error
       } = await supabase.from('gw_booking_requests').insert([payload]);
       if (error) throw error;
+
+      // Send email and SMS notifications to admins
+      try {
+        await supabase.functions.invoke('send-booking-notification', {
+          body: {
+            organization_name: data.organization_name,
+            contact_person_name: data.contact_person_name,
+            contact_email: data.contact_email,
+            contact_phone: data.contact_phone || '',
+            event_name: data.event_name,
+            event_date: data.event_date_start.toLocaleDateString(),
+            venue_name: data.venue_name,
+            honorarium_amount: data.honorarium_amount,
+          }
+        });
+        console.log('Booking notification sent successfully');
+      } catch (notificationError) {
+        console.error('Failed to send booking notification:', notificationError);
+        // Don't fail the submission if notification fails
+      }
+
       toast({
         title: 'Booking Request Submitted',
         description: 'Thank you for your interest! We will review your request and contact you soon.',
