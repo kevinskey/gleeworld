@@ -134,7 +134,7 @@ export const DashboardStoreSection = () => {
                   </div>
                   
                   {/* Course Title - Academic Font */}
-                  <h4 className="font-serif text-xl font-bold text-gray-900 leading-tight mb-2 group-hover:text-gray-700 transition-colors pb-[10px] line-clamp-2 min-h-[56px]">
+                  <h4 className="font-serif text-xl font-bold text-gray-900 leading-tight mb-2 group-hover:text-gray-700 transition-colors pb-[10px] line-clamp-2 min-h-[56px] whitespace-pre-wrap">
                     {course.title}
                   </h4>
                   
