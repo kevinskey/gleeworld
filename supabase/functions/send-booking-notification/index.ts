@@ -34,16 +34,18 @@ const handler = async (req: Request): Promise<Response> => {
     const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const twilioPhoneNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
 
-    // Notification recipients: Admins + Tour Managers (Aaliyah Deere & Jordyn O'Neal)
+    // Notification recipients: Admins + Tour Managers
     const adminEmails = [
       "gleeworld@spelman.edu",
       "aaliyahdeere@gmail.com",      // Aaliyah Deere - Tour Manager
       "jordynoneal@spelman.edu",     // Jordyn O'Neal - Tour Manager
+      "onnestypeele@spelman.edu",    // Onnesty Peele - Tour Manager
     ];
     const adminPhones = [
       "+14042705576",                // Main admin
       "+14049348739",                // Aaliyah Deere
       "+16313722944",                // Jordyn O'Neal
+      "+17573777337",                // Onnesty Peele
     ];
 
     // Build email content
