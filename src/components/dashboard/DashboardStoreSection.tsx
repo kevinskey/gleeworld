@@ -206,11 +206,11 @@ export const DashboardStoreSection = () => {
                           +{product.images.length - 1}
                         </span>}
                     </div>
-                    <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors text-lg">
+                    <h3 style={{ fontFamily: "'Cinzel', serif" }} className="font-medium text-[#003666] truncate group-hover:text-[#002244] transition-colors text-lg">
                       {product.title}
                     </h3>
                   </div>
-                  <span className="text-foreground font-medium whitespace-nowrap">
+                  <span style={{ fontFamily: "'Cinzel', serif" }} className="text-[#003666] font-medium whitespace-nowrap">
                     $ {product.price.toFixed(0)}
                   </span>
                 </div>
