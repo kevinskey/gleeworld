@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -83,12 +83,33 @@ interface CourseHandbookProps {
 }
 
 export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) => {
-  const navigate = useNavigate();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [currentSectionSlug, setCurrentSectionSlug] = useState<string | null>(null);
-
+  
   const sections = getVisibleHandbookSections();
+  
+  // Extract section slug from URL if present
+  const getInitialSection = () => {
+    const match = location.pathname.match(/\/handbook\/([^/]+)/);
+    if (match) {
+      const found = sections.find(s => s.slug === match[1]);
+      if (found) return found.slug;
+    }
+    return sections[0]?.slug || null;
+  };
+  
+  const [currentSectionSlug, setCurrentSectionSlug] = useState<string | null>(getInitialSection);
+  
+  // Sync with URL changes
+  useEffect(() => {
+    const match = location.pathname.match(/\/handbook\/([^/]+)/);
+    if (match) {
+      const found = sections.find(s => s.slug === match[1]);
+      if (found) setCurrentSectionSlug(found.slug);
+    }
+  }, [location.pathname, sections]);
+  
   const currentSection = sections.find(s => s.slug === currentSectionSlug) || sections[0];
   const currentIndex = sections.findIndex(s => s.id === currentSection?.id);
 

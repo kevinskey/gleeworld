@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -36,16 +36,31 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   course
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     user
   } = useAuth();
   const {
     currentSemester
   } = useMus240SemesterSafe();
-  const [activeTab, setActiveTab] = useState('home');
+  
+  // Detect if URL contains /handbook to auto-switch tab
+  const getInitialTab = () => {
+    if (location.pathname.includes('/handbook')) return 'handbook';
+    return 'home';
+  };
+  
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollmentLoading, setEnrollmentLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // Sync tab with URL changes
+  useEffect(() => {
+    if (location.pathname.includes('/handbook')) {
+      setActiveTab('handbook');
+    }
+  }, [location.pathname]);
 
   // Scroll to top on mount
   useEffect(() => {
