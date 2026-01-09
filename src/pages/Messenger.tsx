@@ -21,6 +21,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { syncCourseMessengerGroup } from '@/hooks/useCourseMessengerSync';
+import { SMSHistoryPanel } from '@/components/messaging/SMSHistoryPanel';
 interface RecipientGroup {
   id: string;
   name: string;
@@ -431,58 +432,68 @@ const Messenger = () => {
 
                 {/* SMS Tab */}
                 <TabsContent value="sms" className="flex-1 overflow-auto mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-                  <div className="flex-1 bg-muted/50 p-4 sm:p-6 space-y-4">
-                    {/* Send to All Toggle */}
-                    <div className="flex items-center justify-between p-3 bg-background border border-border rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <Label className="text-foreground">Send to All Members with Phone</Label>
-                      </div>
-                      <Switch checked={sendToAll} onCheckedChange={setSendToAll} />
-                    </div>
+                  <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                    {/* SMS Compose Section */}
+                    <div className="flex-1 flex flex-col min-w-0 border-r border-border">
+                      <div className="flex-1 bg-muted/50 p-4 space-y-4 overflow-auto">
+                        {/* Send to All Toggle */}
+                        <div className="flex items-center justify-between p-3 bg-background border border-border rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <Label className="text-foreground">Send to All Members with Phone</Label>
+                          </div>
+                          <Switch checked={sendToAll} onCheckedChange={setSendToAll} />
+                        </div>
 
-                    {/* Individual Recipients */}
-                    {!sendToAll && <div className="space-y-1">
-                        <Label className="text-sm font-medium text-foreground">Recipients:</Label>
-                        <div className="flex flex-wrap gap-2 p-3 min-h-[48px] border border-border rounded-lg bg-background">
-                          {smsRecipients.map(r => <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1">
-                              {r.full_name}
-                              <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>)}
-                          <div className="relative flex-1 min-w-[200px]">
-                            <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search members..." className="border-0 h-8 p-0 focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground" />
-                            {filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                {filteredContacts.filter(r => r.phone_number).map(result => <button key={result.user_id} onClick={() => addSmsRecipient({
-                            user_id: result.user_id,
-                            full_name: result.full_name,
-                            phone_number: result.phone_number || ''
-                          })} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
-                                    <span className="font-medium">{result.full_name}</span>
-                                    <span className="text-sm text-muted-foreground">{result.phone_number}</span>
-                                  </button>)}
-                              </div>}
+                        {/* Individual Recipients */}
+                        {!sendToAll && <div className="space-y-1">
+                            <Label className="text-sm font-medium text-foreground">Recipients:</Label>
+                            <div className="flex flex-wrap gap-2 p-3 min-h-[48px] border border-border rounded-lg bg-background">
+                              {smsRecipients.map(r => <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1">
+                                  {r.full_name}
+                                  <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>)}
+                              <div className="relative flex-1 min-w-[200px]">
+                                <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search members..." className="border-0 h-8 p-0 focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground" />
+                                {filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                    {filteredContacts.filter(r => r.phone_number).map(result => <button key={result.user_id} onClick={() => addSmsRecipient({
+                                user_id: result.user_id,
+                                full_name: result.full_name,
+                                phone_number: result.phone_number || ''
+                              })} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
+                                        <span className="font-medium">{result.full_name}</span>
+                                        <span className="text-sm text-muted-foreground">{result.phone_number}</span>
+                                      </button>)}
+                                  </div>}
+                              </div>
+                            </div>
+                          </div>}
+
+                        {/* SMS Content */}
+                        <div className="space-y-1 flex-1 flex flex-col">
+                          <Label className="text-sm font-medium text-foreground">Message:</Label>
+                          <Textarea value={smsContent} onChange={e => setSmsContent(e.target.value)} placeholder="Type your SMS message..." className="flex-1 min-h-[120px] resize-none bg-background border-border text-foreground placeholder:text-muted-foreground" maxLength={480} />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>{smsContent.length}/480 characters</span>
+                            <span>{Math.ceil(smsContent.length / 160) || 1} SMS segment{smsContent.length > 160 ? 's' : ''}</span>
                           </div>
                         </div>
-                      </div>}
-
-                    {/* SMS Content */}
-                    <div className="space-y-1 flex-1 flex flex-col">
-                      <Label className="text-sm font-medium text-foreground">Message:</Label>
-                      <Textarea value={smsContent} onChange={e => setSmsContent(e.target.value)} placeholder="Type your SMS message..." className="flex-1 min-h-[150px] resize-none bg-background border-border text-foreground placeholder:text-muted-foreground" maxLength={480} />
-                      <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                        <span>{smsContent.length}/480 characters</span>
-                        <span>{Math.ceil(smsContent.length / 160) || 1} SMS segment{smsContent.length > 160 ? 's' : ''}</span>
+                      </div>
+                      
+                      {/* Send Button */}
+                      <div className="flex-shrink-0 p-4 bg-muted border-t border-border">
+                        <Button onClick={handleSendSMS} disabled={isSending || !sendToAll && smsRecipients.length === 0 || !smsContent.trim()} className="w-full">
+                          {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <><Send className="h-4 w-4 mr-2" /> Send SMS {sendToAll ? 'to All Members' : ''}</>}
+                        </Button>
                       </div>
                     </div>
-                  </div>
-                  
-                  {/* Send Button */}
-                  <div className="p-4 bg-muted border-t border-border">
-                    <Button onClick={handleSendSMS} disabled={isSending || !sendToAll && smsRecipients.length === 0 || !smsContent.trim()} className="w-full">
-                      {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <><Send className="h-4 w-4 mr-2" /> Send SMS {sendToAll ? 'to All Members' : ''}</>}
-                    </Button>
+
+                    {/* SMS History Panel */}
+                    <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-background overflow-hidden border-t lg:border-t-0">
+                      <SMSHistoryPanel />
+                    </div>
                   </div>
                 </TabsContent>
 
