@@ -18298,6 +18298,84 @@ export type Database = {
           },
         ]
       }
+      handbook_edit_logs: {
+        Row: {
+          created_at: string
+          edit_summary: string | null
+          edited_by: string
+          editor_name: string | null
+          editor_role: string | null
+          id: string
+          new_content: string
+          previous_content: string | null
+          section_id: string
+          section_title: string
+        }
+        Insert: {
+          created_at?: string
+          edit_summary?: string | null
+          edited_by: string
+          editor_name?: string | null
+          editor_role?: string | null
+          id?: string
+          new_content: string
+          previous_content?: string | null
+          section_id: string
+          section_title: string
+        }
+        Update: {
+          created_at?: string
+          edit_summary?: string | null
+          edited_by?: string
+          editor_name?: string | null
+          editor_role?: string | null
+          id?: string
+          new_content?: string
+          previous_content?: string | null
+          section_id?: string
+          section_title?: string
+        }
+        Relationships: []
+      }
+      handbook_sections: {
+        Row: {
+          content: string
+          created_at: string
+          icon: string
+          id: string
+          is_visible: boolean
+          order_index: number
+          short_title: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          icon?: string
+          id: string
+          is_visible?: boolean
+          order_index?: number
+          short_title: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_visible?: boolean
+          order_index?: number
+          short_title?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       host_interactions: {
         Row: {
           attachments: Json | null
