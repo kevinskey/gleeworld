@@ -24,9 +24,9 @@ serve(async (req) => {
       .trim()
       .replace(/^['"]|['"]$/g, "");
 
-    // JAAS_KEY_ID should be your key id in JaaS, typically: "<tenant>/<apiKeyId>"
-    // Some people mistakenly paste it as: "vpaas-magic-cookie-<tenant>/<apiKeyId>".
-    // Normalize to the correct format.
+    // JAAS_KEY_ID should match the JaaS Console "API keys" value.
+    // 8x8 expects header.kid to be: "vpaas-magic-cookie-<tenant>/<apiKeyId>"
+    // Some UIs expose it as "<tenant>/<apiKeyId>" or even "<apiKeyId>:<secret>" (wrong for JWT kid).
     const keyIdRaw = (Deno.env.get('JAAS_KEY_ID') || '').trim().replace(/^['"]|['"]$/g, "");
 
     if (!privateKeyPem) {
@@ -37,7 +37,17 @@ serve(async (req) => {
       throw new Error('JAAS_KEY_ID not configured');
     }
 
-    const keyId = keyIdRaw;
+    // Normalize kid:
+    // - If user provided "<tenant>/<apiKeyId>", prepend "vpaas-magic-cookie-".
+    // - If user already provided "vpaas-magic-cookie-<tenant>/<apiKeyId>", keep as-is.
+    // This prevents the JaaS error: "Key ID (kid) does not match sub".
+    let keyId = keyIdRaw;
+    if (!keyId.startsWith('vpaas-magic-cookie-') && keyId.includes('/')) {
+      const [tenant, apiKeyId] = keyId.split('/', 2);
+      if (tenant && apiKeyId) {
+        keyId = `vpaas-magic-cookie-${tenant}/${apiKeyId}`;
+      }
+    }
 
     // Basic config validation to avoid generating tokens that JaaS will reject
     console.log('DEBUG: JAAS_APP_ID value:', JSON.stringify(appId), 'JAAS_KEY_ID value:', JSON.stringify(keyIdRaw), 'kid:', JSON.stringify(keyId));
@@ -46,8 +56,12 @@ serve(async (req) => {
       throw new Error(`JAAS_APP_ID invalid. Got: "${appId}". Expected like: vpaas-magic-cookie-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`);
     }
 
-    if (!keyId.includes('/') || keyId.includes('BEGIN')) {
-      throw new Error('JAAS_KEY_ID invalid. Expected like: <tenant>/<apiKeyId> (from JaaS Console > API Keys)');
+    // kid MUST start with the same vpaas tenant as sub (appId)
+    if (!keyId.includes('/') || keyId.includes('BEGIN') || !keyId.startsWith(`${appId}/`)) {
+      throw new Error(
+        'JAAS_KEY_ID invalid. Expected like: vpaas-magic-cookie-<tenant>/<apiKeyId> (from JaaS Console > API Keys). ' +
+          `Got: "${keyIdRaw}" (normalized to "${keyId}")`
+      );
     }
 
     console.log('Using appId:', appId, 'kid:', keyId);
