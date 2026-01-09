@@ -2,159 +2,173 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { Video, Plus, Users, Clock } from 'lucide-react';
+import { Video, Plus, Users, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useQueryClient } from '@tanstack/react-query';
 import { JitsiMeetRoom } from './JitsiMeetRoom';
 import { ScheduleMeetingDialog } from './ScheduleMeetingDialog';
 import { ScheduledMeetingsList } from './ScheduledMeetingsList';
+
 interface VideoSessionManagerProps {
   className?: string;
 }
+
 export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
   className
 }) => {
-  const {
-    user
-  } = useAuth();
-  const {
-    userProfile
-  } = useUserProfile(user);
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
   const queryClient = useQueryClient();
   const [roomName, setRoomName] = useState('');
   const [isInMeeting, setIsInMeeting] = useState(false);
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
+  const [showQuickRoomsDialog, setShowQuickRoomsDialog] = useState(false);
+
   const handleJoinScheduledMeeting = (scheduledRoomName: string) => {
     setActiveRoom(scheduledRoomName);
     setIsInMeeting(true);
   };
+
   const handleMeetingScheduled = () => {
     queryClient.invalidateQueries({
       queryKey: ['scheduled-meetings']
     });
   };
+
   const handleStartMeeting = () => {
     if (!roomName.trim()) return;
-
-    // Sanitize room name - replace spaces with dashes, remove special chars
     const sanitizedRoom = roomName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     setActiveRoom(sanitizedRoom);
     setIsInMeeting(true);
-    setShowCreateDialog(false);
+    setShowJoinDialog(false);
   };
+
   const handleJoinQuickMeeting = () => {
-    // Generate a quick meeting room name
     const quickRoom = `glee-meeting-${Date.now().toString(36)}`;
     setActiveRoom(quickRoom);
     setIsInMeeting(true);
   };
+
   const handleLeaveMeeting = () => {
     setIsInMeeting(false);
     setActiveRoom(null);
     setRoomName('');
   };
+
   if (isInMeeting && activeRoom) {
-    return <div className={`w-full h-[600px] ${className}`}>
-      <JitsiMeetRoom roomName={activeRoom} userName={userProfile?.full_name || userProfile?.display_name || user?.email || 'Guest'} userEmail={user?.email} userId={user?.id} isModerator={userProfile?.is_admin || userProfile?.is_super_admin || false} onClose={handleLeaveMeeting} />
-      </div>;
+    return (
+      <div className={`w-full h-[600px] ${className}`}>
+        <JitsiMeetRoom
+          roomName={activeRoom}
+          userName={userProfile?.full_name || userProfile?.display_name || user?.email || 'Guest'}
+          userEmail={user?.email}
+          userId={user?.id}
+          isModerator={userProfile?.is_admin || userProfile?.is_super_admin || false}
+          onClose={handleLeaveMeeting}
+        />
+      </div>
+    );
   }
-  return <div className={`space-y-6 ${className}`}>
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="cursor-pointer hover:border-primary transition-colors" onClick={handleJoinQuickMeeting}>
-          <CardContent className="pt-6 text-center">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Video className="h-6 w-6 text-primary" />
-            </div>
-            <h3 className="font-semibold mb-1">Start Instant Meeting</h3>
-            <p className="text-sm text-muted-foreground">Start a video call right now</p>
-          </CardContent>
-        </Card>
 
-        <ScheduleMeetingDialog onMeetingScheduled={handleMeetingScheduled} />
+  return (
+    <div className={`space-y-8 ${className}`}>
+      {/* Main Actions Grid - Zoom Style */}
+      <div className="grid grid-cols-2 gap-6 max-w-md mx-auto pt-4">
+        {/* New Meeting */}
+        <button
+          onClick={handleJoinQuickMeeting}
+          className="flex flex-col items-center gap-3 group"
+        >
+          <div className="w-20 h-20 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105">
+            <Video className="h-10 w-10 text-white" />
+          </div>
+          <span className="text-base font-medium text-foreground">New meeting</span>
+        </button>
 
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        {/* Join */}
+        <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
           <DialogTrigger asChild>
-            <Card className="cursor-pointer hover:border-primary transition-colors">
-              <CardContent className="pt-6 text-center">
-                <div className="w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center mx-auto mb-4">
-                  <Plus className="h-6 w-6 text-foreground" />
-                </div>
-                <h3 className="font-semibold mb-1">Create Named Room</h3>
-                <p className="text-sm text-muted-foreground">Create a room with a custom name</p>
-              </CardContent>
-            </Card>
+            <button className="flex flex-col items-center gap-3 group">
+              <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                <Plus className="h-10 w-10 text-primary-foreground" />
+              </div>
+              <span className="text-base font-medium text-foreground">Join</span>
+            </button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create Video Room</DialogTitle>
+              <DialogTitle>Join Meeting</DialogTitle>
               <DialogDescription>
-                Enter a name for your meeting room. Share this name with others to join.
+                Enter a room name to join an existing meeting.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label htmlFor="room-name">Room Name</Label>
-                <Input id="room-name" placeholder="e.g., rehearsal-room, soprano-section" value={roomName} onChange={e => setRoomName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleStartMeeting()} />
-                <p className="text-xs text-muted-foreground">
-                  Room names are converted to lowercase with dashes
-                </p>
+                <Input
+                  id="room-name"
+                  placeholder="e.g., rehearsal-room, soprano-section"
+                  value={roomName}
+                  onChange={e => setRoomName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleStartMeeting()}
+                />
               </div>
               <Button onClick={handleStartMeeting} disabled={!roomName.trim()} className="w-full">
                 <Video className="h-4 w-4 mr-2" />
-                Start Meeting
+                Join Meeting
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Schedule */}
+        <ScheduleMeetingDialog onMeetingScheduled={handleMeetingScheduled} />
+
+        {/* Quick Rooms */}
+        <Dialog open={showQuickRoomsDialog} onOpenChange={setShowQuickRoomsDialog}>
+          <DialogTrigger asChild>
+            <button className="flex flex-col items-center gap-3 group">
+              <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                <Users className="h-10 w-10 text-primary-foreground" />
+              </div>
+              <span className="text-base font-medium text-foreground">Quick rooms</span>
+            </button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Quick Rooms</DialogTitle>
+              <DialogDescription>
+                Join a preset room for your section or purpose.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-3 pt-4">
+              {['director-office', 'soprano-section', 'alto-section', 'rehearsal-room', 'exec-board'].map(room => (
+                <Button
+                  key={room}
+                  variant="outline"
+                  className="justify-start"
+                  onClick={() => {
+                    setActiveRoom(room);
+                    setIsInMeeting(true);
+                    setShowQuickRoomsDialog(false);
+                  }}
+                >
+                  <Video className="h-4 w-4 mr-2" />
+                  {room}
+                </Button>
+              ))}
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Join Existing Room */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Join Existing Room
-          </CardTitle>
-          
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <Input placeholder="Enter room name..." value={roomName} onChange={e => setRoomName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleStartMeeting()} />
-            <Button onClick={handleStartMeeting} disabled={!roomName.trim()}>
-              Join
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Scheduled Meetings */}
       <ScheduledMeetingsList onJoinMeeting={handleJoinScheduledMeeting} />
-
-      {/* Quick Rooms */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Quick Rooms
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {['director-office', 'soprano-section', 'alto-section', 'rehearsal-room', 'exec-board'].map(room => <Button key={room} variant="outline" size="sm" className="justify-start" onClick={() => {
-            setActiveRoom(room);
-            setIsInMeeting(true);
-          }}>
-                <Video className="h-3 w-3 mr-2" />
-                {room}
-              </Button>)}
-          </div>
-        </CardContent>
-      </Card>
-    </div>;
+    </div>
+  );
 };
+
 export default VideoSessionManager;

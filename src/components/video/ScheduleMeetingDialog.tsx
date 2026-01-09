@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -129,15 +129,12 @@ export const ScheduleMeetingDialog: React.FC<ScheduleMeetingDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Card className="cursor-pointer hover:border-primary transition-colors">
-          <CardContent className="pt-4 text-center">
-            <div className="w-10 h-10 rounded-full bg-accent/50 flex items-center justify-center mx-auto mb-2">
-              <CalendarIcon className="h-5 w-5 text-foreground" />
-            </div>
-            <h3 className="font-medium text-sm mb-0.5">Schedule Meeting</h3>
-            <p className="text-xs text-muted-foreground">Plan a meeting for later</p>
-          </CardContent>
-        </Card>
+        <button className="flex flex-col items-center gap-3 group">
+          <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105">
+            <CalendarIcon className="h-10 w-10 text-primary-foreground" />
+          </div>
+          <span className="text-base font-medium text-foreground">Schedule</span>
+        </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
