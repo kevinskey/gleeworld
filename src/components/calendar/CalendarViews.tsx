@@ -101,16 +101,14 @@ export const CalendarViews = () => {
           >
             Today
           </Button>
-          {canManageEvents && (
-            <Button 
-              size="sm" 
-              className="gap-2 h-9 text-sm font-medium bg-primary hover:bg-primary/90" 
-              onClick={() => setShowCreateEvent(true)}
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">New Event</span>
-            </Button>
-          )}
+          <Button 
+            size="sm" 
+            className="gap-2 h-9 text-sm font-medium bg-primary hover:bg-primary/90" 
+            onClick={() => setShowCreateEvent(true)}
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">New Event</span>
+          </Button>
         </div>
       </div>
 
