@@ -120,6 +120,7 @@ const Messenger = () => {
   }, [user]);
   
   const canEditGroups = messengerRole === 'admin' || messengerRole === 'super-admin' || isExecBoard;
+  console.log('[Messenger] canEditGroups:', canEditGroups, 'messengerRole:', messengerRole, 'isExecBoard:', isExecBoard);
   // Video state
   const [activeVideoSession, setActiveVideoSession] = useState<{
     id: string;
