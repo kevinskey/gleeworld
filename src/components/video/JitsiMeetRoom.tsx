@@ -190,6 +190,30 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
           }
         });
 
+        // When auth fails, JaaS often triggers one of these events.
+        const handleConferenceFailure = (payload: any) => {
+          console.error('Jitsi conference failed:', payload);
+          if (mounted) {
+            setError(
+              payload?.message ||
+                payload?.error ||
+                payload?.name ||
+                'Conference failed to start (possible JWT/key mismatch)'
+            );
+            setIsLoading(false);
+          }
+        };
+
+        apiRef.current.addListener('conferenceFailed', handleConferenceFailure);
+        apiRef.current.addListener('errorOccurred', handleConferenceFailure);
+        apiRef.current.addListener('authenticationRequired', (payload: any) => {
+          console.error('Jitsi authenticationRequired:', payload);
+          if (mounted) {
+            setError('JaaS authentication required (JWT rejected). Double-check the API key public key matches the private key.');
+            setIsLoading(false);
+          }
+        });
+
         apiRef.current.addListener('videoConferenceLeft', () => {
           if (mounted && onClose) {
             onClose();
