@@ -153,7 +153,7 @@ export const DashboardStoreSection = () => {
       </div>
 
       {/* Shop Section Header - Edge to Edge */}
-      <h2 className="h-12 sm:h-14 text-sm sm:text-xl font-bold bg-accent-foreground text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-center gap-2">
+      <h2 className="h-9 sm:h-10 text-sm sm:text-xl font-bold bg-accent-foreground text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2">
         <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
         Shop
       </h2>
@@ -209,7 +209,7 @@ export const DashboardStoreSection = () => {
       </div>
 
       {/* My Modules - Edge to Edge */}
-      <Button onClick={() => navigate('/modules')} className="w-full h-12 sm:h-14 gap-2 text-sm sm:text-xl bg-[#003666] justify-center text-center px-3 sm:px-6 lg:px-8 rounded-none">
+      <Button onClick={() => navigate('/modules')} className="w-full h-9 sm:h-10 gap-2 text-sm sm:text-xl bg-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none">
         <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
         My Modules
       </Button>
