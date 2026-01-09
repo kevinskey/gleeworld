@@ -44,9 +44,9 @@ const GleeAcademy = () => {
   return (
     <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
       <div className="min-h-screen bg-background">
-        {/* Header Banner - Matching other pages */}
-        <div className="w-full py-6" style={{ backgroundColor: '#003666' }}>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center tracking-wide">
+        {/* Header Banner - Standardized height */}
+        <div className="w-full h-12 sm:h-14 flex items-center justify-center" style={{ backgroundColor: '#003666' }}>
+          <h1 className="text-sm sm:text-xl lg:text-2xl font-bold text-white text-center tracking-wide uppercase">
             GLEE ACADEMY
           </h1>
         </div>
