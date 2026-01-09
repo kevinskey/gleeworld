@@ -168,7 +168,7 @@ export const DashboardStoreSection = () => {
             {products.map(product => <div key={product.id} onClick={() => navigate(`/shop/${product.id}`)} className="group cursor-pointer flex-shrink-0 w-72 snap-start">
                 {/* Product Image */}
                 <div className="relative aspect-square bg-muted/50 overflow-hidden">
-                  {product.images?.[0] ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center">
+                  {product.images?.[0] ? <img src={product.images[0]} alt={product.title} className="w-full h-full group-hover:scale-105 transition-transform duration-500 object-fill" /> : <div className="w-full h-full flex items-center justify-center">
                       <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
                     </div>}
                   
