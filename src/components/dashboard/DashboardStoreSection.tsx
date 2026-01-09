@@ -115,7 +115,7 @@ export const DashboardStoreSection = () => {
           {courses.length > 0 ? courses.map((course, index) => {
           const CourseIcon = getCourseIcon(course.title);
           const level = getCourseLevel(course.title);
-          return <div key={course.id} onClick={() => navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`)} className="flex-shrink-0 w-72 snap-start cursor-pointer group bg-white border-r border-r-black border-b border-b-gray-300 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all min-h-[320px]">
+          return <div key={course.id} onClick={() => navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`)} className="flex-shrink-0 w-72 snap-start cursor-pointer group bg-white border-r border-r-black border-b border-b-gray-300 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all min-h-[280px]">
                 <div className="p-6 h-full flex flex-col pt-[40px] pb-[70px] py-[4px]">
                   {/* Course Code Badge */}
                   <div className="flex items-center justify-between mb-4">
@@ -158,16 +158,16 @@ export const DashboardStoreSection = () => {
         Shop
       </h2>
       
-      <div className="w-full px-[50px]">
+      <div className="w-full">
         {/* Product Horizontal Scroll */}
         {products.length > 0 ? <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" style={{
         scrollbarWidth: 'none',
         msOverflowStyle: 'none',
         WebkitOverflowScrolling: 'touch'
       }}>
-            {products.map(product => <div key={product.id} onClick={() => navigate(`/shop/${product.id}`)} className="group cursor-pointer flex-shrink-0 w-64 snap-start">
+            {products.map(product => <div key={product.id} onClick={() => navigate(`/shop/${product.id}`)} className="group cursor-pointer flex-shrink-0 w-72 snap-start">
                 {/* Product Image */}
-                <div className="relative aspect-[3/4] bg-muted/50 rounded-lg overflow-hidden mb-4">
+                <div className="relative aspect-square bg-muted/50 overflow-hidden">
                   {product.images?.[0] ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center">
                       <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
                     </div>}
