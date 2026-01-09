@@ -81,11 +81,19 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
         return;
       }
 
-      // Get unique user IDs (filter out nulls) and fetch their profiles
+      // Get unique user IDs (filter out nulls) and fetch their profiles from gw_profiles
       const userIds = [...new Set(enrollmentData.map(e => e.user_id).filter((id): id is string => id !== null && id !== undefined))];
       
-      let profileMap = new Map<string, { full_name: string | null; email: string | null }>();
+      // Also get unique student_profile_ids for enrollments without user_id (CSV imports)
+      const studentProfileIds = [...new Set(enrollmentData
+        .filter(e => !e.user_id && e.student_profile_id)
+        .map(e => e.student_profile_id)
+        .filter((id): id is string => id !== null && id !== undefined))];
       
+      let profileMap = new Map<string, { full_name: string | null; email: string | null }>();
+      let studentProfileMap = new Map<string, { full_name: string | null; email: string | null }>();
+      
+      // Fetch from gw_profiles for linked accounts
       if (userIds.length > 0) {
         const {
           data: profileData,
@@ -98,15 +106,35 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
           email: p.email
         }]));
       }
+      
+      // Fetch from gw_student_profiles for CSV-imported students without linked accounts
+      if (studentProfileIds.length > 0) {
+        const {
+          data: studentProfileData,
+          error: studentProfileError
+        } = await supabase.from('gw_student_profiles').select('id, full_name, email').in('id', studentProfileIds);
+        if (studentProfileError) throw studentProfileError;
+        
+        studentProfileMap = new Map((studentProfileData || []).map(p => [p.id, {
+          full_name: p.full_name,
+          email: p.email
+        }]));
+      }
 
-      // Merge enrollment data with profile data
-      const mergedData = enrollmentData.map(enrollment => ({
-        ...enrollment,
-        gw_profiles: profileMap.get(enrollment.user_id) || {
-          full_name: null,
-          email: null
-        }
-      }));
+      // Merge enrollment data with profile data (check both sources)
+      const mergedData = enrollmentData.map(enrollment => {
+        // First try gw_profiles (linked accounts), then gw_student_profiles (CSV imports)
+        const gwProfile = enrollment.user_id ? profileMap.get(enrollment.user_id) : null;
+        const studentProfile = enrollment.student_profile_id ? studentProfileMap.get(enrollment.student_profile_id) : null;
+        
+        return {
+          ...enrollment,
+          gw_profiles: gwProfile || studentProfile || {
+            full_name: null,
+            email: null
+          }
+        };
+      });
       setEnrollments(mergedData as any);
     } catch (error) {
       console.error('Error loading enrollments:', error);
