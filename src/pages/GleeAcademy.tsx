@@ -50,12 +50,14 @@ const GleeAcademy = () => {
         
 
         {/* Courses Section */}
+        <div className="w-full h-12 sm:h-14 flex items-center justify-center" style={{ backgroundColor: '#003666' }}>
+          <h2 className="text-sm sm:text-xl lg:text-2xl font-bold text-white text-center tracking-wide uppercase">
+            Our Courses
+          </h2>
+        </div>
         <div id="courses" className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                Our Courses
-              </h2>
+            <div className="text-center mb-8">
               <p className="text-muted-foreground max-w-2xl mx-auto">
                 From foundational skills to advanced techniques, find the perfect course for your musical journey.
               </p>
