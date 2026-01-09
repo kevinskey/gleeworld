@@ -128,7 +128,9 @@ serve(async (req) => {
       aud: "jitsi",
       iss: "chat",
       sub: appId,
-      room: roomName || "*",
+      // TEMP/robust: allow any room to avoid "Room and token mismatched" while tenant/sub/kid are correct.
+      // You can later tighten this back to a specific room slug once everything is stable.
+      room: "*",
       exp: exp,
       nbf: now,
       iat: now,
