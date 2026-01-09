@@ -19,7 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { format, getDay } from "date-fns";
+import { format, getDay, addMonths } from "date-fns";
 
 interface CreateEventDialogProps {
   onEventCreated: () => void;
@@ -744,6 +744,121 @@ export const CreateEventDialog = ({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Custom Recurrence Settings */}
+          {formData.recurrence_type === 'custom' && (
+            <div className="mb-6 p-4 bg-muted/50 rounded-lg border space-y-4">
+              <div className="flex items-center gap-3">
+                <Label className="text-sm font-medium min-w-[80px]">Repeat every</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={formData.recurrence_interval}
+                  onChange={e => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(e.target.value) || 1 }))}
+                  className="w-20 h-9"
+                />
+                <Select 
+                  value={formData.recurrence_type === 'custom' ? (formData.recurrence_days_of_week?.length ? 'weeks' : 'days') : 'days'}
+                  onValueChange={value => {
+                    if (value === 'weeks') {
+                      // Default to current day if no days selected
+                      const currentDay = startDate ? getDay(startDate) : 1;
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        recurrence_days_of_week: prev.recurrence_days_of_week?.length ? prev.recurrence_days_of_week : [currentDay]
+                      }));
+                    } else {
+                      setFormData(prev => ({ ...prev, recurrence_days_of_week: [] }));
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-28 h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    <SelectItem value="days">day(s)</SelectItem>
+                    <SelectItem value="weeks">week(s)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Day of week selection for weekly recurrence */}
+              {formData.recurrence_days_of_week && formData.recurrence_days_of_week.length >= 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Repeat on</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {DAY_NAMES.map((day, index) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          const days = formData.recurrence_days_of_week || [];
+                          const newDays = days.includes(index)
+                            ? days.filter(d => d !== index)
+                            : [...days, index].sort();
+                          setFormData(prev => ({ ...prev, recurrence_days_of_week: newDays }));
+                        }}
+                        className={`w-10 h-10 rounded-full text-sm font-medium transition-colors ${
+                          formData.recurrence_days_of_week?.includes(index)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted hover:bg-muted/80'
+                        }`}
+                      >
+                        {day.slice(0, 2)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* End conditions */}
+              <div className="space-y-3 pt-2 border-t">
+                <Label className="text-sm font-medium">Ends</Label>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      id="end-after"
+                      name="recurrence-end"
+                      checked={!formData.recurrence_end_date}
+                      onChange={() => setFormData(prev => ({ ...prev, recurrence_end_date: '' }))}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="end-after" className="text-sm cursor-pointer">After</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={formData.max_occurrences}
+                      onChange={e => setFormData(prev => ({ ...prev, max_occurrences: parseInt(e.target.value) || 10, recurrence_end_date: '' }))}
+                      className="w-20 h-9"
+                      disabled={!!formData.recurrence_end_date}
+                    />
+                    <span className="text-sm text-muted-foreground">occurrences</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      id="end-on"
+                      name="recurrence-end"
+                      checked={!!formData.recurrence_end_date}
+                      onChange={() => setFormData(prev => ({ ...prev, recurrence_end_date: format(addMonths(new Date(), 3), 'yyyy-MM-dd') }))}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="end-on" className="text-sm cursor-pointer">On date</Label>
+                    <Input
+                      type="date"
+                      value={formData.recurrence_end_date}
+                      onChange={e => setFormData(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
+                      className="w-40 h-9"
+                      disabled={!formData.recurrence_end_date}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Invitees Section */}
           <div className="mb-6">
