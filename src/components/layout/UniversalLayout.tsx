@@ -38,7 +38,7 @@ export const UniversalLayout = ({
   const shellBg = isDashboardShell ? 'bg-muted' : 'bg-background';
   
   return (
-    <div className={`min-h-screen w-full ${shellBg}`}>
+    <div className={`min-h-dvh w-full ${shellBg}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {/* Fixed Header */}
       {showHeader && (
         shouldUsePublicHeader 
@@ -46,8 +46,15 @@ export const UniversalLayout = ({
           : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />
       )}
       
-      {/* Main Content - padded by header height to prevent overlap */}
-      <main className={`w-full min-h-dvh pt-[var(--gw-header-h,4rem)] pb-20 sm:pb-0 ${shellBg} text-foreground ${className}`}>
+      {/* Main Content - padded by header height and safe areas to prevent overlap */}
+      <main 
+        className={`w-full min-h-dvh pt-[var(--gw-header-h,4rem)] ${shellBg} text-foreground ${className}`}
+        style={{ 
+          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)'
+        }}
+      >
         {containerized ? (
         <PageContainer maxWidth="full" padded={false} className="!p-0 !m-0">
           {children}
