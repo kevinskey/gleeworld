@@ -99,11 +99,10 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
         if (!mounted || !containerRef.current) return;
 
         // Initialize Jitsi Meet
-        // For JaaS (8x8.vc), load external_api.js from the tenant path and pass ONLY the room slug here.
-        // Passing `${appId}/${roomName}` can cause "Room and token mismatched".
+        // For JaaS (8x8.vc), the roomName MUST include the appId prefix for tenant matching.
         const domain = '8x8.vc';
         const options = {
-          roomName: roomName,
+          roomName: `${tokenData.appId}/${roomName}`,
           jwt: tokenData.token,
           parentNode: containerRef.current,
           width: '100%',
