@@ -9,12 +9,10 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, addWeeks, parseISO } from 'date-fns';
-
 interface WeekItem {
   week: string;
   topics: string;
 }
-
 interface Props {
   schedule: WeekItem[];
   onChange: (schedule: WeekItem[]) => void;
@@ -184,25 +182,19 @@ export const WeeklyScheduleEditor: React.FC<Props> = ({
               <p className="text-sm mt-1">Click "AI Generate" for an AI-powered outline or add weeks manually.</p>
             </div> : <div className="space-y-3">
               {schedule.map((item, index) => {
-                const weekNum = parseWeekNumber(item.week);
-                const dateRange = courseStartDate && weekNum !== null 
-                  ? getWeekDateRange(weekNum - 1, courseStartDate) 
-                  : null;
-                
-                return (
-                  <div key={index} className="flex items-start gap-3 p-4 border rounded-lg hover:bg-accent/30 transition-colors">
+            const weekNum = parseWeekNumber(item.week);
+            const dateRange = courseStartDate && weekNum !== null ? getWeekDateRange(weekNum - 1, courseStartDate) : null;
+            return <div key={index} className="flex items-start gap-3 p-4 border rounded-lg hover:bg-accent/30 transition-colors">
                     <div className="flex items-center gap-2 text-muted-foreground pt-2">
                       <GripVertical className="h-4 w-4 cursor-move" />
                     </div>
                     
                     <div className="w-40 flex-shrink-0 space-y-1">
                       <Textarea value={item.week} onChange={e => updateWeek(index, 'week', e.target.value)} className="font-medium text-sm resize-none text-center" rows={2} />
-                      {dateRange && (
-                        <div className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
+                      {dateRange && <div className="text-xs text-center flex items-center justify-center gap-1 text-black mx-0">
                           <Calendar className="h-3 w-3" />
                           {dateRange}
-                        </div>
-                      )}
+                        </div>}
                     </div>
                     
                     <div className="flex-1">
@@ -217,9 +209,8 @@ export const WeeklyScheduleEditor: React.FC<Props> = ({
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                );
-              })}
+                  </div>;
+          })}
             </div>}
 
           {schedule.length > 0 && <div className="flex items-center justify-between pt-4 border-t text-sm text-muted-foreground">
