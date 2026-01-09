@@ -326,8 +326,8 @@ const Messenger = () => {
         </div>
       </UniversalLayout>;
   }
-  return <UniversalLayout showHeader={false} showFooter={false} className="pt-0">
-      <div className="flex flex-col h-dvh pt-[200px]">
+  return <UniversalLayout showHeader={true} showFooter={false}>
+      <div className="flex flex-col h-[calc(100dvh-var(--gw-header-h,4rem))]">
         {/* Persistent Header */}
         <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 lg:px-10 py-3">
           <div className="flex items-center justify-between">
