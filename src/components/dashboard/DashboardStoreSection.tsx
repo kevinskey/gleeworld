@@ -99,7 +99,7 @@ export const DashboardStoreSection = () => {
   }
   return <div className="w-full bg-background">
       {/* Glee Academy - Edge to Edge (FIRST on desktop) */}
-      <div className="h-[5px] bg-white w-full" />
+      <div className="h-[25px] bg-white w-full" />
       <Button onClick={() => navigate('/glee-academy')} style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-10 gap-2 text-sm sm:text-xl bg-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none">
         <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
         Glee Academy
@@ -155,7 +155,7 @@ export const DashboardStoreSection = () => {
       </div>
 
       {/* Shop Section Header - Edge to Edge */}
-      <div className="h-[5px] bg-white w-full" />
+      <div className="h-[25px] bg-white w-full" />
       <h2 style={{ fontFamily: "'Cinzel', serif" }} className="h-10 text-sm sm:text-xl font-bold bg-[#003666] text-primary-foreground px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2">
         <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
         Shop
@@ -213,7 +213,7 @@ export const DashboardStoreSection = () => {
       </div>
 
       {/* My Modules - Edge to Edge */}
-      <div className="h-[5px] bg-white w-full" />
+      <div className="h-[25px] bg-white w-full" />
       <Button onClick={() => navigate('/modules')} style={{ fontFamily: "'Cinzel', serif" }} className="w-full h-10 gap-2 text-sm sm:text-xl bg-[#003666] justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none">
         <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
         My Modules
