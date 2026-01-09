@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format, isPast, isFuture, differenceInMinutes } from 'date-fns';
-import { Video, Clock, Trash2, Play } from 'lucide-react';
+import { Video, Clock, Trash2, Play, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { MeetingInviteDialog } from './MeetingInviteDialog';
 
 interface ScheduledMeeting {
   id: string;
@@ -30,6 +31,7 @@ export const ScheduledMeetingsList: React.FC<ScheduledMeetingsListProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [inviteMeeting, setInviteMeeting] = useState<ScheduledMeeting | null>(null);
 
   const { data: meetings = [], isLoading } = useQuery({
     queryKey: ['scheduled-meetings'],
@@ -169,6 +171,14 @@ export const ScheduledMeetingsList: React.FC<ScheduledMeetingsListProps> = ({
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setInviteMeeting(meeting)}
+                  title="Invite via SMS"
+                >
+                  <UserPlus className="h-3 w-3" />
+                </Button>
                 {canJoin && (
                   <Button
                     size="sm"
@@ -193,6 +203,14 @@ export const ScheduledMeetingsList: React.FC<ScheduledMeetingsListProps> = ({
           );
         })}
       </CardContent>
+
+      {inviteMeeting && (
+        <MeetingInviteDialog
+          open={!!inviteMeeting}
+          onOpenChange={(open) => !open && setInviteMeeting(null)}
+          meeting={inviteMeeting}
+        />
+      )}
     </Card>
   );
 };
