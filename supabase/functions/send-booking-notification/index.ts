@@ -72,11 +72,9 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Send email notification
-    // Use verified domain email or fallback to resend.dev for testing
-    const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "GleeWorld Bookings <onboarding@resend.dev>";
+    // Send email notification using verified gleeworld.org domain
     const emailPromise = resend.emails.send({
-      from: fromEmail,
+      from: "GleeWorld Bookings <bookings@gleeworld.org>",
       to: adminEmails,
       subject: `📅 New Booking Request: ${bookingData.event_name} from ${bookingData.organization_name}`,
       html: emailHtml,
