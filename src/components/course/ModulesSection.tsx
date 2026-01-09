@@ -86,21 +86,36 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
     }
   });
 
-  // Fetch course data for start_date
+  // Fetch semester start_date via course's semester_id link
   const {
-    data: courseData
+    data: semesterData
   } = useQuery({
-    queryKey: ['course-data', courseId],
+    queryKey: ['course-semester-data', courseId],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('gw_courses').select('start_date, end_date').eq('id', courseId).maybeSingle();
-      if (error) {
-        console.error('Error fetching course:', error);
+      // First get the course's semester_id
+      const { data: course, error: courseError } = await supabase
+        .from('gw_courses')
+        .select('semester_id')
+        .eq('id', courseId)
+        .maybeSingle();
+      
+      if (courseError || !course?.semester_id) {
+        console.error('Error fetching course semester:', courseError);
         return null;
       }
-      return data;
+      
+      // Then get the semester's start_date
+      const { data: semester, error: semesterError } = await supabase
+        .from('gw_semesters')
+        .select('start_date, end_date')
+        .eq('id', course.semester_id)
+        .maybeSingle();
+      
+      if (semesterError) {
+        console.error('Error fetching semester:', semesterError);
+        return null;
+      }
+      return semester;
     }
   });
 
@@ -306,7 +321,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                       </CardHeader>
                     </Card>;
             }
-            const dateRange = getWeekDateRange(weekLabel, courseData?.start_date || null, index);
+            const dateRange = getWeekDateRange(weekLabel, semesterData?.start_date || null, index);
             return <Collapsible key={index} defaultOpen={index < 3} className="group/collapsible">
                     <Card className="overflow-hidden group">
                       <CollapsibleTrigger className="w-full [&[data-state=open]>div>div:last-child>svg:last-child]:rotate-180">
