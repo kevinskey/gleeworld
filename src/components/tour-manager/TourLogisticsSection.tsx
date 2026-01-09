@@ -10,13 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Clock, Bus, MapPin, Music, Users, Package, CheckCircle2, 
-  AlertCircle, Plus, Edit, Trash2, Save, Calendar, Megaphone,
-  ShoppingBag, ClipboardList, UserCheck, Timer, DoorOpen
-} from 'lucide-react';
+import { Clock, Bus, MapPin, Music, Users, Package, CheckCircle2, AlertCircle, Plus, Edit, Trash2, Save, Calendar, Megaphone, ShoppingBag, ClipboardList, UserCheck, Timer, DoorOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
 interface TimeSlot {
   id: string;
   label: string;
@@ -24,7 +19,6 @@ interface TimeSlot {
   notes?: string;
   status: 'pending' | 'confirmed' | 'completed';
 }
-
 interface CrewAssignment {
   id: string;
   name: string;
@@ -32,7 +26,6 @@ interface CrewAssignment {
   callTime: string;
   duties: string[];
 }
-
 interface MerchItem {
   id: string;
   name: string;
@@ -42,32 +35,102 @@ interface MerchItem {
 }
 
 // Mock data for demonstration
-const mockEventTimeline: TimeSlot[] = [
-  { id: '1', label: 'Setup Crew Call', time: '10:00 AM', status: 'confirmed', notes: 'Load in through back entrance' },
-  { id: '2', label: 'Bus Departure', time: '11:00 AM', status: 'confirmed', notes: 'Depart from Spelman campus' },
-  { id: '3', label: 'Arrival at Venue', time: '2:00 PM', status: 'pending' },
-  { id: '4', label: 'Sound Check', time: '3:00 PM', status: 'pending', notes: 'Full ensemble run-through' },
-  { id: '5', label: 'Performer Call Time', time: '5:00 PM', status: 'pending' },
-  { id: '6', label: 'Off Stage (Doors Open)', time: '6:30 PM', status: 'pending' },
-  { id: '7', label: 'Performance Start', time: '7:00 PM', status: 'pending' },
-  { id: '8', label: 'Performance End', time: '9:00 PM', status: 'pending' },
-  { id: '9', label: 'Load Out Complete', time: '10:30 PM', status: 'pending' },
-];
-
-const mockCrewAssignments: CrewAssignment[] = [
-  { id: '1', name: 'Stage Manager', role: 'Lead', callTime: '10:00 AM', duties: ['Coordinate load-in', 'Manage backstage', 'Cue performers'] },
-  { id: '2', name: 'Sound Tech', role: 'Audio', callTime: '10:00 AM', duties: ['Set up microphones', 'Sound check', 'Mix during performance'] },
-  { id: '3', name: 'Lighting Tech', role: 'Lighting', callTime: '10:00 AM', duties: ['Program lighting cues', 'Operate light board'] },
-  { id: '4', name: 'Merch Lead', role: 'Merchandise', callTime: '5:00 PM', duties: ['Set up merch table', 'Handle sales', 'Inventory tracking'] },
-];
-
-const mockMerchItems: MerchItem[] = [
-  { id: '1', name: 'Concert T-Shirt', quantity: 50, price: 25, notes: 'Sizes S-XXL' },
-  { id: '2', name: 'Tour Hoodie', quantity: 30, price: 45 },
-  { id: '3', name: 'CD Album', quantity: 100, price: 15 },
-  { id: '4', name: 'Poster', quantity: 75, price: 10 },
-];
-
+const mockEventTimeline: TimeSlot[] = [{
+  id: '1',
+  label: 'Setup Crew Call',
+  time: '10:00 AM',
+  status: 'confirmed',
+  notes: 'Load in through back entrance'
+}, {
+  id: '2',
+  label: 'Bus Departure',
+  time: '11:00 AM',
+  status: 'confirmed',
+  notes: 'Depart from Spelman campus'
+}, {
+  id: '3',
+  label: 'Arrival at Venue',
+  time: '2:00 PM',
+  status: 'pending'
+}, {
+  id: '4',
+  label: 'Sound Check',
+  time: '3:00 PM',
+  status: 'pending',
+  notes: 'Full ensemble run-through'
+}, {
+  id: '5',
+  label: 'Performer Call Time',
+  time: '5:00 PM',
+  status: 'pending'
+}, {
+  id: '6',
+  label: 'Off Stage (Doors Open)',
+  time: '6:30 PM',
+  status: 'pending'
+}, {
+  id: '7',
+  label: 'Performance Start',
+  time: '7:00 PM',
+  status: 'pending'
+}, {
+  id: '8',
+  label: 'Performance End',
+  time: '9:00 PM',
+  status: 'pending'
+}, {
+  id: '9',
+  label: 'Load Out Complete',
+  time: '10:30 PM',
+  status: 'pending'
+}];
+const mockCrewAssignments: CrewAssignment[] = [{
+  id: '1',
+  name: 'Stage Manager',
+  role: 'Lead',
+  callTime: '10:00 AM',
+  duties: ['Coordinate load-in', 'Manage backstage', 'Cue performers']
+}, {
+  id: '2',
+  name: 'Sound Tech',
+  role: 'Audio',
+  callTime: '10:00 AM',
+  duties: ['Set up microphones', 'Sound check', 'Mix during performance']
+}, {
+  id: '3',
+  name: 'Lighting Tech',
+  role: 'Lighting',
+  callTime: '10:00 AM',
+  duties: ['Program lighting cues', 'Operate light board']
+}, {
+  id: '4',
+  name: 'Merch Lead',
+  role: 'Merchandise',
+  callTime: '5:00 PM',
+  duties: ['Set up merch table', 'Handle sales', 'Inventory tracking']
+}];
+const mockMerchItems: MerchItem[] = [{
+  id: '1',
+  name: 'Concert T-Shirt',
+  quantity: 50,
+  price: 25,
+  notes: 'Sizes S-XXL'
+}, {
+  id: '2',
+  name: 'Tour Hoodie',
+  quantity: 30,
+  price: 45
+}, {
+  id: '3',
+  name: 'CD Album',
+  quantity: 100,
+  price: 15
+}, {
+  id: '4',
+  name: 'Poster',
+  quantity: 75,
+  price: 10
+}];
 export const TourLogisticsSection = () => {
   const [activeTab, setActiveTab] = useState('timeline');
   const [timeline, setTimeline] = useState<TimeSlot[]>(mockEventTimeline);
@@ -76,7 +139,6 @@ export const TourLogisticsSection = () => {
   const [isAddingTime, setIsAddingTime] = useState(false);
   const [isAddingCrew, setIsAddingCrew] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -87,7 +149,6 @@ export const TourLogisticsSection = () => {
         return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -98,9 +159,7 @@ export const TourLogisticsSection = () => {
         return <Badge variant="secondary">Pending</Badge>;
     }
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -193,30 +252,21 @@ export const TourLogisticsSection = () => {
 
           {/* Timeline Visual */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-6 bg-primary-foreground border">
               <div className="relative">
                 {/* Vertical line */}
                 <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
                 
                 <div className="space-y-6">
-                  {timeline.map((slot, index) => (
-                    <div key={slot.id} className="relative flex gap-4 pl-10">
+                  {timeline.map((slot, index) => <div key={slot.id} className="relative flex gap-4 pl-10">
                       {/* Timeline dot */}
-                      <div className={cn(
-                        "absolute left-2 w-5 h-5 rounded-full border-2 flex items-center justify-center bg-background",
-                        slot.status === 'completed' ? "border-green-500" :
-                        slot.status === 'confirmed' ? "border-blue-500" : "border-muted-foreground"
-                      )}>
-                        <div className={cn(
-                          "w-2 h-2 rounded-full",
-                          slot.status === 'completed' ? "bg-green-500" :
-                          slot.status === 'confirmed' ? "bg-blue-500" : "bg-muted-foreground"
-                        )} />
+                      <div className={cn("absolute left-2 w-5 h-5 rounded-full border-2 flex items-center justify-center bg-background", slot.status === 'completed' ? "border-green-500" : slot.status === 'confirmed' ? "border-blue-500" : "border-muted-foreground")}>
+                        <div className={cn("w-2 h-2 rounded-full", slot.status === 'completed' ? "bg-green-500" : slot.status === 'confirmed' ? "bg-blue-500" : "bg-muted-foreground")} />
                       </div>
                       
                       {/* Content */}
                       <div className="flex-1 bg-muted/30 rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                        <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="flex flex-wrap items-start justify-between gap-2 bg-primary-foreground border">
                           <div className="flex items-center gap-3">
                             <span className="text-lg font-bold text-primary">{slot.time}</span>
                             <h4 className="font-medium">{slot.label}</h4>
@@ -228,12 +278,9 @@ export const TourLogisticsSection = () => {
                             </Button>
                           </div>
                         </div>
-                        {slot.notes && (
-                          <p className="text-sm text-muted-foreground mt-2">{slot.notes}</p>
-                        )}
+                        {slot.notes && <p className="text-sm text-muted-foreground mt-2">{slot.notes}</p>}
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
             </CardContent>
@@ -325,8 +372,7 @@ export const TourLogisticsSection = () => {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            {crewAssignments.map((crew) => (
-              <Card key={crew.id}>
+            {crewAssignments.map(crew => <Card key={crew.id}>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -349,17 +395,14 @@ export const TourLogisticsSection = () => {
                   <div>
                     <p className="text-sm font-medium mb-2">Duties:</p>
                     <ul className="space-y-1">
-                      {crew.duties.map((duty, idx) => (
-                        <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
+                      {crew.duties.map((duty, idx) => <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
                           <CheckCircle2 className="h-3 w-3 text-green-500" />
                           {duty}
-                        </li>
-                      ))}
+                        </li>)}
                     </ul>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </TabsContent>
 
@@ -400,7 +443,7 @@ export const TourLogisticsSection = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Potential Revenue</p>
-                    <p className="text-2xl font-bold">${merchItems.reduce((acc, item) => acc + (item.quantity * item.price), 0).toLocaleString()}</p>
+                    <p className="text-2xl font-bold">${merchItems.reduce((acc, item) => acc + item.quantity * item.price, 0).toLocaleString()}</p>
                   </div>
                   <ShoppingBag className="h-8 w-8 text-green-500" />
                 </div>
@@ -449,8 +492,7 @@ export const TourLogisticsSection = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {merchItems.map((item) => (
-                      <tr key={item.id} className="border-b hover:bg-muted/50">
+                    {merchItems.map(item => <tr key={item.id} className="border-b hover:bg-muted/50">
                         <td className="py-3 px-4 font-medium">{item.name}</td>
                         <td className="py-3 px-4 text-center">{item.quantity}</td>
                         <td className="py-3 px-4 text-center">${item.price}</td>
@@ -461,8 +503,7 @@ export const TourLogisticsSection = () => {
                             <Edit className="h-4 w-4" />
                           </Button>
                         </td>
-                      </tr>
-                    ))}
+                      </tr>)}
                   </tbody>
                 </table>
               </div>
@@ -483,22 +524,24 @@ export const TourLogisticsSection = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {[
-                  { label: 'Bus confirmed and inspected', checked: true },
-                  { label: 'Driver contact info shared', checked: true },
-                  { label: 'Route mapped and shared', checked: false },
-                  { label: 'Rest stops planned', checked: false },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-5 h-5 rounded border-2 flex items-center justify-center",
-                      item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground"
-                    )}>
+                {[{
+                label: 'Bus confirmed and inspected',
+                checked: true
+              }, {
+                label: 'Driver contact info shared',
+                checked: true
+              }, {
+                label: 'Route mapped and shared',
+                checked: false
+              }, {
+                label: 'Rest stops planned',
+                checked: false
+              }].map((item, idx) => <div key={idx} className="flex items-center gap-3">
+                    <div className={cn("w-5 h-5 rounded border-2 flex items-center justify-center", item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground")}>
                       {item.checked && <CheckCircle2 className="h-3 w-3 text-white" />}
                     </div>
                     <span className={cn("text-sm", item.checked && "line-through text-muted-foreground")}>{item.label}</span>
-                  </div>
-                ))}
+                  </div>)}
               </CardContent>
             </Card>
 
@@ -510,22 +553,24 @@ export const TourLogisticsSection = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {[
-                  { label: 'Sound check time confirmed', checked: true },
-                  { label: 'Set list finalized', checked: true },
-                  { label: 'Wardrobe ready', checked: false },
-                  { label: 'Props/staging confirmed', checked: false },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-5 h-5 rounded border-2 flex items-center justify-center",
-                      item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground"
-                    )}>
+                {[{
+                label: 'Sound check time confirmed',
+                checked: true
+              }, {
+                label: 'Set list finalized',
+                checked: true
+              }, {
+                label: 'Wardrobe ready',
+                checked: false
+              }, {
+                label: 'Props/staging confirmed',
+                checked: false
+              }].map((item, idx) => <div key={idx} className="flex items-center gap-3">
+                    <div className={cn("w-5 h-5 rounded border-2 flex items-center justify-center", item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground")}>
                       {item.checked && <CheckCircle2 className="h-3 w-3 text-white" />}
                     </div>
                     <span className={cn("text-sm", item.checked && "line-through text-muted-foreground")}>{item.label}</span>
-                  </div>
-                ))}
+                  </div>)}
               </CardContent>
             </Card>
 
@@ -537,22 +582,24 @@ export const TourLogisticsSection = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {[
-                  { label: 'Inventory counted', checked: true },
-                  { label: 'Cash box prepared', checked: false },
-                  { label: 'Card reader charged', checked: false },
-                  { label: 'Merch table supplies packed', checked: false },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-5 h-5 rounded border-2 flex items-center justify-center",
-                      item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground"
-                    )}>
+                {[{
+                label: 'Inventory counted',
+                checked: true
+              }, {
+                label: 'Cash box prepared',
+                checked: false
+              }, {
+                label: 'Card reader charged',
+                checked: false
+              }, {
+                label: 'Merch table supplies packed',
+                checked: false
+              }].map((item, idx) => <div key={idx} className="flex items-center gap-3">
+                    <div className={cn("w-5 h-5 rounded border-2 flex items-center justify-center", item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground")}>
                       {item.checked && <CheckCircle2 className="h-3 w-3 text-white" />}
                     </div>
                     <span className={cn("text-sm", item.checked && "line-through text-muted-foreground")}>{item.label}</span>
-                  </div>
-                ))}
+                  </div>)}
               </CardContent>
             </Card>
 
@@ -564,27 +611,28 @@ export const TourLogisticsSection = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {[
-                  { label: 'All crew assigned', checked: true },
-                  { label: 'Call times communicated', checked: true },
-                  { label: 'Emergency contacts shared', checked: true },
-                  { label: 'Duty sheets distributed', checked: false },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-5 h-5 rounded border-2 flex items-center justify-center",
-                      item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground"
-                    )}>
+                {[{
+                label: 'All crew assigned',
+                checked: true
+              }, {
+                label: 'Call times communicated',
+                checked: true
+              }, {
+                label: 'Emergency contacts shared',
+                checked: true
+              }, {
+                label: 'Duty sheets distributed',
+                checked: false
+              }].map((item, idx) => <div key={idx} className="flex items-center gap-3">
+                    <div className={cn("w-5 h-5 rounded border-2 flex items-center justify-center", item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground")}>
                       {item.checked && <CheckCircle2 className="h-3 w-3 text-white" />}
                     </div>
                     <span className={cn("text-sm", item.checked && "line-through text-muted-foreground")}>{item.label}</span>
-                  </div>
-                ))}
+                  </div>)}
               </CardContent>
             </Card>
           </div>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
