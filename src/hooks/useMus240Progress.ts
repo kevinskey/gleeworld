@@ -123,18 +123,21 @@ export const useMus240Progress = (semesterOverride?: string) => {
   };
 
   useEffect(() => {
+    if (!user?.id) return;
+
     fetchGradeData();
 
     // Set up real-time subscriptions
+    const channelName = `grade-data-changes-${user.id}-${Date.now()}-${Math.random()}`;
     const channel = supabase
-      .channel('grade-data-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'mus240_grade_summaries',
-          filter: `student_id=eq.${user?.id}`
+          filter: `student_id=eq.${user.id}`
         },
         () => {
           console.log('Grade summary changed, refetching');
@@ -147,7 +150,7 @@ export const useMus240Progress = (semesterOverride?: string) => {
           event: '*',
           schema: 'public',
           table: 'mus240_participation_grades',
-          filter: `student_id=eq.${user?.id}`
+          filter: `student_id=eq.${user.id}`
         },
         () => {
           console.log('Participation grade changed, refetching');
@@ -160,7 +163,7 @@ export const useMus240Progress = (semesterOverride?: string) => {
           event: '*',
           schema: 'public',
           table: 'assignment_submissions',
-          filter: `student_id=eq.${user?.id}`
+          filter: `student_id=eq.${user.id}`
         },
         () => {
           console.log('Assignment submission changed, refetching');
@@ -172,7 +175,7 @@ export const useMus240Progress = (semesterOverride?: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id]);
 
   const getLetterGradeColor = (grade: string) => {
     switch (grade?.charAt(0)) {

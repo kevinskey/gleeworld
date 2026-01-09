@@ -42,8 +42,9 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     }
 
     // Set up realtime subscription for group changes
+    const channelName = `mus240-groups-changes-${semester}-${user?.id ?? 'anon'}-${Date.now()}-${Math.random()}`;
     const channel = supabase
-      .channel('mus240-groups-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

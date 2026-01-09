@@ -47,8 +47,9 @@ export const LiveQuestionController: React.FC<LiveQuestionControllerProps> = ({ 
     fetchResponses();
     
     // Subscribe to real-time response updates
+    const channelName = `poll-responses-${poll.id}-${poll.current_question_index}-${Date.now()}-${Math.random()}`;
     const channel = supabase
-      .channel('poll-responses')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
