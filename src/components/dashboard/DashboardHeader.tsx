@@ -28,44 +28,44 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
 
   return (
     <header 
-      className={`backdrop-blur-sm border-b border-border px-6 flex items-center justify-between relative overflow-hidden z-40 ${
+      className={`backdrop-blur-sm border-b border-border px-4 lg:px-6 flex items-center justify-between relative overflow-hidden z-40 ${
         isSpelmanBlue 
           ? 'bg-gradient-to-r from-[#0066CC] via-[#0077DD] to-[#0088EE]' 
           : 'bg-gradient-to-r from-primary/10 via-background to-destructive/10'
       }`}
       style={{ 
-        paddingTop: 'max(env(safe-area-inset-top), 0.5rem)',
-        minHeight: 'calc(5rem + env(safe-area-inset-top, 0px))'
+        paddingTop: 'max(env(safe-area-inset-top), 0.25rem)',
+        minHeight: 'calc(3.75rem + env(safe-area-inset-top, 0px))'
       }}
     >
       {/* Holiday sparkle accents - hide for Spelman Blue */}
       {!isSpelmanBlue && (
         <div className="absolute inset-0 pointer-events-none">
-          <Sparkles className="absolute top-2 left-[10%] w-4 h-4 text-amber-400/60 animate-pulse" />
-          <Sparkles className="absolute top-4 left-[30%] w-3 h-3 text-destructive/40 animate-pulse delay-300" />
-          <Sparkles className="absolute bottom-3 right-[20%] w-4 h-4 text-emerald-500/50 animate-pulse delay-500" />
-          <Sparkles className="absolute top-3 right-[40%] w-3 h-3 text-amber-400/50 animate-pulse delay-700" />
+          <Sparkles className="absolute top-2 left-[10%] w-3 h-3 lg:w-4 lg:h-4 text-amber-400/60 animate-pulse" />
+          <Sparkles className="absolute top-3 left-[30%] w-2 h-2 lg:w-3 lg:h-3 text-destructive/40 animate-pulse delay-300" />
+          <Sparkles className="absolute bottom-2 right-[20%] w-3 h-3 lg:w-4 lg:h-4 text-emerald-500/50 animate-pulse delay-500" />
+          <Sparkles className="absolute top-2 right-[40%] w-2 h-2 lg:w-3 lg:h-3 text-amber-400/50 animate-pulse delay-700" />
         </div>
       )}
 
-      {/* Left side - Logo and branding */}
-      <div className="flex items-center gap-6 relative z-10">
-        <div className="flex items-center gap-3">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg ${
+      {/* Left side - Logo and branding - smaller on tablet */}
+      <div className="flex items-center gap-4 lg:gap-6 relative z-10">
+        <div className="flex items-center gap-2 lg:gap-3">
+          <div className={`w-7 h-7 lg:w-11 lg:h-11 rounded-lg lg:rounded-xl flex items-center justify-center font-bold text-sm lg:text-lg shadow-lg ${
             isSpelmanBlue 
-              ? 'bg-white/20 text-white ring-2 ring-white/30' 
-              : 'bg-gradient-to-br from-destructive via-primary to-emerald-600 text-primary-foreground ring-2 ring-amber-400/30'
+              ? 'bg-white/20 text-white ring-1 lg:ring-2 ring-white/30' 
+              : 'bg-gradient-to-br from-destructive via-primary to-emerald-600 text-primary-foreground ring-1 lg:ring-2 ring-amber-400/30'
           }`}>
-            <span className="font-['Cinzel'] text-xl">G</span>
+            <span className="font-['Cinzel'] text-base lg:text-xl">G</span>
           </div>
           <div>
-            <h1 className="text-2xl lg:text-4xl font-bold font-['Cinzel'] tracking-wide flex items-center gap-2">
+            <h1 className="text-lg lg:text-2xl xl:text-4xl font-bold font-['Cinzel'] tracking-wide flex items-center gap-1 lg:gap-2">
               <span className={isSpelmanBlue ? 'text-white' : 'bg-gradient-to-r from-primary via-destructive to-emerald-600 bg-clip-text text-transparent'}>
                 {isSpelmanBlue ? 'Portal' : 'GleeWorld'}
               </span>
-              {!isSpelmanBlue && <span className="text-amber-500 text-sm">✨</span>}
+              {!isSpelmanBlue && <span className="text-amber-500 text-xs lg:text-sm">✨</span>}
             </h1>
-            <p className={`text-xs font-['Dancing_Script'] text-base italic ${isSpelmanBlue ? 'text-white/80' : 'text-muted-foreground'}`}>
+            <p className={`text-[10px] lg:text-xs font-['Dancing_Script'] lg:text-base italic ${isSpelmanBlue ? 'text-white/80' : 'text-muted-foreground'}`}>
               {isSpelmanBlue ? 'Spelman College Glee Club' : 'Season of Joy & Song'}
             </p>
           </div>
