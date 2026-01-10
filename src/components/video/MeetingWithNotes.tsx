@@ -5,6 +5,7 @@ import { MeetingNotesPanel } from './MeetingNotesPanel';
 import { FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMeetingNotes } from '@/hooks/useMeetingNotes';
+import { useMeetingPresence } from '@/hooks/useActiveMeetings';
 
 interface MeetingWithNotesProps {
   roomName: string;
@@ -25,6 +26,9 @@ export const MeetingWithNotes: React.FC<MeetingWithNotesProps> = ({
 }) => {
   const [showNotes, setShowNotes] = useState(true);
   const { endMeeting } = useMeetingNotes(roomName);
+  
+  // Track presence in this meeting room
+  useMeetingPresence(roomName, userName, userEmail, userId);
 
   const handleClose = async () => {
     await endMeeting();

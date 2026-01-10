@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { Video, Plus, Users, CalendarDays } from 'lucide-react';
+import { Video, Plus, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useQueryClient } from '@tanstack/react-query';
@@ -12,8 +12,8 @@ import { ScheduleMeetingDialog } from './ScheduleMeetingDialog';
 import { ScheduledMeetingsList } from './ScheduledMeetingsList';
 import { MeetingWaitingRoom } from './MeetingWaitingRoom';
 import { MeetingNotesHistory } from './MeetingNotesHistory';
+import { ActiveMeetingsList } from './ActiveMeetingsList';
 import { supabase } from '@/integrations/supabase/client';
-
 interface VideoSessionManagerProps {
   className?: string;
   joinRoomName?: string | null;
@@ -234,6 +234,12 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Active Meetings - Live Sessions */}
+      <ActiveMeetingsList 
+        onJoinMeeting={handleJoinScheduledMeeting} 
+        className="max-w-2xl mx-auto"
+      />
 
       {/* Scheduled Meetings */}
       <ScheduledMeetingsList onJoinMeeting={handleJoinScheduledMeeting} />
