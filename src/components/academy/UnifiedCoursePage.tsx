@@ -346,60 +346,64 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                     
                   </Card>}
 
-                {/* Welcome Card */}
-                
-
-                {/* Instructor Card */}
-                <Card className="bg-primary border-0">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Users className="h-5 w-5 text-white" />
-                      Instructor
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p className="font-semibold text-lg text-white">{course.instructor.name}</p>
-                      <p className="text-white/80">
-                        <Mail className="h-4 w-4 inline mr-2" />
-                        {course.instructor.email}
-                      </p>
-                      <p className="text-white/80">
-                        <BookMarked className="h-4 w-4 inline mr-2" />
-                        Office: {course.instructor.office}
-                      </p>
-                      <p className="text-white/80">
-                        <Clock className="h-4 w-4 inline mr-2" />
-                        Office Hours: {course.instructor.hours}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Quick Links */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[{
-                  icon: ClipboardList,
-                  label: 'Assignments',
-                  tab: 'assignments'
-                }, {
-                  icon: FileCheck,
-                  label: 'Tests',
-                  tab: 'tests'
-                }, {
-                  icon: MessagesSquare,
-                  label: 'Messages',
-                  tab: 'messages'
-                }, {
-                  icon: Trophy,
-                  label: 'Grades',
-                  tab: 'grades'
-                }].map(item => <Card key={item.tab} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setActiveTab(item.tab)}>
-                      <CardContent className="p-4 text-center border border-muted-foreground">
-                        <item.icon className="h-8 w-8 mx-auto text-primary mb-2" />
-                        <span className="font-medium">{item.label}</span>
+                {/* Two Column Layout for Home */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                  {/* Left Column - Music Library (2/3 width) */}
+                  <div className="md:col-span-2 space-y-4">
+                    <Card className="border border-border">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <Music className="h-5 w-5 text-primary" />
+                          Music Library
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {[
+                            { icon: Video, label: 'Video Library', desc: 'Lecture recordings & performances' },
+                            { icon: Headphones, label: 'Audio Examples', desc: 'Listening materials & rehearsals' },
+                            { icon: Music, label: 'Sheet Music', desc: 'Scores and part materials' },
+                            { icon: FileText, label: 'Documents', desc: 'Handouts and readings' },
+                          ].map((item, i) => (
+                            <button 
+                              key={i} 
+                              onClick={() => setActiveTab('resources')}
+                              className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 hover:border-primary/50 transition-colors text-left"
+                            >
+                              <div className="p-2 rounded-md bg-primary/10">
+                                <item.icon className="h-4 w-4 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{item.label}</p>
+                                <p className="text-xs text-muted-foreground">{item.desc}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
                       </CardContent>
-                    </Card>)}
+                    </Card>
+                  </div>
+
+                  {/* Right Column - Instructor (1/3 width) */}
+                  <div className="md:col-span-1">
+                    <Card className="bg-primary border-0">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Users className="h-4 w-4 text-white" />
+                          <span className="font-semibold text-white text-sm">Instructor</span>
+                        </div>
+                        <p className="font-semibold text-white text-sm">{course.instructor.name}</p>
+                        <p className="text-white/80 text-xs mt-1">
+                          <Mail className="h-3 w-3 inline mr-1" />
+                          {course.instructor.email}
+                        </p>
+                        <p className="text-white/80 text-xs mt-1">
+                          <Clock className="h-3 w-3 inline mr-1" />
+                          {course.instructor.hours}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </div>}
 
