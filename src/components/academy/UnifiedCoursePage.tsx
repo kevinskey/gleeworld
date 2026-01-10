@@ -272,29 +272,36 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           {/* Course Header - Full width dark blue on all screen sizes */}
           <div className="bg-[#003666] w-full">
             <div className="px-4 sm:px-6 md:px-6 lg:px-12 xl:px-16 py-4 md:py-6">
-              <div className="flex items-center gap-2 md:gap-3 mb-2">
-                <Badge variant="secondary" className="font-mono text-xs md:text-sm">{course.courseCode}</Badge>
-                <Badge variant="outline" className="border-white/30 text-white text-xs md:hidden">
-                  {course.level}
-                </Badge>
-              </div>
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{course.title}</h1>
-              <p className="text-white/80 mt-2 text-sm md:hidden">{course.description}</p>
-              <div className="hidden md:flex flex-wrap items-center gap-3 md:gap-4 lg:gap-6 mt-2 md:mt-3 text-xs md:text-sm text-white/80">
-                <span className="font-medium text-white">Dr. Kevin Johnson</span>
-                <span>kjohns10@spelman.edu</span>
-                <span className="hidden lg:inline">Office: Fine Arts 105</span>
-                <span className="hidden lg:inline">Office Hours: MWF 3-5 PM</span>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2">
+                    <Badge variant="secondary" className="font-mono text-xs md:text-sm">{course.courseCode}</Badge>
+                    <Badge variant="outline" className="border-white/30 text-white text-xs md:hidden">
+                      {course.level}
+                    </Badge>
+                  </div>
+                  <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{course.title}</h1>
+                  <p className="text-white/80 mt-2 text-sm md:hidden">{course.description}</p>
+                  <div className="hidden md:flex flex-wrap items-center gap-3 md:gap-4 lg:gap-6 mt-2 md:mt-3 text-xs md:text-sm text-white/80">
+                    <span className="font-medium text-white">Dr. Kevin Johnson</span>
+                    <span>kjohns10@spelman.edu</span>
+                    <span className="hidden lg:inline">Office: Fine Arts 105</span>
+                    <span className="hidden lg:inline">Office Hours: MWF 3-5 PM</span>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate('/glee-academy')} 
+                  className="hidden md:flex text-white hover:bg-white/10 hover:text-white"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Academy
+                </Button>
               </div>
             </div>
           </div>
 
           <div className="px-4 sm:px-6 md:px-6 lg:px-12 xl:px-16 space-y-4 md:space-y-6 w-full py-4 md:py-6">
-            {/* Back Button - Tablet and Desktop */}
-            <Button variant="ghost" onClick={() => navigate('/glee-academy')} className="hidden md:flex -mb-2 text-sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Academy
-            </Button>
 
             {/* Mobile Tab Navigation - Mobile only (hidden on tablet with sidebar) */}
             <div className="md:hidden relative z-10 -mx-4 px-4">
