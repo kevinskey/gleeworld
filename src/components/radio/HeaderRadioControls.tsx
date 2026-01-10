@@ -134,7 +134,8 @@ export const HeaderRadioControls = () => {
         const updateRadioBarHeight = () => {
           if (radioBarRef.current) {
             const height = radioBarRef.current.getBoundingClientRect().height;
-            document.documentElement.style.setProperty('--gw-radio-bar-height', `${height}px`);
+            // Add 10px spacer below radio bar for visual separation from content
+            document.documentElement.style.setProperty('--gw-radio-bar-height', `${height + 10}px`);
           }
         };
         // Delay to ensure the bar is rendered
@@ -510,8 +511,8 @@ export const HeaderRadioControls = () => {
                   )}
                 </div>
               </div>
-              {/* 5px spacer below extended radio */}
-              <div className="h-[5px]" />
+              {/* 10px spacer below extended radio */}
+              <div className="h-[10px]" />
             </div>
           </>,
           document.body
