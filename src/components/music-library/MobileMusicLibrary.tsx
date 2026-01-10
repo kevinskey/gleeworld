@@ -154,7 +154,7 @@ export const MobileMusicLibrary = ({
                 <ChevronDown className="h-3 w-3 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48 bg-popover">
+            <DropdownMenuContent align="start" className="z-50 w-48 bg-popover">
               <DropdownMenuLabel className="text-xs text-muted-foreground">Navigate To</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {sections.map((section) => {

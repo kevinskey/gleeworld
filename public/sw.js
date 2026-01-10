@@ -1,7 +1,7 @@
 // Service Worker for GleeWorld PWA
-// Version: 7.0 - January 2026
-// NOTE: v7.0 - Cache bust update to ensure users get latest version
-const CACHE_VERSION = 'v7.0';
+// Version: 7.1 - January 2026
+// NOTE: v7.1 - Cache bust to force clients (especially iOS PWA) to pick up latest UI changes
+const CACHE_VERSION = 'v7.1';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
