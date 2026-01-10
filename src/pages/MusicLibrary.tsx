@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { MusicLibrary } from "@/components/music-library/MusicLibrary";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MusicLibraryPage = () => {
+  const isMobile = useIsMobile();
+  
   useEffect(() => {
     document.title = 'Music Library | GleeWorld';
-    // Meta description
     const desc =
       'Music Library — Spelman College Glee Club sheet music, study scores, setlists.';
     let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
@@ -16,7 +18,6 @@ const MusicLibraryPage = () => {
     }
     if (meta) meta.setAttribute('content', desc);
 
-    // Canonical link
     const href = `${window.location.origin}/music-library`;
     let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!link) {
@@ -27,9 +28,15 @@ const MusicLibraryPage = () => {
     if (link) link.setAttribute('href', href);
   }, []);
 
+  // On mobile, use minimal layout without footer for full-screen library experience
   return (
-    <UniversalLayout showFooter={false} containerized={false}>
-      <MusicLibrary />
+    <UniversalLayout 
+      showFooter={false} 
+      containerized={false}
+    >
+      <div className={isMobile ? 'h-[calc(100dvh-4rem)]' : ''}>
+        <MusicLibrary />
+      </div>
     </UniversalLayout>
   );
 };
