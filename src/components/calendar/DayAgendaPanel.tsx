@@ -31,15 +31,12 @@ export const DayAgendaPanel = ({
 
   return (
     <div className="h-full flex flex-col bg-slate-100 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      {/* Header */}
-      <div className="bg-slate-800 text-white px-4 py-4 flex-shrink-0">
-        <h2 className="text-lg font-bold">
-          {format(selectedDate, 'EEEE')}
+      {/* Header - More compact on tablet */}
+      <div className="bg-slate-800 text-white px-3 md:px-4 py-2 md:py-3 flex-shrink-0">
+        <h2 className="text-sm md:text-base font-bold leading-tight">
+          {format(selectedDate, 'EEE, MMM d')}
         </h2>
-        <p className="text-slate-300 text-sm">
-          {format(selectedDate, 'MMMM d, yyyy')}
-        </p>
-        <div className="mt-2 text-sm text-slate-400">
+        <div className="text-xs text-slate-400">
           {events.length} {events.length === 1 ? 'event' : 'events'}
         </div>
       </div>
