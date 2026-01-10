@@ -205,7 +205,7 @@ export const UniversalHeader = ({
     };
   }, []);
   return <>
-    <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+    <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none safe-top">
       <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0 bg-primary-foreground">
         <header ref={headerRef} className={`w-full shadow-lg relative rounded-b-lg bg-white/80 backdrop-blur-xl text-foreground ${user ? getRoleAccentColor() : 'border-b border-white/20'}`}>
           <div className="flex items-center justify-between w-full min-h-14 sm:min-h-16 md:min-h-14 py-3 md:py-2 px-2 sm:px-4 md:px-6 lg:px-8 pt-3 pb-3">

@@ -1919,6 +1919,7 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
 
 /* Mobile safe area utilities */
 .safe-top {
+  padding-top: constant(safe-area-inset-top);
   padding-top: env(safe-area-inset-top);
 }
 
