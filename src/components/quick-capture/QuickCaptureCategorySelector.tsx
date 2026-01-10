@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Camera, Mic, Video, UserCheck, Sparkles, ArrowLeft, Image, Film } from 'lucide-react';
 
-export type QuickCaptureCategory = 'christmas_carol_selfie' | 'glee_cam_pic' | 'glee_cam_video' | 'voice_part_recording' | 'exec_board_video' | 'member_audition_video';
+export type QuickCaptureCategory = 'profile_picture' | 'glee_cam_pic' | 'glee_cam_video' | 'voice_part_recording' | 'exec_board_video' | 'member_audition_video';
 
 type MediaType = 'photo' | 'video';
 
@@ -20,11 +20,11 @@ interface CategoryOption {
 // Photo categories
 const photoCategories: CategoryOption[] = [
   {
-    id: 'christmas_carol_selfie',
-    title: 'Christmas Carol Selfie',
-    description: 'Festive selfie for the holiday hero carousel',
-    icon: <Sparkles className="h-8 w-8" />,
-    color: 'from-red-500 to-green-500',
+    id: 'profile_picture',
+    title: 'Profile Picture',
+    description: 'Take a new profile photo for your account',
+    icon: <UserCheck className="h-8 w-8" />,
+    color: 'from-blue-500 to-indigo-500',
     mediaType: 'photo'
   },
   {
