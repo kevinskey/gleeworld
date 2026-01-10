@@ -35,7 +35,8 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
       const start = startOfMonth(currentMonth);
       const end = endOfMonth(currentMonth);
 
-      const { data, error } = await supabase
+      // Fetch from gw_course_calendar
+      const { data: courseData, error: courseError } = await supabase
         .from('gw_course_calendar')
         .select('*')
         .eq('course_id', courseId)
@@ -43,8 +44,38 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
         .lte('start_time', end.toISOString())
         .order('start_time', { ascending: true });
 
-      if (error) throw error;
-      setEvents(data || []);
+      if (courseError) throw courseError;
+
+      // For MUS 070 (Glee Club), also fetch from gw_events with SCGC calendar or Glee-related titles
+      let gleeEvents: CalendarEvent[] = [];
+      if (courseId === 'a0000000-0000-0000-0000-000000000070') {
+        const scgcCalendarId = 'b1e077a0-85f3-4665-b006-4767b310a521';
+        
+        const { data: eventsData, error: eventsError } = await supabase
+          .from('gw_events')
+          .select('id, title, description, event_type, start_date, location')
+          .or(`calendar_id.eq.${scgcCalendarId},title.ilike.%glee%,title.ilike.%scgc%`)
+          .gte('start_date', start.toISOString())
+          .lte('start_date', end.toISOString())
+          .order('start_date', { ascending: true });
+
+        if (eventsError) throw eventsError;
+        
+        // Transform gw_events to match CalendarEvent interface
+        gleeEvents = (eventsData || []).map(event => ({
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          event_type: event.event_type || 'rehearsal',
+          start_time: event.start_date,
+          end_time: null,
+          location: event.location
+        }));
+      }
+
+      // Combine and dedupe events
+      const allEvents = [...(courseData || []), ...gleeEvents];
+      setEvents(allEvents);
     } catch (error) {
       console.error('Error fetching calendar events:', error);
     } finally {
