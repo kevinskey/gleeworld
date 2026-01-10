@@ -7,6 +7,7 @@ import { MessageInput } from './MessageInput';
 import { TypingIndicator } from './TypingIndicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
+import { X } from 'lucide-react';
 
 interface ChatWindowProps {
   groupId: string | null;
@@ -98,7 +99,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
 
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="text-destructive mb-2">Error loading messages</div>
           <div className="text-sm text-muted-foreground">Please try selecting the group again</div>
@@ -118,31 +119,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
   const replyingToMessage = messages?.find(msg => msg.id === replyingTo);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-background">
-      {/* Group Header */}
-      <div className="border-b border-border p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-primary font-medium text-sm">
-                {messages?.[0]?.user_profile?.full_name?.charAt(0) || 'G'}
-              </span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground">Group Chat</h3>
-              <p className="text-sm text-muted-foreground">
-                {typingUsers.length > 0 
-                  ? `${typingUsers.map(u => u.user_name || 'Someone').join(', ')} typing...`
-                  : `${messages?.length || 0} messages`
-                }
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Messages Area */}
-      <ScrollArea className="flex-1 px-4 py-2">
+    <div className="flex flex-col h-full bg-background">
+      {/* Messages Area - scrollable */}
+      <ScrollArea className="flex-1 px-3 sm:px-4 py-2">
         <div className="space-y-1">
           {messages && messages.length > 0 ? (
             messages.map((message, index) => {
@@ -187,12 +166,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
 
       {/* Reply Preview */}
       {replyingToMessage && (
-        <div className="mx-4 mb-2 p-3 bg-muted/30 border-l-4 border-primary rounded-r-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
+        <div className="mx-3 sm:mx-4 mb-2 p-3 bg-muted/30 border-l-4 border-primary rounded-r-lg">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 text-sm mb-1">
                 <span className="text-muted-foreground">Replying to</span>
-                <span className="font-medium text-primary">
+                <span className="font-medium text-primary truncate">
                   {replyingToMessage.user_profile?.full_name || 'Unknown User'}
                 </span>
               </div>
@@ -202,16 +181,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
             </div>
             <button
               onClick={() => setReplyingTo(null)}
-              className="ml-2 p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
             >
-              ✕
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* Message Input */}
-      <div className="p-4 bg-background border-t border-border">
+      {/* Message Input - fixed at bottom */}
+      <div className="flex-shrink-0 p-3 sm:p-4 bg-background border-t border-border">
         <MessageInput
           onSendMessage={(content) => handleSendMessage(content)}
           disabled={sendMessage.isPending}

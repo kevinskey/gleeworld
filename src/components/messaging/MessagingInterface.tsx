@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MessageGroupsList } from './MessageGroupsList';
 import { ChatWindow } from './ChatWindow';
-import { GroupMembersList } from './GroupMembersList';
-import { CreateGroupDialog, EditGroupDialog, DeleteGroupDialog, ManageMembersDialog } from './GroupManagement';
+import { CreateGroupDialog } from './GroupManagement';
 import { UserSelector } from './UserSelector';
 import { useMessageGroups } from '@/hooks/useMessaging';
-import { MessageSquare, Users, Plus, Settings, UserPlus, ArrowLeft } from 'lucide-react';
+import { MessageSquare, UserPlus } from 'lucide-react';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { GroupHeader } from '@/components/messaging/GroupHeader';
 
@@ -17,9 +15,7 @@ interface MessagingInterfaceProps {
 }
 
 export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded = false }) => {
-  
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [showMembers, setShowMembers] = useState(false);
   const [showDirectMessages, setShowDirectMessages] = useState(false);
   
   const { data: groups, isLoading, error } = useMessageGroups();
@@ -28,7 +24,7 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
 
   if (error) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="h-full flex items-center justify-center p-4">
         <div className="text-center">
           <div className="text-destructive mb-2">Error loading messages</div>
           <div className="text-sm text-muted-foreground">{error.message}</div>
@@ -46,36 +42,34 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
   }
 
   // Mobile: Show either groups list OR chat, not both
-  // When a group is selected on mobile, show only the chat
   const showGroupsList = !selectedGroupId;
 
   return (
-    <div className={`${embedded ? 'h-full' : 'h-screen'} flex flex-col bg-background overflow-hidden`}>
-      {/* Mobile/Embedded: Show groups list when no group selected */}
+    <div 
+      className={`flex flex-col bg-background overflow-hidden ${
+        embedded 
+          ? 'h-full' 
+          : 'h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]'
+      }`}
+    >
+      {/* Groups List View */}
       {showGroupsList ? (
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-3 border-b border-border flex-shrink-0">
+          <div className="flex-shrink-0 bg-[hsl(var(--message-header))] text-white px-4 py-3 shadow-md">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
+              <div className="flex items-center gap-3">
+                <MessageSquare className="h-6 w-6" />
                 <h1 className="text-lg font-bold">Messages</h1>
               </div>
               <div className="flex gap-2">
                 <CreateGroupDialog onSuccess={() => setSelectedGroupId(null)} />
                 <EnhancedTooltip content="Send direct message">
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm" 
-                    className="gap-1 text-xs"
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setShowDirectMessages(true);
-                    }}
+                    className="gap-1.5 text-white hover:bg-white/20"
+                    onClick={() => setShowDirectMessages(true)}
                   >
                     <UserPlus className="h-4 w-4" />
                     <span className="hidden sm:inline">DM</span>
@@ -85,8 +79,8 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
             </div>
           </div>
           
-          {/* Groups List */}
-          <div className="flex-1 overflow-auto">
+          {/* Groups List - scrollable */}
+          <div className="flex-1 overflow-y-auto">
             <MessageGroupsList
               groups={groups || []}
               selectedGroupId={selectedGroupId}
@@ -97,15 +91,18 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
       ) : (
         /* Chat View when group is selected */
         <div className="flex flex-col h-full">
-          <GroupHeader
-            groupId={selectedGroupId as string}
-            groupName={selectedGroup?.name || ''}
-            groupAvatar={(selectedGroup as any)?.avatar_url}
-            showBackButton
-            onBack={() => setSelectedGroupId(null)}
-          />
+          {/* Group Header with back button */}
+          <div className="flex-shrink-0">
+            <GroupHeader
+              groupId={selectedGroupId as string}
+              groupName={selectedGroup?.name || ''}
+              groupAvatar={(selectedGroup as any)?.avatar_url}
+              showBackButton
+              onBack={() => setSelectedGroupId(null)}
+            />
+          </div>
 
-          {/* Chat Messages */}
+          {/* Chat Messages - flex-1 to fill remaining space */}
           <div className="flex-1 overflow-hidden">
             <ChatWindow groupId={selectedGroupId} />
           </div>
@@ -114,7 +111,7 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
 
       {/* DM Dialog */}
       <Dialog open={showDirectMessages} onOpenChange={setShowDirectMessages}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] flex flex-col z-[9999]">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[85vh] flex flex-col z-[9999]">
           <DialogHeader>
             <DialogTitle>Send Direct Message</DialogTitle>
           </DialogHeader>
