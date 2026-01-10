@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Camera, Mic, Video, UserCheck, Image, Film, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export type QuickCaptureCategory = 'profile_picture' | 'glee_cam_pic' | 'glee_cam_video' | 'voice_part_recording' | 'exec_board_video' | 'member_audition_video';
 
@@ -60,71 +59,53 @@ export const QuickCaptureCategorySelector = ({
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 z-[9998] bg-black/10" 
+        className="fixed inset-0 z-[9998]" 
         onClick={handleClose}
       />
       
-      {/* Slim dropdown bar */}
+      {/* Small dropdown positioned top-right */}
       <div 
-        className="fixed left-0 right-0 z-[9999] bg-white border-b border-gray-200"
-        style={{ top: 'var(--gw-header-h, 56px)' }}
+        className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-lg"
+        style={{ top: 'calc(var(--gw-header-h, 56px) + 4px)', right: '16px' }}
       >
-        <div className="flex items-center justify-between px-4 h-10">
-          
-          {/* Left: Options */}
-          <div className="flex items-center gap-3">
-            {!selectedType ? (
-              <>
+        <div className="p-2 min-w-[140px]">
+          {!selectedType ? (
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={() => setSelectedType('photo')}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded transition-colors w-full text-left"
+              >
+                <Image className="h-4 w-4" />
+                Photo
+              </button>
+              <button
+                onClick={() => setSelectedType('video')}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded transition-colors w-full text-left"
+              >
+                <Film className="h-4 w-4" />
+                Video
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={handleBack}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-900 transition-colors w-full text-left border-b border-gray-100 mb-1"
+              >
+                ← Back
+              </button>
+              {currentCategories.map((category) => (
                 <button
-                  onClick={() => setSelectedType('photo')}
-                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                  key={category.id}
+                  onClick={() => handleSelectCategory(category.id)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded transition-colors w-full text-left"
                 >
-                  <Image className="h-3.5 w-3.5" />
-                  Photo
+                  {category.icon}
+                  {category.title}
                 </button>
-                <div className="h-4 w-px bg-gray-300" />
-                <button
-                  onClick={() => setSelectedType('video')}
-                  className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                >
-                  <Film className="h-3.5 w-3.5" />
-                  Video
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={handleBack}
-                  className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
-                >
-                  ←
-                </button>
-                <div className="h-4 w-px bg-gray-300" />
-                {currentCategories.map((category, idx) => (
-                  <div key={category.id} className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleSelectCategory(category.id)}
-                      className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                    >
-                      {category.icon}
-                      {category.title}
-                    </button>
-                    {idx < currentCategories.length - 1 && (
-                      <div className="h-4 w-px bg-gray-300" />
-                    )}
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-
-          {/* Right: Close */}
-          <button
-            onClick={handleClose}
-            className="p-1 text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
