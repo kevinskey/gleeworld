@@ -21,8 +21,17 @@ interface CalendarEvent {
   location: string | null;
 }
 
+interface AcademicEvent {
+  title: string;
+  type: string;
+  date?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
 export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [academicEvents, setAcademicEvents] = useState<AcademicEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -45,6 +54,18 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
         .order('start_time', { ascending: true });
 
       if (courseError) throw courseError;
+
+      // Fetch Spelman academic events from active semester
+      const { data: semesterData, error: semesterError } = await supabase
+        .from('gw_semesters')
+        .select('academic_events')
+        .eq('is_active', true)
+        .single();
+
+      if (!semesterError && semesterData?.academic_events) {
+        const events = semesterData.academic_events as unknown as AcademicEvent[];
+        setAcademicEvents(Array.isArray(events) ? events : []);
+      }
 
       // For MUS 070 (Glee Club), also fetch from gw_events with SCGC calendar or Glee-related titles
       let gleeEvents: CalendarEvent[] = [];
@@ -81,6 +102,19 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
     } finally {
       setLoading(false);
     }
+  };
+
+  // Check if a day has academic events (Spelman dates)
+  const getAcademicEventsForDay = (day: Date) => {
+    const dayStr = format(day, 'yyyy-MM-dd');
+    return academicEvents.filter(event => {
+      if (event.date === dayStr) return true;
+      if (event.start_date && event.end_date) {
+        return dayStr >= event.start_date && dayStr <= event.end_date;
+      }
+      if (event.start_date === dayStr) return true;
+      return false;
+    });
   };
 
   const days = eachDayOfInterval({
@@ -164,13 +198,18 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
               
               {days.map(day => {
                 const dayEvents = getEventsForDay(day);
+                const dayAcademicEvents = getAcademicEventsForDay(day);
+                const hasAcademicEvent = dayAcademicEvents.length > 0;
+                
                 return (
                   <div
                     key={day.toISOString()}
                     className={`h-24 p-1 rounded-lg border transition-colors ${
                       isToday(day) 
                         ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:bg-muted/50'
+                        : hasAcademicEvent
+                          ? 'border-accent bg-accent/10'
+                          : 'border-border hover:bg-muted/50'
                     }`}
                   >
                     <div className={`text-sm font-medium mb-1 ${
@@ -179,7 +218,18 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                       {format(day, 'd')}
                     </div>
                     <div className="space-y-0.5 overflow-hidden">
-                      {dayEvents.slice(0, 2).map(event => (
+                      {/* Spelman academic events */}
+                      {dayAcademicEvents.slice(0, 1).map((event, idx) => (
+                        <div
+                          key={`academic-${idx}`}
+                          className="text-xs truncate px-1 py-0.5 rounded bg-accent text-accent-foreground"
+                          title={event.title}
+                        >
+                          {event.title}
+                        </div>
+                      ))}
+                      {/* Regular events */}
+                      {dayEvents.slice(0, dayAcademicEvents.length > 0 ? 1 : 2).map(event => (
                         <div
                           key={event.id}
                           className="text-xs truncate px-1 py-0.5 rounded bg-primary text-primary-foreground"
@@ -187,9 +237,9 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                           {event.title}
                         </div>
                       ))}
-                      {dayEvents.length > 2 && (
+                      {(dayEvents.length + dayAcademicEvents.length) > 2 && (
                         <div className="text-xs text-muted-foreground px-1">
-                          +{dayEvents.length - 2} more
+                          +{(dayEvents.length + dayAcademicEvents.length) - 2} more
                         </div>
                       )}
                     </div>
