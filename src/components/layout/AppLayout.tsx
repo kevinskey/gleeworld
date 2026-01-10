@@ -21,7 +21,7 @@ export const AppLayout = ({
           onTabChange={onTabChange}
         />
       )}
-      <main className="w-full min-h-dvh pt-[var(--gw-header-h,4rem)] bg-background text-foreground">
+      <main className="w-full min-h-dvh bg-background text-foreground" style={{ paddingTop: 'calc(var(--gw-header-h, 4rem) + var(--gw-radio-bar-height, 0px))' }}>
         {children}
       </main>
     </div>
