@@ -134,8 +134,7 @@ export const HeaderRadioControls = () => {
         const updateRadioBarHeight = () => {
           if (radioBarRef.current) {
             const height = radioBarRef.current.getBoundingClientRect().height;
-            // Use exact height - the visual spacer div handles the tiny gap
-            document.documentElement.style.setProperty('--gw-radio-bar-height', `${height + 1}px`);
+            document.documentElement.style.setProperty('--gw-radio-bar-height', `${height}px`);
           }
         };
         // Delay to ensure the bar is rendered
@@ -511,8 +510,6 @@ export const HeaderRadioControls = () => {
                   )}
                 </div>
               </div>
-              {/* 1px hairline spacer below extended radio */}
-              <div className="h-px" />
             </div>
           </>,
           document.body
