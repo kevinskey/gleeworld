@@ -39,7 +39,7 @@ export const useHandbookEdit = () => {
         .select('role')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .in('role', ['admin', 'super-admin', 'exec-board']);
+        .in('role', ['admin', 'super_admin', 'executive_board']);
 
       if (!appError && appRoles && appRoles.length > 0) {
         setCanEdit(true);
