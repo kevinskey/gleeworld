@@ -195,9 +195,12 @@ export const useMeetingPresence = (
   useEffect(() => {
     if (!roomName || !userId) return;
 
-    const presenceChannel = getPresenceChannel(userId);
+    console.log('[Presence] meeting hook mount', { roomName, userId });
 
-    const track = async () => {
+    const presenceChannel = getPresenceChannel(userId);
+    let interval: number | null = null;
+
+    const doTrack = async () => {
       try {
         if (singletonSubscribePromise) {
           await singletonSubscribePromise;
@@ -225,19 +228,24 @@ export const useMeetingPresence = (
           user_name: userName,
           user_email: userEmail,
           joined_at: new Date().toISOString(),
+          kind: 'meeting',
         });
 
-        console.log('Tracking presence for room:', roomName);
+        console.log('[Presence] tracked meeting', roomName);
       } catch (e) {
         console.error('Failed to track meeting presence:', e);
       }
     };
 
-    track();
+    // Track immediately + refresh periodically (keeps state live in flaky networks)
+    void doTrack();
+    interval = window.setInterval(() => void doTrack(), 5000);
+
     setChannel(presenceChannel);
 
     return () => {
-      // Remove this user's presence slice, but keep the singleton channel open.
+      console.log('[Presence] meeting hook cleanup', { roomName, userId });
+      if (interval) window.clearInterval(interval);
       presenceChannel.untrack();
     };
   }, [roomName, userName, userEmail, userId]);
