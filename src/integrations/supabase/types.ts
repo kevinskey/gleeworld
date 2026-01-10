@@ -26240,6 +26240,10 @@ export type Database = {
         Args: { budget_id_param: string; permission_type_param: string }
         Returns: boolean
       }
+      user_has_executive_board_role: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       user_has_executive_function_access: {
         Args: {
           function_name_param: string
