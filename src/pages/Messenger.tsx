@@ -488,26 +488,29 @@ const Messenger = () => {
   return <><UniversalLayout showHeader={true} showFooter={false}>
       <div className="flex flex-col h-[calc(100dvh-var(--gw-header-h,4rem))]">
         {/* Persistent Header */}
-        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border backdrop-blur px-6 lg:px-10 py-6 bg-slate-300 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <BackNavigation />
-              <div className="rounded-lg p-4 bg-primary">
-                <Mail className="h-10 w-10 text-primary-foreground" />
+        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border backdrop-blur px-3 sm:px-6 lg:px-10 py-3 sm:py-6 bg-slate-300 shadow-lg">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+              <div className="hidden sm:block">
+                <BackNavigation />
               </div>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-bold text-foreground">Messenger</h1>
-                  <Badge variant="outline" className="text-base capitalize px-3 py-1">{messengerRole}</Badge>
+              <div className="rounded-lg p-2 sm:p-4 bg-primary flex-shrink-0">
+                <Mail className="h-6 w-6 sm:h-10 sm:w-10 text-primary-foreground" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate">Messenger</h1>
+                  <Badge variant="outline" className="text-xs sm:text-base capitalize px-2 sm:px-3 py-0.5 sm:py-1 flex-shrink-0">{messengerRole}</Badge>
                 </div>
-                <p className="text-base text-muted-foreground hidden sm:block">
+                <p className="text-sm sm:text-base text-muted-foreground hidden sm:block">
                   {canMessageAnyone ? 'Full access' : messengerRole === 'alumna' ? 'Alumnae & mentees' : `${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`}
                 </p>
               </div>
             </div>
-            <Button variant="outline" size="lg" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-3">
-              <Users className="h-8 w-8" />
+            <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-1 sm:gap-3 flex-shrink-0 h-9 sm:h-11 px-2 sm:px-4">
+              <Users className="h-5 w-5 sm:h-8 sm:w-8" />
               <span className="hidden sm:inline text-lg">Groups ({recipientGroups.length})</span>
+              <span className="sm:hidden text-xs">{recipientGroups.length}</span>
             </Button>
           </div>
         </header>
