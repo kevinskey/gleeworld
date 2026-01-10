@@ -187,7 +187,18 @@
   .bg-brand-600,
   .bg-brand-700,
   .bg-brand-800,
-  .bg-brand-900 {
+  .bg-brand-900,
+  [class*="from-[#002244]"],
+  [class*="from-[#003666]"],
+  .bg-gradient-to-r[class*="from-[#002"] {
+    color: hsl(0 0% 100%) !important;
+  }
+  
+  /* Force white text on gradient buttons with dark blue */
+  [class*="from-[#002244]"] *,
+  [class*="from-[#003666]"] *,
+  [class*="bg-gradient"][class*="002244"] *,
+  [class*="bg-gradient"][class*="003666"] * {
     color: hsl(0 0% 100%) !important;
   }
   
