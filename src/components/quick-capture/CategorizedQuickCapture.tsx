@@ -17,12 +17,13 @@ interface CategorizedQuickCaptureProps {
 }
 
 const categoryConfig = {
-  christmas_carol_selfie: {
-    title: 'Christmas Carol Selfie',
-    icon: Sparkles,
+  profile_picture: {
+    title: 'Profile Picture',
+    icon: Camera,
     mode: 'photo' as const,
-    folder: 'christmas-carol-selfies',
-    gleeCamSlug: 'christmas-carol-selfies',
+    folder: 'profile-pictures',
+    gleeCamSlug: null, // Profile pics don't go to GleeCam
+    isProfilePicture: true,
   },
   glee_cam_pic: {
     title: 'Glee Cam Pic',
@@ -30,6 +31,7 @@ const categoryConfig = {
     mode: 'photo' as const,
     folder: 'glee-cam-pics',
     gleeCamSlug: 'glee-cam-pics',
+    isProfilePicture: false,
   },
   glee_cam_video: {
     title: 'Glee Cam Video',
@@ -37,6 +39,7 @@ const categoryConfig = {
     mode: 'video' as const,
     folder: 'glee-cam-videos',
     gleeCamSlug: 'glee-cam-videos',
+    isProfilePicture: false,
   },
   voice_part_recording: {
     title: 'Voice Part Recording',
@@ -44,6 +47,7 @@ const categoryConfig = {
     mode: 'video' as const,
     folder: 'voice-part-recordings',
     gleeCamSlug: 'voice-part-recording',
+    isProfilePicture: false,
   },
   exec_board_video: {
     title: 'ExecBoard Training Video',
@@ -51,13 +55,15 @@ const categoryConfig = {
     mode: 'video' as const,
     folder: 'exec-board-videos',
     gleeCamSlug: 'execboard-video',
+    isProfilePicture: false,
   },
   member_audition_video: {
     title: 'Member Audition Video',
     icon: Video,
     mode: 'video' as const,
     folder: 'member-audition-videos',
-    gleeCamSlug: null, // No glee cam category for auditions
+    gleeCamSlug: null,
+    isProfilePicture: false,
   },
 };
 
@@ -251,6 +257,33 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
       }
 
       // Save to database
+      // Handle profile picture - save directly to user profile
+      if (config.isProfilePicture) {
+        console.log('Saving as profile picture...');
+        const { error: profileError } = await supabase
+          .from('gw_profiles')
+          .update({ avatar_url: publicUrl })
+          .eq('user_id', user.id);
+
+        if (profileError) {
+          console.error('Profile update error:', profileError);
+          throw new Error('Failed to update profile picture: ' + profileError.message);
+        }
+
+        console.log('Profile picture updated successfully');
+        
+        setPhotoCount(prev => prev + 1);
+        
+        toast({
+          title: "Profile Picture Updated!",
+          description: "Your new profile picture has been saved.",
+        });
+
+        // Close after profile picture is saved
+        handleClose();
+        return;
+      }
+
       const insertData = {
         user_id: user.id,
         category: category,
@@ -260,7 +293,7 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
         thumbnail_url: thumbnailUrl,
         file_type: capturedMedia.type,
         file_size: capturedMedia.size,
-        is_approved: category === 'glee_cam_pic' || category === 'glee_cam_video' || category === 'christmas_carol_selfie' || category === 'exec_board_video',
+        is_approved: category === 'glee_cam_pic' || category === 'glee_cam_video' || category === 'exec_board_video',
       };
       
       console.log('Inserting to database:', insertData);
@@ -312,8 +345,8 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
         }
       }
 
-      // If glee cam pic/video or christmas selfie, sync to heroes
-      if (category === 'glee_cam_pic' || category === 'glee_cam_video' || category === 'christmas_carol_selfie') {
+      // If glee cam pic/video, sync to heroes
+      if (category === 'glee_cam_pic' || category === 'glee_cam_video') {
         console.log('Syncing to heroes...');
         const { error: syncError } = await supabase.functions.invoke('sync-glee-cam-to-heroes');
         if (syncError) {
