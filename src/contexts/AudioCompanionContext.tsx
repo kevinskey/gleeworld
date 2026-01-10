@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
-import FloatingYouTubePlayer from '@/components/music-library/FloatingYouTubePlayer';
+
+// Lazy load to prevent circular dependency issues with react-rnd
+const FloatingYouTubePlayer = lazy(() => import('@/components/music-library/FloatingYouTubePlayer'));
 
 interface AudioCompanionState {
   isActive: boolean;
@@ -323,11 +325,13 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       
       {/* Floating YouTube Player - draggable, resizable, closeable */}
       {youtubeVideoId && (
-        <FloatingYouTubePlayer
-          videoId={youtubeVideoId}
-          onClose={closeYouTube}
-          title="YouTube Player"
-        />
+        <Suspense fallback={null}>
+          <FloatingYouTubePlayer
+            videoId={youtubeVideoId}
+            onClose={closeYouTube}
+            title="YouTube Player"
+          />
+        </Suspense>
       )}
       
       {/* Global hidden audio element */}
