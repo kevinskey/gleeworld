@@ -361,7 +361,7 @@ export const HeaderRadioControls = () => {
                         )}
                       </button>
                       
-                      {/* African Wood Style Volume Slider */}
+                      {/* Volume Slider */}
                       <div className="relative w-16 sm:w-20 h-3 flex items-center">
                         {/* Slider track - brushed metal groove */}
                         <div 
@@ -381,25 +381,14 @@ export const HeaderRadioControls = () => {
                           />
                         </div>
                         
-                        {/* African Blackwood Handle */}
+                        {/* Silver Handle */}
                         <div
-                          className="absolute top-1/2 -translate-y-1/2 w-4 h-5 rounded-sm cursor-grab active:cursor-grabbing shadow-lg"
+                          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full cursor-grab active:cursor-grabbing shadow-md"
                           style={{
-                            left: `calc(${volume * 100}% - 8px)`,
-                            background: `
-                              linear-gradient(135deg, 
-                                #1a1209 0%, 
-                                #2d1f12 15%, 
-                                #1f1610 30%, 
-                                #3d2817 45%,
-                                #1a1209 55%,
-                                #2a1c10 70%,
-                                #1f1610 85%,
-                                #251a0e 100%
-                              )
-                            `,
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1)',
-                            border: '1px solid #0f0a05',
+                            left: `calc(${volume * 100}% - 6px)`,
+                            background: 'linear-gradient(180deg, #f4f4f5 0%, #d4d4d8 30%, #a1a1aa 70%, #71717a 100%)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.8)',
+                            border: '1px solid #52525b',
                           }}
                           onMouseDown={(e) => {
                             e.preventDefault();
@@ -425,12 +414,7 @@ export const HeaderRadioControls = () => {
                             document.addEventListener('mousemove', onMouseMove);
                             document.addEventListener('mouseup', onMouseUp);
                           }}
-                        >
-                          {/* Wood grain texture lines */}
-                          <div className="absolute inset-x-1 top-1 h-[1px] bg-gradient-to-r from-transparent via-amber-900/30 to-transparent" />
-                          <div className="absolute inset-x-0.5 top-2 h-[1px] bg-gradient-to-r from-transparent via-amber-800/20 to-transparent" />
-                          <div className="absolute inset-x-1 bottom-1.5 h-[1px] bg-gradient-to-r from-transparent via-amber-900/25 to-transparent" />
-                        </div>
+                        />
                       </div>
                     </div>
 
