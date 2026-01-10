@@ -243,16 +243,16 @@ export const DashboardStoreSection = () => {
       </Button>
 
       {/* Modules Section with Search */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-background">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-white">
         {/* Search Bar */}
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
           <input
             type="text"
             placeholder="Search modules..."
             value={moduleSearch}
             onChange={(e) => setModuleSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full pl-10 pr-4 py-2 rounded-full border-2 border-gray-300 bg-white text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003666] focus:border-[#003666]"
           />
         </div>
 
