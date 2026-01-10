@@ -272,10 +272,11 @@ export const DashboardStoreSection = () => {
                 <button
                   key={module.id}
                   onClick={() => navigate(`/modules/${module.id}`)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-[#002244] to-[#003666] text-white hover:from-[#003666] hover:to-[#0B5A8B] transition-all duration-200 shadow-md hover:shadow-lg text-left"
+                  className="flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-[#002244] to-[#003666] hover:from-[#003666] hover:to-[#0B5A8B] transition-all duration-200 shadow-md hover:shadow-lg text-left"
+                  style={{ color: '#ffffff' }}
                 >
-                  {IconComponent && <IconComponent className="h-4 w-4 flex-shrink-0" />}
-                  <span className="text-sm font-medium truncate">{module.title}</span>
+                  {IconComponent && <IconComponent className="h-4 w-4 flex-shrink-0 text-white" />}
+                  <span className="text-sm font-medium truncate text-white">{module.title}</span>
                 </button>
               );
             })}
