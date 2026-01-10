@@ -277,7 +277,7 @@ export const DashboardStoreSection = () => {
                   style={{ color: '#ffffff' }}
                 >
                   <Icon className="h-3.5 w-3.5 flex-shrink-0 text-white" />
-                  <span className="text-xs font-normal truncate text-white">{module.title}</span>
+                  <span className="text-xs font-normal truncate text-white">{module.title.toLowerCase()}</span>
                 </button>
               );
             })}
