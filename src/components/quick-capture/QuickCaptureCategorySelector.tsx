@@ -65,8 +65,8 @@ export const QuickCaptureCategorySelector = ({
       
       {/* Small dropdown positioned top-right */}
       <div 
-        className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-lg"
-        style={{ top: 'calc(var(--gw-header-h, 56px) + 4px)', right: '16px' }}
+        className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-lg right-auto"
+        style={{ top: 'calc(var(--gw-header-h, 56px) + 4px)', right: '60px' }}
       >
         <div className="p-2 min-w-[140px]">
           {!selectedType ? (
