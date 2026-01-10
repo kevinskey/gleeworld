@@ -17,7 +17,8 @@ import { format, isSameDay, addMonths, subMonths } from "date-fns";
 export const CalendarViews = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [visibleCalendarIds, setVisibleCalendarIds] = useState<string[]>([]);
+  // null = not initialized yet (show all), [] = user intentionally hid all
+  const [visibleCalendarIds, setVisibleCalendarIds] = useState<string[] | null>(null);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const navigate = useNavigate();
   const { events, loading, fetchEvents } = useGleeWorldEvents();
@@ -26,9 +27,11 @@ export const CalendarViews = () => {
   const canManageEvents = !roleLoading && (isAdmin() || isExecutiveBoard());
 
   // Filter events based on visible calendars
-  const filteredEvents = events.filter(event => {
-    return visibleCalendarIds.includes(event.calendar_id);
-  });
+  const filteredEvents = useMemo(() => {
+    if (visibleCalendarIds === null) return events;
+    if (visibleCalendarIds.length === 0) return [];
+    return events.filter((event) => visibleCalendarIds.includes(event.calendar_id));
+  }, [events, visibleCalendarIds]);
 
   // Get events for selected date
   const selectedDateEvents = useMemo(() => {
