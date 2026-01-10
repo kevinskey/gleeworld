@@ -30,7 +30,6 @@ export const useActiveMeetings = () => {
         const state = presenceChannel.presenceState();
         const meetings = parsePresenceState(state);
         setActiveMeetings(meetings);
-        setIsLoading(false);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         console.log('User joined meeting:', key, newPresences);
@@ -39,8 +38,10 @@ export const useActiveMeetings = () => {
         console.log('User left meeting:', key, leftPresences);
       })
       .subscribe(async (status) => {
+        console.log('Presence channel status:', status);
         if (status === 'SUBSCRIBED') {
           console.log('Subscribed to active meetings presence');
+          // Set loading to false once subscribed - sync will update with actual data
           setIsLoading(false);
         }
       });
