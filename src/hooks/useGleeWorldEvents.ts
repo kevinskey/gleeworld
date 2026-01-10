@@ -146,21 +146,40 @@ export const useGleeWorldEvents = () => {
         };
       });
 
-      // Transform appointments to match the interface (assign to default calendar)
-      const { data: defaultCalendar } = await supabase
+      // Transform appointments to match the interface (assign to a default calendar when possible)
+      const { data: defaultCalendar, error: defaultCalendarError } = await supabase
         .from('gw_calendars')
         .select('id')
         .eq('is_default', true)
-        .single();
+        .maybeSingle();
 
-      const transformedAppointments: GleeWorldEvent[] = (appointmentsResult.data || []).map(appointment => ({
+      if (defaultCalendarError) throw defaultCalendarError;
+
+      // Fallback if no default calendar exists
+      const { data: fallbackCalendar, error: fallbackCalendarError } = defaultCalendar?.id
+        ? { data: null, error: null }
+        : await supabase
+            .from('gw_calendars')
+            .select('id')
+            .eq('is_visible', true)
+            .order('name', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+      if (fallbackCalendarError) throw fallbackCalendarError;
+
+      const appointmentCalendarId = defaultCalendar?.id ?? fallbackCalendar?.id ?? '';
+
+      const transformedAppointments: GleeWorldEvent[] = (appointmentsResult.data || []).map((appointment) => ({
         id: appointment.id,
         title: appointment.title,
         description: appointment.description,
         event_type: appointment.appointment_type,
         start_date: appointment.appointment_date,
         is_appointment: true, // Flag to identify appointments
-        end_date: new Date(new Date(appointment.appointment_date).getTime() + appointment.duration_minutes * 60000).toISOString(),
+        end_date: new Date(
+          new Date(appointment.appointment_date).getTime() + appointment.duration_minutes * 60000
+        ).toISOString(),
         location: null,
         venue_name: null,
         address: null,
@@ -169,11 +188,11 @@ export const useGleeWorldEvents = () => {
         is_public: false,
         status: appointment.status,
         image_url: null,
-        calendar_id: defaultCalendar?.id || '',
+        calendar_id: appointmentCalendarId,
         created_by: appointment.created_by,
         created_at: appointment.created_at,
         updated_at: appointment.updated_at,
-        source: 'appointment' as const
+        source: 'appointment' as const,
       }));
 
       // Combine and sort by start_date
