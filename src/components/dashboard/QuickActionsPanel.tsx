@@ -204,10 +204,10 @@ export const QuickActionsPanel = ({
       
       {/* Themed Dropdown Panel - positioned below header like other dropdowns */}
       <div 
-        className={`fixed z-50 transition-all duration-300 ease-out ${isOpen ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-4 opacity-0 scale-95 pointer-events-none'}`}
-        style={{ top: 'calc(var(--gw-header-h, 56px) + 4px)', right: '100px' }}
+        className={`fixed z-50 transition-all duration-300 ease-out left-4 right-4 sm:left-auto sm:right-24 ${isOpen ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-4 opacity-0 scale-95 pointer-events-none'}`}
+        style={{ top: 'calc(var(--gw-header-h, 56px) + 4px)' }}
       >
-        <div className="bg-popover text-popover-foreground border border-border shadow-2xl rounded-lg w-80 sm:w-96">
+        <div className="bg-popover text-popover-foreground border border-border shadow-2xl rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
           
           {/* Header with management controls */}
           <div className="px-2 py-1.5 border-b border-white/20 flex items-center justify-between">
