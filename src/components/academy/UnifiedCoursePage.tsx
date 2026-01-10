@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book } from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,6 +53,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollmentLoading, setEnrollmentLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isExecutiveBoard, setIsExecutiveBoard] = useState(false);
 
   // Sync tab with URL changes
   useEffect(() => {
@@ -79,6 +80,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
         data: profile
       } = await supabase.from('gw_profiles').select('is_admin, is_super_admin, role').eq('user_id', user.id).single();
       setIsAdmin(profile?.is_admin || profile?.is_super_admin || false);
+      setIsExecutiveBoard(profile?.role === 'executive-board' || profile?.is_admin || profile?.is_super_admin || false);
 
       // For MUS 070 (Glee Club), members and admins are auto-enrolled
       if (course.id === 'a0000000-0000-0000-0000-000000000070') {
@@ -343,11 +345,21 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                     
                   </Card>}
 
-                {/* Appointments Button */}
-                <div className="flex justify-end">
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3">
+                  {isExecutiveBoard && (
+                    <Button 
+                      variant="outline" 
+                      className="gap-2 rounded-full px-6"
+                      onClick={() => navigate('/admin/calendar')}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Event
+                    </Button>
+                  )}
                   <Button 
                     variant="default" 
-                    className="gap-2"
+                    className="gap-2 rounded-full px-6"
                     onClick={() => navigate('/booking')}
                   >
                     <Calendar className="h-4 w-4" />
