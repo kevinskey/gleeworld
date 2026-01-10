@@ -77,11 +77,11 @@ export const CalendarViews = () => {
             <Sparkles className="absolute bottom-1 right-[20%] w-3 h-3 text-emerald-500/50 animate-pulse delay-500" />
           </div>
         )}
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-2 md:gap-3 text-white">
           {/* Icon + Title - hidden on smaller tablets */}
-          <div className="hidden md:flex items-center gap-1.5">
-            <CalendarIcon className="w-4 h-4" />
-            <h1 className="text-sm font-semibold tracking-tight">Calendar</h1>
+          <div className="hidden md:flex items-center gap-1.5 text-white">
+            <CalendarIcon className="w-4 h-4 text-white" />
+            <h1 className="text-sm font-semibold tracking-tight text-white">Calendar</h1>
           </div>
           
           {/* Month Navigation - always visible, compact */}
@@ -92,7 +92,7 @@ export const CalendarViews = () => {
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-            <span className="text-xs md:text-sm font-medium min-w-[80px] md:min-w-[100px] text-center">
+            <span className="text-xs md:text-sm font-medium min-w-[80px] md:min-w-[100px] text-center text-white">
               {format(currentDate, 'MMM yyyy')}
             </span>
             <button 
@@ -112,15 +112,15 @@ export const CalendarViews = () => {
               setCurrentDate(new Date());
               setSelectedDate(new Date());
             }}
-            className="h-6 px-3 rounded-full text-[10px] md:text-xs font-medium bg-white/10 text-white hover:bg-white/20 active:scale-95 active:bg-white/30 transition-all duration-150"
+            className="h-6 px-3 rounded-full text-[10px] md:text-xs font-medium bg-white/20 text-white hover:bg-white/30 active:scale-95 active:bg-white/40 transition-all duration-150"
           >
             Today
           </button>
           <button 
             onClick={() => setShowCreateEvent(true)}
-            className="h-6 px-3 rounded-full text-[10px] md:text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 active:brightness-110 transition-all duration-150 flex items-center gap-1"
+            className="h-6 px-3 rounded-full text-[10px] md:text-xs font-medium bg-white/20 text-white hover:bg-white/30 active:scale-95 active:bg-white/40 transition-all duration-150 flex items-center gap-1"
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3 w-3 text-white" />
             <span className="hidden sm:inline">New</span>
           </button>
         </div>
