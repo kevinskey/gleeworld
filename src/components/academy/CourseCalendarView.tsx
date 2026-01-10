@@ -117,7 +117,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Calendar Grid */}
       <div className="lg:col-span-2">
-        <Card>
+        <Card className="bg-card text-card-foreground">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -132,7 +132,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="font-semibold min-w-[150px] text-center">
+                <span className="font-semibold min-w-[150px] text-center text-foreground">
                   {format(currentMonth, 'MMMM yyyy')}
                 </span>
                 <Button 
@@ -182,7 +182,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                       {dayEvents.slice(0, 2).map(event => (
                         <div
                           key={event.id}
-                          className="text-xs truncate px-1 py-0.5 rounded bg-primary/10 text-primary"
+                          className="text-xs truncate px-1 py-0.5 rounded bg-primary text-primary-foreground"
                         >
                           {event.title}
                         </div>
@@ -203,9 +203,9 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
 
       {/* Upcoming Events */}
       <div>
-        <Card>
+        <Card className="bg-card text-card-foreground">
           <CardHeader>
-            <CardTitle className="text-lg">Upcoming Events</CardTitle>
+            <CardTitle className="text-lg text-foreground">Upcoming Events</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -217,7 +217,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                 {upcomingEvents.map(event => (
                   <div key={event.id} className="border-l-2 border-primary pl-3">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-sm">{event.title}</span>
+                      <span className="font-semibold text-sm text-foreground">{event.title}</span>
                       {getEventTypeBadge(event.event_type)}
                     </div>
                     <div className="text-xs text-muted-foreground space-y-1">
