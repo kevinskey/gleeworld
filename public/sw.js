@@ -1,6 +1,6 @@
 // Service Worker for GleeWorld PWA
-// Version: 5.1 - January 2026
-const CACHE_VERSION = 'v5.1';
+// Version: 6.0 - January 2026
+const CACHE_VERSION = 'v6.0';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
@@ -10,12 +10,21 @@ const STATIC_ASSETS = [
   '/',
   '/manifest.json',
   '/favicon.ico',
-  '/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png'
+  '/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png',
+  '/offline.html'
+];
+
+// Routes that should work offline
+const OFFLINE_ROUTES = [
+  '/dashboard',
+  '/messenger',
+  '/events',
+  '/handbook'
 ];
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker v5...');
+  console.log('[SW] Installing service worker v6.0...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
@@ -32,7 +41,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker v5...');
+  console.log('[SW] Activating service worker v6.0...');
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -40,7 +49,7 @@ self.addEventListener('activate', (event) => {
           cacheNames
             .filter((name) => {
               // Delete any cache that doesn't match current version
-              return !name.includes(CACHE_VERSION);
+              return name.startsWith('gleeworld-') && !name.includes(CACHE_VERSION);
             })
             .map((name) => {
               console.log('[SW] Deleting old cache:', name);
@@ -63,55 +72,57 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip cross-origin requests except for fonts and CDNs
-  if (url.origin !== self.location.origin && 
-      !url.href.includes('fonts.googleapis.com') &&
-      !url.href.includes('fonts.gstatic.com')) {
-    return;
-  }
+  // Skip chrome-extension and other non-http(s) requests
+  if (!url.protocol.startsWith('http')) return;
 
-  // Skip API requests, auth, and Supabase calls
-  if (url.pathname.includes('/api/') || 
-      url.pathname.includes('/auth/') ||
-      url.href.includes('supabase')) {
-    return;
-  }
+  // Skip Supabase API calls - always fetch from network
+  if (url.hostname.includes('supabase')) return;
 
-  // For HTML pages - network first, cache fallback
-  if (request.headers.get('accept')?.includes('text/html')) {
+  // Skip external APIs
+  if (!url.hostname.includes('lovableproject.com') && 
+      !url.hostname.includes('localhost') &&
+      !url.hostname.includes('gleeworld')) return;
+
+  // For navigation requests (HTML pages) - network first with cache fallback
+  if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Clone and cache successful responses
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
+          // Clone and cache the response
+          const responseClone = response.clone();
+          caches.open(DYNAMIC_CACHE).then((cache) => {
+            cache.put(request, responseClone);
+          });
           return response;
         })
         .catch(() => {
-          // Try cache, then offline page
+          // Try cache first, then offline page
           return caches.match(request)
-            .then((cached) => cached || caches.match('/'));
+            .then((cachedResponse) => {
+              if (cachedResponse) return cachedResponse;
+              return caches.match('/offline.html') || caches.match('/');
+            });
         })
     );
     return;
   }
 
-  // For static assets - cache first, network fallback
-  if (request.url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|otf|ttf|webp)$/)) {
+  // For static assets (JS, CSS, images) - cache first with network fallback
+  if (request.destination === 'script' || 
+      request.destination === 'style' || 
+      request.destination === 'image' ||
+      request.destination === 'font') {
     event.respondWith(
       caches.match(request)
-        .then((cached) => {
-          if (cached) return cached;
-          
+        .then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+
           return fetch(request)
             .then((response) => {
+              // Cache successful responses
               if (response.ok) {
                 const responseClone = response.clone();
-                caches.open(STATIC_CACHE).then((cache) => {
+                caches.open(DYNAMIC_CACHE).then((cache) => {
                   cache.put(request, responseClone);
                 });
               }
@@ -121,92 +132,105 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
+
+  // Default: network first with cache fallback
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          const responseClone = response.clone();
+          caches.open(DYNAMIC_CACHE).then((cache) => {
+            cache.put(request, responseClone);
+          });
+        }
+        return response;
+      })
+      .catch(() => caches.match(request))
+  );
 });
 
-// Push notification event
+// Push notification handling
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push notification received');
-
-  let notificationData = {
+  console.log('[SW] Push received:', event);
+  
+  let data = {
     title: 'GleeWorld',
     body: 'You have a new notification',
     icon: '/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png',
     badge: '/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png',
-    tag: 'gleeworld-notification',
-    data: { url: '/dashboard' }
+    data: { url: '/' }
   };
 
   if (event.data) {
     try {
       const payload = event.data.json();
-      notificationData = {
-        ...notificationData,
-        ...payload,
-        data: { ...notificationData.data, ...payload.data }
-      };
+      data = { ...data, ...payload };
     } catch (e) {
-      console.error('[SW] Error parsing push data:', e);
-      notificationData.body = event.data.text() || notificationData.body;
+      data.body = event.data.text();
     }
   }
 
+  const options = {
+    body: data.body,
+    icon: data.icon,
+    badge: data.badge,
+    vibrate: [100, 50, 100],
+    data: data.data,
+    actions: [
+      { action: 'open', title: 'Open' },
+      { action: 'close', title: 'Dismiss' }
+    ],
+    tag: 'gleeworld-notification',
+    renotify: true
+  };
+
   event.waitUntil(
-    self.registration.showNotification(notificationData.title, {
-      body: notificationData.body,
-      icon: notificationData.icon,
-      badge: notificationData.badge,
-      tag: notificationData.tag,
-      data: notificationData.data,
-      requireInteraction: false,
-      vibrate: [200, 100, 200],
-      actions: [
-        { action: 'open', title: 'Open' },
-        { action: 'dismiss', title: 'Dismiss' }
-      ]
-    })
+    self.registration.showNotification(data.title, options)
   );
 });
 
-// Notification click event
+// Notification click handling
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked:', event.action);
+  console.log('[SW] Notification clicked:', event);
   event.notification.close();
 
-  if (event.action === 'dismiss') return;
+  if (event.action === 'close') return;
 
-  const urlToOpen = event.notification.data?.url 
-    ? new URL(event.notification.data.url, self.location.origin).href
-    : new URL('/dashboard', self.location.origin).href;
+  const urlToOpen = event.notification.data?.url || '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((windowClients) => {
-        // Focus existing window if available
-        for (const client of windowClients) {
-          if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+      .then((clientList) => {
+        // Try to focus existing window
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
             client.navigate(urlToOpen);
             return client.focus();
           }
         }
-        // Open new window
-        return clients.openWindow(urlToOpen);
+        // Open new window if none exists
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
       })
   );
 });
 
-// Background sync event (for offline actions)
+// Background sync for offline actions
 self.addEventListener('sync', (event) => {
   console.log('[SW] Background sync:', event.tag);
   
-  if (event.tag === 'sync-pending-actions') {
-    event.waitUntil(
-      // Handle any pending offline actions here
-      Promise.resolve()
-    );
+  if (event.tag === 'sync-messages') {
+    event.waitUntil(syncPendingMessages());
   }
 });
 
-// Message event for communication with main app
+async function syncPendingMessages() {
+  // Placeholder for syncing offline messages when back online
+  console.log('[SW] Syncing pending messages...');
+}
+
+// Message handling from client
 self.addEventListener('message', (event) => {
   console.log('[SW] Message received:', event.data);
   
@@ -218,9 +242,5 @@ self.addEventListener('message', (event) => {
     caches.keys().then((names) => {
       names.forEach((name) => caches.delete(name));
     });
-  }
-  
-  if (event.data?.type === 'GET_VERSION') {
-    event.ports[0].postMessage({ version: CACHE_VERSION });
   }
 });
