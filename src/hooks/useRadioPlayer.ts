@@ -674,14 +674,33 @@ export const useRadioPlayer = () => {
   // Skip to next track
   const skipTrack = useCallback(async () => {
     try {
+      // Fetch "playing_next" BEFORE skipping so we can optimistically update the LCD
+      const npBefore = await azuraCastService.getNowPlaying();
+      const nextSong = npBefore?.playing_next?.song;
+
+      // Optimistically update the display with the upcoming track
+      if (nextSong?.title) {
+        setState(prev => ({
+          ...prev,
+          currentTrack: {
+            title: nextSong.title,
+            artist: sanitizeArtist(nextSong.artist),
+            album: nextSong.album || undefined,
+            art: nextSong.art || undefined,
+          },
+        }));
+      }
+
+      // Now actually skip the track
       await azuraCastService.skipTrack();
-      // Give AzuraCast a moment to advance, then refresh metadata
-      await new Promise(resolve => setTimeout(resolve, 500));
-      refreshNowPlaying();
+
       toast({
         title: 'Skipped',
-        description: 'Moving to the next track...',
+        description: nextSong?.title ? `Now playing: ${nextSong.title}` : 'Moving to the next track...',
       });
+
+      // Refresh after a moment to confirm / correct metadata
+      setTimeout(() => refreshNowPlaying(), 1500);
     } catch (error) {
       console.error('Failed to skip track:', error);
       toast({
@@ -690,7 +709,7 @@ export const useRadioPlayer = () => {
         variant: 'destructive',
       });
     }
-  }, [toast, refreshNowPlaying]);
+  }, [toast, refreshNowPlaying, sanitizeArtist]);
 
   return {
     ...state,
