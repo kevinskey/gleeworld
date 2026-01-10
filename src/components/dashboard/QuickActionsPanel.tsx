@@ -202,8 +202,11 @@ export const QuickActionsPanel = ({
       {/* Clear backdrop - must be first/behind the panel */}
       {isOpen && <div className="fixed inset-0 bg-black/20 z-40 transition-opacity duration-300" onClick={onClose} />}
       
-      {/* Themed Dropdown Panel - centered in upper portion */}
-      <div className={`fixed top-[15%] left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out ${isOpen ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-4 opacity-0 scale-95 pointer-events-none'}`}>
+      {/* Themed Dropdown Panel - positioned below header like other dropdowns */}
+      <div 
+        className={`fixed z-50 transition-all duration-300 ease-out ${isOpen ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-4 opacity-0 scale-95 pointer-events-none'}`}
+        style={{ top: 'calc(var(--gw-header-h, 56px) + 4px)', right: '100px' }}
+      >
         <div className="bg-popover text-popover-foreground border border-border shadow-2xl rounded-lg w-80 sm:w-96">
           
           {/* Header with management controls */}
