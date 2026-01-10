@@ -24,7 +24,7 @@ export const useHandbookAppendix = (courseId: string, slug: string) => {
   const [saving, setSaving] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
 
-  // Check edit permissions (admin/director only)
+  // Check edit permissions (exec-board/admin)
   const checkPermissions = useCallback(async () => {
     if (!user) {
       setCanEdit(false);
@@ -32,17 +32,28 @@ export const useHandbookAppendix = (courseId: string, slug: string) => {
     }
 
     try {
-      const { data: profile } = await supabase
-        .from('gw_profiles')
-        .select('is_admin, is_super_admin, role')
+      // Prefer app_roles (authoritative role source)
+      const { data: appRoles, error: appError } = await supabase
+        .from('app_roles')
+        .select('role')
         .eq('user_id', user.id)
-        .single();
+        .eq('is_active', true)
+        .in('role', ['admin', 'super_admin', 'executive_board']);
 
-      setCanEdit(
-        profile?.is_admin === true || 
-        profile?.is_super_admin === true || 
-        profile?.role === 'director'
-      );
+      if (!appError && appRoles && appRoles.length > 0) {
+        setCanEdit(true);
+        return;
+      }
+
+      // Fallback: executive board membership table
+      const { data: execBoard, error: execError } = await supabase
+        .from('gw_executive_board_members')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1);
+
+      setCanEdit(!execError && !!execBoard && execBoard.length > 0);
     } catch (error) {
       console.error('Error checking permissions:', error);
       setCanEdit(false);
