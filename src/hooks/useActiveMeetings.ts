@@ -67,14 +67,17 @@ export const useActiveMeetings = () => {
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannel.presenceState();
-        const meetings = parsePresenceState(state);
-        setActiveMeetings(meetings);
+        setActiveMeetings(parsePresenceState(state));
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         console.log('User joined meeting:', key, newPresences);
+        const state = presenceChannel.presenceState();
+        setActiveMeetings(parsePresenceState(state));
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         console.log('User left meeting:', key, leftPresences);
+        const state = presenceChannel.presenceState();
+        setActiveMeetings(parsePresenceState(state));
       });
 
     // Subscribe once (avoid multiple .subscribe() on same topic)
