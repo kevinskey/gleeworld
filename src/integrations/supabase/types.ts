@@ -24787,6 +24787,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_radio_presets: {
+        Row: {
+          channel_id: string
+          created_at: string
+          id: string
+          slot_number: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string
+          id?: string
+          slot_number: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string
+          id?: string
+          slot_number?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_radio_presets_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "gw_radio_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_role_transitions: {
         Row: {
           changed_by: string | null
