@@ -261,7 +261,7 @@ export const HeaderRadioControls = () => {
                               <span className="text-red-400 text-[7px] font-mono animate-pulse">●</span>
                             )}
                             <span 
-                              key={currentTrack?.title || 'no-track'}
+                              key={`${currentTrack?.title || 'no-track'}-${currentTrack?.artist || ''}`}
                               className="text-[9px] sm:text-[10px] font-mono text-green-400 tracking-wide truncate"
                             >
                               {currentTrack?.title 

@@ -62,14 +62,39 @@ export const useRadioPlayer = () => {
     streamerName: undefined,
   });
 
-  
+
 
   // Helper to sanitize unknown artists
-  const sanitizeArtist = (name?: string | null): string => {
+  const sanitizeArtist = useCallback((name?: string | null): string => {
     const a = (name || '').trim();
     if (!a) return '';
     return /^\[?\s*unknown(?:\s+artist)?\s*\]?$/i.test(a) || /^n\/a$/i.test(a) ? '' : a;
-  };
+  }, []);
+
+  // Pull "now playing" directly from AzuraCast so the UI updates promptly
+  // (DB realtime can lag a few seconds behind stream changes)
+  const refreshNowPlaying = useCallback(async () => {
+    try {
+      const np = await azuraCastService.getNowPlaying();
+      const song = np?.now_playing?.song;
+
+      if (song?.title) {
+        setState(prev => ({
+          ...prev,
+          currentTrack: {
+            title: song.title,
+            artist: sanitizeArtist(song.artist),
+            album: song.album || undefined,
+            art: song.art || undefined,
+          },
+        }));
+      }
+    } catch (error) {
+      // Silent fail: stream should keep playing even if metadata fetch fails
+      console.warn('useRadioPlayer: refreshNowPlaying failed:', error);
+    }
+  }, [sanitizeArtist]);
+
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isPlayingRef = useRef(false);
@@ -504,6 +529,8 @@ export const useRadioPlayer = () => {
           
           console.log('useRadioPlayer: Successfully started playing:', streamUrl);
           setState(prev => ({ ...prev, isLoading: false, isPlaying: true }));
+          // Update LCD metadata immediately
+          refreshNowPlaying();
           toast({
             title: "Now Playing",
             description: "Glee World Radio is now streaming",
@@ -539,7 +566,7 @@ export const useRadioPlayer = () => {
       console.error('useRadioPlayer: Unexpected error in play():', error);
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [state.volume, streamUrls, toast]);
+  }, [state.volume, streamUrls, toast, refreshNowPlaying]);
 
   const pause = useCallback(() => {
     if (audioRef.current) {
@@ -594,6 +621,8 @@ export const useRadioPlayer = () => {
         await audio.play();
         console.log('Successfully switched to:', url);
         setState(prev => ({ ...prev, isPlaying: true }));
+        // Update LCD metadata immediately after switching
+        refreshNowPlaying();
         return; // Success
       } catch (error) {
         console.log('Failed with URL:', url, error);
@@ -609,7 +638,7 @@ export const useRadioPlayer = () => {
       description: 'This station may be offline. Try another.',
       variant: 'destructive',
     });
-  }, [toast]);
+  }, [toast, refreshNowPlaying]);
 
   // Health check watchdog to auto-reconnect if playback stalls
   useEffect(() => {
@@ -630,10 +659,25 @@ export const useRadioPlayer = () => {
     return () => clearInterval(interval);
   }, [state.isPlaying, play]);
 
+  // Poll AzuraCast metadata while playing so the LCD title changes promptly
+  useEffect(() => {
+    if (!state.isPlaying) return;
+
+    refreshNowPlaying();
+    const interval = setInterval(() => {
+      refreshNowPlaying();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [state.isPlaying, refreshNowPlaying]);
+
   // Skip to next track
   const skipTrack = useCallback(async () => {
     try {
       await azuraCastService.skipTrack();
+      // Give AzuraCast a moment to advance, then refresh metadata
+      await new Promise(resolve => setTimeout(resolve, 500));
+      refreshNowPlaying();
       toast({
         title: 'Skipped',
         description: 'Moving to the next track...',
@@ -646,7 +690,7 @@ export const useRadioPlayer = () => {
         variant: 'destructive',
       });
     }
-  }, [toast]);
+  }, [toast, refreshNowPlaying]);
 
   return {
     ...state,
