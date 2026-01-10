@@ -166,8 +166,8 @@ export default function AuthPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-2xl">
             Glee World! 
           </h1>
-          <h2 className="text-6xl mb-4 drop-shadow-lg font-serif md:text-4xl text-muted bg-black/0 font-semibold">
-            ​Sign in or Create an account     
+          <h2 className="text-2xl md:text-3xl mb-4 drop-shadow-lg font-serif text-white font-semibold">
+            Sign in or Create an account
           </h2>
           <p className="text-white/80 text-lg drop-shadow-md">
             {isLogin ? 'Sign in to access your account' : 'Join our musical family'}
