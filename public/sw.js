@@ -1,8 +1,7 @@
 // Service Worker for GleeWorld PWA
-// Version: 6.1 - January 2026
-// NOTE: v6.1 switches JS/CSS to network-first and avoids caching Vite dev chunks
-// to prevent "Invalid hook call" issues from stale cached React bundles.
-const CACHE_VERSION = 'v6.1';
+// Version: 7.0 - January 2026
+// NOTE: v7.0 - Cache bust update to ensure users get latest version
+const CACHE_VERSION = 'v7.0';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
@@ -26,7 +25,7 @@ const OFFLINE_ROUTES = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker v6.0...');
+  console.log('[SW] Installing service worker v7.0...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
@@ -43,7 +42,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker v6.0...');
+  console.log('[SW] Activating service worker v7.0...');
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
