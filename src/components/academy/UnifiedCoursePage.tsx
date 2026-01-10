@@ -156,15 +156,15 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   return <div className="academy-neutral">
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="flex min-h-screen bg-background">
-        {/* Left Sidebar - Navigation */}
-        <div className="w-[260px] min-w-[260px] bg-muted border-r border-border flex-shrink-0 hidden lg:block pr-[10px]">
-          <div className="p-4 border-b border-border pb-[30px] pt-[20px]">
+        {/* Left Sidebar - Navigation - Visible on tablet (md) and up */}
+        <div className="w-[200px] md:w-[220px] lg:w-[260px] min-w-[200px] md:min-w-[220px] lg:min-w-[260px] bg-muted border-r border-border flex-shrink-0 hidden md:block">
+          <div className="p-3 md:p-4 border-b border-border pb-4 md:pb-6 lg:pb-[30px] pt-3 md:pt-4 lg:pt-[20px]">
             <Mus240SemesterSelector showLabel={false} className="mb-2" />
-            <div className="text-lg font-bold text-foreground pt-[10px] pl-[20px]">{course.courseCode}</div>
-            <div className="text-xl text-black border-4 border-solid border-primary pt-[5px] pb-[5px] pr-[5px] pl-[15px]">{course.title}</div>
+            <div className="text-base md:text-lg font-bold text-foreground pt-2 md:pt-[10px] pl-2 md:pl-4 lg:pl-[20px]">{course.courseCode}</div>
+            <div className="text-lg md:text-xl text-black border-2 md:border-4 border-solid border-primary py-1 md:py-[5px] pr-2 md:pr-[5px] pl-2 md:pl-3 lg:pl-[15px]">{course.title}</div>
           </div>
           
-          <nav className="p-2 space-y-1">
+          <nav className="p-1.5 md:p-2 space-y-0.5 md:space-y-1">
             {[{
               icon: Home,
               label: 'Home',
@@ -227,15 +227,15 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: Book,
               label: 'Handbook',
               tab: 'handbook'
-            }] : [])].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
+            }] : [])].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 
-                <span className="text-xl pl-[20px]">{item.label}</span>
+                <span className="text-sm md:text-base lg:text-lg pl-2 md:pl-3 lg:pl-[20px]">{item.label}</span>
               </button>)}
           </nav>
           
           {/* Course Resources Section */}
-          <div className="p-4 border-t border-border space-y-2">
-            <h3 className="font-bold text-foreground text-sm mb-3">Resources</h3>
+          <div className="p-2 md:p-3 lg:p-4 border-t border-border space-y-1 md:space-y-2">
+            <h3 className="font-bold text-foreground text-xs md:text-sm mb-2 md:mb-3">Resources</h3>
             {[{
               icon: Video,
               label: 'Video Library',
@@ -252,16 +252,16 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: FileText,
               label: 'Documents',
               desc: 'Handouts and readings'
-            }].map((item, i) => <button key={i} className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
-                <item.icon className="h-4 w-4" />
+            }].map((item, i) => <button key={i} className="w-full flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
+                <item.icon className="h-3 w-3 md:h-4 md:w-4" />
                 <span>{item.label}</span>
               </button>)}
           </div>
           
           {/* Instructor Control Center Button */}
-          {isAdmin && <div className="p-4 border-t border-border">
-              <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="w-full" size="sm">
-                <Settings className="h-4 w-4 mr-2" />
+          {isAdmin && <div className="p-2 md:p-3 lg:p-4 border-t border-border">
+              <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="w-full text-xs md:text-sm" size="sm">
+                <Settings className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                 Instructor Console
               </Button>
             </div>}
@@ -269,8 +269,8 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
-          {/* Course Header - Full width on mobile, seamless with header */}
-          <div className="bg-gradient-to-r from-primary to-primary/80 lg:hidden">
+          {/* Course Header - Full width on mobile only (hidden on tablet/desktop with sidebar) */}
+          <div className="bg-gradient-to-r from-primary to-primary/80 md:hidden">
             <div className="px-4 sm:px-6 pb-6 pt-4">
               <div className="flex items-center gap-3 mb-2">
                 <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
@@ -283,31 +283,31 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 md:px-10 lg:px-16 space-y-6 w-full py-6">
-            {/* Back Button - Desktop only */}
-            <Button variant="ghost" onClick={() => navigate('/glee-academy')} className="hidden lg:flex -mb-2">
+          <div className="px-4 sm:px-6 md:px-6 lg:px-12 xl:px-16 space-y-4 md:space-y-6 w-full py-4 md:py-6">
+            {/* Back Button - Tablet and Desktop */}
+            <Button variant="ghost" onClick={() => navigate('/glee-academy')} className="hidden md:flex -mb-2 text-sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Academy
             </Button>
 
-            {/* Course Header - Card on Desktop */}
-            <Card className="bg-[#003666] border-0 hidden lg:block">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
+            {/* Course Header - Card on Tablet and Desktop */}
+            <Card className="bg-[#003666] border-0 hidden md:block">
+              <CardHeader className="pb-3 md:pb-4">
+                <div className="flex items-center gap-2 md:gap-3 mb-2">
+                  <Badge variant="secondary" className="font-mono text-xs md:text-sm">{course.courseCode}</Badge>
                 </div>
-                <CardTitle className="text-2xl lg:text-3xl font-bold text-primary-foreground">{course.title}</CardTitle>
-                <div className="flex items-center gap-6 mt-3 text-sm text-primary-foreground/80">
+                <CardTitle className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-foreground">{course.title}</CardTitle>
+                <div className="flex flex-wrap items-center gap-3 md:gap-4 lg:gap-6 mt-2 md:mt-3 text-xs md:text-sm text-primary-foreground/80">
                   <span className="font-medium text-primary-foreground">Dr. Kevin Johnson</span>
                   <span>kjohns10@spelman.edu</span>
-                  <span>Office: Fine Arts 105</span>
-                  <span>Office Hours: MWF 3-5 PM</span>
+                  <span className="hidden lg:inline">Office: Fine Arts 105</span>
+                  <span className="hidden lg:inline">Office Hours: MWF 3-5 PM</span>
                 </div>
               </CardHeader>
             </Card>
 
-            {/* Mobile Tab Navigation - Below Welcome Card */}
-            <div className="lg:hidden relative z-10 -mx-4 px-4">
+            {/* Mobile Tab Navigation - Mobile only (hidden on tablet with sidebar) */}
+            <div className="md:hidden relative z-10 -mx-4 px-4">
               <Tabs value={activeTab} onValueChange={val => {
                 console.log('Tab changed to:', val);
                 if (val === 'messages') {
