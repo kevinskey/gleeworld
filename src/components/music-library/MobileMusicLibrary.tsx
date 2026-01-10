@@ -126,25 +126,31 @@ export const MobileMusicLibrary = ({
 
   return (
     <div className="w-full flex flex-col overflow-hidden h-full bg-background">
-      {/* Ultra-Compact Mobile Header - Single Row with Dropdowns */}
+      {/* Ultra-Compact Mobile Header - Single Row with Title, Back & Dropdowns */}
       <div className="flex-shrink-0 bg-background border-b border-border">
-        <div className="flex items-center h-12 px-2 gap-1">
+        <div className="flex items-center h-11 px-2 gap-1">
           {/* Back Button - Minimal */}
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-9 w-9 flex-shrink-0"
+            className="h-8 w-8 flex-shrink-0"
             onClick={() => navigate('/dashboard')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
 
+          {/* Music Library Title */}
+          <span className="text-sm font-semibold text-foreground whitespace-nowrap">Music Library</span>
+          
+          {/* Divider */}
+          <span className="text-muted-foreground/40 mx-0.5">|</span>
+
           {/* Section Dropdown - Primary Navigation */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-9 px-2 gap-1 font-medium">
-                <CurrentIcon className="h-4 w-4" />
-                <span className="max-w-[80px] truncate">{currentSection.label}</span>
+              <Button variant="ghost" className="h-8 px-1.5 gap-0.5 text-xs font-medium">
+                <CurrentIcon className="h-3.5 w-3.5" />
+                <span className="max-w-[70px] truncate">{currentSection.label}</span>
                 <ChevronDown className="h-3 w-3 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
