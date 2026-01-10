@@ -83,13 +83,31 @@ export const useActiveMeetings = () => {
     // Subscribe once (avoid multiple .subscribe() on same topic)
     if (!singletonSubscribePromise) {
       singletonSubscribePromise = new Promise<void>((resolve) => {
-        presenceChannel.subscribe((status) => {
+        presenceChannel.subscribe(async (status) => {
           console.log('Presence channel status:', status);
 
           if (status === 'SUBSCRIBED') {
             singletonSubscribed = true;
             setError(null);
             setIsLoading(false);
+
+            // Presence sync/join events are more reliable after the client tracks a presence state.
+            try {
+              await presenceChannel.track({
+                room_name: '',
+                user_id: presenceKey,
+                user_name: user?.email || 'Viewer',
+                user_email: user?.email,
+                joined_at: new Date().toISOString(),
+                kind: 'lobby',
+              });
+              console.log('Tracked lobby presence');
+            } catch (e) {
+              console.warn('Failed to track lobby presence:', e);
+            }
+
+            // Immediate refresh after subscribe/track
+            setActiveMeetings(parsePresenceState(presenceChannel.presenceState()));
             resolve();
             return;
           }
@@ -109,15 +127,23 @@ export const useActiveMeetings = () => {
         });
       });
     } else {
-      // Already subscribing/subscribed
       setIsLoading(false);
     }
 
     setChannel(presenceChannel);
 
+    // Fallback poll: some environments drop presence events; this keeps UI in sync.
+    const poll = window.setInterval(() => {
+      try {
+        const state = presenceChannel.presenceState();
+        setActiveMeetings(parsePresenceState(state));
+      } catch {
+        // ignore
+      }
+    }, 2000);
+
     return () => {
-      // IMPORTANT: Do not remove the singleton channel here; other hooks/components may rely on it.
-      // The channel will be cleaned up if the presenceKey changes.
+      window.clearInterval(poll);
     };
   }, [user?.id]);
 
