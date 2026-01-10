@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronUp, Music2, Church, Sparkles, Check, Bell, MapPin, Mic, Disc, Clock, Music, Loader2, Shield, Heart, Star, Globe, Film } from 'lucide-react';
+import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronUp, Music2, Church, Sparkles, Check, Bell, MapPin, Mic, Disc, Clock, Music, Loader2, Shield, Heart, Star, Globe, Film, SkipForward, SkipBack } from 'lucide-react';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { useRadioChannels, type RadioChannel } from '@/hooks/useRadioChannels';
 import { useUserRadioPresets } from '@/hooks/useUserRadioPresets';
@@ -72,7 +72,21 @@ export const HeaderRadioControls = () => {
       togglePlayPause, 
       setVolume,
       switchStream,
+      skipTrack,
     } = useRadioPlayer();
+
+    const [isSkipping, setIsSkipping] = useState(false);
+
+    const handleSkipTrack = async () => {
+      if (isSkipping || !isPlaying) return;
+      setIsSkipping(true);
+      try {
+        await skipTrack();
+      } finally {
+        // Reset after a short delay to prevent rapid clicking
+        setTimeout(() => setIsSkipping(false), 2000);
+      }
+    };
 
     const isMuted = volume === 0;
 
@@ -257,29 +271,79 @@ export const HeaderRadioControls = () => {
                       </div>
                     </div>
 
-                    {/* Play/Pause Button */}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        togglePlayPause();
-                      }}
-                      disabled={isLoading || !isOnline}
-                      className={cn(
-                        "w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition-all",
-                        "bg-gradient-to-b border shadow-md",
-                        isPlaying
-                          ? "from-green-500 to-green-700 border-green-800"
-                          : "from-zinc-500 to-zinc-700 border-zinc-600 hover:from-zinc-400 hover:to-zinc-600"
-                      )}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="h-3 w-3 text-white animate-spin" />
-                      ) : isPlaying ? (
-                        <Pause className="h-3 w-3 text-white" />
-                      ) : (
-                        <Play className="h-3 w-3 text-white ml-0.5" />
-                      )}
-                    </button>
+                    {/* Transport Controls: Rewind, Play/Pause, Skip */}
+                    <div className="flex items-center gap-0.5">
+                      {/* Rewind/Previous Button - restarts stream to refresh */}
+                      <EnhancedTooltip content="Restart stream">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            // Restart the stream to get fresh content
+                            if (selectedChannel?.stream_url) {
+                              switchStream(selectedChannel.stream_url);
+                            }
+                          }}
+                          disabled={!isPlaying || isLoading}
+                          className={cn(
+                            "w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all",
+                            "bg-gradient-to-b border shadow-md",
+                            isPlaying
+                              ? "from-zinc-400 to-zinc-600 border-zinc-500 hover:from-zinc-300 hover:to-zinc-500"
+                              : "from-zinc-500 to-zinc-700 border-zinc-600 opacity-50 cursor-not-allowed"
+                          )}
+                        >
+                          <SkipBack className="h-2.5 w-2.5 text-white" />
+                        </button>
+                      </EnhancedTooltip>
+
+                      {/* Play/Pause Button */}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          togglePlayPause();
+                        }}
+                        disabled={isLoading || !isOnline}
+                        className={cn(
+                          "w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition-all",
+                          "bg-gradient-to-b border shadow-md",
+                          isPlaying
+                            ? "from-green-500 to-green-700 border-green-800"
+                            : "from-zinc-500 to-zinc-700 border-zinc-600 hover:from-zinc-400 hover:to-zinc-600"
+                        )}
+                      >
+                        {isLoading ? (
+                          <Loader2 className="h-3 w-3 text-white animate-spin" />
+                        ) : isPlaying ? (
+                          <Pause className="h-3 w-3 text-white" />
+                        ) : (
+                          <Play className="h-3 w-3 text-white ml-0.5" />
+                        )}
+                      </button>
+
+                      {/* Skip Forward Button */}
+                      <EnhancedTooltip content="Skip to next track">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleSkipTrack();
+                          }}
+                          disabled={!isPlaying || isLoading || isSkipping}
+                          className={cn(
+                            "w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all",
+                            "bg-gradient-to-b border shadow-md",
+                            isPlaying && !isSkipping
+                              ? "from-zinc-400 to-zinc-600 border-zinc-500 hover:from-zinc-300 hover:to-zinc-500"
+                              : "from-zinc-500 to-zinc-700 border-zinc-600 opacity-50 cursor-not-allowed"
+                          )}
+                        >
+                          {isSkipping ? (
+                            <Loader2 className="h-2.5 w-2.5 text-white animate-spin" />
+                          ) : (
+                            <SkipForward className="h-2.5 w-2.5 text-white" />
+                          )}
+                        </button>
+                      </EnhancedTooltip>
+                    </div>
 
                     {/* Volume Slider Section */}
                     <div className="flex items-center gap-1.5">
