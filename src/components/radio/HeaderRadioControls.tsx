@@ -234,7 +234,9 @@ export const HeaderRadioControls = () => {
                               <span className="text-red-400 text-[7px] font-mono animate-pulse">●</span>
                             )}
                             <span className="text-[9px] sm:text-[10px] font-mono text-green-400 tracking-wide truncate">
-                              {currentTrack?.title || selectedChannel?.name || 'No Signal'}
+                              {currentTrack?.title 
+                                ? `${currentTrack.title}${currentTrack.artist ? ` - ${currentTrack.artist}` : ''}`
+                                : selectedChannel?.name || 'No Signal'}
                             </span>
                           </div>
                           <div className="flex items-center gap-0.5 text-green-400/70 flex-shrink-0">
