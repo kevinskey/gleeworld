@@ -17,15 +17,25 @@ import { RadioChannelDrawer } from './RadioChannelDrawer';
 
 // CSS class added to body when radio bar is open - used by other components to add padding
 const RADIO_OPEN_CLASS = 'radio-bar-open';
+const RADIO_OPEN_KEY = 'gleeworld-radio-open';
 
 export const HeaderRadioControls = () => {
   try {
-    const [isOpen, setIsOpen] = useState(false);
+    // Persist radio bar open state across page navigation
+    const [isOpen, setIsOpen] = useState(() => {
+      const saved = localStorage.getItem(RADIO_OPEN_KEY);
+      return saved === 'true';
+    });
     const [headerHeight, setHeaderHeight] = useState(0);
     const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
     const { presets, setPresetSlot, isLoading: presetsLoading } = useUserRadioPresets(channels);
     const { themeName } = useTheme();
     const radioBarRef = useRef<HTMLDivElement>(null);
+
+    // Persist open state to localStorage
+    useEffect(() => {
+      localStorage.setItem(RADIO_OPEN_KEY, isOpen ? 'true' : 'false');
+    }, [isOpen]);
     
     // Use theme CSS variables - icons inherit from parent which uses theme tokens
     const isHbcuTheme = themeName === 'hbcu';
