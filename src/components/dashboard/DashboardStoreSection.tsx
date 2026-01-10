@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Plus, ChevronDown, GraduationCap, BookOpen, Play, Users, Music, Monitor, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Plus, ChevronDown, GraduationCap, BookOpen, Play, Users, Music, Monitor, ChevronRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -51,11 +51,19 @@ export const DashboardStoreSection = () => {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('(ALL)');
   const [showMore, setShowMore] = useState(false);
+  const [moduleSearch, setModuleSearch] = useState('');
   const navigate = useNavigate();
   const {
     modules,
     loading: modulesLoading
   } = useUnifiedModules();
+
+  // Filter and sort modules alphabetically
+  const filteredModules = useMemo(() => {
+    const sorted = [...modules].sort((a, b) => a.title.localeCompare(b.title));
+    if (!moduleSearch.trim()) return sorted;
+    return sorted.filter(m => m.title.toLowerCase().includes(moduleSearch.toLowerCase()));
+  }, [modules, moduleSearch]);
   useEffect(() => {
     const fetchData = async () => {
       // Fetch products
@@ -234,27 +242,45 @@ export const DashboardStoreSection = () => {
         My Modules
       </Button>
 
-      {/* Modules Grid Section */}
-      <div className="w-full px-[50px] py-8">
-        {modulesLoading ? <div className="text-center py-8 text-muted-foreground">Loading modules...</div> : modules.length === 0 ? <div className="text-center py-8 text-muted-foreground">No modules available</div> : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {modules.map(module => {
-          const unifiedModule = UNIFIED_MODULES.find(m => m.id === module.id);
-          const IconComponent = unifiedModule?.icon;
-          return <Card key={module.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 bg-[#003666] border border-white/20 hover:bg-[#002244]" onClick={() => navigate(`/modules/${module.id}`)}>
-                  <CardHeader className="pb-3 pt-4">
-                    <div className="flex flex-col items-center text-center gap-2">
-                      {IconComponent && <div className="p-2 rounded-lg bg-white/10">
-                          <IconComponent className="h-5 w-5 text-white" />
-                        </div>}
-                      <CardTitle className="text-sm font-medium leading-tight line-clamp-2 text-white">
-                        {module.title}
-                      </CardTitle>
-                    </div>
-                  </CardHeader>
-                </Card>;
-        })}
-          </div>}
-        <div className="h-[25px] bg-[#003666] w-full" />
+      {/* Modules Section with Search */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-background">
+        {/* Search Bar */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search modules..."
+            value={moduleSearch}
+            onChange={(e) => setModuleSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
+
+        {/* Modules 2-Column Grid with Pill Buttons */}
+        {modulesLoading ? (
+          <div className="text-center py-8 text-muted-foreground">Loading modules...</div>
+        ) : filteredModules.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            {moduleSearch ? 'No modules match your search' : 'No modules available'}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {filteredModules.map(module => {
+              const unifiedModule = UNIFIED_MODULES.find(m => m.id === module.id);
+              const IconComponent = unifiedModule?.icon;
+              return (
+                <button
+                  key={module.id}
+                  onClick={() => navigate(`/modules/${module.id}`)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-[#002244] to-[#003666] text-white hover:from-[#003666] hover:to-[#0B5A8B] transition-all duration-200 shadow-md hover:shadow-lg text-left"
+                >
+                  {IconComponent && <IconComponent className="h-4 w-4 flex-shrink-0" />}
+                  <span className="text-sm font-medium truncate">{module.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Fan Zone - Edge to Edge */}
