@@ -1,6 +1,8 @@
 // Service Worker for GleeWorld PWA
-// Version: 6.0 - January 2026
-const CACHE_VERSION = 'v6.0';
+// Version: 6.1 - January 2026
+// NOTE: v6.1 switches JS/CSS to network-first and avoids caching Vite dev chunks
+// to prevent "Invalid hook call" issues from stale cached React bundles.
+const CACHE_VERSION = 'v6.1';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
@@ -64,7 +66,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - network first with cache fallback for HTML, cache first for assets
+// Fetch event - network first with cache fallback for HTML, network first for JS/CSS, cache for images/fonts
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -83,12 +85,18 @@ self.addEventListener('fetch', (event) => {
       !url.hostname.includes('localhost') &&
       !url.hostname.includes('gleeworld')) return;
 
+  // IMPORTANT: avoid caching Vite dev/prebundle chunks (can cause React to be served stale)
+  // Example path in Lovable preview: /node_modules/.vite/deps/chunk-XXXX.js
+  if (url.pathname.includes('/node_modules/.vite/')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   // For navigation requests (HTML pages) - network first with cache fallback
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Clone and cache the response
           const responseClone = response.clone();
           caches.open(DYNAMIC_CACHE).then((cache) => {
             cache.put(request, responseClone);
@@ -96,7 +104,6 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Try cache first, then offline page
           return caches.match(request)
             .then((cachedResponse) => {
               if (cachedResponse) return cachedResponse;
@@ -107,11 +114,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For static assets (JS, CSS, images) - cache first with network fallback
-  if (request.destination === 'script' || 
-      request.destination === 'style' || 
-      request.destination === 'image' ||
-      request.destination === 'font') {
+  // JS/CSS: network-first (prevents stale React bundles causing invalid hook calls)
+  if (request.destination === 'script' || request.destination === 'style') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Images/fonts: cache-first
+  if (request.destination === 'image' || request.destination === 'font') {
     event.respondWith(
       caches.match(request)
         .then((cachedResponse) => {
@@ -119,7 +141,6 @@ self.addEventListener('fetch', (event) => {
 
           return fetch(request)
             .then((response) => {
-              // Cache successful responses
               if (response.ok) {
                 const responseClone = response.clone();
                 caches.open(DYNAMIC_CACHE).then((cache) => {
