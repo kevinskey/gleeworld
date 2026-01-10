@@ -208,18 +208,18 @@ export const UniversalHeader = ({
     <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none">
       <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0 bg-primary-foreground">
         <header ref={headerRef} className={`w-full shadow-lg relative rounded-b-lg bg-white/80 backdrop-blur-xl text-foreground ${user ? getRoleAccentColor() : 'border-b border-white/20'}`}>
-          <div className="flex items-center justify-between w-full min-h-10 sm:min-h-11 md:min-h-12 py-1 px-2 sm:px-4 md:px-6 lg:px-8 pt-[2px] pb-[2px]">
+          <div className="flex items-center justify-between w-full min-h-10 sm:min-h-11 md:min-h-[36px] py-1 md:py-0 px-2 sm:px-4 md:px-6 lg:px-8 pt-[2px] pb-[2px]">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
             <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">
               <Link to="/" className="flex items-center gap-2 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-card-foreground p-1 sm:p-1.5">
                 <div className="relative">
-                  <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-12 h-12 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-18 lg:h-18 object-contain flex-shrink-0 drop-shadow-md" />
+                  <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-12 h-12 sm:w-12 sm:h-12 md:w-7 md:h-7 lg:w-18 lg:h-18 object-contain flex-shrink-0 drop-shadow-md" />
                 </div>
                 <span style={{
                     fontFamily: "'Cinzel', serif",
                     letterSpacing: '0.02em'
-                  }} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl whitespace-nowrap relative font-medium text-card-foreground drop-shadow-sm">
+                  }} className="text-2xl sm:text-3xl md:text-2xl lg:text-5xl xl:text-6xl whitespace-nowrap relative font-medium text-card-foreground drop-shadow-sm">
                   GleeWorld
                 </span>
               </Link>
