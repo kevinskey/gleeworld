@@ -223,10 +223,11 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
           }
         });
 
+        // Note: We intentionally don't call onClose on videoConferenceLeft
+        // because this event fires when switching tabs/windows, not just when
+        // the user intentionally leaves. We only close on readyToClose (hangup button).
         apiRef.current.addListener('videoConferenceLeft', () => {
-          if (mounted && onCloseRef.current) {
-            onCloseRef.current();
-          }
+          console.log('videoConferenceLeft event - meeting will stay open unless hangup was clicked');
         });
 
         apiRef.current.addListener('participantJoined', () => {
