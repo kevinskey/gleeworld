@@ -99,7 +99,7 @@ export const DashboardStoreSection = () => {
   }
   return <div className="w-full bg-background">
       {/* Glee Academy - Edge to Edge (FIRST on desktop) */}
-      <div className="h-[25px] bg-background w-full" />
+      <div className="h-[12px] bg-background w-full" />
       <Button onClick={() => navigate('/glee-academy')} variant="ghost" style={{
       fontFamily: "'Cinzel', serif"
     }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] text-white [&_svg]:text-white justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-lg border-t border-t-white/20 hover:brightness-110">
