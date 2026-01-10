@@ -27,11 +27,35 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
   const { userProfile } = useUserProfile(user);
   const queryClient = useQueryClient();
   const [roomName, setRoomName] = useState('');
-  const [isInMeeting, setIsInMeeting] = useState(false);
-  const [isInWaitingRoom, setIsInWaitingRoom] = useState(false);
-  const [activeRoom, setActiveRoom] = useState<string | null>(null);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [showQuickRoomsDialog, setShowQuickRoomsDialog] = useState(false);
+
+  // Persist meeting state in sessionStorage so navigation doesn't close the meeting
+  const [isInMeeting, setIsInMeeting] = useState(() => {
+    const saved = sessionStorage.getItem('glee-active-meeting');
+    return saved ? JSON.parse(saved).isInMeeting : false;
+  });
+  const [isInWaitingRoom, setIsInWaitingRoom] = useState(() => {
+    const saved = sessionStorage.getItem('glee-active-meeting');
+    return saved ? JSON.parse(saved).isInWaitingRoom : false;
+  });
+  const [activeRoom, setActiveRoom] = useState<string | null>(() => {
+    const saved = sessionStorage.getItem('glee-active-meeting');
+    return saved ? JSON.parse(saved).activeRoom : null;
+  });
+
+  // Sync state to sessionStorage whenever it changes
+  useEffect(() => {
+    if (isInMeeting || isInWaitingRoom) {
+      sessionStorage.setItem('glee-active-meeting', JSON.stringify({
+        isInMeeting,
+        isInWaitingRoom,
+        activeRoom
+      }));
+    } else {
+      sessionStorage.removeItem('glee-active-meeting');
+    }
+  }, [isInMeeting, isInWaitingRoom, activeRoom]);
 
   // Handle auto-join from URL parameter
   useEffect(() => {
