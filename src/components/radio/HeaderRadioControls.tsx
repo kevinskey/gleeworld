@@ -510,6 +510,8 @@ export const HeaderRadioControls = () => {
                   )}
                 </div>
               </div>
+              {/* 5px spacer below extended radio */}
+              <div className="h-[5px]" />
             </div>
           </>,
           document.body
