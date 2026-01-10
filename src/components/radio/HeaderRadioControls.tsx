@@ -257,7 +257,10 @@ export const HeaderRadioControls = () => {
                             {isLive && (
                               <span className="text-red-400 text-[7px] font-mono animate-pulse">●</span>
                             )}
-                            <span className="text-[9px] sm:text-[10px] font-mono text-green-400 tracking-wide truncate">
+                            <span 
+                              key={currentTrack?.title || 'no-track'}
+                              className="text-[9px] sm:text-[10px] font-mono text-green-400 tracking-wide truncate"
+                            >
                               {currentTrack?.title 
                                 ? `${currentTrack.title}${currentTrack.artist ? ` - ${currentTrack.artist}` : ''}`
                                 : selectedChannel?.name || 'No Signal'}
