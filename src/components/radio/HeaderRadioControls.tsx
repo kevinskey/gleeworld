@@ -362,10 +362,18 @@ export const HeaderRadioControls = () => {
                       </button>
                       
                       {/* Volume Slider */}
-                      <div className="relative w-16 sm:w-20 h-3 flex items-center">
+                      <div 
+                        className="relative w-16 sm:w-20 h-3 flex items-center cursor-pointer"
+                        onClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = e.clientX - rect.left;
+                          const newVolume = Math.max(0, Math.min(1, x / rect.width));
+                          setVolume(newVolume);
+                        }}
+                      >
                         {/* Slider track - brushed metal groove */}
                         <div 
-                          className="absolute inset-x-0 h-1.5 rounded-full border border-zinc-500/50"
+                          className="absolute inset-x-0 h-1.5 rounded-full border border-zinc-500/50 pointer-events-none"
                           style={{
                             background: 'linear-gradient(180deg, #3f3f46 0%, #52525b 50%, #71717a 100%)',
                             boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4)',
@@ -392,6 +400,7 @@ export const HeaderRadioControls = () => {
                           }}
                           onMouseDown={(e) => {
                             e.preventDefault();
+                            e.stopPropagation();
                             const slider = e.currentTarget.parentElement;
                             if (!slider) return;
                             
