@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense, ReactNode } from "react";
+import { AudioCompanionProvider } from "@/contexts/AudioCompanionContext";
 import { Toaster } from "@/components/ui/toaster";
 import { FanRoute } from "@/components/routes/FanRoute";
 import { AlumnaeRoute } from "@/components/routes/AlumnaeRoute";
@@ -333,6 +334,7 @@ const App = () => {
                   <CourseProvider>
                   <MessengerProvider>
                   <AssistantProvider>
+                  <AudioCompanionProvider>
                   <div>
                   <Toaster />
                   <Sonner />
@@ -2316,6 +2318,7 @@ const App = () => {
                     <GlobalMusicPlayer />
                     <PWAInstallPrompt />
                    </div>
+                   </AudioCompanionProvider>
                    </AssistantProvider>
                   </MessengerProvider>
                   </CourseProvider>
