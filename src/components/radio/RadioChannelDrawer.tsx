@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import {
   Radio,
   Search,
@@ -82,17 +77,8 @@ export const RadioChannelDrawer: React.FC<RadioChannelDrawerProps> = ({
   const { user } = useAuth();
 
   const filteredChannels = channels.filter(channel =>
-    channel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (channel.description?.toLowerCase().includes(searchQuery.toLowerCase()))
+    channel.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Group channels by type if available (type field exists on RadioChannel)
-  const groupedChannels = filteredChannels.reduce((acc, channel) => {
-    const category = channel.type || 'General';
-    if (!acc[category]) acc[category] = [];
-    acc[category].push(channel);
-    return acc;
-  }, {} as Record<string, RadioChannel[]>);
 
   const isChannelInPresets = (channelId: string) => {
     return presets.some(p => p.channel_id === channelId);
@@ -106,8 +92,8 @@ export const RadioChannelDrawer: React.FC<RadioChannelDrawerProps> = ({
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
         <button
           className={cn(
             "w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[8px] sm:text-[9px] font-bold transition-all",
@@ -118,139 +104,119 @@ export const RadioChannelDrawer: React.FC<RadioChannelDrawerProps> = ({
         >
           <MoreHorizontal className="h-3 w-3 mx-auto" />
         </button>
-      </SheetTrigger>
-      <SheetContent side="bottom" className="h-[70vh] rounded-t-2xl">
-        <SheetHeader className="pb-4">
-          <SheetTitle className="flex items-center gap-2">
-            <Radio className="h-5 w-5 text-primary" />
-            Glee World Radio Channels
-          </SheetTitle>
-        </SheetHeader>
-
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search channels..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+      </PopoverTrigger>
+      <PopoverContent 
+        side="bottom" 
+        align="end" 
+        sideOffset={8}
+        className="w-64 p-0 bg-zinc-800 border-zinc-600 shadow-xl z-[10000]"
+      >
+        {/* Mini Search */}
+        <div className="p-2 border-b border-zinc-700">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-7 pr-2 py-1 text-xs bg-zinc-900 border border-zinc-700 rounded text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
+            />
+          </div>
         </div>
 
-        {/* Channel List */}
-        <ScrollArea className="h-[calc(100%-8rem)]">
-          <div className="space-y-6 pr-4">
-            {Object.entries(groupedChannels).map(([category, categoryChannels]) => (
-              <div key={category}>
-                <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
-                  {category}
-                </h3>
-                <div className="grid gap-2">
-                  {categoryChannels.map((channel) => {
-                    const Icon = getChannelIcon(channel.icon);
-                    const isSelected = selectedChannel?.id === channel.id;
-                    const inPresets = isChannelInPresets(channel.id);
+        {/* Compact Channel List */}
+        <ScrollArea className="h-48">
+          <div className="p-1">
+            {filteredChannels.map((channel) => {
+              const Icon = getChannelIcon(channel.icon);
+              const isSelected = selectedChannel?.id === channel.id;
+              const inPresets = isChannelInPresets(channel.id);
 
-                    return (
-                      <div
-                        key={channel.id}
-                        className={cn(
-                          "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer",
-                          isSelected
-                            ? "bg-primary/10 border-primary"
-                            : "hover:bg-muted border-border"
-                        )}
-                        onClick={() => {
-                          onChannelSelect(channel);
-                          setIsOpen(false);
-                        }}
-                      >
-                        {/* Channel Icon */}
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center",
-                          isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
-                        )}>
-                          <Icon className="h-5 w-5" />
+              return (
+                <div
+                  key={channel.id}
+                  className={cn(
+                    "flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors",
+                    isSelected
+                      ? "bg-amber-500/20 text-amber-300"
+                      : "hover:bg-zinc-700 text-zinc-300"
+                  )}
+                  onClick={() => {
+                    onChannelSelect(channel);
+                    setIsOpen(false);
+                  }}
+                >
+                  {/* Icon */}
+                  <div className={cn(
+                    "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0",
+                    isSelected ? "bg-amber-500/30" : "bg-zinc-700"
+                  )}>
+                    <Icon className="h-3 w-3" />
+                  </div>
+
+                  {/* Name */}
+                  <span className="text-[10px] font-medium truncate flex-1">
+                    {channel.name}
+                  </span>
+
+                  {/* Playing indicator */}
+                  {isSelected && isPlaying && (
+                    <Play className="h-2.5 w-2.5 text-green-400 flex-shrink-0" />
+                  )}
+
+                  {/* Add to Preset */}
+                  {user && (
+                    <div className="flex-shrink-0">
+                      {assigningChannel?.id === channel.id ? (
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5, 6].map((slot) => (
+                            <button
+                              key={slot}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddToPreset(channel, slot);
+                              }}
+                              className="w-4 h-4 rounded-full bg-amber-500 text-zinc-900 text-[8px] font-bold hover:bg-amber-400 transition-colors"
+                            >
+                              {slot}
+                            </button>
+                          ))}
                         </div>
-
-                        {/* Channel Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium truncate">{channel.name}</span>
-                            {isSelected && isPlaying && (
-                              <Badge variant="secondary" className="text-xs">
-                                <Play className="h-3 w-3 mr-1" />
-                                Playing
-                              </Badge>
-                            )}
-                          </div>
-                          {channel.description && (
-                            <p className="text-sm text-muted-foreground truncate">
-                              {channel.description}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Add to Presets Button */}
-                        {user && (
-                          <div className="flex-shrink-0">
-                            {assigningChannel?.id === channel.id ? (
-                              <div className="flex gap-1">
-                                {[1, 2, 3, 4, 5, 6].map((slot) => (
-                                  <button
-                                    key={slot}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleAddToPreset(channel, slot);
-                                    }}
-                                    className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/80 transition-colors"
-                                  >
-                                    {slot}
-                                  </button>
-                                ))}
-                              </div>
-                            ) : inPresets ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-green-500"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setAssigningChannel(channel);
-                                }}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                      ) : inPresets ? (
+                        <Check className="h-3 w-3 text-green-400" />
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAssigningChannel(channel);
+                          }}
+                          className="p-0.5 hover:bg-zinc-600 rounded"
+                        >
+                          <Plus className="h-3 w-3 text-zinc-400" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {filteredChannels.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Radio className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No channels found</p>
+              <div className="text-center py-4 text-zinc-500 text-[10px]">
+                No channels found
               </div>
             )}
           </div>
         </ScrollArea>
-      </SheetContent>
-    </Sheet>
+
+        {/* Footer */}
+        <div className="px-2 py-1.5 border-t border-zinc-700 text-center">
+          <span className="text-[8px] text-zinc-500 uppercase tracking-wider">
+            {channels.length} Channels Available
+          </span>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 };
