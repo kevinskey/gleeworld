@@ -18,6 +18,40 @@ export interface ActiveMeeting {
 // Global presence channel for all video meetings
 const PRESENCE_CHANNEL = 'active-video-meetings';
 
+// IMPORTANT: Supabase will close earlier channels if multiple are created with the same topic.
+// We keep a singleton presence channel (per user key) shared by both the list and meeting tracking.
+let singletonChannel: RealtimeChannel | null = null;
+let singletonKey: string | null = null;
+let singletonSubscribed = false;
+let singletonSubscribePromise: Promise<void> | null = null;
+
+const getPresenceChannel = (presenceKey: string) => {
+  if (singletonChannel && singletonKey === presenceKey) {
+    return singletonChannel;
+  }
+
+  // Clean up previous channel (different user)
+  if (singletonChannel) {
+    try {
+      supabase.removeChannel(singletonChannel);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  singletonKey = presenceKey;
+  singletonSubscribed = false;
+  singletonSubscribePromise = null;
+
+  singletonChannel = supabase.channel(PRESENCE_CHANNEL, {
+    config: {
+      presence: { key: presenceKey },
+    },
+  });
+
+  return singletonChannel;
+};
+
 export const useActiveMeetings = () => {
   const { user } = useAuth();
   const [activeMeetings, setActiveMeetings] = useState<ActiveMeeting[]>([]);
@@ -27,13 +61,9 @@ export const useActiveMeetings = () => {
 
   useEffect(() => {
     const presenceKey = user?.id || `viewer-${Math.random().toString(36).slice(2)}`;
+    const presenceChannel = getPresenceChannel(presenceKey);
 
-    const presenceChannel = supabase.channel(PRESENCE_CHANNEL, {
-      config: {
-        presence: { key: presenceKey },
-      },
-    });
-
+    // Attach handlers once per channel instance
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannel.presenceState();
@@ -45,32 +75,46 @@ export const useActiveMeetings = () => {
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         console.log('User left meeting:', key, leftPresences);
-      })
-      .subscribe((status) => {
-        console.log('Presence channel status:', status);
-
-        if (status === 'SUBSCRIBED') {
-          setError(null);
-          setIsLoading(false);
-          return;
-        }
-
-        if (status === 'CLOSED') {
-          setError('Realtime connection closed.');
-          setIsLoading(false);
-          return;
-        }
-
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          setError('Realtime connection failed.');
-          setIsLoading(false);
-        }
       });
+
+    // Subscribe once (avoid multiple .subscribe() on same topic)
+    if (!singletonSubscribePromise) {
+      singletonSubscribePromise = new Promise<void>((resolve) => {
+        presenceChannel.subscribe((status) => {
+          console.log('Presence channel status:', status);
+
+          if (status === 'SUBSCRIBED') {
+            singletonSubscribed = true;
+            setError(null);
+            setIsLoading(false);
+            resolve();
+            return;
+          }
+
+          if (status === 'CLOSED') {
+            setError('Realtime connection closed.');
+            setIsLoading(false);
+            resolve();
+            return;
+          }
+
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            setError('Realtime connection failed.');
+            setIsLoading(false);
+            resolve();
+          }
+        });
+      });
+    } else {
+      // Already subscribing/subscribed
+      setIsLoading(false);
+    }
 
     setChannel(presenceChannel);
 
     return () => {
-      supabase.removeChannel(presenceChannel);
+      // IMPORTANT: Do not remove the singleton channel here; other hooks/components may rely on it.
+      // The channel will be cleaned up if the presenceKey changes.
     };
   }, [user?.id]);
 
@@ -78,8 +122,7 @@ export const useActiveMeetings = () => {
   const parsePresenceState = (state: Record<string, any[]>): ActiveMeeting[] => {
     const meetingsMap = new Map<string, ActiveMeetingParticipant[]>();
 
-    // State is keyed by unique presence key (we'll use `${room_name}:${user_id}`)
-    Object.entries(state).forEach(([key, presences]) => {
+    Object.values(state).forEach((presences) => {
       presences.forEach((presence: any) => {
         const roomName = presence.room_name;
         if (!roomName) return;
@@ -123,15 +166,30 @@ export const useMeetingPresence = (
   useEffect(() => {
     if (!roomName || !userId) return;
 
-    const presenceChannel = supabase.channel(PRESENCE_CHANNEL, {
-      config: {
-        presence: { key: userId },
-      },
-    });
+    const presenceChannel = getPresenceChannel(userId);
 
-    presenceChannel.subscribe(async (status) => {
-      console.log('Meeting presence status:', status);
-      if (status === 'SUBSCRIBED') {
+    const track = async () => {
+      try {
+        if (singletonSubscribePromise) {
+          await singletonSubscribePromise;
+        }
+
+        // If no one mounted the list yet, subscribe here.
+        if (!singletonSubscribed) {
+          await new Promise<void>((resolve) => {
+            presenceChannel.subscribe((status) => {
+              console.log('Meeting presence channel status:', status);
+              if (status === 'SUBSCRIBED') {
+                singletonSubscribed = true;
+                resolve();
+              }
+              if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                resolve();
+              }
+            });
+          });
+        }
+
         await presenceChannel.track({
           room_name: roomName,
           user_id: userId,
@@ -139,15 +197,19 @@ export const useMeetingPresence = (
           user_email: userEmail,
           joined_at: new Date().toISOString(),
         });
-        console.log('Tracking presence for room:', roomName);
-      }
-    });
 
+        console.log('Tracking presence for room:', roomName);
+      } catch (e) {
+        console.error('Failed to track meeting presence:', e);
+      }
+    };
+
+    track();
     setChannel(presenceChannel);
 
     return () => {
+      // Remove this user's presence slice, but keep the singleton channel open.
       presenceChannel.untrack();
-      supabase.removeChannel(presenceChannel);
     };
   }, [roomName, userName, userEmail, userId]);
 
