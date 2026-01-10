@@ -52,6 +52,7 @@ interface SheetMusicLibraryProps {
   viewMode: "grid" | "list";
   columns?: number;
   onPdfSelect?: (pdfUrl: string, title: string, id?: string) => void;
+  isMobile?: boolean;
 }
 
 export const SheetMusicLibrary = ({
@@ -62,6 +63,7 @@ export const SheetMusicLibrary = ({
   viewMode,
   columns = 1,
   onPdfSelect,
+  isMobile = false,
 }: SheetMusicLibraryProps) => {
   const { user } = useAuth();
   const { profile } = useUserRole();
@@ -253,6 +255,12 @@ export const SheetMusicLibrary = ({
   }
 
   const getGridCols = () => {
+    if (isMobile) {
+      if (columns === 1) return 'grid-cols-1';
+      if (columns === 2) return 'grid-cols-2';
+      if (columns === 3) return 'grid-cols-3';
+      return 'grid-cols-2';
+    }
     if (columns === 1) return 'grid-cols-1';
     if (columns === 2) return 'grid-cols-2';
     if (columns === 3) return 'grid-cols-3';
@@ -267,9 +275,11 @@ export const SheetMusicLibrary = ({
         return (
           <Card 
             key={item.id} 
-            className={`group hover:shadow-lg transition-all cursor-pointer ${
-              isSelected ? 'ring-2 ring-primary shadow-lg' : ''
-            }`}
+            className={`group transition-all cursor-pointer active:scale-[0.98] ${
+              isSelected 
+                ? 'ring-2 ring-primary shadow-lg' 
+                : 'hover:shadow-md'
+            } ${isMobile ? 'touch-manipulation' : ''}`}
             onClick={() => {
               const nextId = isSelected ? null : item.id;
               setSelectedItemId(nextId);
@@ -277,106 +287,84 @@ export const SheetMusicLibrary = ({
                   if (item.pdf_url) {
                     onPdfSelect(item.pdf_url, item.title, item.id);
                   } else if (item.xml_content || item.xml_url) {
-                    // For XML files, we'll handle viewing inline
                     console.log('Selected MusicXML item:', item.title);
                   }
                 }
             }}
           >
-            <CardHeader className={`${isSelected ? 'pb-2' : 'pb-0 pt-2'}`}>
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0 max-w-full">
-                  <CardTitle className={`${isSelected ? 'text-sm md:text-base' : 'text-xs md:text-sm'} font-medium truncate leading-snug`} title={item.title}>
-                    {item.title}
-                  </CardTitle>
-                  {(item.composer || item.arranger) && !isSelected && (
-                    <p className="text-xs text-muted-foreground truncate leading-none" title={item.composer || item.arranger}>
-                      {item.composer ? `by ${item.composer}` : `arr. ${item.arranger}`}
-                    </p>
-                  )}
-                  {isSelected && (
-                    <>
-                      {item.composer && (
-                        <p className="text-xs text-muted-foreground truncate" title={item.composer}>
-                          by {item.composer}
-                        </p>
-                      )}
-                      {item.arranger && (
-                        <p className="text-xs text-muted-foreground truncate" title={item.arranger}>
-                          arr. {item.arranger}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className={`${isSelected ? 'space-y-3' : 'space-y-0 pt-0 pb-1'}`}>
-              {/* Collapsed/Expanded Content */}
-              {isSelected ? (
-                <div className="space-y-3">
-                  {/* PDF Viewer */}
-                  {item.pdf_url && (
-                    <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-                      <PDFThumbnail
-                        pdfUrl={item.pdf_url}
-                        alt={`${item.title} thumbnail`}
-                        title={item.title}
-                        className="w-full h-full"
-                      />
-                    </div>
-                  )}
-                  
-                  {/* MusicXML Viewer */}
-                  {(item.xml_content || item.xml_url) && !item.pdf_url && (
-                    <div className="bg-muted rounded-lg overflow-hidden h-64">
-                      <OSMDViewer
-                        xmlContent={item.xml_content || undefined}
-                        xmlUrl={item.xml_url || undefined}
-                        title={item.title}
-                        className="w-full h-full"
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Fallback when no content */}
-                  {!item.pdf_url && !item.xml_content && !item.xml_url && (
-                    <div className="aspect-[3/4] bg-muted rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">No preview available</p>
-                      </div>
-                    </div>
-                  )}
+            {/* Thumbnail Area - Compact on Mobile */}
+            <div className={`relative ${isMobile && columns >= 2 ? 'aspect-[4/5]' : 'aspect-[3/4]'} bg-muted overflow-hidden rounded-t-lg`}>
+              {item.pdf_url ? (
+                <PDFThumbnail
+                  pdfUrl={item.pdf_url}
+                  alt={`${item.title} thumbnail`}
+                  title={item.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (item.xml_content || item.xml_url) ? (
+                <div className="w-full h-full flex items-center justify-center bg-blue-50">
+                  <Music2 className={`${isMobile && columns >= 2 ? 'h-8 w-8' : 'h-12 w-12'} text-blue-600`} />
                 </div>
               ) : (
-                <div className="h-1.5 bg-muted/20 rounded-sm flex items-center justify-center">
-                  <div className="w-2 h-1 bg-muted-foreground/30 rounded-sm"></div>
+                <div className="w-full h-full flex items-center justify-center">
+                  <FileText className={`${isMobile && columns >= 2 ? 'h-8 w-8' : 'h-12 w-12'} text-muted-foreground`} />
                 </div>
               )}
-
-              {/* Details - only show when selected */}
+              
+              {/* Selection Indicator */}
               {isSelected && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {item.key_signature && (
-                      <span>Key: {item.key_signature}</span>
-                    )}
-                    {item.time_signature && (
-                      <span>• {item.time_signature}</span>
-                    )}
-                  </div>
+                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                  <Star className="h-3 w-3 fill-current" />
+                </div>
+              )}
+            </div>
 
-                  {item.voice_parts && item.voice_parts.length > 0 && (
+            {/* Content Area - Minimal on Mobile */}
+            <CardContent className={`${isMobile && columns >= 2 ? 'p-2' : 'p-3'}`}>
+              <h3 
+                className={`font-medium truncate leading-tight ${
+                  isMobile && columns >= 2 
+                    ? 'text-xs' 
+                    : isMobile && columns === 1 
+                      ? 'text-sm' 
+                      : 'text-sm'
+                }`} 
+                title={item.title}
+              >
+                {item.title}
+              </h3>
+              
+              {(item.composer || item.arranger) && (
+                <p 
+                  className={`text-muted-foreground truncate ${
+                    isMobile && columns >= 2 ? 'text-[10px]' : 'text-xs'
+                  }`} 
+                  title={item.composer || item.arranger || ''}
+                >
+                  {item.composer ? item.composer : `arr. ${item.arranger}`}
+                </p>
+              )}
+
+              {/* Show more details when selected or on single column */}
+              {(isSelected || (isMobile && columns === 1)) && (
+                <div className="mt-2 space-y-1.5">
+                  {(item.key_signature || item.time_signature) && (
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      {item.key_signature && <span>Key: {item.key_signature}</span>}
+                      {item.time_signature && <span>• {item.time_signature}</span>}
+                    </div>
+                  )}
+
+                  {item.voice_parts && item.voice_parts.length > 0 && columns === 1 && (
                     <div className="flex flex-wrap gap-1">
                       {item.voice_parts.slice(0, 3).map((part, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
+                        <Badge key={index} variant="outline" className="text-[10px] px-1.5 py-0">
                           {part}
                         </Badge>
                       ))}
                       {item.voice_parts.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{item.voice_parts.length - 3} more
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          +{item.voice_parts.length - 3}
                         </Badge>
                       )}
                     </div>
@@ -384,9 +372,9 @@ export const SheetMusicLibrary = ({
                 </div>
               )}
 
-              {/* Actions */}
-              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                {canEditMusic && (
+              {/* Admin Actions - only on hover/focus for desktop */}
+              {canEditMusic && !isMobile && (
+                <div className="flex gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button 
                     size="sm" 
                     variant="outline" 
@@ -394,11 +382,10 @@ export const SheetMusicLibrary = ({
                       e.stopPropagation();
                       handleEdit(item);
                     }}
+                    className="h-7 px-2"
                   >
                     <Edit className="h-3 w-3" />
                   </Button>
-                )}
-                {canEditMusic && (
                   <Button 
                     size="sm" 
                     variant="outline" 
@@ -406,12 +393,12 @@ export const SheetMusicLibrary = ({
                       e.stopPropagation();
                       handleDelete(item);
                     }}
-                    className="text-destructive hover:text-destructive"
+                    className="text-destructive hover:text-destructive h-7 px-2"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
