@@ -269,17 +269,23 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
-          {/* Course Header - Full width on mobile only (hidden on tablet/desktop with sidebar) */}
-          <div className="bg-gradient-to-r from-primary to-primary/80 md:hidden">
-            <div className="px-4 sm:px-6 pb-6 pt-4">
-              <div className="flex items-center gap-3 mb-2">
-                <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
-                <Badge variant="outline" className="border-white/30 text-white">
+          {/* Course Header - Full width dark blue on all screen sizes */}
+          <div className="bg-[#003666] w-full">
+            <div className="px-4 sm:px-6 md:px-6 lg:px-12 xl:px-16 py-4 md:py-6">
+              <div className="flex items-center gap-2 md:gap-3 mb-2">
+                <Badge variant="secondary" className="font-mono text-xs md:text-sm">{course.courseCode}</Badge>
+                <Badge variant="outline" className="border-white/30 text-white text-xs md:hidden">
                   {course.level}
                 </Badge>
               </div>
-              <h1 className="text-2xl font-bold text-white">{course.title}</h1>
-              <p className="text-white/80 mt-2">{course.description}</p>
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{course.title}</h1>
+              <p className="text-white/80 mt-2 text-sm md:hidden">{course.description}</p>
+              <div className="hidden md:flex flex-wrap items-center gap-3 md:gap-4 lg:gap-6 mt-2 md:mt-3 text-xs md:text-sm text-white/80">
+                <span className="font-medium text-white">Dr. Kevin Johnson</span>
+                <span>kjohns10@spelman.edu</span>
+                <span className="hidden lg:inline">Office: Fine Arts 105</span>
+                <span className="hidden lg:inline">Office Hours: MWF 3-5 PM</span>
+              </div>
             </div>
           </div>
 
@@ -289,22 +295,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Academy
             </Button>
-
-            {/* Course Header - Card on Tablet and Desktop */}
-            <Card className="bg-[#003666] border-0 hidden md:block">
-              <CardHeader className="pb-3 md:pb-4">
-                <div className="flex items-center gap-2 md:gap-3 mb-2">
-                  <Badge variant="secondary" className="font-mono text-xs md:text-sm">{course.courseCode}</Badge>
-                </div>
-                <CardTitle className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-foreground">{course.title}</CardTitle>
-                <div className="flex flex-wrap items-center gap-3 md:gap-4 lg:gap-6 mt-2 md:mt-3 text-xs md:text-sm text-primary-foreground/80">
-                  <span className="font-medium text-primary-foreground">Dr. Kevin Johnson</span>
-                  <span>kjohns10@spelman.edu</span>
-                  <span className="hidden lg:inline">Office: Fine Arts 105</span>
-                  <span className="hidden lg:inline">Office Hours: MWF 3-5 PM</span>
-                </div>
-              </CardHeader>
-            </Card>
 
             {/* Mobile Tab Navigation - Mobile only (hidden on tablet with sidebar) */}
             <div className="md:hidden relative z-10 -mx-4 px-4">
