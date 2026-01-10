@@ -59,60 +59,53 @@ export const CalendarViews = () => {
   return (
     <div className="flex flex-col h-full overflow-hidden bg-slate-50 rounded-xl">
       {/* Header Bar - Compact on tablet */}
-      <div className="bg-slate-900 text-white px-3 md:px-4 py-2 md:py-3 flex items-center justify-between flex-shrink-0 rounded-t-xl">
-        <div className="flex items-center gap-2 md:gap-4">
+      <div className="bg-slate-900 text-white px-3 md:px-4 py-2 flex items-center justify-between flex-shrink-0 rounded-t-xl">
+        <div className="flex items-center gap-2 md:gap-3">
           {/* Icon + Title - hidden on smaller tablets */}
-          <div className="hidden md:flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5" />
-            <h1 className="text-lg font-bold tracking-tight">Calendar</h1>
+          <div className="hidden md:flex items-center gap-1.5">
+            <CalendarIcon className="w-4 h-4" />
+            <h1 className="text-sm font-semibold tracking-tight">Calendar</h1>
           </div>
           
           {/* Month Navigation - always visible, compact */}
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+          <div className="flex items-center gap-0.5">
+            <button 
               onClick={() => navigateMonth('prev')} 
-              className="h-7 w-7 text-white hover:bg-slate-800"
+              className="h-6 w-6 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 active:bg-white/20 transition-all duration-150"
             >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-sm md:text-base font-semibold min-w-[100px] md:min-w-[130px] text-center">
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            <span className="text-xs md:text-sm font-medium min-w-[80px] md:min-w-[100px] text-center">
               {format(currentDate, 'MMM yyyy')}
-            </h2>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            </span>
+            <button 
               onClick={() => navigateMonth('next')} 
-              className="h-7 w-7 text-white hover:bg-slate-800"
+              className="h-6 w-6 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-90 active:bg-white/20 transition-all duration-150"
             >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
 
-        {/* Actions - compact on tablet */}
-        <div className="flex items-center gap-1.5 md:gap-2">
+        {/* Actions - pill buttons with press animation */}
+        <div className="flex items-center gap-1.5">
           <OfficeHoursBooking selectedDate={selectedDate} />
-          <Button 
-            variant="secondary" 
-            size="sm" 
-            className="h-7 md:h-8 text-xs md:text-sm font-medium px-2 md:px-3"
+          <button 
             onClick={() => {
               setCurrentDate(new Date());
               setSelectedDate(new Date());
             }}
+            className="h-6 px-3 rounded-full text-[10px] md:text-xs font-medium bg-white/10 text-white hover:bg-white/20 active:scale-95 active:bg-white/30 transition-all duration-150"
           >
             Today
-          </Button>
-          <Button 
-            size="sm" 
-            className="gap-1.5 h-7 md:h-8 text-xs md:text-sm font-medium bg-primary hover:bg-primary/90 px-2 md:px-3" 
+          </button>
+          <button 
             onClick={() => setShowCreateEvent(true)}
+            className="h-6 px-3 rounded-full text-[10px] md:text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 active:brightness-110 transition-all duration-150 flex items-center gap-1"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-3 w-3" />
             <span className="hidden sm:inline">New</span>
-          </Button>
+          </button>
         </div>
       </div>
 

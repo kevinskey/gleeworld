@@ -15,14 +15,12 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
   };
 
   return (
-    <Button 
-      variant="secondary"
-      size="sm"
-      className="gap-2 h-9 text-sm font-medium"
+    <button 
       onClick={handleClick}
+      className="h-6 px-3 rounded-full text-[10px] md:text-xs font-medium bg-white/10 text-white hover:bg-white/20 active:scale-95 active:bg-white/30 transition-all duration-150 flex items-center gap-1"
     >
-      <MessageSquare className="h-4 w-4" />
-      <span className="hidden sm:inline">Book Appointment</span>
-    </Button>
+      <MessageSquare className="h-3 w-3" />
+      <span className="hidden sm:inline">Book</span>
+    </button>
   );
 };
