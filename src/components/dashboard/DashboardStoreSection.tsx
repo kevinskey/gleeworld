@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Plus, ChevronDown, GraduationCap, BookOpen, Play, Users, Music, Monitor, ChevronRight, Search } from 'lucide-react';
+import { ShoppingBag, Plus, ChevronDown, GraduationCap, BookOpen, Play, Users, Music, Monitor, ChevronRight, Search, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -268,15 +268,16 @@ export const DashboardStoreSection = () => {
             {filteredModules.map(module => {
               const unifiedModule = UNIFIED_MODULES.find(m => m.id === module.id);
               const IconComponent = unifiedModule?.icon;
+              const Icon = IconComponent || LayoutGrid;
               return (
                 <button
                   key={module.id}
                   onClick={() => navigate(`/modules/${module.id}`)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-[#002244] to-[#003666] hover:from-[#003666] hover:to-[#0B5A8B] transition-all duration-200 shadow-md hover:shadow-lg text-left"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#002244] to-[#003666] hover:from-[#003666] hover:to-[#0B5A8B] transition-all duration-200 shadow-md hover:shadow-lg text-left"
                   style={{ color: '#ffffff' }}
                 >
-                  {IconComponent && <IconComponent className="h-4 w-4 flex-shrink-0 text-white" />}
-                  <span className="text-sm font-medium truncate text-white">{module.title}</span>
+                  <Icon className="h-3.5 w-3.5 flex-shrink-0 text-white" />
+                  <span className="text-xs font-normal truncate text-white">{module.title}</span>
                 </button>
               );
             })}
