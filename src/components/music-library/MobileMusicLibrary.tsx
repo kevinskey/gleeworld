@@ -1,30 +1,36 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { SheetMusicLibrary } from './SheetMusicLibrary';
 import { SetlistBuilder } from './SetlistBuilder';
-import { SetlistPlayer } from './SetlistPlayer';
 import { StudyScoresPanel } from './StudyScoresPanel';
 import { MyCollectionsPanel } from './MyCollectionsPanel';
 import { SheetMusicViewDialog } from './SheetMusicViewDialog';
 import { 
   Music, 
   Eye, 
-  Play, 
   BookOpen, 
   Star, 
   List,
   Search,
-  Filter,
   Grid3X3,
-  LayoutList
+  LayoutList,
+  SlidersHorizontal,
+  X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger 
+} from '@/components/ui/sheet';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface MobileMusicLibraryProps {
   onPdfSelect: (pdfUrl: string, title: string, id?: string) => void;
@@ -47,6 +53,7 @@ export const MobileMusicLibrary = ({
   const [columns, setColumns] = useState(2);
   const [studyDialogOpen, setStudyDialogOpen] = useState(false);
   const [studyItem, setStudyItem] = useState<any>(null);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const { toast } = useToast();
 
   const openStudyMode = async () => {
@@ -88,100 +95,216 @@ export const MobileMusicLibrary = ({
     setStudyDialogOpen(true);
   };
 
+  const categories = [
+    { value: "all", label: "All" },
+    { value: "classical", label: "Classical" },
+    { value: "spiritual", label: "Spiritual" },
+    { value: "contemporary", label: "Contemporary" },
+    { value: "gospel", label: "Gospel" },
+    { value: "jazz", label: "Jazz" },
+  ];
+
+  const sortOptions = [
+    { value: "title", label: "Title" },
+    { value: "composer", label: "Composer" },
+    { value: "created_at", label: "Date Added" },
+    { value: "difficulty_level", label: "Difficulty" },
+  ];
+
   return (
-    <div className="w-full flex flex-col overflow-hidden">
-      {/* Mobile Header */}
-      <div className="flex-shrink-0 bg-background border-b px-1 py-2 space-y-2">
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search music library..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-10 sm:h-12 text-sm"
-          />
+    <div className="w-full flex flex-col overflow-hidden h-full">
+      {/* Compact Mobile Header */}
+      <div className="flex-shrink-0 bg-background/95 backdrop-blur-sm sticky top-0 z-10 px-2 py-2 space-y-2 border-b border-border">
+        {/* Search Row with Filter Button */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-8 h-10 text-base"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+          
+          {/* Filter Sheet Trigger */}
+          <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="h-10 w-10 flex-shrink-0">
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-auto max-h-[70vh] rounded-t-xl">
+              <SheetHeader className="pb-4">
+                <SheetTitle>Filter & Sort</SheetTitle>
+              </SheetHeader>
+              <div className="space-y-6 pb-6">
+                {/* Category Filter */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Category</Label>
+                  <RadioGroup 
+                    value={selectedCategory} 
+                    onValueChange={setSelectedCategory}
+                    className="grid grid-cols-3 gap-2"
+                  >
+                    {categories.map((cat) => (
+                      <div key={cat.value} className="flex items-center">
+                        <RadioGroupItem value={cat.value} id={`cat-${cat.value}`} className="sr-only" />
+                        <Label
+                          htmlFor={`cat-${cat.value}`}
+                          className={`flex-1 text-center py-2 px-3 rounded-lg border text-sm cursor-pointer transition-colors ${
+                            selectedCategory === cat.value
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-muted/50 border-border hover:bg-muted'
+                          }`}
+                        >
+                          {cat.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                {/* Sort By */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Sort By</Label>
+                  <RadioGroup 
+                    value={sortBy} 
+                    onValueChange={setSortBy}
+                    className="grid grid-cols-2 gap-2"
+                  >
+                    {sortOptions.map((opt) => (
+                      <div key={opt.value} className="flex items-center">
+                        <RadioGroupItem value={opt.value} id={`sort-${opt.value}`} className="sr-only" />
+                        <Label
+                          htmlFor={`sort-${opt.value}`}
+                          className={`flex-1 text-center py-2 px-3 rounded-lg border text-sm cursor-pointer transition-colors ${
+                            sortBy === opt.value
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-muted/50 border-border hover:bg-muted'
+                          }`}
+                        >
+                          {opt.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                {/* Grid Columns */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Grid Size</Label>
+                  <ToggleGroup 
+                    type="single" 
+                    value={columns.toString()} 
+                    onValueChange={(v) => v && setColumns(Number(v))}
+                    className="justify-start gap-2"
+                  >
+                    <ToggleGroupItem value="1" className="h-10 px-4 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                      Large
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="2" className="h-10 px-4 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                      Medium
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="3" className="h-10 px-4 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                      Small
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+
+                <Button 
+                  className="w-full" 
+                  onClick={() => setFilterSheetOpen(false)}
+                >
+                  Apply Filters
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Quick View Toggle */}
+          <ToggleGroup 
+            type="single" 
+            value={viewMode} 
+            onValueChange={(v) => v && setViewMode(v as "grid" | "list")}
+            className="flex-shrink-0"
+          >
+            <ToggleGroupItem value="grid" className="h-10 w-10 p-0">
+              <Grid3X3 className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="list" className="h-10 w-10 p-0">
+              <LayoutList className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
 
-        {/* Filters Row */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-24 h-8 text-xs flex-shrink-0">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="classical">Classical</SelectItem>
-              <SelectItem value="spiritual">Spiritual</SelectItem>
-              <SelectItem value="contemporary">Contemporary</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-24 h-8 text-xs flex-shrink-0">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="title">Title</SelectItem>
-              <SelectItem value="composer">Composer</SelectItem>
-              <SelectItem value="date">Date Added</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={columns.toString()} onValueChange={(v) => setColumns(Number(v))}>
-            <SelectTrigger className="w-16 h-8 text-xs flex-shrink-0">
-              <Grid3X3 className="h-3 w-3 mr-1" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1</SelectItem>
-              <SelectItem value="2">2</SelectItem>
-              <SelectItem value="3">3</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Selected PDF Info */}
+        {/* Selected PDF Floating Banner */}
         {selectedPdf && (
-          <div className="bg-primary/10 rounded-lg p-2 flex items-center justify-between">{/* Removed sm:p-3 to keep consistent p-2 */}
+          <div className="bg-primary/10 rounded-lg p-2 flex items-center justify-between gap-2 border border-primary/20">
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-primary truncate">
+              <p className="text-sm font-medium text-primary truncate">
                 {selectedPdf.title}
               </p>
-              <p className="text-[10px] text-muted-foreground">Currently selected</p>
             </div>
-            <Button size="sm" onClick={openStudyMode} className="ml-2 h-8 px-2 text-xs">{/* Removed sm responsive sizing */}
-              <Eye className="h-4 w-4 mr-1" />
+            <Button size="sm" onClick={openStudyMode} className="h-8 px-3 text-xs flex-shrink-0">
+              <Eye className="h-3 w-3 mr-1" />
               Study
             </Button>
           </div>
         )}
       </div>
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation - Scrollable on small screens */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 w-full">
-        <TabsList className="flex-shrink-0 grid w-full grid-cols-4 px-1 my-1 gap-1">
-          <TabsTrigger value="library" className="text-xs px-1 py-1">
-            <Music className="h-4 w-4 mr-1" />
-            Library
-          </TabsTrigger>
-          <TabsTrigger value="study" className="text-xs px-1 py-1">
-            <BookOpen className="h-4 w-4 mr-1" />
-            Study
-          </TabsTrigger>
-          <TabsTrigger value="collections" className="text-xs px-1 py-1">
-            <Star className="h-4 w-4 mr-1" />
-            Collections
-          </TabsTrigger>
-          <TabsTrigger value="setlists" className="text-xs px-1 py-1">
-            <List className="h-4 w-4 mr-1" />
-            Setlists
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex-shrink-0 px-2 py-1.5 bg-background border-b border-border">
+          <TabsList className="w-full grid grid-cols-4 h-10 p-1">
+            <TabsTrigger 
+              value="library" 
+              className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1 px-2"
+            >
+              <Music className="h-3.5 w-3.5" />
+              <span className="hidden xs:inline">Library</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="study" 
+              className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1 px-2"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              <span className="hidden xs:inline">Study</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="collections" 
+              className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1 px-2"
+            >
+              <Star className="h-3.5 w-3.5" />
+              <span className="hidden xs:inline">Saved</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="setlists" 
+              className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1 px-2"
+            >
+              <List className="h-3.5 w-3.5" />
+              <span className="hidden xs:inline">Sets</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        {/* Tab Content */}
-        <div ref={scrollContainerRef as any} className="flex-1 overflow-y-auto min-h-0 w-full">
-          <TabsContent value="library" className="h-full px-1 py-1 space-y-2 mt-0 w-full">
+        {/* Tab Content - Scrollable Area */}
+        <div 
+          ref={scrollContainerRef as any} 
+          className="flex-1 overflow-y-auto overscroll-contain min-h-0 w-full pb-safe"
+        >
+          <TabsContent value="library" className="h-full px-2 py-2 mt-0 w-full">
             <SheetMusicLibrary 
               searchQuery={searchQuery}
               selectedCategory={selectedCategory}
@@ -190,24 +313,25 @@ export const MobileMusicLibrary = ({
               viewMode={viewMode}
               columns={columns}
               onPdfSelect={onPdfSelect}
+              isMobile={true}
             />
           </TabsContent>
 
-          <TabsContent value="study" className="h-full px-1 py-1 mt-0 w-full">
+          <TabsContent value="study" className="h-full px-2 py-2 mt-0 w-full">
             <StudyScoresPanel 
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="collections" className="h-full px-1 py-1 mt-0 w-full">
+          <TabsContent value="collections" className="h-full px-2 py-2 mt-0 w-full">
             <MyCollectionsPanel
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="setlists" className="h-full px-1 py-1 mt-0 w-full">
+          <TabsContent value="setlists" className="h-full px-2 py-2 mt-0 w-full">
             <SetlistBuilder 
               onPdfSelect={onPdfSelect} 
               onOpenPlayer={onOpenSetlistPlayer}
