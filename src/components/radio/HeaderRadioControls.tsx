@@ -195,12 +195,12 @@ export const HeaderRadioControls = () => {
                 }}
               >
                 <div className="max-w-7xl mx-auto px-2 sm:px-3 py-2">
-                  <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
                     
                     {/* Power/Close Button */}
                     <button
                       onClick={() => setIsOpen(false)}
-                      className="w-5 h-5 rounded-full bg-gradient-to-b from-zinc-600 to-zinc-800 border border-zinc-500 shadow-inner flex items-center justify-center hover:from-zinc-500 hover:to-zinc-700 transition-all"
+                      className="w-5 h-5 rounded-full bg-gradient-to-b from-zinc-600 to-zinc-800 border border-zinc-500 shadow-inner flex items-center justify-center hover:from-zinc-500 hover:to-zinc-700 transition-all flex-shrink-0"
                     >
                       <div className={cn(
                         "w-1.5 h-1.5 rounded-full transition-colors",
@@ -208,31 +208,34 @@ export const HeaderRadioControls = () => {
                       )} />
                     </button>
 
-                    {/* Brand */}
-                    <span className="text-[8px] font-bold tracking-widest text-zinc-700 dark:text-zinc-300 uppercase hidden sm:block">
+                    {/* Brand - Hidden on mobile */}
+                    <span className="text-[8px] font-bold tracking-widest text-zinc-700 dark:text-zinc-300 uppercase hidden md:block flex-shrink-0">
                       GleeWorld
                     </span>
 
-                    {/* Dynamic Preset Buttons - Show user's configured presets */}
-                    <div className="flex items-center gap-0.5">
+                    {/* Dynamic Preset Buttons - Show fewer on mobile */}
+                    <div className="flex items-center gap-0.5 flex-shrink-0">
                       {[1, 2, 3, 4, 5, 6].map((slotNumber) => {
+                        // Only show first 3 presets on mobile
+                        const showOnMobile = slotNumber <= 3;
                         const preset = presets.find(p => p.slot_number === slotNumber);
                         const channel = preset?.channel;
                         const isSelected = selectedChannel?.id === channel?.id;
                         
                         return (
-                          <RadioPresetButton
-                            key={slotNumber}
-                            preset={preset}
-                            slotNumber={slotNumber}
-                            isSelected={isSelected}
-                            isLoading={isLoading || presetsLoading}
-                            onClick={() => {
-                              if (channel) {
-                                handleChannelChange(channel);
-                              }
-                            }}
-                          />
+                          <div key={slotNumber} className={cn(!showOnMobile && "hidden sm:block")}>
+                            <RadioPresetButton
+                              preset={preset}
+                              slotNumber={slotNumber}
+                              isSelected={isSelected}
+                              isLoading={isLoading || presetsLoading}
+                              onClick={() => {
+                                if (channel) {
+                                  handleChannelChange(channel);
+                                }
+                              }}
+                            />
+                          </div>
                         );
                       })}
                       
@@ -247,29 +250,30 @@ export const HeaderRadioControls = () => {
                       />
                     </div>
 
-                    {/* LCD Display */}
-                    <div className="flex-1 mx-1 sm:mx-2">
+                    {/* LCD Display - Give it min-width on mobile */}
+                    <div className="flex-1 min-w-[80px] sm:min-w-[100px] mx-0.5 sm:mx-2">
                       <div 
-                        className="bg-[#1a2a1a] border border-zinc-600 rounded px-1.5 py-0.5 shadow-inner"
+                        className="bg-[#1a2a1a] border border-zinc-600 rounded px-1 sm:px-1.5 py-0.5 shadow-inner"
                         style={{
                           background: 'linear-gradient(180deg, #0f1a0f 0%, #1a2a1a 50%, #0f1a0f 100%)',
                         }}
                       >
-                        <div className="flex items-center justify-between gap-1">
-                          <div className="flex items-center gap-1 min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-0.5 sm:gap-1">
+                          <div className="flex items-center gap-0.5 sm:gap-1 min-w-0 flex-1">
                             {isLive && (
-                              <span className="text-red-400 text-[7px] font-mono animate-pulse">●</span>
+                              <span className="text-red-400 text-[7px] font-mono animate-pulse flex-shrink-0">●</span>
                             )}
                             <span 
                               key={`${currentTrack?.title || 'no-track'}-${currentTrack?.artist || ''}`}
-                              className="text-[9px] sm:text-[10px] font-mono text-green-400 tracking-wide truncate"
+                              className="text-[8px] sm:text-[10px] font-mono text-green-400 tracking-wide truncate"
                             >
                               {currentTrack?.title 
                                 ? `${currentTrack.title}${currentTrack.artist ? ` - ${currentTrack.artist}` : ''}`
                                 : selectedChannel?.name || 'No Signal'}
                             </span>
                           </div>
-                          <div className="flex items-center gap-0.5 text-green-400/70 flex-shrink-0">
+                          {/* Hide listener count on very small screens */}
+                          <div className="hidden xs:flex items-center gap-0.5 text-green-400/70 flex-shrink-0">
                             <span className="text-[7px] font-mono">{listenerCount}</span>
                             <Users className="h-2 w-2" />
                           </div>
@@ -351,8 +355,8 @@ export const HeaderRadioControls = () => {
                       </EnhancedTooltip>
                     </div>
 
-                    {/* Volume Slider Section */}
-                    <div className="flex items-center gap-1.5">
+                    {/* Volume Slider Section - Hidden on very small screens */}
+                    <div className="hidden xs:flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
@@ -367,9 +371,9 @@ export const HeaderRadioControls = () => {
                         )}
                       </button>
                       
-                      {/* Volume Slider */}
+                      {/* Volume Slider - Narrower on small screens */}
                       <div 
-                        className="relative w-16 sm:w-20 h-3 flex items-center cursor-pointer touch-none"
+                        className="relative w-12 sm:w-16 md:w-20 h-3 flex items-center cursor-pointer touch-none"
                         onClick={(e) => {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const x = e.clientX - rect.left;
