@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface ActiveMeetingParticipant {
@@ -18,12 +19,20 @@ export interface ActiveMeeting {
 const PRESENCE_CHANNEL = 'active-video-meetings';
 
 export const useActiveMeetings = () => {
+  const { user } = useAuth();
   const [activeMeetings, setActiveMeetings] = useState<ActiveMeeting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   useEffect(() => {
-    const presenceChannel = supabase.channel(PRESENCE_CHANNEL);
+    const presenceKey = user?.id || `viewer-${Math.random().toString(36).slice(2)}`;
+
+    const presenceChannel = supabase.channel(PRESENCE_CHANNEL, {
+      config: {
+        presence: { key: presenceKey },
+      },
+    });
 
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
@@ -37,11 +46,23 @@ export const useActiveMeetings = () => {
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         console.log('User left meeting:', key, leftPresences);
       })
-      .subscribe(async (status) => {
+      .subscribe((status) => {
         console.log('Presence channel status:', status);
+
         if (status === 'SUBSCRIBED') {
-          console.log('Subscribed to active meetings presence');
-          // Set loading to false once subscribed - sync will update with actual data
+          setError(null);
+          setIsLoading(false);
+          return;
+        }
+
+        if (status === 'CLOSED') {
+          setError('Realtime connection closed.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setError('Realtime connection failed.');
           setIsLoading(false);
         }
       });
@@ -51,7 +72,7 @@ export const useActiveMeetings = () => {
     return () => {
       supabase.removeChannel(presenceChannel);
     };
-  }, []);
+  }, [user?.id]);
 
   // Parse presence state into active meetings format
   const parsePresenceState = (state: Record<string, any[]>): ActiveMeeting[] => {
@@ -85,6 +106,7 @@ export const useActiveMeetings = () => {
   return {
     activeMeetings,
     isLoading,
+    error,
     channel,
   };
 };
@@ -101,11 +123,15 @@ export const useMeetingPresence = (
   useEffect(() => {
     if (!roomName || !userId) return;
 
-    const presenceChannel = supabase.channel(PRESENCE_CHANNEL);
+    const presenceChannel = supabase.channel(PRESENCE_CHANNEL, {
+      config: {
+        presence: { key: userId },
+      },
+    });
 
     presenceChannel.subscribe(async (status) => {
+      console.log('Meeting presence status:', status);
       if (status === 'SUBSCRIBED') {
-        // Track this user's presence in the room
         await presenceChannel.track({
           room_name: roomName,
           user_id: userId,
@@ -120,7 +146,6 @@ export const useMeetingPresence = (
     setChannel(presenceChannel);
 
     return () => {
-      // Untrack removes this user's presence
       presenceChannel.untrack();
       supabase.removeChannel(presenceChannel);
     };

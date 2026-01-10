@@ -14,19 +14,32 @@ export const ActiveMeetingsList: React.FC<ActiveMeetingsListProps> = ({
   onJoinMeeting,
   className = '',
 }) => {
-  const { activeMeetings, isLoading } = useActiveMeetings();
+  const { activeMeetings, isLoading, error } = useActiveMeetings();
 
   if (isLoading) {
     return (
       <Card className={className}>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
             Active Meetings
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className={className}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">Active Meetings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-4">{error}</p>
         </CardContent>
       </Card>
     );
@@ -54,7 +67,7 @@ export const ActiveMeetingsList: React.FC<ActiveMeetingsListProps> = ({
     <Card className={className}>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
           Active Meetings
           <span className="ml-auto text-sm font-normal text-muted-foreground">
             {activeMeetings.length} in session
@@ -87,8 +100,8 @@ const MeetingCard: React.FC<MeetingCardProps> = ({ meeting, onJoin }) => {
   return (
     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-          <Video className="h-5 w-5 text-green-600" />
+        <div className="h-10 w-10 rounded-lg bg-primary/15 flex items-center justify-center">
+          <Video className="h-5 w-5 text-primary" />
         </div>
         <div>
           <p className="font-medium text-sm">{displayName}</p>
