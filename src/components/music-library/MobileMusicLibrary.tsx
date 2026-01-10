@@ -127,7 +127,7 @@ export const MobileMusicLibrary = ({
   return (
     <div className="w-full flex flex-col overflow-hidden h-full bg-background">
       {/* Ultra-Compact Mobile Header - Single Row with Title, Back & Dropdowns */}
-      <div className="flex-shrink-0 bg-background border-b border-border">
+      <div className="flex-shrink-0 bg-background border-b border-border safe-top">
         <div className="flex items-center h-11 px-2 gap-1">
           {/* Back Button - Minimal */}
           <Button 
