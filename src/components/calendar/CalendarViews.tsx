@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, ChevronLeft, ChevronRight, Settings, CalendarIcon } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Settings, CalendarIcon, Sparkles } from "lucide-react";
 import { MonthlyCalendar } from "./MonthlyCalendar";
 import { CalendarManager } from "./CalendarManager";
 import { CalendarFilterStrip } from "./CalendarFilterStrip";
@@ -12,6 +12,7 @@ import { useGleeWorldEvents } from "@/hooks/useGleeWorldEvents";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@/contexts/ThemeContext";
 import { format, isSameDay, addMonths, subMonths } from "date-fns";
 
 export const CalendarViews = () => {
@@ -24,7 +25,10 @@ export const CalendarViews = () => {
   const { events, loading, fetchEvents } = useGleeWorldEvents();
   const { user } = useAuth();
   const { isAdmin, isExecutiveBoard, loading: roleLoading } = useUserRole();
+  const { themeName } = useTheme();
   const canManageEvents = !roleLoading && (isAdmin() || isExecutiveBoard());
+  
+  const isSpelmanBlue = themeName === 'spelman-blue';
 
   // Filter events based on visible calendars
   const filteredEvents = useMemo(() => {
@@ -58,8 +62,21 @@ export const CalendarViews = () => {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-slate-50 rounded-xl">
-      {/* Header Bar - Compact on tablet */}
-      <div className="bg-slate-900 text-white px-3 md:px-4 py-2 flex items-center justify-between flex-shrink-0 rounded-t-xl">
+      {/* Header Bar - Matches Dashboard Header Style */}
+      <div 
+        className={`backdrop-blur-sm border-b border-border px-3 md:px-6 py-2 flex items-center justify-between flex-shrink-0 rounded-t-xl relative overflow-hidden ${
+          isSpelmanBlue 
+            ? 'bg-gradient-to-r from-[#0066CC] via-[#0077DD] to-[#0088EE]' 
+            : 'bg-gradient-to-r from-primary/90 via-primary to-destructive/80'
+        }`}
+      >
+        {/* Holiday sparkle accents - hide for Spelman Blue */}
+        {!isSpelmanBlue && (
+          <div className="absolute inset-0 pointer-events-none">
+            <Sparkles className="absolute top-1 left-[10%] w-3 h-3 text-amber-400/60 animate-pulse" />
+            <Sparkles className="absolute bottom-1 right-[20%] w-3 h-3 text-emerald-500/50 animate-pulse delay-500" />
+          </div>
+        )}
         <div className="flex items-center gap-2 md:gap-3">
           {/* Icon + Title - hidden on smaller tablets */}
           <div className="hidden md:flex items-center gap-1.5">
