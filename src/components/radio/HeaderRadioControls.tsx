@@ -6,11 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronUp, Music2, Church, Sparkles, Check, Bell, MapPin, Mic, Disc, Clock, Music, Loader2, Shield, Heart, Star, Globe, Film } from 'lucide-react';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { useRadioChannels, type RadioChannel } from '@/hooks/useRadioChannels';
+import { useUserRadioPresets } from '@/hooks/useUserRadioPresets';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { HEADER_ICON_SIZES } from '@/components/layout/headerIconSizes';
+import { RadioPresetButton } from './RadioPresetButton';
+import { RadioChannelDrawer } from './RadioChannelDrawer';
 
 // CSS class added to body when radio bar is open - used by other components to add padding
 const RADIO_OPEN_CLASS = 'radio-bar-open';
@@ -20,6 +23,7 @@ export const HeaderRadioControls = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [headerHeight, setHeaderHeight] = useState(0);
     const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
+    const { presets, setPresetSlot, isLoading: presetsLoading } = useUserRadioPresets(channels);
     const { themeName } = useTheme();
     const radioBarRef = useRef<HTMLDivElement>(null);
     
@@ -163,7 +167,7 @@ export const HeaderRadioControls = () => {
                   background: 'linear-gradient(180deg, #d4d4d8 0%, #a1a1aa 50%, #71717a 100%)',
                 }}
               >
-                <div className="max-w-7xl mx-auto px-2 sm:px-3 py-1">
+                <div className="max-w-7xl mx-auto px-2 sm:px-3 py-2">
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     
                     {/* Power/Close Button */}
@@ -182,27 +186,38 @@ export const HeaderRadioControls = () => {
                       GleeWorld
                     </span>
 
-                    {/* Channel Preset Buttons */}
+                    {/* Dynamic Preset Buttons - Show user's configured presets */}
                     <div className="flex items-center gap-0.5">
-                      {channels.slice(0, 6).map((channel, idx) => {
-                        const isSelected = selectedChannel?.id === channel.id;
+                      {[1, 2, 3, 4, 5, 6].map((slotNumber) => {
+                        const preset = presets.find(p => p.slot_number === slotNumber);
+                        const channel = preset?.channel;
+                        const isSelected = selectedChannel?.id === channel?.id;
+                        
                         return (
-                          <button
-                            key={channel.id}
-                            onClick={() => handleChannelChange(channel)}
-                            disabled={isLoading}
-                            className={cn(
-                              "w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[8px] sm:text-[9px] font-bold transition-all",
-                              "bg-gradient-to-b border shadow-sm",
-                              isSelected
-                                ? "from-amber-400 to-amber-600 border-amber-700 text-amber-900 shadow-[0_0_6px_rgba(251,191,36,0.5)]"
-                                : "from-zinc-500 to-zinc-700 border-zinc-600 text-zinc-200 hover:from-zinc-400 hover:to-zinc-600"
-                            )}
-                          >
-                            {idx + 1}
-                          </button>
+                          <RadioPresetButton
+                            key={slotNumber}
+                            preset={preset}
+                            slotNumber={slotNumber}
+                            isSelected={isSelected}
+                            isLoading={isLoading || presetsLoading}
+                            onClick={() => {
+                              if (channel) {
+                                handleChannelChange(channel);
+                              }
+                            }}
+                          />
                         );
                       })}
+                      
+                      {/* Channel Browser Drawer Button */}
+                      <RadioChannelDrawer
+                        channels={channels}
+                        selectedChannel={selectedChannel}
+                        presets={presets}
+                        onChannelSelect={handleChannelChange}
+                        onAddToPreset={setPresetSlot}
+                        isPlaying={isPlaying}
+                      />
                     </div>
 
                     {/* LCD Display */}
