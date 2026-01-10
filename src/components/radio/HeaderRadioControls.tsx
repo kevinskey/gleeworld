@@ -76,6 +76,7 @@ export const HeaderRadioControls = () => {
     } = useRadioPlayer();
 
     const [isSkipping, setIsSkipping] = useState(false);
+    const [channelNotification, setChannelNotification] = useState<string | null>(null);
 
     const handleSkipTrack = async () => {
       if (isSkipping || !isPlaying) return;
@@ -96,7 +97,9 @@ export const HeaderRadioControls = () => {
       // Switch to the channel's stream URL to play that station
       if (channel.stream_url) {
         await switchStream(channel.stream_url);
-        toast.success(`Switched to ${channel.name}`);
+        // Show inline notification instead of toast
+        setChannelNotification(`Switched to ${channel.name}`);
+        setTimeout(() => setChannelNotification(null), 3000);
       }
     };
 
@@ -438,6 +441,16 @@ export const HeaderRadioControls = () => {
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
+                  
+                  {/* Inline channel change notification */}
+                  {channelNotification && (
+                    <div className="mt-2 px-3 py-1.5 bg-green-500/20 border border-green-500/30 rounded-md text-green-400 text-xs font-medium text-center animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Check className="h-3 w-3" />
+                        <span>{channelNotification}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
