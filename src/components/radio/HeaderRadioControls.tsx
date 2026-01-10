@@ -369,12 +369,42 @@ export const HeaderRadioControls = () => {
                       
                       {/* Volume Slider */}
                       <div 
-                        className="relative w-16 sm:w-20 h-3 flex items-center cursor-pointer"
+                        className="relative w-16 sm:w-20 h-3 flex items-center cursor-pointer touch-none"
                         onClick={(e) => {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const x = e.clientX - rect.left;
                           const newVolume = Math.max(0, Math.min(1, x / rect.width));
                           setVolume(newVolume);
+                        }}
+                        onTouchStart={(e) => {
+                          e.preventDefault();
+                          const slider = e.currentTarget;
+                          const rect = slider.getBoundingClientRect();
+                          
+                          const updateVolume = (clientX: number) => {
+                            const x = clientX - rect.left;
+                            const newVolume = Math.max(0, Math.min(1, x / rect.width));
+                            setVolume(newVolume);
+                          };
+                          
+                          // Set initial position
+                          if (e.touches[0]) {
+                            updateVolume(e.touches[0].clientX);
+                          }
+                          
+                          const onTouchMove = (moveEvent: TouchEvent) => {
+                            if (moveEvent.touches[0]) {
+                              updateVolume(moveEvent.touches[0].clientX);
+                            }
+                          };
+                          
+                          const onTouchEnd = () => {
+                            document.removeEventListener('touchmove', onTouchMove);
+                            document.removeEventListener('touchend', onTouchEnd);
+                          };
+                          
+                          document.addEventListener('touchmove', onTouchMove, { passive: false });
+                          document.addEventListener('touchend', onTouchEnd);
                         }}
                       >
                         {/* Slider track - brushed metal groove */}
@@ -397,7 +427,7 @@ export const HeaderRadioControls = () => {
                         
                         {/* Silver Handle */}
                         <div
-                          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full cursor-grab active:cursor-grabbing shadow-md"
+                          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full cursor-grab active:cursor-grabbing shadow-md touch-none"
                           style={{
                             left: `calc(${volume * 100}% - 6px)`,
                             background: 'linear-gradient(180deg, #f4f4f5 0%, #d4d4d8 30%, #a1a1aa 70%, #71717a 100%)',
@@ -428,6 +458,33 @@ export const HeaderRadioControls = () => {
                             
                             document.addEventListener('mousemove', onMouseMove);
                             document.addEventListener('mouseup', onMouseUp);
+                          }}
+                          onTouchStart={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const slider = e.currentTarget.parentElement;
+                            if (!slider) return;
+                            
+                            const updateVolume = (clientX: number) => {
+                              const rect = slider.getBoundingClientRect();
+                              const x = clientX - rect.left;
+                              const newVolume = Math.max(0, Math.min(1, x / rect.width));
+                              setVolume(newVolume);
+                            };
+                            
+                            const onTouchMove = (moveEvent: TouchEvent) => {
+                              if (moveEvent.touches[0]) {
+                                updateVolume(moveEvent.touches[0].clientX);
+                              }
+                            };
+                            
+                            const onTouchEnd = () => {
+                              document.removeEventListener('touchmove', onTouchMove);
+                              document.removeEventListener('touchend', onTouchEnd);
+                            };
+                            
+                            document.addEventListener('touchmove', onTouchMove, { passive: false });
+                            document.addEventListener('touchend', onTouchEnd);
                           }}
                         />
                       </div>
