@@ -43,8 +43,8 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
         flex flex-col
         h-full
         min-h-[280px]
-        shadow-sm
-        hover:shadow-md
+        shadow-md
+        hover:shadow-lg
         transition-shadow
         duration-200
         ${className}
@@ -52,14 +52,14 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
     >
       {/* Course Code - Elegant serif style */}
       <h3 
-        className="text-2xl sm:text-3xl font-light tracking-wide text-foreground mb-2"
+        className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light tracking-wide text-foreground mb-2"
         style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
       >
         {course.courseCode}
       </h3>
 
       {/* Course Title - Italic style */}
-      <h4 className="text-base sm:text-lg font-semibold text-[#003666] italic mb-4 leading-snug">
+      <h4 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-[#003666] italic mb-4 leading-snug">
         {course.title}
       </h4>
 
