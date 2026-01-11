@@ -81,7 +81,7 @@ const GleeAcademy = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col">
-                    <p className="text-gray-700 text-sm md:text-base mb-4 flex-1">
+                    <p className="text-gray-900 text-sm md:text-base mb-4 flex-1">
                       {course.description}
                     </p>
                     <div className="flex items-center text-sm text-gray-600 mb-4">
