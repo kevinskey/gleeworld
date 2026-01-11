@@ -162,16 +162,20 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 {!user && (
                   <Button 
                     asChild
-                    variant="navy"
-                    className="relative text-sm lg:text-base px-5 lg:px-6 py-2 lg:py-2.5 font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border-0 text-white [&_span]:text-white [&_a]:text-white"
+                    variant="outline"
+                    className="relative text-sm lg:text-base px-4 lg:px-5 py-1.5 lg:py-2 font-medium rounded-full border-2 transition-all duration-300 hover:bg-[#003666] hover:text-white"
+                    style={{ 
+                      borderColor: HEADER_STYLES.brandColor,
+                      color: HEADER_STYLES.brandColor,
+                    }}
                   >
                     <Link 
                       to="/auth" 
-                      className="flex items-center gap-2 text-white"
+                      className="flex items-center gap-1.5"
                     >
-                      <span className="text-white">Sign In</span>
-                      <span className="hidden sm:inline opacity-70 text-white">|</span>
-                      <span className="hidden sm:inline text-white">Join</span>
+                      <span>Sign In</span>
+                      <span className="hidden sm:inline opacity-50">|</span>
+                      <span className="hidden sm:inline">Join</span>
                     </Link>
                   </Button>
                 )}
@@ -184,17 +188,17 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="hover:bg-muted transition-all duration-200 p-2" 
+                      className="hover:bg-muted/50 transition-all duration-200 p-2" 
                       style={{ color: HEADER_STYLES.brandColor }}
                       onClick={() => setIsOpen(true)} 
                       aria-label="Toggle mobile menu"
                     >
-                      {/* 5 lines like music staff */}
-                      <div className="flex flex-col justify-center items-center w-6 h-6 gap-1">
-                        {[1, 2, 3, 4, 5].map((i) => (
+                      {/* Clean 3-line hamburger menu */}
+                      <div className="flex flex-col justify-center items-center w-5 h-5 gap-[5px]">
+                        {[1, 2, 3].map((i) => (
                           <div 
                             key={i}
-                            className="w-7 h-0.5 transition-all duration-200 hover:w-8"
+                            className="w-5 h-[2px] rounded-full transition-all duration-200"
                             style={{ backgroundColor: HEADER_STYLES.brandColor }}
                           />
                         ))}
