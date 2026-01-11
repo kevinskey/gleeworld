@@ -122,12 +122,13 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 />
                 
                 {/* Site Title - Cinzel font, 90% of logo size */}
-                <h1 
-                  style={{ 
+                <h1
+                  style={{
+                    fontFamily: "'Cinzel', serif",
                     color: HEADER_STYLES.brandColor,
                     fontSize: HEADER_STYLES.titleSizes.mobile,
                   }}
-                  className="whitespace-nowrap drop-shadow-sm md:!text-[2.25rem] lg:!text-[2.7rem]"
+                  className="font-['Cinzel'] font-medium whitespace-nowrap drop-shadow-sm md:!text-[2.25rem] lg:!text-[2.7rem]"
                 >
                   GleeWorld
                 </h1>
