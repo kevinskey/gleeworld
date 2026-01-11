@@ -29,9 +29,9 @@ export const UniversalLayout = ({
 }: UniversalLayoutProps) => {
   const location = useLocation();
 
-  // Use PublicHeader for public, fan, and alumnae pages
-  const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
-  const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
+  // Use PublicHeader for public, fan, alumnae, and academy pages
+  const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae', '/glee-academy'];
+  const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname) || location.pathname.startsWith('/glee-academy');
 
   // Full-bleed shell background for wide screens on dashboards
   const isDashboardShell = location.pathname.startsWith('/dashboard');
