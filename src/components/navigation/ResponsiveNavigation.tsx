@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,7 +25,8 @@ interface ResponsiveNavigationProps {
 
 export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'default' }: ResponsiveNavigationProps) => {
   const location = useLocation();
-const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [infoOpen, setInfoOpen] = useState(false);
   
   const isSpelmanBlue = variant === 'spelman-blue';
@@ -44,6 +45,7 @@ const { user, signOut } = useAuth();
   const handleAuthAction = async () => {
     if (user) {
       await signOut();
+      navigate('/', { replace: true });
     }
     onItemClick?.();
   };

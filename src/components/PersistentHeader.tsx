@@ -57,9 +57,11 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
     return () => clearInterval(timer);
   }, []);
 
+  const { signOut } = useAuth();
+  
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
+    await signOut();
+    navigate('/', { replace: true });
   };
 
   return (

@@ -158,14 +158,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error('AuthContext: Error signing out:', error);
       }
       
-      // Immediate redirect without reload to prevent white screen
-      window.location.replace('/');
+      // Don't do full page reload - let the component handle navigation
+      console.log('AuthContext: Sign out complete, state cleared');
     } catch (error) {
       console.error('AuthContext: Sign out failed:', error);
       setUser(null);
       setSession(null);
       setLoading(false);
-      window.location.replace('/');
     }
   };
 

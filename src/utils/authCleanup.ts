@@ -39,12 +39,10 @@ export const cleanupAuthState = () => {
   }
 };
 
-export const resetAuthState = async () => {
+export const resetAuthState = async (navigateFn?: (path: string) => void) => {
   console.log('authCleanup: Resetting complete auth state...');
   
   try {
-    // Use regular import instead of dynamic import
-    
     // Sign out globally first
     try {
       await supabase.auth.signOut({ scope: 'global' });
@@ -58,11 +56,18 @@ export const resetAuthState = async () => {
     
     console.log('authCleanup: Complete auth reset finished');
     
-    // Force page reload to ensure clean state
-    window.location.href = '/auth';
+    // Use SPA navigation if provided, otherwise fallback to redirect
+    if (navigateFn) {
+      navigateFn('/auth');
+    } else {
+      window.location.href = '/auth';
+    }
   } catch (error) {
     console.error('authCleanup: Auth reset failed:', error);
-    // Fallback: still try to redirect
-    window.location.href = '/auth';
+    if (navigateFn) {
+      navigateFn('/auth');
+    } else {
+      window.location.href = '/auth';
+    }
   }
 };
