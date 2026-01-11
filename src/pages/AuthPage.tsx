@@ -24,95 +24,81 @@ export default function AuthPage() {
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const getRedirectTarget = () => {
+    // Check sessionStorage first for stored redirect path
+    const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
+    if (storedRedirect) {
+      sessionStorage.removeItem('redirectAfterAuth');
+      return storedRedirect;
+    }
+
+    // Fall back to URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnTo = urlParams.get('returnTo');
+    const hasTimeSlot = urlParams.get('timeSlot');
+
+    if (returnTo) return returnTo;
+    if (hasTimeSlot) return '/audition-application';
+
+    // Regular auth, redirect to dashboard for members
+    return '/dashboard';
+  };
+
   useEffect(() => {
     // If user is already authenticated, redirect them
     if (user && !loading) {
-      // Check sessionStorage first for stored redirect path
-      const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
-      if (storedRedirect) {
-        // Clear the stored redirect and use it
-        sessionStorage.removeItem('redirectAfterAuth');
-        window.location.href = storedRedirect;
-        return;
-      }
-
-      // Fall back to URL parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const returnTo = urlParams.get('returnTo');
-      const hasTimeSlot = urlParams.get('timeSlot');
-      if (returnTo) {
-        // User came from a specific page (like QR scanning), redirect back
-        window.location.href = returnTo;
-      } else if (hasTimeSlot) {
-        // User came from booking flow
-        window.location.href = '/audition-application';
-      } else {
-        // Regular auth, redirect to dashboard for members
-        window.location.href = '/dashboard';
-      }
+      const target = getRedirectTarget();
+      navigate(target, { replace: true });
     }
-  }, [user, loading]);
+  }, [user, loading, navigate]);
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+
     try {
       if (isLogin) {
         // Login flow
-        const {
-          data,
-          error
-        } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email,
-          password
-        });
-        if (error) throw error;
-        toast({
-          title: "Welcome back!",
-          description: "You have been successfully logged in."
+          password,
         });
 
-        // Handle redirect after successful login
-        // Check sessionStorage first
-        const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
-        if (storedRedirect) {
-          sessionStorage.removeItem('redirectAfterAuth');
-          window.location.href = storedRedirect;
-        } else {
-          // Fall back to URL parameters
-          const urlParams = new URLSearchParams(window.location.search);
-          const returnTo = urlParams.get('returnTo');
-          if (returnTo) {
-            window.location.href = returnTo;
-          } else {
-            window.location.href = '/dashboard';
-          }
-        }
+        if (error) throw error;
+
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully logged in.",
+        });
+
+        // No full page reload—navigate within the SPA to avoid a white screen.
+        const target = getRedirectTarget();
+        navigate(target, { replace: true });
       } else {
         // Signup flow
         const redirectUrl = `${window.location.origin}/audition-application`;
-        const {
-          data,
-          error
-        } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: redirectUrl,
             data: {
-              full_name: name
-            }
-          }
+              full_name: name,
+            },
+          },
         });
+
         if (error) throw error;
+
         if (data.user && !data.user.email_confirmed_at) {
           toast({
             title: "Check your email",
-            description: "We sent you a confirmation link. Please check your email to complete registration."
+            description:
+              "We sent you a confirmation link. Please check your email to complete registration.",
           });
         } else {
           toast({
             title: "Account created!",
-            description: "Please complete your audition application."
+            description: "Please complete your audition application.",
           });
         }
       }
@@ -121,7 +107,7 @@ export default function AuthPage() {
       toast({
         title: "Authentication failed",
         description: error.message || "Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
