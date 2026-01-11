@@ -87,7 +87,10 @@ export const HeroManagement = () => {
     mobile_image_url: "",
     ipad_image_url: "",
     display_order: 0,
-    is_active: true
+    is_active: true,
+    duration_ms: null as number | null,
+    layout: 'one' as 'one' | 'two' | 'three',
+    transition: 'fade' as 'fade' | 'left' | 'right' | 'up' | 'down' | 'zoom'
   });
 
   // Fetch slide counts for all contexts
@@ -461,7 +464,10 @@ export const HeroManagement = () => {
       mobile_image_url: slide.mobile_image_url || "",
       ipad_image_url: slide.ipad_image_url || "",
       display_order: slide.display_order || 0,
-      is_active: slide.is_active ?? true
+      is_active: slide.is_active ?? true,
+      duration_ms: null,
+      layout: 'one',
+      transition: 'fade'
     });
     setEditingId(slide.id);
   };
@@ -525,7 +531,10 @@ export const HeroManagement = () => {
       mobile_image_url: "",
       ipad_image_url: "",
       display_order: 0,
-      is_active: true
+      is_active: true,
+      duration_ms: null,
+      layout: 'one',
+      transition: 'fade'
     });
     setEditingId(null);
   };
