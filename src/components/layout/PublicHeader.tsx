@@ -154,21 +154,17 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 {/* Sign In / Join Button - Only shown when not logged in */}
                 {!user && (
                   <Button 
-                    asChild 
+                    asChild
+                    variant="navy"
                     className="relative text-sm lg:text-base px-5 lg:px-6 py-2 lg:py-2.5 font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border-0"
-                    style={{ 
-                      backgroundColor: HEADER_STYLES.brandColor,
-                      color: '#FFFFFF'
-                    }}
                   >
                     <Link 
                       to="/auth" 
                       className="flex items-center gap-2"
-                      style={{ color: '#FFFFFF' }}
                     >
-                      <span style={{ color: '#FFFFFF' }}>Sign In</span>
-                      <span className="hidden sm:inline" style={{ color: 'rgba(255,255,255,0.7)' }}>|</span>
-                      <span className="hidden sm:inline" style={{ color: '#FFFFFF' }}>Join</span>
+                      <span>Sign In</span>
+                      <span className="hidden sm:inline opacity-70">|</span>
+                      <span className="hidden sm:inline">Join</span>
                     </Link>
                   </Button>
                 )}
@@ -216,12 +212,12 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                       {!user && (
                         <div className="flex flex-col gap-2 pt-3 mt-3 border-t border-border">
                           <Button 
-                            asChild 
+                            asChild
+                            variant="navy"
                             className="w-full"
-                            style={{ backgroundColor: HEADER_STYLES.brandColor, color: '#FFFFFF' }}
                             onClick={() => setIsOpen(false)}
                           >
-                            <Link to="/auth" style={{ color: '#FFFFFF' }}>Sign In / Join</Link>
+                            <Link to="/auth">Sign In / Join</Link>
                           </Button>
                         </div>
                       )}
