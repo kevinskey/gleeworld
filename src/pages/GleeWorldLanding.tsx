@@ -272,7 +272,7 @@ export const GleeWorldLanding = () => {
       {/* Concert Ticket Request Hero Banner - REMOVED: Concerts are over */}
 
       {/* Hero Section */}
-      <section className="relative z-30 py-4 sm:py-6 md:py-10 lg:py-12 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-4 sm:py-6 md:py-10 lg:py-12 px-2 sm:px-4 md:px-6 lg:px-8 w-full bg-white">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
             <div className="h-[280px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] 2xl:h-[800px] relative overflow-hidden">
