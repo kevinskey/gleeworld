@@ -66,11 +66,11 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
               <div className="flex items-center gap-2 lg:gap-3">
 {/* Single Auth Button */}
                 {!user && (
-                  <Button asChild className="relative text-sm lg:text-base px-5 lg:px-6 py-2 lg:py-2.5 bg-[#003666] hover:bg-[#002b52] text-white font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border-0">
-                    <Link to="/auth" className="flex items-center gap-2">
-                      <span>Sign In</span>
-                      <span className="hidden sm:inline text-white/70">|</span>
-                      <span className="hidden sm:inline">Join</span>
+                  <Button asChild className="relative text-sm lg:text-base px-5 lg:px-6 py-2 lg:py-2.5 bg-[#003666] hover:bg-[#002b52] !text-white font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border-0 [&>a]:!text-white [&_span]:!text-white">
+                    <Link to="/auth" className="flex items-center gap-2 !text-white">
+                      <span className="!text-white">Sign In</span>
+                      <span className="hidden sm:inline !text-white/70">|</span>
+                      <span className="hidden sm:inline !text-white">Join</span>
                     </Link>
                   </Button>
                 )}
