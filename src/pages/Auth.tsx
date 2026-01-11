@@ -16,36 +16,38 @@ const Auth = () => {
   const theme = searchParams.get('theme') as 'default' | 'mus240' || 'default';
 
   useEffect(() => {
-    // Only redirect if user is logged in and auth is done loading
+    // As soon as auth is established, redirect immediately (don't block on profile fetch)
     if (!loading && user) {
-      // Wait for profile if user exists, but don't block if profile loading takes too long
-      if (!profileLoading || profile) {
-        // Check for URL parameter first, then sessionStorage
-        const urlParams = new URLSearchParams(window.location.search);
-        const returnTo = urlParams.get('returnTo');
-        
-        if (returnTo) {
-          sessionStorage.setItem('redirectAfterAuth', returnTo);
-          navigate(returnTo, { replace: true });
-          return;
-        }
-        
-        const redirectPath = sessionStorage.getItem('redirectAfterAuth');
-        if (redirectPath) {
-          sessionStorage.removeItem('redirectAfterAuth');
-          navigate(redirectPath, { replace: true });
-          return;
-        }
-        
-        navigate('/glee-academy', { replace: true });
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnTo = urlParams.get('returnTo');
+
+      if (returnTo) {
+        sessionStorage.setItem('redirectAfterAuth', returnTo);
+        navigate(returnTo, { replace: true });
+        return;
       }
+
+      const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+      if (redirectPath) {
+        sessionStorage.removeItem('redirectAfterAuth');
+        navigate(redirectPath, { replace: true });
+        return;
+      }
+
+      navigate('/glee-academy', { replace: true });
     }
-  }, [user, loading, profileLoading, profile, navigate]);
+  }, [user, loading, navigate]);
 
   // Show loading only during initial auth check
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)',
+        }}
+      >
         <LoadingSpinner size="lg" text="Loading..." className="text-white" />
       </div>
     );
@@ -54,21 +56,19 @@ const Auth = () => {
   // If user is logged in, show redirecting state
   if (user) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)',
+        }}
+      >
         <LoadingSpinner size="lg" text="Redirecting..." className="text-white" />
       </div>
     );
   }
 
   // No user - show auth form immediately (don't wait for profile loading)
-
-  if (user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
-        <LoadingSpinner size="lg" text="Redirecting..." className="text-white" />
-      </div>
-    );
-  }
 
   const getTitle = () => {
     if (isReset) return "Reset Password";
