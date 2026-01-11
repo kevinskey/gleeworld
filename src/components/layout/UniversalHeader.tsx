@@ -230,8 +230,16 @@ export const UniversalHeader = ({
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
             <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">
-              <Link to="/" className="flex items-center hover:scale-105 transition-transform duration-200 relative flex-shrink-0 p-1 sm:p-1.5">
-                <img src="/lovable-uploads/gleeworld-logo.png" alt="GleeWorld" className="h-10 sm:h-12 md:h-10 lg:h-14 xl:h-16 w-auto object-contain flex-shrink-0 drop-shadow-md" />
+              <Link to="/" className="flex items-center gap-2 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-card-foreground p-1 sm:p-1.5">
+                <div className="relative">
+                  <img src="/lovable-uploads/gleeworld-logo.png" alt="GleeWorld" className="w-12 h-12 sm:w-12 sm:h-12 md:w-7 md:h-7 lg:w-18 lg:h-18 object-contain flex-shrink-0 drop-shadow-md" />
+                </div>
+                <span style={{
+                    fontFamily: "'Cinzel', serif",
+                    letterSpacing: '0.02em'
+                  }} className="text-2xl sm:text-3xl md:text-2xl lg:text-5xl xl:text-6xl whitespace-nowrap relative font-medium text-card-foreground drop-shadow-sm">
+                  GleeWorld
+                </span>
               </Link>
             </EnhancedTooltip>
             
