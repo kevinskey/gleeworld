@@ -176,32 +176,28 @@ export const UniversalHeader = ({
   const lastHeaderHeightRef = useRef<number>(0);
   const isInitializedRef = useRef(false);
   useEffect(() => {
-    const getSafeTopPx = () => {
-      // --gw-safe-top is defined in CSS as env(safe-area-inset-top, 0px)
-      const raw = getComputedStyle(document.documentElement)
-        .getPropertyValue('--gw-safe-top')
-        .trim();
-      const parsed = Number.parseFloat(raw.replace('px', ''));
-      return Number.isFinite(parsed) ? parsed : 0;
-    };
-
     const update = (force = false) => {
       const el = headerRef.current;
       if (!el) return;
 
-      const headerHeight = Math.round(el.getBoundingClientRect().height);
-      const safeTop = Math.round(getSafeTopPx());
-      const height = headerHeight + safeTop;
+      const baseHeight = Math.round(el.getBoundingClientRect().height);
 
       // Only update on initial mount or if height changes significantly (> 2px)
       // This prevents dropdown interactions from causing layout shifts
-      if (!force && isInitializedRef.current && Math.abs(height - lastHeaderHeightRef.current) <= 2) {
+      if (!force && isInitializedRef.current && Math.abs(baseHeight - lastHeaderHeightRef.current) <= 2) {
         return;
       }
-      lastHeaderHeightRef.current = height;
-      // Set both variables for compatibility
-      document.documentElement.style.setProperty('--gw-header-h', `${height}px`);
-      document.documentElement.style.setProperty('--gw-header-height', `${height}px`);
+
+      lastHeaderHeightRef.current = baseHeight;
+
+      // Set base height; CSS combines with safe-area inset via calc()
+      document.documentElement.style.setProperty('--gw-header-base-h', `${baseHeight}px`);
+
+      // Backwards compat: some parts of the app still read these vars directly.
+      // Keep them pointing at the combined value.
+      document.documentElement.style.setProperty('--gw-header-h', `calc(var(--gw-header-base-h) + var(--gw-safe-top))`);
+      document.documentElement.style.setProperty('--gw-header-height', `calc(var(--gw-header-base-h) + var(--gw-safe-top))`);
+
       isInitializedRef.current = true;
     };
 
@@ -221,9 +217,14 @@ export const UniversalHeader = ({
       window.clearTimeout(safeTopRecheck);
     };
   }, []);
-  return <>
-    <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none bg-primary-foreground safe-top">
-      <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0 bg-primary-foreground">
+
+  return (
+    <>
+      <div
+        className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none bg-primary-foreground"
+        style={{ top: 'var(--gw-safe-top)' }}
+      >
+        <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0 bg-primary-foreground">
         <header ref={headerRef} className={`w-full shadow-lg relative rounded-b-lg bg-white/80 backdrop-blur-xl text-foreground ${user ? getRoleAccentColor() : 'border-b border-white/20'}`}>
           <div className="flex items-center justify-between w-full min-h-14 sm:min-h-16 md:min-h-14 py-3 md:py-2 px-2 sm:px-4 md:px-6 lg:px-8 pt-3 pb-3">
           {/* Logo and Navigation */}
