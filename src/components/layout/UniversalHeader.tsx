@@ -486,5 +486,6 @@ export const UniversalHeader = ({
 
       {/* Mobile Bottom Navigation */}
       {user && <MobileBottomNav />}
-    </>;
+    </>
+  );
 };
