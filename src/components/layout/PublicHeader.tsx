@@ -98,7 +98,14 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
             ================================================================ */}
         <header 
           className={`border-b border-border/40 shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}
-          style={{ backgroundColor: HEADER_STYLES.backgroundColor }}
+          style={{
+            backgroundColor: HEADER_STYLES.backgroundColor,
+            // Ensure ALL headings (h1-h6) inside the public header use Cinzel
+            // (GlobalDesignFixes uses --heading-font as the source of truth)
+            ['--heading-font' as any]: 'Cinzel',
+            ['--heading-weight' as any]: '500',
+            ['--heading-letter-spacing' as any]: HEADER_STYLES.titleLetterSpacing,
+          }}
         >
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 lg:h-20 min-w-0">
@@ -117,12 +124,10 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 {/* Site Title - Cinzel font, 90% of logo size */}
                 <h1 
                   style={{ 
-                    fontFamily: HEADER_STYLES.titleFontFamily, 
-                    letterSpacing: HEADER_STYLES.titleLetterSpacing,
                     color: HEADER_STYLES.brandColor,
-                    fontSize: HEADER_STYLES.titleSizes.mobile
+                    fontSize: HEADER_STYLES.titleSizes.mobile,
                   }}
-                  className="font-medium whitespace-nowrap drop-shadow-sm md:!text-[2.25rem] lg:!text-[2.7rem]"
+                  className="whitespace-nowrap drop-shadow-sm md:!text-[2.25rem] lg:!text-[2.7rem]"
                 >
                   GleeWorld
                 </h1>
