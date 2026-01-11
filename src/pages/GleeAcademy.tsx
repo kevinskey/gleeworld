@@ -56,40 +56,40 @@ const GleeAcademy = () => {
               {ACADEMY_COURSES.map(course => (
                 <Card 
                   key={course.id} 
-                  className="bg-white border border-gray-200 hover:border-[#003666] hover:shadow-lg transition-all cursor-pointer group"
+                  className="bg-white border border-gray-300 hover:border-[#003666] hover:shadow-lg transition-all cursor-pointer group"
                   onClick={() => handleCourseClick(course.route, course.courseCode)}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline" className="font-mono text-xs border-gray-300 text-gray-700">
+                      <Badge variant="outline" className="font-mono text-xs border-[#003666] text-[#003666]">
                         {course.courseCode}
                       </Badge>
                       <Badge 
-                        className={`text-xs ${
+                        className={`text-xs font-medium ${
                           course.level === 'Beginner' 
-                            ? 'bg-green-100 text-green-700' 
+                            ? 'bg-green-600 text-white' 
                             : course.level === 'Intermediate' 
-                              ? 'bg-yellow-100 text-yellow-700' 
-                              : 'bg-purple-100 text-purple-700'
+                              ? 'bg-amber-500 text-white' 
+                              : 'bg-purple-600 text-white'
                         }`}
                       >
                         {course.level}
                       </Badge>
                     </div>
-                    <CardTitle className="text-lg font-bold text-gray-900 group-hover:text-[#003666] transition-colors">
+                    <CardTitle className="text-lg font-bold text-[#003666] group-hover:text-[#002244] transition-colors">
                       {course.title}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    <p className="text-gray-700 text-sm mb-4 line-clamp-2">
                       {course.description}
                     </p>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center text-sm text-gray-500">
+                      <div className="flex items-center text-sm text-gray-600">
                         <Users className="h-4 w-4 mr-1" />
                         <span>{course.instructor.name}</span>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-[#003666] transition-colors" />
+                      <ChevronRight className="h-5 w-5 text-[#003666] group-hover:text-[#002244] transition-colors" />
                     </div>
                   </CardContent>
                 </Card>
