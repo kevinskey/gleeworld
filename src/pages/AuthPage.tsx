@@ -126,9 +126,14 @@ export default function AuthPage() {
         </div>
       </div>;
   }
-  return <div className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center p-4 auth-page" style={{
-    backgroundImage: `url(${authBackground})`
-  }}>
+  return <div 
+    className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] auth-page" 
+    style={{
+      backgroundImage: `url(${authBackground})`,
+      paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+      paddingRight: 'max(1rem, env(safe-area-inset-right))',
+    }}
+  >
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70" />
       
@@ -138,7 +143,7 @@ export default function AuthPage() {
       <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-accent/5 rounded-full blur-xl animate-pulse delay-500" />
       
       {/* Back Button */}
-      <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="absolute top-6 left-6 z-20 text-white hover:bg-white/20 border border-white/30 backdrop-blur-sm transition-all duration-300">
+      <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="absolute z-20 text-white hover:bg-white/20 border border-white/30 backdrop-blur-sm transition-all duration-300" style={{ top: 'max(1.5rem, calc(env(safe-area-inset-top) + 0.5rem))', left: 'max(1.5rem, env(safe-area-inset-left))' }}>
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Home
       </Button>
