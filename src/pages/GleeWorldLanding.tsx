@@ -272,10 +272,10 @@ export const GleeWorldLanding = () => {
       {/* Concert Ticket Request Hero Banner - REMOVED: Concerts are over */}
 
       {/* Hero Section */}
-      <section className="relative z-30 py-4 sm:py-6 md:py-10 lg:py-12 px-2 sm:px-4 md:px-6 lg:px-8 w-full bg-white">
+      <section className="relative z-30 py-2 sm:py-4 md:py-6 lg:py-8 px-2 sm:px-4 md:px-6 lg:px-8 w-full bg-white">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
-            <div className="h-[280px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] 2xl:h-[800px] relative overflow-hidden">
+            <div className="aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] lg:aspect-[21/9] xl:aspect-[21/8] max-h-[85vh] relative overflow-hidden">
               {heroSlides.length > 0 ? <>
                   {/* Desktop Image - Smart Cover */}
                   <SmartCoverImage src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="hidden md:block w-full h-full brightness-95 contrast-100" fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" />
