@@ -214,8 +214,8 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
           {/* Glee Club Logo Footer - similar to Carl Fischer reference */}
           <div className="w-full border-t pt-3 flex justify-center">
             <img 
-              src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
-              alt="Spelman College Glee Club"
+              src="/lovable-uploads/gleeworld-logo.png" 
+              alt="GleeWorld"
               className="h-12 object-contain opacity-80"
             />
           </div>
