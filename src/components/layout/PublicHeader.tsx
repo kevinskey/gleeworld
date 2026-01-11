@@ -47,11 +47,11 @@ const HEADER_STYLES = {
     desktop: "lg:w-12 lg:h-12" // 48px
   },
   
-  // Title sizes - 90% of logo (calculated: 32*0.9=28.8px, 40*0.9=36px, 48*0.9=43.2px)
+  // Title sizes - 90% of logo, then reduced by 10%
   titleSizes: {
-    mobile: "1.8rem",   // ~28.8px (90% of 32px)
-    tablet: "2.25rem",  // ~36px (90% of 40px)
-    desktop: "2.7rem"   // ~43.2px (90% of 48px)
+    mobile: "1.62rem",   // ~26px (was 1.8rem)
+    tablet: "2.025rem",  // ~32px (was 2.25rem)
+    desktop: "2.43rem"   // ~39px (was 2.7rem)
   }
 } as const;
 
@@ -133,7 +133,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                     fontWeight: 500,
                     letterSpacing: '0.02em',
                   }}
-                  className="whitespace-nowrap drop-shadow-sm md:!text-[2.25rem] lg:!text-[2.7rem]"
+                  className="whitespace-nowrap drop-shadow-sm md:!text-[2.025rem] lg:!text-[2.43rem]"
                 >
                   GleeWorld
                 </span>
