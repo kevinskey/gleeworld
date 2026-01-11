@@ -1,22 +1,69 @@
+/**
+ * ============================================================================
+ * PUBLIC HEADER - For guests/unauthenticated users on public landing pages
+ * ============================================================================
+ * 
+ * This header is DIFFERENT from the PersistentHeader (UniversalHeader.tsx)
+ * which is used for logged-in/authenticated users.
+ * 
+ * DESIGN SPECS:
+ * - Background: Solid white (#FFFFFF)
+ * - Site Title Font: Cinzel (matches PersistentHeader)
+ * - Site Title Size: 90% of logo height
+ * - All text/icons color: #003666 (Spelman blue)
+ * - Sign In button: #003666 background with white text
+ * 
+ * ============================================================================
+ */
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Music, Settings } from "lucide-react";
+import { Music } from "lucide-react";
 import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigation";
-import { HeaderClock } from "@/components/ui/header-clock";
-import { MusicStaffMenu } from "@/components/ui/music-staff-menu";
 import { useAuth } from "@/contexts/AuthContext";
+
+// ============================================================================
+// DESIGN CONSTANTS - Edit these to change the header appearance
+// ============================================================================
+const HEADER_STYLES = {
+  // Brand color for all text and icons
+  brandColor: "#003666",
+  
+  // Background color
+  backgroundColor: "#FFFFFF",
+  
+  // Title font family (must match PersistentHeader)
+  titleFontFamily: "'Cinzel', serif",
+  
+  // Title letter spacing
+  titleLetterSpacing: "0.02em",
+  
+  // Logo sizes at different breakpoints
+  logoSizes: {
+    mobile: "w-8 h-8",      // 32px
+    tablet: "md:w-10 md:h-10", // 40px  
+    desktop: "lg:w-12 lg:h-12" // 48px
+  },
+  
+  // Title sizes - 90% of logo (calculated: 32*0.9=28.8px, 40*0.9=36px, 48*0.9=43.2px)
+  titleSizes: {
+    mobile: "1.8rem",   // ~28.8px (90% of 32px)
+    tablet: "2.25rem",  // ~36px (90% of 40px)
+    desktop: "2.7rem"   // ~43.2px (90% of 48px)
+  }
+} as const;
+
 interface PublicHeaderProps {
   className?: string;
 }
 
 export const PublicHeader = ({ className }: PublicHeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const [hideForAnnotation, setHideForAnnotation] = useState(false);
+  
   useEffect(() => {
     const handler = (e: any) => setHideForAnnotation(!!e.detail?.active);
     window.addEventListener('annotationModeChange', handler as any);
@@ -24,85 +71,151 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
     return () => window.removeEventListener('annotationModeChange', handler as any);
   }, []);
 
-  // Add global style to hide sheet overlay and improve iOS touch handling
+  // Global styles for overlay and iOS touch handling
   const overlayStyle = `
     [data-radix-dialog-overlay] {
       background: transparent !important;
       backdrop-filter: none !important;
     }
-
-    /* iOS Safari touch fixes */
     button[aria-label="Toggle mobile menu"] {
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
       touch-action: manipulation;
       cursor: pointer;
     }
   `;
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: overlayStyle }} />
-      {/* Wrapper provides iOS safe-area offset for PWA */}
+      
+      {/* Wrapper for iOS safe-area offset (PWA) */}
       <div
         className="sticky top-0 z-50 w-full"
         style={{ top: 'var(--gw-safe-top)' }}
       >
-        <header className={`bg-white border-b border-border/40 shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}>
+        {/* ================================================================
+            MAIN HEADER ELEMENT
+            ================================================================ */}
+        <header 
+          className={`border-b border-border/40 shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}
+          style={{ backgroundColor: HEADER_STYLES.backgroundColor }}
+        >
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 lg:h-20 min-w-0">
-              {/* Logo */}
+              
+              {/* ============================================================
+                  LOGO + SITE TITLE
+                  ============================================================ */}
               <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
-                <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 flex-shrink-0" />
+                {/* Logo Image */}
+                <img 
+                  src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
+                  alt="Spelman College Glee Club" 
+                  className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0`} 
+                />
+                
+                {/* Site Title - Cinzel font, 90% of logo size */}
                 <h1 
-                  style={{ fontFamily: "'Cinzel', serif", letterSpacing: '0.02em', fontSize: '90%' }}
-                  className="font-medium text-[#003666] whitespace-nowrap drop-shadow-sm text-[calc(2rem*0.9)] md:text-[calc(2.5rem*0.9)] lg:text-[calc(3rem*0.9)]"
+                  style={{ 
+                    fontFamily: HEADER_STYLES.titleFontFamily, 
+                    letterSpacing: HEADER_STYLES.titleLetterSpacing,
+                    color: HEADER_STYLES.brandColor,
+                    fontSize: HEADER_STYLES.titleSizes.mobile
+                  }}
+                  className="font-medium whitespace-nowrap drop-shadow-sm md:!text-[2.25rem] lg:!text-[2.7rem]"
                 >
                   GleeWorld
                 </h1>
               </Link>
               
-              {/* Center Navigation - flex-1 to take remaining space and center content */}
-              <div className="hidden lg:flex flex-1 justify-center [&_a]:text-[#003666] [&_button]:text-[#003666] [&_svg]:text-[#003666]">
-                <ResponsiveNavigation variant="default" />
+              {/* ============================================================
+                  CENTER NAVIGATION (Desktop only)
+                  ============================================================ */}
+              <div 
+                className="hidden lg:flex flex-1 justify-center"
+                style={{ color: HEADER_STYLES.brandColor }}
+              >
+                <div className="[&_a]:!text-[#003666] [&_button]:!text-[#003666] [&_svg]:!text-[#003666]">
+                  <ResponsiveNavigation variant="default" />
+                </div>
               </div>
 
-              {/* Right side actions */}
+              {/* ============================================================
+                  RIGHT SIDE ACTIONS
+                  ============================================================ */}
               <div className="flex items-center gap-2 lg:gap-3">
-{/* Single Auth Button */}
+                
+                {/* Sign In / Join Button - Only shown when not logged in */}
                 {!user && (
-                  <Button asChild className="relative text-sm lg:text-base px-5 lg:px-6 py-2 lg:py-2.5 bg-[#003666] hover:bg-[#002b52] !text-white font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border-0 [&>a]:!text-white [&_span]:!text-white">
-                    <Link to="/auth" className="flex items-center gap-2 !text-white">
-                      <span className="!text-white">Sign In</span>
-                      <span className="hidden sm:inline !text-white/70">|</span>
-                      <span className="hidden sm:inline !text-white">Join</span>
+                  <Button 
+                    asChild 
+                    className="relative text-sm lg:text-base px-5 lg:px-6 py-2 lg:py-2.5 font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border-0"
+                    style={{ 
+                      backgroundColor: HEADER_STYLES.brandColor,
+                      color: '#FFFFFF'
+                    }}
+                  >
+                    <Link 
+                      to="/auth" 
+                      className="flex items-center gap-2"
+                      style={{ color: '#FFFFFF' }}
+                    >
+                      <span style={{ color: '#FFFFFF' }}>Sign In</span>
+                      <span className="hidden sm:inline" style={{ color: 'rgba(255,255,255,0.7)' }}>|</span>
+                      <span className="hidden sm:inline" style={{ color: '#FFFFFF' }}>Join</span>
                     </Link>
                   </Button>
                 )}
               
-                {/* Friendly Mobile Menu - Shows below lg breakpoint */}
+                {/* ============================================================
+                    MOBILE MENU (Shows below lg breakpoint)
+                    ============================================================ */}
                 <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
                   <DropdownMenuTrigger asChild className="lg:hidden">
-                    <Button variant="ghost" size="sm" className="text-[#003666] hover:bg-muted transition-all duration-200 p-2" onClick={() => setIsOpen(true)} aria-label="Toggle mobile menu">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="hover:bg-muted transition-all duration-200 p-2" 
+                      style={{ color: HEADER_STYLES.brandColor }}
+                      onClick={() => setIsOpen(true)} 
+                      aria-label="Toggle mobile menu"
+                    >
+                      {/* 5 lines like music staff */}
                       <div className="flex flex-col justify-center items-center w-6 h-6 gap-1">
-                        {/* 5 lines like music staff */}
-                        <div className="w-7 h-0.5 bg-[#003666] transition-all duration-200 hover:w-8"></div>
-                        <div className="w-7 h-0.5 bg-[#003666] transition-all duration-200 hover:w-8"></div>
-                        <div className="w-7 h-0.5 bg-[#003666] transition-all duration-200 hover:w-8"></div>
-                        <div className="w-7 h-0.5 bg-[#003666] transition-all duration-200 hover:w-8"></div>
-                        <div className="w-7 h-0.5 bg-[#003666] transition-all duration-200 hover:w-8"></div>
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div 
+                            key={i}
+                            className="w-7 h-0.5 transition-all duration-200 hover:w-8"
+                            style={{ backgroundColor: HEADER_STYLES.brandColor }}
+                          />
+                        ))}
                       </div>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" side="bottom" sideOffset={20} avoidCollisions collisionPadding={8} className="w-[92vw] sm:w-80 max-w-sm p-3 bg-background border border-border rounded-lg shadow-xl z-[9999] max-h-[80vh] overflow-y-auto">
+                  
+                  <DropdownMenuContent 
+                    align="end" 
+                    side="bottom" 
+                    sideOffset={20} 
+                    avoidCollisions 
+                    collisionPadding={8} 
+                    className="w-[92vw] sm:w-80 max-w-sm p-3 bg-background border border-border rounded-lg shadow-xl z-[9999] max-h-[80vh] overflow-y-auto"
+                  >
                     <div className="flex items-center justify-center gap-2 pb-2 border-b border-border">
-                      <Music className="h-4 w-4 text-primary" />
+                      <Music className="h-4 w-4" style={{ color: HEADER_STYLES.brandColor }} />
                       <span className="font-semibold text-sm text-foreground">Menu</span>
                     </div>
                     <nav className="flex flex-col gap-1 pt-3">
                       <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
                       {!user && (
                         <div className="flex flex-col gap-2 pt-3 mt-3 border-t border-border">
-                          <Button asChild className="w-full bg-primary hover:bg-primary/90" onClick={() => setIsOpen(false)}>
-                            <Link to="/auth">Sign In / Join</Link>
+                          <Button 
+                            asChild 
+                            className="w-full"
+                            style={{ backgroundColor: HEADER_STYLES.brandColor, color: '#FFFFFF' }}
+                            onClick={() => setIsOpen(false)}
+                          >
+                            <Link to="/auth" style={{ color: '#FFFFFF' }}>Sign In / Join</Link>
                           </Button>
                         </div>
                       )}
