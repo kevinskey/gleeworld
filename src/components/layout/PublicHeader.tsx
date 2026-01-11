@@ -46,69 +46,65 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
         className="sticky top-0 z-50 w-full"
         style={{ top: 'var(--gw-safe-top)' }}
       >
-        <header className={`bg-primary/95 border-b border-primary-foreground/20 backdrop-blur-md shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}>
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 lg:h-20 min-w-0">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
-              <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 flex-shrink-0" />
-              <div className="min-w-0">
-                <h1 className="text-lg md:text-xl xl:text-3xl font-bold text-white tracking-wide truncate lg:text-xl">GLEEWORLD</h1>
-              </div>
-            </Link>
-            
-            {/* Center Navigation - flex-1 to take remaining space and center content */}
-            <div className="hidden lg:flex flex-1 justify-center">
-              <ResponsiveNavigation variant="spelman-blue" />
-            </div>
-
-            {/* Right side actions */}
-            <div className="flex items-center gap-2 lg:gap-3">
-              {/* Fan Auth Buttons */}
-              {!user && <div className="hidden md:flex items-center gap-2">
-                  <Button variant="outline" asChild className="text-sm lg:text-base px-3 lg:px-4 py-1.5 lg:py-2 border-white/30 text-white hover:bg-white/10 hover:text-white">
-                    <Link to="/auth">Sign In</Link>
-                  </Button>
-                  <Button asChild className="text-sm lg:text-base px-3 lg:px-4 py-1.5 lg:py-2 bg-[#0066CC] hover:bg-[#0077DD] text-white whitespace-nowrap border border-[#0088EE]">
-                    <Link to="/auth?mode=signup&role=fan">Join as Fan</Link>
-                  </Button>
-                </div>}
-            
-            {/* Friendly Mobile Menu - Shows below lg breakpoint */}
-            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-              <DropdownMenuTrigger asChild className="lg:hidden">
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 transition-all duration-200 p-2" onClick={() => setIsOpen(true)} aria-label="Toggle mobile menu">
-                  <div className="flex flex-col justify-center items-center w-6 h-6 gap-1">
-                    {/* 5 lines like music staff */}
-                    <div className="w-7 h-0.5 bg-white transition-all duration-200 hover:w-8"></div>
-                    <div className="w-7 h-0.5 bg-white transition-all duration-200 hover:w-8"></div>
-                    <div className="w-7 h-0.5 bg-white transition-all duration-200 hover:w-8"></div>
-                    <div className="w-7 h-0.5 bg-white transition-all duration-200 hover:w-8"></div>
-                    <div className="w-7 h-0.5 bg-white transition-all duration-200 hover:w-8"></div>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="bottom" sideOffset={20} avoidCollisions collisionPadding={8} className="w-[92vw] sm:w-80 max-w-sm p-3 bg-background border border-border rounded-lg shadow-xl z-[9999] max-h-[80vh] overflow-y-auto">
-                <div className="flex items-center justify-center gap-2 pb-2 border-b border-border">
-                  <Music className="h-4 w-4 text-primary" />
-                  <span className="font-semibold text-sm text-foreground">Menu</span>
+        <header className={`bg-white/95 border-b border-border/40 backdrop-blur-md shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}>
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 lg:h-20 min-w-0">
+              {/* Logo */}
+              <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
+                <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 flex-shrink-0" />
+                <div className="min-w-0">
+                  <h1 className="text-lg md:text-xl xl:text-3xl font-bold text-foreground tracking-wide truncate lg:text-xl">GLEEWORLD</h1>
                 </div>
-                <nav className="flex flex-col gap-1 pt-3">
-                  <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
-                  {!user && <div className="flex flex-col gap-2 pt-3 mt-3 border-t border-border">
-                      <Button variant="outline" asChild className="w-full" onClick={() => setIsOpen(false)}>
-                        <Link to="/auth">Sign In</Link>
-                      </Button>
-                      <Button asChild className="w-full bg-primary hover:bg-primary/90" onClick={() => setIsOpen(false)}>
-                        <Link to="/auth?mode=signup&role=fan">Join as Fan</Link>
-                      </Button>
-                    </div>}
-                </nav>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </Link>
+              
+              {/* Center Navigation - flex-1 to take remaining space and center content */}
+              <div className="hidden lg:flex flex-1 justify-center">
+                <ResponsiveNavigation variant="default" />
+              </div>
+
+              {/* Right side actions */}
+              <div className="flex items-center gap-2 lg:gap-3">
+                {/* Single Auth Button */}
+                {!user && (
+                  <Button asChild className="text-sm lg:text-base px-4 lg:px-5 py-1.5 lg:py-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Link to="/auth">Sign In / Join</Link>
+                  </Button>
+                )}
+              
+                {/* Friendly Mobile Menu - Shows below lg breakpoint */}
+                <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+                  <DropdownMenuTrigger asChild className="lg:hidden">
+                    <Button variant="ghost" size="sm" className="text-foreground hover:bg-muted transition-all duration-200 p-2" onClick={() => setIsOpen(true)} aria-label="Toggle mobile menu">
+                      <div className="flex flex-col justify-center items-center w-6 h-6 gap-1">
+                        {/* 5 lines like music staff */}
+                        <div className="w-7 h-0.5 bg-foreground transition-all duration-200 hover:w-8"></div>
+                        <div className="w-7 h-0.5 bg-foreground transition-all duration-200 hover:w-8"></div>
+                        <div className="w-7 h-0.5 bg-foreground transition-all duration-200 hover:w-8"></div>
+                        <div className="w-7 h-0.5 bg-foreground transition-all duration-200 hover:w-8"></div>
+                        <div className="w-7 h-0.5 bg-foreground transition-all duration-200 hover:w-8"></div>
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" side="bottom" sideOffset={20} avoidCollisions collisionPadding={8} className="w-[92vw] sm:w-80 max-w-sm p-3 bg-background border border-border rounded-lg shadow-xl z-[9999] max-h-[80vh] overflow-y-auto">
+                    <div className="flex items-center justify-center gap-2 pb-2 border-b border-border">
+                      <Music className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-sm text-foreground">Menu</span>
+                    </div>
+                    <nav className="flex flex-col gap-1 pt-3">
+                      <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
+                      {!user && (
+                        <div className="flex flex-col gap-2 pt-3 mt-3 border-t border-border">
+                          <Button asChild className="w-full bg-primary hover:bg-primary/90" onClick={() => setIsOpen(false)}>
+                            <Link to="/auth">Sign In / Join</Link>
+                          </Button>
+                        </div>
+                      )}
+                    </nav>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
-           </div>
-        </div>
+          </div>
         </header>
       </div>
     </>
