@@ -343,7 +343,13 @@ const App = () => {
                   <GleeAssistant />
                   <MessengerModal />
                   <DesignSystemEnforcer />
-                  <Suspense fallback={<LoadingSpinner size="lg" text="Loading..." />}>
+                  <Suspense
+                    fallback={
+                      <div className="min-h-screen bg-background flex items-center justify-center">
+                        <LoadingSpinner size="lg" text="Loading..." />
+                      </div>
+                    }
+                  >
                     <Routes>
                     {/* Root route */}
                     <Route 
