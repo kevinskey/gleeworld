@@ -56,7 +56,7 @@ const GleeAcademy = () => {
               {ACADEMY_COURSES.map(course => (
                 <Card 
                   key={course.id} 
-                  className="bg-white border border-gray-200 hover:border-[#003666] hover:shadow-xl transition-all cursor-pointer group flex flex-col"
+                  className="bg-white text-foreground border border-gray-200 hover:border-[#003666] hover:shadow-xl transition-all cursor-pointer group flex flex-col"
                   onClick={() => handleCourseClick(course.route, course.courseCode)}
                 >
                   <CardHeader className="pb-3">
@@ -81,7 +81,7 @@ const GleeAcademy = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col">
-                    <p className="text-gray-900 text-sm md:text-base mb-4 flex-1">
+                    <p className="text-foreground/80 text-sm md:text-base mb-4 flex-1 leading-relaxed">
                       {course.description}
                     </p>
                     <div className="flex items-center text-sm text-gray-600 mb-4">
