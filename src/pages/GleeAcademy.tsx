@@ -36,15 +36,15 @@ const GleeAcademy = () => {
       <div className="min-h-screen bg-white">
         {/* Header Banner */}
         <div 
-          className="w-full py-6 sm:py-8 md:py-10 flex items-center justify-center"
+          className="w-full py-4 sm:py-5 flex items-center justify-center"
           style={{ backgroundColor: '#003666' }}
         >
           <div className="container mx-auto px-4">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white text-center tracking-wide">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center tracking-wide">
               Glee Academy
             </h1>
-            <p className="text-white/80 text-center mt-2 text-sm sm:text-base max-w-2xl mx-auto">
-              From foundational skills to advanced techniques, find the perfect course for your musical journey.
+            <p className="text-white/70 text-center mt-1 text-xs sm:text-sm max-w-xl mx-auto">
+              Find the perfect course for your musical journey.
             </p>
           </div>
         </div>
