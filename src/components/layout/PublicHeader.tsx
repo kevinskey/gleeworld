@@ -160,7 +160,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                   <Button 
                     asChild
                     variant="outline"
-                    className="relative text-xs lg:text-sm px-3 lg:px-4 py-0.5 lg:py-1.5 h-7 lg:h-auto font-medium rounded-full border transition-all duration-300 hover:bg-[#003666] hover:text-white"
+                    className="relative text-xs lg:text-sm px-3 lg:px-4 py-0 lg:py-1.5 h-6 lg:h-auto font-medium rounded-full border transition-all duration-300 hover:bg-[#003666] hover:text-white"
                     style={{ 
                       borderColor: HEADER_STYLES.brandColor,
                       color: HEADER_STYLES.brandColor,
