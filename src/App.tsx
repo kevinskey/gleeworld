@@ -45,6 +45,7 @@ import Mus001Page from "./pages/courses/Mus001Page";
 import Mus000Page from "./pages/courses/Mus000Page";
 import Glee101Page from "./pages/courses/Glee101Page";
 import AcademyCoursePage from "./pages/academy/AcademyCoursePage";
+import CourseOnboarding from "./pages/academy/CourseOnboarding";
 import AcademyCoursesAdmin from "./pages/admin/AcademyCoursesAdmin";
 import CourseInstructorConsole from "./pages/courses/CourseInstructorConsole";
 
@@ -471,6 +472,16 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <AcademyCoursePage />
+                  </PublicRoute>
+                }
+              />
+              
+              {/* Course Onboarding Page - for non-enrolled users */}
+              <Route 
+                path="/academy/:courseCode/onboarding" 
+                element={
+                  <PublicRoute>
+                    <CourseOnboarding />
                   </PublicRoute>
                 }
               />
