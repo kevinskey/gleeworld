@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { ChevronRight, BookOpen, Users, Music, GraduationCap, Calendar, Trophy, Star, ArrowRight, Loader2 } from 'lucide-react';
+import { Music, Users, Calendar, Trophy, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { AcademyCourseCard } from '@/components/academy/AcademyCourseCard';
 
 const GleeAcademy = () => {
   const navigate = useNavigate();
@@ -98,52 +97,12 @@ const GleeAcademy = () => {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
               {ACADEMY_COURSES.map(course => (
-                <Card 
-                  key={course.id} 
-                  className="bg-white text-foreground border border-gray-200 hover:border-[#003666] hover:shadow-xl transition-all cursor-pointer group flex flex-col"
-                  onClick={() => handleCourseClick(course)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge variant="outline" className="font-mono text-xs border-[#003666] text-[#003666]">
-                        {course.courseCode}
-                      </Badge>
-                      <Badge 
-                        className={`text-xs font-medium ${
-                          course.level === 'Beginner' 
-                            ? 'bg-green-600 text-white' 
-                            : course.level === 'Intermediate' 
-                              ? 'bg-amber-500 text-white' 
-                              : 'bg-purple-600 text-white'
-                        }`}
-                      >
-                        {course.level}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-xl md:text-2xl font-bold text-[#003666] group-hover:text-[#002244] transition-colors leading-tight">
-                      {course.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col">
-                    <p className="text-foreground/80 text-sm md:text-base mb-4 flex-1 leading-relaxed">
-                      {course.description}
-                    </p>
-                    <div className="flex items-center text-sm text-gray-600 mb-4">
-                      <Users className="h-4 w-4 mr-2" />
-                      <span>{course.instructor.name}</span>
-                    </div>
-                    <Button 
-                      className="w-full bg-[#003666] hover:bg-[#002244] text-white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCourseClick(course);
-                      }}
-                    >
-                      Enroll Now
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </CardContent>
-                </Card>
+                <AcademyCourseCard
+                  key={course.id}
+                  course={course}
+                  onEnter={handleCourseClick}
+                  buttonText={enrolledCourses.includes(course.id) ? 'Continue' : 'Enter Course'}
+                />
               ))}
             </div>
           </div>
