@@ -53,12 +53,12 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
               <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
                 <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 flex-shrink-0" />
                 <div className="min-w-0">
-                  <h1 className="text-lg md:text-xl xl:text-3xl font-bold text-foreground tracking-wide truncate lg:text-xl">GLEEWORLD</h1>
+                  <h1 className="text-lg md:text-xl xl:text-3xl font-bold tracking-wide truncate lg:text-xl text-[#003666]">GLEEWORLD</h1>
                 </div>
               </Link>
               
               {/* Center Navigation - flex-1 to take remaining space and center content */}
-              <div className="hidden lg:flex flex-1 justify-center">
+              <div className="hidden lg:flex flex-1 justify-center [&_a]:text-[#003666] [&_button]:text-[#003666] [&_svg]:text-[#003666]">
                 <ResponsiveNavigation variant="default" />
               </div>
 
@@ -78,14 +78,14 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 {/* Friendly Mobile Menu - Shows below lg breakpoint */}
                 <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
                   <DropdownMenuTrigger asChild className="lg:hidden">
-                    <Button variant="ghost" size="sm" className="text-foreground hover:bg-muted transition-all duration-200 p-2" onClick={() => setIsOpen(true)} aria-label="Toggle mobile menu">
+                    <Button variant="ghost" size="sm" className="text-[#003666] hover:bg-muted transition-all duration-200 p-2" onClick={() => setIsOpen(true)} aria-label="Toggle mobile menu">
                       <div className="flex flex-col justify-center items-center w-6 h-6 gap-1">
                         {/* 5 lines like music staff */}
-                        <div className="w-7 h-0.5 bg-foreground transition-all duration-200 hover:w-8"></div>
-                        <div className="w-7 h-0.5 bg-foreground transition-all duration-200 hover:w-8"></div>
-                        <div className="w-7 h-0.5 bg-foreground transition-all duration-200 hover:w-8"></div>
-                        <div className="w-7 h-0.5 bg-foreground transition-all duration-200 hover:w-8"></div>
-                        <div className="w-7 h-0.5 bg-foreground transition-all duration-200 hover:w-8"></div>
+                        <div className="w-7 h-0.5 bg-[#003666] transition-all duration-200 hover:w-8"></div>
+                        <div className="w-7 h-0.5 bg-[#003666] transition-all duration-200 hover:w-8"></div>
+                        <div className="w-7 h-0.5 bg-[#003666] transition-all duration-200 hover:w-8"></div>
+                        <div className="w-7 h-0.5 bg-[#003666] transition-all duration-200 hover:w-8"></div>
+                        <div className="w-7 h-0.5 bg-[#003666] transition-all duration-200 hover:w-8"></div>
                       </div>
                     </Button>
                   </DropdownMenuTrigger>
