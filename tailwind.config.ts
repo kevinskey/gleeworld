@@ -32,6 +32,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
+				'cinzel': ['Cinzel', 'serif'],
 				'dancing': ['Dancing Script', 'cursive'],
 				'bebas': ['Bebas Neue', 'cursive'],
 				'roboto': ['Roboto', 'sans-serif'],
