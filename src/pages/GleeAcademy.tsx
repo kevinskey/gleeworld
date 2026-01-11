@@ -56,11 +56,11 @@ const GleeAcademy = () => {
               {ACADEMY_COURSES.map(course => (
                 <Card 
                   key={course.id} 
-                  className="bg-white border border-gray-300 hover:border-[#003666] hover:shadow-lg transition-all cursor-pointer group"
+                  className="bg-white border border-gray-200 hover:border-[#003666] hover:shadow-xl transition-all cursor-pointer group flex flex-col"
                   onClick={() => handleCourseClick(course.route, course.courseCode)}
                 >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between mb-2">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between mb-3">
                       <Badge variant="outline" className="font-mono text-xs border-[#003666] text-[#003666]">
                         {course.courseCode}
                       </Badge>
@@ -76,21 +76,28 @@ const GleeAcademy = () => {
                         {course.level}
                       </Badge>
                     </div>
-                    <CardTitle className="text-lg font-bold text-[#003666] group-hover:text-[#002244] transition-colors">
+                    <CardTitle className="text-xl md:text-2xl font-bold text-[#003666] group-hover:text-[#002244] transition-colors leading-tight">
                       {course.title}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-700 text-sm mb-4 line-clamp-2">
+                  <CardContent className="flex-1 flex flex-col">
+                    <p className="text-gray-700 text-sm md:text-base mb-4 flex-1">
                       {course.description}
                     </p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Users className="h-4 w-4 mr-1" />
-                        <span>{course.instructor.name}</span>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-[#003666] group-hover:text-[#002244] transition-colors" />
+                    <div className="flex items-center text-sm text-gray-600 mb-4">
+                      <Users className="h-4 w-4 mr-2" />
+                      <span>{course.instructor.name}</span>
                     </div>
+                    <Button 
+                      className="w-full bg-[#003666] hover:bg-[#002244] text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCourseClick(course.route, course.courseCode);
+                      }}
+                    >
+                      Enroll Now
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
