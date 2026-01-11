@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AdvertisingHeroManager } from "./AdvertisingHeroManager";
 import { AmazonProductSuggester } from "./AmazonProductSuggester";
+import { UnifiedHeroSelector, HERO_CONTEXTS, type HeroContext } from "./UnifiedHeroSelector";
 
 interface HeroSlide {
   id: string;
@@ -50,6 +51,10 @@ export const HeroManagement = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Hero context selector state
+  const [selectedContext, setSelectedContext] = useState<HeroContext>(HERO_CONTEXTS[0]);
+  const [slideCounts, setSlideCounts] = useState<Record<string, number>>({});
+
   // YouTube video state
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideoConfig[]>([]);
   const [leftVideo, setLeftVideo] = useState<YouTubeVideoConfig>({
@@ -86,21 +91,106 @@ export const HeroManagement = () => {
     is_active: true
   });
 
+  // Fetch slide counts for all contexts
+  const fetchSlideCounts = async () => {
+    try {
+      const counts: Record<string, number> = {};
+      
+      // Fetch gw_hero_slides counts by usage_context
+      const { data: gwSlides } = await supabase
+        .from('gw_hero_slides')
+        .select('usage_context');
+      
+      if (gwSlides) {
+        const homepageCount = gwSlides.filter(s => s.usage_context === 'homepage').length;
+        const pressKitCount = gwSlides.filter(s => s.usage_context === 'press_kit').length;
+        counts['public-landing-top'] = homepageCount;
+        counts['press-kit'] = pressKitCount;
+      }
+      
+      // Fetch dashboard_hero_slides count
+      const { count: dashboardCount } = await supabase
+        .from('dashboard_hero_slides')
+        .select('*', { count: 'exact', head: true });
+      counts['member-dashboard'] = dashboardCount || 0;
+      
+      // Fetch advertising_hero count
+      const { count: adCount } = await supabase
+        .from('advertising_hero')
+        .select('*', { count: 'exact', head: true });
+      counts['advertising'] = adCount || 0;
+      
+      setSlideCounts(counts);
+    } catch (error) {
+      console.error('Error fetching slide counts:', error);
+    }
+  };
+
   useEffect(() => {
     fetchHeroSlides();
     fetchScrollSettings();
     fetchYouTubeVideos();
+    fetchSlideCounts();
   }, []);
 
-  const fetchHeroSlides = async () => {
-    try {
-      const { data: slidesData, error: slidesError } = await supabase
-        .from('dashboard_hero_slides')
-        .select('*')
-        .order('display_order', { ascending: true });
+  // Re-fetch when context changes
+  useEffect(() => {
+    fetchHeroSlides();
+    resetForm();
+  }, [selectedContext]);
 
-      if (slidesError) throw slidesError;
-      setHeroSlides(slidesData || []);
+  const fetchHeroSlides = async () => {
+    setLoading(true);
+    try {
+      let slidesData: HeroSlide[] = [];
+      
+      if (selectedContext.table === 'gw_hero_slides') {
+        const { data, error } = await supabase
+          .from('gw_hero_slides')
+          .select('*')
+          .eq('usage_context', selectedContext.usageContext || 'homepage')
+          .order('display_order', { ascending: true });
+        if (error) throw error;
+        slidesData = (data || []).map(s => ({
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          image_url: s.image_url || '',
+          mobile_image_url: s.mobile_image_url,
+          ipad_image_url: s.ipad_image_url,
+          display_order: s.display_order,
+          is_active: s.is_active,
+          created_at: s.created_at,
+          updated_at: s.created_at // gw_hero_slides doesn't have updated_at
+        }));
+      } else if (selectedContext.table === 'dashboard_hero_slides') {
+        const { data, error } = await supabase
+          .from('dashboard_hero_slides')
+          .select('*')
+          .order('display_order', { ascending: true });
+        if (error) throw error;
+        slidesData = data || [];
+      } else if (selectedContext.table === 'advertising_hero') {
+        const { data, error } = await supabase
+          .from('advertising_hero')
+          .select('*')
+          .order('display_order', { ascending: true });
+        if (error) throw error;
+        slidesData = (data || []).map(s => ({
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          image_url: s.image_url || '',
+          mobile_image_url: s.mobile_image_url,
+          ipad_image_url: s.ipad_image_url,
+          display_order: s.display_order,
+          is_active: s.is_active,
+          created_at: s.created_at,
+          updated_at: s.updated_at
+        }));
+      }
+      
+      setHeroSlides(slidesData);
     } catch (error) {
       console.error('Error fetching hero data:', error);
       toast({
@@ -458,206 +548,234 @@ export const HeroManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* AI Amazon Product Suggester */}
-      <AmazonProductSuggester />
-
-      {/* Advertising Hero Manager - Top Priority */}
-      <AdvertisingHeroManager />
-
-      {/* Scroll Settings Card */}
-      <Card className="border-2 border-accent/20">
-        <CardHeader className="bg-gradient-to-r from-accent/5 to-accent/10">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-purple-100 text-purple-700">⚙️</div>
-            Carousel Settings
+      {/* Unified Hero Selector - TOP OF PAGE */}
+      <Card className="border-2 border-primary/30 shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 pb-4">
+          <CardTitle className="text-xl flex items-center gap-2">
+            🎨 Hero Management Dashboard
           </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="auto-scroll">Auto Scroll</Label>
-              <p className="text-sm text-muted-foreground">Automatically advance slides</p>
-            </div>
-            <Switch
-              id="auto-scroll"
-              checked={scrollSettings.auto_scroll_enabled}
-              onCheckedChange={(checked) => setScrollSettings(prev => ({ ...prev, auto_scroll_enabled: checked }))}
-            />
-          </div>
-          
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Scroll Speed: {scrollSettings.scroll_speed_seconds}s</Label>
-              <span className="text-sm text-muted-foreground">(2-30 seconds)</span>
-            </div>
-            <Slider
-              value={[scrollSettings.scroll_speed_seconds]}
-              onValueChange={(value) => setScrollSettings(prev => ({ ...prev, scroll_speed_seconds: value[0] }))}
-              min={2}
-              max={30}
-              step={1}
-              className="w-full"
-            />
-          </div>
-
-          <Button onClick={updateScrollSettings} className="w-full">
-            <Save className="h-4 w-4 mr-2" />
-            Save Settings
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* YouTube Videos Section */}
-      <Card className="border-2 border-red-200">
-        <CardHeader className="bg-gradient-to-r from-red-50 to-red-100">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-red-100 text-red-700">📺</div>
-            Dashboard YouTube Videos
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6 pt-4">
-          <p className="text-sm text-muted-foreground">
-            Configure two YouTube videos to display at the top of the dashboard in a two-column layout.
+          <p className="text-sm text-muted-foreground mt-1">
+            Select a hero context below to manage its slides
           </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Video */}
-            <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-medium text-blue-800 flex items-center gap-2">
-                <span className="p-1 rounded bg-blue-500 text-white text-xs">1</span>
-                Left Video
-              </h4>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-xs">YouTube Video ID</Label>
-                  <Input
-                    value={leftVideo.video_id}
-                    onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: e.target.value }))}
-                    placeholder="e.g. dQw4w9WgXcQ"
-                    className="h-8 text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    The ID from youtube.com/watch?v=<strong>VIDEO_ID</strong>
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Title (optional)</Label>
-                  <Input
-                    value={leftVideo.title}
-                    onChange={(e) => setLeftVideo(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Video title"
-                    className="h-8 text-sm"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Active</Label>
-                  <Switch
-                    checked={leftVideo.is_active}
-                    onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, is_active: checked }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Autoplay</Label>
-                  <Switch
-                    checked={leftVideo.autoplay}
-                    onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, autoplay: checked }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Muted</Label>
-                  <Switch
-                    checked={leftVideo.muted}
-                    onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, muted: checked }))}
-                  />
-                </div>
-                <Button 
-                  onClick={() => saveYouTubeVideo(leftVideo)} 
-                  disabled={!leftVideo.video_id || savingYouTube}
-                  size="sm"
-                  className="w-full"
-                >
-                  <Save className="h-3 w-3 mr-1" />
-                  {leftVideo.id ? 'Update' : 'Save'} Left Video
-                </Button>
-              </div>
-            </div>
-
-            {/* Right Video */}
-            <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
-              <h4 className="font-medium text-green-800 flex items-center gap-2">
-                <span className="p-1 rounded bg-green-500 text-white text-xs">2</span>
-                Right Video
-              </h4>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-xs">YouTube Video ID</Label>
-                  <Input
-                    value={rightVideo.video_id}
-                    onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: e.target.value }))}
-                    placeholder="e.g. dQw4w9WgXcQ"
-                    className="h-8 text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    The ID from youtube.com/watch?v=<strong>VIDEO_ID</strong>
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Title (optional)</Label>
-                  <Input
-                    value={rightVideo.title}
-                    onChange={(e) => setRightVideo(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Video title"
-                    className="h-8 text-sm"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Active</Label>
-                  <Switch
-                    checked={rightVideo.is_active}
-                    onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, is_active: checked }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Autoplay</Label>
-                  <Switch
-                    checked={rightVideo.autoplay}
-                    onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, autoplay: checked }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Muted</Label>
-                  <Switch
-                    checked={rightVideo.muted}
-                    onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, muted: checked }))}
-                  />
-                </div>
-                <Button 
-                  onClick={() => saveYouTubeVideo(rightVideo)} 
-                  disabled={!rightVideo.video_id || savingYouTube}
-                  size="sm"
-                  className="w-full"
-                >
-                  <Save className="h-3 w-3 mr-1" />
-                  {rightVideo.id ? 'Update' : 'Save'} Right Video
-                </Button>
-              </div>
-            </div>
-          </div>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <UnifiedHeroSelector 
+            selectedContext={selectedContext.id}
+            onContextChange={setSelectedContext}
+            slideCounts={slideCounts}
+          />
         </CardContent>
       </Card>
 
-      {/* Header */}
-      <Card className="border-2 border-primary/20">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10">
-          <CardTitle className="text-xl md:text-2xl flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${editingId ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-              {editingId ? '✏️' : '➕'}
-            </div>
-            <span className="hidden sm:inline">{editingId ? "Edit" : "Create New"} Dashboard Hero Slide</span>
-            <span className="sm:hidden">{editingId ? "Edit" : "New"} Hero Slide</span>
-          </CardTitle>
-        </CardHeader>
-      </Card>
+      {/* Show context-specific content based on selection */}
+      {selectedContext.id === 'advertising' ? (
+        <>
+          {/* AI Amazon Product Suggester */}
+          <AmazonProductSuggester />
+          {/* Advertising Hero Manager */}
+          <AdvertisingHeroManager />
+        </>
+      ) : (
+        <>
+          {/* Carousel Settings - only for dashboard context */}
+          {selectedContext.id === 'member-dashboard' && (
+            <>
+              {/* Scroll Settings Card */}
+              <Card className="border-2 border-accent/20">
+                <CardHeader className="bg-gradient-to-r from-accent/5 to-accent/10">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-purple-100 text-purple-700">⚙️</div>
+                    Carousel Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="auto-scroll">Auto Scroll</Label>
+                      <p className="text-sm text-muted-foreground">Automatically advance slides</p>
+                    </div>
+                    <Switch
+                      id="auto-scroll"
+                      checked={scrollSettings.auto_scroll_enabled}
+                      onCheckedChange={(checked) => setScrollSettings(prev => ({ ...prev, auto_scroll_enabled: checked }))}
+                    />
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label>Scroll Speed: {scrollSettings.scroll_speed_seconds}s</Label>
+                      <span className="text-sm text-muted-foreground">(2-30 seconds)</span>
+                    </div>
+                    <Slider
+                      value={[scrollSettings.scroll_speed_seconds]}
+                      onValueChange={(value) => setScrollSettings(prev => ({ ...prev, scroll_speed_seconds: value[0] }))}
+                      min={2}
+                      max={30}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <Button onClick={updateScrollSettings} className="w-full">
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Settings
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* YouTube Videos Section */}
+              <Card className="border-2 border-red-200">
+                <CardHeader className="bg-gradient-to-r from-red-50 to-red-100">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-red-100 text-red-700">📺</div>
+                    Dashboard YouTube Videos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Configure two YouTube videos to display at the top of the dashboard in a two-column layout.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Left Video */}
+                    <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="font-medium text-blue-800 flex items-center gap-2">
+                        <span className="p-1 rounded bg-blue-500 text-white text-xs">1</span>
+                        Left Video
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">YouTube Video ID</Label>
+                          <Input
+                            value={leftVideo.video_id}
+                            onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: e.target.value }))}
+                            placeholder="e.g. dQw4w9WgXcQ"
+                            className="h-8 text-sm"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            The ID from youtube.com/watch?v=<strong>VIDEO_ID</strong>
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Title (optional)</Label>
+                          <Input
+                            value={leftVideo.title}
+                            onChange={(e) => setLeftVideo(prev => ({ ...prev, title: e.target.value }))}
+                            placeholder="Video title"
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Active</Label>
+                          <Switch
+                            checked={leftVideo.is_active}
+                            onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, is_active: checked }))}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Autoplay</Label>
+                          <Switch
+                            checked={leftVideo.autoplay}
+                            onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, autoplay: checked }))}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Muted</Label>
+                          <Switch
+                            checked={leftVideo.muted}
+                            onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, muted: checked }))}
+                          />
+                        </div>
+                        <Button 
+                          onClick={() => saveYouTubeVideo(leftVideo)} 
+                          disabled={!leftVideo.video_id || savingYouTube}
+                          size="sm"
+                          className="w-full"
+                        >
+                          <Save className="h-3 w-3 mr-1" />
+                          {leftVideo.id ? 'Update' : 'Save'} Left Video
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Right Video */}
+                    <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                      <h4 className="font-medium text-green-800 flex items-center gap-2">
+                        <span className="p-1 rounded bg-green-500 text-white text-xs">2</span>
+                        Right Video
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">YouTube Video ID</Label>
+                          <Input
+                            value={rightVideo.video_id}
+                            onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: e.target.value }))}
+                            placeholder="e.g. dQw4w9WgXcQ"
+                            className="h-8 text-sm"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            The ID from youtube.com/watch?v=<strong>VIDEO_ID</strong>
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Title (optional)</Label>
+                          <Input
+                            value={rightVideo.title}
+                            onChange={(e) => setRightVideo(prev => ({ ...prev, title: e.target.value }))}
+                            placeholder="Video title"
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Active</Label>
+                          <Switch
+                            checked={rightVideo.is_active}
+                            onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, is_active: checked }))}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Autoplay</Label>
+                          <Switch
+                            checked={rightVideo.autoplay}
+                            onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, autoplay: checked }))}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Muted</Label>
+                          <Switch
+                            checked={rightVideo.muted}
+                            onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, muted: checked }))}
+                          />
+                        </div>
+                        <Button 
+                          onClick={() => saveYouTubeVideo(rightVideo)} 
+                          disabled={!rightVideo.video_id || savingYouTube}
+                          size="sm"
+                          className="w-full"
+                        >
+                          <Save className="h-3 w-3 mr-1" />
+                          {rightVideo.id ? 'Update' : 'Save'} Right Video
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* Header for Hero Slides */}
+          <Card className="border-2 border-primary/20">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10">
+              <CardTitle className="text-xl md:text-2xl flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${editingId ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                  {editingId ? '✏️' : '➕'}
+                </div>
+                <span className="hidden sm:inline">{editingId ? "Edit" : "Create New"} {selectedContext.label} Slide</span>
+                <span className="sm:hidden">{editingId ? "Edit" : "New"} Slide</span>
+              </CardTitle>
+            </CardHeader>
+          </Card>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -1019,6 +1137,8 @@ export const HeroManagement = () => {
           )}
         </CardContent>
       </Card>
+        </>
+      )}
     </div>
   );
 };
