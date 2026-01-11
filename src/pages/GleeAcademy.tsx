@@ -105,8 +105,7 @@ const GleeAcademy = () => {
                 />
               ))}
               
-              {/* Sight Singing Studio Ad - spans columns 2-3 */}
-              <div className="hidden lg:block" /> {/* Empty spacer for column 1 */}
+              {/* Sight Singing Studio Ad - spans columns 2-3, next to Leadership Development */}
               <a 
                 href="https://www.sightsingingstudio.com" 
                 target="_blank" 
