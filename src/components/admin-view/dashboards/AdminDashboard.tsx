@@ -60,7 +60,7 @@ import { AuditionsManagement } from "@/components/admin/AuditionsManagement";
 
 import { WardrobeManagementHub } from "@/components/wardrobe/WardrobeManagementHub";
 import { StudentIntakeProcessor } from "@/components/admin/StudentIntakeProcessor";
-import { DashboardHeroManagerModule } from "@/components/modules/DashboardHeroManagerModule";
+import { HeroManagement } from "@/components/admin/HeroManagement";
 
 interface AdminDashboardProps {
   user: {
@@ -350,7 +350,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       case "settings":
         return <SystemSettings />;
       case "hero-management":
-        return <DashboardHeroManagerModule />;
+        return <HeroManagement />;
       case "user-management":
         return <EnhancedUserManagement users={users} loading={usersLoading} error={usersError} onRefetch={refetchUsers} />;
       case "permissions":

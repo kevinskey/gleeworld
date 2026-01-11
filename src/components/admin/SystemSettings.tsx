@@ -9,7 +9,7 @@ import { Settings, Save, RefreshCw, Calendar, Image } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarControlsAdmin } from "./CalendarControlsAdmin";
-import { DashboardHeroManagerModule } from "@/components/modules/DashboardHeroManagerModule";
+import { HeroManagement } from "@/components/admin/HeroManagement";
 import { useSearchParams } from "react-router-dom";
 
 export const SystemSettings = () => {
@@ -198,7 +198,7 @@ export const SystemSettings = () => {
             </TabsContent>
             
             <TabsContent value="hero" className="mt-6">
-              <DashboardHeroManagerModule />
+              <HeroManagement />
             </TabsContent>
           </Tabs>
         </CardContent>
