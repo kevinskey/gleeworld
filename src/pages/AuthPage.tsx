@@ -151,7 +151,7 @@ export default function AuthPage() {
             <img
               src={gleeWorldLogoCircle}
               alt="GleeWorld.org logo"
-              className="w-24 h-24 object-contain drop-shadow-2xl"
+              className="w-36 h-36 object-contain drop-shadow-2xl"
             />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-2xl">
