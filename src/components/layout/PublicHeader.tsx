@@ -46,7 +46,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
         className="sticky top-0 z-50 w-full"
         style={{ top: 'var(--gw-safe-top)' }}
       >
-        <header className={`bg-white/95 border-b border-border/40 backdrop-blur-md shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}>
+        <header className={`bg-white border-b border-border/40 shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}>
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 lg:h-20 min-w-0">
               {/* Logo */}
