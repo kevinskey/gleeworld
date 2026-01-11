@@ -43,8 +43,8 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
         flex flex-col
         h-full
         min-h-[280px]
-        shadow-md
-        hover:shadow-lg
+        shadow-lg
+        hover:shadow-xl
         transition-shadow
         duration-200
         ${className}
