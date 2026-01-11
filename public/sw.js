@@ -176,8 +176,8 @@ self.addEventListener('push', (event) => {
   let data = {
     title: 'GleeWorld',
     body: 'You have a new notification',
-    icon: '/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png',
-    badge: '/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png',
+    icon: '/lovable-uploads/gleeworld-logo.png',
+    badge: '/lovable-uploads/gleeworld-logo.png',
     data: { url: '/' }
   };
 

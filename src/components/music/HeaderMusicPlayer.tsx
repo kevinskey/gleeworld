@@ -170,10 +170,9 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="p-1 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 border-2 border-amber-500">
             <img 
-              src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
-              alt="Spelman College Glee Club" 
+              src="/lovable-uploads/gleeworld-logo.png" 
+              alt="GleeWorld" 
               className="w-8 h-8 object-contain drop-shadow-md rounded-full"
-              style={{ filter: 'sepia(20%) brightness(1.1)' }}
             />
           </div>
         </div>

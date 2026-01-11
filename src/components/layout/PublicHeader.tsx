@@ -114,14 +114,11 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                   LOGO + SITE TITLE
                   ============================================================ */}
               <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
-                {/* Logo Image - colorized to brand color #003666 */}
+                {/* Logo Image */}
                 <img 
-                  src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
-                  alt="Spelman College Glee Club" 
+                  src="/lovable-uploads/gleeworld-logo.png" 
+                  alt="GleeWorld" 
                   className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0`}
-                  style={{
-                    filter: 'brightness(0) saturate(100%) invert(15%) sepia(100%) saturate(1500%) hue-rotate(192deg) brightness(92%) contrast(102%)'
-                  }}
                 />
                 
                 {/* Site Title - Cinzel font, 90% of logo size */}
