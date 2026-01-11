@@ -38,11 +38,15 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
       cursor: pointer;
     }
   `;
-  return <>
-      <style dangerouslySetInnerHTML={{
-      __html: overlayStyle
-    }} />
-      <header className={`bg-primary/95 border-b border-primary-foreground/20 sticky top-0 z-50 backdrop-blur-md shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}>
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: overlayStyle }} />
+      {/* Wrapper provides iOS safe-area offset for PWA */}
+      <div
+        className="sticky top-0 z-50 w-full"
+        style={{ top: 'var(--gw-safe-top)' }}
+      >
+        <header className={`bg-primary/95 border-b border-primary-foreground/20 backdrop-blur-md shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}>
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20 min-w-0">
             {/* Logo */}
@@ -105,6 +109,8 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
             </div>
            </div>
         </div>
-    </header>
-    </>;
+        </header>
+      </div>
+    </>
+  );
 };
