@@ -125,7 +125,7 @@ const GleeAcademy = () => {
                   Practice sight reading with real notation, adjustable tempo, and progress tracking.
                 </p>
                 <Button 
-                  className="bg-white text-purple-600 hover:bg-gray-100 rounded-full px-6"
+                  className="bg-purple-600 text-white hover:bg-purple-700 rounded-full px-6 border-2 border-white"
                 >
                   Get Started →
                 </Button>
