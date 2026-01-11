@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getDefaultEventImage } from "@/constants/images";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +28,7 @@ import { SmartCoverImage } from "@/components/ui/SmartCoverImage";
 import { FeaturedVideoCarousel } from "@/components/public/FeaturedVideoCarousel";
 import { AllVideosGrid } from "@/components/youtube/AllVideosGrid";
 import { PollReminderPopup } from "@/components/polls/PollReminderPopup";
+import { HeroSlider, adaptDatabaseSlide, type HeroSlide as HeroSliderSlide } from "@/components/hero/HeroSlider";
 interface Event {
   id: string;
   title: string;
@@ -136,18 +137,12 @@ export const GleeWorldLanding = () => {
       clearTimeout(maxLoadingTimer);
     };
   }, []);
+  // Convert DB slides to HeroSlider format
+  const adaptedSlides = useMemo(() => 
+    heroSlides.map(adaptDatabaseSlide), 
+    [heroSlides]
+  );
 
-  // Auto-advance slides based on individual slide duration
-  useEffect(() => {
-    if (heroSlides.length <= 1) return;
-    const currentHeroSlide = heroSlides[currentSlide];
-    const duration = (currentHeroSlide?.slide_duration_seconds || 10) * 1000;
-    const timer = setTimeout(() => {
-      setCurrentSlide(prev => (prev + 1) % heroSlides.length);
-    }, duration);
-    return () => clearTimeout(timer);
-  }, [currentSlide, heroSlides]);
-  const currentHeroSlide = heroSlides[currentSlide];
   const goToAuditions = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -275,60 +270,23 @@ export const GleeWorldLanding = () => {
       <section className="relative z-30 py-2 sm:py-4 md:py-6 lg:py-8 px-2 sm:px-4 md:px-6 lg:px-8 w-full bg-white">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
-            <div className="aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] lg:aspect-[21/9] xl:aspect-[21/8] max-h-[85vh] relative overflow-hidden">
-              {heroSlides.length > 0 ? <>
-                  {/* Desktop Image - Smart Cover */}
-                  <SmartCoverImage src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="hidden md:block w-full h-full brightness-95 contrast-100" fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" />
-                  
-                  {/* iPad Image - Smart Cover */}
-                  <SmartCoverImage src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="hidden sm:block md:hidden w-full h-full brightness-95 contrast-100" fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" />
-                  
-                  {/* Mobile Image - Smart Cover */}
-                  <SmartCoverImage src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="block sm:hidden w-full h-full brightness-95 contrast-100" fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" />
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/20"></div>
-                  
-                  {/* Content overlay - positioned elements */}
-                  <div className="absolute inset-0">
-                    {/* Title Section */}
-                    {currentHeroSlide?.title && <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none`}>
-                        <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-primary-foreground max-w-5xl pointer-events-auto drop-shadow-2xl text-center sm:text-left leading-tight`}>
-                          {currentHeroSlide.title}
-                        </h1>
-                      </div>}
-                    
-                    {/* Description Section */}
-                     {currentHeroSlide?.description && <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none`}>
-                         <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-primary-foreground/90 max-w-3xl pointer-events-auto drop-shadow-lg text-center sm:text-left leading-relaxed`}>
-                           {currentHeroSlide.description}
-                         </p>
-                       </div>}
-                    
-                     {/* Action Button Section */}
-                     {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && <div className="absolute inset-0 flex justify-center items-end pb-6 sm:pb-8 md:pb-10 lg:pb-12 xl:pb-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none">
-                         <Button size="lg" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-primary-foreground/20 text-sm sm:text-base md:text-lg px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5" asChild>
-                           <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
-                             {currentHeroSlide.action_button_text}
-                           </a>
-                         </Button>
-                       </div>}
-                     
-                     {/* Legacy button support */}
-                     {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && <div className="absolute inset-0 flex justify-center items-end pb-6 sm:pb-8 md:pb-10 lg:pb-12 xl:pb-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none">
-                         <Button size="lg" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-primary-foreground/20 text-sm sm:text-base md:text-lg px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5" asChild>
-                           <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
-                             {currentHeroSlide.button_text}
-                           </a>
-                         </Button>
-                       </div>}
-                  </div>
-                  
-                </> : <div className="w-full h-full bg-muted flex items-center justify-center">
-                  <div className="text-center p-4">
-                    <Calendar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-muted-foreground mx-auto mb-3 sm:mb-4" />
-                    <p className="text-muted-foreground text-sm sm:text-base">No hero slides configured</p>
-                  </div>
-                </div>}
-            </div>
+            {adaptedSlides.length > 0 ? (
+              <HeroSlider 
+                slides={adaptedSlides}
+                defaultDurationMs={6000}
+                autoplay={true}
+                showControls={true}
+                showProgress={true}
+                showPausePlay={true}
+              />
+            ) : (
+              <div className="aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] lg:aspect-[21/9] w-full bg-muted flex items-center justify-center">
+                <div className="text-center p-4">
+                  <Calendar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+                  <p className="text-muted-foreground text-sm sm:text-base">No hero slides configured</p>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
       </section>
