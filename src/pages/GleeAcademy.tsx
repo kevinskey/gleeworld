@@ -104,6 +104,33 @@ const GleeAcademy = () => {
                   buttonText={enrolledCourses.includes(course.id) ? 'Continue' : 'Enter Course'}
                 />
               ))}
+              
+              {/* Sight Singing Studio Ad - spans columns 2-3 */}
+              <div className="hidden lg:block" /> {/* Empty spacer for column 1 */}
+              <a 
+                href="https://www.sightsingingstudio.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="md:col-span-2 bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 rounded-xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-shadow duration-200 flex flex-col items-center justify-center text-center min-h-[200px]"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+                    <Music className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <span className="text-xl font-bold text-white">Sight Singing Studio</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
+                  Master sight singing, <span className="italic">one phrase at a time</span>
+                </h3>
+                <p className="text-white/90 text-base sm:text-lg mb-4 max-w-xl">
+                  Practice sight reading with real notation, adjustable tempo, and progress tracking.
+                </p>
+                <Button 
+                  className="bg-white text-purple-600 hover:bg-gray-100 rounded-full px-6"
+                >
+                  Get Started →
+                </Button>
+              </a>
             </div>
           </div>
         </div>
