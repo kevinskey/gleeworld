@@ -267,7 +267,7 @@ export const GleeWorldLanding = () => {
       {/* Concert Ticket Request Hero Banner - REMOVED: Concerts are over */}
 
       {/* Hero Section */}
-      <section className="relative z-30 py-2 sm:py-4 md:py-6 lg:py-8 px-2 sm:px-4 md:px-6 lg:px-8 w-full bg-white">
+      <section className="relative z-30 py-2 sm:py-4 md:py-6 lg:py-8 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full bg-white">
         <div className="w-full">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
             {adaptedSlides.length > 0 ? (
@@ -294,7 +294,7 @@ export const GleeWorldLanding = () => {
 
 
       {/* Upcoming Events Section */}
-      <section id="events" className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full bg-primary-foreground">
+      <section id="events" className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full bg-primary-foreground">
         <div className="w-full">
           <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
@@ -437,7 +437,7 @@ export const GleeWorldLanding = () => {
 
 
       {/* All Videos Section with Infinite Scroll */}
-      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full">
         <div className="w-full">
           <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <AllVideosGrid maxHeight="700px" showTitle={true} />
@@ -446,7 +446,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full">
         <div className="w-full">
           <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             {/* The Glee Store Title */}
@@ -467,7 +467,7 @@ export const GleeWorldLanding = () => {
 
       {/* Albums Section - Fan Only */}
       {albums.length > 0 && <FanOnlyMusicSection albumCount={albums.length}>
-          <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+          <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full">
             <div className="w-full">
               <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
                 <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
@@ -524,8 +524,8 @@ export const GleeWorldLanding = () => {
       <AlbumModal album={selectedAlbum} isOpen={isAlbumModalOpen} onClose={handleCloseAlbumModal} />
 
       {/* YouTube Section */}
-      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
-        <div className="w-full max-w-screen-2xl mx-auto">
+      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full">
+        <div className="w-full">
           <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
@@ -545,8 +545,8 @@ export const GleeWorldLanding = () => {
 
 
       {/* Footer */}
-      <section className="relative z-30 pt-8 sm:pt-12 md:pt-16 lg:pt-20 pb-4 sm:pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
-        <div className="w-full max-w-screen-2xl mx-auto">
+      <section className="relative z-30 pt-8 sm:pt-12 md:pt-16 lg:pt-20 pb-4 sm:pb-6 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+        <div className="w-full">
           <Card className="bg-primary text-primary-foreground p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-border shadow-xl">
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
               <div className="space-y-3 sm:space-y-4">
