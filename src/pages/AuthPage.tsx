@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
-import { Music, UserPlus, LogIn, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, LogIn, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import gleeWorldLogoCircle from '@/assets/glee-world-logo-circle.png';
 const authBackground = '/lovable-uploads/1e93a440-6349-4948-a145-7b55dedea9fc.png';
 export default function AuthPage() {
   const {
@@ -119,7 +120,7 @@ export default function AuthPage() {
     }}>
         <div className="absolute inset-0 bg-black/60" />
         <div className="text-center relative z-10">
-          <Music className="h-12 w-12 text-white mx-auto mb-4 animate-pulse" />
+          <img src={gleeWorldLogoCircle} alt="Loading" className="h-12 w-12 mx-auto mb-4 animate-pulse" />
           <p className="text-white/90 text-lg">Loading...</p>
         </div>
       </div>;
@@ -146,8 +147,12 @@ export default function AuthPage() {
         
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-xl rounded-full mb-6 border border-white/20 shadow-2xl">
-            <Music className="h-10 w-10 text-white drop-shadow-lg" />
+          <div className="flex justify-center mb-6">
+            <img
+              src={gleeWorldLogoCircle}
+              alt="GleeWorld.org logo"
+              className="w-24 h-24 object-contain drop-shadow-2xl"
+            />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-2xl">
             Glee World! 
