@@ -132,10 +132,10 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                     fontSize: HEADER_STYLES.titleSizes.mobile,
                     fontWeight: 500,
                     letterSpacing: '0.02em',
-                    lineHeight: 1,
-                    display: 'block',
+                    lineHeight: 0,
+                    verticalAlign: 'middle',
                   }}
-                  className="whitespace-nowrap drop-shadow-sm md:!text-[2.025rem] lg:!text-[2.43rem] leading-none"
+                  className="whitespace-nowrap drop-shadow-sm md:!text-[2.025rem] lg:!text-[2.43rem] leading-[0] flex items-center"
                 >
                   GleeWorld
                 </span>
