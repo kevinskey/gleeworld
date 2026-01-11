@@ -136,8 +136,8 @@ const { user, signOut } = useAuth();
                     isActivePath(item.href) && "text-white bg-[#0066CC] font-semibold"
                   )
                 : cn(
-                    "text-foreground hover:text-primary hover:bg-accent/10",
-                    isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
+                    "text-[#003666] hover:text-[#002244] hover:bg-accent/10",
+                    isActivePath(item.href) && "text-[#002244] bg-accent/20 font-semibold"
                   )
             )}
           >
@@ -158,13 +158,13 @@ const { user, signOut } = useAuth();
                     isDropdownActive(infoDropdown) && "text-white bg-[#0066CC] font-semibold"
                   )
                 : cn(
-                    "text-foreground hover:text-primary hover:bg-accent/10",
-                    isDropdownActive(infoDropdown) && "text-primary bg-accent/20 font-semibold"
+                    "text-[#003666] hover:text-[#002244] hover:bg-accent/10",
+                    isDropdownActive(infoDropdown) && "text-[#002244] bg-accent/20 font-semibold"
                   )
             )}
           >
             Info
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 text-[#003666]" />
           </button>
           {infoOpen && (
             <div
@@ -204,8 +204,8 @@ const { user, signOut } = useAuth();
                     isActivePath(item.href) && "text-white bg-[#0066CC] font-semibold"
                   )
                 : cn(
-                    "text-foreground hover:text-primary hover:bg-accent/10",
-                    isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
+                    "text-[#003666] hover:text-[#002244] hover:bg-accent/10",
+                    isActivePath(item.href) && "text-[#002244] bg-accent/20 font-semibold"
                   )
             )}
           >
@@ -226,13 +226,13 @@ const { user, signOut } = useAuth();
                     isDropdownActive(infoDropdown) && "text-white bg-[#0066CC] font-semibold"
                   )
                 : cn(
-                    "text-foreground hover:text-primary hover:bg-accent/10",
-                    isDropdownActive(infoDropdown) && "text-primary bg-accent/20 font-semibold"
+                    "text-[#003666] hover:text-[#002244] hover:bg-accent/10",
+                    isDropdownActive(infoDropdown) && "text-[#002244] bg-accent/20 font-semibold"
                   )
             )}
           >
             Info
-            <ChevronDown className="h-3 w-3" />
+            <ChevronDown className="h-3 w-3 text-[#003666]" />
           </button>
           {infoOpen && (
             <div
