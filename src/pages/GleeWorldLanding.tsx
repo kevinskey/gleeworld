@@ -275,9 +275,9 @@ export const GleeWorldLanding = () => {
                 slides={adaptedSlides}
                 defaultDurationMs={6000}
                 autoplay={true}
-                showControls={true}
-                showProgress={true}
-                showPausePlay={true}
+                showControls={false}
+                showProgress={false}
+                showPausePlay={false}
               />
             ) : (
               <div className="aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] lg:aspect-[21/9] w-full bg-muted flex items-center justify-center">
