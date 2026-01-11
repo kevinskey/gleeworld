@@ -20,9 +20,9 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Music } from "lucide-react";
 import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigation";
 import { useAuth } from "@/contexts/AuthContext";
+import gleeWorldLogoCircle from "@/assets/glee-world-logo-circle.png";
 
 // ============================================================================
 // DESIGN CONSTANTS - Edit these to change the header appearance
@@ -116,7 +116,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
               <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
                 {/* Logo Image */}
                 <img 
-                  src="/lovable-uploads/gleeworld-logo.png" 
+                  src={gleeWorldLogoCircle} 
                   alt="GleeWorld" 
                   className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0`}
                 />
@@ -212,7 +212,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                     className="w-[92vw] sm:w-80 max-w-sm p-3 bg-background border border-border rounded-lg shadow-xl z-[9999] max-h-[80vh] overflow-y-auto"
                   >
                     <div className="flex items-center justify-center gap-2 pb-2 border-b border-border">
-                      <Music className="h-4 w-4" style={{ color: HEADER_STYLES.brandColor }} />
+                      <img src={gleeWorldLogoCircle} alt="GleeWorld" className="h-4 w-4" />
                       <span className="font-semibold text-sm text-foreground">Menu</span>
                     </div>
                     <nav className="flex flex-col gap-1 pt-3">
