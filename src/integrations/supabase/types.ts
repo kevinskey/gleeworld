@@ -10009,6 +10009,7 @@ export type Database = {
           image_url: string | null
           ipad_image_url: string | null
           is_active: boolean | null
+          layout: string | null
           link_url: string | null
           mobile_image_url: string | null
           slide_duration_seconds: number | null
@@ -10016,6 +10017,7 @@ export type Database = {
           title_position_horizontal: string | null
           title_position_vertical: string | null
           title_size: string | null
+          transition: string | null
           usage_context: string | null
         }
         Insert: {
@@ -10034,6 +10036,7 @@ export type Database = {
           image_url?: string | null
           ipad_image_url?: string | null
           is_active?: boolean | null
+          layout?: string | null
           link_url?: string | null
           mobile_image_url?: string | null
           slide_duration_seconds?: number | null
@@ -10041,6 +10044,7 @@ export type Database = {
           title_position_horizontal?: string | null
           title_position_vertical?: string | null
           title_size?: string | null
+          transition?: string | null
           usage_context?: string | null
         }
         Update: {
@@ -10059,6 +10063,7 @@ export type Database = {
           image_url?: string | null
           ipad_image_url?: string | null
           is_active?: boolean | null
+          layout?: string | null
           link_url?: string | null
           mobile_image_url?: string | null
           slide_duration_seconds?: number | null
@@ -10066,6 +10071,7 @@ export type Database = {
           title_position_horizontal?: string | null
           title_position_vertical?: string | null
           title_size?: string | null
+          transition?: string | null
           usage_context?: string | null
         }
         Relationships: [
