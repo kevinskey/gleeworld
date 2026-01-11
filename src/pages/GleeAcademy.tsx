@@ -1,18 +1,62 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { ChevronRight, BookOpen, Users, Music, GraduationCap, Calendar, Trophy, Star, ArrowRight } from 'lucide-react';
+import { ChevronRight, BookOpen, Users, Music, GraduationCap, Calendar, Trophy, Star, ArrowRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+
 const GleeAcademy = () => {
   const navigate = useNavigate();
-  const handleCourseClick = (route: string, courseCode?: string) => {
-    if (courseCode === 'MUS 000') {
+  const { user } = useAuth();
+  const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+
+  useEffect(() => {
+    const checkEnrollments = async () => {
+      if (!user) {
+        setEnrolledCourses([]);
+        return;
+      }
+
+      setCheckingEnrollment(true);
+      try {
+        const { data, error } = await supabase
+          .from('gw_course_enrollments')
+          .select('course_id')
+          .eq('user_id', user.id);
+
+        if (!error && data) {
+          setEnrolledCourses(data.map(e => e.course_id));
+        }
+      } catch (error) {
+        console.error('Error checking enrollments:', error);
+      } finally {
+        setCheckingEnrollment(false);
+      }
+    };
+
+    checkEnrollments();
+  }, [user]);
+
+  const handleCourseClick = (course: typeof ACADEMY_COURSES[0]) => {
+    if (course.courseCode === 'MUS 000') {
       window.open('https://readmusic.gleeworld.org', '_blank');
+      return;
+    }
+
+    const isEnrolled = enrolledCourses.includes(course.id);
+    const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
+    
+    if (isEnrolled) {
+      // Go to the course page
+      navigate(course.route);
     } else {
-      navigate(route);
+      // Go to onboarding page
+      navigate(`/academy/${courseSlug}/onboarding`);
     }
   };
   const features = [{
@@ -57,7 +101,7 @@ const GleeAcademy = () => {
                 <Card 
                   key={course.id} 
                   className="bg-white text-foreground border border-gray-200 hover:border-[#003666] hover:shadow-xl transition-all cursor-pointer group flex flex-col"
-                  onClick={() => handleCourseClick(course.route, course.courseCode)}
+                  onClick={() => handleCourseClick(course)}
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between mb-3">
@@ -92,7 +136,7 @@ const GleeAcademy = () => {
                       className="w-full bg-[#003666] hover:bg-[#002244] text-white"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleCourseClick(course.route, course.courseCode);
+                        handleCourseClick(course);
                       }}
                     >
                       Enroll Now
