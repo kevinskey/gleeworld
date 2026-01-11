@@ -1,6 +1,6 @@
 import React from 'react';
-import { HeroManagement } from '@/components/admin/HeroManagement';
+import { SliderManager } from '@/components/admin/sliders';
 
 export const HeroManagerModule = () => {
-  return <HeroManagement />;
+  return <SliderManager />;
 };

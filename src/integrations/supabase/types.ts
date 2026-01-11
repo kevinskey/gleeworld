@@ -17475,6 +17475,233 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_universal_slider_slides: {
+        Row: {
+          alt_text: string | null
+          amazon_affiliate_tag: string | null
+          amazon_asin: string | null
+          background_position: string | null
+          background_size: string | null
+          created_at: string | null
+          cta_style: string | null
+          cta_target: string | null
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          description_color: string | null
+          description_font_family: string | null
+          description_font_size: string | null
+          description_font_weight: string | null
+          description_position_h: string | null
+          description_position_v: string | null
+          display_order: number | null
+          duration_seconds: number | null
+          event_id: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          link_target: string | null
+          link_url: string | null
+          mobile_image_url: string | null
+          overlay_color: string | null
+          overlay_enabled: boolean | null
+          pause_on_this_slide: boolean | null
+          product_id: string | null
+          product_price: string | null
+          product_url: string | null
+          slide_type: string
+          slider_id: string
+          tablet_image_url: string | null
+          title: string | null
+          title_color: string | null
+          title_font_family: string | null
+          title_font_size: string | null
+          title_font_weight: string | null
+          title_position_h: string | null
+          title_position_v: string | null
+          updated_at: string | null
+          youtube_autoplay: boolean | null
+          youtube_loop: boolean | null
+          youtube_muted: boolean | null
+          youtube_video_id: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          amazon_affiliate_tag?: string | null
+          amazon_asin?: string | null
+          background_position?: string | null
+          background_size?: string | null
+          created_at?: string | null
+          cta_style?: string | null
+          cta_target?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          description_color?: string | null
+          description_font_family?: string | null
+          description_font_size?: string | null
+          description_font_weight?: string | null
+          description_position_h?: string | null
+          description_position_v?: string | null
+          display_order?: number | null
+          duration_seconds?: number | null
+          event_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_target?: string | null
+          link_url?: string | null
+          mobile_image_url?: string | null
+          overlay_color?: string | null
+          overlay_enabled?: boolean | null
+          pause_on_this_slide?: boolean | null
+          product_id?: string | null
+          product_price?: string | null
+          product_url?: string | null
+          slide_type?: string
+          slider_id: string
+          tablet_image_url?: string | null
+          title?: string | null
+          title_color?: string | null
+          title_font_family?: string | null
+          title_font_size?: string | null
+          title_font_weight?: string | null
+          title_position_h?: string | null
+          title_position_v?: string | null
+          updated_at?: string | null
+          youtube_autoplay?: boolean | null
+          youtube_loop?: boolean | null
+          youtube_muted?: boolean | null
+          youtube_video_id?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          amazon_affiliate_tag?: string | null
+          amazon_asin?: string | null
+          background_position?: string | null
+          background_size?: string | null
+          created_at?: string | null
+          cta_style?: string | null
+          cta_target?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          description_color?: string | null
+          description_font_family?: string | null
+          description_font_size?: string | null
+          description_font_weight?: string | null
+          description_position_h?: string | null
+          description_position_v?: string | null
+          display_order?: number | null
+          duration_seconds?: number | null
+          event_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_target?: string | null
+          link_url?: string | null
+          mobile_image_url?: string | null
+          overlay_color?: string | null
+          overlay_enabled?: boolean | null
+          pause_on_this_slide?: boolean | null
+          product_id?: string | null
+          product_price?: string | null
+          product_url?: string | null
+          slide_type?: string
+          slider_id?: string
+          tablet_image_url?: string | null
+          title?: string | null
+          title_color?: string | null
+          title_font_family?: string | null
+          title_font_size?: string | null
+          title_font_weight?: string | null
+          title_position_h?: string | null
+          title_position_v?: string | null
+          updated_at?: string | null
+          youtube_autoplay?: boolean | null
+          youtube_loop?: boolean | null
+          youtube_muted?: boolean | null
+          youtube_video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_universal_slider_slides_slider_id_fkey"
+            columns: ["slider_id"]
+            isOneToOne: false
+            referencedRelation: "gw_universal_sliders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_universal_sliders: {
+        Row: {
+          auto_play: boolean | null
+          column_count: number | null
+          created_at: string | null
+          created_by: string | null
+          custom_height_px: number | null
+          default_slide_duration_seconds: number | null
+          display_order: number | null
+          gap_size: string | null
+          height_preset: string | null
+          id: string
+          is_active: boolean | null
+          is_full_width: boolean | null
+          loop: boolean | null
+          name: string
+          placement_key: string
+          show_dots: boolean | null
+          show_navigation: boolean | null
+          slider_type: string
+          transition_effect: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_play?: boolean | null
+          column_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_height_px?: number | null
+          default_slide_duration_seconds?: number | null
+          display_order?: number | null
+          gap_size?: string | null
+          height_preset?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_full_width?: boolean | null
+          loop?: boolean | null
+          name: string
+          placement_key: string
+          show_dots?: boolean | null
+          show_navigation?: boolean | null
+          slider_type?: string
+          transition_effect?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_play?: boolean | null
+          column_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_height_px?: number | null
+          default_slide_duration_seconds?: number | null
+          display_order?: number | null
+          gap_size?: string | null
+          height_preset?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_full_width?: boolean | null
+          loop?: boolean | null
+          name?: string
+          placement_key?: string
+          show_dots?: boolean | null
+          show_navigation?: boolean | null
+          slider_type?: string
+          transition_effect?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gw_user_appointment_preferences: {
         Row: {
           advance_booking_days: number | null
