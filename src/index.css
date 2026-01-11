@@ -309,15 +309,15 @@ button.module-card-solid:hover,
   background-image: none !important;
 }
 
-/* Header styling - liquid glass effect with readable text */
+/* Header styling - solid white for maximum readability */
 header,
 .spelman-blue-theme header,
 .glass-theme header,
 [class*="theme"] header {
-  background-color: rgba(255, 255, 255, 0.75) !important;
-  background: rgba(255, 255, 255, 0.75) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background-color: hsl(0 0% 100%) !important;
+  background: hsl(0 0% 100%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   color: hsl(222 47% 11%) !important;
 }
 
