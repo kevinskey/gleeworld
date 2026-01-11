@@ -37,69 +37,70 @@ export default function AuthPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const returnTo = urlParams.get('returnTo');
     const hasTimeSlot = urlParams.get('timeSlot');
-
     if (returnTo) return returnTo;
     if (hasTimeSlot) return '/audition-application';
 
     // Regular auth, redirect to dashboard for members
     return '/dashboard';
   };
-
   useEffect(() => {
     // If user is already authenticated, redirect them
     if (user && !loading) {
       const target = getRedirectTarget();
-      navigate(target, { replace: true });
+      navigate(target, {
+        replace: true
+      });
     }
   }, [user, loading, navigate]);
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
       if (isLogin) {
         // Login flow
-        const { error } = await supabase.auth.signInWithPassword({
+        const {
+          error
+        } = await supabase.auth.signInWithPassword({
           email,
-          password,
+          password
         });
-
         if (error) throw error;
-
         toast({
           title: "Welcome back!",
-          description: "You have been successfully logged in.",
+          description: "You have been successfully logged in."
         });
 
         // No full page reload—navigate within the SPA to avoid a white screen.
         const target = getRedirectTarget();
-        navigate(target, { replace: true });
+        navigate(target, {
+          replace: true
+        });
       } else {
         // Signup flow
         const redirectUrl = `${window.location.origin}/audition-application`;
-        const { data, error } = await supabase.auth.signUp({
+        const {
+          data,
+          error
+        } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: redirectUrl,
             data: {
-              full_name: name,
-            },
-          },
+              full_name: name
+            }
+          }
         });
-
         if (error) throw error;
-
         if (data.user && !data.user.email_confirmed_at) {
           toast({
             title: "Check your email",
-            description:
-              "We sent you a confirmation link. Please check your email to complete registration.",
+            description: "We sent you a confirmation link. Please check your email to complete registration."
           });
         } else {
           toast({
             title: "Account created!",
-            description: "Please complete your audition application.",
+            description: "Please complete your audition application."
           });
         }
       }
@@ -108,7 +109,7 @@ export default function AuthPage() {
       toast({
         title: "Authentication failed",
         description: error.message || "Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -148,16 +149,12 @@ export default function AuthPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <img
-              src={gleeWorldLogoCircle}
-              alt="GleeWorld.org logo"
-              className="w-36 h-36 object-contain drop-shadow-2xl"
-            />
+            <img src={gleeWorldLogoCircle} alt="GleeWorld.org logo" className="w-36 h-36 object-contain drop-shadow-2xl" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-2xl">
             Glee World! 
           </h1>
-          <h2 className="text-2xl md:text-3xl mb-4 drop-shadow-lg font-serif text-white font-semibold">
+          <h2 className="text-2xl mb-4 drop-shadow-lg font-serif text-white font-semibold md:text-xl">
             Sign in or Create an account
           </h2>
           <p className="text-white/80 text-lg drop-shadow-md">
