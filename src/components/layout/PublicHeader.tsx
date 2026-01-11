@@ -52,9 +52,12 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
               {/* Logo */}
               <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
                 <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 flex-shrink-0" />
-                <div className="min-w-0">
-                  <h1 className="text-lg md:text-xl xl:text-3xl font-bold tracking-wide truncate lg:text-xl text-[#003666]">GLEEWORLD</h1>
-                </div>
+                <h1 
+                  style={{ fontFamily: "'Cinzel', serif", letterSpacing: '0.02em', fontSize: '90%' }}
+                  className="font-medium text-[#003666] whitespace-nowrap drop-shadow-sm text-[calc(2rem*0.9)] md:text-[calc(2.5rem*0.9)] lg:text-[calc(3rem*0.9)]"
+                >
+                  GleeWorld
+                </h1>
               </Link>
               
               {/* Center Navigation - flex-1 to take remaining space and center content */}
