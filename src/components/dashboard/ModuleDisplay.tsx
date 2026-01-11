@@ -33,7 +33,7 @@ import { QRCodeManagementModule } from '../modules/QRCodeManagementModule';
 import { Mus240GroupsModule } from '../modules/Mus240GroupsModule';
 import { TestBuilder } from '../test-builder/TestBuilder';
 import { AlumnaePortalModule } from '../modules/AlumnaePortalModule';
-import { DashboardHeroManagerModule } from '@/components/modules/DashboardHeroManagerModule';
+import { HeroManagerModule } from '@/components/modules/HeroManagerModule';
 import { GleeLedgerModule } from '../admin/financial/GleeLedgerModule';
 import { AlumnaeManagementModule } from '../modules/AlumnaeManagementModule';
 import { GradingModule } from '../modules/GradingModule';
@@ -145,7 +145,7 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <AlumnaeManagementModule />;
       case 'hero-management':
       case 'hero-manager':
-        return <DashboardHeroManagerModule />;
+        return <HeroManagerModule />;
       case 'youtube-management':
         return <YouTubeManagement />;
       case 'glee-ledger':
