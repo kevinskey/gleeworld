@@ -163,7 +163,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                   <Button 
                     asChild
                     variant="outline"
-                    className="relative text-sm lg:text-base px-4 lg:px-5 py-1.5 lg:py-2 font-medium rounded-full border-2 transition-all duration-300 hover:bg-[#003666] hover:text-white"
+                    className="relative text-xs lg:text-sm px-3 lg:px-4 py-1 lg:py-1.5 font-medium rounded-full border transition-all duration-300 hover:bg-[#003666] hover:text-white"
                     style={{ 
                       borderColor: HEADER_STYLES.brandColor,
                       color: HEADER_STYLES.brandColor,
@@ -171,7 +171,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                   >
                     <Link 
                       to="/auth" 
-                      className="flex items-center gap-1.5"
+                      className="flex items-center gap-1"
                     >
                       <span>Sign In</span>
                       <span className="hidden sm:inline opacity-50">|</span>
@@ -188,17 +188,17 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="hover:bg-muted/50 transition-all duration-200 p-2" 
+                      className="hover:bg-muted/50 transition-all duration-200 p-1.5" 
                       style={{ color: HEADER_STYLES.brandColor }}
                       onClick={() => setIsOpen(true)} 
                       aria-label="Toggle mobile menu"
                     >
                       {/* Clean 3-line hamburger menu */}
-                      <div className="flex flex-col justify-center items-center w-5 h-5 gap-[5px]">
+                      <div className="flex flex-col justify-center items-center w-4 h-4 gap-1">
                         {[1, 2, 3].map((i) => (
                           <div 
                             key={i}
-                            className="w-5 h-[2px] rounded-full transition-all duration-200"
+                            className="w-4 h-[1.5px] rounded-full transition-all duration-200"
                             style={{ backgroundColor: HEADER_STYLES.brandColor }}
                           />
                         ))}
