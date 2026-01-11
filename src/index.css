@@ -71,6 +71,10 @@
     --spelman-navy: 208 100% 20%; /* #003666 */
     --spelman-navy-hover: 208 100% 17%; /* slightly darker */
     --spelman-navy-foreground: 0 0% 100%;
+    
+    /* Primary Brand Palette */
+    --primary: 219 78% 31%; /* Spelman dark blue */
+    --primary-foreground: 0 0% 100%; /* Pure white for maximum contrast */
 
     /* Secondary Accent Colors */
     --secondary: var(--spelman-blue-light);
