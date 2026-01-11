@@ -4,7 +4,6 @@ import { AcademyCourse } from '@/config/academyCourses';
 
 // Character limit for description to ensure uniform card height
 const DESCRIPTION_CHAR_LIMIT = 120;
-
 interface AcademyCourseCardProps {
   course: AcademyCourse;
   onEnter: (course: AcademyCourse) => void;
@@ -26,16 +25,11 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
   course,
   onEnter,
   buttonText = 'Enter Course',
-  className = '',
+  className = ''
 }) => {
   // Truncate description to ensure uniform card height
-  const truncatedDescription = course.description.length > DESCRIPTION_CHAR_LIMIT
-    ? `${course.description.slice(0, DESCRIPTION_CHAR_LIMIT).trim()}...`
-    : course.description;
-
-  return (
-    <div
-      className={`
+  const truncatedDescription = course.description.length > DESCRIPTION_CHAR_LIMIT ? `${course.description.slice(0, DESCRIPTION_CHAR_LIMIT).trim()}...` : course.description;
+  return <div className={`
         bg-white 
         border border-border/40
         rounded-xl
@@ -48,18 +42,16 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
         transition-shadow
         duration-200
         ${className}
-      `}
-    >
+      `}>
       {/* Course Code - Elegant serif style */}
-      <h3 
-        className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light tracking-wide text-foreground mb-2"
-        style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-      >
+      <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light tracking-wide text-foreground mb-2" style={{
+      fontFamily: 'Georgia, "Times New Roman", serif'
+    }}>
         {course.courseCode}
       </h3>
 
       {/* Course Title - Italic style */}
-      <h4 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-[#003666] italic mb-4 leading-snug">
+      <h4 className="text-sm sm:text-base md:text-lg font-semibold text-[#003666] italic mb-4 leading-snug lg:text-3xl">
         {course.title}
       </h4>
 
@@ -69,13 +61,10 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
       </p>
 
       {/* Enter Course Button - Rounded pill style */}
-      <Button
-        variant="outline"
-        onClick={(e) => {
-          e.stopPropagation();
-          onEnter(course);
-        }}
-        className="
+      <Button variant="outline" onClick={e => {
+      e.stopPropagation();
+      onEnter(course);
+    }} className="
           w-fit
           px-6 py-2
           rounded-full
@@ -87,12 +76,9 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
           transition-colors
           font-medium
           text-sm
-        "
-      >
+        ">
         {buttonText}
       </Button>
-    </div>
-  );
+    </div>;
 };
-
 export default AcademyCourseCard;
