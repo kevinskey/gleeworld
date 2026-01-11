@@ -5,11 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Save, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload, Save, X, Clock, LayoutGrid, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface SlideFormData {
+export interface SlideFormData {
   title: string;
   description: string;
   image_url: string;
@@ -17,6 +18,10 @@ interface SlideFormData {
   ipad_image_url: string;
   display_order: number;
   is_active: boolean;
+  // New advanced controls
+  duration_ms: number | null;
+  layout: 'one' | 'two' | 'three';
+  transition: 'fade' | 'left' | 'right' | 'up' | 'down' | 'zoom';
 }
 
 interface SlideEditFormProps {
@@ -26,7 +31,23 @@ interface SlideEditFormProps {
   onCancel: () => void;
   saving: boolean;
   isEditing: boolean;
+  showAdvancedControls?: boolean;
 }
+
+const LAYOUT_OPTIONS = [
+  { value: 'one', label: '1 Column', description: 'Full-width single column' },
+  { value: 'two', label: '2 Columns', description: 'Media + Text side by side' },
+  { value: 'three', label: '3 Columns', description: 'Media + Text + CTA' },
+];
+
+const TRANSITION_OPTIONS = [
+  { value: 'fade', label: 'Fade', icon: '✨' },
+  { value: 'left', label: 'Slide Left', icon: '←' },
+  { value: 'right', label: 'Slide Right', icon: '→' },
+  { value: 'up', label: 'Slide Up', icon: '↑' },
+  { value: 'down', label: 'Slide Down', icon: '↓' },
+  { value: 'zoom', label: 'Zoom', icon: '🔍' },
+];
 
 export const SlideEditForm = ({
   formData,
@@ -35,6 +56,7 @@ export const SlideEditForm = ({
   onCancel,
   saving,
   isEditing,
+  showAdvancedControls = true,
 }: SlideEditFormProps) => {
   const { toast } = useToast();
 
@@ -203,6 +225,85 @@ export const SlideEditForm = ({
             </div>
           </div>
         </div>
+
+        {/* Advanced Controls: Timing, Layout, Transition */}
+        {showAdvancedControls && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+            {/* Duration Override */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-600" />
+                <Label className="text-xs font-medium text-amber-800">Duration (ms)</Label>
+              </div>
+              <Input
+                type="number"
+                value={formData.duration_ms || ''}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  duration_ms: e.target.value ? parseInt(e.target.value) : null 
+                }))}
+                placeholder="Default (6000)"
+                className="h-8 text-xs"
+                min={1000}
+                max={60000}
+                step={500}
+              />
+              <p className="text-xs text-muted-foreground">Leave empty for global default</p>
+            </div>
+
+            {/* Layout */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4 text-amber-600" />
+                <Label className="text-xs font-medium text-amber-800">Layout</Label>
+              </div>
+              <Select
+                value={formData.layout}
+                onValueChange={(value: 'one' | 'two' | 'three') => 
+                  setFormData(prev => ({ ...prev, layout: value }))
+                }
+              >
+                <SelectTrigger className="h-8 text-xs bg-background">
+                  <SelectValue placeholder="Select layout" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {LAYOUT_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                      <span className="font-medium">{opt.label}</span>
+                      <span className="text-muted-foreground ml-1">- {opt.description}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Transition */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-amber-600" />
+                <Label className="text-xs font-medium text-amber-800">Transition</Label>
+              </div>
+              <Select
+                value={formData.transition}
+                onValueChange={(value: 'fade' | 'left' | 'right' | 'up' | 'down' | 'zoom') => 
+                  setFormData(prev => ({ ...prev, transition: value }))
+                }
+              >
+                <SelectTrigger className="h-8 text-xs bg-background">
+                  <SelectValue placeholder="Select transition" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {TRANSITION_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                      <span className="mr-2">{opt.icon}</span>
+                      <span className="font-medium">{opt.label}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
 
         {/* Settings Row */}
         <div className="flex flex-wrap items-center gap-4 p-3 bg-muted/30 rounded-lg">
