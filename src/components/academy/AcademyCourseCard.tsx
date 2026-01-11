@@ -51,7 +51,7 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
       </h3>
 
       {/* Course Title - Italic style */}
-      <h4 className="text-sm sm:text-base md:text-lg font-semibold text-[#003666] italic mb-4 leading-snug lg:text-3xl">
+      <h4 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold text-[#003666] italic mb-4 leading-snug">
         {course.title}
       </h4>
 
