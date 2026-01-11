@@ -51,13 +51,11 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
       {/* Left side - Logo and branding - smaller on tablet */}
       <div className="flex items-center gap-4 lg:gap-6 relative z-10">
         <div className="flex items-center gap-2 lg:gap-3">
-          <div className={`w-7 h-7 lg:w-11 lg:h-11 rounded-lg lg:rounded-xl flex items-center justify-center font-bold text-sm lg:text-lg shadow-lg ${
-            isSpelmanBlue 
-              ? 'bg-white/20 text-white ring-1 lg:ring-2 ring-white/30' 
-              : 'bg-gradient-to-br from-destructive via-primary to-emerald-600 text-primary-foreground ring-1 lg:ring-2 ring-amber-400/30'
-          }`}>
-            <span className="font-['Cinzel'] text-base lg:text-xl">G</span>
-          </div>
+          <img 
+            src="/lovable-uploads/gleeworld-logo.png" 
+            alt="GleeWorld" 
+            className="w-9 h-9 lg:w-12 lg:h-12 object-contain drop-shadow-md"
+          />
           <div>
             <h1 className="text-lg lg:text-2xl xl:text-4xl font-bold font-['Cinzel'] tracking-wide flex items-center gap-1 lg:gap-2">
               <span className={isSpelmanBlue ? 'text-white' : 'bg-gradient-to-r from-primary via-destructive to-emerald-600 bg-clip-text text-transparent'}>
