@@ -147,17 +147,17 @@ export default function AuthPage() {
       <div className="w-full max-w-md relative z-10">
         
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
-            <img src={gleeWorldLogoCircle} alt="GleeWorld.org logo" className="w-36 h-36 object-contain drop-shadow-2xl" />
+        <div className="text-center mb-4 sm:mb-6 md:mb-8">
+          <div className="flex justify-center mb-3 sm:mb-4 md:mb-6">
+            <img src={gleeWorldLogoCircle} alt="GleeWorld.org logo" className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 object-contain drop-shadow-2xl" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-2xl">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 sm:mb-3 drop-shadow-2xl">
             Glee World! 
           </h1>
-          <h2 className="text-2xl mb-4 drop-shadow-lg font-serif text-white font-semibold md:text-xl">
+          <h2 className="text-base sm:text-lg md:text-xl mb-2 sm:mb-3 md:mb-4 drop-shadow-lg font-serif text-white font-semibold">
             Sign in or Create an account
           </h2>
-          <p className="text-white/80 text-lg drop-shadow-md">
+          <p className="text-white/80 text-sm sm:text-base md:text-lg drop-shadow-md">
             {isLogin ? 'Sign in to access your account' : 'Join our musical family'}
           </p>
         </div>
@@ -166,8 +166,8 @@ export default function AuthPage() {
         <Card className="bg-black/40 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 pointer-events-none" />
           
-          <CardHeader className="relative">
-            <CardTitle className="flex items-center justify-center text-white text-xl">
+          <CardHeader className="relative py-3 sm:py-4 md:py-6">
+            <CardTitle className="flex items-center justify-center text-white text-base sm:text-lg md:text-xl">
               {isLogin ? <>
                   <LogIn className="h-5 w-5 mr-2" />
                   Welcome Back
@@ -206,7 +206,7 @@ export default function AuthPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 py-6 text-lg font-semibold" disabled={isSubmitting}>
+              <Button type="submit" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 py-4 sm:py-5 md:py-6 text-sm sm:text-base md:text-lg font-semibold" disabled={isSubmitting}>
                 {isSubmitting ? isLogin ? 'Signing in...' : 'Creating account...' : isLogin ? 'Sign In' : 'Create Account & Apply'}
               </Button>
             </form>
