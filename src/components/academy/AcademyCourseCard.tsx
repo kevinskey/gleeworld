@@ -56,7 +56,7 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
       </h4>
 
       {/* Description - Fixed height with truncation */}
-      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed flex-1 mb-6">
+      <p className="text-base sm:text-lg md:text-lg text-muted-foreground leading-relaxed flex-1 mb-6 antialiased">
         {truncatedDescription}
       </p>
 
