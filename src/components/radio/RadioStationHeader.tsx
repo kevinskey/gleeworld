@@ -31,8 +31,8 @@ export const RadioStationHeader = ({
           <div className="flex items-center gap-6">
             <div className="relative">
               <img 
-                src="/glee-100-crest.png" 
-                alt="Glee Club 100th Anniversary Crest" 
+                src="/lovable-uploads/gleeworld-logo.png" 
+                alt="GleeWorld" 
                 className="h-24 w-24 object-contain bg-white/10 rounded-full p-2 backdrop-blur-sm"
               />
               {isLive && (

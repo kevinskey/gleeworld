@@ -11,7 +11,7 @@ const STATIC_ASSETS = [
   '/',
   '/manifest.json',
   '/favicon.ico',
-  '/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png',
+  '/lovable-uploads/gleeworld-logo.png',
   '/offline.html'
 ];
 
