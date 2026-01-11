@@ -77,9 +77,11 @@ const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, showMessag
     return () => clearInterval(timer);
   }, []);
 
+  const { signOut } = useAuth();
+  
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
+    await signOut();
+    navigate('/', { replace: true });
   };
 
   return (
@@ -211,14 +213,11 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
         return <Info className="h-4 w-4 text-blue-500" />;
     }
   };
-
+  const { signOut } = useAuth();
+  
   const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/auth');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+    await signOut();
+    navigate('/', { replace: true });
   };
 
   const getInitials = (name: string) => {
