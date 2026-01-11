@@ -54,7 +54,7 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
           <img 
             src="/lovable-uploads/gleeworld-logo.png" 
             alt="GleeWorld" 
-            className="w-9 h-9 lg:w-12 lg:h-12 object-contain drop-shadow-md"
+            className="w-12 h-12 lg:w-16 lg:h-16 object-contain drop-shadow-md"
           />
           <div>
             <h1 className="text-lg lg:text-2xl xl:text-4xl font-bold font-['Cinzel'] tracking-wide flex items-center gap-1 lg:gap-2">
