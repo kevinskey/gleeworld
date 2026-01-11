@@ -15,60 +15,52 @@ const Auth = () => {
   const isReset = searchParams.get('reset') === 'true';
   const theme = searchParams.get('theme') as 'default' | 'mus240' || 'default';
 
-  console.log('🔄 Auth component render:', {
-    hasUser: !!user,
-    loading,
-    profileLoading,
-    pathname: window.location.pathname
-  });
-
   useEffect(() => {
-    console.log('🔄 Auth redirect check:', {
-      hasUser: !!user,
-      loading,
-      profileLoading,
-      userEmail: user?.email,
-      pathname: window.location.pathname
-    });
-
-    if (!loading && !profileLoading && user) {
-      console.log('🚀 Auth redirect logic - User authenticated, redirecting...');
-      
-      // Check for URL parameter first, then sessionStorage
-      const urlParams = new URLSearchParams(window.location.search);
-      const returnTo = urlParams.get('returnTo');
-      
-      if (returnTo) {
-        console.log('Auth: Redirecting to URL parameter:', returnTo);
-        // Store in sessionStorage for consistency and redirect
-        sessionStorage.setItem('redirectAfterAuth', returnTo);
-        navigate(returnTo, { replace: true });
-        return;
+    // Only redirect if user is logged in and auth is done loading
+    if (!loading && user) {
+      // Wait for profile if user exists, but don't block if profile loading takes too long
+      if (!profileLoading || profile) {
+        // Check for URL parameter first, then sessionStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnTo = urlParams.get('returnTo');
+        
+        if (returnTo) {
+          sessionStorage.setItem('redirectAfterAuth', returnTo);
+          navigate(returnTo, { replace: true });
+          return;
+        }
+        
+        const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+        if (redirectPath) {
+          sessionStorage.removeItem('redirectAfterAuth');
+          navigate(redirectPath, { replace: true });
+          return;
+        }
+        
+        navigate('/glee-academy', { replace: true });
       }
-      
-      // Clear any stored redirect path
-      const redirectPath = sessionStorage.getItem('redirectAfterAuth');
-      if (redirectPath) {
-        console.log('Auth: Redirecting to stored path:', redirectPath);
-        sessionStorage.removeItem('redirectAfterAuth');
-        navigate(redirectPath, { replace: true });
-        return;
-      }
-      
-      // Default redirect to Glee Academy
-      const defaultPath = '/glee-academy';
-      console.log('Auth: Redirecting to Glee Academy:', defaultPath);
-      navigate(defaultPath, { replace: true });
     }
-  }, [user, loading, profileLoading, navigate, isAdmin]);
+  }, [user, loading, profileLoading, profile, navigate]);
 
-  if (loading || profileLoading) {
+  // Show loading only during initial auth check
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
         <LoadingSpinner size="lg" text="Loading..." className="text-white" />
       </div>
     );
   }
+
+  // If user is logged in, show redirecting state
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
+        <LoadingSpinner size="lg" text="Redirecting..." className="text-white" />
+      </div>
+    );
+  }
+
+  // No user - show auth form immediately (don't wait for profile loading)
 
   if (user) {
     return (
