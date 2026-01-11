@@ -27,7 +27,6 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { SmartCoverImage } from "@/components/ui/SmartCoverImage";
 import { FeaturedVideoCarousel } from "@/components/public/FeaturedVideoCarousel";
 import { AllVideosGrid } from "@/components/youtube/AllVideosGrid";
-
 import { PollReminderPopup } from "@/components/polls/PollReminderPopup";
 interface Event {
   id: string;
@@ -255,11 +254,15 @@ export const GleeWorldLanding = () => {
   // };
 
   if (loading || authLoading) {
-    return <div className="min-h-screen flex items-center justify-center spelman-blue-theme" style={{ background: 'linear-gradient(180deg, hsl(208 100% 33%) 0%, hsl(203 100% 40%) 40%, hsl(197 80% 63%) 100%)' }}>
+    return <div className="min-h-screen flex items-center justify-center spelman-blue-theme" style={{
+      background: 'linear-gradient(180deg, hsl(208 100% 33%) 0%, hsl(203 100% 40%) 40%, hsl(197 80% 63%) 100%)'
+    }}>
         <LoadingSpinner size="lg" text="Loading GleeWorld..." className="text-white" />
       </div>;
   }
-  return <div className="min-h-screen w-full relative spelman-blue-theme" style={{ background: 'linear-gradient(180deg, hsl(208 100% 33%) 0%, hsl(203 100% 40%) 40%, hsl(197 80% 63%) 100%)' }}>
+  return <div className="min-h-screen w-full relative spelman-blue-theme" style={{
+    background: 'linear-gradient(180deg, hsl(208 100% 33%) 0%, hsl(203 100% 40%) 40%, hsl(197 80% 63%) 100%)'
+  }}>
       <div className="absolute inset-0 -z-10 opacity-20 mix-blend-overlay" style={{
       backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.08'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")"
     }} aria-hidden="true" />
@@ -275,28 +278,13 @@ export const GleeWorldLanding = () => {
             <div className="h-[280px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] 2xl:h-[800px] relative overflow-hidden">
               {heroSlides.length > 0 ? <>
                   {/* Desktop Image - Smart Cover */}
-                  <SmartCoverImage 
-                    src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} 
-                    alt="Hero Background" 
-                    className="hidden md:block w-full h-full brightness-95 contrast-100"
-                    fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-                  />
+                  <SmartCoverImage src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="hidden md:block w-full h-full brightness-95 contrast-100" fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" />
                   
                   {/* iPad Image - Smart Cover */}
-                  <SmartCoverImage 
-                    src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} 
-                    alt="Hero Background" 
-                    className="hidden sm:block md:hidden w-full h-full brightness-95 contrast-100"
-                    fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-                  />
+                  <SmartCoverImage src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="hidden sm:block md:hidden w-full h-full brightness-95 contrast-100" fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" />
                   
                   {/* Mobile Image - Smart Cover */}
-                  <SmartCoverImage 
-                    src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} 
-                    alt="Hero Background" 
-                    className="block sm:hidden w-full h-full brightness-95 contrast-100"
-                    fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-                  />
+                  <SmartCoverImage src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="block sm:hidden w-full h-full brightness-95 contrast-100" fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" />
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/20"></div>
                   
                   {/* Content overlay - positioned elements */}
@@ -348,7 +336,7 @@ export const GleeWorldLanding = () => {
 
 
       {/* Upcoming Events Section */}
-      <section id="events" className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section id="events" className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full bg-primary-foreground">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
