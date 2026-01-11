@@ -1,8 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronDown } from "lucide-react";
 
 const publicNavItems = [
   { href: "/", label: "Home", shortLabel: "Home" },
@@ -10,11 +8,6 @@ const publicNavItems = [
   { href: "/public-calendar", label: "Calendar", shortLabel: "Calendar" },
   { href: "/shop", label: "Shop", shortLabel: "Shop" },
   { href: "/booking-request", label: "Book Us", shortLabel: "Book" },
-];
-
-const infoDropdown = [
-  { href: "/about", label: "About" },
-  { href: "/press-kit", label: "Press Kit" },
 ];
 
 interface ResponsiveNavigationProps {
@@ -27,7 +20,6 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const [infoOpen, setInfoOpen] = useState(false);
   
   const isSpelmanBlue = variant === 'spelman-blue';
 
@@ -36,10 +28,6 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
       return location.pathname === "/" || location.pathname === "/landing";
     }
     return location.pathname === path;
-  };
-
-  const isDropdownActive = (items: { href: string }[]) => {
-    return items.some(item => location.pathname === item.href);
   };
 
   const handleAuthAction = async () => {
@@ -67,39 +55,6 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
             {item.label}
           </Link>
         ))}
-        
-        {/* Mobile Info Dropdown */}
-        <div className="w-full">
-          <button
-            onClick={() => setInfoOpen(!infoOpen)}
-            className={cn(
-              "flex items-center justify-between px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full",
-              "text-foreground hover:bg-accent",
-              isDropdownActive(infoDropdown) && "bg-accent text-accent-foreground"
-            )}
-          >
-            Info
-            <ChevronDown className={cn("h-4 w-4 transition-transform", infoOpen && "rotate-180")} />
-          </button>
-          {infoOpen && (
-            <div className="ml-4 mt-1 space-y-1">
-              {infoDropdown.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  onClick={onItemClick}
-                  className={cn(
-                    "flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                    "text-foreground hover:bg-accent w-full justify-start",
-                    isActivePath(item.href) && "bg-accent text-accent-foreground"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
         
         {/* Dynamic Auth Button */}
         {user ? (
@@ -146,50 +101,6 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
             {item.label}
           </Link>
         ))}
-        
-        {/* Desktop Info Dropdown */}
-        <div className="relative group">
-          <button
-            onMouseEnter={() => setInfoOpen(true)}
-            onMouseLeave={() => setInfoOpen(false)}
-            className={cn(
-              "flex items-center gap-1 px-4 py-2 rounded text-base font-medium transition-all duration-200",
-              isSpelmanBlue
-                ? cn(
-                    "text-white/80 hover:text-white hover:bg-white/10",
-                    isDropdownActive(infoDropdown) && "text-white bg-[#0066CC] font-semibold"
-                  )
-                : cn(
-                    "text-[#003666] hover:text-[#002244] hover:bg-accent/10",
-                    isDropdownActive(infoDropdown) && "text-[#002244] bg-accent/20 font-semibold"
-                  )
-            )}
-          >
-            Info
-            <ChevronDown className="h-4 w-4 text-[#003666]" />
-          </button>
-          {infoOpen && (
-            <div
-              onMouseEnter={() => setInfoOpen(true)}
-              onMouseLeave={() => setInfoOpen(false)}
-              className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-2xl z-[1100] min-w-[180px] backdrop-blur-sm"
-            >
-              {infoDropdown.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={cn(
-                    "block px-4 py-3 text-sm font-medium transition-all duration-200 first:rounded-t-lg last:rounded-b-lg",
-                    "text-foreground hover:bg-accent hover:text-accent-foreground",
-                    isActivePath(item.href) && "bg-accent text-accent-foreground"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Medium-Large screens - Short labels with normal size */}
@@ -214,50 +125,6 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
             {item.shortLabel}
           </Link>
         ))}
-        
-        {/* Medium Screen Info Dropdown */}
-        <div className="relative">
-          <button
-            onMouseEnter={() => setInfoOpen(true)}
-            onMouseLeave={() => setInfoOpen(false)}
-            className={cn(
-              "flex items-center gap-1 px-3 py-2 rounded text-sm font-medium transition-all duration-200",
-              isSpelmanBlue
-                ? cn(
-                    "text-white/80 hover:text-white hover:bg-white/10",
-                    isDropdownActive(infoDropdown) && "text-white bg-[#0066CC] font-semibold"
-                  )
-                : cn(
-                    "text-[#003666] hover:text-[#002244] hover:bg-accent/10",
-                    isDropdownActive(infoDropdown) && "text-[#002244] bg-accent/20 font-semibold"
-                  )
-            )}
-          >
-            Info
-            <ChevronDown className="h-3 w-3 text-[#003666]" />
-          </button>
-          {infoOpen && (
-            <div
-              onMouseEnter={() => setInfoOpen(true)}
-              onMouseLeave={() => setInfoOpen(false)}
-              className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-2xl z-[1100] min-w-[160px] backdrop-blur-sm"
-            >
-              {infoDropdown.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={cn(
-                    "block px-3 py-2 text-sm font-medium transition-all duration-200 first:rounded-t-lg last:rounded-b-lg",
-                    "text-foreground hover:bg-accent hover:text-accent-foreground",
-                    isActivePath(item.href) && "bg-accent text-accent-foreground"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </nav>
   );
