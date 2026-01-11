@@ -1,18 +1,16 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ModuleProps } from '@/types/unified-modules';
-import academyHeroImage from '@/assets/glee-world-academy-hero.jpg';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
+import { AcademyCourseCard } from '@/components/academy/AcademyCourseCard';
+import { AcademyCourse } from '@/config/academyCourses';
 
 export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => {
   const navigate = useNavigate();
   
-  const handleCourseClick = (route: string) => {
-    navigate(route);
+  const handleCourseClick = (course: AcademyCourse) => {
+    navigate(course.route);
   };
 
   return (
@@ -38,64 +36,14 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 auto-rows-fr">
-            {ACADEMY_COURSES.filter(course => course.isActive).map(course => {
-              const IconComponent = course.icon;
-              return (
-                <Card 
-                  key={course.id} 
-                  className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm h-full flex flex-col relative cursor-pointer hover:scale-[1.02]"
-                  onClick={() => handleCourseClick(course.route)}
-                >
-                  <CardHeader className="p-3 sm:pb-4 sm:p-6">
-                    <div className="flex items-start justify-between mb-2 sm:mb-3 flex-wrap gap-1 sm:gap-2">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                          <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                        </div>
-                        <Badge variant="secondary" className="text-[10px] sm:text-xs font-mono">
-                          {course.courseCode}
-                        </Badge>
-                      </div>
-                      <Badge className="bg-primary text-primary-foreground text-[10px] sm:text-xs">
-                        {course.level}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-base sm:text-lg font-semibold group-hover:text-primary transition-colors leading-tight">
-                      {course.title}
-                    </CardTitle>
-                    <span className="text-xs sm:text-sm text-muted-foreground">{course.duration}</span>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col p-3 pt-0 sm:p-6 sm:pt-0">
-                    <p className="text-muted-foreground mb-3 sm:mb-4 text-xs sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-none">
-                      {course.description}
-                    </p>
-                    
-                    <div className="space-y-2 sm:space-y-3 flex-1 flex flex-col">
-                      <h4 className="font-medium text-xs sm:text-sm text-foreground">Course Highlights:</h4>
-                      <ul className="space-y-0.5 sm:space-y-1 flex-1">
-                        {course.highlights.slice(0, 3).map((highlight, index) => (
-                          <li key={index} className="flex items-start gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground">
-                            <ChevronRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary flex-shrink-0 mt-0.5" />
-                            <span className="leading-relaxed line-clamp-1 sm:line-clamp-none">{highlight}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      
-                      <Button 
-                        variant="outline"
-                        className="w-full mt-auto text-xs sm:text-sm border-border/60 bg-background/80 hover:bg-muted/50 text-foreground" 
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); handleCourseClick(course.route); }}
-                      >
-                        Enter {course.courseCode}
-                        <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+            {ACADEMY_COURSES.filter(course => course.isActive).map(course => (
+              <AcademyCourseCard
+                key={course.id}
+                course={course}
+                onEnter={handleCourseClick}
+              />
+            ))}
           </div>
         </div>
       </div>
