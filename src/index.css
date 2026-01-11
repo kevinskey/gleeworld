@@ -2092,14 +2092,19 @@ label.required::after {
 
 /* Prevent horizontal overflow on all pages */
 :root {
-  /* Layout dimensions - header height is set dynamically by UniversalHeader */
-  --gw-header-h: 4rem; /* Default fallback, updated by JS */
-  --gw-header-height: var(--gw-header-h); /* Alias for backwards compat */
-  --gw-radio-bar-height: 0px;
-
-  /* iOS safe-area insets (notch / status bar) */
+  /* Layout dimensions
+     - --gw-header-base-h is set dynamically by UniversalHeader (measured header chrome)
+     - --gw-safe-top uses iOS safe-area inset (notch / status bar)
+     - --gw-header-h combines both so main content always starts below the visible header
+  */
   --gw-safe-top: env(safe-area-inset-top, 0px);
   --gw-safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --gw-header-base-h: 4rem; /* Default fallback, updated by JS */
+  --gw-header-h: calc(var(--gw-header-base-h) + var(--gw-safe-top));
+  --gw-header-height: var(--gw-header-h); /* Alias for backwards compat */
+
+  --gw-radio-bar-height: 0px;
 
   /* Semantic surface colors for accessibility */
   --surface: 0 0% 100%; /* Pure white surface */
