@@ -2096,7 +2096,11 @@ label.required::after {
   --gw-header-h: 4rem; /* Default fallback, updated by JS */
   --gw-header-height: var(--gw-header-h); /* Alias for backwards compat */
   --gw-radio-bar-height: 0px;
-  
+
+  /* iOS safe-area insets (notch / status bar) */
+  --gw-safe-top: env(safe-area-inset-top, 0px);
+  --gw-safe-bottom: env(safe-area-inset-bottom, 0px);
+
   /* Semantic surface colors for accessibility */
   --surface: 0 0% 100%; /* Pure white surface */
   --surface-elevated: 0 0% 100%; /* Elevated surfaces */

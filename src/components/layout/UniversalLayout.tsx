@@ -38,7 +38,7 @@ export const UniversalLayout = ({
   const shellBg = isDashboardShell ? 'bg-muted' : 'bg-background';
   
   return (
-    <div className={`min-h-dvh w-full ${shellBg} safe-top`}>
+    <div className={`min-h-dvh w-full ${shellBg}`}>
       {/* Fixed Header */}
       {showHeader && (
         shouldUsePublicHeader 
