@@ -40,11 +40,11 @@ const HEADER_STYLES = {
   // Title letter spacing
   titleLetterSpacing: "0.02em",
   
-  // Logo sizes at different breakpoints
+  // Logo sizes at different breakpoints (30% larger)
   logoSizes: {
-    mobile: "w-8 h-8",      // 32px
-    tablet: "md:w-10 md:h-10", // 40px  
-    desktop: "lg:w-12 lg:h-12" // 48px
+    mobile: "w-10 h-10",      // 40px (was 32px)
+    tablet: "md:w-14 md:h-14", // 56px (was 40px)
+    desktop: "lg:w-16 lg:h-16" // 64px (was 48px)
   },
   
   // Title sizes - 90% of logo, then reduced by 10%
