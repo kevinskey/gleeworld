@@ -466,22 +466,22 @@ const App = () => {
               <Route path="/choral-conducting-literature" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/classes/mus210" element={<Navigate to="/academy/mus-210" replace />} />
               
+              {/* Course Onboarding Page - for non-enrolled users (must be before wildcard route) */}
+              <Route 
+                path="/academy/:courseCode/onboarding" 
+                element={
+                  <PublicRoute>
+                    <CourseOnboarding />
+                  </PublicRoute>
+                }
+              />
+              
               {/* Dynamic Academy Course Page - handles all courses */}
               <Route 
                 path="/academy/:courseCode/*" 
                 element={
                   <PublicRoute>
                     <AcademyCoursePage />
-                  </PublicRoute>
-                }
-              />
-              
-              {/* Course Onboarding Page - for non-enrolled users */}
-              <Route 
-                path="/academy/:courseCode/onboarding" 
-                element={
-                  <PublicRoute>
-                    <CourseOnboarding />
                   </PublicRoute>
                 }
               />

@@ -69,8 +69,18 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   useEffect(() => {
     checkEnrollmentAndRole();
   }, [user, course.id, currentSemester]);
+
+  // Redirect non-enrolled users to onboarding
+  useEffect(() => {
+    if (!enrollmentLoading && !isEnrolled && !isAdmin) {
+      const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
+      navigate(`/academy/${courseSlug}/onboarding`, { replace: true });
+    }
+  }, [enrollmentLoading, isEnrolled, isAdmin, course.courseCode, navigate]);
+
   const checkEnrollmentAndRole = async () => {
     if (!user) {
+      // Not logged in - will be redirected to onboarding
       setEnrollmentLoading(false);
       return;
     }
