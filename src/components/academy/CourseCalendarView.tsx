@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin } from 'lucide-react';
+import { Calendar, Clock, MapPin, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface CourseCalendarViewProps {
   courseId: string;
@@ -34,6 +35,8 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
   const [academicEvents, setAcademicEvents] = useState<AcademicEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedAcademicEvent, setSelectedAcademicEvent] = useState<AcademicEvent | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -222,8 +225,12 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                       {dayAcademicEvents.slice(0, 1).map((event, idx) => (
                         <div
                           key={`academic-${idx}`}
-                          className="text-xs truncate px-1 py-0.5 rounded bg-accent text-accent-foreground"
+                          className="text-xs truncate px-1 py-0.5 rounded bg-accent text-accent-foreground cursor-pointer hover:opacity-80 transition-opacity"
                           title={event.title}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAcademicEvent(event);
+                          }}
                         >
                           {event.title}
                         </div>
@@ -232,7 +239,11 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                       {dayEvents.slice(0, dayAcademicEvents.length > 0 ? 1 : 2).map(event => (
                         <div
                           key={event.id}
-                          className="text-xs truncate px-1 py-0.5 rounded bg-primary text-primary-foreground"
+                          className="text-xs truncate px-1 py-0.5 rounded bg-primary text-primary-foreground cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEvent(event);
+                          }}
                         >
                           {event.title}
                         </div>
@@ -265,7 +276,11 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
             ) : (
               <div className="space-y-4">
                 {upcomingEvents.map(event => (
-                  <div key={event.id} className="border-l-2 border-primary pl-3">
+                  <div 
+                    key={event.id} 
+                    className="border-l-2 border-primary pl-3 cursor-pointer hover:bg-muted/50 rounded-r-md p-2 -ml-0 transition-colors"
+                    onClick={() => setSelectedEvent(event)}
+                  >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-semibold text-sm text-foreground">{event.title}</span>
                       {getEventTypeBadge(event.event_type)}
@@ -289,6 +304,87 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
           </CardContent>
         </Card>
       </div>
+
+      {/* Event Detail Dialog */}
+      <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
+        <DialogContent className="sm:max-w-md">
+          {selectedEvent && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  {selectedEvent.title}
+                </DialogTitle>
+                <DialogDescription>
+                  {getEventTypeBadge(selectedEvent.event_type)}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="flex items-center gap-3 text-sm">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <div className="font-medium">{format(new Date(selectedEvent.start_time), 'EEEE, MMMM d, yyyy')}</div>
+                    <div className="text-muted-foreground">
+                      {format(new Date(selectedEvent.start_time), 'h:mm a')}
+                      {selectedEvent.end_time && ` - ${format(new Date(selectedEvent.end_time), 'h:mm a')}`}
+                    </div>
+                  </div>
+                </div>
+                {selectedEvent.location && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedEvent.location}</span>
+                  </div>
+                )}
+                {selectedEvent.description && (
+                  <div className="pt-2 border-t">
+                    <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Academic Event Detail Dialog */}
+      <Dialog open={!!selectedAcademicEvent} onOpenChange={(open) => !open && setSelectedAcademicEvent(null)}>
+        <DialogContent className="sm:max-w-md">
+          {selectedAcademicEvent && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-accent" />
+                  {selectedAcademicEvent.title}
+                </DialogTitle>
+                <DialogDescription>
+                  <Badge variant="outline" className="bg-accent/10 text-accent-foreground">
+                    {selectedAcademicEvent.type || 'Academic Event'}
+                  </Badge>
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="flex items-center gap-3 text-sm">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    {selectedAcademicEvent.date && (
+                      <div className="font-medium">{format(new Date(selectedAcademicEvent.date), 'EEEE, MMMM d, yyyy')}</div>
+                    )}
+                    {selectedAcademicEvent.start_date && selectedAcademicEvent.end_date && (
+                      <div className="font-medium">
+                        {format(new Date(selectedAcademicEvent.start_date), 'MMM d')} - {format(new Date(selectedAcademicEvent.end_date), 'MMM d, yyyy')}
+                      </div>
+                    )}
+                    {selectedAcademicEvent.start_date && !selectedAcademicEvent.end_date && !selectedAcademicEvent.date && (
+                      <div className="font-medium">{format(new Date(selectedAcademicEvent.start_date), 'EEEE, MMMM d, yyyy')}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
