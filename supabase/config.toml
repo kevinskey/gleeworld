@@ -363,3 +363,6 @@ verify_jwt = false
 
 [functions.create-refund]
 verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
