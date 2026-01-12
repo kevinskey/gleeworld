@@ -202,12 +202,13 @@ export const CourseInstructorConsole = () => {
           <div className="space-y-0.5">
             {category.items.map(item => {
           const Icon = item.icon;
+          const isActive = activeTab === item.value;
           return <button key={item.value} onClick={() => {
             setActiveTab(item.value);
             if (isMobile) setSidebarOpen(false);
-          }} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border", activeTab === item.value ? "bg-[#003666] text-white border-[#003666]" : "bg-muted hover:bg-accent border-border")}>
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  <span className={activeTab === item.value ? "text-white" : "text-foreground"}>{item.label}</span>
+          }} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border", isActive ? "bg-[#003666] text-white border-[#003666]" : "bg-muted hover:bg-accent border-border")}>
+                  <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-foreground")} />
+                  <span className={isActive ? "text-white" : "text-foreground"}>{item.label}</span>
                 </button>;
         })}
           </div>
