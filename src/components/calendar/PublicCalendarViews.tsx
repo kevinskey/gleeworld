@@ -47,17 +47,12 @@ export const PublicCalendarViews = () => {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div className="bg-neutral-50 rounded-xl overflow-hidden">
       {/* View Selector Header */}
-      <div className="flex items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-100">
+      <div className="flex items-center justify-between gap-4 p-4 sm:p-6 bg-white border-b border-neutral-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#003666]/10 rounded-lg flex items-center justify-center">
-            <CalendarIcon className="h-5 w-5 text-[#003666]" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-[#003666]">Upcoming Events</h2>
-            <p className="text-sm text-muted-foreground">{events.length} event{events.length !== 1 ? 's' : ''} scheduled</p>
-          </div>
+          <h2 className="text-lg font-semibold text-foreground">Upcoming Events</h2>
+          <span className="text-sm text-muted-foreground">({events.length})</span>
         </div>
         <CalendarViewSelector 
           activeView={activeView} 
