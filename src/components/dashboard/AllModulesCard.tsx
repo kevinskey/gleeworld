@@ -82,13 +82,7 @@ export const AllModulesCard = ({
                     <Card 
                       key={module.id} 
                       className="cursor-pointer hover:shadow-lg transition-all duration-300 bg-primary/80 border border-primary-foreground/30 relative group hover:bg-primary/70" 
-                      onClick={() => {
-                        if (module.id === 'librarian') {
-                          navigate('/librarian-dashboard');
-                        } else {
-                          onModuleClick(module.id);
-                        }
-                      }}
+                      onClick={() => onModuleClick(module.id)}
                     >
                       <CardHeader className="pb-3 pt-4">
                         <div className="flex flex-col items-center text-center gap-2">

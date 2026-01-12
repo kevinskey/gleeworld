@@ -136,13 +136,7 @@ export const MyModulesCard = ({ modules, onModuleClick, onToggleFavorite, isFavo
                 <Button
                   variant="outline"
                   className="h-auto flex-col gap-2 p-4 hover:bg-accent/50 w-full bg-card border-border"
-                  onClick={() => {
-                    if (module.id === 'librarian') {
-                      navigate('/librarian-dashboard');
-                    } else {
-                      onModuleClick(module.id);
-                    }
-                  }}
+                  onClick={() => onModuleClick(module.id)}
                 >
                   {IconComponent && (
                     <div className="p-2 rounded-lg bg-primary/10">

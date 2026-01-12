@@ -79,13 +79,7 @@ const SortableFavoriteItem = ({
       </div>
 
       <div 
-        onClick={() => {
-          if (module.id === 'librarian') {
-            navigate('/librarian-dashboard');
-          } else {
-            onModuleClick(module.id);
-          }
-        }}
+        onClick={() => onModuleClick(module.id)}
         className={cn(
           "p-2 flex flex-col items-center text-center transition-all duration-300",
           "bg-card border border-border hover:border-primary/50",
