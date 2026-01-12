@@ -3,16 +3,13 @@ import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { AmazonAffiliateSidebar } from "@/components/amazon/AmazonAffiliateSidebar";
 import { ChristmasCarolRegistrationCard } from "@/components/calendar/ChristmasCarolRegistrationCard";
 import { Calendar as CalendarIcon } from "lucide-react";
-
 const PublicCalendar = () => {
-  return (
-    <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
+  return <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
       <div className="min-h-screen bg-white">
         {/* Header Banner */}
-        <div 
-          className="w-full py-4 sm:py-5 flex items-center justify-center" 
-          style={{ backgroundColor: '#003666' }}
-        >
+        <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{
+        backgroundColor: '#003666'
+      }}>
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-center gap-3 mb-1">
               <CalendarIcon className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
@@ -27,7 +24,7 @@ const PublicCalendar = () => {
         </div>
 
         {/* Calendar Section with Sidebar */}
-        <div className="py-8 sm:py-12 md:py-16 bg-white">
+        <div className="py-8 sm:py-12 md:py-16 bg-white pt-[32px]">
           <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
               {/* Main Calendar */}
@@ -49,8 +46,6 @@ const PublicCalendar = () => {
           </div>
         </div>
       </div>
-    </UniversalLayout>
-  );
+    </UniversalLayout>;
 };
-
 export default PublicCalendar;
