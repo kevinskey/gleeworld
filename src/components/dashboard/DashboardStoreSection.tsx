@@ -327,7 +327,7 @@ export const DashboardStoreSection = () => {
               return (
                 <button
                   key={module.id}
-                  onClick={() => navigate(`/modules/${module.id}`)}
+                  onClick={() => navigate(`/dashboard?module=${module.id}`)}
                   className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#002244] to-[#003666] hover:from-[#003666] hover:to-[#0B5A8B] transition-all duration-200 shadow-md hover:shadow-lg text-left"
                   style={{ color: '#ffffff' }}
                 >

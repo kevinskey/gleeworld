@@ -115,11 +115,7 @@ const SortableModuleCard = ({
   const IconComponent = module.icon;
   return <div ref={setNodeRef} style={style} {...attributes}>
       <Card className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-card border-border ${isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}`} onClick={() => {
-      if (module.id === 'librarian') {
-        navigate('/librarian-dashboard');
-      } else {
-        onModuleClick(module.id);
-      }
+      onModuleClick(module.id);
     }}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
