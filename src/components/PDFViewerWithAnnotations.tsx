@@ -30,8 +30,10 @@ import {
   ZoomIn,
   ZoomOut,
   Share2,
-  Music
+  Music,
+  Piano
 } from "lucide-react";
+import { DockablePiano } from '@/components/music-library/DockablePiano';
 import { AudioCompanionControls } from '@/components/music-library/AudioCompanionControls';
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
@@ -95,6 +97,7 @@ const scrollModePluginInstance = scrollModePlugin();
   const [hasAnnotations, setHasAnnotations] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
   const [showAudioCompanion, setShowAudioCompanion] = useState(false);
+  const [showPiano, setShowPiano] = useState(false);
   
   // Touch navigation state
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; time: number } | null>(null);
@@ -1082,6 +1085,23 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 </Button>
               )}
               
+              {/* Piano Button */}
+              <Button
+                size="sm"
+                variant={showPiano ? "secondary" : "outline"}
+                onClick={() => setShowPiano(!showPiano)}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  setShowPiano(!showPiano);
+                }}
+                aria-label={showPiano ? "Hide piano" : "Show piano"}
+                title="Practice with virtual piano"
+                className={`shadow-lg h-10 sm:h-8 px-2 touch-manipulation ${showPiano ? 'bg-secondary' : ''}`}
+              >
+                <Piano className="h-5 w-5 sm:h-4 sm:w-4 mr-1" />
+                <span className="font-medium text-xs">Piano</span>
+              </Button>
+              
               {/* Annotate Button */}
               <Button
                 size="sm"
@@ -1261,6 +1281,11 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Dockable Piano Overlay */}
+      {showPiano && (
+        <DockablePiano onClose={() => setShowPiano(false)} />
       )}
     </Card>
   );
