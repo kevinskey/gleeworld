@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { 
   format, 
   startOfMonth, 
@@ -8,9 +6,7 @@ import {
   startOfWeek, 
   endOfWeek, 
   eachDayOfInterval, 
-  isSameMonth, 
-  addMonths, 
-  subMonths 
+  isSameMonth
 } from "date-fns";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
@@ -19,27 +15,22 @@ import { EventHoverCard } from "./EventHoverCard";
 interface PublicMonthlyCalendarProps {
   events: GleeWorldEvent[];
   onEventUpdated?: () => void;
+  currentDate?: Date;
+  onDateChange?: (date: Date) => void;
 }
 
-export const PublicMonthlyCalendar = ({ events, onEventUpdated }: PublicMonthlyCalendarProps) => {
-  const getInitialDate = () => {
-    if (events.length > 0) {
-      const firstEvent = events.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())[0];
-      return new Date(firstEvent.start_date);
-    }
-    return new Date();
-  };
-
-  const [currentDate, setCurrentDate] = useState(getInitialDate());
+export const PublicMonthlyCalendar = ({ 
+  events, 
+  onEventUpdated,
+  currentDate: externalDate,
+  onDateChange 
+}: PublicMonthlyCalendarProps) => {
+  const [internalDate, setInternalDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    if (events.length > 0) {
-      const firstEvent = events.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())[0];
-      setCurrentDate(new Date(firstEvent.start_date));
-    }
-  }, [events]);
+  // Use external date if provided, otherwise use internal
+  const currentDate = externalDate ?? internalDate;
 
   useEffect(() => {
     const checkMobile = () => {
@@ -79,44 +70,13 @@ export const PublicMonthlyCalendar = ({ events, onEventUpdated }: PublicMonthlyC
     }
   };
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate(current => 
-      direction === 'prev' ? subMonths(current, 1) : addMonths(current, 1)
-    );
-  };
-
   return (
-    <div className="w-full bg-white rounded-lg p-2 md:p-6">
-      {/* Calendar Header */}
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <Button
-          variant="outline"
-          size={isMobile ? "sm" : "default"}
-          onClick={() => navigateMonth('prev')}
-          className="h-8 w-8 md:h-10 md:w-10 p-0"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        
-        <h2 className="text-lg md:text-xl font-semibold text-foreground">
-          {format(currentDate, 'MMMM yyyy')}
-        </h2>
-        
-        <Button
-          variant="outline"
-          size={isMobile ? "sm" : "default"}
-          onClick={() => navigateMonth('next')}
-          className="h-8 w-8 md:h-10 md:w-10 p-0"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
+    <div className="w-full bg-white rounded-lg">
       {/* Calendar Grid */}
       <div className="grid grid-cols-7 gap-1 md:gap-2">
         {/* Day Headers */}
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-          <div key={day} className="p-2 text-center text-xs md:text-sm font-medium text-muted-foreground">
+          <div key={day} className="p-2 md:p-3 text-center text-xs md:text-sm font-semibold text-[#003666] bg-[#003666]/5 rounded-t-lg">
             {isMobile ? day.charAt(0) : day}
           </div>
         ))}
@@ -131,16 +91,16 @@ export const PublicMonthlyCalendar = ({ events, onEventUpdated }: PublicMonthlyC
             <div
               key={day.toString()}
               className={`
-                min-h-[60px] md:min-h-[80px] p-1 md:p-2 border border-neutral-200 rounded-lg cursor-pointer transition-colors
+                min-h-[70px] md:min-h-[100px] p-1 md:p-2 border border-neutral-200 cursor-pointer transition-colors
                 ${isCurrentMonth ? 'bg-white' : 'bg-neutral-50'}
-                ${isToday ? 'ring-2 ring-blue-400' : ''}
+                ${isToday ? 'ring-2 ring-[#003666] ring-inset' : ''}
                 ${dayEvents.length > 0 ? 'hover:bg-blue-50' : 'hover:bg-neutral-100'}
               `}
               onClick={() => handleDateClick(day)}
             >
-              <div className={`text-xs md:text-sm font-medium mb-1 ${
+              <div className={`text-sm md:text-base font-medium mb-1 ${
                 isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'
-              }`}>
+              } ${isToday ? 'text-[#003666] font-bold' : ''}`}>
                 {format(day, 'd')}
               </div>
               
@@ -149,7 +109,7 @@ export const PublicMonthlyCalendar = ({ events, onEventUpdated }: PublicMonthlyC
                 {dayEvents.slice(0, isMobile ? 2 : 3).map((event) => (
                   <EventHoverCard key={event.id} event={event}>
                     <div
-                      className="text-xs p-1 rounded cursor-pointer truncate bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200 transition-colors"
+                      className="text-xs p-1 rounded cursor-pointer truncate bg-[#003666] text-white hover:bg-[#002244] transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEventClick(event);
@@ -160,7 +120,7 @@ export const PublicMonthlyCalendar = ({ events, onEventUpdated }: PublicMonthlyC
                   </EventHoverCard>
                 ))}
                 {dayEvents.length > (isMobile ? 2 : 3) && (
-                  <div className="text-xs text-muted-foreground text-center">
+                  <div className="text-xs text-[#003666] font-medium text-center">
                     +{dayEvents.length - (isMobile ? 2 : 3)} more
                   </div>
                 )}
