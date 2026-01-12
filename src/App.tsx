@@ -86,7 +86,7 @@ import BudgetApprovals from "./pages/BudgetApprovals";
 import { Shop } from "./pages/Shop";
 import { AlumnaeShop } from "./pages/AlumnaeShop";
 import { CheckoutPage } from "./pages/CheckoutPage";
-import { OrderConfirmationPage } from "./pages/OrderConfirmationPage";
+import { OrderConfirmation } from "./pages/OrderConfirmation";
 import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
@@ -977,7 +977,7 @@ const App = () => {
                   path="/order-confirmation" 
                   element={
                     <PublicRoute>
-                      <OrderConfirmationPage />
+                      <OrderConfirmation />
                     </PublicRoute>
                   } 
                 />

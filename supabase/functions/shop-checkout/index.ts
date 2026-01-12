@@ -9,11 +9,11 @@ const corsHeaders = {
 
 interface CartItem {
   product_id: string;
-  product_title: string;
-  product_price: number;
+  title: string;
+  price: number;
   quantity: number;
-  product_type: string;
-  product_image?: string;
+  product_type?: string;
+  image?: string;
   requires_shipping: boolean;
   weight?: number;
 }
@@ -34,6 +34,7 @@ interface CheckoutRequest {
   };
   selected_rate_id?: string;
   shipping_cost?: number;
+  tax_amount?: number;
 }
 
 const logStep = (step: string, details?: any) => {
@@ -59,7 +60,7 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const body: CheckoutRequest = await req.json();
-    const { items, customer_email, customer_name, shipping_address, selected_rate_id, shipping_cost } = body;
+    const { items, customer_email, customer_name, shipping_address, selected_rate_id, shipping_cost, tax_amount } = body;
 
     if (!items || items.length === 0) {
       throw new Error("No items in cart");
@@ -88,12 +89,13 @@ serve(async (req) => {
     }
 
     // Calculate totals
-    const subtotal = items.reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const requiresShipping = items.some(item => item.requires_shipping);
     const shippingAmount = requiresShipping && shipping_cost ? shipping_cost : 0;
-    const totalAmount = subtotal + shippingAmount;
+    const taxAmount = tax_amount || 0;
+    const totalAmount = subtotal + shippingAmount + taxAmount;
 
-    logStep("Order totals calculated", { subtotal, shippingAmount, totalAmount, requiresShipping });
+    logStep("Order totals calculated", { subtotal, shippingAmount, taxAmount, totalAmount, requiresShipping });
 
     // Generate order number
     const { data: orderNumber } = await supabaseClient.rpc('generate_order_number');
@@ -131,12 +133,12 @@ serve(async (req) => {
     const orderItems = items.map(item => ({
       order_id: order.id,
       product_id: item.product_id,
-      product_title: item.product_title,
-      unit_price: item.product_price,
+      product_title: item.title,
+      unit_price: item.price,
       quantity: item.quantity,
-      total_price: item.product_price * item.quantity,
-      product_type: item.product_type,
-      product_image: item.product_image,
+      total_price: item.price * item.quantity,
+      product_type: item.product_type || 'general',
+      product_image: item.image,
       requires_shipping: item.requires_shipping,
       weight: item.weight
     }));
@@ -170,10 +172,10 @@ serve(async (req) => {
       price_data: {
         currency: 'usd',
         product_data: {
-          name: item.product_title,
-          images: item.product_image ? [item.product_image] : undefined,
+          name: item.title,
+          images: item.image ? [item.image] : undefined,
         },
-        unit_amount: Math.round(item.product_price * 100), // Convert to cents
+        unit_amount: Math.round(item.price * 100), // Convert to cents
       },
       quantity: item.quantity,
     }));
