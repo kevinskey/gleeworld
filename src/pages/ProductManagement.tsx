@@ -15,45 +15,67 @@ import { SubscriptionsManager } from '@/components/products/SubscriptionsManager
 import { OrderDetailDrawer } from '@/components/products/OrderDetailDrawer';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { 
-  Package, Tag, ShoppingCart, Users, Truck, CreditCard, 
-  Percent, Receipt, Boxes, BarChart3, Settings, RefreshCw,
-  Store
-} from 'lucide-react';
+import { Package, Tag, ShoppingCart, Users, Truck, CreditCard, Percent, Receipt, Boxes, BarChart3, Settings, RefreshCw, Store } from 'lucide-react';
 
 // Feature flag for subscriptions
 const FEATURE_SUBSCRIPTIONS_ENABLED = false;
-
-const tabs = [
-  { value: 'products', label: 'Products', icon: Package },
-  { value: 'categories', label: 'Categories', icon: Tag },
-  { value: 'orders', label: 'Orders', icon: ShoppingCart },
-  { value: 'customers', label: 'Customers', icon: Users },
-  { value: 'shipping', label: 'Shipping', icon: Truck },
-  { value: 'payments', label: 'Payments', icon: CreditCard },
-  { value: 'discounts', label: 'Discounts', icon: Percent },
-  { value: 'tax', label: 'Tax', icon: Receipt },
-  { value: 'inventory', label: 'Inventory', icon: Boxes },
-  { value: 'reports', label: 'Reports', icon: BarChart3 },
-  { value: 'settings', label: 'Settings', icon: Settings },
-];
-
+const tabs = [{
+  value: 'products',
+  label: 'Products',
+  icon: Package
+}, {
+  value: 'categories',
+  label: 'Categories',
+  icon: Tag
+}, {
+  value: 'orders',
+  label: 'Orders',
+  icon: ShoppingCart
+}, {
+  value: 'customers',
+  label: 'Customers',
+  icon: Users
+}, {
+  value: 'shipping',
+  label: 'Shipping',
+  icon: Truck
+}, {
+  value: 'payments',
+  label: 'Payments',
+  icon: CreditCard
+}, {
+  value: 'discounts',
+  label: 'Discounts',
+  icon: Percent
+}, {
+  value: 'tax',
+  label: 'Tax',
+  icon: Receipt
+}, {
+  value: 'inventory',
+  label: 'Inventory',
+  icon: Boxes
+}, {
+  value: 'reports',
+  label: 'Reports',
+  icon: BarChart3
+}, {
+  value: 'settings',
+  label: 'Settings',
+  icon: Settings
+}];
 export const ProductManagement = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isOrderDrawerOpen, setIsOrderDrawerOpen] = useState(false);
-
   const handleViewOrder = (orderId: string) => {
     setSelectedOrderId(orderId);
     setIsOrderDrawerOpen(true);
   };
-
   const handleCloseOrderDrawer = () => {
     setIsOrderDrawerOpen(false);
     setSelectedOrderId(null);
   };
-
-  return (
-    <div className="min-h-screen bg-muted/30">
+  return <div className="min-h-screen bg-muted/30">
       {/* Header */}
       <div className="bg-[#003666] text-white">
         <div className="container mx-auto px-6 py-6 max-w-7xl">
@@ -62,7 +84,7 @@ export const ProductManagement = () => {
               <Store className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Merch Store Management</h1>
+              <h1 className="text-2xl font-bold text-primary-foreground">Merch Store Management</h1>
               <p className="text-white/70 text-sm">Manage products, orders, and customers</p>
             </div>
           </div>
@@ -75,38 +97,27 @@ export const ProductManagement = () => {
           <Card className="p-1.5 bg-white shadow-sm border-0">
             <ScrollArea className="w-full">
               <TabsList className="inline-flex h-auto p-0 bg-transparent gap-1 w-max min-w-full">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="
+                {tabs.map(tab => {
+                const Icon = tab.icon;
+                return <TabsTrigger key={tab.value} value={tab.value} className="
                         flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium
                         text-muted-foreground hover:text-foreground hover:bg-muted/50
                         data-[state=active]:bg-[#003666] data-[state=active]:text-white
                         data-[state=active]:shadow-sm transition-all whitespace-nowrap
-                      "
-                    >
+                      ">
                       <Icon className="w-4 h-4" />
                       {tab.label}
-                    </TabsTrigger>
-                  );
-                })}
-                {FEATURE_SUBSCRIPTIONS_ENABLED && (
-                  <TabsTrigger
-                    value="subscriptions"
-                    className="
+                    </TabsTrigger>;
+              })}
+                {FEATURE_SUBSCRIPTIONS_ENABLED && <TabsTrigger value="subscriptions" className="
                       flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium
                       text-muted-foreground hover:text-foreground hover:bg-muted/50
                       data-[state=active]:bg-[#003666] data-[state=active]:text-white
                       data-[state=active]:shadow-sm transition-all whitespace-nowrap
-                    "
-                  >
+                    ">
                     <RefreshCw className="w-4 h-4" />
                     Subscriptions
-                  </TabsTrigger>
-                )}
+                  </TabsTrigger>}
               </TabsList>
               <ScrollBar orientation="horizontal" className="h-2" />
             </ScrollArea>
@@ -158,21 +169,14 @@ export const ProductManagement = () => {
               <StoreSettingsManager />
             </TabsContent>
 
-            {FEATURE_SUBSCRIPTIONS_ENABLED && (
-              <TabsContent value="subscriptions" className="m-0">
+            {FEATURE_SUBSCRIPTIONS_ENABLED && <TabsContent value="subscriptions" className="m-0">
                 <SubscriptionsManager />
-              </TabsContent>
-            )}
+              </TabsContent>}
           </div>
         </Tabs>
       </div>
 
       {/* Order Detail Drawer */}
-      <OrderDetailDrawer
-        orderId={selectedOrderId}
-        isOpen={isOrderDrawerOpen}
-        onClose={handleCloseOrderDrawer}
-      />
-    </div>
-  );
+      <OrderDetailDrawer orderId={selectedOrderId} isOpen={isOrderDrawerOpen} onClose={handleCloseOrderDrawer} />
+    </div>;
 };
