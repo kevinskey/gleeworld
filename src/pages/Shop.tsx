@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { PublicLayout } from "@/components/layout/PublicLayout";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -177,7 +177,7 @@ export const Shop = () => {
     return product.images?.[0] || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400';
   };
   if (loading) {
-    return <PublicLayout>
+    return <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white flex items-center justify-center">
           <div className="text-center">
             <div className="relative">
@@ -189,58 +189,38 @@ export const Shop = () => {
             <p className="text-stone-500 font-light tracking-wide">Loading boutique...</p>
           </div>
         </div>
-      </PublicLayout>;
+      </UniversalLayout>;
   }
-  return <PublicLayout>
+  return <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
       <div className="min-h-screen bg-gradient-to-b from-stone-50 via-white to-stone-50">
-        {/* Hero Section - Elegant & Musical */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-stone-100 via-stone-50 to-amber-50/30">
-          {/* Musical Notes Decorative Pattern */}
-          <div className="absolute inset-0 opacity-[0.03]">
-            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <pattern id="musical-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <text x="5" y="15" fontSize="12" fill="currentColor">♪</text>
-                <text x="15" y="8" fontSize="8" fill="currentColor">♫</text>
-              </pattern>
-              <rect width="100%" height="100%" fill="url(#musical-pattern)" />
-            </svg>
-          </div>
-          
-          {/* Subtle gradient orbs */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-amber-100/40 to-transparent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-stone-200/30 to-transparent rounded-full blur-3xl" />
-          
-          <div className="container mx-auto px-4 py-16 sm:py-24 lg:py-32 relative">
-            <div className="max-w-3xl mx-auto text-center">
-              {/* Decorative musical element */}
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <div className="h-px w-12 bg-gradient-to-r from-transparent to-stone-300" />
-                <Music className="h-6 w-6 text-stone-400" />
-                <div className="h-px w-12 bg-gradient-to-l from-transparent to-stone-300" />
-              </div>
-              
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light text-stone-800 mb-4 tracking-tight" style={{
-              fontFamily: "'Playfair Display', serif"
-            }}>
-                The GleeWorld
-                <span className="block font-medium bg-gradient-to-r from-stone-700 via-amber-700 to-stone-700 bg-clip-text text-transparent">
-                  Boutique
-                </span>
+        {/* Header Banner - Consistent with other pages */}
+        <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{ backgroundColor: '#003666' }}>
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-center gap-3">
+              <ShoppingBag className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center tracking-wide">
+                GleeWorld Boutique
               </h1>
-              
-              <p className="text-lg text-stone-500 mb-10 max-w-xl mx-auto leading-relaxed font-light">
-                Curated accessories, apparel, and digital sheet music for the discerning music lover.
-              </p>
-              
+            </div>
+            <p className="text-white/70 text-center mt-1 text-xs sm:text-sm max-w-xl mx-auto">
+              Curated accessories, apparel & digital sheet music
+            </p>
+          </div>
+        </div>
+
+        {/* Boutique Filter Section */}
+        <div className="bg-gradient-to-b from-stone-50 to-white border-b border-stone-100">
+          <div className="container mx-auto px-4 py-6 sm:py-8">
+            <div className="max-w-3xl mx-auto">
               {/* Category Pills */}
-              <div className="flex flex-wrap justify-center gap-3 mb-8">
+              <div className="flex flex-wrap justify-center gap-3 mb-6">
                 {CATEGORIES.map(category => {
                 const Icon = category.icon;
                 const isActive = selectedCategory === category.value;
                 return <button key={category.value} onClick={() => setSelectedCategory(category.value)} className={`
                         group flex items-center gap-2 px-5 py-2.5 rounded-full 
                         transition-all duration-300 ease-out
-                        ${isActive ? 'bg-stone-800 text-white shadow-lg shadow-stone-800/20' : 'bg-white/80 text-stone-600 hover:bg-white hover:shadow-md border border-stone-200/50'}
+                        ${isActive ? 'bg-stone-800 text-white shadow-lg shadow-stone-800/20' : 'bg-white text-stone-600 hover:bg-stone-50 hover:shadow-md border border-stone-200'}
                       `}>
                       <Icon className={`h-4 w-4 transition-transform duration-300 ${isActive ? '' : 'group-hover:scale-110'}`} />
                       <span className="text-sm font-medium">{category.label}</span>
@@ -253,7 +233,7 @@ export const Shop = () => {
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                   <Search className="h-5 w-5 text-stone-400" />
                 </div>
-                <Input placeholder="Search our collection..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-12 pr-4 py-6 bg-white/90 backdrop-blur-sm border-stone-200 rounded-full text-stone-700 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-200 focus:border-amber-300 shadow-sm" />
+                <Input placeholder="Search our collection..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-12 pr-4 py-5 bg-white border-stone-200 rounded-full text-stone-700 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-200 focus:border-amber-300 shadow-sm" />
               </div>
             </div>
           </div>
@@ -407,5 +387,5 @@ export const Shop = () => {
           </div>
         </div>
       </div>
-    </PublicLayout>;
+    </UniversalLayout>;
 };
