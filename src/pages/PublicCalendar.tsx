@@ -31,6 +31,11 @@ const PublicCalendar = () => {
               {/* Main Calendar */}
               <div className="lg:col-span-3">
                 <PublicCalendarViews />
+                
+                {/* Sight Reading Studio Ad - Below Calendar */}
+                <div className="mt-6">
+                  <SightReadingStudioCard />
+                </div>
               </div>
               
               {/* Sidebar */}
@@ -38,9 +43,6 @@ const PublicCalendar = () => {
                 <div className="sticky top-24 space-y-6">
                   {/* Christmas Carol Registration */}
                   <ChristmasCarolRegistrationCard />
-                  
-                  {/* Sight Reading Studio Ad */}
-                  <SightReadingStudioCard />
                   
                   {/* Amazon Affiliate Products */}
                   <AmazonAffiliateSidebar limit={6} />

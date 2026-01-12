@@ -1,5 +1,4 @@
 import { Music, ExternalLink } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export const SightReadingStudioCard = () => {
@@ -8,29 +7,30 @@ export const SightReadingStudioCard = () => {
   };
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg">
-      <div className="bg-gradient-to-br from-[#003666] via-[#1a5a8a] to-[#2a7ab0] p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-white/20 rounded-full">
-            <Music className="h-6 w-6 text-white" />
+    <div className="bg-gradient-to-r from-[#003666] via-[#1a5a8a] to-[#2a7ab0] rounded-xl overflow-hidden shadow-lg">
+      <div className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 rounded-full shrink-0">
+            <Music className="h-8 w-8 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-white">
-            Sight Reading Studio
-          </h3>
+          <div className="text-center sm:text-left">
+            <h3 className="text-xl font-bold text-white">
+              Sight Reading Studio
+            </h3>
+            <p className="text-white/80 text-sm">
+              Improve your sight-reading skills with our interactive studio
+            </p>
+          </div>
         </div>
-        
-        <p className="text-white/90 text-sm mb-5 leading-relaxed">
-          Improve your sight-reading skills with our interactive studio. Practice anytime, anywhere!
-        </p>
         
         <Button 
           onClick={handleVisitStudio}
-          className="w-full bg-white text-[#003666] hover:bg-white/90 font-semibold py-3 flex items-center justify-center gap-2"
+          className="bg-white text-[#003666] hover:bg-white/90 font-semibold px-6 py-3 flex items-center gap-2 shrink-0"
         >
           <span>Visit Studio</span>
           <ExternalLink className="h-4 w-4" />
         </Button>
       </div>
-    </Card>
+    </div>
   );
 };
