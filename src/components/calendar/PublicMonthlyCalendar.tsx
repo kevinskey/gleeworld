@@ -98,9 +98,9 @@ export const PublicMonthlyCalendar = ({
               `}
               onClick={() => handleDateClick(day)}
             >
-              <div className={`text-sm md:text-base font-medium mb-1 ${
-                isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'
-              } ${isToday ? 'text-[#003666] font-bold' : ''}`}>
+              <div className={`text-sm md:text-base font-semibold mb-1 ${
+                isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+              } ${isToday ? 'bg-[#003666] text-white w-7 h-7 rounded-full flex items-center justify-center' : ''}`}>
                 {format(day, 'd')}
               </div>
               
