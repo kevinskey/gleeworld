@@ -187,7 +187,7 @@ export const ProductManager = () => {
   if (loading) {
     return <div className="flex justify-center p-8">Loading products...</div>;
   }
-  return <div className="container mx-auto p-6 space-y-6">
+  return <div className="container mx-auto p-6 space-y-6 bg-muted/30">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="font-bold text-xl">Product Manager</h1>
