@@ -1,6 +1,7 @@
 import { PublicCalendarViews } from "@/components/calendar/PublicCalendarViews";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { AmazonAffiliateSidebar } from "@/components/amazon/AmazonAffiliateSidebar";
+import { ChristmasCarolRegistrationCard } from "@/components/calendar/ChristmasCarolRegistrationCard";
 import { Calendar as CalendarIcon } from "lucide-react";
 
 const PublicCalendar = () => {
@@ -34,9 +35,13 @@ const PublicCalendar = () => {
                 <PublicCalendarViews />
               </div>
               
-              {/* Amazon Affiliate Sidebar */}
+              {/* Sidebar */}
               <div className="lg:col-span-1">
-                <div className="sticky top-24">
+                <div className="sticky top-24 space-y-6">
+                  {/* Christmas Carol Registration */}
+                  <ChristmasCarolRegistrationCard />
+                  
+                  {/* Amazon Affiliate Products */}
                   <AmazonAffiliateSidebar limit={6} />
                 </div>
               </div>
