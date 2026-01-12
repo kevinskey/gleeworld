@@ -8,7 +8,7 @@ export const MusicLibraryHeader = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="hidden lg:block bg-primary text-primary-foreground">
+    <div className="bg-primary text-primary-foreground">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           <Music className="h-5 w-5" />
