@@ -5,19 +5,17 @@ import { CategoryManager } from '@/components/products/CategoryManager';
 import { OrdersManager } from '@/components/products/OrdersManager';
 import { CustomersManager } from '@/components/products/CustomersManager';
 import { Package, Tag, ShoppingCart, Users } from 'lucide-react';
-
 export const ProductManagement = () => {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Navy header strip - #003666 */}
-      <div className="w-full h-2" style={{ backgroundColor: '#003666' }} />
+      <div className="w-full h-2" style={{
+      backgroundColor: '#003666'
+    }} />
       
       <div className="container mx-auto px-4 py-4 max-w-7xl">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold mb-1">Merch Store Management</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage products, orders, shipping, and customers
-          </p>
+          <h1 className="font-bold mb-1 text-xl">Merch Store Management</h1>
+          
         </div>
 
         <Tabs defaultValue="products" className="space-y-4">
@@ -57,6 +55,5 @@ export const ProductManagement = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>;
 };
