@@ -660,13 +660,14 @@ export const useRadioPlayer = () => {
   }, [state.isPlaying, play]);
 
   // Poll AzuraCast metadata while playing so the LCD title changes promptly
+  // Using 5-second interval for more responsive updates
   useEffect(() => {
     if (!state.isPlaying) return;
 
     refreshNowPlaying();
     const interval = setInterval(() => {
       refreshNowPlaying();
-    }, 10000);
+    }, 5000); // Reduced from 10s to 5s for faster updates
 
     return () => clearInterval(interval);
   }, [state.isPlaying, refreshNowPlaying]);
