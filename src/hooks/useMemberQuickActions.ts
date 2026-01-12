@@ -196,7 +196,8 @@ export const useMemberQuickActions = (userId: string | undefined, userRole: stri
   };
 
   const isInQuickActions = (moduleId: string) => {
-    return quickActions.some(qa => qa.module_id === moduleId && qa.is_visible);
+    // Check if module exists in quick actions (regardless of visibility)
+    return quickActions.some(qa => qa.module_id === moduleId);
   };
 
   const getVisibleQuickActions = () => {
