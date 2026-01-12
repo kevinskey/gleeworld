@@ -89,8 +89,27 @@ export const useMemberQuickActions = (userId: string | undefined, userRole: stri
 
     try {
       // Check if module already exists
-      const exists = quickActions.some(qa => qa.module_id === moduleId);
-      if (exists) {
+      const existing = quickActions.find(qa => qa.module_id === moduleId);
+      if (existing) {
+        // If it exists but is hidden, restore it instead of creating a duplicate
+        if (!existing.is_visible) {
+          const maxOrder = quickActions.length > 0 
+            ? Math.max(...quickActions.map(qa => qa.display_order))
+            : -1;
+
+          const { error: restoreError } = await supabase
+            .from('gw_member_quick_actions')
+            .update({ is_visible: true, display_order: maxOrder + 1 })
+            .eq('user_id', userId)
+            .eq('module_id', moduleId);
+
+          if (restoreError) throw restoreError;
+
+          toast.success('Added to quick actions');
+          await loadQuickActions();
+          return true;
+        }
+
         toast.info('Module already in quick actions');
         return false;
       }
@@ -196,8 +215,8 @@ export const useMemberQuickActions = (userId: string | undefined, userRole: stri
   };
 
   const isInQuickActions = (moduleId: string) => {
-    // Check if module exists in quick actions (regardless of visibility)
-    return quickActions.some(qa => qa.module_id === moduleId);
+    // Used by the "Add" dropdown to prevent duplicates of *visible* actions
+    return quickActions.some(qa => qa.module_id === moduleId && qa.is_visible);
   };
 
   const getVisibleQuickActions = () => {
