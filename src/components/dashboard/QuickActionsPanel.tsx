@@ -224,16 +224,16 @@ export const QuickActionsPanel = ({
                     <Plus className="h-3 w-3 text-popover-foreground" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md" style={{ backgroundColor: 'hsl(var(--card))' }}>
+                <DialogContent className="sm:max-w-md text-card-foreground" style={{ backgroundColor: 'hsl(var(--card))' }}>
                   <DialogHeader>
-                    <DialogTitle>Add Quick Action</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="text-card-foreground">Add Quick Action</DialogTitle>
+                    <DialogDescription className="text-muted-foreground">
                       Select a module to add to your quick actions
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium">Select Module</label>
+                  <div className="space-y-4 text-card-foreground">
+                    <div className="text-card-foreground">
+                      <label className="text-sm font-medium text-card-foreground">Select Module</label>
                         <Select value={selectedModuleToAdd} onValueChange={setSelectedModuleToAdd}>
                         <SelectTrigger className="bg-background border-border">
                           <SelectValue placeholder="Choose a module to add" />
