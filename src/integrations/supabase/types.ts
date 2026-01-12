@@ -16848,6 +16848,18 @@ export type Database = {
           default_currency: string | null
           digital_download_expiry_days: number | null
           digital_max_downloads: number | null
+          featured_card_aspect_ratio: string | null
+          featured_categories: string[] | null
+          featured_desktop_columns: number | null
+          featured_display_limit: number | null
+          featured_display_style: string | null
+          featured_mobile_columns: number | null
+          featured_show_category: boolean | null
+          featured_show_price: boolean | null
+          featured_show_quick_view: boolean | null
+          featured_subtitle: string | null
+          featured_tablet_columns: number | null
+          featured_title: string | null
           free_shipping_threshold: number | null
           id: number
           notifications_enabled: boolean | null
@@ -16862,6 +16874,18 @@ export type Database = {
           default_currency?: string | null
           digital_download_expiry_days?: number | null
           digital_max_downloads?: number | null
+          featured_card_aspect_ratio?: string | null
+          featured_categories?: string[] | null
+          featured_desktop_columns?: number | null
+          featured_display_limit?: number | null
+          featured_display_style?: string | null
+          featured_mobile_columns?: number | null
+          featured_show_category?: boolean | null
+          featured_show_price?: boolean | null
+          featured_show_quick_view?: boolean | null
+          featured_subtitle?: string | null
+          featured_tablet_columns?: number | null
+          featured_title?: string | null
           free_shipping_threshold?: number | null
           id?: number
           notifications_enabled?: boolean | null
@@ -16876,6 +16900,18 @@ export type Database = {
           default_currency?: string | null
           digital_download_expiry_days?: number | null
           digital_max_downloads?: number | null
+          featured_card_aspect_ratio?: string | null
+          featured_categories?: string[] | null
+          featured_desktop_columns?: number | null
+          featured_display_limit?: number | null
+          featured_display_style?: string | null
+          featured_mobile_columns?: number | null
+          featured_show_category?: boolean | null
+          featured_show_price?: boolean | null
+          featured_show_quick_view?: boolean | null
+          featured_subtitle?: string | null
+          featured_tablet_columns?: number | null
+          featured_title?: string | null
           free_shipping_threshold?: number | null
           id?: number
           notifications_enabled?: boolean | null
