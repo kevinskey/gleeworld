@@ -389,7 +389,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {activeTab === 'messages' && (
               <Card className="overflow-hidden">
                 <div className="h-[600px]">
-                  <MessagingInterface embedded={true} />
+                  <Messenger embedded={true} courseIdProp={course.id} courseNameProp={course.title} />
                 </div>
               </Card>
             )}
