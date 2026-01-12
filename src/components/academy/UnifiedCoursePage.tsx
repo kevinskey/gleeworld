@@ -17,7 +17,7 @@ import { CourseCalendarView } from './CourseCalendarView';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseTestsSection } from './CourseTestsSection';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
-import { CourseMessagingInterface } from './CourseMessagingInterface';
+import { MessagingInterface } from '@/components/messaging/MessagingInterface';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 import { StudentSyllabusView } from './syllabus/StudentSyllabusView';
 import { CourseHandbook } from './handbook/CourseHandbook';
@@ -325,12 +325,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             <div className="md:hidden relative z-10 -mx-4 px-4">
               <Tabs value={activeTab} onValueChange={val => {
                 console.log('Tab changed to:', val);
-                if (val === 'messages') {
-                  // Navigate to messenger with course context
-                  navigate(`/messenger?courseId=${course.id}&courseName=${encodeURIComponent(course.courseCode + ' - ' + course.title)}`);
-                } else {
-                  setActiveTab(val);
-                }
+                setActiveTab(val);
               }}>
                 <TabsList className="w-full grid grid-cols-4 h-auto">
                   <TabsTrigger value="home" className="text-xs px-2">Home</TabsTrigger>
@@ -391,7 +386,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {activeTab === 'announcements' && <CourseAnnouncements courseId={course.id} />}
 
-            {activeTab === 'messages' && <CourseMessagingInterface courseId={course.id} courseName={course.title} isEnrolled={isEnrolled} instructorEmail={course.instructor?.email} instructorName={course.instructor?.name} />}
+            {activeTab === 'messages' && (
+              <Card className="overflow-hidden">
+                <div className="h-[600px]">
+                  <MessagingInterface embedded={true} />
+                </div>
+              </Card>
+            )}
 
             {activeTab === 'assignments' && <CourseAssignments courseId={course.id} isEnrolled={isEnrolled} />}
 
