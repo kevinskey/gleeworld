@@ -9,7 +9,7 @@ import { Package, Tag, ShoppingCart, Users } from 'lucide-react';
 export const ProductManagement = () => {
   return (
     <div className="min-h-screen bg-background">
-      {/* Navy header strip */}
+      {/* Navy header strip - #003666 */}
       <div className="w-full h-2" style={{ backgroundColor: '#003666' }} />
       
       <div className="container mx-auto px-4 py-4 max-w-7xl">
