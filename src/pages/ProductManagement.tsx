@@ -14,7 +14,7 @@ export const ProductManagement = () => {
       
       <div className="container mx-auto px-4 py-4 max-w-7xl">
         <div className="mb-4">
-          <h1 className="font-bold mb-1 text-xl">Merch Store Management</h1>
+          <h1 className="font-bold mb-1 text-xl bg-[#003666] text-primary-foreground py-[20px] px-[20px] pl-[20px] pt-[20px] pb-[25px]">Merch Store Management</h1>
           
         </div>
 
