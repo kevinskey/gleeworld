@@ -21,6 +21,7 @@ import Messenger from '@/pages/Messenger';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 import { StudentSyllabusView } from './syllabus/StudentSyllabusView';
 import { CourseHandbook } from './handbook/CourseHandbook';
+import { StudentDossierHome } from './StudentDossierHome';
 
 // Lazy loaded components for performance
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
@@ -350,37 +351,43 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
 
             {/* Content Sections */}
-            {activeTab === 'home' && <div className="space-y-4">
-                {/* Enrollment Card */}
-                {!isEnrolled && !enrollmentLoading && <Card className="border-primary/50 bg-primary/5">
-                    
-                  </Card>}
+            {activeTab === 'home' && (
+              course.courseCode === 'MUS 070' ? (
+                <StudentDossierHome courseId={course.id} />
+              ) : (
+                <div className="space-y-4">
+                  {/* Enrollment Card */}
+                  {!isEnrolled && !enrollmentLoading && <Card className="border-primary/50 bg-primary/5">
+                      
+                    </Card>}
 
-                {/* Action Buttons */}
-                <div className="flex justify-end gap-3">
-                  {isExecutiveBoard && (
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-3">
+                    {isExecutiveBoard && (
+                      <Button 
+                        variant="outline" 
+                        className="gap-2 rounded-full px-6"
+                        onClick={() => navigate('/admin/calendar')}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Event
+                      </Button>
+                    )}
                     <Button 
-                      variant="outline" 
+                      variant="default" 
                       className="gap-2 rounded-full px-6"
-                      onClick={() => navigate('/admin/calendar')}
+                      onClick={() => navigate('/booking')}
                     >
-                      <Plus className="h-4 w-4" />
-                      Add Event
+                      <Calendar className="h-4 w-4" />
+                      Book Appointment
                     </Button>
-                  )}
-                  <Button 
-                    variant="default" 
-                    className="gap-2 rounded-full px-6"
-                    onClick={() => navigate('/booking')}
-                  >
-                    <Calendar className="h-4 w-4" />
-                    Book Appointment
-                  </Button>
-                </div>
+                  </div>
 
-                {/* Full Calendar */}
-                <CourseCalendarView courseId={course.id} />
-              </div>}
+                  {/* Full Calendar */}
+                  <CourseCalendarView courseId={course.id} />
+                </div>
+              )
+            )}
 
             {activeTab === 'syllabus' && <StudentSyllabusView course={course} />}
 
