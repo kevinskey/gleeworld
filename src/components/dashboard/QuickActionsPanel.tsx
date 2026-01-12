@@ -238,7 +238,7 @@ export const QuickActionsPanel = ({
                         <SelectTrigger className="bg-background border-border">
                           <SelectValue placeholder="Choose a module to add" />
                         </SelectTrigger>
-                        <SelectContent className="bg-card border-border max-h-60 overflow-y-auto">
+                        <SelectContent className="bg-card border-border max-h-60 overflow-y-auto z-[100]" style={{ backgroundColor: 'hsl(var(--card))' }}>
                           {availableModules.filter(module => {
                           if (quickActions) {
                             return !quickActions.isInQuickActions(module.name);
