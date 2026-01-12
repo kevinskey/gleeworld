@@ -8,6 +8,9 @@ import { cn } from '@/lib/utils';
 import { useUnifiedModules } from '@/hooks/useUnifiedModules';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
 
+// Character limit for description to ensure uniform card height
+const DESCRIPTION_CHAR_LIMIT = 120;
+
 // Course highlights mapping based on course type
 const getCourseHighlights = (title: string): string[] => {
   if (title.toLowerCase().includes('glee')) {
@@ -137,47 +140,53 @@ export const DashboardStoreSection = () => {
         msOverflowStyle: 'none',
         WebkitOverflowScrolling: 'touch'
       }}>
-          {courses.length > 0 ? courses.map((course, index) => {
-          const CourseIcon = getCourseIcon(course.title);
-          const level = getCourseLevel(course.title);
-          return <div key={course.id} onClick={() => navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`)} className="flex-shrink-0 w-72 snap-start cursor-pointer group bg-white border-r border-r-black border-b border-b-gray-300 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all min-h-[280px]">
-                <div className="p-6 h-full flex flex-col pt-[40px] pb-[70px] py-[4px]">
-                  {/* Course Code Badge */}
-                  <div className="flex items-center justify-between mb-4">
-                    {course.course_code && <span style={{
-                  fontFamily: "'Cinzel', serif"
-                }} className="tracking-wide text-gray-500 uppercase border border-gray-300 px-2 py-1 whitespace-nowrap text-2xl">
-                        {course.course_code}
-                      </span>}
-                    
-                  </div>
-                  
-                  {/* Course Title - Academic Font */}
-                  <h4 className="font-serif text-xl font-bold text-gray-900 leading-tight mb-2 group-hover:text-gray-700 transition-colors pb-[10px] line-clamp-2 min-h-[56px] whitespace-pre-wrap">
-                    {course.title}
-                  </h4>
-                  
-                  {/* Duration */}
-                  
-                  
-                  {/* Description */}
-                  {course.description && <p className="text-gray-600 leading-snug line-clamp-3 pt-[15px] pb-[40px] text-base">
-                      {course.description}
-                    </p>}
-                  
-                  {/* Enter Script */}
-                  <div className="mt-2 py-3 flex items-center justify-center">
-                    <span style={{
-                  fontFamily: "'Allura', cursive"
-                }} className="text-4xl text-[#003666] drop-shadow-[1px_2px_2px_rgba(0,0,0,0.2)] hover:drop-shadow-[2px_3px_3px_rgba(0,0,0,0.25)] transition-all">
-                      Enter Course
-                    </span>
-                  </div>
-                </div>
-              </div>;
-        }) : <div className="flex-shrink-0 w-72 snap-start bg-white p-6 flex items-center justify-center min-h-[200px]">
-              <p className="text-sm text-gray-400 uppercase tracking-wide">No courses available</p>
-            </div>}
+          {courses.length > 0 ? courses.map((course) => {
+            const truncatedDescription = course.description && course.description.length > DESCRIPTION_CHAR_LIMIT 
+              ? `${course.description.slice(0, DESCRIPTION_CHAR_LIMIT).trim()}...` 
+              : course.description;
+            
+            return (
+              <div 
+                key={course.id} 
+                onClick={() => navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`)} 
+                className="flex-shrink-0 w-72 snap-start cursor-pointer bg-white border border-border/40 rounded-xl p-6 sm:p-8 flex flex-col min-h-[280px] shadow-lg hover:shadow-xl transition-shadow duration-200"
+              >
+                {/* Course Code - Elegant serif style */}
+                <h3 
+                  className="text-xl sm:text-2xl font-light tracking-wide text-foreground mb-2" 
+                  style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                >
+                  {course.course_code}
+                </h3>
+
+                {/* Course Title - Italic style */}
+                <h4 className="text-base sm:text-lg font-semibold text-[#003666] italic mb-4 leading-snug line-clamp-2">
+                  {course.title}
+                </h4>
+
+                {/* Description - Fixed height with truncation */}
+                <p className="text-base text-muted-foreground leading-relaxed flex-1 mb-6 antialiased">
+                  {truncatedDescription || 'Explore this course to learn more.'}
+                </p>
+
+                {/* Enter Course Button - Rounded pill style */}
+                <Button 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`);
+                  }}
+                  className="w-fit px-6 py-2 rounded-full border-[#003666] text-[#003666] bg-transparent hover:bg-[#003666] hover:text-white transition-colors font-medium text-sm"
+                >
+                  Enter Course
+                </Button>
+              </div>
+            );
+          }) : (
+            <div className="flex-shrink-0 w-72 snap-start bg-white rounded-xl p-6 flex items-center justify-center min-h-[200px] shadow-lg">
+              <p className="text-sm text-muted-foreground">No courses available</p>
+            </div>
+          )}
         </div>
         <div className="h-[25px] bg-[#003666] w-full" />
       </div>

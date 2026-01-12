@@ -11,6 +11,9 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+// Character limit for description to ensure uniform card height
+const DESCRIPTION_CHAR_LIMIT = 120;
 export const GleeAcademyDashboardCard = () => {
   const navigate = useNavigate();
   const {
@@ -138,24 +141,52 @@ export const GleeAcademyDashboardCard = () => {
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <CardContent className="px-3 sm:px-6 bg-primary-foreground">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+            <CardContent className="px-3 sm:px-6 bg-background py-6">
+              <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
                 {activeCourses.map(course => {
-                const IconComponent = course.icon;
-                const isSelected = selectedCourseId === course.id || isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070';
-                return <button key={course.id} onClick={() => handleCourseClick(course)} className={`group flex flex-col items-center p-3 rounded-lg border transition-all duration-200 ${isSelected ? 'bg-primary border-primary ring-2 ring-primary/30' : 'bg-primary hover:bg-primary/90 border-primary/50 hover:border-primary'}`}>
-                      <div className={`p-2 rounded-full mb-2 transition-colors ${isSelected ? 'bg-primary-foreground/30' : 'bg-primary-foreground/20 group-hover:bg-primary-foreground/30'}`}>
-                        <IconComponent className="h-5 w-5 text-primary-foreground" />
-                      </div>
-                      <span className="text-xs font-semibold text-center text-primary-foreground">
+                  const isSelected = selectedCourseId === course.id || (isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070');
+                  const truncatedDescription = course.description.length > DESCRIPTION_CHAR_LIMIT 
+                    ? `${course.description.slice(0, DESCRIPTION_CHAR_LIMIT).trim()}...` 
+                    : course.description;
+                  
+                  return (
+                    <div 
+                      key={course.id} 
+                      onClick={() => handleCourseClick(course)} 
+                      className={`flex-shrink-0 w-72 snap-start cursor-pointer bg-white border rounded-xl p-6 sm:p-8 flex flex-col min-h-[280px] shadow-lg hover:shadow-xl transition-all duration-200 ${isSelected ? 'ring-2 ring-primary border-primary' : 'border-border/40'}`}
+                    >
+                      {/* Course Code - Elegant serif style */}
+                      <h3 
+                        className="text-xl sm:text-2xl font-light tracking-wide text-foreground mb-2" 
+                        style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                      >
                         {course.courseCode}
-                      </span>
-                      <span className="text-[10px] text-center line-clamp-1 mt-0.5 text-primary-foreground/80">
+                      </h3>
+
+                      {/* Course Title - Italic style */}
+                      <h4 className="text-base sm:text-lg font-semibold text-[#003666] italic mb-4 leading-snug line-clamp-2">
                         {course.title}
-                      </span>
-                      {isSelected && <span className="text-[8px] text-primary-foreground font-medium mt-1">ACTIVE</span>}
-                    </button>;
-              })}
+                      </h4>
+
+                      {/* Description - Fixed height with truncation */}
+                      <p className="text-base text-muted-foreground leading-relaxed flex-1 mb-6 antialiased">
+                        {truncatedDescription}
+                      </p>
+
+                      {/* Enter Course Button - Rounded pill style */}
+                      <Button 
+                        variant="outline" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCourseClick(course);
+                        }}
+                        className={`w-fit px-6 py-2 rounded-full border-[#003666] text-[#003666] bg-transparent hover:bg-[#003666] hover:text-white transition-colors font-medium text-sm ${isSelected ? 'bg-[#003666] text-white' : ''}`}
+                      >
+                        {isSelected ? 'Active' : 'Enter Course'}
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </CollapsibleContent>
