@@ -5,6 +5,7 @@ import { CalendarViewSelector } from "./CalendarViewSelector";
 import { PublicMonthlyCalendar } from "./PublicMonthlyCalendar";
 import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
+import { FeaturedEventsSection } from "./FeaturedEventsSection";
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
 import { Button } from "@/components/ui/button";
 
@@ -110,6 +111,11 @@ export const PublicCalendarViews = () => {
             />
           </div>
         </div>
+      </div>
+
+      {/* Featured Events Section */}
+      <div className="p-4 sm:p-6 bg-white border-b border-neutral-200">
+        <FeaturedEventsSection events={events} />
       </div>
 
       {/* Calendar Content */}
