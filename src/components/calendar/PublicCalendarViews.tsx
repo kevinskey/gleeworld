@@ -102,7 +102,7 @@ export const PublicCalendarViews = () => {
 
           {/* View Selector */}
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground hidden sm:inline">
+            <span className="text-sm text-white hidden sm:inline">
               {events.length} event{events.length !== 1 ? 's' : ''}
             </span>
             <CalendarViewSelector 
