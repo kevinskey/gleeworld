@@ -48,6 +48,7 @@ import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentMod
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 import { MessengerAdminModule } from '../modules/MessengerAdminModule';
 import { AmazonAffiliateModule } from '../modules/AmazonAffiliateModule';
+import { ProductManagement } from '@/pages/ProductManagement';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -169,6 +170,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <MessengerAdminModule />;
       case 'amazon-affiliate':
         return <AmazonAffiliateModule />;
+      case 'merch-store':
+        return <ProductManagement />;
       default:
         return (
           <div className="p-6">
