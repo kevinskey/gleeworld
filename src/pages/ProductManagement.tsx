@@ -19,20 +19,20 @@ export const ProductManagement = () => {
         </div>
 
         <Tabs defaultValue="products" className="space-y-4">
-          <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-[#003666]">
-            <TabsTrigger value="products" className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-[#003666] !text-white data-[state=active]:bg-white data-[state=active]:!text-[#003666]">
+          <TabsList className="flex flex-wrap gap-2 h-auto p-2 bg-[#003666]">
+            <TabsTrigger value="products" className="flex items-center gap-1.5 text-sm px-4 py-2.5 bg-[#003666] !text-white data-[state=active]:bg-white data-[state=active]:!text-[#003666]">
               <Package className="w-3.5 h-3.5" />
               Products
             </TabsTrigger>
-            <TabsTrigger value="categories" className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-[#003666] !text-white data-[state=active]:bg-white data-[state=active]:!text-[#003666]">
+            <TabsTrigger value="categories" className="flex items-center gap-1.5 text-sm px-4 py-2.5 bg-[#003666] !text-white data-[state=active]:bg-white data-[state=active]:!text-[#003666]">
               <Tag className="w-3.5 h-3.5" />
               Categories
             </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-[#003666] !text-white data-[state=active]:bg-white data-[state=active]:!text-[#003666]">
+            <TabsTrigger value="orders" className="flex items-center gap-1.5 text-sm px-4 py-2.5 bg-[#003666] !text-white data-[state=active]:bg-white data-[state=active]:!text-[#003666]">
               <ShoppingCart className="w-3.5 h-3.5" />
               Orders
             </TabsTrigger>
-            <TabsTrigger value="customers" className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-[#003666] !text-white data-[state=active]:bg-white data-[state=active]:!text-[#003666]">
+            <TabsTrigger value="customers" className="flex items-center gap-1.5 text-sm px-4 py-2.5 bg-[#003666] !text-white data-[state=active]:bg-white data-[state=active]:!text-[#003666]">
               <Users className="w-3.5 h-3.5" />
               Customers
             </TabsTrigger>
