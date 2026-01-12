@@ -22,7 +22,6 @@ interface Product {
   title: string;
   sku: string | null;
   inventory_count: number;
-  low_stock_threshold: number | null;
   track_inventory: boolean;
 }
 
@@ -64,7 +63,7 @@ export const InventoryManager = () => {
     try {
       const { data, error } = await supabase
         .from('gw_products')
-        .select('id, title, inventory_quantity, low_stock_threshold, track_inventory')
+        .select('id, title, inventory_quantity, track_inventory')
         .eq('track_inventory', true)
         .order('title', { ascending: true });
 
@@ -74,7 +73,6 @@ export const InventoryManager = () => {
         title: p.title,
         sku: null,
         inventory_count: p.inventory_quantity || 0,
-        low_stock_threshold: p.low_stock_threshold,
         track_inventory: p.track_inventory || false
       }));
       setProducts(mappedData);
@@ -166,11 +164,12 @@ export const InventoryManager = () => {
     setIsDialogOpen(true);
   };
 
+  const LOW_STOCK_THRESHOLD = 5; // Default threshold since column doesn't exist yet
+
   const getStockBadge = (product: Product) => {
-    const threshold = product.low_stock_threshold || 5;
     if (product.inventory_count <= 0) {
       return <Badge variant="destructive">Out of Stock</Badge>;
-    } else if (product.inventory_count <= threshold) {
+    } else if (product.inventory_count <= LOW_STOCK_THRESHOLD) {
       return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Low Stock</Badge>;
     }
     return <Badge variant="outline">In Stock</Badge>;
@@ -194,7 +193,7 @@ export const InventoryManager = () => {
   );
 
   const lowStockCount = products.filter(p => 
-    p.inventory_count <= (p.low_stock_threshold || 5)
+    p.inventory_count > 0 && p.inventory_count <= LOW_STOCK_THRESHOLD
   ).length;
 
   const outOfStockCount = products.filter(p => p.inventory_count <= 0).length;
@@ -279,7 +278,6 @@ export const InventoryManager = () => {
                     <TableHead>Product</TableHead>
                     <TableHead>SKU</TableHead>
                     <TableHead>Current Stock</TableHead>
-                    <TableHead>Low Threshold</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -303,7 +301,6 @@ export const InventoryManager = () => {
                         <TableCell className="font-medium">{product.title}</TableCell>
                         <TableCell className="font-mono">{product.sku || '-'}</TableCell>
                         <TableCell className="font-bold">{product.inventory_count}</TableCell>
-                        <TableCell>{product.low_stock_threshold || 5}</TableCell>
                         <TableCell>{getStockBadge(product)}</TableCell>
                         <TableCell>
                           <Button 
