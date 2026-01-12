@@ -36,6 +36,7 @@ import Mus210Page from "./pages/Mus210Page";
 import GleeClubCoursePage from "./pages/GleeClubCoursePage";
 import NotationBasics from "./pages/music-theory/NotationBasics";
 import GleeAcademy from "./pages/GleeAcademy";
+import Contact from "./pages/Contact";
 import GleeCamGallery from "./pages/GleeCamGallery";
 
 
@@ -449,6 +450,15 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <GleeAcademy />
+                  </PublicRoute>
+                } 
+              />
+              {/* Contact page */}
+              <Route 
+                path="/contact" 
+                element={
+                  <PublicRoute>
+                    <Contact />
                   </PublicRoute>
                 } 
               />
