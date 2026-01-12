@@ -788,7 +788,6 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           </div>
         </div>
       </div>
-    </div>
   );
 
   // Dialog for group editor (shared between modes)
