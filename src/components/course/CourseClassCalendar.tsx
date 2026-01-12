@@ -62,6 +62,7 @@ interface CourseInfo {
     endTime: string;
   } | null;
   classroom: string | null;
+  calendarId: string | null;
 }
 interface QRCodeData {
   id: string;
@@ -203,17 +204,69 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       const {
         data,
         error
-      } = await supabase.from('gw_courses').select('id, meeting_patterns').eq('id', courseId).single();
+      } = await supabase.from('gw_courses').select('id, meeting_patterns, calendar_id, default_location').eq('id', courseId).single();
       if (error && error.code !== 'PGRST116') throw error;
       if (data) {
         setCourseInfo({
           id: data.id,
           meeting_patterns: data.meeting_patterns as CourseInfo['meeting_patterns'],
-          classroom: null
+          classroom: data.default_location || null,
+          calendarId: data.calendar_id || null
         });
       }
     } catch (error) {
       console.error('Error fetching course info:', error);
+    }
+  };
+
+  // Helper to create a corresponding gw_event for a course session
+  const createGwEvent = async (session: { 
+    id: string;
+    title: string; 
+    description: string | null; 
+    session_date: string; 
+    start_time: string; 
+    end_time: string; 
+    location: string | null;
+    session_type: string;
+  }) => {
+    if (!courseInfo?.calendarId) return null;
+    
+    try {
+      const startDateTime = `${session.session_date}T${session.start_time}:00`;
+      const endDateTime = `${session.session_date}T${session.end_time}:00`;
+      
+      const { data: gwEvent, error } = await supabase.from('gw_events').insert({
+        title: session.title,
+        description: session.description,
+        start_date: startDateTime,
+        end_date: endDateTime,
+        location: session.location,
+        event_type: session.session_type,
+        calendar_id: courseInfo.calendarId,
+        course_id: courseId,
+        is_public: false,
+        is_private: true,
+        attendance_required: true,
+        created_by: user?.id
+      }).select().single();
+      
+      if (error) {
+        console.error('Error creating gw_event:', error);
+        return null;
+      }
+      
+      // Link the session to the gw_event
+      if (gwEvent) {
+        await supabase.from('gw_course_class_sessions')
+          .update({ gw_event_id: gwEvent.id })
+          .eq('id', session.id);
+      }
+      
+      return gwEvent;
+    } catch (error) {
+      console.error('Error creating gw_event:', error);
+      return null;
     }
   };
 
@@ -327,6 +380,11 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
             }).eq('id', qr.event_id);
           }
         }
+        
+        // Create corresponding gw_events for main calendar visibility
+        for (const session of createdSessions) {
+          await createGwEvent(session);
+        }
       }
       toast({
         title: 'Sessions Generated',
@@ -435,6 +493,11 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               }).eq('id', qr.event_id);
             }
           }
+          
+          // Create corresponding gw_events for main calendar visibility
+          for (const session of createdSessions) {
+            await createGwEvent(session);
+          }
         }
         toast({
           title: 'Success',
@@ -485,6 +548,9 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               qr_code_id: qrCode.id
             }).eq('id', createdSession.id);
           }
+          
+          // Create corresponding gw_event for main calendar visibility
+          await createGwEvent(createdSession);
         }
         toast({
           title: 'Success',
