@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Plus, ChevronDown, GraduationCap, BookOpen, Play, Users, Music, Monitor, ChevronRight, Search, LayoutGrid } from 'lucide-react';
+import { ShoppingBag, Plus, ChevronDown, GraduationCap, BookOpen, Play, Users, Music, Monitor, ChevronRight, Search, LayoutGrid, ArrowUpAZ, ArrowDownAZ, Folder } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -52,18 +52,32 @@ export const DashboardStoreSection = () => {
   const [activeCategory, setActiveCategory] = useState('(ALL)');
   const [showMore, setShowMore] = useState(false);
   const [moduleSearch, setModuleSearch] = useState('');
+  const [sortOrder, setSortOrder] = useState<'a-z' | 'z-a' | 'category'>('a-z');
   const navigate = useNavigate();
   const {
     modules,
     loading: modulesLoading
   } = useUnifiedModules();
 
-  // Filter and sort modules alphabetically
+  // Filter and sort modules based on selected sort order
   const filteredModules = useMemo(() => {
-    const sorted = [...modules].sort((a, b) => a.title.localeCompare(b.title));
+    let sorted = [...modules];
+    
+    if (sortOrder === 'a-z') {
+      sorted.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortOrder === 'z-a') {
+      sorted.sort((a, b) => b.title.localeCompare(a.title));
+    } else if (sortOrder === 'category') {
+      sorted.sort((a, b) => {
+        const catCompare = (a.category || '').localeCompare(b.category || '');
+        if (catCompare !== 0) return catCompare;
+        return a.title.localeCompare(b.title);
+      });
+    }
+    
     if (!moduleSearch.trim()) return sorted;
     return sorted.filter(m => m.title.toLowerCase().includes(moduleSearch.toLowerCase()));
-  }, [modules, moduleSearch]);
+  }, [modules, moduleSearch, sortOrder]);
   useEffect(() => {
     const fetchData = async () => {
       // Fetch products
@@ -242,18 +256,59 @@ export const DashboardStoreSection = () => {
         My Modules
       </Button>
 
-      {/* Modules Section with Search */}
+      {/* Modules Section with Search and Sort */}
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-white">
-        {/* Search Bar */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600" />
-          <input
-            type="text"
-            placeholder="Search modules..."
-            value={moduleSearch}
-            onChange={(e) => setModuleSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-full border-2 border-gray-400 bg-gray-50 text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#003666] focus:border-[#003666] shadow-sm"
-          />
+        {/* Search Bar and Sort Controls */}
+        <div className="flex gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600" />
+            <input
+              type="text"
+              placeholder="Search modules..."
+              value={moduleSearch}
+              onChange={(e) => setModuleSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-full border-2 border-gray-400 bg-gray-50 text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#003666] focus:border-[#003666] shadow-sm"
+            />
+          </div>
+          {/* Sort Buttons */}
+          <div className="flex gap-1">
+            <button
+              onClick={() => setSortOrder('a-z')}
+              className={cn(
+                "p-2.5 rounded-full border-2 transition-all",
+                sortOrder === 'a-z' 
+                  ? "bg-[#003666] border-[#003666] text-white" 
+                  : "bg-gray-50 border-gray-400 text-gray-600 hover:bg-gray-100"
+              )}
+              title="Sort A-Z"
+            >
+              <ArrowUpAZ className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setSortOrder('z-a')}
+              className={cn(
+                "p-2.5 rounded-full border-2 transition-all",
+                sortOrder === 'z-a' 
+                  ? "bg-[#003666] border-[#003666] text-white" 
+                  : "bg-gray-50 border-gray-400 text-gray-600 hover:bg-gray-100"
+              )}
+              title="Sort Z-A"
+            >
+              <ArrowDownAZ className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setSortOrder('category')}
+              className={cn(
+                "p-2.5 rounded-full border-2 transition-all",
+                sortOrder === 'category' 
+                  ? "bg-[#003666] border-[#003666] text-white" 
+                  : "bg-gray-50 border-gray-400 text-gray-600 hover:bg-gray-100"
+              )}
+              title="Sort by Category"
+            >
+              <Folder className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Modules 2-Column Grid with Pill Buttons */}
