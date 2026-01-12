@@ -197,11 +197,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: ClipboardList,
               label: 'Assignments',
               tab: 'assignments'
-            }, {
+            },
+            // Journals - not for MUS 070
+            ...(course.courseCode !== 'MUS 070' ? [{
               icon: PenLine,
               label: 'Journals',
               tab: 'journals'
-            }, {
+            }] : []),
+            {
               icon: FileCheck,
               label: 'Tests',
               tab: 'tests'
@@ -209,11 +212,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: BarChart,
               label: 'Polls',
               tab: 'polls'
-            }, {
+            },
+            // AI Groups - not for MUS 070
+            ...(course.courseCode !== 'MUS 070' ? [{
               icon: Brain,
               label: 'AI Groups',
               tab: 'ai-groups'
-            }, {
+            }] : []),
+            {
               icon: Library,
               label: 'Resources',
               tab: 'resources'
