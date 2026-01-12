@@ -5278,6 +5278,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string | null
+          after_data: Json | null
+          before_data: Json | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: unknown
+        }
+        Insert: {
+          action: string
+          admin_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: unknown
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: unknown
+        }
+        Relationships: []
+      }
       gw_agendas: {
         Row: {
           agenda_items: Json
@@ -8380,6 +8416,98 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_discount_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          min_subtotal: number | null
+          per_customer_limit: number | null
+          starts_at: string | null
+          type: string
+          updated_at: string | null
+          usage_count: number | null
+          usage_limit: number | null
+          value: number
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_subtotal?: number | null
+          per_customer_limit?: number | null
+          starts_at?: string | null
+          type: string
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          value: number
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_subtotal?: number | null
+          per_customer_limit?: number | null
+          starts_at?: string | null
+          type?: string
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          value?: number
+        }
+        Relationships: []
+      }
+      gw_disputes: {
+        Row: {
+          amount: number
+          created_at: string | null
+          evidence_due_by: string | null
+          id: string
+          order_id: string | null
+          reason: string | null
+          status: string | null
+          stripe_dispute_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          evidence_due_by?: string | null
+          id?: string
+          order_id?: string | null
+          reason?: string | null
+          status?: string | null
+          stripe_dispute_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          evidence_due_by?: string | null
+          id?: string
+          order_id?: string | null
+          reason?: string | null
+          status?: string | null
+          stripe_dispute_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "gw_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_document_shares: {
         Row: {
           document_id: string | null
@@ -9493,6 +9621,33 @@ export type Database = {
           },
         ]
       }
+      gw_feature_flags: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          flag_key: string
+          id: string
+          is_enabled: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          flag_key: string
+          id?: string
+          is_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          flag_key?: string
+          id?: string
+          is_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gw_featured_videos: {
         Row: {
           created_at: string | null
@@ -10110,6 +10265,64 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      gw_inventory_movements: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          delta_qty: number
+          id: string
+          notes: string | null
+          product_id: string | null
+          reason: string | null
+          ref_order_id: string | null
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          delta_qty: number
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          reason?: string | null
+          ref_order_id?: string | null
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          delta_qty?: number
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          reason?: string | null
+          ref_order_id?: string | null
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_inventory_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "gw_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_inventory_movements_ref_order_id_fkey"
+            columns: ["ref_order_id"]
+            isOneToOne: false
+            referencedRelation: "gw_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_inventory_movements_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "gw_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_karaoke_recordings: {
         Row: {
@@ -11760,13 +11973,17 @@ export type Database = {
         Row: {
           billing_address: Json | null
           created_at: string
+          currency: string | null
           customer_email: string
           customer_name: string
           delivered_at: string | null
+          discount_amount: number | null
+          discount_code: string | null
           easypost_label_url: string | null
           easypost_shipment_id: string | null
           easypost_tracking_code: string | null
           estimated_delivery_date: string | null
+          fulfillment_status: string | null
           id: string
           notes: string | null
           order_number: string
@@ -11789,13 +12006,17 @@ export type Database = {
         Insert: {
           billing_address?: Json | null
           created_at?: string
+          currency?: string | null
           customer_email: string
           customer_name: string
           delivered_at?: string | null
+          discount_amount?: number | null
+          discount_code?: string | null
           easypost_label_url?: string | null
           easypost_shipment_id?: string | null
           easypost_tracking_code?: string | null
           estimated_delivery_date?: string | null
+          fulfillment_status?: string | null
           id?: string
           notes?: string | null
           order_number: string
@@ -11818,13 +12039,17 @@ export type Database = {
         Update: {
           billing_address?: Json | null
           created_at?: string
+          currency?: string | null
           customer_email?: string
           customer_name?: string
           delivered_at?: string | null
+          discount_amount?: number | null
+          discount_code?: string | null
           easypost_label_url?: string | null
           easypost_shipment_id?: string | null
           easypost_tracking_code?: string | null
           estimated_delivery_date?: string | null
+          fulfillment_status?: string | null
           id?: string
           notes?: string | null
           order_number?: string
@@ -11843,6 +12068,48 @@ export type Database = {
           total_amount?: number
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      gw_package_presets: {
+        Row: {
+          created_at: string | null
+          dimension_unit: string | null
+          height: number
+          id: string
+          is_default: boolean | null
+          length: number
+          name: string
+          updated_at: string | null
+          weight: number
+          weight_unit: string | null
+          width: number
+        }
+        Insert: {
+          created_at?: string | null
+          dimension_unit?: string | null
+          height: number
+          id?: string
+          is_default?: boolean | null
+          length: number
+          name: string
+          updated_at?: string | null
+          weight: number
+          weight_unit?: string | null
+          width: number
+        }
+        Update: {
+          created_at?: string | null
+          dimension_unit?: string | null
+          height?: number
+          id?: string
+          is_default?: boolean | null
+          length?: number
+          name?: string
+          updated_at?: string | null
+          weight?: number
+          weight_unit?: string | null
+          width?: number
         }
         Relationships: []
       }
@@ -11939,6 +12206,59 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "gw_user_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          order_id: string
+          payment_method: string | null
+          receipt_url: string | null
+          status: string | null
+          stripe_charge_id: string | null
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          order_id: string
+          payment_method?: string | null
+          receipt_url?: string | null
+          status?: string | null
+          stripe_charge_id?: string | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          order_id?: string
+          payment_method?: string | null
+          receipt_url?: string | null
+          status?: string | null
+          stripe_charge_id?: string | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "gw_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -13995,6 +14315,54 @@ export type Database = {
           },
         ]
       }
+      gw_refunds: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          order_id: string
+          payment_id: string | null
+          reason: string | null
+          status: string | null
+          stripe_refund_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          order_id: string
+          payment_id?: string | null
+          reason?: string | null
+          status?: string | null
+          stripe_refund_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          payment_id?: string | null
+          reason?: string | null
+          status?: string | null
+          stripe_refund_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "gw_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_refunds_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "gw_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_rehearsal_feedback: {
         Row: {
           category: Database["public"]["Enums"]["feedback_category_enum"]
@@ -15405,6 +15773,143 @@ export type Database = {
           },
         ]
       }
+      gw_shipment_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_item_id: string
+          quantity: number
+          shipment_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_item_id: string
+          quantity?: number
+          shipment_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_item_id?: string
+          quantity?: number
+          shipment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_shipment_items_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "gw_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_shipment_items_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "gw_shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_shipments: {
+        Row: {
+          carrier: string | null
+          cost: number | null
+          created_at: string | null
+          currency: string | null
+          delivered_at: string | null
+          easypost_shipment_id: string | null
+          id: string
+          label_url: string | null
+          order_id: string
+          selected_rate_id: string | null
+          service: string | null
+          shipped_at: string | null
+          status: string | null
+          tracking_code: string | null
+          tracking_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          carrier?: string | null
+          cost?: number | null
+          created_at?: string | null
+          currency?: string | null
+          delivered_at?: string | null
+          easypost_shipment_id?: string | null
+          id?: string
+          label_url?: string | null
+          order_id: string
+          selected_rate_id?: string | null
+          service?: string | null
+          shipped_at?: string | null
+          status?: string | null
+          tracking_code?: string | null
+          tracking_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          carrier?: string | null
+          cost?: number | null
+          created_at?: string | null
+          currency?: string | null
+          delivered_at?: string | null
+          easypost_shipment_id?: string | null
+          id?: string
+          label_url?: string | null
+          order_id?: string
+          selected_rate_id?: string | null
+          service?: string | null
+          shipped_at?: string | null
+          status?: string | null
+          tracking_code?: string | null
+          tracking_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "gw_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_shipping_settings: {
+        Row: {
+          allowed_carriers: Json | null
+          allowed_services: Json | null
+          created_at: string | null
+          default_insurance_amount: number | null
+          id: number
+          origin_address: Json | null
+          signature_required_default: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_carriers?: Json | null
+          allowed_services?: Json | null
+          created_at?: string | null
+          default_insurance_amount?: number | null
+          id?: number
+          origin_address?: Json | null
+          signature_required_default?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_carriers?: Json | null
+          allowed_services?: Json | null
+          created_at?: string | null
+          default_insurance_amount?: number | null
+          id?: number
+          origin_address?: Json | null
+          signature_required_default?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gw_shoutcast_playlist_tracks: {
         Row: {
           created_at: string | null
@@ -16337,6 +16842,51 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_store_settings: {
+        Row: {
+          created_at: string | null
+          default_currency: string | null
+          digital_download_expiry_days: number | null
+          digital_max_downloads: number | null
+          free_shipping_threshold: number | null
+          id: number
+          notifications_enabled: boolean | null
+          store_email: string | null
+          store_name: string | null
+          stripe_mode: string | null
+          support_email: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_currency?: string | null
+          digital_download_expiry_days?: number | null
+          digital_max_downloads?: number | null
+          free_shipping_threshold?: number | null
+          id?: number
+          notifications_enabled?: boolean | null
+          store_email?: string | null
+          store_name?: string | null
+          stripe_mode?: string | null
+          support_email?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_currency?: string | null
+          digital_download_expiry_days?: number | null
+          digital_max_downloads?: number | null
+          free_shipping_threshold?: number | null
+          id?: number
+          notifications_enabled?: boolean | null
+          store_email?: string | null
+          store_name?: string | null
+          stripe_mode?: string | null
+          support_email?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gw_student_intake: {
         Row: {
           academic_year: string
@@ -16711,6 +17261,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gw_tax_regions: {
+        Row: {
+          created_at: string | null
+          digital_taxable: boolean | null
+          id: string
+          is_active: boolean | null
+          rate: number
+          region_key: string
+          region_name: string
+          shipping_taxable: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          digital_taxable?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          rate: number
+          region_key: string
+          region_name: string
+          shipping_taxable?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          digital_taxable?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          rate?: number
+          region_key?: string
+          region_name?: string
+          shipping_taxable?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       gw_time_entries: {
         Row: {
@@ -18545,6 +19131,42 @@ export type Database = {
           status?: string
           updated_at?: string
           vendor_name?: string | null
+        }
+        Relationships: []
+      }
+      gw_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          provider: string
+          received_at: string | null
+          status: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          provider: string
+          received_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          provider?: string
+          received_at?: string | null
+          status?: string | null
         }
         Relationships: []
       }
