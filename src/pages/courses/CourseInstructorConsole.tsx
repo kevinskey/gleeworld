@@ -3,7 +3,7 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Mail, PenTool, CalendarDays } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Megaphone, PenTool, CalendarDays } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCourseTA } from '@/hooks/useCourseTA';
 import { cn } from '@/lib/utils';
@@ -22,7 +22,7 @@ import { CourseEnrollmentManager } from '@/components/academy/CourseEnrollmentMa
 import { StudentAnalyticsDashboard } from '@/components/mus240/admin/StudentAnalyticsDashboard';
 import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
 import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
-import { StudentCommunications } from '@/components/mus240/instructor/StudentCommunications';
+import { CourseAnnouncementsManager } from '@/components/course/CourseAnnouncementsManager';
 import { SyllabusTemplateEditor } from '@/components/academy/syllabus/SyllabusTemplateEditor';
 import { ModulesSection } from '@/components/course/ModulesSection';
 import { CalendarSection } from '@/components/course/CalendarSection';
@@ -156,9 +156,9 @@ export const CourseInstructorConsole = () => {
       label: 'Analytics',
       icon: BarChart
     }, {
-      value: 'communications',
-      label: 'Communications',
-      icon: Mail
+      value: 'announcements',
+      label: 'Announcements',
+      icon: Megaphone
     }]
   }, {
     label: 'Resources',
@@ -283,7 +283,7 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'grades' && <GradesAdmin />}
             {activeTab === 'students' && dbCourse && <CourseEnrollmentManager courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} term={dbCourse.term || undefined} />}
             {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
-            {activeTab === 'communications' && <StudentCommunications />}
+            {activeTab === 'announcements' && dbCourse && <CourseAnnouncementsManager courseId={dbCourse.id} />}
             {activeTab === 'resources' && <ResourcesAdmin />}
             {activeTab === 'videos' && dbCourse && <CourseVideoLibrary courseId={dbCourse.id} isInstructor={true} />}
             {activeTab === 'audio' && <Card>
