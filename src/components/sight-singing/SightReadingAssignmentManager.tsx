@@ -7,9 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Calendar, Users, FileMusic, Trash2, Edit } from 'lucide-react';
+import { Plus, Calendar, Users, FileMusic, Trash2, Edit, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { SightReadingSubmissionsDialog } from './SightReadingSubmissionsDialog';
 
 interface Assignment {
   id: string;
@@ -39,6 +40,8 @@ export const SightReadingAssignmentManager = ({ user }: SightReadingAssignmentMa
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [showSubmissionsDialog, setShowSubmissionsDialog] = useState(false);
   const { toast } = useToast();
 
   const [newAssignment, setNewAssignment] = useState({
@@ -389,7 +392,15 @@ export const SightReadingAssignmentManager = ({ user }: SightReadingAssignmentMa
                     Created {new Date(assignment.created_at).toLocaleDateString()}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAssignment(assignment);
+                        setShowSubmissionsDialog(true);
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
                       View Submissions
                     </Button>
                     <Button size="sm">
@@ -402,6 +413,16 @@ export const SightReadingAssignmentManager = ({ user }: SightReadingAssignmentMa
           ))
         )}
       </div>
+
+      {/* Submissions Dialog */}
+      {selectedAssignment && (
+        <SightReadingSubmissionsDialog
+          open={showSubmissionsDialog}
+          onOpenChange={setShowSubmissionsDialog}
+          assignmentId={selectedAssignment.id}
+          assignmentTitle={selectedAssignment.title}
+        />
+      )}
     </div>
   );
 };
