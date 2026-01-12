@@ -97,6 +97,33 @@ serve(async (req) => {
               });
             }
           }
+          
+          // Send confirmation email to customer
+          try {
+            const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+            await fetch(`${supabaseUrl}/functions/v1/send-order-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                orderId: order.id, 
+                emailType: 'confirmation' 
+              })
+            });
+            logStep("Confirmation email triggered");
+            
+            // Send admin notification
+            await fetch(`${supabaseUrl}/functions/v1/send-order-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                orderId: order.id, 
+                emailType: 'admin_notification' 
+              })
+            });
+            logStep("Admin notification email triggered");
+          } catch (emailError) {
+            logStep("Email trigger warning", { error: String(emailError) });
+          }
         }
       }
     } else {

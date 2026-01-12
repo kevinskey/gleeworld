@@ -357,3 +357,6 @@ verify_jwt = false
 
 [functions.create-shipping-label]
 verify_jwt = true
+
+[functions.send-order-email]
+verify_jwt = false

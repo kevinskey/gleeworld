@@ -247,72 +247,64 @@ export const CheckoutPage = () => {
     setProcessingPayment(true);
     
     try {
-      // Create order first
-      const order = await createOrder();
-      
-      // For demo purposes, simulate Square payment
-      // In a real implementation, you would integrate with Square's Web Payments SDK
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Process payment through Square edge function
-      const { data: paymentResult, error: paymentError } = await supabase.functions.invoke('process-square-payment', {
+      // Prepare cart items for Stripe checkout
+      const checkoutItems = cartItems.map(item => ({
+        product_id: item.product.id,
+        title: item.product.title,
+        price: item.product.price,
+        quantity: item.quantity,
+        requires_shipping: item.product.requires_shipping,
+        image: item.product.images?.[0]
+      }));
+
+      const shippingAddress = form.sameAsBilling ? {
+        name: `${form.firstName} ${form.lastName}`,
+        street1: form.address1,
+        street2: form.address2,
+        city: form.city,
+        state: form.state,
+        zip: form.postalCode,
+        country: form.country
+      } : {
+        name: `${form.firstName} ${form.lastName}`,
+        street1: form.shippingAddress1,
+        street2: form.shippingAddress2,
+        city: form.shippingCity,
+        state: form.shippingState,
+        zip: form.shippingPostalCode,
+        country: form.shippingCountry
+      };
+
+      // Call Stripe checkout edge function
+      const { data, error: checkoutError } = await supabase.functions.invoke('shop-checkout', {
         body: {
-          sourceId: 'demo-card-token', // This would come from Square's Web Payments SDK
-          amount: total,
-          currency: 'USD',
-          orderId: order.id,
-          userId: user?.id,
-          guestEmail: user ? undefined : form.email,
-          billingAddress: {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            address_line_1: form.address1,
-            address_line_2: form.address2,
-            city: form.city,
-            state: form.state,
-            postal_code: form.postalCode,
-            country: form.country
-          },
-          shippingAddress: form.sameAsBilling ? {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            address_line_1: form.address1,
-            address_line_2: form.address2,
-            city: form.city,
-            state: form.state,
-            postal_code: form.postalCode,
-            country: form.country
-          } : {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            address_line_1: form.shippingAddress1,
-            address_line_2: form.shippingAddress2,
-            city: form.shippingCity,
-            state: form.shippingState,
-            postal_code: form.shippingPostalCode,
-            country: form.shippingCountry
-          }
+          items: checkoutItems,
+          customer_email: form.email,
+          customer_name: `${form.firstName} ${form.lastName}`,
+          shipping_address: shippingAddress,
+          shipping_cost: shippingCost,
+          tax_amount: tax
         }
       });
 
-      if (paymentError) throw paymentError;
+      if (checkoutError) throw checkoutError;
+      if (data.error) throw new Error(data.error);
 
-      // Clear cart and redirect to success page
+      // Clear cart before redirect
       localStorage.removeItem('gleeworld-cart');
-      toast({
-        title: "Payment Successful!",
-        description: `Order ${order.order_number} has been placed successfully.`
-      });
-      
-      navigate('/order-confirmation', { 
-        state: { orderId: order.id, orderNumber: order.order_number }
-      });
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
 
     } catch (error: any) {
       console.error('Payment error:', error);
       toast({
-        title: "Payment Failed",
-        description: error.message || "There was an error processing your payment.",
+        title: "Checkout Failed",
+        description: error.message || "There was an error starting checkout.",
         variant: "destructive"
       });
     } finally {
