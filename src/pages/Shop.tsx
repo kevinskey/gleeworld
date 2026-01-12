@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -11,16 +10,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ShoppingCart, 
   Search, 
-  Filter, 
-  Star, 
   Heart,
   Plus,
   Minus,
   ShoppingBag,
   CreditCard,
-  CheckCircle
+  Music,
+  Shirt,
+  FileMusic,
+  Sparkles,
+  ArrowRight,
+  Package
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface Product {
   id: string;
@@ -41,10 +43,10 @@ interface CartItem {
 }
 
 const CATEGORIES = [
-  { value: "all", label: "All Products" },
-  { value: "apparel", label: "Apparel" },
-  { value: "digital", label: "Music & Recordings" },
-  { value: "accessories", label: "Accessories" }
+  { value: "all", label: "All", icon: Sparkles },
+  { value: "apparel", label: "Clothing", icon: Shirt },
+  { value: "accessories", label: "Accessories", icon: Package },
+  { value: "digital", label: "Sheet Music", icon: FileMusic }
 ];
 
 export const Shop = () => {
@@ -57,8 +59,8 @@ export const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
   const [loading, setLoading] = useState(true);
+  const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
 
-  // Load products from database
   useEffect(() => {
     loadProducts();
     loadCartFromStorage();
@@ -101,12 +103,10 @@ export const Shop = () => {
   useEffect(() => {
     let filtered = products;
 
-    // Filter by category
     if (selectedCategory !== "all") {
       filtered = filtered.filter(product => product.product_type === selectedCategory);
     }
 
-    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(product => 
         product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -184,24 +184,12 @@ export const Shop = () => {
       return;
     }
 
-    // Navigate to checkout with cart data
     navigate('/checkout', { 
       state: { 
         cartItems: getCartItems(),
         totalAmount: getTotalPrice()
       }
     });
-  };
-
-  const renderStars = (rating: number = 4.8) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`h-4 w-4 ${
-          i < Math.floor(rating) ? "text-yellow-400 fill-current" : "text-gray-300"
-        }`}
-      />
-    ));
   };
 
   const getProductImage = (product: Product) => {
@@ -211,10 +199,15 @@ export const Shop = () => {
   if (loading) {
     return (
       <PublicLayout>
-        <div className="container mx-auto px-4 py-8">
+        <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white flex items-center justify-center">
           <div className="text-center">
-            <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600">Loading products...</p>
+            <div className="relative">
+              <Music className="h-16 w-16 text-stone-300 mx-auto mb-4 animate-pulse" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-20 h-20 border-2 border-stone-200 border-t-stone-400 rounded-full animate-spin" />
+              </div>
+            </div>
+            <p className="text-stone-500 font-light tracking-wide">Loading boutique...</p>
           </div>
         </div>
       </PublicLayout>
@@ -223,276 +216,227 @@ export const Shop = () => {
 
   return (
     <PublicLayout>
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-primary via-primary-glow to-accent overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxLTEuNzktNC00LTRzLTQgMS43OS00IDQgMS43OSA0IDQgNCA0LTEuNzkgNC00em0wLTEwYzAtMi4yMS0xLjc5LTQtNC00cy00IDEuNzktNCA0IDEuNzkgNCA0IDQgNC0xLjc5IDQtNHptMC0xMGMwLTIuMjEtMS43OS00LTQtNHMtNCAxLjc5LTQgNCAxLjc5IDQgNCA0IDQtMS43OSA0LTR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-20"></div>
-        
-        <div className="container mx-auto px-4 py-16 sm:py-24 lg:py-32 relative">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-block mb-6">
-              <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-sm px-4 py-1">
-                Official Merchandise
-              </Badge>
-            </div>
-            
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              GleeWorld Shop
-            </h1>
-            
-            <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Celebrate 100+ years of musical excellence with exclusive Spelman College Glee Club merchandise, 
-              recordings, and collectibles. Every purchase supports our legacy.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <Button 
-                size="lg" 
-                className="bg-white text-primary hover:bg-white/90 shadow-xl min-w-[200px]"
-                onClick={() => {
-                  const productsSection = document.getElementById('products-section');
-                  productsSection?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                <ShoppingBag className="h-5 w-5 mr-2" />
-                Shop Now
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="bg-white/10 text-white border-white/30 hover:bg-white/20 backdrop-blur-sm min-w-[200px]"
-                onClick={handleCheckout}
-              >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                Cart ({getTotalItems()})
-              </Button>
-            </div>
-            
-            <div className="flex flex-wrap gap-6 justify-center text-white/90 text-sm">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-white" />
-                <span>Free Shipping Over $150</span>
+      <div className="min-h-screen bg-gradient-to-b from-stone-50 via-white to-stone-50">
+        {/* Hero Section - Elegant & Musical */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-stone-100 via-stone-50 to-amber-50/30">
+          {/* Musical Notes Decorative Pattern */}
+          <div className="absolute inset-0 opacity-[0.03]">
+            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <pattern id="musical-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <text x="5" y="15" fontSize="12" fill="currentColor">♪</text>
+                <text x="15" y="8" fontSize="8" fill="currentColor">♫</text>
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#musical-pattern)" />
+            </svg>
+          </div>
+          
+          {/* Subtle gradient orbs */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-amber-100/40 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-stone-200/30 to-transparent rounded-full blur-3xl" />
+          
+          <div className="container mx-auto px-4 py-16 sm:py-24 lg:py-32 relative">
+            <div className="max-w-3xl mx-auto text-center">
+              {/* Decorative musical element */}
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <div className="h-px w-12 bg-gradient-to-r from-transparent to-stone-300" />
+                <Music className="h-6 w-6 text-stone-400" />
+                <div className="h-px w-12 bg-gradient-to-l from-transparent to-stone-300" />
               </div>
-              <div className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-white fill-white" />
-                <span>Premium Quality</span>
+              
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light text-stone-800 mb-4 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                The GleeWorld
+                <span className="block font-medium bg-gradient-to-r from-stone-700 via-amber-700 to-stone-700 bg-clip-text text-transparent">
+                  Boutique
+                </span>
+              </h1>
+              
+              <p className="text-lg text-stone-500 mb-10 max-w-xl mx-auto leading-relaxed font-light">
+                Curated accessories, apparel, and digital sheet music for the discerning music lover.
+              </p>
+              
+              {/* Category Pills */}
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
+                {CATEGORIES.map((category) => {
+                  const Icon = category.icon;
+                  const isActive = selectedCategory === category.value;
+                  return (
+                    <button
+                      key={category.value}
+                      onClick={() => setSelectedCategory(category.value)}
+                      className={`
+                        group flex items-center gap-2 px-5 py-2.5 rounded-full 
+                        transition-all duration-300 ease-out
+                        ${isActive 
+                          ? 'bg-stone-800 text-white shadow-lg shadow-stone-800/20' 
+                          : 'bg-white/80 text-stone-600 hover:bg-white hover:shadow-md border border-stone-200/50'
+                        }
+                      `}
+                    >
+                      <Icon className={`h-4 w-4 transition-transform duration-300 ${isActive ? '' : 'group-hover:scale-110'}`} />
+                      <span className="text-sm font-medium">{category.label}</span>
+                    </button>
+                  );
+                })}
               </div>
-              <div className="flex items-center gap-2">
-                <Heart className="h-5 w-5 text-white fill-white" />
-                <span>Supporting Our Legacy</span>
+              
+              {/* Search Bar - Elegant */}
+              <div className="max-w-md mx-auto relative">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-stone-400" />
+                </div>
+                <Input
+                  placeholder="Search our collection..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-12 pr-4 py-6 bg-white/90 backdrop-blur-sm border-stone-200 rounded-full text-stone-700 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-200 focus:border-amber-300 shadow-sm"
+                />
               </div>
             </div>
           </div>
         </div>
-        
-        {/* Wave decoration */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-12 sm:h-16">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="fill-background"></path>
-          </svg>
-        </div>
-      </div>
 
-      <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="w-full sm:w-auto">
-            <div className="text-sm text-muted-foreground mb-2">Total: <span className="font-bold text-lg text-foreground">${getTotalPrice().toFixed(2)}</span></div>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
-            <div className="relative w-full sm:w-auto">
-              <Button 
-                variant="outline" 
-                className="flex items-center justify-center space-x-2 w-full sm:w-auto min-w-[120px]"
-                onClick={handleCheckout}
-              >
-                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-sm sm:text-base">Cart ({getTotalItems()})</span>
-              </Button>
-              {getTotalItems() > 0 && (
-                <Badge className="absolute -top-2 -right-2 h-5 w-5 sm:h-6 sm:w-6 rounded-full p-0 flex items-center justify-center text-xs">
-                  {getTotalItems()}
-                </Badge>
-              )}
-            </div>
-            <div className="text-left sm:text-right w-full sm:w-auto">
-              <div className="text-xs sm:text-sm text-gray-600">Total:</div>
-              <div className="font-bold text-base sm:text-lg">${getTotalPrice().toFixed(2)}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div id="products-section" className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 p-3 sm:p-4 bg-white rounded-lg shadow-sm">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-          <div className="sm:w-48">
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger>
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    {category.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Featured Products */}
-        {selectedCategory === "all" && (
-          <div className="mb-8 sm:mb-12">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Featured Products</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {products.slice(0, 3).map((product) => (
-                <Card key={product.id} className="hover:shadow-lg transition-shadow group">
-                  <CardHeader className="pb-4">
-                    <div className="aspect-square bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg mb-4 flex items-center justify-center group-hover:from-blue-200 group-hover:to-purple-200 transition-colors overflow-hidden">
-                      <img 
-                        src={getProductImage(product)} 
-                        alt={product.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{product.title}</CardTitle>
-                        <Badge variant="secondary" className="mt-1">
-                          {CATEGORIES.find(c => c.value === product.product_type)?.label}
-                        </Badge>
-                      </div>
-                      <Button variant="ghost" size="sm" className="p-1">
-                        <Heart className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="mb-4">{product.description}</CardDescription>
-                    
-                    <div className="flex items-center space-x-2 mb-4">
-                      <div className="flex">{renderStars()}</div>
-                      <span className="text-sm text-gray-600">(4.8)</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <div className="text-2xl font-bold text-blue-600">${product.price.toFixed(2)}</div>
-                        <div className="text-sm text-gray-500">{product.inventory_quantity} in stock</div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        {cartItems[product.id] ? (
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeFromCart(product.id)}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <span className="w-8 text-center">{cartItems[product.id]}</span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => addToCart(product.id)}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button onClick={() => addToCart(product.id)}>
-                            Add to Cart
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+        {/* Cart Summary Bar */}
+        {getTotalItems() > 0 && (
+          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
+            <div className="container mx-auto px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-stone-600">
+                    <ShoppingBag className="h-5 w-5" />
+                    <span className="font-medium">{getTotalItems()} items</span>
+                  </div>
+                  <div className="h-4 w-px bg-stone-200" />
+                  <span className="text-lg font-semibold text-stone-800">${getTotalPrice().toFixed(2)}</span>
+                </div>
+                <Button 
+                  onClick={handleCheckout}
+                  className="bg-stone-800 hover:bg-stone-900 text-white rounded-full px-6 gap-2 transition-all duration-300 hover:shadow-lg"
+                >
+                  Checkout
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* All Products */}
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
-            {selectedCategory === "all" ? "All Products" : CATEGORIES.find(c => c.value === selectedCategory)?.label}
-          </h2>
-          
+        {/* Products Section */}
+        <div className="container mx-auto px-4 py-12 sm:py-16">
+          {/* Section Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-light text-stone-800" style={{ fontFamily: "'Playfair Display', serif" }}>
+                {selectedCategory === "all" ? "Our Collection" : CATEGORIES.find(c => c.value === selectedCategory)?.label}
+              </h2>
+              <p className="text-stone-500 text-sm mt-1">{filteredProducts.length} pieces</p>
+            </div>
+          </div>
+
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-12">
-              <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-              <p className="text-gray-600">Try adjusting your search or filters.</p>
+            <div className="text-center py-20">
+              <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Music className="h-10 w-10 text-stone-300" />
+              </div>
+              <h3 className="text-xl font-light text-stone-700 mb-2">No items found</h3>
+              <p className="text-stone-500">Try adjusting your search or browse all categories.</p>
+              <Button 
+                variant="outline" 
+                className="mt-6 rounded-full"
+                onClick={() => { setSelectedCategory("all"); setSearchQuery(""); }}
+              >
+                View All Products
+              </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
               {filteredProducts.map((product) => (
-                <Card key={product.id} className="hover:shadow-lg transition-shadow group">
-                  <CardContent className="p-4">
-                    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-4 flex items-center justify-center group-hover:from-gray-200 group-hover:to-gray-300 transition-colors overflow-hidden">
+                <Card 
+                  key={product.id} 
+                  className={`
+                    group overflow-hidden border-0 bg-white shadow-sm 
+                    transition-all duration-500 ease-out cursor-pointer
+                    hover:shadow-xl hover:-translate-y-1
+                  `}
+                  onMouseEnter={() => setHoveredProduct(product.id)}
+                  onMouseLeave={() => setHoveredProduct(null)}
+                >
+                  <CardContent className="p-0">
+                    {/* Product Image */}
+                    <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-stone-100 to-stone-50">
                       <img 
                         src={getProductImage(product)} 
                         alt={product.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       />
+                      
+                      {/* Overlay gradient on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      {/* Wishlist Button */}
+                      <button className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110">
+                        <Heart className="h-5 w-5 text-stone-500 hover:text-rose-500 transition-colors" />
+                      </button>
+                      
+                      {/* Quick Add Button */}
+                      {!cartItems[product.id] ? (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); addToCart(product.id); }}
+                          className="absolute bottom-4 left-4 right-4 py-3 bg-white/95 backdrop-blur-sm rounded-lg font-medium text-stone-800 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-white shadow-lg flex items-center justify-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add to Cart
+                        </button>
+                      ) : (
+                        <div className="absolute bottom-4 left-4 right-4 py-2 bg-white/95 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
+                          <div className="flex items-center justify-between px-4">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); removeFromCart(product.id); }}
+                              className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center transition-colors"
+                            >
+                              <Minus className="h-4 w-4 text-stone-700" />
+                            </button>
+                            <span className="font-medium text-stone-800">{cartItems[product.id]}</span>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); addToCart(product.id); }}
+                              className="w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-900 flex items-center justify-center transition-colors"
+                            >
+                              <Plus className="h-4 w-4 text-white" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Category Badge */}
+                      <Badge className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-stone-700 border-0 text-xs font-medium">
+                        {CATEGORIES.find(c => c.value === product.product_type)?.label || product.product_type}
+                      </Badge>
                     </div>
                     
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between">
-                        <h3 className="font-semibold text-gray-900 text-sm">{product.title}</h3>
-                        <Button variant="ghost" size="sm" className="p-1 h-auto">
-                          <Heart className="h-3 w-3" />
-                        </Button>
-                      </div>
+                    {/* Product Info */}
+                    <div className="p-5">
+                      <h3 className="font-medium text-stone-800 mb-1 group-hover:text-amber-700 transition-colors" style={{ fontFamily: "'Playfair Display', serif" }}>
+                        {product.title}
+                      </h3>
                       
-                      <Badge variant="secondary" className="text-xs">{product.product_type}</Badge>
+                      <p className="text-stone-500 text-sm mb-3 line-clamp-2 font-light">
+                        {product.description}
+                      </p>
                       
-                      <div className="flex items-center space-x-1">
-                        <div className="flex">{renderStars()}</div>
-                        <span className="text-xs text-gray-600">(4.8)</span>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="font-bold text-blue-600">${product.price.toFixed(2)}</div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-semibold text-stone-800">
+                          ${product.price.toFixed(2)}
+                        </span>
                         
-                        {cartItems[product.id] ? (
-                          <div className="flex items-center justify-between">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeFromCart(product.id)}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="text-sm">{cartItems[product.id]}</span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => addToCart(product.id)}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button 
-                            size="sm" 
-                            className="w-full text-xs"
-                            onClick={() => addToCart(product.id)}
-                          >
-                            Add to Cart
-                          </Button>
+                        {product.inventory_quantity < 5 && product.inventory_quantity > 0 && (
+                          <span className="text-xs text-amber-600 font-medium">
+                            Only {product.inventory_quantity} left
+                          </span>
+                        )}
+                        
+                        {product.inventory_quantity === 0 && (
+                          <span className="text-xs text-stone-400 font-medium">
+                            Sold out
+                          </span>
                         )}
                       </div>
                     </div>
@@ -503,19 +447,28 @@ export const Shop = () => {
           )}
         </div>
 
-        {/* Checkout Button */}
-        {getTotalItems() > 0 && (
-          <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-3 sm:p-4 border max-w-[200px]">
-            <div className="text-center">
-              <div className="text-base sm:text-lg font-bold">${getTotalPrice().toFixed(2)}</div>
-              <div className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">{getTotalItems()} items</div>
-              <Button className="w-full text-xs sm:text-sm" onClick={handleCheckout}>
-                <CreditCard className="h-4 w-4 mr-2" />
-                Checkout
-              </Button>
+        {/* Bottom CTA Section */}
+        <div className="bg-gradient-to-br from-stone-100 to-stone-50 py-16">
+          <div className="container mx-auto px-4 text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-stone-300" />
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              <div className="h-px w-8 bg-stone-300" />
             </div>
+            <h3 className="text-2xl font-light text-stone-700 mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+              Every purchase supports our legacy
+            </h3>
+            <p className="text-stone-500 mb-6">Free shipping on orders over $150</p>
+            <Button 
+              onClick={handleCheckout}
+              disabled={getTotalItems() === 0}
+              className="bg-stone-800 hover:bg-stone-900 text-white rounded-full px-8 py-6 text-lg gap-3 transition-all duration-300 hover:shadow-xl disabled:opacity-50"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              View Cart ({getTotalItems()})
+            </Button>
           </div>
-        )}
+        </div>
       </div>
     </PublicLayout>
   );
