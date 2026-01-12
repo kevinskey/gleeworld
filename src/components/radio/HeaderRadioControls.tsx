@@ -96,7 +96,7 @@ export const HeaderRadioControls = () => {
       
       // Switch to the channel's stream URL to play that station
       if (channel.stream_url) {
-        await switchStream(channel.stream_url);
+        await switchStream(channel.stream_url, channel.name);
         // Show inline notification instead of toast
         setChannelNotification(`Switched to ${channel.name}`);
         setTimeout(() => setChannelNotification(null), 3000);

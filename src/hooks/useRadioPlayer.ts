@@ -595,13 +595,19 @@ export const useRadioPlayer = () => {
 
 
   // Switch to a different stream URL (for channel switching)
-  const switchStream = useCallback(async (newStreamUrl: string) => {
-    console.log('Radio switchStream() called with:', newStreamUrl);
+  const switchStream = useCallback(async (newStreamUrl: string, channelName?: string) => {
+    console.log('Radio switchStream() called with:', newStreamUrl, 'channel:', channelName);
 
     if (!audioRef.current) {
       console.log('No audio ref available');
       return;
     }
+
+    // Clear current track immediately and show channel name as placeholder
+    setState(prev => ({
+      ...prev,
+      currentTrack: channelName ? { title: channelName, artist: '' } : null,
+    }));
 
     const audio = audioRef.current;
     const proxyBaseUrl = 'https://oopmlreysjzuxzylyheb.functions.supabase.co/radio-proxy';
@@ -621,8 +627,8 @@ export const useRadioPlayer = () => {
         await audio.play();
         console.log('Successfully switched to:', url);
         setState(prev => ({ ...prev, isPlaying: true }));
-        // Update LCD metadata immediately after switching
-        refreshNowPlaying();
+        // Update LCD metadata after a brief delay to let stream settle
+        setTimeout(() => refreshNowPlaying(), 1000);
         return; // Success
       } catch (error) {
         console.log('Failed with URL:', url, error);
@@ -632,7 +638,7 @@ export const useRadioPlayer = () => {
 
     // All URLs failed
     console.error('All stream URLs failed');
-    setState(prev => ({ ...prev, isPlaying: false }));
+    setState(prev => ({ ...prev, isPlaying: false, currentTrack: null }));
     toast({
       title: 'Channel Unavailable',
       description: 'This station may be offline. Try another.',
