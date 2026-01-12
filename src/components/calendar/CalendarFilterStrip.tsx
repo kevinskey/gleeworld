@@ -272,62 +272,82 @@ export const CalendarFilterStrip = ({
         {calendars.map(calendar => {
           const isSelected = selectedCalendarIds.includes(calendar.id);
           return (
-            <DropdownMenu key={calendar.id}>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toggleCalendar(calendar.id);
-                  }}
-                  onContextMenu={(e) => e.preventDefault()}
-                  className={cn(
-                    "flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all border flex-shrink-0",
-                    isSelected
-                      ? "bg-background border-border shadow-sm"
-                      : "bg-muted/30 border-transparent opacity-50 hover:opacity-80"
-                  )}
-                  style={{
-                    borderLeftWidth: '3px',
-                    borderLeftColor: calendar.color,
-                  }}
-                >
-                  {isSelected && <Check className="w-3 h-3 text-foreground" />}
-                  <span className="truncate max-w-[100px]">{calendar.name}</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="bg-popover z-50 p-2 w-48">
-                <DropdownMenuLabel className="text-xs font-medium">
-                  Change color
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className="grid grid-cols-6 gap-1.5 p-1 pt-2">
-                  {presetColors.map((color) => (
-                    <DropdownMenuItem
-                      key={color}
-                      asChild
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        updateCalendarColor(calendar.id, color);
-                      }}
-                      className="p-0 h-auto focus:bg-transparent"
-                    >
-                      <button
-                        type="button"
-                        className={cn(
-                          "w-5 h-5 rounded border-2 transition-all hover:scale-110 cursor-pointer",
-                          calendar.color?.toLowerCase() === color.toLowerCase()
-                            ? "border-primary ring-2 ring-primary/30"
-                            : "border-transparent"
-                        )}
-                        style={{ backgroundColor: color }}
-                        aria-label={`Set ${calendar.name} color to ${color}`}
-                      />
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div key={calendar.id} className="flex items-center gap-0.5 flex-shrink-0">
+              {/* Toggle Button - Left click toggles visibility */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleCalendar(calendar.id);
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 px-2 py-1 rounded-l text-xs transition-all border-y border-l",
+                  isSelected
+                    ? "bg-background border-border shadow-sm"
+                    : "bg-muted/30 border-transparent opacity-50 hover:opacity-80"
+                )}
+                style={{
+                  borderLeftWidth: '3px',
+                  borderLeftColor: calendar.color,
+                }}
+              >
+                {isSelected && <Check className="w-3 h-3 text-foreground" />}
+                <span className="truncate max-w-[100px]">{calendar.name}</span>
+              </button>
+              
+              {/* Color Picker Dropdown - Separate button */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "px-1 py-1 rounded-r text-xs transition-all border-y border-r hover:bg-muted/50",
+                      isSelected
+                        ? "bg-background border-border"
+                        : "bg-muted/30 border-transparent opacity-50 hover:opacity-80"
+                    )}
+                    aria-label={`Change color for ${calendar.name}`}
+                  >
+                    <div 
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: calendar.color }}
+                    />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="bg-popover z-50 p-2 w-48">
+                  <DropdownMenuLabel className="text-xs font-medium">
+                    Change color
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div className="grid grid-cols-6 gap-1.5 p-1 pt-2">
+                    {presetColors.map((color) => (
+                      <DropdownMenuItem
+                        key={color}
+                        asChild
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          updateCalendarColor(calendar.id, color);
+                        }}
+                        className="p-0 h-auto focus:bg-transparent"
+                      >
+                        <button
+                          type="button"
+                          className={cn(
+                            "w-5 h-5 rounded border-2 transition-all hover:scale-110 cursor-pointer",
+                            calendar.color?.toLowerCase() === color.toLowerCase()
+                              ? "border-primary ring-2 ring-primary/30"
+                              : "border-transparent"
+                          )}
+                          style={{ backgroundColor: color }}
+                          aria-label={`Set ${calendar.name} color to ${color}`}
+                        />
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           );
         })}
       </div>
