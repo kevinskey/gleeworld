@@ -3,7 +3,7 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Megaphone, PenTool, CalendarDays } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Megaphone, PenTool, CalendarDays, Music } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCourseTA } from '@/hooks/useCourseTA';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,7 @@ import { CourseClassCalendar } from '@/components/course/CourseClassCalendar';
 import { TestBuilder } from '@/components/test-builder/TestBuilder';
 import { CoursePollManager } from '@/components/course/CoursePollManager';
 import { SemesterManager } from '@/components/admin/SemesterManager';
+import { SightReadingAssignmentManager } from '@/components/sight-singing/SightReadingAssignmentManager';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -128,6 +129,10 @@ export const CourseInstructorConsole = () => {
       value: 'assignments',
       label: 'Assignments',
       icon: BookOpen
+    }, {
+      value: 'sight-reading',
+      label: 'Sight Reading',
+      icon: Music
     }, {
       value: 'tests',
       label: 'Tests',
@@ -278,6 +283,7 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'class-notes' && dbCourse && <ClassNotesManager courseId={dbCourse.id} isInstructor={true} />}
             {activeTab === 'calendar' && dbCourse?.id && <CourseClassCalendar courseId={dbCourse.id} courseCode={course.courseCode} isInstructor={true} />}
             {activeTab === 'assignments' && dbCourse?.id && <CourseAssignmentManager courseId={dbCourse.id} courseName={course.title} />}
+            {activeTab === 'sight-reading' && <SightReadingAssignmentManager />}
             {activeTab === 'tests' && dbCourse && <TestBuilder courseId={dbCourse.id} courseName={course.title} />}
             {activeTab === 'polls' && dbCourse && <CoursePollManager courseId={dbCourse.id} courseName={course.title} />}
             {activeTab === 'rubrics' && <RubricManager />}
