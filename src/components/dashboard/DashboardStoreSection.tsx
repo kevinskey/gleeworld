@@ -328,7 +328,7 @@ export const DashboardStoreSection = () => {
             {moduleSearch ? 'No modules match your search' : 'No modules available'}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 max-h-[180px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
             {filteredModules.map(module => {
               const unifiedModule = UNIFIED_MODULES.find(m => m.id === module.id);
               const IconComponent = unifiedModule?.icon;
