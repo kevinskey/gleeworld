@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getDefaultEventImage } from "@/constants/images";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,10 +74,7 @@ export const GleeWorldLanding = () => {
     videos,
     getVideoEmbedUrl
   } = useYouTubeVideos();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [isAlbumModalOpen, setIsAlbumModalOpen] = useState(false);
@@ -85,58 +83,47 @@ export const GleeWorldLanding = () => {
   // Get the featured video or fallback to the hardcoded video ID
   const backgroundVideo = videos.find(video => video.is_featured) || videos.find(video => video.video_id === 'fDvKSh6jGKA') || videos[0];
 
-  // Remove hardcoded sample tracks - they're now handled by the edge function
+  // Use React Query for hero slides - caches data to prevent re-fetching on navigation
+  const { data: heroSlides = [], isLoading: heroLoading } = useQuery({
+    queryKey: ['homepage-hero-slides'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_hero_slides')
+        .select('*')
+        .eq('usage_context', 'homepage')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      return data as HeroSlide[];
+    },
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+  });
 
-  // Remove admin redirect - let users stay on home page
+  // Use React Query for events - caches data to prevent re-fetching on navigation
+  const { data: events = [], isLoading: eventsLoading } = useQuery({
+    queryKey: ['homepage-events'],
+    queryFn: async () => {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      
+      const { data, error } = await supabase
+        .from('gw_events')
+        .select('*')
+        .gte('start_date', startOfToday.toISOString())
+        .eq('is_public', true)
+        .order('start_date', { ascending: true })
+        .limit(6);
+      
+      if (error) throw error;
+      return data as Event[];
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    // Set a maximum loading time to prevent infinite stuck state
-    const maxLoadingTimer = setTimeout(() => {
-      console.log('GleeWorldLanding: Maximum loading time reached, forcing completion');
-      setLoading(false);
-    }, 5000); // 5 second max loading time
-
-    const fetchData = async () => {
-      console.log('GleeWorldLanding: Inside fetchData function');
-      try {
-        console.log('GleeWorldLanding: Starting data fetch');
-
-        // Add shorter timeout to prevent hanging
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Data fetch timeout')), 3000));
-
-        // Get start of today for event filtering (so today's events still show)
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-
-        // Fetch hero slides and events in parallel with timeout
-        const fetchPromises = Promise.all([supabase.from('gw_hero_slides').select('*').eq('usage_context', 'homepage').eq('is_active', true).order('display_order', {
-          ascending: true
-        }), supabase.from('gw_events').select('*').gte('start_date', startOfToday.toISOString()).eq('is_public', true).order('start_date', {
-          ascending: true
-        }).limit(6)]);
-        const results = (await Promise.race([fetchPromises, timeoutPromise])) as any;
-        const [heroResult, eventsResult] = results;
-        console.log('GleeWorldLanding: Data fetch completed', {
-          heroSlides: heroResult.data?.length || 0,
-          events: eventsResult.data?.length || 0
-        });
-        if (heroResult.data) setHeroSlides(heroResult.data);
-        if (eventsResult.data) setEvents(eventsResult.data);
-      } catch (error) {
-        console.error('GleeWorldLanding: Error fetching data:', error);
-        // Don't fail completely - show page with empty data
-      } finally {
-        clearTimeout(maxLoadingTimer);
-        setLoading(false);
-      }
-    };
-    fetchData();
-
-    // Cleanup function
-    return () => {
-      clearTimeout(maxLoadingTimer);
-    };
-  }, []);
+  const loading = heroLoading || eventsLoading;
   // Convert DB slides to HeroSlider format
   const adaptedSlides = useMemo(() => 
     heroSlides.map(adaptDatabaseSlide), 
