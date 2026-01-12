@@ -23,7 +23,7 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { console.log('InAppPDFViewerDialog onOpenChange:', nextOpen); onOpenChange(nextOpen); }} modal={false}>
       <DialogContent 
-        className="max-w-7xl h-[90vh] p-0 z-[9999]"
+        className="w-[90vw] max-w-[90vw] h-[90vh] p-0 z-[9999]"
         style={{ zIndex: 9999 }}
         onInteractOutside={(e) => {
           // Prevent closing when interacting with floating YouTube player
