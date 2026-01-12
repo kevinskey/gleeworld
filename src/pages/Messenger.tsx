@@ -29,7 +29,14 @@ interface RecipientGroup {
   count: number;
   type: 'manual' | 'course';
 }
-const Messenger = () => {
+
+interface MessengerProps {
+  embedded?: boolean;
+  courseIdProp?: string;
+  courseNameProp?: string;
+}
+
+const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, courseNameProp }) => {
   const {
     user
   } = useAuth();
@@ -39,9 +46,9 @@ const Messenger = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Course context from query params
-  const courseId = searchParams.get('courseId');
-  const courseName = searchParams.get('courseName');
+  // Course context from query params or props (for embedded mode)
+  const courseId = courseIdProp || searchParams.get('courseId');
+  const courseName = courseNameProp || searchParams.get('courseName');
   const joinRoomName = searchParams.get('join');
   const {
     hasAccess,
@@ -461,33 +468,51 @@ const Messenger = () => {
   };
   // Show loading state
   if (accessLoading) {
-    return <UniversalLayout showHeader={true} showFooter={false}>
-        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </UniversalLayout>;
+    const loadingContent = (
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+    
+    if (embedded) return loadingContent;
+    
+    return (
+      <UniversalLayout showHeader={true} showFooter={false}>
+        <div className="h-[calc(100vh-64px)]">{loadingContent}</div>
+      </UniversalLayout>
+    );
   }
 
   // Show no-access message for fans
   if (!hasAccess) {
-    return <UniversalLayout showHeader={true} showFooter={false}>
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] p-6">
-          <div className="max-w-md text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-              <ShieldAlert className="h-8 w-8 text-destructive" />
-            </div>
-            <h1 className="text-2xl font-bold">Messenger Access Restricted</h1>
-            <p className="text-muted-foreground">{noAccessReason}</p>
-            <Button asChild className="mt-4">
-              <a href="mailto:admin@gleeworld.org">Contact Admin</a>
-            </Button>
+    const noAccessContent = (
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px] p-6">
+        <div className="max-w-md text-center space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+            <ShieldAlert className="h-8 w-8 text-destructive" />
           </div>
+          <h1 className="text-2xl font-bold">Messenger Access Restricted</h1>
+          <p className="text-muted-foreground">{noAccessReason}</p>
+          <Button asChild className="mt-4">
+            <a href="mailto:admin@gleeworld.org">Contact Admin</a>
+          </Button>
         </div>
-      </UniversalLayout>;
+      </div>
+    );
+    
+    if (embedded) return noAccessContent;
+    
+    return (
+      <UniversalLayout showHeader={true} showFooter={false}>
+        {noAccessContent}
+      </UniversalLayout>
+    );
   }
-  return <><UniversalLayout showHeader={true} showFooter={false}>
-      <div className="flex flex-col h-[calc(100dvh-var(--gw-header-h,4rem))]">
-        {/* Persistent Header */}
+  // Main content component (used in both embedded and full page modes)
+  const mainContent = (
+    <div className={`flex flex-col ${embedded ? 'h-full' : 'h-[calc(100dvh-var(--gw-header-h,4rem))]'}`}>
+      {/* Persistent Header - hide in embedded mode */}
+      {!embedded && (
         <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border backdrop-blur px-3 sm:px-6 lg:px-10 py-3 sm:py-6 bg-slate-300 shadow-lg">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
@@ -514,14 +539,15 @@ const Messenger = () => {
             </Button>
           </div>
         </header>
-        
-        {/* Main Content with L/R padding */}
-        <div className="flex-1 min-h-0 overflow-hidden px-6 lg:px-10">
-          <div className="h-full flex w-full">
-            {/* Composer Area */}
-            <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
-              {/* Tabs */}
-              <Tabs value={composerMode} onValueChange={v => setComposerMode(v as 'email' | 'sms' | 'video')} className="flex flex-col flex-1 overflow-hidden">
+      )}
+      
+      {/* Main Content with L/R padding */}
+      <div className={`flex-1 min-h-0 overflow-hidden ${embedded ? 'px-0' : 'px-6 lg:px-10'}`}>
+        <div className="h-full flex w-full">
+          {/* Composer Area */}
+          <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
+            {/* Tabs */}
+            <Tabs value={composerMode} onValueChange={v => setComposerMode(v as 'email' | 'sms' | 'video')} className="flex flex-col flex-1 overflow-hidden">
                 <TabsList className={`grid w-full ${canSendSMS ? 'grid-cols-3' : 'grid-cols-2'} rounded-none bg-background h-11 p-0 gap-0 border-b`}>
                   <TabsTrigger value="email" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
                     <Mail className="h-4 w-4" />
@@ -762,9 +788,11 @@ const Messenger = () => {
           </div>
         </div>
       </div>
-    </UniversalLayout>
-    
-    {/* Group Editor Dialog */}
+    </div>
+  );
+
+  // Dialog for group editor (shared between modes)
+  const groupEditorDialog = (
     <Dialog open={showGroupEditor} onOpenChange={setShowGroupEditor}>
       <DialogContent>
         <DialogHeader>
@@ -794,6 +822,26 @@ const Messenger = () => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  </>;
+  );
+
+  // Return embedded mode (no layout wrapper)
+  if (embedded) {
+    return (
+      <>
+        {mainContent}
+        {groupEditorDialog}
+      </>
+    );
+  }
+
+  // Return full page mode with layout
+  return (
+    <>
+      <UniversalLayout showHeader={true} showFooter={false}>
+        {mainContent}
+      </UniversalLayout>
+      {groupEditorDialog}
+    </>
+  );
 };
 export default Messenger;

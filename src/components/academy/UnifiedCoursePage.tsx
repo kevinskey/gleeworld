@@ -17,7 +17,7 @@ import { CourseCalendarView } from './CourseCalendarView';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseTestsSection } from './CourseTestsSection';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
-import { MessagingInterface } from '@/components/messaging/MessagingInterface';
+import Messenger from '@/pages/Messenger';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 import { StudentSyllabusView } from './syllabus/StudentSyllabusView';
 import { CourseHandbook } from './handbook/CourseHandbook';
