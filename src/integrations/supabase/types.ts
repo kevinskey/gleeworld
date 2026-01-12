@@ -7574,6 +7574,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           end_time: string
+          gw_event_id: string | null
           id: string
           image_url: string | null
           location: string | null
@@ -7591,6 +7592,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           end_time: string
+          gw_event_id?: string | null
           id?: string
           image_url?: string | null
           location?: string | null
@@ -7608,6 +7610,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           end_time?: string
+          gw_event_id?: string | null
           id?: string
           image_url?: string | null
           location?: string | null
@@ -7624,6 +7627,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_course_class_sessions_gw_event_id_fkey"
+            columns: ["gw_event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
             referencedColumns: ["id"]
           },
           {
@@ -8296,6 +8306,7 @@ export type Database = {
       }
       gw_courses: {
         Row: {
+          calendar_id: string | null
           code: string | null
           course_code: string | null
           created_at: string | null
@@ -8325,6 +8336,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          calendar_id?: string | null
           code?: string | null
           course_code?: string | null
           created_at?: string | null
@@ -8354,6 +8366,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          calendar_id?: string | null
           code?: string | null
           course_code?: string | null
           created_at?: string | null
@@ -8383,6 +8396,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "gw_courses_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "gw_calendars"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gw_courses_semester_id_fkey"
             columns: ["semester_id"]
