@@ -85,7 +85,7 @@ export const ProductManagement = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-primary-foreground">Merch Store Management</h1>
-              <p className="text-sm text-primary-foreground">Manage products, orders, and customers</p>
+              <p className="text-sm text-primary-foreground pt-[15px]">Manage products, orders, and customers</p>
             </div>
           </div>
         </div>
