@@ -224,7 +224,7 @@ export const QuickActionsPanel = ({
                     <Plus className="h-3 w-3 text-popover-foreground" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md bg-card">
+                <DialogContent className="sm:max-w-md" style={{ backgroundColor: 'hsl(var(--card))' }}>
                   <DialogHeader>
                     <DialogTitle>Add Quick Action</DialogTitle>
                     <DialogDescription>
