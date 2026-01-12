@@ -212,8 +212,8 @@ export const MusicLibraryModule = () => {
   return <div className="h-full flex flex-col">
       {/* Header */}
       <div className="py-2 md:py-4 border-b border-border bg-background">
-        <div className="flex items-center gap-2 mb-3 md:mb-4 bg-[#003666] text-primary-foreground">
-          <Music className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+        <div className="flex items-center gap-2 mb-3 md:mb-4 bg-[#003666] text-primary-foreground pl-[20px]">
+          <Music className="w-4 h-4 md:w-5 md:h-5 text-primary pl-[2px]" />
           <h2 className="text-base font-semibold py-[20px] md:text-xl text-primary-foreground">Music Library</h2>
         </div>
         
