@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, Sparkles, ArrowRight, Music, ExternalLink } from "lucide-react";
+import { Calendar, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const ChristmasCarolRegistrationCard = () => {
@@ -9,10 +9,8 @@ export const ChristmasCarolRegistrationCard = () => {
 
   const handleRegisterClick = () => {
     if (user) {
-      // User is logged in, could navigate to a registration form
       navigate('/events/christmas-carol-registration');
     } else {
-      // Not logged in, redirect to auth with return path
       navigate('/auth?returnTo=/events/christmas-carol-registration');
     }
   };
@@ -59,21 +57,9 @@ export const ChristmasCarolRegistrationCard = () => {
         </Button>
 
         {/* Small note */}
-        <p className="text-white/70 text-xs mt-3 mb-4">
+        <p className="text-white/70 text-xs mt-3">
           {user ? "Complete your registration" : "Create an account to register"}
         </p>
-
-        {/* Sight Reading Studio Link */}
-        <a
-          href="https://readmusic.gleeworld.org"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 text-white/90 hover:text-white text-sm py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-        >
-          <Music className="h-4 w-4" />
-          <span>Sight Reading Studio</span>
-          <ExternalLink className="h-3 w-3" />
-        </a>
       </div>
 
       {/* Decorative bottom */}
