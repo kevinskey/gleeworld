@@ -1,95 +1,90 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { CalendarViewSelector } from "./CalendarViewSelector";
 import { PublicMonthlyCalendar } from "./PublicMonthlyCalendar";
 import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
 import { usePublicGleeWorldEvents } from "@/hooks/usePublicGleeWorldEvents";
+import { Button } from "@/components/ui/button";
 
 export const PublicCalendarViews = () => {
   const [activeView, setActiveView] = useState("month");
   const { events, loading, fetchEvents } = usePublicGleeWorldEvents();
 
-  // Remove debug logging to reduce console noise
-  // console.log('PublicCalendarViews render:', { events: events.length, loading });
-
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Public Events Calendar</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-pulse">Loading public events...</div>
+      <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-[#003666] border-t-transparent rounded-full animate-spin" />
+            <p className="text-muted-foreground text-sm">Loading events...</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
-  // Show events count for debugging
   if (events.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Public Events Calendar</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Public Events Found</h3>
-            <p className="text-muted-foreground">
-              There are currently no upcoming public events to display.
-            </p>
-            <button 
-              onClick={() => fetchEvents()} 
-              className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
-            >
-              Refresh Events
-            </button>
+      <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="w-16 h-16 bg-[#003666]/10 rounded-full flex items-center justify-center mb-4">
+            <CalendarIcon className="h-8 w-8 text-[#003666]" />
           </div>
-        </CardContent>
-      </Card>
+          <h3 className="text-xl font-semibold text-[#003666] mb-2">No Public Events Found</h3>
+          <p className="text-muted-foreground max-w-md mb-6">
+            There are currently no upcoming public events to display. Check back soon for updates!
+          </p>
+          <Button 
+            onClick={() => fetchEvents()} 
+            className="bg-[#003666] hover:bg-[#002244] text-white"
+          >
+            Refresh Events
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between gap-4">
-          <CardTitle className="flex items-center gap-2 text-xl font-semibold tracking-tight">
-            <CalendarIcon className="h-5 w-5" />
-            Public Events Calendar
-          </CardTitle>
-          <CalendarViewSelector 
-            activeView={activeView} 
-            onViewChange={setActiveView}
-          />
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+      {/* View Selector Header */}
+      <div className="flex items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[#003666]/10 rounded-lg flex items-center justify-center">
+            <CalendarIcon className="h-5 w-5 text-[#003666]" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-[#003666]">Upcoming Events</h2>
+            <p className="text-sm text-muted-foreground">{events.length} event{events.length !== 1 ? 's' : ''} scheduled</p>
+          </div>
         </div>
-      </CardHeader>
-      <CardContent className="p-3 md:p-6">
-        <div className="mt-4">
-          {activeView === 'month' && (
-            <div className="animate-fade-in">
-              <PublicMonthlyCalendar events={events} onEventUpdated={fetchEvents} />
-            </div>
-          )}
-          
-          {activeView === 'week' && (
-            <div className="animate-fade-in">
-              <WeeklyCalendar events={events} onEventUpdated={fetchEvents} />
-            </div>
-          )}
-          
-          {activeView === 'list' && (
-            <div className="animate-fade-in">
-              <EventsList events={events} onEventUpdated={fetchEvents} />
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        <CalendarViewSelector 
+          activeView={activeView} 
+          onViewChange={setActiveView}
+        />
+      </div>
+
+      {/* Calendar Content */}
+      <div className="p-4 sm:p-6">
+        {activeView === 'month' && (
+          <div className="animate-fade-in">
+            <PublicMonthlyCalendar events={events} onEventUpdated={fetchEvents} />
+          </div>
+        )}
+        
+        {activeView === 'week' && (
+          <div className="animate-fade-in">
+            <WeeklyCalendar events={events} onEventUpdated={fetchEvents} />
+          </div>
+        )}
+        
+        {activeView === 'list' && (
+          <div className="animate-fade-in">
+            <EventsList events={events} onEventUpdated={fetchEvents} />
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
