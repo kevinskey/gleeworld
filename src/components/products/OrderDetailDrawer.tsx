@@ -7,9 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   Package, CreditCard, Truck, MapPin, Calendar,
-  ExternalLink, RefreshCw, Download, Loader2
+  ExternalLink, RefreshCw, Download, Loader2, AlertTriangle
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -19,7 +29,6 @@ interface OrderDetailDrawerProps {
   onClose: () => void;
 }
 
-// Match actual gw_orders schema
 interface Order {
   id: string;
   order_number: string;
@@ -43,7 +52,6 @@ interface Order {
   stripe_payment_intent_id: string | null;
 }
 
-// Match actual gw_order_items schema
 interface OrderItem {
   id: string;
   product_title: string;
@@ -85,6 +93,10 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [creatingShipment, setCreatingShipment] = useState(false);
+  const [processingRefund, setProcessingRefund] = useState(false);
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [refundAmount, setRefundAmount] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -98,7 +110,6 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
     
     setLoading(true);
     try {
-      // Fetch order
       const { data: orderData, error: orderError } = await supabase
         .from('gw_orders')
         .select('*')
@@ -107,7 +118,6 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
 
       if (orderError) throw orderError;
       
-      // Map to our interface
       setOrder({
         id: orderData.id,
         order_number: orderData.order_number,
@@ -131,7 +141,6 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
         stripe_payment_intent_id: orderData.stripe_payment_intent_id,
       });
 
-      // Fetch order items
       const { data: itemsData, error: itemsError } = await supabase
         .from('gw_order_items')
         .select('*')
@@ -139,7 +148,6 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
 
       if (itemsError) throw itemsError;
       
-      // Map items to our interface
       setItems((itemsData || []).map(item => ({
         id: item.id,
         product_title: item.product_title,
@@ -151,7 +159,6 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
         product_image: item.product_image,
       })));
 
-      // Fetch shipments
       const { data: shipmentsData, error: shipmentsError } = await supabase
         .from('gw_shipments')
         .select('*')
@@ -161,7 +168,6 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
         setShipments(shipmentsData || []);
       }
 
-      // Fetch payments
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('gw_payments')
         .select('*')
@@ -179,6 +185,80 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateShipment = async () => {
+    if (!order) return;
+    
+    setCreatingShipment(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-shipping-label', {
+        body: { order_id: order.id }
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Shipment Created",
+        description: `Tracking: ${data.tracking_code} via ${data.carrier}`,
+      });
+
+      // Refresh order details
+      await fetchOrderDetails();
+    } catch (error: any) {
+      toast({
+        title: "Shipment Failed",
+        description: error.message || "Failed to create shipping label",
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingShipment(false);
+    }
+  };
+
+  const handleIssueRefund = async () => {
+    if (!order) return;
+    
+    setProcessingRefund(true);
+    try {
+      const refundAmountCents = refundAmount 
+        ? Math.round(parseFloat(refundAmount) * 100)
+        : undefined;
+
+      const { data, error } = await supabase.functions.invoke('create-refund', {
+        body: { 
+          order_id: order.id,
+          amount: refundAmountCents,
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Refund Issued",
+        description: `$${data.amount.toFixed(2)} refunded successfully`,
+      });
+
+      setRefundDialogOpen(false);
+      setRefundAmount('');
+      await fetchOrderDetails();
+    } catch (error: any) {
+      toast({
+        title: "Refund Failed",
+        description: error.message || "Failed to process refund",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingRefund(false);
     }
   };
 
@@ -201,6 +281,7 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
         paid: { variant: 'default', label: 'Paid' },
         succeeded: { variant: 'default', label: 'Succeeded' },
         refunded: { variant: 'outline', label: 'Refunded' },
+        partially_refunded: { variant: 'outline', label: 'Partial Refund' },
         disputed: { variant: 'destructive', label: 'Disputed' },
         failed: { variant: 'destructive', label: 'Failed' },
       },
@@ -238,303 +319,380 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
     );
   };
 
+  const canRefund = order && 
+    order.payment_status === 'paid' && 
+    order.stripe_payment_intent_id;
+
+  const canCreateShipment = order && 
+    order.requires_shipping && 
+    !order.easypost_tracking_code && 
+    order.payment_status === 'paid';
+
   if (!isOpen) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-hidden flex flex-col">
-        <SheetHeader className="pb-4">
-          <SheetTitle className="flex items-center justify-between">
-            <span>Order {order?.order_number || '...'}</span>
-            <Button variant="outline" size="sm" onClick={fetchOrderDetails} disabled={loading}>
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </SheetTitle>
-        </SheetHeader>
+    <>
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <SheetContent className="w-full sm:max-w-2xl overflow-hidden flex flex-col">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="flex items-center justify-between">
+              <span>Order {order?.order_number || '...'}</span>
+              <Button variant="outline" size="sm" onClick={fetchOrderDetails} disabled={loading}>
+                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </SheetTitle>
+          </SheetHeader>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : order ? (
-          <ScrollArea className="flex-1 -mx-6 px-6">
-            <div className="space-y-6 pb-6">
-              {/* Status Summary */}
-              <div className="flex flex-wrap gap-2">
-                {getStatusBadge(order.status, 'order')}
-                {getStatusBadge(order.payment_status, 'payment')}
-              </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : order ? (
+            <ScrollArea className="flex-1 -mx-6 px-6">
+              <div className="space-y-6 pb-6">
+                {/* Status Summary */}
+                <div className="flex flex-wrap gap-2">
+                  {getStatusBadge(order.status, 'order')}
+                  {getStatusBadge(order.payment_status, 'payment')}
+                </div>
 
-              {/* Order Info */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Order Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Customer</span>
-                    <span>{order.customer_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Email</span>
-                    <span>{order.customer_email}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Created</span>
-                    <span>{format(new Date(order.created_at), 'MMM d, yyyy h:mm a')}</span>
-                  </div>
-                </CardContent>
-              </Card>
+                {/* Order Info */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Order Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Customer</span>
+                      <span>{order.customer_name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Email</span>
+                      <span>{order.customer_email}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Created</span>
+                      <span>{format(new Date(order.created_at), 'MMM d, yyyy h:mm a')}</span>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* Items */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Package className="w-4 h-4" />
-                    Items ({items.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {items.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No items</p>
-                  ) : items.map((item) => (
-                    <div key={item.id} className="flex justify-between items-start py-2 border-b last:border-0">
-                      <div className="flex gap-3">
-                        {item.product_image && (
-                          <img 
-                            src={item.product_image} 
-                            alt={item.product_title}
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                        )}
-                        <div>
-                          <p className="font-medium">{item.product_title}</p>
-                          {item.variant_title && (
-                            <p className="text-xs text-muted-foreground">{item.variant_title}</p>
+                {/* Items */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Package className="w-4 h-4" />
+                      Items ({items.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {items.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No items</p>
+                    ) : items.map((item) => (
+                      <div key={item.id} className="flex justify-between items-start py-2 border-b last:border-0">
+                        <div className="flex gap-3">
+                          {item.product_image && (
+                            <img 
+                              src={item.product_image} 
+                              alt={item.product_title}
+                              className="w-12 h-12 object-cover rounded"
+                            />
                           )}
-                          <div className="flex gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              Qty: {item.quantity}
-                            </Badge>
-                            {!item.requires_shipping && (
-                              <Badge variant="secondary" className="text-xs">Digital</Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{formatCurrency(item.total_price, order.currency)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatCurrency(item.unit_price, order.currency)} each
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Totals */}
-              <Card>
-                <CardContent className="pt-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>{formatCurrency(order.subtotal, order.currency)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Shipping</span>
-                    <span>{formatCurrency(order.shipping_cost, order.currency)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tax</span>
-                    <span>{formatCurrency(order.tax_amount, order.currency)}</span>
-                  </div>
-                  {order.discount_amount > 0 && (
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span>Discount</span>
-                      <span>-{formatCurrency(order.discount_amount, order.currency)}</span>
-                    </div>
-                  )}
-                  <Separator />
-                  <div className="flex justify-between font-bold">
-                    <span>Total</span>
-                    <span>{formatCurrency(order.total_amount, order.currency)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Addresses */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      Shipping Address
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {formatAddress(order.shipping_address)}
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      Billing Address
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {formatAddress(order.billing_address)}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Payment Info from Order */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <CreditCard className="w-4 h-4" />
-                    Payment
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {order.stripe_payment_intent_id ? (
-                    <div className="text-sm space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Stripe Payment Intent</span>
-                        <span className="font-mono text-xs">{order.stripe_payment_intent_id}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Status</span>
-                        {getStatusBadge(order.payment_status, 'payment')}
-                      </div>
-                    </div>
-                  ) : payments.length > 0 ? (
-                    <div className="space-y-3">
-                      {payments.map((payment) => (
-                        <div key={payment.id} className="flex justify-between items-center py-2 border-b last:border-0">
                           <div>
-                            <p className="font-medium">{formatCurrency(payment.amount, payment.currency)}</p>
-                            <p className="text-xs text-muted-foreground font-mono">
-                              {payment.stripe_payment_intent_id || payment.stripe_charge_id || 'N/A'}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(payment.status, 'payment')}
-                            {payment.receipt_url && (
-                              <Button variant="ghost" size="sm" asChild>
-                                <a href={payment.receipt_url} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="w-4 h-4" />
-                                </a>
-                              </Button>
+                            <p className="font-medium">{item.product_title}</p>
+                            {item.variant_title && (
+                              <p className="text-xs text-muted-foreground">{item.variant_title}</p>
                             )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No payment recorded</p>
-                  )}
-                  <div className="mt-4 flex gap-2">
-                    <Button variant="outline" size="sm" disabled>
-                      Issue Refund
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Shipments */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Truck className="w-4 h-4" />
-                    Shipping
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {order.easypost_tracking_code ? (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Tracking</span>
-                        <span className="font-mono">{order.easypost_tracking_code}</span>
-                      </div>
-                      {order.easypost_label_url && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={order.easypost_label_url} target="_blank" rel="noopener noreferrer">
-                            <Download className="w-4 h-4 mr-1" />
-                            Download Label
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  ) : shipments.length > 0 ? (
-                    <div className="space-y-3">
-                      {shipments.map((shipment) => (
-                        <div key={shipment.id} className="py-2 border-b last:border-0">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-medium">
-                                {shipment.carrier} - {shipment.service}
-                              </p>
-                              {shipment.tracking_code && (
-                                <p className="text-xs font-mono text-muted-foreground">
-                                  {shipment.tracking_code}
-                                </p>
-                              )}
-                              {shipment.cost && (
-                                <p className="text-xs text-muted-foreground">
-                                  Cost: {formatCurrency(shipment.cost)}
-                                </p>
+                            <div className="flex gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                Qty: {item.quantity}
+                              </Badge>
+                              {!item.requires_shipping && (
+                                <Badge variant="secondary" className="text-xs">Digital</Badge>
                               )}
                             </div>
-                            <Badge variant="outline">{shipment.status}</Badge>
-                          </div>
-                          <div className="flex gap-2 mt-2">
-                            {shipment.tracking_url && (
-                              <Button variant="outline" size="sm" asChild>
-                                <a href={shipment.tracking_url} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="w-4 h-4 mr-1" />
-                                  Track
-                                </a>
-                              </Button>
-                            )}
-                            {shipment.label_url && (
-                              <Button variant="outline" size="sm" asChild>
-                                <a href={shipment.label_url} target="_blank" rel="noopener noreferrer">
-                                  <Download className="w-4 h-4 mr-1" />
-                                  Label
-                                </a>
-                              </Button>
-                            )}
                           </div>
                         </div>
-                      ))}
+                        <div className="text-right">
+                          <p className="font-medium">{formatCurrency(item.total_price, order.currency)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatCurrency(item.unit_price, order.currency)} each
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* Totals */}
+                <Card>
+                  <CardContent className="pt-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>{formatCurrency(order.subtotal, order.currency)}</span>
                     </div>
-                  ) : order.requires_shipping ? (
-                    <p className="text-sm text-muted-foreground">No shipment created yet</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Digital order - no shipping required</p>
-                  )}
-                  {order.requires_shipping && !order.easypost_tracking_code && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Shipping</span>
+                      <span>{formatCurrency(order.shipping_cost, order.currency)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Tax</span>
+                      <span>{formatCurrency(order.tax_amount, order.currency)}</span>
+                    </div>
+                    {order.discount_amount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Discount</span>
+                        <span>-{formatCurrency(order.discount_amount, order.currency)}</span>
+                      </div>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between font-bold">
+                      <span>Total</span>
+                      <span>{formatCurrency(order.total_amount, order.currency)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Addresses */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        Shipping Address
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {formatAddress(order.shipping_address)}
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        Billing Address
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {formatAddress(order.billing_address)}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Payment Info */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <CreditCard className="w-4 h-4" />
+                      Payment
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {order.stripe_payment_intent_id ? (
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Stripe Payment Intent</span>
+                          <span className="font-mono text-xs">{order.stripe_payment_intent_id}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Status</span>
+                          {getStatusBadge(order.payment_status, 'payment')}
+                        </div>
+                      </div>
+                    ) : payments.length > 0 ? (
+                      <div className="space-y-3">
+                        {payments.map((payment) => (
+                          <div key={payment.id} className="flex justify-between items-center py-2 border-b last:border-0">
+                            <div>
+                              <p className="font-medium">{formatCurrency(payment.amount, payment.currency)}</p>
+                              <p className="text-xs text-muted-foreground font-mono">
+                                {payment.stripe_payment_intent_id || payment.stripe_charge_id || 'N/A'}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(payment.status, 'payment')}
+                              {payment.receipt_url && (
+                                <Button variant="ghost" size="sm" asChild>
+                                  <a href={payment.receipt_url} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="w-4 h-4" />
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No payment recorded</p>
+                    )}
                     <div className="mt-4 flex gap-2">
-                      <Button variant="outline" size="sm" disabled>
-                        Create Shipment
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setRefundDialogOpen(true)}
+                        disabled={!canRefund || processingRefund}
+                      >
+                        {processingRefund && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Issue Refund
                       </Button>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+
+                {/* Shipments */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Truck className="w-4 h-4" />
+                      Shipping
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {order.easypost_tracking_code ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Tracking</span>
+                          <span className="font-mono">{order.easypost_tracking_code}</span>
+                        </div>
+                        {order.easypost_label_url && (
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={order.easypost_label_url} target="_blank" rel="noopener noreferrer">
+                              <Download className="w-4 h-4 mr-1" />
+                              Download Label
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    ) : shipments.length > 0 ? (
+                      <div className="space-y-3">
+                        {shipments.map((shipment) => (
+                          <div key={shipment.id} className="py-2 border-b last:border-0">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium">
+                                  {shipment.carrier} - {shipment.service}
+                                </p>
+                                {shipment.tracking_code && (
+                                  <p className="text-xs font-mono text-muted-foreground">
+                                    {shipment.tracking_code}
+                                  </p>
+                                )}
+                                {shipment.cost && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Cost: {formatCurrency(shipment.cost)}
+                                  </p>
+                                )}
+                              </div>
+                              <Badge variant="outline">{shipment.status}</Badge>
+                            </div>
+                            <div className="flex gap-2 mt-2">
+                              {shipment.tracking_url && (
+                                <Button variant="outline" size="sm" asChild>
+                                  <a href={shipment.tracking_url} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="w-4 h-4 mr-1" />
+                                    Track
+                                  </a>
+                                </Button>
+                              )}
+                              {shipment.label_url && (
+                                <Button variant="outline" size="sm" asChild>
+                                  <a href={shipment.label_url} target="_blank" rel="noopener noreferrer">
+                                    <Download className="w-4 h-4 mr-1" />
+                                    Label
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : order.requires_shipping ? (
+                      <p className="text-sm text-muted-foreground">No shipment created yet</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Digital order - no shipping required</p>
+                    )}
+                    {canCreateShipment && (
+                      <div className="mt-4 flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleCreateShipment}
+                          disabled={creatingShipment}
+                        >
+                          {creatingShipment && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                          <Truck className="w-4 h-4 mr-1" />
+                          Create Shipment
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </ScrollArea>
+          ) : (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              Order not found
             </div>
-          </ScrollArea>
-        ) : (
-          <div className="flex items-center justify-center py-12 text-muted-foreground">
-            Order not found
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Refund Dialog */}
+      <Dialog open={refundDialogOpen} onOpenChange={setRefundDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Issue Refund
+            </DialogTitle>
+            <DialogDescription>
+              This will refund the customer via Stripe. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Order Total</Label>
+              <p className="text-lg font-bold">
+                {order && formatCurrency(order.total_amount, order.currency)}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="refundAmount">Refund Amount (leave blank for full refund)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                <Input
+                  id="refundAmount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max={order?.total_amount || 0}
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(e.target.value)}
+                  placeholder={order?.total_amount?.toFixed(2) || '0.00'}
+                  className="pl-8"
+                />
+              </div>
+            </div>
           </div>
-        )}
-      </SheetContent>
-    </Sheet>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRefundDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleIssueRefund}
+              disabled={processingRefund}
+            >
+              {processingRefund && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Confirm Refund
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
