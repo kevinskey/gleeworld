@@ -11682,38 +11682,57 @@ export type Database = {
           id: string
           order_id: string | null
           product_id: string | null
+          product_image: string | null
           product_title: string
+          product_type: string | null
           quantity: number
+          requires_shipping: boolean | null
           total_price: number
           unit_price: number
           variant_id: string | null
           variant_title: string | null
+          weight: number | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           order_id?: string | null
           product_id?: string | null
+          product_image?: string | null
           product_title: string
+          product_type?: string | null
           quantity?: number
+          requires_shipping?: boolean | null
           total_price: number
           unit_price: number
           variant_id?: string | null
           variant_title?: string | null
+          weight?: number | null
         }
         Update: {
           created_at?: string | null
           id?: string
           order_id?: string | null
           product_id?: string | null
+          product_image?: string | null
           product_title?: string
+          product_type?: string | null
           quantity?: number
+          requires_shipping?: boolean | null
           total_price?: number
           unit_price?: number
           variant_id?: string | null
           variant_title?: string | null
+          weight?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_order_items_order"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "gw_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gw_order_items_order_id_fkey"
             columns: ["order_id"]
@@ -11736,6 +11755,96 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gw_orders: {
+        Row: {
+          billing_address: Json | null
+          created_at: string
+          customer_email: string
+          customer_name: string
+          delivered_at: string | null
+          easypost_label_url: string | null
+          easypost_shipment_id: string | null
+          easypost_tracking_code: string | null
+          estimated_delivery_date: string | null
+          id: string
+          notes: string | null
+          order_number: string
+          payment_status: string | null
+          requires_shipping: boolean
+          shipped_at: string | null
+          shipping_address: Json | null
+          shipping_carrier: string | null
+          shipping_cost: number
+          shipping_service: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          billing_address?: Json | null
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          delivered_at?: string | null
+          easypost_label_url?: string | null
+          easypost_shipment_id?: string | null
+          easypost_tracking_code?: string | null
+          estimated_delivery_date?: string | null
+          id?: string
+          notes?: string | null
+          order_number: string
+          payment_status?: string | null
+          requires_shipping?: boolean
+          shipped_at?: string | null
+          shipping_address?: Json | null
+          shipping_carrier?: string | null
+          shipping_cost?: number
+          shipping_service?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          billing_address?: Json | null
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          delivered_at?: string | null
+          easypost_label_url?: string | null
+          easypost_shipment_id?: string | null
+          easypost_tracking_code?: string | null
+          estimated_delivery_date?: string | null
+          id?: string
+          notes?: string | null
+          order_number?: string
+          payment_status?: string | null
+          requires_shipping?: boolean
+          shipped_at?: string | null
+          shipping_address?: Json | null
+          shipping_carrier?: string | null
+          shipping_cost?: number
+          shipping_service?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       gw_payment_plan_installments: {
         Row: {
@@ -25863,6 +25972,7 @@ export type Database = {
         }
         Returns: string
       }
+      generate_order_number: { Args: never; Returns: string }
       generate_qr_attendance_token: {
         Args: {
           p_created_by: string

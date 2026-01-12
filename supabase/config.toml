@@ -142,7 +142,7 @@ verify_jwt = false
 [functions.generate-musicxml]
 verify_jwt = false
 
-[functions.evaluate-singing] 
+[functions.evaluate-singing]
 verify_jwt = true
 
 [functions.store-recording]
@@ -348,3 +348,12 @@ verify_jwt = false
 
 [functions.send-booking-notification]
 verify_jwt = false
+
+[functions.shop-checkout]
+verify_jwt = false
+
+[functions.verify-shop-payment]
+verify_jwt = false
+
+[functions.create-shipping-label]
+verify_jwt = true
