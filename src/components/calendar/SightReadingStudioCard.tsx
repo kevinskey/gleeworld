@@ -25,10 +25,10 @@ export const SightReadingStudioCard = () => {
         
         <Button 
           onClick={handleVisitStudio}
-          className="bg-white text-[#003666] hover:bg-white/90 font-semibold px-6 py-3 flex items-center gap-2 shrink-0"
+          className="!bg-white !text-[#003666] hover:!bg-gray-100 font-semibold px-6 py-3 shrink-0"
         >
-          <span>Visit Studio</span>
-          <ExternalLink className="h-4 w-4" />
+          <span className="text-[#003666]">Visit Studio</span>
+          <ExternalLink className="h-4 w-4 text-[#003666] ml-2" />
         </Button>
       </div>
     </div>
