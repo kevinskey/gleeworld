@@ -47,17 +47,16 @@ const ForcePasswordChange: React.FC = () => {
       });
       return;
     }
-
     setIsSubmitting(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-      
+
       if (error) throw error;
 
       // Mark that user has changed password during this period (persist in localStorage)
       localStorage.setItem('password_changed_jan2026', 'true');
       sessionStorage.setItem('password_changed_jan2026', 'true');
-      
+
       toast({
         title: 'Password updated successfully',
         description: 'You can now continue using the app.',
@@ -65,15 +64,47 @@ const ForcePasswordChange: React.FC = () => {
 
       navigate('/dashboard', { replace: true });
     } catch (error: any) {
+      // If Supabase says the new password is the same as the old one, it often means
+      // the user is trying to set their password to their *current* password.
+      // For this in-app requirement prompt, we can treat that as “already updated”.
+      const msg = String(error?.message || '');
+      const isSamePasswordError =
+        msg.includes('same_password') ||
+        msg.includes('New password should be different') ||
+        msg.includes('should be different from the old password');
+
+      if (isSamePasswordError) {
+        localStorage.setItem('password_changed_jan2026', 'true');
+        sessionStorage.setItem('password_changed_jan2026', 'true');
+
+        toast({
+          title: 'Password already updated',
+          description: 'You can continue using the app.',
+        });
+
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+
       console.error('Password update error:', error);
       toast({
         title: 'Failed to update password',
-        description: error.message || 'Please try again.',
+        description: msg || 'Please try again.',
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleAlreadyChanged = () => {
+    localStorage.setItem('password_changed_jan2026', 'true');
+    sessionStorage.setItem('password_changed_jan2026', 'true');
+    toast({
+      title: 'Got it',
+      description: 'We won\'t ask you again on this device.',
+    });
+    navigate('/dashboard', { replace: true });
   };
 
   return (
@@ -158,6 +189,16 @@ const ForcePasswordChange: React.FC = () => {
               disabled={isSubmitting || !allRequirementsMet || !passwordsMatch}
             >
               {isSubmitting ? 'Updating...' : 'Update Password'}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleAlreadyChanged}
+              disabled={isSubmitting}
+            >
+              I already changed my password
             </Button>
           </form>
         </CardContent>
