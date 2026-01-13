@@ -1014,117 +1014,145 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           )}
 
           {!annotationMode && (
-            <div className="absolute top-1 right-1 z-30 flex items-center gap-0.5 sm:gap-1 flex-wrap justify-end">
-              {/* Compact Zoom Controls */}
-              <div className="flex items-center bg-card/95 backdrop-blur border border-border shadow-sm rounded-md overflow-hidden">
+            <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-30">
+              {/* Mobile-friendly floating toolbar */}
+              <div className="flex items-center gap-2 bg-background/95 backdrop-blur-md border border-border shadow-lg rounded-full px-3 py-2">
+                {/* Zoom Controls */}
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleScaleZoomOut}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      handleScaleZoomOut();
+                    }}
+                    disabled={scale <= 0.5}
+                    className="h-9 w-9 p-0 touch-manipulation rounded-full"
+                    title="Zoom out"
+                    aria-label="Zoom out"
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                  <span className="text-xs font-medium tabular-nums min-w-[36px] text-center">
+                    {Math.round(scale * 100)}%
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleScaleZoomIn}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      handleScaleZoomIn();
+                    }}
+                    disabled={scale >= 3}
+                    className="h-9 w-9 p-0 touch-manipulation rounded-full"
+                    title="Zoom in"
+                    aria-label="Zoom in"
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="w-px h-6 bg-border" />
+                
+                {/* Audio Companion */}
+                {showAudioCompanion ? (
+                  <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowAudioCompanion(true)}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      setShowAudioCompanion(true);
+                    }}
+                    aria-label="Listen along with audio"
+                    title="Play audio while reading sheet music"
+                    className="h-9 w-9 p-0 touch-manipulation rounded-full"
+                  >
+                    <Music className="h-4 w-4" />
+                  </Button>
+                )}
+                
+                {/* Piano Button */}
                 <Button
                   size="sm"
-                  variant="ghost"
-                  onClick={handleScaleZoomOut}
+                  variant={showPiano ? "secondary" : "ghost"}
+                  onClick={() => setShowPiano(!showPiano)}
                   onTouchEnd={(e) => {
                     e.preventDefault();
-                    handleScaleZoomOut();
+                    setShowPiano(!showPiano);
                   }}
-                  disabled={scale <= 0.5}
-                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 touch-manipulation rounded-none"
-                  title="Zoom out"
-                  aria-label="Zoom out"
+                  aria-label={showPiano ? "Hide piano" : "Show piano"}
+                  title="Practice with virtual piano"
+                  className={`h-9 w-9 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-secondary' : ''}`}
                 >
-                  <ZoomOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Piano className="h-4 w-4" />
                 </Button>
-                <span className="text-[10px] sm:text-xs font-medium px-1 tabular-nums min-w-[32px] text-center">
-                  {Math.round(scale * 100)}%
-                </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleScaleZoomIn}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    handleScaleZoomIn();
-                  }}
-                  disabled={scale >= 3}
-                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 touch-manipulation rounded-none"
-                  title="Zoom in"
-                  aria-label="Zoom in"
-                >
-                  <ZoomIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </Button>
-              </div>
-              
-              {/* Audio Companion - Compact */}
-              {showAudioCompanion ? (
-                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
-              ) : (
+                
+                {/* Annotate Button */}
                 <Button
                   size="sm"
                   variant="default"
-                  onClick={() => setShowAudioCompanion(true)}
+                  onClick={() => { 
+                    setError(null); 
+                    setAnnotationMode(true); 
+                  }}
                   onTouchEnd={(e) => {
                     e.preventDefault();
-                    setShowAudioCompanion(true);
+                    setError(null); 
+                    setAnnotationMode(true);
                   }}
-                  aria-label="Listen along with audio"
-                  title="Play audio while reading sheet music"
-                  className="shadow-sm h-7 sm:h-8 px-1.5 sm:px-2 touch-manipulation"
+                  aria-label="Enable annotations"
+                  title="Click to enable drawing and annotations"
+                  className="h-9 w-9 p-0 touch-manipulation rounded-full"
                 >
-                  <Music className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline font-medium text-xs ml-1">Listen</span>
+                  <Palette className="h-4 w-4" />
                 </Button>
-              )}
-              
-              {/* Piano Button - Icon only on mobile */}
-              <Button
-                size="sm"
-                variant={showPiano ? "secondary" : "outline"}
-                onClick={() => setShowPiano(!showPiano)}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  setShowPiano(!showPiano);
-                }}
-                aria-label={showPiano ? "Hide piano" : "Show piano"}
-                title="Practice with virtual piano"
-                className={`shadow-sm h-7 w-7 sm:h-8 sm:w-auto sm:px-2 p-0 touch-manipulation ${showPiano ? 'bg-secondary' : ''}`}
-              >
-                <Piano className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline font-medium text-xs ml-1">Piano</span>
-              </Button>
-              
-              {/* Annotate Button - Compact */}
-              <Button
-                size="sm"
-                variant="default"
-                onClick={() => { 
-                  setError(null); 
-                  setAnnotationMode(true); 
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  setError(null); 
-                  setAnnotationMode(true);
-                }}
-                aria-label="Enable annotations"
-                title="Click to enable drawing and annotations"
-                className="shadow-sm h-7 sm:h-8 px-1.5 sm:px-2 touch-manipulation"
-              >
-                <Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline font-semibold text-xs ml-1">Annotate</span>
-              </Button>
+              </div>
             </div>
           )}
           
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
             <div 
-              className="w-full overflow-auto flex justify-center" 
+              className="w-full overflow-auto flex justify-center flex-1" 
               ref={containerRef}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              onTouchStart={(e) => {
+                // Handle pinch-to-zoom start
+                if (e.touches.length === 2) {
+                  const dx = e.touches[0].clientX - e.touches[1].clientX;
+                  const dy = e.touches[0].clientY - e.touches[1].clientY;
+                  const distance = Math.sqrt(dx * dx + dy * dy);
+                  setInitialPinchDistance(distance);
+                  setInitialZoom(scale);
+                  return;
+                }
+                handleTouchStart(e);
+              }}
+              onTouchMove={(e) => {
+                // Handle pinch-to-zoom
+                if (e.touches.length === 2 && initialPinchDistance !== null) {
+                  const dx = e.touches[0].clientX - e.touches[1].clientX;
+                  const dy = e.touches[0].clientY - e.touches[1].clientY;
+                  const distance = Math.sqrt(dx * dx + dy * dy);
+                  const scaleChange = distance / initialPinchDistance;
+                  const newScale = Math.max(0.5, Math.min(3, initialZoom * scaleChange));
+                  setScale(newScale);
+                  return;
+                }
+                handleTouchMove(e);
+              }}
+              onTouchEnd={(e) => {
+                setInitialPinchDistance(null);
+                handleTouchEnd(e);
+              }}
               onClick={handleMouseClick}
               style={{ 
                 WebkitOverflowScrolling: 'touch',
-                touchAction: 'pan-x pan-y'
+                touchAction: 'pan-x pan-y pinch-zoom'
               } as React.CSSProperties}
             >
               <canvas
