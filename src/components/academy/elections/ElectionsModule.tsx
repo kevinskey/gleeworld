@@ -19,6 +19,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useExecutiveBoardMembers } from '@/hooks/useExecutiveBoardMembers';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 
 interface ElectionsModuleProps {
@@ -104,7 +105,19 @@ const SHADOWING_CONTENT = {
 export const ElectionsModule: React.FC<ElectionsModuleProps> = ({ courseId }) => {
   const { user } = useAuth();
   const { members: execBoardMembers, loading: loadingExecBoard } = useExecutiveBoardMembers();
+  const { profile, isSuperAdmin, isAdmin } = useUserRole();
   const [activeTab, setActiveTab] = useState('shadowing');
+  
+  // Check if user can view shadowing info (admin, super-admin, president, vice-president, secretary)
+  const canViewShadowing = () => {
+    if (!profile) return false;
+    if (isSuperAdmin() || isAdmin()) return true;
+    
+    // Check for specific exec board positions
+    const allowedPositions = ['president', 'vice president', 'vice_president', 'secretary'];
+    const userPosition = profile.exec_board_role?.toLowerCase() || '';
+    return allowedPositions.some(pos => userPosition.includes(pos));
+  };
   
   // Shadowing applications state
   const [applications, setApplications] = useState<ShadowingApplication[]>([]);
@@ -325,6 +338,24 @@ export const ElectionsModule: React.FC<ElectionsModuleProps> = ({ courseId }) =>
 
         {/* Shadowing Tab */}
         <TabsContent value="shadowing" className="mt-6 space-y-6">
+          {!canViewShadowing() ? (
+            <Card>
+              <CardContent className="py-12">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <div className="p-4 rounded-full bg-muted mb-4">
+                    <Users className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Restricted Access</h3>
+                  <p className="text-sm text-muted-foreground max-w-md">
+                    The Shadowing Program information is only available to administrators, 
+                    the President, Vice President, and Secretary.
+                  </p>
+                  <Badge variant="secondary" className="mt-4">Leadership Access Required</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
           {/* Current Executive Board */}
           <Card>
             <CardHeader>
@@ -587,6 +618,8 @@ export const ElectionsModule: React.FC<ElectionsModuleProps> = ({ courseId }) =>
               </ScrollArea>
             </CardContent>
           </Card>
+          </>
+          )}
         </TabsContent>
 
         {/* Voting Tab */}
