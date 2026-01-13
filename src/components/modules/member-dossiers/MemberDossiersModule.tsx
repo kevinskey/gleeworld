@@ -80,7 +80,11 @@ interface MemberDossierData {
   avgSatisfaction: number | null;
 }
 
-const MemberDossiersModule: React.FC = () => {
+interface MemberDossiersModuleProps {
+  courseId?: string; // If provided, only show students enrolled in this course
+}
+
+const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId }) => {
   const navigate = useNavigate();
   const [members, setMembers] = useState<MemberDossierData[]>([]);
   const [allInterviews, setAllInterviews] = useState<ExitInterview[]>([]);
@@ -94,15 +98,42 @@ const MemberDossiersModule: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch member profiles (students, executives, and members)
-      const { data: profiles, error: profilesError } = await supabase
-        .from("gw_profiles")
-        .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes, student_number, dues_paid, is_section_leader, is_exec_board, exec_board_role, music_role, can_dance, instruments_played, academic_year")
-        .in("role", ["member", "student", "executive", "executive-board"])
-        .not("user_id", "is", null)
-        .order("full_name");
+      let profiles: MemberProfile[] = [];
 
-      if (profilesError) throw profilesError;
+      if (courseId) {
+        // Fetch only students enrolled in this specific course
+        const { data: enrollments, error: enrollmentError } = await supabase
+          .from("gw_course_enrollments")
+          .select("user_id")
+          .eq("course_id", courseId)
+          .eq("enrollment_status", "enrolled")
+          .not("user_id", "is", null);
+
+        if (enrollmentError) throw enrollmentError;
+
+        const userIds = (enrollments || []).map(e => e.user_id).filter((id): id is string => id !== null);
+
+        if (userIds.length > 0) {
+          const { data: profileData, error: profilesError } = await supabase
+            .from("gw_profiles")
+            .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes, student_number, dues_paid, is_section_leader, is_exec_board, exec_board_role, music_role, can_dance, instruments_played, academic_year")
+            .in("user_id", userIds)
+            .order("full_name");
+
+          if (profilesError) throw profilesError;
+          profiles = profileData || [];
+        }
+      } else {
+        // Fetch all user profiles (for admin view)
+        const { data: profileData, error: profilesError } = await supabase
+          .from("gw_profiles")
+          .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes, student_number, dues_paid, is_section_leader, is_exec_board, exec_board_role, music_role, can_dance, instruments_played, academic_year")
+          .not("user_id", "is", null)
+          .order("full_name");
+
+        if (profilesError) throw profilesError;
+        profiles = profileData || [];
+      }
 
       // Fetch all exit interviews
       const { data: interviews, error: interviewsError } = await supabase
