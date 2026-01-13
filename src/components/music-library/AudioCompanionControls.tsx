@@ -12,6 +12,7 @@ import {
   Youtube,
   Upload,
   StopCircle,
+  Square,
   Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -207,7 +208,24 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         className="w-16"
       />
 
-      {/* Stop */}
+      {/* Stop (pause and reset to beginning) */}
+      {audioSource && (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            if (!isPlaying) return;
+            togglePlayPause(); // Pause
+            seek(0); // Reset to beginning
+          }}
+          className="h-8 w-8 p-0"
+          title="Stop"
+        >
+          <Square className="h-4 w-4 text-foreground fill-foreground" />
+        </Button>
+      )}
+
+      {/* Stop and Clear */}
       {audioSource && (
         <Button
           size="sm"
