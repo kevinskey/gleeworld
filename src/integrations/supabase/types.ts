@@ -6168,6 +6168,7 @@ export type Database = {
           is_active: boolean
           location_data: Json | null
           max_scans: number | null
+          pin_code: string | null
           qr_token: string
           redirect_url: string | null
           scan_count: number
@@ -6188,6 +6189,7 @@ export type Database = {
           is_active?: boolean
           location_data?: Json | null
           max_scans?: number | null
+          pin_code?: string | null
           qr_token: string
           redirect_url?: string | null
           scan_count?: number
@@ -6208,6 +6210,7 @@ export type Database = {
           is_active?: boolean
           location_data?: Json | null
           max_scans?: number | null
+          pin_code?: string | null
           qr_token?: string
           redirect_url?: string | null
           scan_count?: number
