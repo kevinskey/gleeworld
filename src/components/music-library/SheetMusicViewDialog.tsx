@@ -76,7 +76,7 @@ export const SheetMusicViewDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!fixed !inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !p-0 !w-screen !h-screen !max-w-none !max-h-none overflow-hidden !rounded-none !border-0">
+      <DialogContent className="!fixed !inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !p-0 !w-screen !h-screen !max-w-none !max-h-none overflow-hidden !rounded-none !border-0 !z-[9990]" style={{ top: 'calc(var(--gw-header-h, 0px) + var(--gw-radio-bar-height, 0px))', height: 'calc(100vh - var(--gw-header-h, 0px) - var(--gw-radio-bar-height, 0px))' }}>
         <DialogHeader className="hidden" />
         <Button
           variant="secondary"
