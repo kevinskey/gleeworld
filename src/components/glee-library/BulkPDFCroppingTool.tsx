@@ -191,11 +191,10 @@ export const BulkPDFCroppingTool = () => {
 
         // Upload the cropped PDF to storage
         const fileName = `${itemId}_cropped_${Date.now()}.pdf`;
-        const filePath = `sheet-music/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('glee-library')
-          .upload(filePath, result.blob, {
+          .from('sheet-music')
+          .upload(fileName, result.blob, {
             contentType: 'application/pdf',
             upsert: true,
           });
@@ -210,8 +209,8 @@ export const BulkPDFCroppingTool = () => {
 
         // Get public URL
         const { data: urlData } = supabase.storage
-          .from('glee-library')
-          .getPublicUrl(filePath);
+          .from('sheet-music')
+          .getPublicUrl(fileName);
 
         // Update the sheet music record with new PDF URL
         const cropRecommendationsData = {
