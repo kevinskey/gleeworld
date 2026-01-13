@@ -320,24 +320,34 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     >
       {children}
       
-      {/* Hidden YouTube iframe for audio-only playback - controlled by transport */}
+      {/* Small visible YouTube player - positioned in corner for playback */}
       {youtubeVideoId && (
-        <iframe
-          ref={iframeRef}
-          src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&rel=0&origin=${window.location.origin}`}
-          allow="autoplay; encrypted-media"
-          onLoad={handleIframeLoad}
+        <div
           style={{
             position: 'fixed',
-            top: '-9999px',
-            left: '-9999px',
-            width: '1px',
-            height: '1px',
-            opacity: 0,
-            pointerEvents: 'none',
+            bottom: '60px',
+            right: '16px',
+            width: '200px',
+            height: '113px',
+            zIndex: 9999,
+            borderRadius: '8px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
           }}
-          title="YouTube Audio"
-        />
+        >
+          <iframe
+            ref={iframeRef}
+            src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&controls=1&modestbranding=1&rel=0&origin=${window.location.origin}`}
+            allow="autoplay; encrypted-media"
+            onLoad={handleIframeLoad}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+            }}
+            title="YouTube Player"
+          />
+        </div>
       )}
       
       {/* Global hidden audio element */}
