@@ -47,7 +47,9 @@ export const MessengerModal: React.FC = () => {
     showCloseWarning, 
     setShowCloseWarning, 
     confirmClose,
-    setHasUnsavedChanges 
+    setHasUnsavedChanges,
+    composeOptions,
+    clearComposeOptions
   } = useMessenger();
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
@@ -64,6 +66,23 @@ export const MessengerModal: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Handle pre-filled compose options
+  useEffect(() => {
+    if (composeOptions && isOpen) {
+      if (composeOptions.recipientEmail) {
+        setRecipients([composeOptions.recipientEmail]);
+      }
+      if (composeOptions.subject) {
+        setSubject(composeOptions.subject);
+      }
+      if (composeOptions.content) {
+        setContent(composeOptions.content);
+      }
+      setComposerMode('email');
+      clearComposeOptions();
+    }
+  }, [composeOptions, isOpen, clearComposeOptions]);
 
   // SMS specific state
   const [smsContent, setSmsContent] = useState('');
