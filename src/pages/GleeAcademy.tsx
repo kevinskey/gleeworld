@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Music, Users, Calendar, Trophy, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
@@ -69,7 +69,7 @@ const GleeAcademy = () => {
     title: 'Flexible Learning',
     description: 'Access course materials anytime, anywhere'
   }];
-  return <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
+  return <PublicLayout>
       <div className="min-h-screen bg-white">
         {/* Header Banner */}
         <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{
@@ -138,6 +138,6 @@ const GleeAcademy = () => {
           </div>
         </div>
       </div>
-    </UniversalLayout>;
+    </PublicLayout>;
 };
 export default GleeAcademy;

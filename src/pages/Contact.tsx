@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Mail, Phone, MapPin, Send, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -66,7 +66,7 @@ const Contact = () => {
   ];
 
   return (
-    <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
+    <PublicLayout>
       <div className="min-h-screen bg-white">
         {/* Header Banner */}
         <div 
@@ -219,7 +219,7 @@ const Contact = () => {
           </div>
         </div>
       </div>
-    </UniversalLayout>
+    </PublicLayout>
   );
 };
 
