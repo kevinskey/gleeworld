@@ -7,7 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Scissors, FileText, Loader2, CheckCircle, AlertTriangle, Play, Pause, RotateCw } from "lucide-react";
+import { Scissors, FileText, Loader2, CheckCircle, AlertTriangle, Play, Pause, RotateCw, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { applyUniformCropToPDF } from "@/utils/pdfCropApply";
@@ -45,6 +46,7 @@ export const BulkPDFCroppingTool = () => {
   const [bulkStatus, setBulkStatus] = useState<Map<string, BulkCropStatus>>(new Map());
   const [overallProgress, setOverallProgress] = useState(0);
   const [currentItem, setCurrentItem] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   
   // Crop settings state
   const [cropSettings, setCropSettings] = useState<CropSettings>({
@@ -413,6 +415,18 @@ export const BulkPDFCroppingTool = () => {
           </CardContent>
         </Card>
 
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search PDFs by title or composer..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+            disabled={isProcessing}
+          />
+        </div>
+
         {/* Selection Controls */}
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={selectAll} disabled={isProcessing}>
@@ -476,7 +490,16 @@ export const BulkPDFCroppingTool = () => {
         {/* Sheet Music List */}
         <ScrollArea className="h-96">
           <div className="space-y-2">
-            {sheetMusic.map((item) => {
+            {sheetMusic
+              .filter((item) => {
+                if (!searchQuery.trim()) return true;
+                const query = searchQuery.toLowerCase();
+                return (
+                  item.title.toLowerCase().includes(query) ||
+                  (item.composer?.toLowerCase().includes(query) ?? false)
+                );
+              })
+              .map((item) => {
               const status = bulkStatus.get(item.id);
               const isSelected = selectedItems.has(item.id);
               
