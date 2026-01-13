@@ -821,7 +821,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   const colors = ["#ff0000", "#000000", "#0000ff", "#008000", "#800080", "#ffa500"];
 
   return (
-    <Card className={cn("w-full", className)}>
+    <Card className={cn("w-full border-0 sm:border rounded-none sm:rounded-lg", className)}>
       {/* Annotation Toolbar */}
         {annotationMode && (
           <div className="flex flex-wrap items-center gap-1 p-1 bg-muted/50 rounded-t-lg border-b">
@@ -1015,9 +1015,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           )}
 
           {!annotationMode && (
-            <div className="absolute top-1 right-1 z-30 flex items-center gap-1 flex-wrap justify-end">
-              {/* Zoom Controls - larger touch targets for mobile */}
-              <div className="flex items-center gap-0.5 bg-card/95 backdrop-blur border border-border p-1 shadow-lg rounded">
+            <div className="absolute top-1 right-1 z-30 flex items-center gap-0.5 sm:gap-1 flex-wrap justify-end">
+              {/* Compact Zoom Controls */}
+              <div className="flex items-center bg-card/95 backdrop-blur border border-border shadow-sm rounded-md overflow-hidden">
                 <Button
                   size="sm"
                   variant="ghost"
@@ -1027,26 +1027,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     handleScaleZoomOut();
                   }}
                   disabled={scale <= 0.5}
-                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 touch-manipulation"
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 touch-manipulation rounded-none"
                   title="Zoom out"
                   aria-label="Zoom out"
                 >
-                  <ZoomOut className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <ZoomOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleScaleReset}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    handleScaleReset();
-                  }}
-                  className="h-10 px-2 sm:h-8 sm:px-1.5 text-sm sm:text-xs font-medium touch-manipulation"
-                  title="Reset zoom"
-                  aria-label="Reset zoom"
-                >
+                <span className="text-[10px] sm:text-xs font-medium px-1 tabular-nums min-w-[32px] text-center">
                   {Math.round(scale * 100)}%
-                </Button>
+                </span>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -1056,21 +1045,21 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     handleScaleZoomIn();
                   }}
                   disabled={scale >= 3}
-                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 touch-manipulation"
+                  className="h-7 w-7 sm:h-8 sm:w-8 p-0 touch-manipulation rounded-none"
                   title="Zoom in"
                   aria-label="Zoom in"
                 >
-                  <ZoomIn className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <ZoomIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
               </div>
               
-              {/* Audio Companion - inline in header */}
+              {/* Audio Companion - Compact */}
               {showAudioCompanion ? (
                 <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
               ) : (
-              <Button
+                <Button
                   size="sm"
-                  variant="outline"
+                  variant="default"
                   onClick={() => setShowAudioCompanion(true)}
                   onTouchEnd={(e) => {
                     e.preventDefault();
@@ -1078,14 +1067,14 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   }}
                   aria-label="Listen along with audio"
                   title="Play audio while reading sheet music"
-                  className="shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 border-primary h-10 sm:h-8 px-2 touch-manipulation"
+                  className="shadow-sm h-7 sm:h-8 px-1.5 sm:px-2 touch-manipulation"
                 >
-                  <Music className="h-5 w-5 sm:h-4 sm:w-4 mr-1" />
-                  <span className="font-medium text-xs">Listen Along</span>
+                  <Music className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline font-medium text-xs ml-1">Listen</span>
                 </Button>
               )}
               
-              {/* Piano Button */}
+              {/* Piano Button - Icon only on mobile */}
               <Button
                 size="sm"
                 variant={showPiano ? "secondary" : "outline"}
@@ -1096,13 +1085,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 }}
                 aria-label={showPiano ? "Hide piano" : "Show piano"}
                 title="Practice with virtual piano"
-                className={`shadow-lg h-10 sm:h-8 px-2 touch-manipulation ${showPiano ? 'bg-secondary' : ''}`}
+                className={`shadow-sm h-7 w-7 sm:h-8 sm:w-auto sm:px-2 p-0 touch-manipulation ${showPiano ? 'bg-secondary' : ''}`}
               >
-                <Piano className="h-5 w-5 sm:h-4 sm:w-4 mr-1" />
-                <span className="font-medium text-xs">Piano</span>
+                <Piano className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline font-medium text-xs ml-1">Piano</span>
               </Button>
               
-              {/* Annotate Button */}
+              {/* Annotate Button - Compact */}
               <Button
                 size="sm"
                 variant="default"
@@ -1117,10 +1106,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 }}
                 aria-label="Enable annotations"
                 title="Click to enable drawing and annotations"
-                className="shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-10 sm:h-8 px-2 touch-manipulation"
+                className="shadow-sm h-7 sm:h-8 px-1.5 sm:px-2 touch-manipulation"
               >
-                <Palette className="h-5 w-5 sm:h-4 sm:w-4 mr-1" />
-                <span className="font-semibold">Annotate</span>
+                <Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline font-semibold text-xs ml-1">Annotate</span>
               </Button>
             </div>
           )}
@@ -1246,16 +1235,28 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           ) : null}
 
           {signedUrl && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30">
-              <div className="flex items-center gap-2 rounded-md border bg-background/80 backdrop-blur px-2 py-1">
-                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={prevPage} disabled={isLoading || currentPage <= 1}>
-                  <ChevronLeft className="h-4 w-4" />
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+              <div className="flex items-center gap-1.5 rounded-full border bg-background/90 backdrop-blur shadow-md px-1.5 py-0.5">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
+                  onClick={prevPage} 
+                  disabled={isLoading || currentPage <= 1}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
-                <span className="text-xs sm:text-sm tabular-nums">
+                <span className="text-[10px] sm:text-xs tabular-nums font-medium min-w-[40px] text-center">
                   {currentPage} / {totalPages || (pdf?.numPages ?? 0) || 1}
                 </span>
-                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={nextPage} disabled={isLoading || currentPage >= (totalPages || (pdf?.numPages ?? 0) || 1)}>
-                  <ChevronRight className="h-4 w-4" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
+                  onClick={nextPage} 
+                  disabled={isLoading || currentPage >= (totalPages || (pdf?.numPages ?? 0) || 1)}
+                >
+                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </div>
