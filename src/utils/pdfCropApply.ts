@@ -31,12 +31,24 @@ export async function applyCropToPDF(
   let pdfBytes: ArrayBuffer;
   if (typeof pdfSource === 'string') {
     const response = await fetch(pdfSource);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
+    }
+    
     pdfBytes = await response.arrayBuffer();
+    
+    // Validate PDF header - PDF files start with %PDF
+    const header = new Uint8Array(pdfBytes.slice(0, 5));
+    const headerString = String.fromCharCode(...header);
+    if (!headerString.startsWith('%PDF')) {
+      throw new Error('Invalid PDF: File does not have a valid PDF header. The file may be corrupted or not a PDF.');
+    }
   } else {
     pdfBytes = pdfSource;
   }
 
-  const pdfDoc = await PDFDocument.load(pdfBytes);
+  const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
   const pages = pdfDoc.getPages();
   const appliedSettings: PageCropSettings[] = [];
 
