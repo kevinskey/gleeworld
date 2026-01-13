@@ -6155,6 +6155,7 @@ export type Database = {
       gw_attendance_qr_codes: {
         Row: {
           assignment_id: string | null
+          auto_rotate_enabled: boolean | null
           context_type: string | null
           course_code: string | null
           course_id: string | null
@@ -6164,18 +6165,28 @@ export type Database = {
           expires_at: string
           generated_at: string
           generated_by: string
+          geofence_enabled: boolean | null
+          geofence_latitude: number | null
+          geofence_longitude: number | null
+          geofence_radius_meters: number | null
           id: string
           is_active: boolean
           location_data: Json | null
           max_scans: number | null
+          parent_qr_id: string | null
           pin_code: string | null
           qr_token: string
           redirect_url: string | null
+          rotate_interval_seconds: number | null
+          rotation_sequence: number | null
           scan_count: number
+          time_window_enabled: boolean | null
+          time_window_minutes: number | null
           updated_at: string
         }
         Insert: {
           assignment_id?: string | null
+          auto_rotate_enabled?: boolean | null
           context_type?: string | null
           course_code?: string | null
           course_id?: string | null
@@ -6185,18 +6196,28 @@ export type Database = {
           expires_at: string
           generated_at?: string
           generated_by: string
+          geofence_enabled?: boolean | null
+          geofence_latitude?: number | null
+          geofence_longitude?: number | null
+          geofence_radius_meters?: number | null
           id?: string
           is_active?: boolean
           location_data?: Json | null
           max_scans?: number | null
+          parent_qr_id?: string | null
           pin_code?: string | null
           qr_token: string
           redirect_url?: string | null
+          rotate_interval_seconds?: number | null
+          rotation_sequence?: number | null
           scan_count?: number
+          time_window_enabled?: boolean | null
+          time_window_minutes?: number | null
           updated_at?: string
         }
         Update: {
           assignment_id?: string | null
+          auto_rotate_enabled?: boolean | null
           context_type?: string | null
           course_code?: string | null
           course_id?: string | null
@@ -6206,14 +6227,23 @@ export type Database = {
           expires_at?: string
           generated_at?: string
           generated_by?: string
+          geofence_enabled?: boolean | null
+          geofence_latitude?: number | null
+          geofence_longitude?: number | null
+          geofence_radius_meters?: number | null
           id?: string
           is_active?: boolean
           location_data?: Json | null
           max_scans?: number | null
+          parent_qr_id?: string | null
           pin_code?: string | null
           qr_token?: string
           redirect_url?: string | null
+          rotate_interval_seconds?: number | null
+          rotation_sequence?: number | null
           scan_count?: number
+          time_window_enabled?: boolean | null
+          time_window_minutes?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -6222,6 +6252,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_attendance_qr_codes_parent_qr_id_fkey"
+            columns: ["parent_qr_id"]
+            isOneToOne: false
+            referencedRelation: "gw_attendance_qr_codes"
             referencedColumns: ["id"]
           },
         ]
@@ -9092,6 +9129,8 @@ export type Database = {
           tags: string[] | null
           title: string
           updated_at: string | null
+          venue_latitude: number | null
+          venue_longitude: number | null
           venue_name: string | null
         }
         Insert: {
@@ -9135,6 +9174,8 @@ export type Database = {
           tags?: string[] | null
           title: string
           updated_at?: string | null
+          venue_latitude?: number | null
+          venue_longitude?: number | null
           venue_name?: string | null
         }
         Update: {
@@ -9178,6 +9219,8 @@ export type Database = {
           tags?: string[] | null
           title?: string
           updated_at?: string | null
+          venue_latitude?: number | null
+          venue_longitude?: number | null
           venue_name?: string | null
         }
         Relationships: [
@@ -26698,6 +26741,20 @@ export type Database = {
         Returns: Json
       }
       generate_qr_token: { Args: { event_id_param: string }; Returns: string }
+      generate_rotating_qr_code: {
+        Args: {
+          p_created_by: string
+          p_event_id: string
+          p_geofence_enabled?: boolean
+          p_geofence_latitude?: number
+          p_geofence_longitude?: number
+          p_geofence_radius_meters?: number
+          p_rotate_interval_seconds?: number
+          p_time_window_enabled?: boolean
+          p_time_window_minutes?: number
+        }
+        Returns: Json
+      }
       generate_secure_password: { Args: { length?: number }; Returns: string }
       generate_secure_qr_token: {
         Args: { event_id_param: string }
@@ -27384,6 +27441,14 @@ export type Database = {
       user_owns_study_score: {
         Args: { study_score_id: string }
         Returns: boolean
+      }
+      validate_attendance_security: {
+        Args: {
+          p_qr_id: string
+          p_user_latitude?: number
+          p_user_longitude?: number
+        }
+        Returns: Json
       }
       validate_password_strength: {
         Args: { password_text: string }
