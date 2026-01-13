@@ -14,6 +14,7 @@ import { CourseAssignments } from './CourseAssignments';
 import { CourseGradebook } from './CourseGradebook';
 import { CourseAttendance } from './CourseAttendance';
 import { CourseCalendarView } from './CourseCalendarView';
+import { CalendarWithAttendance } from './CalendarWithAttendance';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseTestsSection } from './CourseTestsSection';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
@@ -178,75 +179,38 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           </div>
           
           <nav className="p-1.5 md:p-2 space-y-0.5 md:space-y-1">
-            {[{
-              icon: Home,
-              label: 'Home',
-              tab: 'home'
-            }, {
-              icon: FileText,
-              label: 'Syllabus',
-              tab: 'syllabus'
-            }, {
-              icon: Bell,
-              label: 'Announcements',
-              tab: 'announcements'
-            }, {
-              icon: MessagesSquare,
-              label: 'Messages',
-              tab: 'messages'
-            }, {
-              icon: ClipboardList,
-              label: 'Assignments',
-              tab: 'assignments'
-            },
-            // Journals - not for MUS 070
-            ...(course.courseCode !== 'MUS 070' ? [{
-              icon: PenLine,
-              label: 'Journals',
-              tab: 'journals'
-            }] : []),
-            {
-              icon: FileCheck,
-              label: 'Tests',
-              tab: 'tests'
-            }, {
-              icon: BarChart,
-              label: 'Polls',
-              tab: 'polls'
-            },
-            // AI Groups - not for MUS 070
-            ...(course.courseCode !== 'MUS 070' ? [{
-              icon: Brain,
-              label: 'AI Groups',
-              tab: 'ai-groups'
-            }] : []),
-            {
-              icon: Library,
-              label: 'Resources',
-              tab: 'resources'
-            }, {
-              icon: Trophy,
-              label: 'Grades',
-              tab: 'grades'
-            }, {
-              icon: UserCheck,
-              label: 'Attendance',
-              tab: 'attendance'
-            }, {
-              icon: Ruler,
-              label: 'Rubrics',
-              tab: 'rubrics'
-            }, {
-              icon: Calendar,
-              label: 'Calendar',
-              tab: 'calendar'
-            },
-            // Handbook - only for MUS 070
-            ...(course.courseCode === 'MUS 070' ? [{
-              icon: Book,
-              label: 'Handbook',
-              tab: 'handbook'
-            }] : [])].map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
+            {/* MUS 070 specific sidebar order: Home, Syllabus, Handbook, Calendar, Announcements, Messages, Music Library, Assignments, Tests, Polls, Resources, Grades, Rubrics */}
+            {(course.courseCode === 'MUS 070' ? [
+              { icon: Home, label: 'Home', tab: 'home' },
+              { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
+              { icon: Book, label: 'Handbook', tab: 'handbook' },
+              { icon: Calendar, label: 'Calendar', tab: 'calendar' },
+              { icon: Bell, label: 'Announcements', tab: 'announcements' },
+              { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
+              { icon: Music, label: 'Music Library', tab: 'music-library' },
+              { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
+              { icon: FileCheck, label: 'Tests', tab: 'tests' },
+              { icon: BarChart, label: 'Polls', tab: 'polls' },
+              { icon: Library, label: 'Resources', tab: 'resources' },
+              { icon: Trophy, label: 'Grades', tab: 'grades' },
+              { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
+            ] : [
+              // Default order for other courses
+              { icon: Home, label: 'Home', tab: 'home' },
+              { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
+              { icon: Bell, label: 'Announcements', tab: 'announcements' },
+              { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
+              { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
+              { icon: PenLine, label: 'Journals', tab: 'journals' },
+              { icon: FileCheck, label: 'Tests', tab: 'tests' },
+              { icon: BarChart, label: 'Polls', tab: 'polls' },
+              { icon: Brain, label: 'AI Groups', tab: 'ai-groups' },
+              { icon: Library, label: 'Resources', tab: 'resources' },
+              { icon: Trophy, label: 'Grades', tab: 'grades' },
+              { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
+              { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
+              { icon: Calendar, label: 'Calendar', tab: 'calendar' },
+            ]).map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 
                 <span className="text-sm md:text-base lg:text-lg pl-2 md:pl-3 lg:pl-[20px]">{item.label}</span>
               </button>)}
@@ -486,7 +450,32 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </CardContent>
               </Card>}
 
-            {activeTab === 'calendar' && <CourseCalendarView courseId={course.id} />}
+            {activeTab === 'calendar' && (
+              course.courseCode === 'MUS 070' 
+                ? <CalendarWithAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} />
+                : <CourseCalendarView courseId={course.id} />
+            )}
+
+            {/* Music Library Tab - Only for MUS 070 */}
+            {activeTab === 'music-library' && course.courseCode === 'MUS 070' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Music className="h-5 w-5 text-primary" />
+                    Music Library
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                    Access sheet music, practice tracks, and recordings for the Glee Club repertoire.
+                  </p>
+                  <Button onClick={() => navigate('/music-library')} className="gap-2">
+                    <Music className="h-4 w-4" />
+                    Open Music Library
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Handbook Tab - Only for MUS 070 */}
             {activeTab === 'handbook' && course.courseCode === 'MUS 070' && <CourseHandbook courseCode={course.courseCode} />}
