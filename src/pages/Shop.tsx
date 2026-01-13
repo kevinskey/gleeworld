@@ -202,25 +202,25 @@ export const Shop = () => {
                 GleeWorld Boutique
               </h1>
             </div>
-            <p className="text-white/70 text-center mt-1 text-xs sm:text-sm max-w-xl mx-auto">
+            <p className="text-white/80 text-center mt-1 text-xs sm:text-sm max-w-xl mx-auto">
               Curated accessories, apparel & digital sheet music
             </p>
           </div>
         </div>
 
-        {/* Boutique Filter Section */}
+        {/* Boutique Filter Section - Compact for iPad */}
         <div className="bg-gradient-to-b from-stone-50 to-white border-b border-stone-100">
-          <div className="container mx-auto px-4 py-6 sm:py-8">
+          <div className="container mx-auto px-4 py-4 sm:py-6">
             <div className="max-w-3xl mx-auto">
               {/* Category Pills */}
-              <div className="flex flex-wrap justify-center gap-3 mb-6">
+              <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4">
                 {CATEGORIES.map(category => {
                 const Icon = category.icon;
                 const isActive = selectedCategory === category.value;
                 return <button key={category.value} onClick={() => setSelectedCategory(category.value)} className={`
-                        group flex items-center gap-2 px-5 py-2.5 rounded-full 
+                        group flex items-center gap-2 px-4 py-2 rounded-full 
                         transition-all duration-300 ease-out
-                        ${isActive ? 'bg-stone-800 text-white shadow-lg shadow-stone-800/20' : 'bg-white text-stone-600 hover:bg-stone-50 hover:shadow-md border border-stone-200'}
+                        ${isActive ? 'bg-stone-800 text-white shadow-lg shadow-stone-800/20' : 'bg-white text-stone-700 hover:bg-stone-50 hover:shadow-md border border-stone-200'}
                       `}>
                       <Icon className={`h-4 w-4 transition-transform duration-300 ${isActive ? '' : 'group-hover:scale-110'}`} />
                       <span className="text-sm font-medium">{category.label}</span>
@@ -231,9 +231,9 @@ export const Shop = () => {
               {/* Search Bar - Elegant */}
               <div className="max-w-md mx-auto relative">
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-stone-400" />
+                  <Search className="h-5 w-5 text-stone-500" />
                 </div>
-                <Input placeholder="Search our collection..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-12 pr-4 py-5 bg-white border-stone-200 rounded-full text-stone-700 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-200 focus:border-amber-300 shadow-sm" />
+                <Input placeholder="Search our collection..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-12 pr-4 py-5 bg-white border-stone-200 rounded-full text-stone-800 placeholder:text-stone-500 focus:ring-2 focus:ring-amber-200 focus:border-amber-300 shadow-sm" />
               </div>
             </div>
           </div>
@@ -244,7 +244,7 @@ export const Shop = () => {
             <div className="container mx-auto px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-stone-600">
+                  <div className="flex items-center gap-2 text-stone-700">
                     <ShoppingBag className="h-5 w-5" />
                     <span className="font-medium">{getTotalItems()} items</span>
                   </div>
@@ -259,33 +259,33 @@ export const Shop = () => {
             </div>
           </div>}
 
-        {/* Products Section */}
-        <div className="container mx-auto px-4 py-12 sm:py-16">
+        {/* Products Section - Tighter spacing for iPad */}
+        <div className="container mx-auto px-4 py-6 sm:py-10">
           {/* Section Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-light text-stone-800" style={{
               fontFamily: "'Playfair Display', serif"
             }}>
                 {selectedCategory === "all" ? "Our Collection" : CATEGORIES.find(c => c.value === selectedCategory)?.label}
               </h2>
-              <p className="text-stone-500 text-sm mt-1">{filteredProducts.length} pieces</p>
+              <p className="text-stone-700 text-sm mt-1">{filteredProducts.length} pieces</p>
             </div>
           </div>
 
-          {filteredProducts.length === 0 ? <div className="text-center py-20">
+          {filteredProducts.length === 0 ? <div className="text-center py-16">
               <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Music className="h-10 w-10 text-stone-300" />
+                <Music className="h-10 w-10 text-stone-400" />
               </div>
-              <h3 className="text-xl font-light text-stone-700 mb-2">No items found</h3>
-              <p className="text-stone-500">Try adjusting your search or browse all categories.</p>
-              <Button variant="outline" className="mt-6 rounded-full" onClick={() => {
+              <h3 className="text-xl font-light text-stone-800 mb-2">No items found</h3>
+              <p className="text-stone-600">Try adjusting your search or browse all categories.</p>
+              <Button variant="outline" className="mt-6 rounded-full border-stone-300 text-stone-800 hover:bg-stone-100" onClick={() => {
             setSelectedCategory("all");
             setSearchQuery("");
           }}>
                 View All Products
               </Button>
-            </div> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+            </div> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {filteredProducts.map(product => <Card key={product.id} className={`
                     group overflow-hidden border-0 bg-white shadow-sm 
                     transition-all duration-500 ease-out cursor-pointer
@@ -301,49 +301,49 @@ export const Shop = () => {
                       
                       {/* Wishlist Button */}
                       <button className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110">
-                        <Heart className="h-5 w-5 text-stone-500 hover:text-rose-500 transition-colors" />
+                        <Heart className="h-5 w-5 text-stone-600 hover:text-rose-500 transition-colors" />
                       </button>
                       
-                      {/* Quick Add Button */}
+                      {/* Quick Add Button - Fixed white-on-white issue */}
                       {!cartItems[product.id] ? <button onClick={e => {
                   e.stopPropagation();
                   addToCart(product.id);
-                }} className="absolute bottom-4 left-4 right-4 py-3 bg-white/95 backdrop-blur-sm rounded-lg font-medium text-stone-800 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-white shadow-lg flex items-center justify-center gap-2">
+                }} className="absolute bottom-4 left-4 right-4 py-3 bg-stone-800 rounded-lg font-medium text-white opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-stone-900 shadow-lg flex items-center justify-center gap-2">
                           <Plus className="h-4 w-4" />
                           Add to Cart
-                        </button> : <div className="absolute bottom-4 left-4 right-4 py-2 bg-white/95 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
+                        </button> : <div className="absolute bottom-4 left-4 right-4 py-2 bg-stone-800 rounded-lg opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
                           <div className="flex items-center justify-between px-4">
                             <button onClick={e => {
                       e.stopPropagation();
                       removeFromCart(product.id);
-                    }} className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center transition-colors">
-                              <Minus className="h-4 w-4 text-stone-700" />
+                    }} className="w-8 h-8 rounded-full bg-stone-700 hover:bg-stone-600 flex items-center justify-center transition-colors">
+                              <Minus className="h-4 w-4 text-white" />
                             </button>
-                            <span className="font-medium text-stone-800">{cartItems[product.id]}</span>
+                            <span className="font-medium text-white">{cartItems[product.id]}</span>
                             <button onClick={e => {
                       e.stopPropagation();
                       addToCart(product.id);
-                    }} className="w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-900 flex items-center justify-center transition-colors">
-                              <Plus className="h-4 w-4 text-white" />
+                    }} className="w-8 h-8 rounded-full bg-white hover:bg-stone-100 flex items-center justify-center transition-colors">
+                              <Plus className="h-4 w-4 text-stone-800" />
                             </button>
                           </div>
                         </div>}
                       
                       {/* Category Badge */}
-                      <Badge className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-stone-700 border-0 text-xs font-medium">
+                      <Badge className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-stone-800 border-0 text-xs font-medium">
                         {CATEGORIES.find(c => c.value === product.product_type)?.label || product.product_type}
                       </Badge>
                     </div>
                     
                     {/* Product Info */}
-                    <div className="p-5">
+                    <div className="p-4">
                       <h3 className="font-medium text-stone-800 mb-1 group-hover:text-amber-700 transition-colors" style={{
                   fontFamily: "'Playfair Display', serif"
                 }}>
                         {product.title}
                       </h3>
                       
-                      <p className="text-stone-500 text-sm mb-3 line-clamp-2 font-light">
+                      <p className="text-stone-600 text-sm mb-3 line-clamp-2 font-light">
                         {product.description}
                       </p>
                       
@@ -356,7 +356,7 @@ export const Shop = () => {
                             Only {product.inventory_quantity} left
                           </span>}
                         
-                        {product.inventory_quantity === 0 && <span className="text-xs text-stone-400 font-medium">
+                        {product.inventory_quantity === 0 && <span className="text-xs text-stone-500 font-medium">
                             Sold out
                           </span>}
                       </div>
@@ -366,20 +366,20 @@ export const Shop = () => {
             </div>}
         </div>
 
-        {/* Bottom CTA Section */}
-        <div className="bg-gradient-to-br from-stone-100 to-stone-50 py-16">
+        {/* Bottom CTA Section - Compact */}
+        <div className="bg-gradient-to-br from-stone-100 to-stone-50 py-10 sm:py-12">
           <div className="container mx-auto px-4 text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="flex items-center justify-center gap-3 mb-3">
               <div className="h-px w-8 bg-stone-300" />
               <Sparkles className="h-5 w-5 text-amber-500" />
               <div className="h-px w-8 bg-stone-300" />
             </div>
-            <h3 className="text-2xl font-light text-stone-700 mb-2" style={{
+            <h3 className="text-2xl font-light text-stone-800 mb-2" style={{
             fontFamily: "'Playfair Display', serif"
           }}>
               Every purchase supports our legacy
             </h3>
-            <p className="text-stone-500 mb-6 text-center">Free shipping on orders over $150</p>
+            <p className="text-stone-700 mb-5 text-center">Free shipping on orders over $150</p>
             <Button onClick={handleCheckout} disabled={getTotalItems() === 0} className="bg-stone-800 hover:bg-stone-900 text-white rounded-full px-8 py-6 text-lg gap-3 transition-all duration-300 hover:shadow-xl disabled:opacity-50">
               <ShoppingCart className="h-5 w-5" />
               View Cart ({getTotalItems()})
