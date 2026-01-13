@@ -204,16 +204,22 @@ export const CourseInstructorConsole = () => {
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-3">
             {category.label}
           </h3>
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {category.items.map(item => {
           const Icon = item.icon;
           const isActive = activeTab === item.value;
           return <button key={item.value} onClick={() => {
             setActiveTab(item.value);
             if (isMobile) setSidebarOpen(false);
-          }} className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border", isActive ? "bg-[#003666] text-white border-[#003666]" : "bg-muted hover:bg-accent border-border")}>
-                  <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-foreground")} />
-                  <span className={isActive ? "text-white" : "text-foreground"}>{item.label}</span>
+          }} className={cn(
+            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+            isActive 
+              ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/20" 
+              : "text-foreground hover:bg-accent hover:text-accent-foreground"
+          )}>
+                  <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
+                  <span>{item.label}</span>
+                  {isActive && <div className="ml-auto h-2 w-2 rounded-full bg-primary-foreground/80" />}
                 </button>;
         })}
           </div>
