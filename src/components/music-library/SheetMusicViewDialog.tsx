@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations'
 import { useAuth } from '@/contexts/AuthContext';
 import { SheetMusicHistory } from '@/components/music-library/SheetMusicHistory';
 import { PracticeLinks } from '@/modules/glee-library/practice/PracticeLinks';
+import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
 
 interface SheetMusic {
   id: string;
@@ -54,11 +55,20 @@ export const SheetMusicViewDialog = ({
   item,
 }: SheetMusicViewDialogProps) => {
   const { user } = useAuth();
+  const { stop, closeYouTube } = useAudioCompanion();
   
   const [setlistInfo, setSetlistInfo] = useState<any>(null);
   const [licenseInfo, setLicenseInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'marked' | 'practice' | 'smart'>('overview');
   const pdfRef = useRef<any>(null);
+
+  // Stop YouTube playback when dialog closes
+  useEffect(() => {
+    if (!open) {
+      stop();
+      closeYouTube();
+    }
+  }, [open, stop, closeYouTube]);
   
   if (!item) return null;
 
