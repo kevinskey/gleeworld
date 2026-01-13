@@ -206,6 +206,7 @@ import { ProviderDashboard } from "./components/providers/ProviderDashboard";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
 import { Mus240StaffRoute } from "./components/auth/Mus240StaffRoute";
+import { ProfileCompletionGuard } from "./components/auth/ProfileCompletionGuard";
 import TimesheetPage from "./pages/TimesheetPage";
 import BownaScholarLanding from "./pages/BownaScholarLanding";
 import SMSTest from "./pages/SMSTest";
@@ -308,9 +309,8 @@ const needsForcePasswordChange = (): boolean => {
   return now >= startDate && now <= endDate;
 };
 
-// Protected route wrapper
-const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const navigate = useNavigate();
+// Protected route wrapper with profile completion check
+const ProtectedRoute = ({ children, skipProfileCheck = false }: { children: ReactNode; skipProfileCheck?: boolean }) => {
   const location = useLocation();
   
   try {
@@ -336,8 +336,13 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     if (needsForcePasswordChange() && location.pathname !== '/force-password-change') {
       return <Navigate to="/force-password-change" replace />;
     }
+    
+    // Skip profile check for specific pages
+    if (skipProfileCheck) {
+      return <>{children}</>;
+    }
   
-    return <>{children}</>;
+    return <ProfileCompletionGuard>{children}</ProfileCompletionGuard>;
   } catch (error) {
     console.error('ProtectedRoute error:', error);
     return <Navigate to="/auth" replace />;
@@ -466,7 +471,7 @@ const App = () => {
               <Route 
                 path="/force-password-change"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute skipProfileCheck>
                     <ForcePasswordChange />
                   </ProtectedRoute>
                 } 
@@ -891,7 +896,7 @@ const App = () => {
                 <Route
                   path="/profile/setup" 
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute skipProfileCheck>
                       <ProfileSetup />
                     </ProtectedRoute>
                   } 
