@@ -3,7 +3,7 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Megaphone, PenTool, CalendarDays, Music } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Megaphone, PenTool, CalendarDays, Music, Shield } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCourseTA } from '@/hooks/useCourseTA';
 import { cn } from '@/lib/utils';
@@ -33,6 +33,7 @@ import { TestBuilder } from '@/components/test-builder/TestBuilder';
 import { CoursePollManager } from '@/components/course/CoursePollManager';
 import { SemesterManager } from '@/components/admin/SemesterManager';
 import { SightReadingAssignmentManager } from '@/components/sight-singing/SightReadingAssignmentManager';
+import { AttendanceSecurityControls } from '@/components/attendance/AttendanceSecurityControls';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -183,6 +184,10 @@ export const CourseInstructorConsole = () => {
   }, {
     label: 'Tools',
     items: [{
+      value: 'attendance-security',
+      label: 'Attendance Security',
+      icon: Shield
+    }, {
       value: 'semesters',
       label: 'Semesters',
       icon: CalendarDays
@@ -307,6 +312,12 @@ export const CourseInstructorConsole = () => {
                   <p className="text-muted-foreground">Audio library coming soon.</p>
                 </CardContent>
               </Card>}
+            {activeTab === 'attendance-security' && dbCourse && (
+              <AttendanceSecurityControls 
+                eventId={dbCourse.id} 
+                eventTitle={`${course.title} Class Session`}
+              />
+            )}
             {activeTab === 'semesters' && <SemesterManager />}
             {activeTab === 'ai-assistant' && <AIAssistant />}
             {activeTab === 'settings' && <Card>
