@@ -16,6 +16,7 @@ interface SMSPayload {
   to?: string;
   message: string;
   notificationId?: string;
+  senderId?: string; // User ID for logging
   // Bulk SMS fields
   sendToAll?: boolean;
   recipients?: string[];
@@ -102,7 +103,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('SMS request received:', { 
       sendToAll: payload.sendToAll, 
       recipientCount: payload.recipients?.length || (payload.to ? 1 : 0),
-      messageLength: payload.message?.length 
+      messageLength: payload.message?.length,
+      senderId: payload.senderId
     });
 
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
@@ -172,6 +174,26 @@ const handler = async (req: Request): Promise<Response> => {
 
       console.log(`Bulk SMS complete: ${successful} sent, ${failed} failed`);
 
+      // Log to message history if senderId provided
+      if (payload.senderId) {
+        try {
+          await supabase.from('gw_user_message_history').insert({
+            user_id: payload.senderId,
+            direction: 'sent',
+            channel: 'sms',
+            content: payload.message.slice(0, 5000),
+            recipient_phones: phoneNumbers,
+            status: failed === 0 ? 'sent' : (successful > 0 ? 'sent' : 'failed'),
+            error_message: failed > 0 ? `${failed} of ${phoneNumbers.length} messages failed` : null,
+            metadata: { successful, failed, total: phoneNumbers.length },
+            sent_at: new Date().toISOString()
+          });
+          console.log("Bulk SMS logged to history");
+        } catch (logError) {
+          console.error("Error logging bulk SMS:", logError);
+        }
+      }
+
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -203,6 +225,26 @@ const handler = async (req: Request): Promise<Response> => {
           })
           .eq('notification_id', payload.notificationId)
           .eq('delivery_method', 'sms');
+      }
+
+      // Log single SMS if senderId provided
+      if (payload.senderId) {
+        try {
+          await supabase.from('gw_user_message_history').insert({
+            user_id: payload.senderId,
+            direction: 'sent',
+            channel: 'sms',
+            content: payload.message.slice(0, 5000),
+            recipient_phones: [payload.to],
+            status: result.success ? 'sent' : 'failed',
+            external_id: result.messageId,
+            error_message: result.error,
+            sent_at: new Date().toISOString()
+          });
+          console.log("Single SMS logged to history");
+        } catch (logError) {
+          console.error("Error logging single SMS:", logError);
+        }
       }
 
       return new Response(

@@ -1,8 +1,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +21,13 @@ interface SendBrandedEmailRequest {
   html: string;
   senderName?: string;
   replyTo?: string;
+  senderId?: string; // User ID for logging
 }
+
+// Strip HTML tags for plain text storage
+const stripHtml = (html: string): string => {
+  return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+};
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -29,7 +41,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Send Branded Email Request:", {
       to: emailData.to,
       subject: emailData.subject,
-      senderName: emailData.senderName
+      senderName: emailData.senderName,
+      senderId: emailData.senderId
     });
 
     // Validate required fields
@@ -57,10 +70,51 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (emailResponse.error) {
       console.error("Resend API error:", emailResponse.error);
+      
+      // Log failed message if senderId provided
+      if (emailData.senderId) {
+        try {
+          await supabase.from('gw_user_message_history').insert({
+            user_id: emailData.senderId,
+            direction: 'sent',
+            channel: 'email',
+            subject: emailData.subject,
+            content: stripHtml(emailData.html).slice(0, 5000),
+            recipient_emails: recipients,
+            status: 'failed',
+            error_message: emailResponse.error.message || 'Email delivery failed',
+            sent_at: new Date().toISOString()
+          });
+          console.log("Failed email logged to history");
+        } catch (logError) {
+          console.error("Error logging failed email:", logError);
+        }
+      }
+      
       throw new Error(emailResponse.error.message || "Failed to send email");
     }
 
     console.log("Email sent successfully:", emailResponse.data?.id);
+
+    // Log successful message if senderId provided
+    if (emailData.senderId) {
+      try {
+        await supabase.from('gw_user_message_history').insert({
+          user_id: emailData.senderId,
+          direction: 'sent',
+          channel: 'email',
+          subject: emailData.subject,
+          content: stripHtml(emailData.html).slice(0, 5000),
+          recipient_emails: recipients,
+          status: 'sent',
+          external_id: emailResponse.data?.id,
+          sent_at: new Date().toISOString()
+        });
+        console.log("Email logged to history");
+      } catch (logError) {
+        console.error("Error logging email to history:", logError);
+      }
+    }
 
     return new Response(JSON.stringify({
       success: true,

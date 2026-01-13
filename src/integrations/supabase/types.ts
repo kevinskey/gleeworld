@@ -18717,6 +18717,63 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_user_message_history: {
+        Row: {
+          channel: string
+          content: string
+          created_at: string | null
+          direction: string
+          error_message: string | null
+          external_id: string | null
+          id: string
+          metadata: Json | null
+          recipient_emails: string[] | null
+          recipient_phones: string[] | null
+          sender_email: string | null
+          sender_name: string | null
+          sent_at: string | null
+          status: string | null
+          subject: string | null
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          content: string
+          created_at?: string | null
+          direction: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_emails?: string[] | null
+          recipient_phones?: string[] | null
+          sender_email?: string | null
+          sender_name?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          content?: string
+          created_at?: string | null
+          direction?: string
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_emails?: string[] | null
+          recipient_phones?: string[] | null
+          sender_email?: string | null
+          sender_name?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_user_module_orders: {
         Row: {
           created_at: string

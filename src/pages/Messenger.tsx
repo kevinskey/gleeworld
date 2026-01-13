@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2 } from "lucide-react";
+import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2, History } from "lucide-react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { BackNavigation } from "@/components/shared/BackNavigation";
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { syncCourseMessengerGroup } from '@/hooks/useCourseMessengerSync';
 import { SMSHistoryPanel } from '@/components/messaging/SMSHistoryPanel';
+import { CommunicationHistoryPanel } from '@/components/messaging/CommunicationHistoryPanel';
 interface RecipientGroup {
   id: string;
   name: string;
@@ -80,7 +81,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   }, [courseId, courseName]);
 
   // Composer state - default to video tab if joining from link
-  const [composerMode, setComposerMode] = useState<'email' | 'sms' | 'video'>(joinRoomName ? 'video' : 'email');
+  const [composerMode, setComposerMode] = useState<'email' | 'sms' | 'video' | 'history'>(joinRoomName ? 'video' : 'email');
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [recipients, setRecipients] = useState<string[]>([]);
@@ -397,7 +398,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           to: recipients,
           subject,
           html: htmlContent,
-          senderName: userProfile?.full_name
+          senderName: userProfile?.full_name,
+          senderId: user?.id
         }
       });
       if (error) throw error;
@@ -446,7 +448,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
         body: {
           message: messageWithSender,
           sendToAll,
-          recipients: sendToAll ? [] : smsRecipients.map(r => r.phone_number)
+          recipients: sendToAll ? [] : smsRecipients.map(r => r.phone_number),
+          senderId: user?.id
         }
       });
       if (error) throw error;
@@ -547,19 +550,23 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           {/* Composer Area */}
           <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
             {/* Tabs */}
-            <Tabs value={composerMode} onValueChange={v => setComposerMode(v as 'email' | 'sms' | 'video')} className="flex flex-col flex-1 overflow-hidden">
-                <TabsList className={`grid w-full ${canSendSMS ? 'grid-cols-3' : 'grid-cols-2'} rounded-none bg-background h-11 p-0 gap-0 border-b`}>
+            <Tabs value={composerMode} onValueChange={v => setComposerMode(v as 'email' | 'sms' | 'video' | 'history')} className="flex flex-col flex-1 overflow-hidden">
+                <TabsList className={`grid w-full ${canSendSMS ? 'grid-cols-4' : 'grid-cols-3'} rounded-none bg-background h-11 p-0 gap-0 border-b`}>
                   <TabsTrigger value="email" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
                     <Mail className="h-4 w-4" />
-                    <span>Email</span>
+                    <span className="hidden sm:inline">Email</span>
                   </TabsTrigger>
                   {canSendSMS && <TabsTrigger value="sms" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
                       <Smartphone className="h-4 w-4" />
-                      <span>SMS</span>
+                      <span className="hidden sm:inline">SMS</span>
                     </TabsTrigger>}
                   <TabsTrigger value="video" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
                     <Video className="h-4 w-4" />
-                    <span>Video</span>
+                    <span className="hidden sm:inline">Video</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
+                    <History className="h-4 w-4" />
+                    <span className="hidden sm:inline">History</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -685,6 +692,11 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                 {/* Video Tab */}
                 <TabsContent value="video" className="flex-1 overflow-auto mt-0 bg-background data-[state=active]:flex data-[state=active]:flex-col p-4">
                   <VideoSessionManager joinRoomName={joinRoomName} />
+                </TabsContent>
+
+                {/* History Tab */}
+                <TabsContent value="history" className="flex-1 overflow-auto mt-0 data-[state=active]:flex data-[state=active]:flex-col">
+                  <CommunicationHistoryPanel />
                 </TabsContent>
               </Tabs>
             </div>
