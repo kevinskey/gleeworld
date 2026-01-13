@@ -15539,6 +15539,60 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_shadowing_applications: {
+        Row: {
+          academic_year: string
+          alternate_position: string | null
+          availability_confirmed: boolean | null
+          conduct_agreement: boolean | null
+          created_at: string
+          evaluated_at: string | null
+          evaluated_by: string | null
+          evaluation_score: number | null
+          evaluator_notes: string | null
+          id: string
+          primary_position: string
+          statement_of_intent: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          academic_year: string
+          alternate_position?: string | null
+          availability_confirmed?: boolean | null
+          conduct_agreement?: boolean | null
+          created_at?: string
+          evaluated_at?: string | null
+          evaluated_by?: string | null
+          evaluation_score?: number | null
+          evaluator_notes?: string | null
+          id?: string
+          primary_position: string
+          statement_of_intent: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          academic_year?: string
+          alternate_position?: string | null
+          availability_confirmed?: boolean | null
+          conduct_agreement?: boolean | null
+          created_at?: string
+          evaluated_at?: string | null
+          evaluated_by?: string | null
+          evaluation_score?: number | null
+          evaluator_notes?: string | null
+          id?: string
+          primary_position?: string
+          statement_of_intent?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_sheet_music: {
         Row: {
           archive_reason: string | null
