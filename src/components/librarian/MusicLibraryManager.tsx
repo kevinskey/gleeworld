@@ -36,7 +36,7 @@ interface MusicItem {
   tempo_marking?: string;
   duration_minutes?: number;
   pdf_url?: string;
-  audio_reference_url?: string;
+  
   audio_url?: string;
   audio_title?: string;
   lyrics?: string;
@@ -90,8 +90,8 @@ export const MusicLibraryManager = () => {
 
   const handleSave = async () => {
     try {
-      // Remove fields that don't exist in the database
-      const { audio_reference_url, ...validFormData } = formData as any;
+      // Use formData directly - audio_url is the correct database column
+      const validFormData = formData;
       
       if (editingItem) {
         // Update existing item
@@ -641,12 +641,12 @@ export const MusicLibraryManager = () => {
               </div>
 
               <div>
-                <Label htmlFor="audio_reference_url">Audio Reference URL</Label>
+                <Label htmlFor="audio_url">YouTube Play-Along URL</Label>
                 <Input
-                  id="audio_reference_url"
-                  value={formData.audio_reference_url || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, audio_reference_url: e.target.value }))}
-                  placeholder="Enter audio reference URL"
+                  id="audio_url"
+                  value={formData.audio_url || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, audio_url: e.target.value }))}
+                  placeholder="e.g., https://youtu.be/xxxxx"
                 />
               </div>
 
