@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus } from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +23,7 @@ import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240Semester
 import { StudentSyllabusView } from './syllabus/StudentSyllabusView';
 import { CourseHandbook } from './handbook/CourseHandbook';
 import { StudentDossierHome } from './StudentDossierHome';
+import { ElectionsModule } from './elections/ElectionsModule';
 
 // Lazy loaded components for performance
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
@@ -179,11 +180,12 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           </div>
           
           <nav className="p-1.5 md:p-2 space-y-0.5 md:space-y-1">
-            {/* MUS 070 specific sidebar order: Home, Syllabus, Handbook, Calendar, Announcements, Messages, Music Library, Assignments, Tests, Polls, Resources, Grades, Rubrics */}
+            {/* MUS 070 specific sidebar order: Home, Syllabus, Handbook, Elections, Calendar, Announcements, Messages, Music Library, Assignments, Tests, Polls, Resources, Grades, Rubrics */}
             {(course.courseCode === 'MUS 070' ? [
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
               { icon: Book, label: 'Handbook', tab: 'handbook' },
+              { icon: Vote, label: 'Elections', tab: 'elections' },
               { icon: Calendar, label: 'Calendar', tab: 'calendar' },
               { icon: Bell, label: 'Announcements', tab: 'announcements' },
               { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
@@ -479,6 +481,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {/* Handbook Tab - Only for MUS 070 */}
             {activeTab === 'handbook' && course.courseCode === 'MUS 070' && <CourseHandbook courseCode={course.courseCode} />}
+
+            {/* Elections Tab - Only for MUS 070 */}
+            {activeTab === 'elections' && course.courseCode === 'MUS 070' && <ElectionsModule courseId={course.id} />}
 
           </div>
         </div>
