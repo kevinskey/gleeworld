@@ -185,7 +185,8 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
     };
   }, []);
 
-  const keyHeight = isExpanded ? 140 : 100;
+  const isDesktop = window.innerWidth >= 1024;
+  const keyHeight = isExpanded ? (isDesktop ? 220 : 140) : (isDesktop ? 160 : 100);
   const whiteKeyWidth = Math.max(36, Math.floor((window.innerWidth - 32) / (octaveCount * 7)));
 
   const pianoContent = (
