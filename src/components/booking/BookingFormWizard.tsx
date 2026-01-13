@@ -150,6 +150,12 @@ export const BookingFormWizard: React.FC = () => {
     const isValid = await validateStep(currentStep);
     if (isValid && currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
+    } else if (!isValid) {
+      toast({
+        title: 'Please complete required fields',
+        description: 'Some required information is missing. Please check the highlighted fields.',
+        variant: 'destructive'
+      });
     }
   };
 
