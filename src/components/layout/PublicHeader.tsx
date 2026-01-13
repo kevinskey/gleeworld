@@ -159,14 +159,15 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 {!user && (
                   <Button 
                     asChild
-                    className="relative text-xs lg:text-sm px-3 lg:px-4 py-0 lg:py-1.5 h-6 lg:h-auto font-medium rounded-full transition-all duration-300 bg-[#003666] border-2 border-[#003666] hover:bg-white"
+                    variant="ghost"
+                    className="relative text-xs lg:text-sm px-3 lg:px-4 py-0.5 lg:py-1.5 h-7 lg:h-auto font-medium rounded-full transition-all duration-300 text-[#003666] hover:bg-[#003666]/10 border border-[#003666]/30 hover:border-[#003666]/50"
                   >
                     <Link 
                       to="/auth" 
-                      className="flex items-center gap-1 text-white hover:text-[#003666]"
+                      className="flex items-center gap-1"
                     >
                       <span>Sign In</span>
-                      <span className="hidden sm:inline opacity-50">|</span>
+                      <span className="hidden sm:inline opacity-40">|</span>
                       <span className="hidden sm:inline">Join</span>
                     </Link>
                   </Button>
