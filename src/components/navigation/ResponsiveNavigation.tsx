@@ -42,21 +42,25 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
   if (mobile) {
     return (
       <>
-        {publicNavItems.map((item) => (
-          <Link
-            key={item.href}
-            to={item.href}
-            onClick={onItemClick}
-            className={cn(
-              "flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full justify-start",
-              isActivePath(item.href) 
-                ? "bg-[#003666] text-white hover:bg-[#002244]" 
-                : "text-gray-900 hover:bg-gray-100"
-            )}
-          >
-            {item.label}
-          </Link>
-        ))}
+        {publicNavItems.map((item) => {
+          const isActive = isActivePath(item.href);
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              onClick={onItemClick}
+              style={{ color: isActive ? '#ffffff' : '#111827' }}
+              className={cn(
+                "flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full justify-start",
+                isActive 
+                  ? "bg-[#003666] hover:bg-[#002244]" 
+                  : "hover:bg-gray-100"
+              )}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
       </>
     );
   }
