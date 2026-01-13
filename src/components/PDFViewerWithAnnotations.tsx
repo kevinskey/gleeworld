@@ -1014,7 +1014,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           )}
 
           {!annotationMode && (
-            <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-30">
+            <div 
+              className="absolute bottom-14 left-1/2 -translate-x-1/2 z-30"
+              style={{ touchAction: 'none' } as React.CSSProperties}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
               {/* Mobile-friendly floating toolbar */}
               <div className="flex items-center gap-2 bg-background/95 backdrop-blur-md border border-border shadow-lg rounded-full px-3 py-2">
                 {/* Zoom Controls */}
@@ -1025,6 +1031,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     onClick={handleScaleZoomOut}
                     onTouchEnd={(e) => {
                       e.preventDefault();
+                      e.stopPropagation();
                       handleScaleZoomOut();
                     }}
                     disabled={scale <= 0.5}
@@ -1043,6 +1050,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     onClick={handleScaleZoomIn}
                     onTouchEnd={(e) => {
                       e.preventDefault();
+                      e.stopPropagation();
                       handleScaleZoomIn();
                     }}
                     disabled={scale >= 3}
@@ -1066,6 +1074,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     onClick={() => setShowAudioCompanion(true)}
                     onTouchEnd={(e) => {
                       e.preventDefault();
+                      e.stopPropagation();
                       setShowAudioCompanion(true);
                     }}
                     aria-label="Listen along with audio"
@@ -1083,6 +1092,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={() => setShowPiano(!showPiano)}
                   onTouchEnd={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setShowPiano(!showPiano);
                   }}
                   aria-label={showPiano ? "Hide piano" : "Show piano"}
@@ -1102,6 +1112,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   }}
                   onTouchEnd={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setError(null); 
                     setAnnotationMode(true);
                   }}
@@ -1262,13 +1273,24 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           ) : null}
 
           {signedUrl && (
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+            <div 
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"
+              style={{ touchAction: 'none' } as React.CSSProperties}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
               <div className="flex items-center gap-1.5 rounded-full border bg-background/90 backdrop-blur shadow-md px-1.5 py-0.5">
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
-                  onClick={prevPage} 
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full touch-manipulation" 
+                  onClick={prevPage}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    prevPage();
+                  }}
                   disabled={isLoading || currentPage <= 1}
                 >
                   <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -1279,8 +1301,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
-                  onClick={nextPage} 
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full touch-manipulation" 
+                  onClick={nextPage}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    nextPage();
+                  }}
                   disabled={isLoading || currentPage >= (totalPages || (pdf?.numPages ?? 0) || 1)}
                 >
                   <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
