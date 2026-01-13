@@ -3,7 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Upload, Camera, FileSpreadsheet, Package, BarChart3, FileText, MapPin, Clock, AlertCircle, ArrowLeft, Home } from 'lucide-react';
+import {
+  BookOpen,
+  Upload,
+  Camera,
+  FileSpreadsheet,
+  Package,
+  BarChart3,
+  FileText,
+  MapPin,
+  Clock,
+  AlertCircle,
+  ArrowLeft,
+  Home,
+  Scissors,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { PDFImportManager } from './PDFImportManager';
@@ -12,24 +26,37 @@ import { LibrarianStats } from './LibrarianStats';
 import { CSVImportExport } from './CSVImportExport';
 import { DocumentScanner } from './DocumentScanner';
 import { MusicLibraryManager } from './MusicLibraryManager';
+import { BulkPDFCroppingTool } from '@/components/glee-library/BulkPDFCroppingTool';
+
 export const LibrarianDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showScanner, setShowScanner] = useState(false);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   console.log('🔍 LibrarianDashboard component rendering');
-  return <div className="container mx-auto p-4 space-y-6">
+
+  return (
+    <div className="container mx-auto p-4 space-y-6">
       {/* Navigation Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2"
+          >
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
           <div className="h-6 w-px bg-border" />
-          <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2"
+          >
             <Home className="h-4 w-4" />
             Home
           </Button>
@@ -42,10 +69,10 @@ export const LibrarianDashboard = () => {
         <div className="relative bg-gradient-to-b from-zinc-300 via-zinc-400 to-zinc-500 dark:from-zinc-600 dark:via-zinc-700 dark:to-zinc-800 rounded-lg shadow-lg p-5 border border-zinc-400 dark:border-zinc-600">
           {/* Left Rivet */}
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gradient-radial from-zinc-200 to-zinc-500 dark:from-zinc-500 dark:to-zinc-800 rounded-full shadow-inner border border-zinc-600 dark:border-zinc-400"></div>
-          
+
           {/* Right Rivet */}
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-gradient-radial from-zinc-200 to-zinc-500 dark:from-zinc-500 dark:to-zinc-800 rounded-full shadow-inner border border-zinc-600 dark:border-zinc-400"></div>
-          
+
           {/* Header Content */}
           <div className="flex items-center justify-center">
             <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2 tracking-wider">
@@ -65,6 +92,10 @@ export const LibrarianDashboard = () => {
             <Upload className="h-4 w-4 mr-2" />
             Import PDFs
           </Button>
+          <Button onClick={() => setActiveTab('ai-tools')} size="sm" variant="outline">
+            <Scissors className="h-4 w-4 mr-2" />
+            AI Tools
+          </Button>
           <Button onClick={() => setActiveTab('inventory')} size="sm" variant="outline">
             <Package className="h-4 w-4 mr-2" />
             Physical Inventory
@@ -81,10 +112,13 @@ export const LibrarianDashboard = () => {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="library">Library</TabsTrigger>
-          <TabsTrigger value="pdf-import" className="pb-[5px]">PDF Import</TabsTrigger>
+          <TabsTrigger value="pdf-import" className="pb-[5px]">
+            PDF Import
+          </TabsTrigger>
+          <TabsTrigger value="ai-tools">AI Tools</TabsTrigger>
           <TabsTrigger value="inventory">Physical Inventory</TabsTrigger>
           <TabsTrigger value="csv">CSV Tools</TabsTrigger>
         </TabsList>
@@ -104,11 +138,21 @@ export const LibrarianDashboard = () => {
                   <Camera className="h-4 w-4 mr-2" />
                   Scan New Score
                 </Button>
-                <Button size="sm" variant="outline" className="w-full" onClick={() => setActiveTab('inventory')}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setActiveTab('inventory')}
+                >
                   <MapPin className="h-4 w-4 mr-2" />
                   Update Location
                 </Button>
-                <Button size="sm" variant="outline" className="w-full" onClick={() => setActiveTab('csv')}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setActiveTab('csv')}
+                >
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Generate Report
                 </Button>
@@ -177,6 +221,10 @@ export const LibrarianDashboard = () => {
           <PDFImportManager />
         </TabsContent>
 
+        <TabsContent value="ai-tools" className="space-y-4">
+          <BulkPDFCroppingTool />
+        </TabsContent>
+
         <TabsContent value="inventory">
           <PhysicalInventoryManager />
         </TabsContent>
@@ -187,14 +235,20 @@ export const LibrarianDashboard = () => {
       </Tabs>
 
       {/* Document Scanner Modal */}
-      {showScanner && <DocumentScanner onClose={() => setShowScanner(false)} onComplete={(pdfUrl, metadata) => {
-      setShowScanner(false);
-      toast({
-        title: "Document Scanned Successfully",
-        description: `"${metadata.title}" has been scanned and saved to the music library.`
-      });
-      // Optionally switch to PDF import tab to show the completed upload
-      setActiveTab('pdf-import');
-    }} />}
-    </div>;
+      {showScanner && (
+        <DocumentScanner
+          onClose={() => setShowScanner(false)}
+          onComplete={(pdfUrl, metadata) => {
+            setShowScanner(false);
+            toast({
+              title: 'Document Scanned Successfully',
+              description: `"${metadata.title}" has been scanned and saved to the music library.`,
+            });
+            // Optionally switch to PDF import tab to show the completed upload
+            setActiveTab('pdf-import');
+          }}
+        />
+      )}
+    </div>
+  );
 };
