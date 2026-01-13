@@ -107,12 +107,30 @@ export async function applyUniformCropToPDF(
   let pdfBytes: ArrayBuffer;
   if (typeof pdfSource === 'string') {
     const response = await fetch(pdfSource);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
+    }
+    
+    // Check content type to ensure it's a PDF
+    const contentType = response.headers.get('content-type');
+    if (contentType && !contentType.includes('pdf') && !contentType.includes('octet-stream')) {
+      throw new Error(`Invalid file type: ${contentType}. Expected a PDF file.`);
+    }
+    
     pdfBytes = await response.arrayBuffer();
+    
+    // Validate PDF header - PDF files start with %PDF
+    const header = new Uint8Array(pdfBytes.slice(0, 5));
+    const headerString = String.fromCharCode(...header);
+    if (!headerString.startsWith('%PDF')) {
+      throw new Error('Invalid PDF: File does not have a valid PDF header. The file may be corrupted or not a PDF.');
+    }
   } else {
     pdfBytes = pdfSource;
   }
 
-  const pdfDoc = await PDFDocument.load(pdfBytes);
+  const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
   const pageCount = pdfDoc.getPageCount();
 
   // Create settings for all pages
