@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { UserPlus, Users, Search, GraduationCap, Trash2, Filter, ArrowUpDown, SortAsc, SortDesc } from 'lucide-react';
+import { UserPlus, Users, Search, GraduationCap, Trash2, Filter, ArrowUpDown, SortAsc, SortDesc, FileUser } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ClasslistUploadDialog } from '@/components/academy/ClasslistUploadDialog';
@@ -467,6 +467,15 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
                   </div>
                   
                   <div className="flex items-center gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => navigate(`/dashboard?module=member-dossiers&userId=${enrollment.user_id}`)}
+                      title="View Dossier"
+                    >
+                      <FileUser className="h-4 w-4" />
+                    </Button>
+                    
                     <Select value={enrollment.enrollment_status} onValueChange={value => updateEnrollmentStatus(enrollment.id, value)}>
                       <SelectTrigger className="w-32">
                         <SelectValue />
