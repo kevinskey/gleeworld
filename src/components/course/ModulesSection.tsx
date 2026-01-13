@@ -341,7 +341,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                                     </span>
                                   )}
                                 </div>
-                                {topicItems.length > 0 && <p className="text-sm mt-0.5 line-clamp-3 text-primary-foreground pt-[10px] pb-[10px] leading-relaxed">
+                                {topicItems.length > 0 && <p className="text-sm mt-0.5 line-clamp-3 text-muted-foreground pt-[10px] pb-[10px] leading-relaxed">
                                     {topicItems[0]}
                                   </p>}
                               </div>
