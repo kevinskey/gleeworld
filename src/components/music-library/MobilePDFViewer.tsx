@@ -1,8 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
-import { Eye, ArrowLeft, Maximize } from 'lucide-react';
+import { Eye, ArrowLeft, BookOpen } from 'lucide-react';
 
 interface MobilePDFViewerProps {
   selectedPdf: {url: string; title: string; id?: string} | null;
@@ -11,58 +10,60 @@ interface MobilePDFViewerProps {
 }
 
 export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFViewerProps) => {
-  console.log('MobilePDFViewer: Rendering with selectedPdf:', selectedPdf);
-  
   if (!selectedPdf) {
-    console.log('MobilePDFViewer: No PDF selected, showing placeholder');
     return (
       <div className="h-full flex flex-col items-center justify-center p-4 text-center">
-        <div className="w-24 h-24 sm:w-32 sm:h-32 bg-muted rounded-lg flex items-center justify-center mb-4">
-          <Eye className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
+        <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center mb-3">
+          <Eye className="h-10 w-10 text-muted-foreground" />
         </div>
-        <h3 className="mobile-text-lg font-medium mb-2">No Sheet Music Selected</h3>
-        <p className="text-xs sm:text-sm text-muted-foreground mb-4">
-          Choose a piece from the library to view it here
+        <h3 className="text-base font-medium mb-1">No Sheet Music Selected</h3>
+        <p className="text-xs text-muted-foreground mb-3">
+          Choose a piece from the library
         </p>
-        <Button onClick={onBack} variant="outline" className="touch-target">
-          <ArrowLeft className="h-4 w-4 mr-2" />
+        <Button onClick={onBack} variant="outline" size="sm" className="h-8 text-xs">
+          <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
           Back to Library
         </Button>
       </div>
     );
   }
 
-  console.log('MobilePDFViewer: Rendering PDF viewer with URL:', selectedPdf.url);
-
   return (
-    <div className="h-full flex flex-col">
-      {/* Mobile PDF Header */}
-      <div className="sticky top-0 z-10 bg-background border-b card-compact">
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={onBack} className="touch-target h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Library
-          </Button>
-          <div className="flex-1 min-w-0 mx-2">
-            <h2 className="text-xs sm:text-sm font-medium truncate">{selectedPdf.title}</h2>
-          </div>
-          <div className="flex gap-1">
-            <Button size="sm" onClick={onStudyMode} className="touch-target h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
-              <Maximize className="h-4 w-4 mr-1" />
-              Study
-            </Button>
-          </div>
-        </div>
+    <div className="h-full flex flex-col bg-background">
+      {/* Compact Mobile PDF Header */}
+      <div className="flex-shrink-0 flex items-center justify-between h-10 px-2 bg-background/95 backdrop-blur border-b safe-top z-20">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onBack} 
+          className="h-7 px-2 text-xs gap-1"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Library</span>
+        </Button>
+        
+        <h2 className="text-xs font-medium truncate max-w-[45%] text-center">
+          {selectedPdf.title}
+        </h2>
+        
+        <Button 
+          size="sm" 
+          onClick={onStudyMode} 
+          className="h-7 px-2 text-xs gap-1"
+        >
+          <BookOpen className="h-3.5 w-3.5" />
+          <span>Study</span>
+        </Button>
       </div>
 
-      {/* PDF Viewer */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      {/* Full-width PDF Viewer */}
+      <div className="flex-1 min-h-0 overflow-hidden w-full">
         <PDFViewerWithAnnotations 
           key={selectedPdf.url}
           pdfUrl={selectedPdf.url}
           musicTitle={selectedPdf.title}
           musicId={selectedPdf.id}
-          className="w-full h-full"
+          className="w-full h-full rounded-none border-0"
         />
       </div>
     </div>
