@@ -57,6 +57,7 @@ import YouTubeChannel from "./pages/YouTubeChannel";
 import DirectoryPage from "./pages/DirectoryPage";
 import Auth from "./pages/Auth";
 import AuthPage from "./pages/AuthPage";
+import ForcePasswordChange from "./pages/ForcePasswordChange";
 import AuditionApplicationPage from "./pages/AuditionApplicationPage";
 import FanDashboard from "./pages/FanDashboard";
 // import AdminDashboard from "./pages/AdminDashboard";
@@ -291,8 +292,27 @@ const queryClient = new QueryClient({
   },
 });
 
+// Check if user needs forced password change (Jan 13-17, 2026)
+const needsForcePasswordChange = (): boolean => {
+  // Check if already changed password this session
+  if (sessionStorage.getItem('password_changed_jan2026') === 'true') {
+    return false;
+  }
+  
+  const now = new Date();
+  // Start: Monday Jan 13, 2026 00:00:00 EST
+  const startDate = new Date('2026-01-13T00:00:00-05:00');
+  // End: Friday Jan 17, 2026 12:00:00 EST
+  const endDate = new Date('2026-01-17T12:00:00-05:00');
+  
+  return now >= startDate && now <= endDate;
+};
+
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   try {
     const { user, loading } = useAuth();
   
@@ -310,6 +330,11 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
         sessionStorage.setItem('redirectAfterAuth', currentPath);
       }
       return <Navigate to="/auth" replace />;
+    }
+    
+    // Check for forced password change (skip if already on that page)
+    if (needsForcePasswordChange() && location.pathname !== '/force-password-change') {
+      return <Navigate to="/force-password-change" replace />;
     }
   
     return <>{children}</>;
@@ -436,6 +461,14 @@ const App = () => {
                   <PublicRoute>
                     <ResetPassword />
                   </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/force-password-change"
+                element={
+                  <ProtectedRoute>
+                    <ForcePasswordChange />
+                  </ProtectedRoute>
                 } 
               />
               <Route 
