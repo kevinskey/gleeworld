@@ -1,8 +1,5 @@
-import React, { createContext, useContext, useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
-
-// Lazy load to prevent circular dependency issues with react-rnd
-const FloatingYouTubePlayer = lazy(() => import('@/components/music-library/FloatingYouTubePlayer'));
 
 interface AudioCompanionState {
   isActive: boolean;
@@ -323,15 +320,24 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     >
       {children}
       
-      {/* Floating YouTube Player - draggable, resizable, closeable */}
+      {/* Hidden YouTube iframe for audio-only playback - controlled by transport */}
       {youtubeVideoId && (
-        <Suspense fallback={null}>
-          <FloatingYouTubePlayer
-            videoId={youtubeVideoId}
-            onClose={closeYouTube}
-            title="YouTube Player"
-          />
-        </Suspense>
+        <iframe
+          ref={iframeRef}
+          src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&rel=0&origin=${window.location.origin}`}
+          allow="autoplay; encrypted-media"
+          onLoad={handleIframeLoad}
+          style={{
+            position: 'fixed',
+            top: '-9999px',
+            left: '-9999px',
+            width: '1px',
+            height: '1px',
+            opacity: 0,
+            pointerEvents: 'none',
+          }}
+          title="YouTube Audio"
+        />
       )}
       
       {/* Global hidden audio element */}
