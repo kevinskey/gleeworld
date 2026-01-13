@@ -3,7 +3,7 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Megaphone, PenTool, CalendarDays, Music, Shield } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Megaphone, PenTool, CalendarDays, Music, Shield, UserSearch } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCourseTA } from '@/hooks/useCourseTA';
 import { cn } from '@/lib/utils';
@@ -34,6 +34,7 @@ import { CoursePollManager } from '@/components/course/CoursePollManager';
 import { SemesterManager } from '@/components/admin/SemesterManager';
 import { SightReadingAssignmentManager } from '@/components/sight-singing/SightReadingAssignmentManager';
 import { AttendanceSecurityControls } from '@/components/attendance/AttendanceSecurityControls';
+import MemberDossiersModule from '@/components/modules/member-dossiers/MemberDossiersModule';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -157,6 +158,10 @@ export const CourseInstructorConsole = () => {
       value: 'students',
       label: 'Enrollment',
       icon: UserPlus
+    }, {
+      value: 'dossiers',
+      label: 'Member Dossiers',
+      icon: UserSearch
     }, {
       value: 'analytics',
       label: 'Analytics',
@@ -300,6 +305,7 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'rubrics' && <RubricManager />}
             {activeTab === 'grades' && <GradesAdmin />}
             {activeTab === 'students' && dbCourse && <CourseEnrollmentManager courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} term={dbCourse.term || undefined} />}
+            {activeTab === 'dossiers' && <MemberDossiersModule />}
             {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
             {activeTab === 'announcements' && dbCourse && <CourseAnnouncementsManager courseId={dbCourse.id} />}
             {activeTab === 'resources' && <ResourcesAdmin />}
