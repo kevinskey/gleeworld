@@ -26753,7 +26753,7 @@ export type Database = {
           p_time_window_enabled?: boolean
           p_time_window_minutes?: number
         }
-        Returns: Json
+        Returns: string
       }
       generate_secure_password: { Args: { length?: number }; Returns: string }
       generate_secure_qr_token: {
