@@ -20,6 +20,7 @@ import { PersonalNotes } from '@/modules/glee-library/personal-notes/PersonalNot
 import { SmartToolsSidebar } from '@/modules/glee-library/smart-tools/SmartToolsSidebar';
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { SheetMusicHistory } from '@/components/music-library/SheetMusicHistory';
 import { PracticeLinks } from '@/modules/glee-library/practice/PracticeLinks';
 import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
@@ -59,6 +60,7 @@ export const SheetMusicViewDialog = ({
   item,
 }: SheetMusicViewDialogProps) => {
   const { user } = useAuth();
+  const { isAdmin, profile } = useUserRole();
   const { stop, closeYouTube } = useAudioCompanion();
   
   const [setlistInfo, setSetlistInfo] = useState<any>(null);
@@ -77,7 +79,8 @@ export const SheetMusicViewDialog = ({
   
   if (!item) return null;
 
-  const isAdmin = user?.email?.includes('admin') || false;
+  // Allow admins, super-admins, and librarians to crop PDFs
+  const canCropPDF = isAdmin() || profile?.exec_board_role === 'librarian';
 
   const handleSaveCroppedPDF = async (blob: Blob) => {
     if (!item || !user) return;
@@ -142,7 +145,7 @@ export const SheetMusicViewDialog = ({
       <DialogContent className="!fixed !inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !p-0 !w-screen !h-screen !max-w-none !max-h-none overflow-hidden !rounded-none !border-0 !z-[9990]" style={{ top: 'calc(var(--gw-header-h, 0px) + var(--gw-radio-bar-height, 0px))', height: 'calc(100vh - var(--gw-header-h, 0px) - var(--gw-radio-bar-height, 0px))' }}>
         <DialogHeader className="hidden" />
         <div className="absolute top-20 right-3 z-50 flex gap-2">
-          {item.pdf_url && isAdmin && (
+          {item.pdf_url && canCropPDF && (
             <Button
               variant="secondary"
               size="sm"
