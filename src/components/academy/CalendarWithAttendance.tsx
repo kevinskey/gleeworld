@@ -18,6 +18,7 @@ import {
 import { QuickCameraCapture } from '@/components/camera/QuickCameraCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMessenger } from '@/contexts/MessengerContext';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -87,6 +88,7 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
   isAdmin = false 
 }) => {
   const { user } = useAuth();
+  const { openMessenger } = useMessenger();
   
   // Calendar state
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -112,15 +114,35 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
   
   // Student profile
   const [studentName, setStudentName] = useState('');
+  
+  // Secretary email for messenger
+  const [secretaryEmail, setSecretaryEmail] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCalendarEvents();
+    fetchSecretaryEmail();
     if (isEnrolled && user) {
       fetchAttendance();
       fetchExcuseRequests();
       fetchStudentProfile();
     }
   }, [courseId, currentMonth, isEnrolled, user]);
+
+  const fetchSecretaryEmail = async () => {
+    try {
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('email')
+        .or(`exec_board_role.ilike.%secretary%,role_tags.cs.{secretary},special_roles.cs.{secretary}`)
+        .limit(1)
+        .single();
+      if (data?.email) {
+        setSecretaryEmail(data.email);
+      }
+    } catch (error) {
+      console.error('Error fetching secretary email:', error);
+    }
+  };
 
   const fetchStudentProfile = async () => {
     if (!user) return;
@@ -136,6 +158,21 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
     } catch (error) {
       console.error('Error fetching student profile:', error);
     }
+  };
+
+  const handleEmailSecretary = () => {
+    const selectedEvents = events.filter(e => selectedEventIds.includes(e.id));
+    const eventDetails = selectedEvents.map(e => 
+      `- ${e.title} (${format(new Date(e.start_time), 'MMM d, yyyy h:mm a')})`
+    ).join('\n');
+    
+    const excuseLabel = EXCUSE_TYPES.find(t => t.value === excuseType)?.label || excuseType;
+    
+    openMessenger({
+      recipientEmail: secretaryEmail || '',
+      subject: `Excuse Request - ${studentName || 'Student'}`,
+      content: `Dear Glee Secretary,\n\nI am writing regarding my absence for the following event(s):\n${eventDetails}\n\nReason: ${excuseLabel}\n${excuseClarification ? `\nAdditional details: ${excuseClarification}` : ''}\n\nThank you for your understanding.\n\nSincerely,\n${studentName || 'Student'}`
+    });
   };
 
   const fetchCalendarEvents = async () => {
@@ -817,9 +854,18 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
               />
             </div>
           </div>
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setShowExcuseDialog(false)}>
               Cancel
+            </Button>
+            <Button 
+              variant="secondary"
+              onClick={handleEmailSecretary}
+              disabled={!secretaryEmail}
+              className="gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              Email Glee Secretary
             </Button>
             <Button 
               onClick={handleSubmitExcuse} 

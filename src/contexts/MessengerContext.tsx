@@ -1,9 +1,17 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
+export interface MessengerComposeOptions {
+  recipientEmail?: string;
+  recipientName?: string;
+  subject?: string;
+  content?: string;
+}
+
 interface MessengerContextType {
   isOpen: boolean;
   hasUnsavedChanges: boolean;
-  openMessenger: () => void;
+  composeOptions: MessengerComposeOptions | null;
+  openMessenger: (options?: MessengerComposeOptions) => void;
   closeMessenger: () => void;
   toggleMessenger: () => void;
   setHasUnsavedChanges: (value: boolean) => void;
@@ -11,6 +19,7 @@ interface MessengerContextType {
   confirmClose: () => void; // Force close without warning
   showCloseWarning: boolean;
   setShowCloseWarning: (value: boolean) => void;
+  clearComposeOptions: () => void;
 }
 
 const MessengerContext = createContext<MessengerContextType | undefined>(undefined);
@@ -19,9 +28,17 @@ export const MessengerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showCloseWarning, setShowCloseWarning] = useState(false);
+  const [composeOptions, setComposeOptions] = useState<MessengerComposeOptions | null>(null);
 
-  const openMessenger = useCallback(() => {
+  const openMessenger = useCallback((options?: MessengerComposeOptions) => {
+    if (options) {
+      setComposeOptions(options);
+    }
     setIsOpen(true);
+  }, []);
+
+  const clearComposeOptions = useCallback(() => {
+    setComposeOptions(null);
   }, []);
 
   const closeMessenger = useCallback(() => {
@@ -61,6 +78,7 @@ export const MessengerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       value={{
         isOpen,
         hasUnsavedChanges,
+        composeOptions,
         openMessenger,
         closeMessenger,
         toggleMessenger,
@@ -69,6 +87,7 @@ export const MessengerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         showCloseWarning,
         setShowCloseWarning,
         confirmClose,
+        clearComposeOptions,
       }}
     >
       {children}
