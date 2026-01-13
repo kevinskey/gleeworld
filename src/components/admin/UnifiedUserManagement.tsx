@@ -49,7 +49,8 @@ import {
   BookOpen,
   Boxes,
   Star,
-  GraduationCap
+  GraduationCap,
+  FolderOpen
 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -67,6 +68,7 @@ import { PermissionErrorBoundary } from './PermissionErrorBoundary';
 import { useAutoEnrollUser } from '@/hooks/useAutoEnrollUser';
 import { useUsernamePermissionsAdmin } from '@/hooks/useUsernamePermissions';
 import { usePermissionGroups } from '@/hooks/usePermissionGroups';
+import MemberDossiersModule from '@/components/modules/member-dossiers/MemberDossiersModule';
 import type { User as AdminUser } from '@/hooks/useUsers';
 
 interface UserProfile {
@@ -393,9 +395,10 @@ export const UnifiedUserManagement = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-1">
           <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3">Overview</TabsTrigger>
           <TabsTrigger value="users" className="text-xs sm:text-sm px-2 sm:px-3">Users</TabsTrigger>
+          <TabsTrigger value="dossiers" className="text-xs sm:text-sm px-2 sm:px-3">Dossiers</TabsTrigger>
           <TabsTrigger value="enroll" className="text-xs sm:text-sm px-2 sm:px-3">Add User</TabsTrigger>
           <TabsTrigger value="permissions" className="text-xs sm:text-sm px-2 sm:px-3 pb-2">Permissions</TabsTrigger>
           <TabsTrigger value="modules" className="text-xs sm:text-sm px-2 sm:px-3">Modules</TabsTrigger>
@@ -845,6 +848,23 @@ export const UnifiedUserManagement = () => {
                   </TableBody>
                 </Table>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="dossiers" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FolderOpen className="h-5 w-5" />
+                User Dossiers
+              </CardTitle>
+              <CardDescription>
+                Comprehensive user profiles, usage analytics, and profile completion tracking for site management
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MemberDossiersModule />
             </CardContent>
           </Card>
         </TabsContent>
