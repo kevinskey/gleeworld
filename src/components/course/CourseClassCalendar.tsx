@@ -1050,24 +1050,24 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     const isToday = isSameDay(day, new Date());
                     const isSelected = selectedDate && isSameDay(day, selectedDate);
                     const isCurrentMonth = isSameMonth(day, currentDate);
-                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[80px] p-1 rounded-lg border text-left transition-colors", !isCurrentMonth && "opacity-40", isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary", isSelected && "bg-primary/10 border-primary", !isSelected && !isHoliday && "hover:bg-accent")}>
-                            <div className={cn("text-sm font-medium mb-1 flex items-center gap-1 text-primary-foreground", isToday && "text-primary", isHoliday && "text-amber-600")}>
+                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] p-1.5 sm:p-2 lg:p-3 rounded-lg lg:rounded-xl border-2 text-left transition-colors", !isCurrentMonth && "opacity-40", isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary", isSelected && "bg-primary/10 border-primary", !isSelected && !isHoliday && "hover:bg-accent border-transparent")}>
+                            <div className={cn("text-base sm:text-lg lg:text-xl font-bold mb-1 lg:mb-2 flex items-center gap-1", isToday && "text-primary", isHoliday && "text-amber-600")}>
                               {format(day, 'd')}
                               {isHoliday && <AlertCircle className="h-3 w-3" />}
                             </div>
-                            <div className="space-y-0.5">
-                              {daySpelmanEvents.slice(0, 1).map(event => <div key={event.id} className="text-xs bg-amber-100 rounded px-1 py-0.5 truncate text-black">
+                            <div className="space-y-1 lg:space-y-1.5">
+                              {daySpelmanEvents.slice(0, 1).map(event => <div key={event.id} className="text-[10px] sm:text-xs lg:text-sm bg-amber-100 rounded-md lg:rounded-lg px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 truncate text-black">
                                   {event.title}
                                 </div>)}
-                              {daySessions.slice(0, isHoliday ? 1 : 2).map(session => {
+                              {daySessions.slice(0, isHoliday ? 1 : 3).map(session => {
                           const typeConfig = getSessionTypeConfig(session.session_type);
-                          return <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1 py-0.5 truncate flex items-center gap-1">
-                                    <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
+                          return <div key={session.id} className="text-[10px] sm:text-xs lg:text-sm bg-[#003666]/10 text-[#003666] rounded-md lg:rounded-lg px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 truncate flex items-center gap-1">
+                                    <typeConfig.icon className="h-3 w-3 lg:h-4 lg:w-4 flex-shrink-0" />
                                     <span className="truncate">{session.title}</span>
                                   </div>;
                         })}
-                              {daySessions.length + daySpelmanEvents.length > 2 && <div className="text-xs text-muted-foreground">
-                                  +{daySessions.length + daySpelmanEvents.length - 2} more
+                              {daySessions.length + daySpelmanEvents.length > 3 && <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground px-1.5 sm:px-2">
+                                  +{daySessions.length + daySpelmanEvents.length - 3} more
                                 </div>}
                             </div>
                           </button>;
@@ -1097,23 +1097,23 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
                     const isToday = isSameDay(day, new Date());
                     const isSelected = selectedDate && isSameDay(day, selectedDate);
-                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[200px] p-2 rounded-lg border text-left transition-colors", isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary", isSelected && "bg-primary/10 border-primary ring-1 ring-primary", !isSelected && !isHoliday && "hover:bg-accent")}>
+                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[200px] sm:min-h-[240px] lg:min-h-[280px] xl:min-h-[320px] p-2 sm:p-3 lg:p-4 rounded-lg lg:rounded-xl border-2 text-left transition-colors", isHoliday && "bg-amber-50 border-amber-300", isToday && "border-primary", isSelected && "bg-primary/10 border-primary ring-2 ring-primary", !isSelected && !isHoliday && "hover:bg-accent border-transparent")}>
                             {isHoliday && <div className="flex items-center gap-1 text-amber-600 text-xs mb-2">
                                 <AlertCircle className="h-3 w-3" />
                                 Holiday
                               </div>}
                             <div className="space-y-1">
-                              {daySpelmanEvents.map(event => <div key={event.id} className="text-xs bg-amber-100 rounded px-1.5 py-1 text-black">
+                              {daySpelmanEvents.map(event => <div key={event.id} className="text-xs sm:text-sm lg:text-base bg-amber-100 rounded-md lg:rounded-lg px-2 sm:px-2.5 lg:px-3 py-1.5 sm:py-2 lg:py-2.5 text-black">
                                   {event.title}
                                 </div>)}
                               {daySessions.map(session => {
                           const typeConfig = getSessionTypeConfig(session.session_type);
-                          return <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1.5 py-1">
-                                    <div className="flex items-center gap-1 font-medium">
-                                      <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
+                          return <div key={session.id} className="text-xs sm:text-sm lg:text-base bg-[#003666]/10 text-[#003666] rounded-md lg:rounded-lg px-2 sm:px-2.5 lg:px-3 py-1.5 sm:py-2 lg:py-2.5">
+                                    <div className="flex items-center gap-1.5 font-medium">
+                                      <typeConfig.icon className="h-3.5 w-3.5 lg:h-4 lg:w-4 flex-shrink-0" />
                                       <span className="truncate">{session.title}</span>
                                     </div>
-                                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                                    <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-0.5 lg:mt-1">
                                       {session.start_time} - {session.end_time}
                                     </div>
                                   </div>;
