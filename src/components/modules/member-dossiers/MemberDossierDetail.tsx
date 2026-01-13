@@ -12,6 +12,7 @@ import {
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { MemberCheckoutStatus } from "./MemberCheckoutStatus";
+import { ExitInterviewSummaryCard } from "@/components/surveys/ExitInterviewSummaryCard";
 interface ExitInterview {
   id: string;
   semester: string;
@@ -345,7 +346,10 @@ export const MemberDossierDetail: React.FC<MemberDossierDetailProps> = ({
       {/* Checkout Status */}
       <MemberCheckoutStatus userId={member.user_id} />
 
-      {/* Exit Interviews */}
+      {/* Exit Interview Quick Summary - for admin quick reference */}
+      <ExitInterviewSummaryCard userId={member.user_id} />
+
+      {/* Exit Interviews - Detailed View */}
       {exitInterviews.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
