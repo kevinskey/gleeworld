@@ -209,26 +209,35 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                     sideOffset={20} 
                     avoidCollisions 
                     collisionPadding={8} 
-                    className="w-[92vw] sm:w-80 max-w-sm p-3 bg-background border border-border rounded-lg shadow-xl z-[9999] max-h-[80vh] overflow-y-auto"
+                    className="w-[92vw] sm:w-80 max-w-sm p-3 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] max-h-[80vh] overflow-y-auto"
                   >
-                    <div className="flex items-center justify-center gap-2 pb-2 border-b border-border">
+                    <div className="flex items-center justify-center gap-2 pb-2 border-b border-gray-200">
                       <img src={gleeWorldLogoCircle} alt="GleeWorld" className="h-4 w-4" />
-                      <span className="font-semibold text-sm text-foreground">Menu</span>
+                      <span className="font-semibold text-sm text-gray-900">Menu</span>
                     </div>
                     <nav className="flex flex-col gap-1 pt-3">
                       <ResponsiveNavigation mobile onItemClick={() => setIsOpen(false)} />
-                      {!user && (
-                        <div className="flex flex-col gap-2 pt-3 mt-3 border-t border-border">
+                      <div className="flex flex-col gap-2 pt-3 mt-3 border-t border-gray-200">
+                        {user ? (
+                          <Button 
+                            variant="outline"
+                            className="w-full text-gray-700 border-gray-300 hover:bg-gray-100"
+                            onClick={() => {
+                              setIsOpen(false);
+                            }}
+                          >
+                            <Link to="/dashboard" className="w-full">My Dashboard</Link>
+                          </Button>
+                        ) : (
                           <Button 
                             asChild
-                            variant="navy"
-                            className="w-full"
+                            className="w-full bg-[#003666] hover:bg-[#002244] text-white"
                             onClick={() => setIsOpen(false)}
                           >
                             <Link to="/auth">Sign In / Join</Link>
                           </Button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </nav>
                   </DropdownMenuContent>
                 </DropdownMenu>
