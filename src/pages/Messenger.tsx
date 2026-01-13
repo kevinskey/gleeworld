@@ -81,7 +81,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   }, [courseId, courseName]);
 
   // Composer state - default to video tab if joining from link
-  const [composerMode, setComposerMode] = useState<'email' | 'sms' | 'video' | 'history'>(joinRoomName ? 'video' : 'email');
+  const [composerMode, setComposerMode] = useState<'email' | 'sms' | 'video'>(joinRoomName ? 'video' : 'email');
+  const [showEmailHistory, setShowEmailHistory] = useState(false);
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [recipients, setRecipients] = useState<string[]>([]);
@@ -550,8 +551,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           {/* Composer Area */}
           <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
             {/* Tabs */}
-            <Tabs value={composerMode} onValueChange={v => setComposerMode(v as 'email' | 'sms' | 'video' | 'history')} className="flex flex-col flex-1 overflow-hidden">
-                <TabsList className={`grid w-full ${canSendSMS ? 'grid-cols-4' : 'grid-cols-3'} rounded-none bg-background h-11 p-0 gap-0 border-b`}>
+            <Tabs value={composerMode} onValueChange={v => setComposerMode(v as 'email' | 'sms' | 'video')} className="flex flex-col flex-1 overflow-hidden">
+                <TabsList className={`grid w-full ${canSendSMS ? 'grid-cols-3' : 'grid-cols-2'} rounded-none bg-background h-11 p-0 gap-0 border-b`}>
                   <TabsTrigger value="email" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
                     <Mail className="h-4 w-4" />
                     <span className="hidden sm:inline">Email</span>
@@ -564,62 +565,86 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                     <Video className="h-4 w-4" />
                     <span className="hidden sm:inline">Video</span>
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
-                    <History className="h-4 w-4" />
-                    <span className="hidden sm:inline">History</span>
-                  </TabsTrigger>
                 </TabsList>
 
                 {/* Email Tab */}
                 <TabsContent value="email" className="flex-1 overflow-auto mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-                  <div className="flex-1 bg-muted/50 p-6 space-y-4">
-                    {/* Recipients */}
-                    <div className="space-y-1">
-                      <Label className="text-sm font-medium text-foreground">To:</Label>
-                      <div className="flex flex-wrap gap-2 p-3 min-h-[48px] border border-border rounded-lg bg-background">
-                        {recipients.map((r, i) => <Badge key={i} variant="secondary" className="gap-1 pr-1">
-                            {r}
-                            <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>)}
-                        <div className="relative flex-1 min-w-[200px]">
-                          <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
-                          if (e.key === 'Enter' && searchQuery.includes('@')) {
-                            addRecipient(searchQuery);
-                          }
-                        }} placeholder="Search or type email..." className="border-0 h-8 p-0 focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground" />
-                          {filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                              {filteredContacts.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
-                                  <span className="font-medium">{result.full_name}</span>
-                                  <span className="text-sm text-muted-foreground">{result.email}</span>
-                                </button>)}
-                            </div>}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Subject */}
-                    <div className="space-y-1">
-                      <Label className="text-sm font-medium text-foreground">Subject:</Label>
-                      <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject line..." className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground" />
-                    </div>
-
-                    {/* Content */}
-                    <div className="space-y-1 flex-1 flex flex-col min-h-0">
-                      <Label className="text-sm font-medium text-foreground">Message:</Label>
-                      <div className="flex-1 min-h-[200px] md:min-h-[400px]">
-                        <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="400px" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Send Button - Fixed at bottom */}
-                  <div className="p-4 bg-muted border-t border-border">
-                    <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full">
-                      {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
+                  {/* Toggle between Compose and History */}
+                  <div className="flex items-center gap-2 p-3 bg-background border-b border-border">
+                    <Button 
+                      variant={!showEmailHistory ? "default" : "outline"} 
+                      size="sm" 
+                      onClick={() => setShowEmailHistory(false)}
+                      className="gap-2"
+                    >
+                      <Send className="h-4 w-4" />
+                      Compose
+                    </Button>
+                    <Button 
+                      variant={showEmailHistory ? "default" : "outline"} 
+                      size="sm" 
+                      onClick={() => setShowEmailHistory(true)}
+                      className="gap-2"
+                    >
+                      <History className="h-4 w-4" />
+                      History
                     </Button>
                   </div>
+
+                  {showEmailHistory ? (
+                    <CommunicationHistoryPanel channelFilter="email" />
+                  ) : (
+                    <>
+                      <div className="flex-1 bg-muted/50 p-6 space-y-4">
+                        {/* Recipients */}
+                        <div className="space-y-1">
+                          <Label className="text-sm font-medium text-foreground">To:</Label>
+                          <div className="flex flex-wrap gap-2 p-3 min-h-[48px] border border-border rounded-lg bg-background">
+                            {recipients.map((r, i) => <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                                {r}
+                                <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>)}
+                            <div className="relative flex-1 min-w-[200px]">
+                              <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
+                              if (e.key === 'Enter' && searchQuery.includes('@')) {
+                                addRecipient(searchQuery);
+                              }
+                            }} placeholder="Search or type email..." className="border-0 h-8 p-0 focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground" />
+                              {filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                  {filteredContacts.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
+                                      <span className="font-medium">{result.full_name}</span>
+                                      <span className="text-sm text-muted-foreground">{result.email}</span>
+                                    </button>)}
+                                </div>}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Subject */}
+                        <div className="space-y-1">
+                          <Label className="text-sm font-medium text-foreground">Subject:</Label>
+                          <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject line..." className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground" />
+                        </div>
+
+                        {/* Content */}
+                        <div className="space-y-1 flex-1 flex flex-col min-h-0">
+                          <Label className="text-sm font-medium text-foreground">Message:</Label>
+                          <div className="flex-1 min-h-[200px] md:min-h-[400px]">
+                            <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="400px" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Send Button - Fixed at bottom */}
+                      <div className="p-4 bg-muted border-t border-border">
+                        <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full">
+                          {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </TabsContent>
 
                 {/* SMS Tab */}
@@ -694,10 +719,6 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                   <VideoSessionManager joinRoomName={joinRoomName} />
                 </TabsContent>
 
-                {/* History Tab */}
-                <TabsContent value="history" className="flex-1 overflow-auto mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-                  <CommunicationHistoryPanel />
-                </TabsContent>
               </Tabs>
             </div>
 

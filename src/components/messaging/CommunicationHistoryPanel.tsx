@@ -24,14 +24,21 @@ import { useGroupedMessageHistory, MessageHistoryItem } from '@/hooks/useMessage
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export const CommunicationHistoryPanel: React.FC = () => {
-  const [channelFilter, setChannelFilter] = useState<'all' | 'email' | 'sms'>('all');
+interface CommunicationHistoryPanelProps {
+  channelFilter?: 'email' | 'sms';
+}
+
+export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps> = ({ channelFilter: initialChannelFilter }) => {
+  const [channelFilter, setChannelFilter] = useState<'all' | 'email' | 'sms'>(initialChannelFilter || 'all');
   const [directionFilter, setDirectionFilter] = useState<'all' | 'sent' | 'received'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set(['Today']));
 
+  // If channelFilter is locked via prop, use it directly
+  const effectiveChannelFilter = initialChannelFilter || (channelFilter === 'all' ? undefined : channelFilter);
+
   const { groupedMessages, stats, isLoading, refetch } = useGroupedMessageHistory({
-    channel: channelFilter === 'all' ? undefined : channelFilter,
+    channel: effectiveChannelFilter,
     direction: directionFilter === 'all' ? undefined : directionFilter,
     search: searchQuery || undefined,
   });
@@ -143,16 +150,18 @@ export const CommunicationHistoryPanel: React.FC = () => {
               className="pl-9 h-9"
             />
           </div>
-          <Select value={channelFilter} onValueChange={(v) => setChannelFilter(v as typeof channelFilter)}>
-            <SelectTrigger className="w-[110px] h-9">
-              <SelectValue placeholder="Channel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="email">Email</SelectItem>
-              <SelectItem value="sms">SMS</SelectItem>
-            </SelectContent>
-          </Select>
+          {!initialChannelFilter && (
+            <Select value={channelFilter} onValueChange={(v) => setChannelFilter(v as typeof channelFilter)}>
+              <SelectTrigger className="w-[110px] h-9">
+                <SelectValue placeholder="Channel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="sms">SMS</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <Select value={directionFilter} onValueChange={(v) => setDirectionFilter(v as typeof directionFilter)}>
             <SelectTrigger className="w-[110px] h-9">
               <SelectValue placeholder="Direction" />
