@@ -156,7 +156,7 @@ export default function AuthPage() {
           <div className="flex justify-center mb-3 sm:mb-4 md:mb-6">
             <img src={gleeWorldLogoCircle} alt="GleeWorld.org logo" className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 object-contain drop-shadow-2xl" />
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 sm:mb-3 drop-shadow-2xl">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3 drop-shadow-2xl lg:text-6xl">
             Glee World! 
           </h1>
           <h2 className="text-base sm:text-lg md:text-xl mb-2 sm:mb-3 md:mb-4 drop-shadow-lg font-serif text-white font-semibold">
@@ -172,7 +172,7 @@ export default function AuthPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 pointer-events-none" />
           
           <CardHeader className="relative py-3 sm:py-4 md:py-6">
-            <CardTitle className="flex items-center justify-center text-base sm:text-lg md:text-xl text-black">
+            <CardTitle className="flex items-center justify-center text-base sm:text-lg text-secondary-foreground md:text-3xl">
               {isLogin ? <>
                   <LogIn className="h-5 w-5 mr-2" />
                   Welcome Back
