@@ -285,7 +285,7 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
                 </p>
                 <ol className="list-decimal list-inside space-y-2">
                   {objectives.map((objective) => (
-                    <li key={objective.id} className="text-foreground/90">
+                    <li key={objective.id} className="text-sm text-foreground/90">
                       {objective.objective_text}
                       {objective.bloom_level && (
                         <Badge variant="outline" className="ml-2 text-xs">
@@ -327,17 +327,17 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
                     </h4>
                     <div className="space-y-2">
                       {requirements.map((req) => (
-                        <div key={req.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <span className="font-medium">{req.requirement_text}</span>
+                        <div key={req.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                          <span className="text-sm font-medium">{req.requirement_text}</span>
                           {req.weight_percentage > 0 && (
-                            <Badge>{req.weight_percentage}%</Badge>
+                            <Badge className="text-xs">{req.weight_percentage}%</Badge>
                           )}
                         </div>
                       ))}
                       {/* Total row */}
-                      <div className="flex items-center justify-between p-3 border-t mt-2 pt-4">
-                        <span className="font-semibold">Total</span>
-                        <Badge variant="secondary" className="text-base">
+                      <div className="flex items-center justify-between p-2 border-t mt-2 pt-3">
+                        <span className="text-sm font-semibold">Total</span>
+                        <Badge variant="secondary" className="text-sm">
                           {requirements.reduce((sum, r) => sum + r.weight_percentage, 0)}%
                         </Badge>
                       </div>
@@ -355,8 +355,8 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                       {Object.entries(gradingScale).map(([grade, range]) => (
                         <div key={grade} className="flex items-center justify-between p-2 bg-muted/50 rounded">
-                          <span className="font-medium">{grade}</span>
-                          <span className="text-sm text-muted-foreground">{String(range)}</span>
+                          <span className="text-sm font-medium">{grade}</span>
+                          <span className="text-xs text-muted-foreground">{String(range)}</span>
                         </div>
                       ))}
                     </div>
@@ -387,12 +387,12 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
               <CardContent>
                 <div className="space-y-3">
                   {weeklySchedule.map((week: any, index: number) => (
-                    <div key={index} className="flex gap-4 p-3 border rounded-lg">
-                      <div className="flex-shrink-0 w-20 font-semibold text-primary">
+                    <div key={index} className="flex gap-3 p-2 border rounded-lg">
+                      <div className="flex-shrink-0 w-16 text-sm font-semibold text-primary">
                         {week.week || `Week ${index + 1}`}
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">{week.topics || week.topic}</p>
+                        <p className="text-sm font-medium">{week.topics || week.topic}</p>
                       </div>
                     </div>
                   ))}
