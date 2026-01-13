@@ -140,14 +140,17 @@ export type Database = {
           created_by: string | null
           description: string | null
           display_order: number | null
+          duration_ms: number | null
           id: string
           image_url: string
           ipad_image_url: string | null
           is_active: boolean
+          layout: string | null
           link_target: string | null
           link_url: string | null
           mobile_image_url: string | null
           title: string | null
+          transition: string | null
           updated_at: string
         }
         Insert: {
@@ -156,14 +159,17 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number | null
+          duration_ms?: number | null
           id?: string
           image_url: string
           ipad_image_url?: string | null
           is_active?: boolean
+          layout?: string | null
           link_target?: string | null
           link_url?: string | null
           mobile_image_url?: string | null
           title?: string | null
+          transition?: string | null
           updated_at?: string
         }
         Update: {
@@ -172,14 +178,17 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number | null
+          duration_ms?: number | null
           id?: string
           image_url?: string
           ipad_image_url?: string | null
           is_active?: boolean
+          layout?: string | null
           link_target?: string | null
           link_url?: string | null
           mobile_image_url?: string | null
           title?: string | null
+          transition?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -3035,42 +3044,51 @@ export type Database = {
           created_at: string | null
           description: string | null
           display_order: number | null
+          duration_ms: number | null
           id: string
           image_url: string
           ipad_image_url: string | null
           is_active: boolean | null
+          layout: string | null
           link_target: string | null
           link_url: string | null
           mobile_image_url: string | null
           title: string | null
+          transition: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
           display_order?: number | null
+          duration_ms?: number | null
           id?: string
           image_url: string
           ipad_image_url?: string | null
           is_active?: boolean | null
+          layout?: string | null
           link_target?: string | null
           link_url?: string | null
           mobile_image_url?: string | null
           title?: string | null
+          transition?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
           display_order?: number | null
+          duration_ms?: number | null
           id?: string
           image_url?: string
           ipad_image_url?: string | null
           is_active?: boolean | null
+          layout?: string | null
           link_target?: string | null
           link_url?: string | null
           mobile_image_url?: string | null
           title?: string | null
+          transition?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -10179,6 +10197,7 @@ export type Database = {
           description_position_vertical: string | null
           description_size: string | null
           display_order: number | null
+          duration_ms: number | null
           hero_settings_id: string | null
           id: string
           image_url: string | null
@@ -10206,6 +10225,7 @@ export type Database = {
           description_position_vertical?: string | null
           description_size?: string | null
           display_order?: number | null
+          duration_ms?: number | null
           hero_settings_id?: string | null
           id?: string
           image_url?: string | null
@@ -10233,6 +10253,7 @@ export type Database = {
           description_position_vertical?: string | null
           description_size?: string | null
           display_order?: number | null
+          duration_ms?: number | null
           hero_settings_id?: string | null
           id?: string
           image_url?: string | null

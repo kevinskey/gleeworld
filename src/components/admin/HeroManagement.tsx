@@ -24,6 +24,9 @@ interface HeroSlide {
   is_active: boolean | null;
   created_at: string | null;
   updated_at: string | null;
+  duration_ms: number | null;
+  layout: string | null;
+  transition: string | null;
 }
 
 interface HeroSettings {
@@ -163,7 +166,10 @@ export const HeroManagement = () => {
           display_order: s.display_order,
           is_active: s.is_active,
           created_at: s.created_at,
-          updated_at: s.created_at // gw_hero_slides doesn't have updated_at
+          updated_at: s.created_at, // gw_hero_slides doesn't have updated_at
+          duration_ms: s.duration_ms ?? 6000,
+          layout: s.layout ?? 'one',
+          transition: s.transition ?? 'fade'
         }));
       } else if (selectedContext.table === 'dashboard_hero_slides') {
         const { data, error } = await supabase
@@ -171,7 +177,21 @@ export const HeroManagement = () => {
           .select('*')
           .order('display_order', { ascending: true });
         if (error) throw error;
-        slidesData = data || [];
+        slidesData = (data || []).map(s => ({
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          image_url: s.image_url || '',
+          mobile_image_url: s.mobile_image_url,
+          ipad_image_url: s.ipad_image_url,
+          display_order: s.display_order,
+          is_active: s.is_active,
+          created_at: s.created_at,
+          updated_at: s.updated_at,
+          duration_ms: s.duration_ms ?? 6000,
+          layout: s.layout ?? 'one',
+          transition: s.transition ?? 'fade'
+        }));
       } else if (selectedContext.table === 'advertising_hero') {
         const { data, error } = await supabase
           .from('advertising_hero')
@@ -188,7 +208,10 @@ export const HeroManagement = () => {
           display_order: s.display_order,
           is_active: s.is_active,
           created_at: s.created_at,
-          updated_at: s.updated_at
+          updated_at: s.updated_at,
+          duration_ms: s.duration_ms ?? 6000,
+          layout: s.layout ?? 'one',
+          transition: s.transition ?? 'fade'
         }));
       }
       
@@ -415,7 +438,10 @@ export const HeroManagement = () => {
             mobile_image_url: formData.mobile_image_url || null,
             ipad_image_url: formData.ipad_image_url || null,
             display_order: formData.display_order,
-            is_active: formData.is_active
+            is_active: formData.is_active,
+            duration_ms: formData.duration_ms,
+            layout: formData.layout,
+            transition: formData.transition
           })
           .eq('id', editingId);
 
@@ -431,7 +457,10 @@ export const HeroManagement = () => {
             mobile_image_url: formData.mobile_image_url || null,
             ipad_image_url: formData.ipad_image_url || null,
             display_order: formData.display_order,
-            is_active: formData.is_active
+            is_active: formData.is_active,
+            duration_ms: formData.duration_ms,
+            layout: formData.layout,
+            transition: formData.transition
           });
 
         if (error) throw error;
@@ -465,9 +494,9 @@ export const HeroManagement = () => {
       ipad_image_url: slide.ipad_image_url || "",
       display_order: slide.display_order || 0,
       is_active: slide.is_active ?? true,
-      duration_ms: null,
-      layout: 'one',
-      transition: 'fade'
+      duration_ms: slide.duration_ms || 6000,
+      layout: (slide.layout as 'one' | 'two' | 'three') || 'one',
+      transition: (slide.transition as 'fade' | 'left' | 'right' | 'up' | 'down' | 'zoom') || 'fade'
     });
     setEditingId(slide.id);
   };
