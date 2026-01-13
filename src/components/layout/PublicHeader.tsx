@@ -183,19 +183,22 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
                   <DropdownMenuTrigger asChild className="lg:hidden">
                     <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="hover:bg-muted/50 transition-all duration-200 p-1.5" 
-                      style={{ color: HEADER_STYLES.brandColor }}
+                      variant="outline" 
+                      size="default" 
+                      className="hover:bg-muted/50 transition-all duration-200 p-2 border-2 rounded-md" 
+                      style={{ 
+                        color: HEADER_STYLES.brandColor,
+                        borderColor: HEADER_STYLES.brandColor 
+                      }}
                       onClick={() => setIsOpen(true)} 
                       aria-label="Toggle mobile menu"
                     >
-                      {/* Clean 3-line hamburger menu */}
-                      <div className="flex flex-col justify-center items-center w-4 h-4 gap-1">
+                      {/* Prominent 3-line hamburger menu */}
+                      <div className="flex flex-col justify-center items-center w-6 h-5 gap-1.5">
                         {[1, 2, 3].map((i) => (
                           <div 
                             key={i}
-                            className="w-4 h-[1.5px] rounded-full transition-all duration-200"
+                            className="w-5 h-[2.5px] rounded-full transition-all duration-200"
                             style={{ backgroundColor: HEADER_STYLES.brandColor }}
                           />
                         ))}

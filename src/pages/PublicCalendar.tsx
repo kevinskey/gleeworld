@@ -1,11 +1,11 @@
 import { PublicCalendarViews } from "@/components/calendar/PublicCalendarViews";
-import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 import { AmazonAffiliateSidebar } from "@/components/amazon/AmazonAffiliateSidebar";
 import { ChristmasCarolRegistrationCard } from "@/components/calendar/ChristmasCarolRegistrationCard";
 import { SightReadingStudioCard } from "@/components/calendar/SightReadingStudioCard";
 import { Calendar as CalendarIcon } from "lucide-react";
 const PublicCalendar = () => {
-  return <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
+  return <PublicLayout>
       <div className="min-h-screen bg-white">
         {/* Header Banner */}
         <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{
@@ -52,6 +52,6 @@ const PublicCalendar = () => {
           </div>
         </div>
       </div>
-    </UniversalLayout>;
+    </PublicLayout>;
 };
 export default PublicCalendar;

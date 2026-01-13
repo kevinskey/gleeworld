@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -177,7 +177,7 @@ export const Shop = () => {
     return product.images?.[0] || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400';
   };
   if (loading) {
-    return <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
+    return <PublicLayout>
         <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white flex items-center justify-center">
           <div className="text-center">
             <div className="relative">
@@ -189,9 +189,9 @@ export const Shop = () => {
             <p className="text-stone-500 font-light tracking-wide">Loading boutique...</p>
           </div>
         </div>
-      </UniversalLayout>;
+      </PublicLayout>;
   }
-  return <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
+  return <PublicLayout>
       <div className="min-h-screen bg-gradient-to-b from-stone-50 via-white to-stone-50">
         {/* Header Banner - Consistent with other pages */}
         <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{ backgroundColor: '#003666' }}>
@@ -387,5 +387,5 @@ export const Shop = () => {
           </div>
         </div>
       </div>
-    </UniversalLayout>;
+    </PublicLayout>;
 };
