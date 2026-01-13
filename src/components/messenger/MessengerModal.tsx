@@ -311,7 +311,8 @@ export const MessengerModal: React.FC = () => {
           to: recipients,
           subject,
           html: htmlContent,
-          senderName: userProfile?.full_name || 'GleeWorld'
+          senderName: userProfile?.full_name || 'GleeWorld',
+          senderId: user?.id
         }
       });
 
@@ -342,7 +343,8 @@ export const MessengerModal: React.FC = () => {
         body: {
           message: smsContent,
           sendToAll,
-          recipients: sendToAll ? [] : smsRecipients.map(r => r.phone_number)
+          recipients: sendToAll ? [] : smsRecipients.map(r => r.phone_number),
+          senderId: user?.id
         }
       });
 
