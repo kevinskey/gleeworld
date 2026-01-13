@@ -58,8 +58,8 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
   const [requirements, setRequirements] = useState<CourseRequirement[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const [showObjectives, setShowObjectives] = useState(true);
-  const [showGrading, setShowGrading] = useState(true);
+  const [showObjectives, setShowObjectives] = useState(false);
+  const [showGrading, setShowGrading] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showPolicies, setShowPolicies] = useState(false);
 
