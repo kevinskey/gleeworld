@@ -295,8 +295,14 @@ const queryClient = new QueryClient({
 
 // Check if user needs forced password change (Jan 13-17, 2026)
 const needsForcePasswordChange = (): boolean => {
-  // Check if already changed password this session
+  // Check if already changed password (persisted in localStorage)
+  if (localStorage.getItem('password_changed_jan2026') === 'true') {
+    return false;
+  }
+  // Also check sessionStorage for backward compatibility
   if (sessionStorage.getItem('password_changed_jan2026') === 'true') {
+    // Migrate to localStorage so it persists
+    localStorage.setItem('password_changed_jan2026', 'true');
     return false;
   }
   
