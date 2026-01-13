@@ -108,8 +108,8 @@ export const PERMISSIONS = [
   'access_budget_creation',
   'approve_budgets_treasurer',
   
-  // Admin permissions
-  'view_all_contracts',
+  // Admin permissions (can see/manage admin-created content only)
+  'view_admin_contracts', // View contracts created by admins (not super admin)
   'create_contracts',
   'manage_users',
   'view_all_payments',
@@ -125,11 +125,13 @@ export const PERMISSIONS = [
   
   // Super Admin only permissions
   'all_permissions',
+  'view_all_contracts', // Super admin can see ALL contracts including their own
   'delete_users',
   'manage_system_settings',
   'view_activity_logs',
   'approve_budgets_super_admin',
   'manage_roles',
+  'manage_super_admin_contracts', // Only super admin can manage their own contracts
 ] as const;
 
 export type Permission = typeof PERMISSIONS[number];
@@ -225,7 +227,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'send_emails',
     'access_contracts',
     'access_budget_creation',
-    'view_all_contracts',
+    'view_admin_contracts', // Admin can only see admin-created contracts, NOT super admin contracts
     'create_contracts',
     'manage_users',
     'view_all_payments',

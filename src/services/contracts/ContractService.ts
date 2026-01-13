@@ -37,12 +37,30 @@ export class ContractService {
     }
   }
 
-  static async getContracts(filters?: ContractFilters): Promise<Contract[]> {
+  static async getContracts(filters?: ContractFilters & { excludeSuperAdminContracts?: boolean }): Promise<Contract[]> {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('contracts')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // If admin (not super admin), exclude contracts created by super admins
+      if (filters?.excludeSuperAdminContracts) {
+        // Get all super admin user IDs
+        const { data: superAdmins } = await supabase
+          .from('gw_profiles')
+          .select('user_id')
+          .eq('is_super_admin', true);
+        
+        const superAdminIds = superAdmins?.map(sa => sa.user_id) || [];
+        
+        if (superAdminIds.length > 0) {
+          // Filter out contracts created by super admins
+          query = query.not('created_by', 'in', `(${superAdminIds.join(',')})`);
+        }
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       
