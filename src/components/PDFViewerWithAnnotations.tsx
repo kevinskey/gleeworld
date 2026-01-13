@@ -821,7 +821,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   const colors = ["#ff0000", "#000000", "#0000ff", "#008000", "#800080", "#ffa500"];
 
   return (
-    <Card className={cn("w-full border-0 sm:border rounded-none sm:rounded-lg", className)}>
+    <Card className={cn("w-full h-full flex flex-col border-0 sm:border rounded-none sm:rounded-lg", className)}>
       {/* Annotation Toolbar */}
         {annotationMode && (
           <div className="flex flex-wrap items-center gap-1 p-1 bg-muted/50 rounded-t-lg border-b">
@@ -996,11 +996,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         )}
 
       {/* PDF Content */}
-      <CardContent className="p-0">
+      <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
         <div 
-          className="relative w-full overflow-y-auto overflow-x-hidden"
+          className="relative w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
           style={{ 
-            maxHeight: 'calc(100vh - 12rem)',
             WebkitOverflowScrolling: 'touch',
             touchAction: 'pan-y pinch-zoom'
           } as React.CSSProperties}
