@@ -107,6 +107,7 @@ export const PERMISSIONS = [
   'access_contracts',
   'access_budget_creation',
   'approve_budgets_treasurer',
+  'submit_contracts_for_approval', // Tour managers can submit contracts to admins for approval
   
   // Admin permissions (can see/manage admin-created content only)
   'view_admin_contracts', // View contracts created by admins (not super admin)
@@ -457,6 +458,8 @@ export const EXEC_BOARD_PERMISSIONS: Record<string, readonly Permission[]> = {
   'tour-manager': [
     'access_tour_planner',
     'access_budget_creation',
+    'create_contracts', // Can create contracts
+    'submit_contracts_for_approval', // Can submit to admins but CANNOT approve/sign as admin
   ],
   'wardrobe_manager': [],
 } as const;
