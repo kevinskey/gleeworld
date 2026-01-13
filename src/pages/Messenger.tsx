@@ -648,7 +648,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                     </div>
 
                     {/* Email History Panel - always visible on desktop, toggle on mobile */}
-                    <div className={`w-full lg:w-80 xl:w-96 flex-shrink-0 bg-background overflow-hidden border-t lg:border-t-0 ${showEmailHistory ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'}`}>
+                    <div className={`w-full lg:w-1/2 flex-shrink-0 bg-background overflow-hidden border-t lg:border-t-0 ${showEmailHistory ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'}`}>
                       <CommunicationHistoryPanel channelFilter="email" />
                     </div>
                   </div>

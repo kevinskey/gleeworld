@@ -152,24 +152,24 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
           </div>
           {!initialChannelFilter && (
             <Select value={channelFilter} onValueChange={(v) => setChannelFilter(v as typeof channelFilter)}>
-              <SelectTrigger className="w-[110px] h-9">
+              <SelectTrigger className="w-[140px] h-11 text-base">
                 <SelectValue placeholder="Channel" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="sms">SMS</SelectItem>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="all" className="text-base py-3">All Types</SelectItem>
+                <SelectItem value="email" className="text-base py-3">Email</SelectItem>
+                <SelectItem value="sms" className="text-base py-3">SMS</SelectItem>
               </SelectContent>
             </Select>
           )}
           <Select value={directionFilter} onValueChange={(v) => setDirectionFilter(v as typeof directionFilter)}>
-            <SelectTrigger className="w-[110px] h-9">
+            <SelectTrigger className="w-[140px] h-11 text-base">
               <SelectValue placeholder="Direction" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="sent">Sent</SelectItem>
-              <SelectItem value="received">Received</SelectItem>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all" className="text-base py-3">All</SelectItem>
+              <SelectItem value="sent" className="text-base py-3">Sent</SelectItem>
+              <SelectItem value="received" className="text-base py-3">Received</SelectItem>
             </SelectContent>
           </Select>
         </div>
