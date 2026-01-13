@@ -8,6 +8,7 @@ const publicNavItems = [
   { href: "/public-calendar", label: "Calendar", shortLabel: "Calendar" },
   { href: "/shop", label: "Shop", shortLabel: "Shop" },
   { href: "/booking-request", label: "Book Us", shortLabel: "Book" },
+  { href: "/press-kit", label: "Press Kit", shortLabel: "Press" },
 ];
 
 interface ResponsiveNavigationProps {
@@ -48,31 +49,13 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
             onClick={onItemClick}
             className={cn(
               "flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-              "text-foreground hover:bg-accent w-full justify-start",
-              isActivePath(item.href) && "bg-accent text-accent-foreground"
+              "text-gray-700 hover:bg-gray-100 w-full justify-start",
+              isActivePath(item.href) && "bg-[#003666] text-white"
             )}
           >
             {item.label}
           </Link>
         ))}
-        
-        {/* Dynamic Auth Button */}
-        {user ? (
-          <button
-            onClick={handleAuthAction}
-            className="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 w-full justify-start mt-1"
-          >
-            Sign Out
-          </button>
-        ) : (
-          <Link
-            to="/auth"
-            onClick={onItemClick}
-            className="flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 w-full justify-start mt-1"
-          >
-            Sign In
-          </Link>
-        )}
       </>
     );
   }
