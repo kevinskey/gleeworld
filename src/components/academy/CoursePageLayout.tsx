@@ -26,6 +26,7 @@ interface CoursePageLayoutProps {
   };
   isEnrolled?: boolean;
   onEnroll?: () => void;
+  isTA?: boolean;
   children?: React.ReactNode;
 }
 export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
@@ -39,6 +40,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
   instructor,
   isEnrolled = false,
   onEnroll,
+  isTA = false,
   children
 }) => {
   const navigate = useNavigate();

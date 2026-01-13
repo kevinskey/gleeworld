@@ -175,6 +175,7 @@ export const TAManagement = () => {
                   <SelectItem value="MUS240">MUS 240</SelectItem>
                   <SelectItem value="MUS100">MUS 100</SelectItem>
                   <SelectItem value="MUS200">MUS 200</SelectItem>
+                  <SelectItem value="GLEE-CLUB">GLEE 101 (Glee Club)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
