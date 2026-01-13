@@ -172,7 +172,7 @@ export default function AuthPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 pointer-events-none" />
           
           <CardHeader className="relative py-3 sm:py-4 md:py-6">
-            <CardTitle className="flex items-center justify-center text-base sm:text-lg text-secondary-foreground md:text-3xl">
+            <CardTitle className="flex items-center justify-center text-base sm:text-lg md:text-3xl text-primary">
               {isLogin ? <>
                   <LogIn className="h-5 w-5 mr-2" />
                   Welcome Back
