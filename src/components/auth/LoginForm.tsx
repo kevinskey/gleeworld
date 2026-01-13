@@ -55,7 +55,7 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
             required
-            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
+            className="bg-black/40 border-white/40 text-white placeholder:text-white/60 focus:border-white/70 focus:bg-black/50"
           />
         </div>
         
@@ -69,7 +69,7 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             required
-            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
+            className="bg-black/40 border-white/40 text-white placeholder:text-white/60 focus:border-white/70 focus:bg-black/50"
           />
         </div>
         
