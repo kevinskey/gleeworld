@@ -420,55 +420,76 @@ export const HeroManagement = () => {
       toast({
         title: "Error",
         description: "Image is required",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
+    // NOTE: This module supports multiple hero contexts. Persist edits to the currently selected table.
+    const table = selectedContext.table;
+
     setSaving(true);
     try {
+      const payload = {
+        title: formData.title.trim() || null,
+        description: formData.description || null,
+        image_url: formData.image_url || null,
+        mobile_image_url: formData.mobile_image_url || null,
+        ipad_image_url: formData.ipad_image_url || null,
+        display_order: formData.display_order,
+        is_active: formData.is_active,
+        duration_ms: formData.duration_ms,
+        layout: formData.layout,
+        transition: formData.transition,
+      } as const;
+
       if (editingId) {
         // Update existing
-        const { error } = await supabase
-          .from('dashboard_hero_slides')
-          .update({
-            title: formData.title.trim() || null,
-            description: formData.description || null,
-            image_url: formData.image_url || null,
-            mobile_image_url: formData.mobile_image_url || null,
-            ipad_image_url: formData.ipad_image_url || null,
-            display_order: formData.display_order,
-            is_active: formData.is_active,
-            duration_ms: formData.duration_ms,
-            layout: formData.layout,
-            transition: formData.transition
-          })
+        let updateQuery = supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(table as any)
+          .update(payload)
           .eq('id', editingId);
 
+        // gw_hero_slides is context-scoped
+        if (table === 'gw_hero_slides') {
+          updateQuery = updateQuery.eq('usage_context', selectedContext.usageContext || 'homepage');
+        }
+
+        // PostgREST returns 204 even when 0 rows are affected; select() lets us detect that.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (updateQuery as any).select('id').maybeSingle();
         if (error) throw error;
+        if (!data?.id) {
+          throw new Error('Slide not found in the selected hero context (no rows updated).');
+        }
       } else {
         // Create new
-        const { error } = await supabase
-          .from('dashboard_hero_slides')
-          .insert({
-            title: formData.title.trim() || null,
-            description: formData.description || null,
-            image_url: formData.image_url || null,
-            mobile_image_url: formData.mobile_image_url || null,
-            ipad_image_url: formData.ipad_image_url || null,
-            display_order: formData.display_order,
-            is_active: formData.is_active,
-            duration_ms: formData.duration_ms,
-            layout: formData.layout,
-            transition: formData.transition
-          });
+        const insertPayload =
+          table === 'gw_hero_slides'
+            ? {
+                ...payload,
+                usage_context: selectedContext.usageContext || 'homepage',
+              }
+            : payload;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(table as any) as any)
+          .insert(insertPayload)
+          .select('id')
+          .single();
 
         if (error) throw error;
+        if (!data?.id) {
+          throw new Error('Failed to create slide (no id returned).');
+        }
       }
 
       toast({
         title: "Success",
-        description: editingId ? "Hero slide updated" : "Hero slide created"
+        description: editingId ? "Hero slide updated" : "Hero slide created",
       });
 
       resetForm();
@@ -477,8 +498,9 @@ export const HeroManagement = () => {
       console.error('Error saving hero slide:', error);
       toast({
         title: "Error",
-        description: "Failed to save hero slide",
-        variant: "destructive"
+        description:
+          error instanceof Error ? error.message : "Failed to save hero slide",
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
@@ -504,17 +526,25 @@ export const HeroManagement = () => {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this hero slide?')) return;
 
+    const table = selectedContext.table;
+
     try {
-      const { error } = await supabase
-        .from('dashboard_hero_slides')
+      let deleteQuery = supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(table as any)
         .delete()
         .eq('id', id);
 
+      if (table === 'gw_hero_slides') {
+        deleteQuery = deleteQuery.eq('usage_context', selectedContext.usageContext || 'homepage');
+      }
+
+      const { error } = await deleteQuery;
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Hero slide deleted"
+        description: "Hero slide deleted",
       });
 
       fetchHeroSlides();
@@ -523,31 +553,39 @@ export const HeroManagement = () => {
       toast({
         title: "Error",
         description: "Failed to delete hero slide",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
 
   const toggleActive = async (id: string, currentStatus: boolean | null) => {
+    const table = selectedContext.table;
+
     try {
-      const { error } = await supabase
-        .from('dashboard_hero_slides')
+      let updateQuery = supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(table as any)
         .update({ is_active: !currentStatus })
         .eq('id', id);
 
+      if (table === 'gw_hero_slides') {
+        updateQuery = updateQuery.eq('usage_context', selectedContext.usageContext || 'homepage');
+      }
+
+      const { error } = await updateQuery;
       if (error) throw error;
 
       fetchHeroSlides();
       toast({
         title: "Success",
-        description: `Hero slide ${!currentStatus ? 'activated' : 'deactivated'}`
+        description: `Hero slide ${!currentStatus ? 'activated' : 'deactivated'}`,
       });
     } catch (error) {
       console.error('Error toggling hero slide status:', error);
       toast({
         title: "Error",
         description: "Failed to update hero slide status",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
