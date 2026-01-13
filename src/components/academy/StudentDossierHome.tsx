@@ -2,15 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { 
   User, Music, GraduationCap, Mail, Phone, Calendar, 
-  ClipboardList, CheckCircle, XCircle, Clock, FileText
+  ClipboardList, CheckCircle, XCircle, Clock, FileText, Settings
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
 import { CourseAssignments } from './CourseAssignments';
+import { ExitInterviewSummaryCard } from '@/components/surveys/ExitInterviewSummaryCard';
+import { CollapsibleMemberExitInterview } from '@/components/surveys/CollapsibleMemberExitInterview';
 
 interface StudentProfile {
   user_id: string;
@@ -210,14 +214,65 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
               </div>
             </div>
 
-            {/* Attendance Quick Stat */}
-            <div className="hidden md:block text-center bg-background/80 rounded-xl p-4 shadow-sm">
-              <div className={`text-3xl font-bold ${attendanceRate >= 90 ? 'text-green-600' : attendanceRate >= 75 ? 'text-amber-600' : 'text-red-600'}`}>
-                {attendanceRate}%
+            {/* Attendance Quick Stat + Settings */}
+            <div className="hidden md:flex flex-col gap-2 items-end">
+              <div className="text-center bg-background/80 rounded-xl p-4 shadow-sm">
+                <div className={`text-3xl font-bold ${attendanceRate >= 90 ? 'text-green-600' : attendanceRate >= 75 ? 'text-amber-600' : 'text-red-600'}`}>
+                  {attendanceRate}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Attendance Rate</p>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Attendance Rate</p>
+              
+              {/* Settings Button */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Student Settings
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-4">
+                    {/* Current Exit Interview */}
+                    <CollapsibleMemberExitInterview />
+                    
+                    {/* Exit Interview History */}
+                    <ExitInterviewSummaryCard showInSettings />
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
+        </div>
+
+        {/* Mobile Settings Button */}
+        <div className="md:hidden mt-4">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full gap-2">
+                <Settings className="h-4 w-4" />
+                Settings & Exit Interviews
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Student Settings
+                </SheetTitle>
+              </SheetHeader>
+              <div className="mt-6 space-y-4">
+                <CollapsibleMemberExitInterview />
+                <ExitInterviewSummaryCard showInSettings />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </Card>
 
