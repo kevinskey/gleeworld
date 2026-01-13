@@ -20,6 +20,7 @@ interface HeroSlide {
   image_url: string;
   mobile_image_url: string | null;
   ipad_image_url: string | null;
+  video_url: string | null; // YouTube video URL
   display_order: number | null;
   is_active: boolean | null;
   created_at: string | null;
@@ -89,6 +90,7 @@ export const HeroManagement = () => {
     image_url: "",
     mobile_image_url: "",
     ipad_image_url: "",
+    video_url: "", // YouTube video URL
     display_order: 0,
     is_active: true,
     duration_ms: null as number | null,
@@ -163,10 +165,11 @@ export const HeroManagement = () => {
           image_url: s.image_url || '',
           mobile_image_url: s.mobile_image_url,
           ipad_image_url: s.ipad_image_url,
+          video_url: s.video_url ?? null,
           display_order: s.display_order,
           is_active: s.is_active,
           created_at: s.created_at,
-          updated_at: s.created_at, // gw_hero_slides doesn't have updated_at
+          updated_at: s.created_at,
           duration_ms: s.duration_ms ?? 6000,
           layout: s.layout ?? 'one',
           transition: s.transition ?? 'fade'
@@ -184,6 +187,7 @@ export const HeroManagement = () => {
           image_url: s.image_url || '',
           mobile_image_url: s.mobile_image_url,
           ipad_image_url: s.ipad_image_url,
+          video_url: null, // dashboard_hero_slides doesn't have video_url yet
           display_order: s.display_order,
           is_active: s.is_active,
           created_at: s.created_at,
@@ -205,6 +209,7 @@ export const HeroManagement = () => {
           image_url: s.image_url || '',
           mobile_image_url: s.mobile_image_url,
           ipad_image_url: s.ipad_image_url,
+          video_url: null, // advertising_hero doesn't have video_url
           display_order: s.display_order,
           is_active: s.is_active,
           created_at: s.created_at,
@@ -436,6 +441,7 @@ export const HeroManagement = () => {
         image_url: formData.image_url || null,
         mobile_image_url: formData.mobile_image_url || null,
         ipad_image_url: formData.ipad_image_url || null,
+        video_url: formData.video_url || null,
         display_order: formData.display_order,
         is_active: formData.is_active,
         duration_ms: formData.duration_ms,
@@ -514,6 +520,7 @@ export const HeroManagement = () => {
       image_url: slide.image_url || "",
       mobile_image_url: slide.mobile_image_url || "",
       ipad_image_url: slide.ipad_image_url || "",
+      video_url: slide.video_url || "",
       display_order: slide.display_order || 0,
       is_active: slide.is_active ?? true,
       duration_ms: slide.duration_ms || 6000,
@@ -597,6 +604,7 @@ export const HeroManagement = () => {
       image_url: "",
       mobile_image_url: "",
       ipad_image_url: "",
+      video_url: "",
       display_order: 0,
       is_active: true,
       duration_ms: null,

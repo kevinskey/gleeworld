@@ -16,6 +16,7 @@ export interface SlideFormData {
   image_url: string;
   mobile_image_url: string;
   ipad_image_url: string;
+  video_url: string; // YouTube video URL
   display_order: number;
   is_active: boolean;
   // New advanced controls
@@ -137,6 +138,21 @@ export const SlideEditForm = ({
               className="resize-none min-h-[36px]"
             />
           </div>
+        </div>
+
+        {/* YouTube Video URL */}
+        <div className="p-3 bg-red-50 rounded border border-red-200">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-0.5 rounded bg-red-500 text-white text-xs">🎬</div>
+            <Label className="text-xs font-medium text-red-800">YouTube Video (optional)</Label>
+          </div>
+          <Input
+            value={formData.video_url}
+            onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
+            placeholder="YouTube URL or video ID"
+            className="h-8 text-xs"
+          />
+          <p className="text-xs text-muted-foreground mt-1">If set, video will display instead of image</p>
         </div>
 
         {/* Images */}
