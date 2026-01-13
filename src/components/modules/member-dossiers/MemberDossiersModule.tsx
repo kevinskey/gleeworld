@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Search, RefreshCw, Music, BarChart3, Upload, AlertTriangle } from "lucide-react";
 import { MemberDossierCard } from "./MemberDossierCard";
-import { MemberDossierDetail } from "./MemberDossierDetail";
+import { DirectorDossierView } from "./DirectorDossierView";
 import { MemberDossierAnalytics } from "./MemberDossierAnalytics";
 import { MemberDataUpload } from "./MemberDataUpload";
 
@@ -207,7 +207,7 @@ const MemberDossiersModule: React.FC = () => {
 
   if (selectedMember) {
     return (
-      <MemberDossierDetail
+      <DirectorDossierView
         member={selectedMember.profile}
         exitInterviews={selectedMember.exitInterviews}
         onBack={() => setSelectedMember(null)}
