@@ -5,6 +5,8 @@ import { Scissors, X } from "lucide-react";
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
 import { PDFCropEditor } from '@/components/glee-library/PDFCropEditor';
 import { useUserRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface InAppPDFViewerDialogProps {
   open: boolean;
@@ -32,6 +34,56 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
       profile?.role?.toLowerCase() === 'librarian'
     );
   }, [isAdmin, profile]);
+
+  const handleSaveCroppedPDF = async (blob: Blob) => {
+    if (!musicId) {
+      toast.error('Cannot save: No music ID available');
+      return;
+    }
+
+    try {
+      // Upload the cropped PDF to storage
+      const fileName = `${musicId}_cropped_${Date.now()}.pdf`;
+      const filePath = `sheet-music/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('glee-library')
+        .upload(filePath, blob, {
+          contentType: 'application/pdf',
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('glee-library')
+        .getPublicUrl(filePath);
+
+      // Update the sheet music record with new PDF URL
+      const { error: updateError } = await supabase
+        .from('gw_sheet_music')
+        .update({
+          pdf_url: urlData.publicUrl,
+          crop_recommendations: {
+            applied: true,
+            appliedAt: new Date().toISOString(),
+          },
+        })
+        .eq('id', musicId);
+
+      if (updateError) throw updateError;
+
+      toast.success('Cropped PDF saved successfully!');
+      setShowCropEditor(false);
+
+      // Refresh the page to show the new PDF
+      window.location.reload();
+    } catch (error) {
+      console.error('Error saving cropped PDF:', error);
+      toast.error('Failed to save cropped PDF');
+    }
+  };
 
   return (
     <Dialog
@@ -94,6 +146,7 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
               <PDFCropEditor
                 pdfUrl={pdfUrl}
                 title={title ?? 'PDF Document'}
+                onSave={musicId ? handleSaveCroppedPDF : undefined}
                 onClose={() => setShowCropEditor(false)}
               />
             ) : (
