@@ -353,8 +353,19 @@ header svg,
 /* Exception: buttons with explicit background styling (like Sign In button) should have white text */
 header button[style*="background"] span,
 header button[style*="background"] a,
-header a[style*="color"] {
-  color: inherit !important;
+header a[style*="color"],
+header button.bg-\[\#003666\] a,
+header button.bg-\[\#003666\] span,
+header a.bg-\[\#003666\],
+header a.bg-\[\#003666\] span {
+  color: white !important;
+}
+
+header button.bg-\[\#003666\]:hover a,
+header button.bg-\[\#003666\]:hover span,
+header a.bg-\[\#003666\]:hover,
+header a.bg-\[\#003666\]:hover span {
+  color: #003666 !important;
 }
 
 /* Use on pages that must stay white even when a theme class is present on <html>. */
