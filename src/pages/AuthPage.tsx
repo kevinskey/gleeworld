@@ -126,14 +126,11 @@ export default function AuthPage() {
         </div>
       </div>;
   }
-  return <div 
-    className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] auth-page" 
-    style={{
-      backgroundImage: `url(${authBackground})`,
-      paddingLeft: 'max(1rem, env(safe-area-inset-left))',
-      paddingRight: 'max(1rem, env(safe-area-inset-right))',
-    }}
-  >
+  return <div className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] auth-page" style={{
+    backgroundImage: `url(${authBackground})`,
+    paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+    paddingRight: 'max(1rem, env(safe-area-inset-right))'
+  }}>
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70" />
       
@@ -143,7 +140,10 @@ export default function AuthPage() {
       <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-accent/5 rounded-full blur-xl animate-pulse delay-500" />
       
       {/* Back Button */}
-      <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="absolute z-20 text-white hover:bg-white/20 border border-white/30 backdrop-blur-sm transition-all duration-300" style={{ top: 'max(1.5rem, calc(env(safe-area-inset-top) + 0.5rem))', left: 'max(1.5rem, env(safe-area-inset-left))' }}>
+      <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="absolute z-20 text-white hover:bg-white/20 border border-white/30 backdrop-blur-sm transition-all duration-300" style={{
+      top: 'max(1.5rem, calc(env(safe-area-inset-top) + 0.5rem))',
+      left: 'max(1.5rem, env(safe-area-inset-left))'
+    }}>
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Home
       </Button>
@@ -172,7 +172,7 @@ export default function AuthPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 pointer-events-none" />
           
           <CardHeader className="relative py-3 sm:py-4 md:py-6">
-            <CardTitle className="flex items-center justify-center text-white text-base sm:text-lg md:text-xl">
+            <CardTitle className="flex items-center justify-center text-base sm:text-lg md:text-xl text-black">
               {isLogin ? <>
                   <LogIn className="h-5 w-5 mr-2" />
                   Welcome Back
@@ -183,7 +183,7 @@ export default function AuthPage() {
             </CardTitle>
           </CardHeader>
           
-          <CardContent className="relative">
+          <CardContent className="relative bg-[#003666]">
             <form onSubmit={handleAuth} className="space-y-5">
               {!isLogin && <div>
                   <label className="text-sm font-medium text-white/90 mb-2 block">
@@ -193,14 +193,14 @@ export default function AuthPage() {
                 </div>}
 
               <div>
-                <label className="text-sm font-medium text-black mb-2 block">
+                <label className="text-sm font-medium mb-2 block text-primary-foreground">
                   Email Address *
                 </label>
                 <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required className="auth-input" />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-black mb-2 block">
+                <label className="text-sm font-medium mb-2 block text-primary-foreground">
                   Password *
                 </label>
                 <div className="relative">
