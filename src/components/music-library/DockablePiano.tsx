@@ -370,10 +370,12 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
   // Render as docked panel at bottom
   return createPortal(
     <div 
-      className="fixed bottom-0 left-0 right-0 z-[10000]"
+      className="fixed bottom-0 left-0 right-0 safe-bottom"
       style={{ 
+        zIndex: 99999, // Higher than any other z-index to ensure visibility
         transform: 'translateZ(0)', // Force GPU acceleration
-        pointerEvents: 'auto'
+        pointerEvents: 'auto',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
       {pianoContent}
