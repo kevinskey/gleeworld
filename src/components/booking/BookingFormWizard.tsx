@@ -96,6 +96,7 @@ const STEPS = [
 export const BookingFormWizard: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<BookingFormData>({
@@ -228,13 +229,7 @@ export const BookingFormWizard: React.FC = () => {
         console.error('Failed to send booking notification:', notificationError);
       }
 
-      toast({
-        title: 'Booking Request Submitted',
-        description: 'Thank you for your interest! We will review your request and contact you soon.',
-        variant: 'default'
-      });
-      form.reset();
-      setCurrentStep(1);
+      setIsSubmitted(true);
     } catch (error: any) {
       console.error('Error submitting booking request:', error);
       toast({
@@ -248,6 +243,49 @@ export const BookingFormWizard: React.FC = () => {
   };
 
   const progressPercent = (currentStep / STEPS.length) * 100;
+
+  // Success screen after submission
+  if (isSubmitted) {
+    return (
+      <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-muted/30 to-background py-6 px-4">
+        <div className="max-w-2xl mx-auto">
+          <Card className="border-0 shadow-lg bg-card">
+            <CardContent className="p-8 md:p-12 text-center">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                <Check className="h-10 w-10 text-primary" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+                Booking Request Submitted!
+              </h1>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Thank you for your interest in the Spelman College Glee Club! We have received your booking request and will review it shortly.
+              </p>
+              <p className="text-sm text-muted-foreground mb-8">
+                A confirmation email will be sent to you, and our team will reach out within 3-5 business days.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.href = '/'}
+                >
+                  Return to Home
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsSubmitted(false);
+                    setCurrentStep(1);
+                    form.reset();
+                  }}
+                >
+                  Submit Another Request
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-muted/30 to-background py-6 px-4">
