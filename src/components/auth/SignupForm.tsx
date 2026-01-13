@@ -148,7 +148,7 @@ export const SignupForm = () => {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
-            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
+            className="bg-black/40 border-white/40 text-white placeholder:text-white/60 focus:border-white/70 focus:bg-black/50"
           />
         </div>
         
@@ -161,7 +161,7 @@ export const SignupForm = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
+            className="bg-black/40 border-white/40 text-white placeholder:text-white/60 focus:border-white/70 focus:bg-black/50"
           />
         </div>
         
@@ -176,7 +176,7 @@ export const SignupForm = () => {
             required
             minLength={8}
             title="Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters"
-            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
+            className="bg-black/40 border-white/40 text-white placeholder:text-white/60 focus:border-white/70 focus:bg-black/50"
           />
         </div>
         
