@@ -29,41 +29,43 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Compact Mobile PDF Header */}
-      <div className="flex-shrink-0 flex items-center justify-between h-10 px-2 bg-background/95 backdrop-blur border-b safe-top z-20">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={onBack} 
-          className="h-7 px-2 text-xs gap-1"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Library</span>
-        </Button>
-        
-        <h2 className="text-xs font-medium truncate max-w-[45%] text-center">
-          {selectedPdf.title}
-        </h2>
-        
-        <Button 
-          size="sm" 
-          onClick={onStudyMode} 
-          className="h-7 px-2 text-xs gap-1"
-        >
-          <BookOpen className="h-3.5 w-3.5" />
-          <span>Study</span>
-        </Button>
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+      {/* Ultra-compact floating header */}
+      <div className="absolute top-0 left-0 right-0 z-30 safe-top">
+        <div className="flex items-center justify-between px-2 py-1.5 bg-gradient-to-b from-background/95 via-background/80 to-transparent backdrop-blur-sm">
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            onClick={onBack} 
+            className="h-7 px-2 text-xs gap-1 shadow-sm"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Library</span>
+          </Button>
+          
+          <h2 className="text-xs font-medium truncate max-w-[40%] text-center px-2">
+            {selectedPdf.title}
+          </h2>
+          
+          <Button 
+            size="sm" 
+            onClick={onStudyMode} 
+            className="h-7 px-2 text-xs gap-1 shadow-sm"
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>Study</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Full-width PDF Viewer */}
-      <div className="flex-1 min-h-0 overflow-hidden w-full">
+      {/* Full-screen PDF Viewer - edge to edge */}
+      <div className="flex-1 w-full h-full">
         <PDFViewerWithAnnotations 
           key={selectedPdf.url}
           pdfUrl={selectedPdf.url}
           musicTitle={selectedPdf.title}
           musicId={selectedPdf.id}
-          className="w-full h-full rounded-none border-0"
+          className="w-full h-full"
         />
       </div>
     </div>
