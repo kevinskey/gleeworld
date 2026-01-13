@@ -227,22 +227,22 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
       ) : viewMode === 'list' ? (
         <ListView />
       ) : (
-        /* Calendar Grid View */
-        <Card>
-          <CardContent className="p-4">
+        /* Calendar Grid View - Expanded for desktop */
+        <Card className="overflow-hidden">
+          <CardContent className="p-2 sm:p-4 lg:p-6">
             {/* Day Headers */}
-            <div className="grid grid-cols-7 gap-2 mb-3">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 lg:gap-3 mb-2 lg:mb-4">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="text-center text-sm font-semibold text-muted-foreground py-2 uppercase tracking-wide">
+                <div key={day} className="text-center text-xs sm:text-sm lg:text-base font-semibold text-muted-foreground py-2 lg:py-3 uppercase tracking-wide">
                   {day}
                 </div>
               ))}
             </div>
 
-            {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-2">
+            {/* Calendar Days - Larger cells on desktop */}
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 lg:gap-3">
               {Array.from({ length: days[0].getDay() }).map((_, i) => (
-                <div key={`empty-${i}`} className="min-h-[120px] bg-muted/20 rounded-xl" />
+                <div key={`empty-${i}`} className="min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] bg-muted/20 rounded-lg lg:rounded-xl" />
               ))}
               
               {days.map(day => {
@@ -250,40 +250,42 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                 const dayAcademicEvents = getAcademicEventsForDay(day);
                 const hasAcademicEvent = dayAcademicEvents.length > 0;
                 const isCurrent = isToday(day);
+                const totalEvents = dayEvents.length + dayAcademicEvents.length;
+                const maxEventsToShow = 3;
                 
                 return (
                   <div
                     key={day.toISOString()}
                     className={cn(
-                      "min-h-[120px] p-2 rounded-xl border-2 transition-all cursor-pointer hover:shadow-md",
+                      "min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] p-1.5 sm:p-2 lg:p-3 rounded-lg lg:rounded-xl border-2 transition-all cursor-pointer hover:shadow-md",
                       isCurrent && "border-primary bg-primary/5",
                       hasAcademicEvent && !isCurrent && "border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20",
                       !isCurrent && !hasAcademicEvent && "border-transparent hover:border-primary/30"
                     )}
                   >
                     <div className={cn(
-                      "text-lg font-bold mb-2",
+                      "text-base sm:text-lg lg:text-xl font-bold mb-1 lg:mb-2",
                       isCurrent && "text-primary"
                     )}>
                       {format(day, 'd')}
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 lg:space-y-1.5">
                       {dayAcademicEvents.slice(0, 1).map((event, idx) => (
                         <div
                           key={`academic-${idx}`}
-                          className="text-xs font-medium truncate px-2 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 cursor-pointer hover:opacity-80"
+                          className="text-[10px] sm:text-xs lg:text-sm font-medium truncate px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 rounded-md lg:rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 cursor-pointer hover:opacity-80"
                           onClick={(e) => { e.stopPropagation(); setSelectedAcademicEvent(event); }}
                         >
                           {event.title}
                         </div>
                       ))}
-                      {dayEvents.slice(0, 2 - dayAcademicEvents.length).map(event => {
+                      {dayEvents.slice(0, maxEventsToShow - dayAcademicEvents.length).map(event => {
                         const colors = getEventColors(event.event_type);
                         return (
                           <div
                             key={event.id}
                             className={cn(
-                              "text-xs font-medium truncate px-2 py-1.5 rounded-lg cursor-pointer hover:opacity-80",
+                              "text-[10px] sm:text-xs lg:text-sm font-medium truncate px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 rounded-md lg:rounded-lg cursor-pointer hover:opacity-80",
                               colors.bg, colors.text
                             )}
                             onClick={(e) => { e.stopPropagation(); setSelectedEvent(event); }}
@@ -292,9 +294,9 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                           </div>
                         );
                       })}
-                      {(dayEvents.length + dayAcademicEvents.length) > 2 && (
-                        <div className="text-xs text-muted-foreground font-medium px-2">
-                          +{(dayEvents.length + dayAcademicEvents.length) - 2} more
+                      {totalEvents > maxEventsToShow && (
+                        <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground font-medium px-1.5 sm:px-2">
+                          +{totalEvents - maxEventsToShow} more
                         </div>
                       )}
                     </div>
