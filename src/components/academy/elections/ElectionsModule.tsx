@@ -34,10 +34,22 @@ interface ShadowingApplication {
   status: 'pending' | 'approved' | 'denied' | 'certified';
   academic_year: string;
   created_at: string;
+  source?: 'application' | 'exit_interview';
+  gpa?: number | null;
   profile?: {
     full_name: string;
     headshot_url: string | null;
   } | null;
+}
+
+interface ExitInterviewCandidate {
+  user_id: string;
+  interested_in_exec_board: boolean;
+  exec_board_position_interest: string | null;
+  current_gpa: number | null;
+  understands_leadership_program: boolean;
+  can_attend_all_sessions: boolean;
+  created_at: string;
 }
 
 const EXEC_POSITIONS = [
@@ -96,6 +108,7 @@ export const ElectionsModule: React.FC<ElectionsModuleProps> = ({ courseId }) =>
   
   // Shadowing applications state
   const [applications, setApplications] = useState<ShadowingApplication[]>([]);
+  const [exitInterviewCandidates, setExitInterviewCandidates] = useState<ShadowingApplication[]>([]);
   const [loadingApplications, setLoadingApplications] = useState(true);
   const [myApplication, setMyApplication] = useState<ShadowingApplication | null>(null);
   
@@ -112,6 +125,7 @@ export const ElectionsModule: React.FC<ElectionsModuleProps> = ({ courseId }) =>
 
   useEffect(() => {
     fetchApplications();
+    fetchExitInterviewCandidates();
   }, [user]);
 
   const fetchApplications = async () => {
@@ -155,6 +169,59 @@ export const ElectionsModule: React.FC<ElectionsModuleProps> = ({ courseId }) =>
       console.error('Error fetching applications:', error);
     } finally {
       setLoadingApplications(false);
+    }
+  };
+
+  const fetchExitInterviewCandidates = async () => {
+    try {
+      // Fetch members who indicated exec board interest in exit interviews
+      const { data, error } = await supabase
+        .from('member_exit_interviews')
+        .select('user_id, interested_in_exec_board, exec_board_position_interest, current_gpa, understands_leadership_program, can_attend_all_sessions, created_at')
+        .eq('interested_in_exec_board', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Get profiles for each candidate
+      const candidatesWithProfiles = await Promise.all(
+        (data || []).map(async (candidate) => {
+          const { data: profile } = await supabase
+            .from('gw_profiles')
+            .select('full_name, headshot_url')
+            .eq('user_id', candidate.user_id)
+            .single();
+
+          // Parse the first position from the comma-separated list as primary
+          const positions = candidate.exec_board_position_interest?.split(',').map(p => p.trim()) || [];
+          const primaryPos = positions[0] || 'undecided';
+          const alternatePos = positions[1] || null;
+          
+          return {
+            id: `exit-${candidate.user_id}`,
+            user_id: candidate.user_id,
+            primary_position: primaryPos.toLowerCase().replace(/ /g, '_'),
+            alternate_position: alternatePos?.toLowerCase().replace(/ /g, '_') || null,
+            statement_of_intent: 'Expressed interest via Exit Interview',
+            status: 'pending' as const,
+            academic_year: currentAcademicYear,
+            created_at: candidate.created_at,
+            source: 'exit_interview' as const,
+            gpa: candidate.current_gpa,
+            profile: profile || null
+          };
+        })
+      );
+
+      // Filter out anyone who already has a formal application
+      const formalApplicantIds = applications.map(a => a.user_id);
+      const uniqueCandidates = candidatesWithProfiles.filter(
+        c => !formalApplicantIds.includes(c.user_id)
+      );
+
+      setExitInterviewCandidates(uniqueCandidates);
+    } catch (error) {
+      console.error('Error fetching exit interview candidates:', error);
     }
   };
 
@@ -332,7 +399,7 @@ export const ElectionsModule: React.FC<ElectionsModuleProps> = ({ courseId }) =>
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : applications.length === 0 ? (
+              ) : applications.length === 0 && exitInterviewCandidates.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
                   <p className="text-muted-foreground text-sm">
@@ -349,48 +416,121 @@ export const ElectionsModule: React.FC<ElectionsModuleProps> = ({ courseId }) =>
                   )}
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {applications.map((app) => {
-                    const Icon = getPositionIcon(app.primary_position);
-                    const isOwnApplication = user?.id === app.user_id;
-                    return (
-                      <div 
-                        key={app.id}
-                        className={`flex items-center justify-between p-4 rounded-lg border ${
-                          isOwnApplication ? 'bg-primary/5 border-primary/20' : 'bg-muted/30'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={app.profile?.headshot_url || ''} />
-                            <AvatarFallback>
-                              {app.profile?.full_name?.charAt(0) || '?'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium text-sm">
-                              {app.profile?.full_name || 'Unknown'}
-                              {isOwnApplication && (
-                                <Badge variant="outline" className="ml-2 text-xs">You</Badge>
-                              )}
-                            </p>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Icon className="h-3 w-3" />
-                              <span className="capitalize">
-                                {app.primary_position.replace(/_/g, ' ')}
-                              </span>
-                              {app.alternate_position && (
-                                <span className="text-muted-foreground/70">
-                                  (Alt: {app.alternate_position.replace(/_/g, ' ')})
-                                </span>
-                              )}
+                <div className="space-y-4">
+                  {/* Formal Applications */}
+                  {applications.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <ClipboardCheck className="h-4 w-4" />
+                        Formal Applications ({applications.length})
+                      </h4>
+                      {applications.map((app) => {
+                        const Icon = getPositionIcon(app.primary_position);
+                        const isOwnApplication = user?.id === app.user_id;
+                        return (
+                          <div 
+                            key={app.id}
+                            className={`flex items-center justify-between p-4 rounded-lg border ${
+                              isOwnApplication ? 'bg-primary/5 border-primary/20' : 'bg-muted/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={app.profile?.headshot_url || ''} />
+                                <AvatarFallback>
+                                  {app.profile?.full_name?.charAt(0) || '?'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {app.profile?.full_name || 'Unknown'}
+                                  {isOwnApplication && (
+                                    <Badge variant="outline" className="ml-2 text-xs">You</Badge>
+                                  )}
+                                </p>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Icon className="h-3 w-3" />
+                                  <span className="capitalize">
+                                    {app.primary_position.replace(/_/g, ' ')}
+                                  </span>
+                                  {app.alternate_position && (
+                                    <span className="text-muted-foreground/70">
+                                      (Alt: {app.alternate_position.replace(/_/g, ' ')})
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
+                            {getStatusBadge(app.status)}
                           </div>
-                        </div>
-                        {getStatusBadge(app.status)}
-                      </div>
-                    );
-                  })}
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Exit Interview Candidates */}
+                  {exitInterviewCandidates.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        From Exit Interviews ({exitInterviewCandidates.length})
+                      </h4>
+                      {exitInterviewCandidates.map((candidate) => {
+                        const Icon = getPositionIcon(candidate.primary_position);
+                        const isOwnApplication = user?.id === candidate.user_id;
+                        return (
+                          <div 
+                            key={candidate.id}
+                            className={`flex items-center justify-between p-4 rounded-lg border ${
+                              isOwnApplication ? 'bg-amber-50 border-amber-200' : 'bg-amber-50/50 border-amber-100'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={candidate.profile?.headshot_url || ''} />
+                                <AvatarFallback>
+                                  {candidate.profile?.full_name?.charAt(0) || '?'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {candidate.profile?.full_name || 'Unknown'}
+                                  {isOwnApplication && (
+                                    <Badge variant="outline" className="ml-2 text-xs">You</Badge>
+                                  )}
+                                  <Badge variant="outline" className="ml-2 text-xs bg-amber-100 border-amber-300">
+                                    Exit Interview
+                                  </Badge>
+                                </p>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Icon className="h-3 w-3" />
+                                  <span className="capitalize">
+                                    {candidate.primary_position.replace(/_/g, ' ')}
+                                  </span>
+                                  {candidate.alternate_position && (
+                                    <span className="text-muted-foreground/70">
+                                      (Alt: {candidate.alternate_position.replace(/_/g, ' ')})
+                                    </span>
+                                  )}
+                                  {candidate.gpa && (
+                                    <span className="text-muted-foreground/70">
+                                      • GPA: {candidate.gpa.toFixed(2)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                              Interested
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                      <p className="text-xs text-muted-foreground italic px-2">
+                        These members indicated interest via their exit interview. They should submit a formal shadowing application to proceed.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
