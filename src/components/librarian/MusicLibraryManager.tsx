@@ -37,6 +37,8 @@ interface MusicItem {
   duration_minutes?: number;
   pdf_url?: string;
   audio_reference_url?: string;
+  audio_url?: string;
+  audio_title?: string;
   lyrics?: string;
   performance_notes?: string;
   copyright_info?: string;
@@ -643,6 +645,19 @@ export const MusicLibraryManager = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, audio_reference_url: e.target.value }))}
                   placeholder="Enter audio reference URL"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="audio_url">YouTube Play-Along URL</Label>
+                <Input
+                  id="audio_url"
+                  value={formData.audio_url || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, audio_url: e.target.value }))}
+                  placeholder="e.g., https://youtube.com/watch?v=..."
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Auto-loads in PDF viewer's audio companion
+                </p>
               </div>
             </div>
 
