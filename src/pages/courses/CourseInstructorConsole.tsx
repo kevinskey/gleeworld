@@ -305,7 +305,7 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'rubrics' && <RubricManager />}
             {activeTab === 'grades' && <GradesAdmin />}
             {activeTab === 'students' && dbCourse && <CourseEnrollmentManager courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} term={dbCourse.term || undefined} />}
-            {activeTab === 'dossiers' && <MemberDossiersModule />}
+            {activeTab === 'dossiers' && dbCourse && <MemberDossiersModule courseId={dbCourse.id} />}
             {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
             {activeTab === 'announcements' && dbCourse && <CourseAnnouncementsManager courseId={dbCourse.id} />}
             {activeTab === 'resources' && <ResourcesAdmin />}
