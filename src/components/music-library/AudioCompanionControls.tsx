@@ -47,6 +47,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
     toggleMute,
     stop,
     hidePlayer,
+    closeYouTube,
   } = useAudioCompanion();
 
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -69,6 +70,9 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
   };
 
   const handleClose = () => {
+    // Stop playback and close YouTube when closing the controls
+    stop();
+    closeYouTube();
     if (onClose) onClose();
     else hidePlayer();
   };
