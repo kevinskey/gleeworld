@@ -32,27 +32,27 @@ const MarkdownContent: React.FC<{ content: string }> = ({ content }) => {
   const blocks = content.split(/\n\n+/);
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-sm">
       {blocks.map((block, index) => {
         const trimmed = block.trim();
         if (!trimmed) return null;
         
         // Headers
         if (trimmed.startsWith('### ')) {
-          return <h3 key={index} className="text-lg font-semibold mt-6 mb-2 text-foreground">{trimmed.slice(4)}</h3>;
+          return <h3 key={index} className="text-base font-semibold mt-6 mb-2 text-foreground">{trimmed.slice(4)}</h3>;
         }
         if (trimmed.startsWith('## ')) {
-          return <h2 key={index} className="text-xl font-bold mt-8 mb-3 text-foreground">{trimmed.slice(3)}</h2>;
+          return <h2 key={index} className="text-lg font-bold mt-8 mb-3 text-foreground">{trimmed.slice(3)}</h2>;
         }
         if (trimmed.startsWith('# ')) {
-          return <h1 key={index} className="text-2xl font-bold mt-6 mb-4 text-foreground">{trimmed.slice(2)}</h1>;
+          return <h1 key={index} className="text-xl font-bold mt-6 mb-4 text-foreground">{trimmed.slice(2)}</h1>;
         }
         
         // Bullet lists
         if (trimmed.startsWith('- ') || trimmed.includes('\n- ')) {
           const items = trimmed.split('\n').filter(line => line.trim().startsWith('- '));
           return (
-            <ul key={index} className="list-disc pl-6 space-y-1">
+            <ul key={index} className="list-disc pl-6 space-y-1 text-sm">
               {items.map((item, i) => (
                 <li key={i} className="text-muted-foreground">{item.slice(2).trim()}</li>
               ))}
@@ -64,7 +64,7 @@ const MarkdownContent: React.FC<{ content: string }> = ({ content }) => {
         if (/^\d+\.\s/.test(trimmed)) {
           const items = trimmed.split('\n').filter(line => /^\d+\.\s/.test(line.trim()));
           return (
-            <ol key={index} className="list-decimal pl-6 space-y-1">
+            <ol key={index} className="list-decimal pl-6 space-y-1 text-sm">
               {items.map((item, i) => (
                 <li key={i} className="text-muted-foreground">{item.replace(/^\d+\.\s/, '').trim()}</li>
               ))}
@@ -78,7 +78,7 @@ const MarkdownContent: React.FC<{ content: string }> = ({ content }) => {
         return (
           <p 
             key={index} 
-            className="text-muted-foreground leading-relaxed"
+            className="text-sm text-muted-foreground leading-relaxed"
             dangerouslySetInnerHTML={{ __html: formattedText }}
           />
         );
