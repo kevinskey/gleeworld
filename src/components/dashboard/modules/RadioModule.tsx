@@ -29,8 +29,8 @@ export const RadioModule = () => {
     return (
       <Card className="h-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Radio className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-3">
+            <Radio className="h-7 w-7" />
             Glee World Radio
             <Badge 
               variant={isOnline ? (isLive ? "default" : "secondary") : "outline"}
@@ -40,7 +40,7 @@ export const RadioModule = () => {
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6 py-6">
           {/* Now Playing */}
           {currentTrack && isOnline && (
             <div className="space-y-2">
@@ -55,16 +55,16 @@ export const RadioModule = () => {
           )}
 
           {/* Stats */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
+          <div className="flex items-center gap-4 text-base text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
               <span>{listenerCount} listeners</span>
             </div>
             <span>Est. 1924 • 100+ Years</span>
           </div>
 
           {/* Controls */}
-          <div className="space-y-4">
+          <div className="space-y-5">
             <Button
               variant="outline"
               size="default"
@@ -76,11 +76,11 @@ export const RadioModule = () => {
               className="w-full"
             >
               {isLoading ? (
-                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
+                <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
               ) : isPlaying ? (
-                <Pause className="h-4 w-4 mr-2" />
+                <Pause className="h-5 w-5 mr-2" />
               ) : (
-                <Play className="h-4 w-4 ml-0.5 mr-2" />
+                <Play className="h-5 w-5 ml-0.5 mr-2" />
               )}
               {isLoading ? 'Loading...' : isPlaying ? 'Pause Radio' : 'Play Radio'}
             </Button>
@@ -91,8 +91,8 @@ export const RadioModule = () => {
                 <span className="text-sm font-medium">Volume</span>
                 <span className="text-sm text-muted-foreground">{Math.round(volume * 100)}%</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Volume2 className="h-4 w-4" />
+              <div className="flex items-center gap-3">
+                <Volume2 className="h-5 w-5" />
                 <Slider
                   value={[volume]}
                   onValueChange={([value]) => setVolume(value)}
@@ -104,7 +104,7 @@ export const RadioModule = () => {
             </div>
           </div>
 
-          <div className="text-center pt-4 border-t text-xs text-muted-foreground">
+          <div className="text-center pt-6 border-t text-sm text-muted-foreground">
             "To Amaze and Inspire" • Official Spelman Glee Club Radio
           </div>
         </CardContent>
