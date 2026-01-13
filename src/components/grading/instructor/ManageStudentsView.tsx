@@ -60,34 +60,61 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
     queryFn: async () => {
       // First get all enrollments for this course
       const { data: enrollments, error: enrollError } = await supabase
-        .from('gw_enrollments' as any)
-        .select('id, student_id, role')
-        .eq('course_id', courseId);
+        .from('gw_course_enrollments')
+        .select('id, user_id, student_profile_id, role, enrollment_status')
+        .eq('course_id', courseId)
+        .eq('enrollment_status', 'enrolled');
       
       if (enrollError) throw enrollError;
       if (!enrollments || enrollments.length === 0) return [];
 
-      // Get all student IDs
-      const studentIds = enrollments.map((e: any) => e.student_id);
+      // Get user IDs (for linked accounts)
+      const userIds = enrollments
+        .map((e: any) => e.user_id)
+        .filter((id: string | null): id is string => id !== null);
+      
+      // Get student profile IDs (for CSV imports)
+      const studentProfileIds = enrollments
+        .filter((e: any) => !e.user_id && e.student_profile_id)
+        .map((e: any) => e.student_profile_id)
+        .filter((id: string | null): id is string => id !== null);
 
-      // Fetch profiles for all enrolled students
-      const { data: profiles, error: profileError } = await supabase
-        .from('gw_profiles')
-        .select('user_id, full_name, email, role')
-        .in('user_id', studentIds);
+      // Fetch profiles for linked accounts
+      let profileMap = new Map<string, { full_name: string; email: string; role: string }>();
+      if (userIds.length > 0) {
+        const { data: profiles, error: profileError } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email, role')
+          .in('user_id', userIds);
 
-      if (profileError) throw profileError;
+        if (profileError) throw profileError;
+        profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+      }
+
+      // Fetch student profiles for CSV imports
+      let studentProfileMap = new Map<string, { full_name: string; email: string }>();
+      if (studentProfileIds.length > 0) {
+        const { data: studentProfiles } = await supabase
+          .from('gw_student_profiles')
+          .select('id, full_name, email')
+          .in('id', studentProfileIds);
+        
+        studentProfileMap = new Map((studentProfiles || []).map(p => [p.id, p]));
+      }
 
       // Map enrollments to student data
       return enrollments.map((enrollment: any) => {
-        const profile = profiles?.find((p) => p.user_id === enrollment.student_id);
+        const profile = enrollment.user_id ? profileMap.get(enrollment.user_id) : null;
+        const studentProfile = enrollment.student_profile_id ? studentProfileMap.get(enrollment.student_profile_id) : null;
+        const data = profile || studentProfile;
+        
         return {
           enrollment_id: enrollment.id,
-          student_id: enrollment.student_id,
-          full_name: profile?.full_name || 'Unknown',
-          email: profile?.email || 'No email',
+          student_id: enrollment.user_id || enrollment.student_profile_id,
+          full_name: data?.full_name || 'Unknown',
+          email: data?.email || 'No email',
           enrollment_role: enrollment.role || 'student',
-          profile_role: profile?.role || 'visitor'
+          profile_role: (profile as any)?.role || 'visitor'
         };
       }) as EnrolledStudent[];
     }
@@ -112,10 +139,10 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
 
       // 2. Check if already enrolled
       const { data: existingEnrollment } = await supabase
-        .from('gw_enrollments' as any)
+        .from('gw_course_enrollments')
         .select('id')
         .eq('course_id', courseId)
-        .eq('student_id', userId)
+        .eq('user_id', userId)
         .maybeSingle();
 
       if (existingEnrollment) {
@@ -123,13 +150,15 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
       }
 
       // 3. Create enrollment
-      const { error: enrollError } = await (supabase
-        .from('gw_enrollments' as any)
+      const { error: enrollError } = await supabase
+        .from('gw_course_enrollments')
         .insert({
           course_id: courseId,
-          student_id: userId,
-          role: 'student'
-        }) as any);
+          user_id: userId,
+          role: 'student',
+          enrollment_status: 'enrolled',
+          enrolled_at: new Date().toISOString()
+        });
 
       if (enrollError) throw enrollError;
 
@@ -155,10 +184,10 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
   // Remove student mutation
   const removeStudentMutation = useMutation({
     mutationFn: async (enrollmentId: string) => {
-      const { error } = await (supabase
-        .from('gw_enrollments' as any)
+      const { error } = await supabase
+        .from('gw_course_enrollments')
         .delete()
-        .eq('id', enrollmentId) as any);
+        .eq('id', enrollmentId);
 
       if (error) throw error;
     },
@@ -176,15 +205,18 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
     mutationFn: async () => {
       // Get all enrollments for this course
       const { data: enrollments } = await supabase
-        .from('gw_enrollments' as any)
-        .select('student_id')
-        .eq('course_id', courseId);
+        .from('gw_course_enrollments')
+        .select('user_id')
+        .eq('course_id', courseId)
+        .eq('enrollment_status', 'enrolled');
       
       if (!enrollments || enrollments.length === 0) {
         throw new Error('No enrollments found');
       }
 
-      const studentIds = enrollments.map((e: any) => e.student_id);
+      const studentIds = enrollments
+        .map((e: any) => e.user_id)
+        .filter((id: string | null): id is string => id !== null);
       
       // Update all profiles to 'student' if they're currently 'visitor' or 'fan'
       const { error, count } = await supabase

@@ -18,10 +18,10 @@ export const useCourseEnrollment = (courseId: string) => {
     try {
       setIsLoading(true);
       const { data, error: fetchError } = await supabase
-        .from('glee_academy_enrollments')
+        .from('gw_course_enrollments')
         .select('*')
         .eq('course_id', courseId)
-        .eq('student_id', user.id)
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (fetchError) throw fetchError;
@@ -47,11 +47,13 @@ export const useCourseEnrollment = (courseId: string) => {
     try {
       setIsLoading(true);
       const { data, error: enrollError } = await supabase
-        .from('glee_academy_enrollments')
+        .from('gw_course_enrollments')
         .insert({
           course_id: courseId,
-          student_id: user.id,
-          enrollment_status: 'enrolled'
+          user_id: user.id,
+          role: 'student',
+          enrollment_status: 'enrolled',
+          enrolled_at: new Date().toISOString()
         })
         .select()
         .single();
