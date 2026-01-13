@@ -30,6 +30,7 @@ export interface HeroSlide {
   imageUrl?: string | null;
   mobileImageUrl?: string | null;
   ipadImageUrl?: string | null;
+  videoUrl?: string | null; // YouTube video URL or ID
   durationMs?: number | null;
   layout: SlideLayout;
   transition: SlideTransition;
@@ -73,6 +74,7 @@ export function adaptDatabaseSlide(dbSlide: any): HeroSlide {
     imageUrl: dbSlide.image_url,
     mobileImageUrl: dbSlide.mobile_image_url,
     ipadImageUrl: dbSlide.ipad_image_url,
+    videoUrl: dbSlide.video_url, // YouTube video support
     durationMs: dbSlide.slide_duration_seconds ? dbSlide.slide_duration_seconds * 1000 : null,
     layout: (dbSlide.layout as SlideLayout) || 'one',
     transition: (dbSlide.transition as SlideTransition) || 'fade',
@@ -232,17 +234,70 @@ const getDescriptionSize = (size: string | null): string => {
 };
 
 // ============================================================================
+// HELPER: Extract YouTube video ID from various URL formats
+// ============================================================================
+
+function extractYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+  
+  // Already just an ID (11 characters, alphanumeric with - and _)
+  if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
+    return url;
+  }
+  
+  // Standard YouTube URLs
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return null;
+}
+
+// ============================================================================
 // COMPONENTS
 // ============================================================================
 
-interface SlideImageProps {
+interface SlideMediaProps {
   slide: HeroSlide;
   fallbackSrc: string;
+  isPlaying: boolean;
 }
 
-const SlideImage: React.FC<SlideImageProps> = ({ slide, fallbackSrc }) => {
+const SlideMedia: React.FC<SlideMediaProps> = ({ slide, fallbackSrc, isPlaying }) => {
   const defaultImage = fallbackSrc;
+  const videoId = slide.videoUrl ? extractYouTubeVideoId(slide.videoUrl) : null;
   
+  // If there's a valid YouTube video URL, render the video
+  if (videoId) {
+    return (
+      <div className="absolute inset-0 w-full h-full overflow-hidden">
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=${isPlaying ? 1 : 0}&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+          title={slide.title || 'Hero video'}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{
+            // Scale up to cover the container and hide YouTube UI elements
+            width: '150%',
+            height: '150%',
+            left: '-25%',
+            top: '-25%',
+          }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+        {/* Overlay to prevent interaction and hide any remaining UI */}
+        <div className="absolute inset-0 pointer-events-none" />
+      </div>
+    );
+  }
+  
+  // Otherwise render images
   return (
     <>
       {/* Desktop Image */}
@@ -585,8 +640,8 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({
             aria-label={`Slide ${index + 1} of ${slides.length}`}
             aria-hidden={!isActive}
           >
-            {/* Background Image */}
-            <SlideImage slide={slide} fallbackSrc={fallbackImage} />
+            {/* Background Media (Image or YouTube Video) */}
+            <SlideMedia slide={slide} fallbackSrc={fallbackImage} isPlaying={isActive && isPlaying} />
             
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/20" />

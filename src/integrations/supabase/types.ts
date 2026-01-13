@@ -10213,6 +10213,7 @@ export type Database = {
           title_size: string | null
           transition: string | null
           usage_context: string | null
+          video_url: string | null
         }
         Insert: {
           action_button_enabled?: boolean | null
@@ -10241,6 +10242,7 @@ export type Database = {
           title_size?: string | null
           transition?: string | null
           usage_context?: string | null
+          video_url?: string | null
         }
         Update: {
           action_button_enabled?: boolean | null
@@ -10269,6 +10271,7 @@ export type Database = {
           title_size?: string | null
           transition?: string | null
           usage_context?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {
