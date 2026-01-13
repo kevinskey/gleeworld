@@ -54,7 +54,8 @@ const ForcePasswordChange: React.FC = () => {
       
       if (error) throw error;
 
-      // Mark that user has changed password during this period
+      // Mark that user has changed password during this period (persist in localStorage)
+      localStorage.setItem('password_changed_jan2026', 'true');
       sessionStorage.setItem('password_changed_jan2026', 'true');
       
       toast({
