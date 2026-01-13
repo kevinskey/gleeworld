@@ -159,12 +159,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 {!user && (
                   <Button 
                     asChild
-                    variant="outline"
-                    className="relative text-xs lg:text-sm px-3 lg:px-4 py-0 lg:py-1.5 h-6 lg:h-auto font-medium rounded-full border transition-all duration-300 hover:bg-[#003666] hover:text-white"
-                    style={{ 
-                      borderColor: HEADER_STYLES.brandColor,
-                      color: HEADER_STYLES.brandColor,
-                    }}
+                    className="relative text-xs lg:text-sm px-3 lg:px-4 py-0 lg:py-1.5 h-6 lg:h-auto font-medium rounded-full transition-all duration-300 bg-[#003666] text-white border-2 border-[#003666] hover:bg-white hover:text-[#003666]"
                   >
                     <Link 
                       to="/auth" 
