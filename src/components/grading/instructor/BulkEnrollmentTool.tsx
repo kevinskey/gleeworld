@@ -37,10 +37,10 @@ export const BulkEnrollmentTool: React.FC<BulkEnrollmentToolProps> = ({ courseId
 
           // Check if already enrolled
           const { data: existing } = await supabase
-            .from('gw_enrollments' as any)
+            .from('gw_course_enrollments')
             .select('id')
             .eq('course_id', courseId)
-            .eq('student_id', profileData.user_id)
+            .eq('user_id', profileData.user_id)
             .maybeSingle();
 
           if (existing) {
@@ -50,12 +50,14 @@ export const BulkEnrollmentTool: React.FC<BulkEnrollmentToolProps> = ({ courseId
 
           // Create enrollment
           const { error } = await supabase
-            .from('gw_enrollments' as any)
+            .from('gw_course_enrollments')
             .insert({
               course_id: courseId,
-              student_id: profileData.user_id,
-              role: 'student'
-            } as any);
+              user_id: profileData.user_id,
+              role: 'student',
+              enrollment_status: 'enrolled',
+              enrolled_at: new Date().toISOString()
+            });
 
           if (error) {
             failed.push(`${email} - ${error.message}`);

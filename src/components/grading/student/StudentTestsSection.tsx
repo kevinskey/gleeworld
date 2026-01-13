@@ -47,9 +47,10 @@ export const StudentTestsSection: React.FC = () => {
     queryFn: async () => {
       // First get enrolled courses
       const { data: enrollments, error: enrollError } = await supabase
-        .from('gw_enrollments' as any)
-        .select('course_id, gw_courses(id, course_code, course_name)')
-        .eq('student_id', user?.id);
+        .from('gw_course_enrollments')
+        .select('course_id, gw_courses(id, course_code, title)')
+        .eq('user_id', user?.id)
+        .eq('enrollment_status', 'enrolled');
 
       if (enrollError) throw enrollError;
 

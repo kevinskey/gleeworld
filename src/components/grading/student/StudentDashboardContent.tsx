@@ -20,10 +20,11 @@ export const StudentDashboardContent: React.FC = () => {
     queryKey: ['gw-student-enrollments', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_enrollments' as any)
+        .from('gw_course_enrollments')
         .select('*, gw_courses(*)')
-        .eq('student_id', user?.id)
-        .order('created_at', { ascending: false});
+        .eq('user_id', user?.id)
+        .eq('enrollment_status', 'enrolled')
+        .order('enrolled_at', { ascending: false });
 
       if (error) throw error;
       return data as any[];
@@ -41,8 +42,8 @@ export const StudentDashboardContent: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'gw_enrollments',
-          filter: `student_id=eq.${user.id}`
+          table: 'gw_course_enrollments',
+          filter: `user_id=eq.${user.id}`
         },
         () => {
           console.log('Enrollment changed, refetching');
