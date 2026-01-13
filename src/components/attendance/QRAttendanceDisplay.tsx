@@ -171,12 +171,14 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
 
     setGenerating(true);
     try {
-      console.log('Calling generate_secure_qr_token function...');
+      console.log('Calling generate_qr_attendance_token_with_pin function...');
       setDebugInfo('Calling database function...');
       
-      // Generate new QR token using secure function (will use v2 after types refresh)
-      const { data: tokenData, error: tokenError } = await supabase.rpc('generate_secure_qr_token', {
-        event_id_param: eventId
+      // Generate QR token with PIN using new combined function
+      const { data: tokenData, error: tokenError } = await supabase.rpc('generate_qr_attendance_token_with_pin', {
+        p_event_id: eventId,
+        p_created_by: user.id,
+        p_expires_in_minutes: expiryMinutes
       });
 
       console.log('Token generation result:', { tokenData, tokenError });
@@ -191,41 +193,31 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
         throw tokenError;
       }
 
-      const token = tokenData as string;
-      const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000).toISOString();
+      const result = tokenData as { token: string; pin_code: string; token_id: string; expires_at: string };
+      
+      console.log('Generated token with PIN:', { 
+        token: result.token?.substring(0, 10) + '...', 
+        pin: result.pin_code,
+        id: result.token_id
+      });
+      setDebugInfo(`Generated with PIN: ${result.pin_code}`);
 
-      console.log('Inserting QR code record...', { eventId, token: token?.substring(0, 10) + '...', expiresAt });
-      setDebugInfo('Inserting QR record...');
-
-      // Create QR code record
-      const { data: qrData, error: qrError } = await supabase
-        .from('gw_attendance_qr_codes')
-        .insert({
-          event_id: eventId,
-          qr_token: token,
-          generated_by: user.id,
-          expires_at: expiresAt
-        })
-        .select()
-        .single();
-
-      console.log('QR code insert result:', { qrData, qrError });
-      setDebugInfo(`Insert result: ${qrData ? 'success' : 'failed'}`);
-
-      if (qrError) {
-        toast({
-          title: "Database Insert Failed",
-          description: `Insert error: ${qrError.message}`,
-          variant: "destructive",
-        });
-        throw qrError;
-      }
+      // Build QR code data from the response
+      const qrData: QRCodeData = {
+        id: result.token_id,
+        qr_token: result.token,
+        pin_code: result.pin_code,
+        generated_at: new Date().toISOString(),
+        expires_at: result.expires_at,
+        scan_count: 0,
+        is_active: true
+      };
 
       setQrCode(qrData);
       
       console.log('Generating QR image...');
       setDebugInfo('Generating QR image...');
-      await generateQRImage(token);
+      await generateQRImage(result.token);
 
       toast({
         title: "QR Code Generated",

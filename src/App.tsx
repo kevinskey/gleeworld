@@ -112,6 +112,7 @@ import EditAnnouncement from "./pages/admin/EditAnnouncement";
 import About from "./pages/About";
 import AttendanceTestPage from "./pages/AttendanceTestPage";
 import AttendanceScanPage from "./pages/AttendanceScanPage";
+import AttendancePinPage from "./pages/AttendancePinPage";
 // Existing AttendancePage (legacy)
 import AttendancePageLegacy from "./pages/AttendancePage";
 // Existing MusicLibraryPage (legacy)
@@ -420,8 +421,17 @@ const App = () => {
                   </PublicRoute>
                 } 
               />
+              {/* Attendance PIN Entry (fallback for QR) */}
               <Route 
-                path="/reset-password" 
+                path="/attendance/pin" 
+                element={
+                  <ProtectedRoute>
+                    <AttendancePinPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/reset-password"
                 element={
                   <PublicRoute>
                     <ResetPassword />
