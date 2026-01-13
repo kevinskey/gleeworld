@@ -77,7 +77,7 @@ export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWit
     fetchAnnotations 
   } = useSheetMusicAnnotations(musicId);
   const { audioData } = useSheetMusicAudio(musicId);
-  const { loadUrl, audioSource } = useAudioCompanion();
+  const { loadUrl, loadYouTube, audioSource } = useAudioCompanion();
   
   // Initialize the default layout plugin
 const scrollModePluginInstance = scrollModePlugin();
@@ -353,10 +353,16 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   // Auto-load associated audio when PDF opens
   useEffect(() => {
     if (audioData?.audio_url && !audioSource) {
-      loadUrl(audioData.audio_url, audioData.audio_title || musicTitle || 'Audio');
+      const url = audioData.audio_url;
+      // Check if it's a YouTube URL
+      if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        loadYouTube(url);
+      } else {
+        loadUrl(url, audioData.audio_title || musicTitle || 'Audio');
+      }
       setShowAudioCompanion(true);
     }
-  }, [audioData, audioSource, loadUrl, musicTitle]);
+  }, [audioData, audioSource, loadUrl, loadYouTube, musicTitle]);
 
   // Toggle global annotation mode to hide/show the app header
   useEffect(() => {
