@@ -16,13 +16,17 @@ import {
   Users, 
   Eye,
   Clock,
-  Loader2
+  Loader2,
+  Hash,
+  Copy,
+  CheckCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface QRCodeData {
   id: string;
   qr_token: string;
+  pin_code?: string;
   generated_at: string;
   expires_at: string;
   scan_count: number;
@@ -48,6 +52,7 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
   const [expiryMinutes, setExpiryMinutes] = useState(60);
   const [liveScans, setLiveScans] = useState<any[]>([]);
   const [showLiveUpdates, setShowLiveUpdates] = useState(false);
+  const [pinCopied, setPinCopied] = useState(false);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const [debugInfo, setDebugInfo] = useState<string>('Component loaded');
 
@@ -415,6 +420,36 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Fallback PIN Code Display */}
+              {qrCode?.pin_code && (
+                <div className="bg-muted/50 rounded-lg p-4 text-center border-2 border-dashed">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Hash className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground font-medium">Fallback PIN Code</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-3xl font-mono font-bold tracking-[0.5em]">
+                      {qrCode.pin_code}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(qrCode.pin_code || '');
+                        setPinCopied(true);
+                        setTimeout(() => setPinCopied(false), 2000);
+                        toast({ title: "PIN copied!" });
+                      }}
+                    >
+                      {pinCopied ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Students can enter this PIN at /attendance/pin if scanning fails
+                  </p>
+                </div>
+              )}
 
               {/* QR Code Info */}
               <div className="grid grid-cols-2 gap-4 text-sm">
