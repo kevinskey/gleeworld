@@ -9268,6 +9268,57 @@ export type Database = {
           },
         ]
       }
+      gw_excuse_requests: {
+        Row: {
+          clarification: string | null
+          course_id: string
+          created_at: string
+          document_filename: string | null
+          document_url: string | null
+          event_ids: string[]
+          excuse_type: string
+          id: string
+          responded_at: string | null
+          responded_by: string | null
+          response_message: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          clarification?: string | null
+          course_id: string
+          created_at?: string
+          document_filename?: string | null
+          document_url?: string | null
+          event_ids: string[]
+          excuse_type: string
+          id?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          response_message?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          clarification?: string | null
+          course_id?: string
+          created_at?: string
+          document_filename?: string | null
+          document_url?: string | null
+          event_ids?: string[]
+          excuse_type?: string
+          id?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          response_message?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_executive_board_checkins: {
         Row: {
           action_type: string
