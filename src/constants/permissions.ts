@@ -1,3 +1,17 @@
+/**
+ * GleeWorld Role & Permission System
+ * 
+ * ROLE HIERARCHY (highest to lowest):
+ * 1. Super Admin (Director) - Full system control, only one person
+ * 2. Admin - Appointed staff (accompanist, assistants, advisors) - Full management except system settings
+ * 3. Executive Board - Elected student officers with role-specific permissions
+ * 4. Instructor - Course instructors, can manage their courses
+ * 5. Student/Member - Active Glee Club members
+ * 6. Alumna - Graduates with alumnae portal access
+ * 7. Auditioner - Applicants in audition process
+ * 8. Fan - Supporters with limited access
+ * 9. Visitor - Unauthenticated, public content only
+ */
 
 export const USER_ROLES = {
   VISITOR: 'visitor',
@@ -5,55 +19,135 @@ export const USER_ROLES = {
   AUDITIONER: 'auditioner',
   STUDENT: 'student',
   ALUMNA: 'alumna',
-  MEMBER: 'member',
+  MEMBER: 'member', // Alias for student
+  INSTRUCTOR: 'instructor',
+  EXECUTIVE: 'executive',
   ADMIN: 'admin',
   SUPER_ADMIN: 'super-admin',
 } as const;
 
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 
+/**
+ * ROLE DESCRIPTIONS - For UI display and documentation
+ */
+export const ROLE_DESCRIPTIONS: Record<UserRole, { title: string; description: string; level: number }> = {
+  [USER_ROLES.SUPER_ADMIN]: {
+    title: 'Director (Super Admin)',
+    description: 'Full system control. Can delete users, manage system settings, approve final budgets, override any action.',
+    level: 100,
+  },
+  [USER_ROLES.ADMIN]: {
+    title: 'Admin',
+    description: 'Appointed staff (accompanist, assistants, advisors). Can manage users, content, contracts, emails, events, and budgets.',
+    level: 80,
+  },
+  [USER_ROLES.EXECUTIVE]: {
+    title: 'Executive Board',
+    description: 'Elected student officers. Role-specific permissions based on position (Treasurer, Chief of Staff, etc.).',
+    level: 60,
+  },
+  [USER_ROLES.INSTRUCTOR]: {
+    title: 'Instructor',
+    description: 'Course instructors. Can manage their courses and view enrolled student dossiers.',
+    level: 50,
+  },
+  [USER_ROLES.STUDENT]: {
+    title: 'Student/Member',
+    description: 'Active Glee Club members. Access to music studio, contracts, payments, and member resources.',
+    level: 40,
+  },
+  [USER_ROLES.MEMBER]: {
+    title: 'Member',
+    description: 'Alias for Student. Active Glee Club members.',
+    level: 40,
+  },
+  [USER_ROLES.ALUMNA]: {
+    title: 'Alumna',
+    description: 'Graduates. Access to alumnae portal, mentoring, reunion RSVPs.',
+    level: 30,
+  },
+  [USER_ROLES.AUDITIONER]: {
+    title: 'Auditioner',
+    description: 'Applicants in audition process. Can sign contracts and access audition portal.',
+    level: 20,
+  },
+  [USER_ROLES.FAN]: {
+    title: 'Fan',
+    description: 'Supporters. Access to events, shop, and newsletter.',
+    level: 10,
+  },
+  [USER_ROLES.VISITOR]: {
+    title: 'Visitor',
+    description: 'Unauthenticated user. Public content only.',
+    level: 0,
+  },
+};
+
 export const PERMISSIONS = [
+  // Personal permissions (all authenticated users)
   'view_own_contracts',
   'view_own_payments',
   'view_own_w9_forms',
   'sign_contracts',
   'submit_w9_forms',
+  
+  // Member permissions
+  'access_music_studio',
+  'access_member_resources',
+  'access_handbook',
+  
+  // Instructor permissions
+  'manage_own_courses',
+  'view_enrolled_students',
+  
+  // Executive Board permissions
+  'access_exec_dashboard',
+  'send_emails',
+  'access_contracts',
+  'access_budget_creation',
+  'approve_budgets_treasurer',
+  
+  // Admin permissions
   'view_all_contracts',
   'create_contracts',
   'manage_users',
   'view_all_payments',
   'view_system_settings',
   'admin_sign_contracts',
+  'access_hero_management',
+  'access_dashboard_settings',
+  'access_youtube_management',
+  'manage_username_permissions',
+  'access_tour_planner',
+  'manage_events',
+  'manage_content',
+  
+  // Super Admin only permissions
   'all_permissions',
   'delete_users',
   'manage_system_settings',
   'view_activity_logs',
-// Module-specific permissions (legacy - migrating to module-based system)
-  'access_hero_management',
-  'access_dashboard_settings',
-  'access_youtube_management',
-  'access_budget_creation',
-  'access_contracts',
-  'access_tour_planner',
-  'access_handbook',
-  'send_emails',
-  'manage_username_permissions',
-  'approve_budgets_treasurer',
   'approve_budgets_super_admin',
+  'manage_roles',
 ] as const;
 
 export type Permission = typeof PERMISSIONS[number];
 
+/**
+ * ROLE-BASED PERMISSIONS
+ * Each role inherits permissions from lower roles (except for role-specific ones)
+ */
 export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
-  [USER_ROLES.VISITOR]: [
-    // No permissions for visitors - they can only view public content
-  ],
+  [USER_ROLES.VISITOR]: [],
+  
   [USER_ROLES.FAN]: [
     'view_own_contracts',
-    'view_own_payments', 
+    'view_own_payments',
     'view_own_w9_forms',
     'access_handbook',
   ],
+  
   [USER_ROLES.AUDITIONER]: [
     'view_own_contracts',
     'view_own_payments',
@@ -61,14 +155,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'sign_contracts',
     'access_handbook',
   ],
-  [USER_ROLES.STUDENT]: [
-    'view_own_contracts',
-    'view_own_payments',
-    'view_own_w9_forms',
-    'sign_contracts',
-    'submit_w9_forms',
-    'access_handbook',
-  ],
+  
   [USER_ROLES.ALUMNA]: [
     'view_own_contracts',
     'view_own_payments',
@@ -77,15 +164,67 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'submit_w9_forms',
     'access_handbook',
   ],
+  
+  [USER_ROLES.STUDENT]: [
+    'view_own_contracts',
+    'view_own_payments',
+    'view_own_w9_forms',
+    'sign_contracts',
+    'submit_w9_forms',
+    'access_music_studio',
+    'access_member_resources',
+    'access_handbook',
+  ],
+  
   [USER_ROLES.MEMBER]: [
     'view_own_contracts',
     'view_own_payments',
     'view_own_w9_forms',
     'sign_contracts',
     'submit_w9_forms',
+    'access_music_studio',
+    'access_member_resources',
     'access_handbook',
   ],
+  
+  [USER_ROLES.INSTRUCTOR]: [
+    'view_own_contracts',
+    'view_own_payments',
+    'view_own_w9_forms',
+    'sign_contracts',
+    'submit_w9_forms',
+    'manage_own_courses',
+    'view_enrolled_students',
+    'access_handbook',
+  ],
+  
+  [USER_ROLES.EXECUTIVE]: [
+    'view_own_contracts',
+    'view_own_payments',
+    'view_own_w9_forms',
+    'sign_contracts',
+    'submit_w9_forms',
+    'access_music_studio',
+    'access_member_resources',
+    'access_handbook',
+    'access_exec_dashboard',
+    'send_emails',
+    'access_contracts',
+  ],
+  
   [USER_ROLES.ADMIN]: [
+    'view_own_contracts',
+    'view_own_payments',
+    'view_own_w9_forms',
+    'sign_contracts',
+    'submit_w9_forms',
+    'access_music_studio',
+    'access_member_resources',
+    'access_handbook',
+    'access_exec_dashboard',
+    'send_emails',
+    'access_contracts',
+    'access_budget_creation',
     'view_all_contracts',
     'create_contracts',
     'manage_users',
@@ -95,18 +234,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     'access_hero_management',
     'access_dashboard_settings',
     'access_youtube_management',
-    'send_emails',
     'manage_username_permissions',
     'access_tour_planner',
-    'access_handbook',
+    'manage_events',
+    'manage_content',
   ],
+  
   [USER_ROLES.SUPER_ADMIN]: [
     'all_permissions',
-    'delete_users',
-    'manage_system_settings',
-    'view_activity_logs',
-    'approve_budgets_super_admin',
-    'access_handbook',
   ],
 } as const;
 
@@ -116,66 +251,84 @@ export const DASHBOARD_MODULES = {
     name: 'Hero Management',
     description: 'Manage homepage hero sections and carousel',
     permission: 'access_hero_management' as Permission,
+    minRole: USER_ROLES.ADMIN,
   },
   dashboard_settings: {
     name: 'Dashboard Settings',
     description: 'Configure dashboard appearance and settings',
     permission: 'access_dashboard_settings' as Permission,
+    minRole: USER_ROLES.ADMIN,
   },
   youtube_management: {
     name: 'YouTube Management',
     description: 'Sync and manage YouTube content',
     permission: 'access_youtube_management' as Permission,
+    minRole: USER_ROLES.ADMIN,
   },
   budget_creation: {
     name: 'Budget Creation',
     description: 'Create and manage project budgets',
     permission: 'access_budget_creation' as Permission,
+    minRole: USER_ROLES.EXECUTIVE,
   },
   contracts: {
     name: 'Contracts',
     description: 'Create and manage contracts',
     permission: 'access_contracts' as Permission,
+    minRole: USER_ROLES.EXECUTIVE,
   },
   send_emails: {
     name: 'Email Campaigns',
     description: 'Send emails to members',
     permission: 'send_emails' as Permission,
+    minRole: USER_ROLES.EXECUTIVE,
   },
   manage_permissions: {
     name: 'Manage Permissions',
     description: 'Manage username-based module permissions',
     permission: 'manage_username_permissions' as Permission,
+    minRole: USER_ROLES.ADMIN,
   },
   permissions_panel: {
     name: 'Permissions Panel',
     description: 'Advanced dashboard module permissions control',
     permission: 'manage_username_permissions' as Permission,
+    minRole: USER_ROLES.ADMIN,
   },
   tour_planner: {
     name: 'Tour Planner',
     description: 'Plan and manage tours, cities, and tasks',
     permission: 'access_tour_planner' as Permission,
+    minRole: USER_ROLES.ADMIN,
   },
   handbook: {
     name: 'Handbook',
     description: 'Official Glee Club handbook and executive board positions',
     permission: 'access_handbook' as Permission,
+    minRole: USER_ROLES.FAN,
+  },
+  music_studio: {
+    name: 'Music Studio',
+    description: 'Recording booth, audio archive, and sheet music',
+    permission: 'access_music_studio' as Permission,
+    minRole: USER_ROLES.STUDENT,
   },
 } as const;
 
 export type DashboardModule = keyof typeof DASHBOARD_MODULES;
 
+/**
+ * Check if a role has a specific permission
+ */
 export const hasPermission = (userRole: string, permission: string): boolean => {
-  // Treat "director" as alias of super-admin for permissions
+  // Normalize director to super-admin
   const normalized = userRole === 'director' ? USER_ROLES.SUPER_ADMIN : userRole;
 
-  // Type guard to check if userRole is valid
   if (!Object.values(USER_ROLES).includes(normalized as UserRole)) {
     return false;
   }
 
-  // Super admin (Director) has all permissions
+  // Super admin has all permissions
   if (normalized === USER_ROLES.SUPER_ADMIN) {
     return true;
   }
@@ -184,23 +337,39 @@ export const hasPermission = (userRole: string, permission: string): boolean => 
   return rolePermissions.includes(permission as Permission);
 };
 
-// Enhanced permission check that includes username-based permissions
+/**
+ * Get role level for hierarchy comparison
+ */
+export const getRoleLevel = (role: string): number => {
+  const normalized = role === 'director' ? USER_ROLES.SUPER_ADMIN : role;
+  return ROLE_DESCRIPTIONS[normalized as UserRole]?.level ?? 0;
+};
+
+/**
+ * Check if roleA is higher than or equal to roleB
+ */
+export const isRoleAtLeast = (userRole: string, minimumRole: UserRole): boolean => {
+  return getRoleLevel(userRole) >= getRoleLevel(minimumRole);
+};
+
+/**
+ * Enhanced permission check that includes username-based permissions
+ */
 export const hasModulePermission = (
   userRole: string, 
   userEmail: string, 
   permission: string,
   usernamePermissions: string[] = []
 ): boolean => {
-  // Check role-based permissions first
   if (hasPermission(userRole, permission)) {
     return true;
   }
-  
-  // Check username-based permissions
   return usernamePermissions.includes(permission);
 };
 
-// Check if user has access to a specific module
+/**
+ * Check if user has access to a specific module
+ */
 export const hasModuleAccess = (
   userRole: string,
   userEmail: string,
@@ -213,27 +382,101 @@ export const hasModuleAccess = (
   return hasModulePermission(userRole, userEmail, module.permission, usernamePermissions);
 };
 
-// Enhanced permission check that includes executive board role permissions
-export const hasExecutiveBoardPermissions = (
-  userRole: string,
-  execBoardRole?: string,
-  usernamePermissions: string[] = []
-): boolean => {
-  // Admin role always has permissions
-  if (hasPermission(userRole, 'send_emails')) {
-    return true;
-  }
+/**
+ * EXECUTIVE BOARD ROLE-SPECIFIC PERMISSIONS
+ * Additional permissions granted based on exec board position
+ */
+export const EXEC_BOARD_PERMISSIONS: Record<string, readonly Permission[]> = {
+  'president': [
+    'access_hero_management',
+    'access_dashboard_settings',
+    'access_youtube_management',
+    'access_budget_creation',
+    'manage_username_permissions',
+    'access_tour_planner',
+    'manage_events',
+  ],
+  'vice-president': [
+    'access_budget_creation',
+    'access_youtube_management',
+    'access_tour_planner',
+    'manage_events',
+  ],
+  'chief_of_staff': [
+    'manage_users',
+    'access_tour_planner',
+    'manage_events',
+  ],
+  'treasurer': [
+    'access_budget_creation',
+    'approve_budgets_treasurer',
+    'view_all_payments',
+  ],
+  'secretary': [
+    'send_emails',
+    'access_contracts',
+  ],
+  'music-director': [
+    'access_youtube_management',
+    'access_music_studio',
+  ],
+  'assistant-music-director': [
+    'access_youtube_management',
+    'access_music_studio',
+  ],
+  'social-chair': [
+    'access_budget_creation',
+    'manage_events',
+  ],
+  'publicity-chair': [
+    'access_hero_management',
+    'access_youtube_management',
+  ],
+  'events-coordinator': [
+    'access_budget_creation',
+    'access_tour_planner',
+    'manage_events',
+  ],
+  'historian': [
+    'access_youtube_management',
+  ],
+  'librarian': [
+    'access_music_studio',
+  ],
+  'technical-director': [
+    'access_dashboard_settings',
+    'access_youtube_management',
+  ],
+  'fundraising-chair': [
+    'access_budget_creation',
+  ],
+  'alumni-relations': [],
+  'membership-chair': [],
+  'tour-manager': [
+    'access_tour_planner',
+    'access_budget_creation',
+  ],
+  'wardrobe_manager': [],
+} as const;
+
+/**
+ * Get permissions for an executive board role
+ */
+export const getExecutiveBoardPermissions = (execBoardRole: string): Permission[] => {
+  // Base permissions for all exec board members
+  const basePermissions: Permission[] = [
+    'send_emails',
+    'access_contracts',
+    'access_exec_dashboard',
+  ];
   
-  // Executive board members have permissions
-  if (execBoardRole && execBoardRole.trim() !== '') {
-    return true;
-  }
-  
-  // Check username-based permissions
-  return usernamePermissions.includes('send_emails');
+  const roleSpecific = EXEC_BOARD_PERMISSIONS[execBoardRole] || [];
+  return [...basePermissions, ...roleSpecific] as Permission[];
 };
 
-// Enhanced permission check with executive board role consideration
+/**
+ * Enhanced permission check with executive board role consideration
+ */
 export const hasEnhancedModulePermission = (
   userRole: string,
   userEmail: string,
@@ -241,25 +484,23 @@ export const hasEnhancedModulePermission = (
   execBoardRole?: string,
   usernamePermissions: string[] = []
 ): boolean => {
-  // Check role-based permissions first
   if (hasPermission(userRole, permission)) {
     return true;
   }
   
-  // Check executive board role permissions
   if (execBoardRole) {
-    // Import here to avoid circular dependency
     const execBoardPermissions = getExecutiveBoardPermissions(execBoardRole);
-    if (execBoardPermissions.includes(permission)) {
+    if (execBoardPermissions.includes(permission as Permission)) {
       return true;
     }
   }
   
-  // Check username-based permissions
   return usernamePermissions.includes(permission);
 };
 
-// Enhanced module access check with executive board role consideration
+/**
+ * Enhanced module access check with executive board role consideration
+ */
 export const hasEnhancedModuleAccess = (
   userRole: string,
   userEmail: string,
@@ -273,35 +514,29 @@ export const hasEnhancedModuleAccess = (
   return hasEnhancedModulePermission(userRole, userEmail, module.permission, execBoardRole, usernamePermissions);
 };
 
-// Helper function to get executive board permissions (implemented separately to avoid circular imports)
-const getExecutiveBoardPermissions = (execBoardRole: string): string[] => {
-  // All executive board members get full email, SMS, and notification permissions
-  const basePermissions = ['send_emails', 'access_contracts', 'sms', 'communications', 'newsletter'];
+/**
+ * Check if user has executive board permissions (for backwards compatibility)
+ */
+export const hasExecutiveBoardPermissions = (
+  userRole: string,
+  execBoardRole?: string,
+  usernamePermissions: string[] = []
+): boolean => {
+  if (hasPermission(userRole, 'send_emails')) {
+    return true;
+  }
   
-  // Role-specific additional permissions
-  const rolePermissionMap: Record<string, string[]> = {
-    'president': ['access_hero_management', 'access_dashboard_settings', 'access_youtube_management', 'access_budget_creation', 'manage_username_permissions', 'access_tour_planner'],
-    'vice-president': ['access_budget_creation', 'access_youtube_management', 'access_tour_planner'],
-    'treasurer': ['access_budget_creation'],
-    'secretary': [],
-    'music-director': ['access_youtube_management'],
-    'assistant-music-director': ['access_youtube_management'],
-    'social-chair': ['access_budget_creation'],
-    'publicity-chair': ['access_hero_management', 'access_youtube_management'],
-    'events-coordinator': ['access_budget_creation', 'access_tour_planner'],
-    'historian': ['access_youtube_management'],
-    'librarian': [],
-    'technical-director': ['access_dashboard_settings', 'access_youtube_management'],
-    'fundraising-chair': ['access_budget_creation'],
-    'alumni-relations': [],
-    'membership-chair': [],
-    'tour-manager': ['access_tour_planner', 'access_budget_creation'],
-  };
+  if (execBoardRole && execBoardRole.trim() !== '') {
+    return true;
+  }
   
-  const roleSpecific = rolePermissionMap[execBoardRole] || [];
-  return [...basePermissions, ...roleSpecific];
+  return usernamePermissions.includes('send_emails');
 };
 
+/**
+ * Simple admin check (for backwards compatibility)
+ */
 export const isAdmin = (userRole?: string): boolean => {
-  return userRole === USER_ROLES.ADMIN || userRole === USER_ROLES.SUPER_ADMIN || userRole === 'director';
+  if (!userRole) return false;
+  return isRoleAtLeast(userRole, USER_ROLES.ADMIN);
 };

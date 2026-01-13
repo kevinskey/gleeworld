@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { USER_ROLES, getRoleLevel, isRoleAtLeast } from "@/constants/permissions";
 
 interface UserProfile {
   id: string;
@@ -15,6 +16,20 @@ interface UserProfile {
   verified?: boolean;
 }
 
+/**
+ * Hook for checking user roles and permissions
+ * 
+ * ROLE HIERARCHY (highest to lowest):
+ * 1. Super Admin (Director) - Full system control
+ * 2. Admin - Appointed staff with management access
+ * 3. Executive Board - Elected student officers
+ * 4. Instructor - Course instructors
+ * 5. Student/Member - Active members
+ * 6. Alumna - Graduates
+ * 7. Auditioner - Applicants
+ * 8. Fan - Supporters
+ * 9. Visitor - Unauthenticated
+ */
 export const useUserRole = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -52,86 +67,204 @@ export const useUserRole = () => {
     fetchUserProfile();
   }, [user]);
 
-  const canDownloadPDF = () => {
-    if (!profile) return false;
-    return profile.is_admin || profile.is_super_admin || profile.role === 'librarian';
+  /**
+   * Get the effective role considering is_admin and is_super_admin flags
+   */
+  const getEffectiveRole = (): string => {
+    if (!profile) return USER_ROLES.VISITOR;
+    
+    // is_super_admin flag takes highest priority
+    if (profile.is_super_admin) return USER_ROLES.SUPER_ADMIN;
+    
+    // is_admin flag means admin role
+    if (profile.is_admin) return USER_ROLES.ADMIN;
+    
+    // is_exec_board flag means executive role
+    if (profile.is_exec_board) return USER_ROLES.EXECUTIVE;
+    
+    // Otherwise use the role field
+    return profile.role || USER_ROLES.VISITOR;
   };
 
-  const canDownloadMP3 = () => {
-    if (!profile) return false;
-    return profile.is_super_admin || profile.role === 'director';
+  /**
+   * Check if user is at least a certain role level
+   */
+  const hasRoleLevel = (minimumRole: typeof USER_ROLES[keyof typeof USER_ROLES]): boolean => {
+    return isRoleAtLeast(getEffectiveRole(), minimumRole);
   };
 
-  const isVisitor = () => {
-    if (!profile) return true; // No profile means visitor
-    return profile.role === 'visitor';
+  // ============ ROLE CHECKS ============
+
+  /**
+   * Super Admin (Director) - Highest level, full system control
+   * Only the Director should have this role
+   */
+  const isSuperAdmin = (): boolean => {
+    if (!profile) return false;
+    return profile.is_super_admin || profile.role === 'director' || profile.role === USER_ROLES.SUPER_ADMIN;
   };
 
-  const isFan = () => {
+  /**
+   * Admin - Appointed staff (accompanist, assistants, advisors)
+   * Can manage users, content, contracts, emails, events, budgets
+   * CANNOT: delete users, manage system settings, approve final budgets
+   */
+  const isAdmin = (): boolean => {
     if (!profile) return false;
-    return profile.role === 'fan';
+    // Super admins are also admins
+    if (isSuperAdmin()) return true;
+    return profile.is_admin || profile.role === USER_ROLES.ADMIN;
   };
 
-  const isAuditioner = () => {
+  /**
+   * Executive Board - Elected student officers
+   * Role-specific permissions based on position
+   */
+  const isExecutiveBoard = (): boolean => {
     if (!profile) return false;
-    return profile.role === 'auditioner';
+    // Admins and super admins have exec board access too
+    if (isAdmin()) return true;
+    return profile.is_exec_board || profile.role === USER_ROLES.EXECUTIVE;
   };
 
-  const isAlumna = () => {
+  /**
+   * Instructor - Course instructors
+   */
+  const isInstructor = (): boolean => {
     if (!profile) return false;
-    return profile.role === 'alumna';
+    if (isAdmin()) return true; // Admins can do instructor tasks
+    return profile.role === USER_ROLES.INSTRUCTOR;
   };
 
-  const isStudent = () => {
+  /**
+   * Student/Member - Active Glee Club members
+   */
+  const isStudent = (): boolean => {
     if (!profile) return false;
-    return profile.role === 'student';
+    return profile.role === USER_ROLES.STUDENT || profile.role === USER_ROLES.MEMBER;
   };
-  
-  // Alias for backwards compatibility
+
+  /**
+   * Alias for backwards compatibility
+   */
   const isMember = isStudent;
 
-  const isAdmin = () => {
+  /**
+   * Alumna - Graduates
+   */
+  const isAlumna = (): boolean => {
     if (!profile) return false;
-    return profile.is_admin || profile.is_super_admin || profile.is_exec_board;
+    return profile.role === USER_ROLES.ALUMNA;
   };
 
-  const isSuperAdmin = () => {
+  /**
+   * Auditioner - Applicants in audition process
+   */
+  const isAuditioner = (): boolean => {
     if (!profile) return false;
-    return profile.is_super_admin || profile.role === 'director';
+    return profile.role === USER_ROLES.AUDITIONER;
   };
 
-  const isExecutiveBoard = () => {
+  /**
+   * Fan - Supporters
+   */
+  const isFan = (): boolean => {
     if (!profile) return false;
-    return profile.is_exec_board || profile.is_admin || profile.is_super_admin;
+    return profile.role === USER_ROLES.FAN;
   };
 
-  const isWardrobeManager = () => {
-    if (!profile) return false;
-    return profile.is_admin || profile.is_super_admin || profile.exec_board_role === 'wardrobe_manager';
+  /**
+   * Visitor - No profile or unauthenticated
+   */
+  const isVisitor = (): boolean => {
+    if (!profile) return true;
+    return profile.role === USER_ROLES.VISITOR;
   };
 
-  const isCourseTA = (courseCode: string = 'MUS240') => {
-    // This is a simplified check - the full check is done in useCourseTA hook
-    // This is just for basic permission checking
+  // ============ SPECIFIC PERMISSION CHECKS ============
+
+  /**
+   * Can download PDF sheet music (Admin+ or Librarian)
+   */
+  const canDownloadPDF = (): boolean => {
     if (!profile) return false;
-    return profile.is_admin || profile.is_super_admin;
+    if (isAdmin()) return true;
+    return profile.exec_board_role === 'librarian';
+  };
+
+  /**
+   * Can download MP3 audio files (Super Admin only)
+   */
+  const canDownloadMP3 = (): boolean => {
+    if (!profile) return false;
+    return isSuperAdmin();
+  };
+
+  /**
+   * Wardrobe Manager - Can manage wardrobe inventory
+   */
+  const isWardrobeManager = (): boolean => {
+    if (!profile) return false;
+    if (isAdmin()) return true;
+    return profile.exec_board_role === 'wardrobe_manager';
+  };
+
+  /**
+   * Course TA check (basic version - full check in useCourseTA)
+   */
+  const isCourseTA = (courseCode: string = 'MUS240'): boolean => {
+    if (!profile) return false;
+    return isAdmin() || isInstructor();
+  };
+
+  /**
+   * Can manage other users (Admin+ or Chief of Staff)
+   */
+  const canManageUsers = (): boolean => {
+    if (!profile) return false;
+    if (isAdmin()) return true;
+    return profile.exec_board_role === 'chief_of_staff';
+  };
+
+  /**
+   * Can delete users (Super Admin only)
+   */
+  const canDeleteUsers = (): boolean => {
+    return isSuperAdmin();
+  };
+
+  /**
+   * Can manage system settings (Super Admin only)
+   */
+  const canManageSystemSettings = (): boolean => {
+    return isSuperAdmin();
   };
 
   return {
     profile,
     loading,
+    getEffectiveRole,
+    hasRoleLevel,
+    
+    // Role checks
+    isSuperAdmin,
+    isAdmin,
+    isExecutiveBoard,
+    isInstructor,
+    isStudent,
+    isMember, // Alias
+    isAlumna,
+    isAuditioner,
+    isFan,
+    isVisitor,
+    
+    // Specific permissions
     canDownloadPDF,
     canDownloadMP3,
-    isAdmin,
-    isSuperAdmin,
-    isExecutiveBoard,
     isWardrobeManager,
-    isVisitor,
-    isFan,
-    isAuditioner,
-    isAlumna,
-    isStudent,
-    isMember, // Alias for backwards compatibility
     isCourseTA,
+    canManageUsers,
+    canDeleteUsers,
+    canManageSystemSettings,
   };
 };
