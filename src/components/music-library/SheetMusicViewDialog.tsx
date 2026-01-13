@@ -11,7 +11,8 @@ import {
   Star,
   Brain,
   List,
-  FileCheck
+  FileCheck,
+  Scissors
 } from "lucide-react";
 import { SheetMusicNotes } from '@/modules/glee-library/notes/SheetMusicNotes';
 import { MarkedScores } from '@/modules/glee-library/marked-scores/MarkedScores';
@@ -22,6 +23,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SheetMusicHistory } from '@/components/music-library/SheetMusicHistory';
 import { PracticeLinks } from '@/modules/glee-library/practice/PracticeLinks';
 import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
+import { PDFCropEditor } from '@/components/glee-library/PDFCropEditor';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface SheetMusic {
   id: string;
@@ -60,6 +64,7 @@ export const SheetMusicViewDialog = ({
   const [setlistInfo, setSetlistInfo] = useState<any>(null);
   const [licenseInfo, setLicenseInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'marked' | 'practice' | 'smart'>('overview');
+  const [showCropEditor, setShowCropEditor] = useState(false);
   const pdfRef = useRef<any>(null);
 
   // Stop YouTube playback when dialog closes
@@ -73,6 +78,54 @@ export const SheetMusicViewDialog = ({
   if (!item) return null;
 
   const isAdmin = user?.email?.includes('admin') || false;
+
+  const handleSaveCroppedPDF = async (blob: Blob) => {
+    if (!item || !user) return;
+    
+    try {
+      // Upload the cropped PDF to storage
+      const fileName = `${item.id}_cropped_${Date.now()}.pdf`;
+      const filePath = `sheet-music/${fileName}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('glee-library')
+        .upload(filePath, blob, {
+          contentType: 'application/pdf',
+          upsert: true
+        });
+      
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('glee-library')
+        .getPublicUrl(filePath);
+      
+      // Update the sheet music record with new PDF URL
+      const { error: updateError } = await supabase
+        .from('gw_sheet_music')
+        .update({ 
+          pdf_url: urlData.publicUrl,
+          crop_recommendations: {
+            applied: true,
+            appliedAt: new Date().toISOString(),
+            appliedBy: user.id
+          }
+        })
+        .eq('id', item.id);
+      
+      if (updateError) throw updateError;
+      
+      toast.success('Cropped PDF saved successfully!');
+      setShowCropEditor(false);
+      
+      // Refresh the page to show the new PDF
+      window.location.reload();
+    } catch (error) {
+      console.error('Error saving cropped PDF:', error);
+      toast.error('Failed to save cropped PDF');
+    }
+  };
 
   const getDifficultyColor = (level: string | null) => {
     switch (level?.toLowerCase()) {
@@ -88,14 +141,25 @@ export const SheetMusicViewDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="!fixed !inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !p-0 !w-screen !h-screen !max-w-none !max-h-none overflow-hidden !rounded-none !border-0 !z-[9990]" style={{ top: 'calc(var(--gw-header-h, 0px) + var(--gw-radio-bar-height, 0px))', height: 'calc(100vh - var(--gw-header-h, 0px) - var(--gw-radio-bar-height, 0px))' }}>
         <DialogHeader className="hidden" />
-        <Button
-          variant="secondary"
-          size="sm"
-          className="absolute top-20 right-3 z-50"
-          onClick={() => onOpenChange(false)}
-        >
-          Close
-        </Button>
+        <div className="absolute top-20 right-3 z-50 flex gap-2">
+          {item.pdf_url && isAdmin && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowCropEditor(true)}
+            >
+              <Scissors className="h-4 w-4 mr-1" />
+              Crop
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+          >
+            Close
+          </Button>
+        </div>
 
         <div className="flex gap-0 h-full overflow-hidden">
           <div className="w-full overflow-y-auto">
@@ -177,6 +241,23 @@ export const SheetMusicViewDialog = ({
           </div>
 
         </div>
+
+        {/* Crop Editor Dialog */}
+        {showCropEditor && item.pdf_url && (
+          <Dialog open={showCropEditor} onOpenChange={setShowCropEditor}>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Crop & Straighten PDF</DialogTitle>
+              </DialogHeader>
+              <PDFCropEditor
+                pdfUrl={item.pdf_url}
+                title={item.title}
+                onSave={handleSaveCroppedPDF}
+                onClose={() => setShowCropEditor(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </DialogContent>
     </Dialog>
   );

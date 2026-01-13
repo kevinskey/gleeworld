@@ -277,7 +277,7 @@ function enhanceDocumentQuality(data: Uint8ClampedArray) {
   }
 }
 
-function basicAutoCrop(canvas: HTMLCanvasElement): HTMLCanvasElement {
+export function basicAutoCrop(canvas: HTMLCanvasElement): HTMLCanvasElement {
   const ctx = canvas.getContext('2d');
   if (!ctx) return canvas;
   
