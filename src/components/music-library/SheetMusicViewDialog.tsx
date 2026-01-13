@@ -80,7 +80,10 @@ export const SheetMusicViewDialog = ({
   if (!item) return null;
 
   // Allow admins, super-admins, and librarians to crop PDFs
-  const canCropPDF = isAdmin() || profile?.exec_board_role === 'librarian';
+  const canCropPDF =
+    isAdmin() ||
+    profile?.exec_board_role?.toLowerCase() === 'librarian' ||
+    profile?.role?.toLowerCase() === 'librarian';
 
   const handleSaveCroppedPDF = async (blob: Blob) => {
     if (!item || !user) return;
