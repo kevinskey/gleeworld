@@ -183,13 +183,10 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
                   <DropdownMenuTrigger asChild className="lg:hidden">
                     <Button 
-                      variant="outline" 
+                      variant="ghost" 
                       size="default" 
-                      className="hover:bg-muted/50 transition-all duration-200 p-2 border-2 rounded-md" 
-                      style={{ 
-                        color: HEADER_STYLES.brandColor,
-                        borderColor: HEADER_STYLES.brandColor 
-                      }}
+                      className="hover:bg-muted/50 transition-all duration-200 p-2" 
+                      style={{ color: HEADER_STYLES.brandColor }}
                       onClick={() => setIsOpen(true)} 
                       aria-label="Toggle mobile menu"
                     >
