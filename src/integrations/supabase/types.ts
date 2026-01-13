@@ -23151,6 +23151,7 @@ export type Database = {
           id: string
           is_active: boolean
           max_scans: number | null
+          pin_code: string | null
           scan_count: number
           token: string
         }
@@ -23162,6 +23163,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           max_scans?: number | null
+          pin_code?: string | null
           scan_count?: number
           token: string
         }
@@ -23173,6 +23175,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           max_scans?: number | null
+          pin_code?: string | null
           scan_count?: number
           token?: string
         }
@@ -26683,6 +26686,14 @@ export type Database = {
         }
         Returns: string
       }
+      generate_qr_attendance_token_with_pin: {
+        Args: {
+          p_created_by: string
+          p_event_id: string
+          p_expires_in_minutes?: number
+        }
+        Returns: Json
+      }
       generate_qr_token: { Args: { event_id_param: string }; Returns: string }
       generate_secure_password: { Args: { length?: number }; Returns: string }
       generate_secure_qr_token: {
@@ -27103,6 +27114,15 @@ export type Database = {
       mark_notification_read: {
         Args: { p_notification_id: string }
         Returns: boolean
+      }
+      process_pin_attendance_scan: {
+        Args: {
+          pin_code_param: string
+          scan_location_param?: Json
+          user_agent_param?: string
+          user_id_param: string
+        }
+        Returns: Json
       }
       process_qr_attendance_scan:
         | {
