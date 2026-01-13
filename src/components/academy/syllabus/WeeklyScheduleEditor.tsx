@@ -184,14 +184,14 @@ export const WeeklyScheduleEditor: React.FC<Props> = ({
               {schedule.map((item, index) => {
             const weekNum = parseWeekNumber(item.week);
             const dateRange = courseStartDate && weekNum !== null ? getWeekDateRange(weekNum - 1, courseStartDate) : null;
-            return <div key={index} className="flex items-start gap-3 p-4 border rounded-lg hover:bg-accent/30 transition-colors">
+            return <div key={index} className={`flex items-start gap-3 p-4 border rounded-lg hover:bg-accent/30 transition-colors ${index % 2 === 0 ? 'bg-muted/30' : 'bg-muted/10'}`}>
                     <div className="flex items-center gap-2 text-muted-foreground pt-2">
                       <GripVertical className="h-4 w-4 cursor-move" />
                     </div>
                     
                     <div className="w-40 flex-shrink-0 space-y-1">
                       <Textarea value={item.week} onChange={e => updateWeek(index, 'week', e.target.value)} className="font-medium text-sm resize-none text-center" rows={2} />
-                      {dateRange && <div className="text-xs text-center flex items-center justify-center gap-1 text-black mx-0">
+                      {dateRange && <div className="text-xs text-center flex items-center justify-center gap-1 text-muted-foreground mx-0">
                           <Calendar className="h-3 w-3" />
                           {dateRange}
                         </div>}

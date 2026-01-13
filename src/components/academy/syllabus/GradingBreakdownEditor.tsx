@@ -72,7 +72,7 @@ export const GradingBreakdownEditor: React.FC<Props> = ({
                 <div className="col-span-1"></div>
               </div>
               
-              {gradingBreakdown.map((item, index) => <div key={index} className="grid grid-cols-12 gap-4 items-center">
+              {gradingBreakdown.map((item, index) => <div key={index} className={`grid grid-cols-12 gap-4 items-center p-2 rounded-md ${index % 2 === 0 ? 'bg-muted/30' : 'bg-muted/10'}`}>
                   <div className="col-span-8">
                     <Input value={item.item} onChange={e => updateItem(index, 'item', e.target.value)} placeholder="e.g., Participation, Midterm Exam, Final Project" />
                   </div>
@@ -120,7 +120,7 @@ export const GradingBreakdownEditor: React.FC<Props> = ({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {Object.entries(gradingScale).map(([grade, range]) => <div key={grade} className="space-y-2">
+            {Object.entries(gradingScale).map(([grade, range], index) => <div key={grade} className={`space-y-2 p-2 rounded-md ${index % 2 === 0 ? 'bg-muted/30' : 'bg-muted/10'}`}>
                 <Label className="text-lg font-bold">{grade}</Label>
                 <Input value={range} onChange={e => updateScale(grade, e.target.value)} placeholder="e.g., 90-100" />
               </div>)}
