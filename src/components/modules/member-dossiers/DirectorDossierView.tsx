@@ -60,16 +60,24 @@ interface MemberProfile {
   full_name: string | null;
   first_name: string | null;
   last_name: string | null;
+  middle_name?: string | null;
+  display_name?: string | null;
   email: string;
   phone: string | null;
+  phone_number?: string | null;
   voice_part: string | null;
+  voice_part_preference?: string | null;
   class_year: number | null;
+  graduation_year?: number | null;
   avatar_url: string | null;
+  headshot_url?: string | null;
   status: string | null;
   role: string | null;
   join_date: string | null;
   notes: string | null;
+  bio?: string | null;
   student_number?: string | null;
+  student_id?: string | null;
   dues_paid?: boolean | null;
   is_section_leader?: boolean | null;
   is_exec_board?: boolean | null;
@@ -78,6 +86,48 @@ interface MemberProfile {
   can_dance?: boolean | null;
   instruments_played?: string[] | null;
   academic_year?: string | null;
+  academic_major?: string | null;
+  major?: string | null;
+  minor?: string | null;
+  gpa?: number | null;
+  pronouns?: string | null;
+  address?: string | null;
+  home_address?: string | null;
+  school_address?: string | null;
+  workplace?: string | null;
+  website_url?: string | null;
+  social_media_links?: Record<string, string> | null;
+  emergency_contact?: string | null;
+  parent_guardian_contact?: string | null;
+  dietary_restrictions?: string[] | null;
+  allergies?: string | null;
+  dress_size?: string | null;
+  formal_dress_size?: string | null;
+  polo_size?: string | null;
+  tshirt_size?: string | null;
+  shoe_size?: string | null;
+  lipstick_shade?: string | null;
+  pearl_status?: string | null;
+  hair_color?: string | null;
+  has_tattoos?: boolean | null;
+  visible_piercings?: boolean | null;
+  bust_measurement?: number | null;
+  waist_measurement?: number | null;
+  hips_measurement?: number | null;
+  height_measurement?: number | null;
+  chest_measurement?: number | null;
+  inseam_measurement?: number | null;
+  measurements_taken_date?: string | null;
+  photo_consent?: boolean | null;
+  media_consent?: boolean | null;
+  data_consent?: boolean | null;
+  media_release_signed_at?: string | null;
+  is_mentor?: boolean | null;
+  mentor_opt_in?: boolean | null;
+  is_featured?: boolean | null;
+  verified?: boolean | null;
+  last_sign_in_at?: string | null;
+  created_at?: string | null;
 }
 
 interface AttendanceRecord {
@@ -143,6 +193,25 @@ interface CourseEnrollment {
     course_code: string;
   };
 }
+
+// Helper component for profile fields
+const ProfileField: React.FC<{
+  label: string;
+  value: string | null | undefined;
+  icon?: React.ReactNode;
+  fullWidth?: boolean;
+}> = ({ label, value, icon, fullWidth }) => {
+  if (!value) return null;
+  return (
+    <div className={fullWidth ? 'col-span-full' : ''}>
+      <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+        {icon}
+        {label}
+      </p>
+      <p className="text-sm font-medium">{value}</p>
+    </div>
+  );
+};
 
 interface DirectorDossierViewProps {
   member: MemberProfile;
@@ -582,6 +651,7 @@ export const DirectorDossierView: React.FC<DirectorDossierViewProps> = ({
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full justify-start flex-wrap h-auto gap-1">
           <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+          <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
           <TabsTrigger value="attendance" className="text-xs">Attendance</TabsTrigger>
           <TabsTrigger value="coursework" className="text-xs">Coursework</TabsTrigger>
           <TabsTrigger value="music" className="text-xs">Music Library</TabsTrigger>
@@ -650,6 +720,195 @@ export const DirectorDossierView: React.FC<DirectorDossierViewProps> = ({
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        {/* Profile Tab */}
+        <TabsContent value="profile" className="space-y-4 mt-4">
+          {/* Personal Information */}
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Personal Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ProfileField label="Full Name" value={member.full_name} />
+                <ProfileField label="First Name" value={member.first_name} />
+                <ProfileField label="Middle Name" value={member.middle_name} />
+                <ProfileField label="Last Name" value={member.last_name} />
+                <ProfileField label="Display Name" value={member.display_name} />
+                <ProfileField label="Pronouns" value={member.pronouns} />
+                <ProfileField label="Email" value={member.email} icon={<Mail className="h-3 w-3" />} />
+                <ProfileField label="Phone" value={member.phone || member.phone_number} icon={<Phone className="h-3 w-3" />} />
+                <ProfileField label="Bio" value={member.bio} fullWidth />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Academic Information */}
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                Academic Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ProfileField label="Student ID" value={member.student_number || member.student_id} icon={<IdCard className="h-3 w-3" />} />
+                <ProfileField label="Academic Year" value={member.academic_year} />
+                <ProfileField label="Class Year" value={member.class_year?.toString()} />
+                <ProfileField label="Graduation Year" value={member.graduation_year?.toString()} />
+                <ProfileField label="Major" value={member.major || member.academic_major} />
+                <ProfileField label="Minor" value={member.minor} />
+                <ProfileField label="GPA" value={member.gpa?.toFixed(2)} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Music & Performance */}
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Music className="h-4 w-4" />
+                Music & Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ProfileField label="Voice Part" value={member.voice_part} />
+                <ProfileField label="Voice Part Preference" value={member.voice_part_preference} />
+                <ProfileField label="Music Role" value={member.music_role} />
+                <ProfileField label="Can Dance" value={member.can_dance === true ? 'Yes' : member.can_dance === false ? 'No' : null} />
+                <ProfileField label="Instruments Played" value={member.instruments_played?.join(', ')} />
+                <ProfileField label="Section Leader" value={member.is_section_leader ? 'Yes' : 'No'} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Leadership & Roles */}
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Award className="h-4 w-4" />
+                Leadership & Roles
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ProfileField label="Role" value={member.role} />
+                <ProfileField label="Status" value={member.status} />
+                <ProfileField label="Executive Board" value={member.is_exec_board ? 'Yes' : 'No'} />
+                <ProfileField label="Exec Board Role" value={member.exec_board_role} />
+                <ProfileField label="Is Mentor" value={member.is_mentor ? 'Yes' : member.mentor_opt_in ? 'Opted In' : null} />
+                <ProfileField label="Is Featured" value={member.is_featured ? 'Yes' : null} />
+                <ProfileField label="Verified" value={member.verified ? 'Yes' : 'No'} />
+                <ProfileField label="Dues Paid" value={member.dues_paid === true ? 'Yes' : member.dues_paid === false ? 'No' : null} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact & Address */}
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Contact & Address
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ProfileField label="Address" value={member.address} />
+                <ProfileField label="Home Address" value={member.home_address} />
+                <ProfileField label="School Address" value={member.school_address} />
+                <ProfileField label="Workplace" value={member.workplace} />
+                <ProfileField label="Website" value={member.website_url} />
+                <ProfileField label="Emergency Contact" value={member.emergency_contact} />
+                <ProfileField label="Parent/Guardian Contact" value={member.parent_guardian_contact} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Health & Dietary */}
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Heart className="h-4 w-4" />
+                Health & Dietary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ProfileField label="Dietary Restrictions" value={member.dietary_restrictions?.join(', ')} />
+                <ProfileField label="Allergies" value={member.allergies} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Wardrobe & Measurements */}
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Wardrobe & Measurements
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <ProfileField label="Dress Size" value={member.dress_size} />
+                <ProfileField label="Formal Dress Size" value={member.formal_dress_size} />
+                <ProfileField label="Polo Size" value={member.polo_size} />
+                <ProfileField label="T-Shirt Size" value={member.tshirt_size} />
+                <ProfileField label="Shoe Size" value={member.shoe_size} />
+                <ProfileField label="Lipstick Shade" value={member.lipstick_shade} />
+                <ProfileField label="Pearl Status" value={member.pearl_status} />
+                <ProfileField label="Hair Color" value={member.hair_color} />
+                <ProfileField label="Has Tattoos" value={member.has_tattoos === true ? 'Yes' : member.has_tattoos === false ? 'No' : null} />
+                <ProfileField label="Visible Piercings" value={member.visible_piercings === true ? 'Yes' : member.visible_piercings === false ? 'No' : null} />
+              </div>
+              {(member.bust_measurement || member.waist_measurement || member.hips_measurement || member.height_measurement) && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs text-muted-foreground mb-2">Body Measurements</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <ProfileField label="Height" value={member.height_measurement ? `${member.height_measurement}"` : null} />
+                    <ProfileField label="Bust" value={member.bust_measurement ? `${member.bust_measurement}"` : null} />
+                    <ProfileField label="Chest" value={member.chest_measurement ? `${member.chest_measurement}"` : null} />
+                    <ProfileField label="Waist" value={member.waist_measurement ? `${member.waist_measurement}"` : null} />
+                    <ProfileField label="Hips" value={member.hips_measurement ? `${member.hips_measurement}"` : null} />
+                    <ProfileField label="Inseam" value={member.inseam_measurement ? `${member.inseam_measurement}"` : null} />
+                  </div>
+                  {member.measurements_taken_date && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Measured: {format(new Date(member.measurements_taken_date), 'MMM d, yyyy')}
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Consents & Dates */}
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <FileCheck className="h-4 w-4" />
+                Consents & Account Info
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ProfileField label="Photo Consent" value={member.photo_consent === true ? 'Yes' : member.photo_consent === false ? 'No' : null} />
+                <ProfileField label="Media Consent" value={member.media_consent === true ? 'Yes' : member.media_consent === false ? 'No' : null} />
+                <ProfileField label="Data Consent" value={member.data_consent === true ? 'Yes' : member.data_consent === false ? 'No' : null} />
+                <ProfileField label="Media Release Signed" value={member.media_release_signed_at ? format(new Date(member.media_release_signed_at), 'MMM d, yyyy') : null} />
+                <ProfileField label="Join Date" value={member.join_date ? format(new Date(member.join_date), 'MMM d, yyyy') : null} />
+                <ProfileField label="Last Sign In" value={member.last_sign_in_at ? format(new Date(member.last_sign_in_at), 'MMM d, yyyy h:mm a') : null} />
+                <ProfileField label="Account Created" value={member.created_at ? format(new Date(member.created_at), 'MMM d, yyyy') : null} />
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Attendance Tab */}

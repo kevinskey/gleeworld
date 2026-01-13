@@ -116,7 +116,7 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
         if (userIds.length > 0) {
           const { data: profileData, error: profilesError } = await supabase
             .from("gw_profiles")
-            .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes, student_number, dues_paid, is_section_leader, is_exec_board, exec_board_role, music_role, can_dance, instruments_played, academic_year")
+            .select("*")
             .in("user_id", userIds)
             .order("full_name");
 
@@ -127,7 +127,7 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
         // Fetch all user profiles (for admin view)
         const { data: profileData, error: profilesError } = await supabase
           .from("gw_profiles")
-          .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes, student_number, dues_paid, is_section_leader, is_exec_board, exec_board_role, music_role, can_dance, instruments_played, academic_year")
+          .select("*")
           .not("user_id", "is", null)
           .order("full_name");
 
