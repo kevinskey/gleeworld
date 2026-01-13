@@ -42,16 +42,33 @@ export const useContracts = () => {
         .eq('user_id', user.id)
         .single();
 
-      const isAdmin = profile?.is_admin || profile?.is_super_admin || profile?.role === 'admin' || profile?.role === 'super-admin';
+      const isSuperAdmin = profile?.is_super_admin || profile?.role === 'super-admin';
+      const isAdmin = profile?.is_admin || profile?.role === 'admin';
 
-      // Get contracts - all contracts for admins, only user's contracts for others
+      // Get contracts - all contracts for super admins, filtered for admins, own for others
       let query = supabase
         .from('contracts_v2')
         .select('*');
 
-      if (!isAdmin) {
+      if (!isSuperAdmin && !isAdmin) {
+        // Regular users only see their own contracts
         query = query.eq('created_by', user.id);
+      } else if (isAdmin && !isSuperAdmin) {
+        // Admins see all contracts EXCEPT those created by super admins
+        const { data: superAdmins } = await supabase
+          .from('gw_profiles')
+          .select('user_id')
+          .eq('is_super_admin', true);
+        
+        const superAdminIds = superAdmins?.map(sa => sa.user_id) || [];
+        
+        if (superAdminIds.length > 0) {
+          // Use a workaround since .not('in') doesn't work well with arrays
+          // Filter out contracts created by super admins
+          query = query.not('created_by', 'in', `(${superAdminIds.join(',')})`);
+        }
       }
+      // Super admins see all contracts (no filter)
 
       const { data: contractsData, error: contractsError } = await query
         .order('created_at', { ascending: false });

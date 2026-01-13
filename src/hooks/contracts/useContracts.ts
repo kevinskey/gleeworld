@@ -1,6 +1,7 @@
 // Unified hook for managing multiple contracts
 import { useState, useEffect, useCallback } from 'react';
 import { ContractService } from '@/services/contracts/ContractService';
+import { supabase } from '@/integrations/supabase/client';
 import type { 
   Contract, 
   ContractFormData, 
@@ -31,8 +32,25 @@ export const useContracts = (initialFilters?: ContractFilters): UseContractsRetu
       setLoading(true);
       setError(null);
       
+      // Check if current user is super admin or just admin
+      const { data: { user } } = await supabase.auth.getUser();
+      let excludeSuperAdminContracts = false;
+      
+      if (user) {
+        const { data: profile } = await supabase
+          .from('gw_profiles')
+          .select('is_admin, is_super_admin')
+          .eq('user_id', user.id)
+          .single();
+        
+        // If admin but NOT super admin, exclude super admin contracts
+        if (profile?.is_admin && !profile?.is_super_admin) {
+          excludeSuperAdminContracts = true;
+        }
+      }
+      
       const [contractsData, statsData] = await Promise.all([
-        ContractService.getContracts(filters),
+        ContractService.getContracts({ ...filters, excludeSuperAdminContracts }),
         ContractService.getStats()
       ]);
       
