@@ -447,122 +447,124 @@ export const ElectionsModule: React.FC<ElectionsModuleProps> = ({ courseId }) =>
                   )}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Formal Applications */}
-                  {applications.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                        <ClipboardCheck className="h-4 w-4" />
-                        Formal Applications ({applications.length})
-                      </h4>
-                      {applications.map((app) => {
-                        const Icon = getPositionIcon(app.primary_position);
-                        const isOwnApplication = user?.id === app.user_id;
-                        return (
-                          <div 
-                            key={app.id}
-                            className={`flex items-center justify-between p-4 rounded-lg border ${
-                              isOwnApplication ? 'bg-primary/5 border-primary/20' : 'bg-muted/30'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-10 w-10">
-                                <AvatarImage src={app.profile?.headshot_url || ''} />
-                                <AvatarFallback>
-                                  {app.profile?.full_name?.charAt(0) || '?'}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium text-sm">
-                                  {app.profile?.full_name || 'Unknown'}
-                                  {isOwnApplication && (
-                                    <Badge variant="outline" className="ml-2 text-xs">You</Badge>
-                                  )}
-                                </p>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <Icon className="h-3 w-3" />
-                                  <span className="capitalize">
-                                    {app.primary_position.replace(/_/g, ' ')}
-                                  </span>
-                                  {app.alternate_position && (
-                                    <span className="text-muted-foreground/70">
-                                      (Alt: {app.alternate_position.replace(/_/g, ' ')})
+                <ScrollArea className="h-[480px]">
+                  <div className="space-y-4 pr-4">
+                    {/* Formal Applications */}
+                    {applications.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <ClipboardCheck className="h-4 w-4" />
+                          Formal Applications ({applications.length})
+                        </h4>
+                        {applications.map((app) => {
+                          const Icon = getPositionIcon(app.primary_position);
+                          const isOwnApplication = user?.id === app.user_id;
+                          return (
+                            <div 
+                              key={app.id}
+                              className={`flex items-center justify-between p-4 rounded-lg border ${
+                                isOwnApplication ? 'bg-primary/5 border-primary/20' : 'bg-muted/30'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage src={app.profile?.headshot_url || ''} />
+                                  <AvatarFallback>
+                                    {app.profile?.full_name?.charAt(0) || '?'}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium text-sm">
+                                    {app.profile?.full_name || 'Unknown'}
+                                    {isOwnApplication && (
+                                      <Badge variant="outline" className="ml-2 text-xs">You</Badge>
+                                    )}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Icon className="h-3 w-3" />
+                                    <span className="capitalize">
+                                      {app.primary_position.replace(/_/g, ' ')}
                                     </span>
-                                  )}
+                                    {app.alternate_position && (
+                                      <span className="text-muted-foreground/70">
+                                        (Alt: {app.alternate_position.replace(/_/g, ' ')})
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
+                              {getStatusBadge(app.status)}
                             </div>
-                            {getStatusBadge(app.status)}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                          );
+                        })}
+                      </div>
+                    )}
 
-                  {/* Exit Interview Candidates */}
-                  {exitInterviewCandidates.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        From Exit Interviews ({exitInterviewCandidates.length})
-                      </h4>
-                      {exitInterviewCandidates.map((candidate) => {
-                        const Icon = getPositionIcon(candidate.primary_position);
-                        const isOwnApplication = user?.id === candidate.user_id;
-                        return (
-                          <div 
-                            key={candidate.id}
-                            className={`flex items-center justify-between p-4 rounded-lg border ${
-                              isOwnApplication ? 'bg-amber-50 border-amber-200' : 'bg-amber-50/50 border-amber-100'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-10 w-10">
-                                <AvatarImage src={candidate.profile?.headshot_url || ''} />
-                                <AvatarFallback>
-                                  {candidate.profile?.full_name?.charAt(0) || '?'}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium text-sm">
-                                  {candidate.profile?.full_name || 'Unknown'}
-                                  {isOwnApplication && (
-                                    <Badge variant="outline" className="ml-2 text-xs">You</Badge>
-                                  )}
-                                  <Badge variant="outline" className="ml-2 text-xs bg-amber-100 border-amber-300">
-                                    Exit Interview
-                                  </Badge>
-                                </p>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <Icon className="h-3 w-3" />
-                                  <span className="capitalize">
-                                    {candidate.primary_position.replace(/_/g, ' ')}
-                                  </span>
-                                  {candidate.alternate_position && (
-                                    <span className="text-muted-foreground/70">
-                                      (Alt: {candidate.alternate_position.replace(/_/g, ' ')})
+                    {/* Exit Interview Candidates */}
+                    {exitInterviewCandidates.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          From Exit Interviews ({exitInterviewCandidates.length})
+                        </h4>
+                        {exitInterviewCandidates.map((candidate) => {
+                          const Icon = getPositionIcon(candidate.primary_position);
+                          const isOwnApplication = user?.id === candidate.user_id;
+                          return (
+                            <div 
+                              key={candidate.id}
+                              className={`flex items-center justify-between p-4 rounded-lg border ${
+                                isOwnApplication ? 'bg-amber-50 border-amber-200' : 'bg-amber-50/50 border-amber-100'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage src={candidate.profile?.headshot_url || ''} />
+                                  <AvatarFallback>
+                                    {candidate.profile?.full_name?.charAt(0) || '?'}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium text-sm">
+                                    {candidate.profile?.full_name || 'Unknown'}
+                                    {isOwnApplication && (
+                                      <Badge variant="outline" className="ml-2 text-xs">You</Badge>
+                                    )}
+                                    <Badge variant="outline" className="ml-2 text-xs bg-amber-100 border-amber-300">
+                                      Exit Interview
+                                    </Badge>
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Icon className="h-3 w-3" />
+                                    <span className="capitalize">
+                                      {candidate.primary_position.replace(/_/g, ' ')}
                                     </span>
-                                  )}
-                                  {candidate.gpa && (
-                                    <span className="text-muted-foreground/70">
-                                      • GPA: {candidate.gpa.toFixed(2)}
-                                    </span>
-                                  )}
+                                    {candidate.alternate_position && (
+                                      <span className="text-muted-foreground/70">
+                                        (Alt: {candidate.alternate_position.replace(/_/g, ' ')})
+                                      </span>
+                                    )}
+                                    {candidate.gpa && (
+                                      <span className="text-muted-foreground/70">
+                                        • GPA: {candidate.gpa.toFixed(2)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
+                              <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                                Interested
+                              </Badge>
                             </div>
-                            <Badge variant="secondary" className="bg-amber-100 text-amber-800">
-                              Interested
-                            </Badge>
-                          </div>
-                        );
-                      })}
-                      <p className="text-xs text-muted-foreground italic px-2">
-                        These members indicated interest via their exit interview. They should submit a formal shadowing application to proceed.
-                      </p>
-                    </div>
-                  )}
-                </div>
+                          );
+                        })}
+                        <p className="text-xs text-muted-foreground italic px-2">
+                          These members indicated interest via their exit interview. They should submit a formal shadowing application to proceed.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
               )}
             </CardContent>
           </Card>
