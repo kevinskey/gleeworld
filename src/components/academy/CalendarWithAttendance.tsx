@@ -13,8 +13,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Calendar, Clock, MapPin, ChevronLeft, ChevronRight, List, Grid3X3,
   UserCheck, CheckCircle, XCircle, AlertTriangle, Send, Mail, FileText,
-  ThumbsUp, ThumbsDown, Inbox, Upload, User, X
+  ThumbsUp, ThumbsDown, Inbox, Upload, User, X, Camera
 } from 'lucide-react';
+import { QuickCameraCapture } from '@/components/camera/QuickCameraCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, startOfDay } from 'date-fns';
@@ -99,8 +100,10 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
   const [excuseType, setExcuseType] = useState('');
   const [excuseDocument, setExcuseDocument] = useState<File | null>(null);
+  const [excuseDocumentPreview, setExcuseDocumentPreview] = useState<string | null>(null);
   const [excuseClarification, setExcuseClarification] = useState('');
   const [submittingExcuse, setSubmittingExcuse] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   
   // Student profile
   const [studentName, setStudentName] = useState('');
@@ -254,7 +257,25 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
     setSelectedEventIds([]);
     setExcuseType('');
     setExcuseDocument(null);
+    setExcuseDocumentPreview(null);
     setExcuseClarification('');
+  };
+
+  const handleCameraCapture = async (imageUrl: string) => {
+    try {
+      // Convert the captured image URL to a file
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `excuse-doc-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      
+      setExcuseDocument(file);
+      setExcuseDocumentPreview(imageUrl);
+      setShowCamera(false);
+      toast.success('Photo captured successfully!');
+    } catch (error) {
+      console.error('Error processing captured image:', error);
+      toast.error('Failed to process captured image');
+    }
   };
 
   const handleEventSelection = (eventId: string, checked: boolean) => {
@@ -629,45 +650,88 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
               </Select>
             </div>
 
-            {/* Document Upload */}
+            {/* Document Upload / Camera */}
             <div className="space-y-2">
-              <Label htmlFor="excuse-document" className="flex items-center gap-2">
+              <Label className="flex items-center gap-2">
                 <Upload className="h-4 w-4" />
                 Supporting Document (optional)
               </Label>
-              <div className="border-2 border-dashed rounded-md p-4 text-center hover:border-primary/50 transition-colors">
-                <input
-                  id="excuse-document"
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  onChange={handleDocumentChange}
-                  className="hidden"
-                />
-                {excuseDocument ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <FileText className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">{excuseDocument.name}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6"
-                      onClick={() => setExcuseDocument(null)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <label htmlFor="excuse-document" className="cursor-pointer">
-                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      Click to upload doctor's note, etc.
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      PDF, JPG, PNG, DOC up to 10MB
-                    </p>
+              
+              {excuseDocument || excuseDocumentPreview ? (
+                <div className="border rounded-md p-4">
+                  {excuseDocumentPreview ? (
+                    <div className="relative">
+                      <img 
+                        src={excuseDocumentPreview} 
+                        alt="Captured document" 
+                        className="w-full max-h-48 object-contain rounded-md"
+                      />
+                      <Button 
+                        variant="destructive" 
+                        size="icon" 
+                        className="absolute top-2 right-2 h-8 w-8"
+                        onClick={() => {
+                          setExcuseDocument(null);
+                          setExcuseDocumentPreview(null);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : excuseDocument && (
+                    <div className="flex items-center justify-center gap-2">
+                      <FileText className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium">{excuseDocument.name}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={() => setExcuseDocument(null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Glee Cam Option */}
+                  <button
+                    type="button"
+                    onClick={() => setShowCamera(true)}
+                    className="flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-md hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                      <Camera className="h-6 w-6 text-white" />
+                    </div>
+                    <span className="text-sm font-medium">Glee Cam</span>
+                    <span className="text-xs text-muted-foreground text-center">
+                      Take a photo
+                    </span>
+                  </button>
+
+                  {/* File Upload Option */}
+                  <label
+                    htmlFor="excuse-document"
+                    className="flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-md hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer"
+                  >
+                    <input
+                      id="excuse-document"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      onChange={handleDocumentChange}
+                      className="hidden"
+                    />
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                      <Upload className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <span className="text-sm font-medium">Upload File</span>
+                    <span className="text-xs text-muted-foreground text-center">
+                      PDF, JPG, PNG, DOC
+                    </span>
                   </label>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Clarification */}
@@ -742,6 +806,14 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Glee Cam for Document Capture */}
+      {showCamera && (
+        <QuickCameraCapture
+          onClose={() => setShowCamera(false)}
+          onCapture={handleCameraCapture}
+        />
+      )}
     </div>
   );
 };
