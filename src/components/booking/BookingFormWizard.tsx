@@ -294,21 +294,21 @@ export const BookingFormWizard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-muted/30 to-background py-6 px-4">
+    <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-muted/30 to-background py-3 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+        <div className="text-center mb-4">
+          <h1 className="text-xl md:text-2xl font-bold text-foreground mb-1">
             Book Our Performance
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Spelman College Glee Club
           </p>
         </div>
 
         {/* Progress Steps */}
-        <div className="mb-8">
-          <Progress value={progressPercent} className="h-2 mb-4" />
+        <div className="mb-4">
+          <Progress value={progressPercent} className="h-1.5 mb-3" />
           <div className="flex justify-between">
             {STEPS.map((step) => {
               const Icon = step.icon;
@@ -321,21 +321,21 @@ export const BookingFormWizard: React.FC = () => {
                   onClick={() => step.id < currentStep && setCurrentStep(step.id)}
                   disabled={step.id > currentStep}
                   className={cn(
-                    "flex flex-col items-center gap-1 transition-all",
+                    "flex flex-col items-center gap-0.5 transition-all",
                     isActive && "text-primary",
                     isCompleted && "text-primary cursor-pointer",
                     !isActive && !isCompleted && "text-muted-foreground/50"
                   )}
                 >
                   <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all",
+                    "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all",
                     isActive && "border-primary bg-primary text-primary-foreground",
                     isCompleted && "border-primary bg-primary/10 text-primary",
                     !isActive && !isCompleted && "border-muted-foreground/30"
                   )}>
-                    {isCompleted ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                    {isCompleted ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                   </div>
-                  <span className="text-xs font-medium hidden sm:block">{step.title}</span>
+                  <span className="text-[10px] font-medium hidden sm:block">{step.title}</span>
                 </button>
               );
             })}
@@ -345,17 +345,17 @@ export const BookingFormWizard: React.FC = () => {
         {/* Form */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <Card className="border-0 shadow-lg bg-card">
-              <CardContent className="p-6 md:p-8">
+            <Card className="border-0 shadow-md bg-card">
+              <CardContent className="p-4 md:p-5">
                 {/* Step 1: Contact Information */}
                 {currentStep === 1 && (
-                  <div className="space-y-6">
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                        <Users className="h-5 w-5 text-primary" />
+                  <div className="space-y-4">
+                    <div className="mb-3">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Users className="h-4 w-4 text-primary" />
                         Contact Information
                       </h2>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Tell us about your organization and how to reach you
                       </p>
                     </div>
@@ -374,7 +374,7 @@ export const BookingFormWizard: React.FC = () => {
                       )}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="contact_person_name"
@@ -404,7 +404,7 @@ export const BookingFormWizard: React.FC = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="contact_email"
@@ -452,13 +452,13 @@ export const BookingFormWizard: React.FC = () => {
 
                 {/* Step 2: Event Details */}
                 {currentStep === 2 && (
-                  <div className="space-y-6">
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                        <Music className="h-5 w-5 text-primary" />
+                  <div className="space-y-4">
+                    <div className="mb-3">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Music className="h-4 w-4 text-primary" />
                         Event Details
                       </h2>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Tell us about your event and performance needs
                       </p>
                     </div>
@@ -484,14 +484,14 @@ export const BookingFormWizard: React.FC = () => {
                         <FormItem>
                           <FormLabel>Event Description</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="Describe your event..." className="min-h-[80px]" {...field} />
+                            <Textarea placeholder="Describe your event..." className="min-h-[60px]" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="event_date_start"
@@ -550,7 +550,7 @@ export const BookingFormWizard: React.FC = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="venue_name"
@@ -605,7 +605,7 @@ export const BookingFormWizard: React.FC = () => {
                       )}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="expected_attendance"
@@ -644,13 +644,13 @@ export const BookingFormWizard: React.FC = () => {
 
                 {/* Step 3: Technical & Logistics */}
                 {currentStep === 3 && (
-                  <div className="space-y-6">
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                        <Settings className="h-5 w-5 text-primary" />
+                  <div className="space-y-4">
+                    <div className="mb-3">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Settings className="h-4 w-4 text-primary" />
                         Technical & Logistics
                       </h2>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Tell us about your venue facilities
                       </p>
                     </div>
@@ -669,12 +669,12 @@ export const BookingFormWizard: React.FC = () => {
                       )}
                     />
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="sound_system_available"
                         render={({ field }) => (
-                          <FormItem className="flex items-start space-x-3 space-y-0 p-4 border rounded-lg">
+                          <FormItem className="flex items-center space-x-2 space-y-0 p-3 border rounded-lg">
                             <FormControl>
                               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
@@ -687,7 +687,7 @@ export const BookingFormWizard: React.FC = () => {
                         control={form.control}
                         name="lighting_available"
                         render={({ field }) => (
-                          <FormItem className="flex items-start space-x-3 space-y-0 p-4 border rounded-lg">
+                          <FormItem className="flex items-center space-x-2 space-y-0 p-3 border rounded-lg">
                             <FormControl>
                               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
@@ -700,7 +700,7 @@ export const BookingFormWizard: React.FC = () => {
                         control={form.control}
                         name="piano_available"
                         render={({ field }) => (
-                          <FormItem className="flex items-start space-x-3 space-y-0 p-4 border rounded-lg">
+                          <FormItem className="flex items-center space-x-2 space-y-0 p-3 border rounded-lg">
                             <FormControl>
                               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
@@ -713,7 +713,7 @@ export const BookingFormWizard: React.FC = () => {
                         control={form.control}
                         name="dressing_rooms_available"
                         render={({ field }) => (
-                          <FormItem className="flex items-start space-x-3 space-y-0 p-4 border rounded-lg">
+                          <FormItem className="flex items-center space-x-2 space-y-0 p-3 border rounded-lg">
                             <FormControl>
                               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
@@ -780,13 +780,13 @@ export const BookingFormWizard: React.FC = () => {
 
                 {/* Step 4: Hospitality & Travel */}
                 {currentStep === 4 && (
-                  <div className="space-y-6">
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                        <Plane className="h-5 w-5 text-primary" />
+                  <div className="space-y-4">
+                    <div className="mb-3">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Plane className="h-4 w-4 text-primary" />
                         Hospitality & Travel
                       </h2>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Compensation and travel arrangements
                       </p>
                     </div>
@@ -794,8 +794,8 @@ export const BookingFormWizard: React.FC = () => {
                     <FormField
                       control={form.control}
                       name="honorarium_offered"
-                      render={({ field }) => (
-                        <FormItem className="flex items-start space-x-3 space-y-0 p-4 border rounded-lg bg-muted/30">
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2 space-y-0 p-3 border rounded-lg bg-muted/30">
                           <FormControl>
                             <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
@@ -836,7 +836,7 @@ export const BookingFormWizard: React.FC = () => {
                             control={form.control}
                             name="travel_expenses_covered"
                             render={({ field }) => (
-                              <FormItem className="flex items-center space-x-3 space-y-0 p-3 border rounded-lg">
+                              <FormItem className="flex items-center space-x-2 space-y-0 p-2 border rounded-lg">
                                 <FormControl>
                                   <Checkbox
                                     checked={field.value?.includes(expense)}
@@ -855,12 +855,12 @@ export const BookingFormWizard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="lodging_provided"
                         render={({ field }) => (
-                          <FormItem className="flex items-start space-x-3 space-y-0 p-4 border rounded-lg">
+                          <FormItem className="flex items-center space-x-2 space-y-0 p-3 border rounded-lg">
                             <FormControl>
                               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
@@ -873,7 +873,7 @@ export const BookingFormWizard: React.FC = () => {
                         control={form.control}
                         name="meals_provided"
                         render={({ field }) => (
-                          <FormItem className="flex items-start space-x-3 space-y-0 p-4 border rounded-lg">
+                          <FormItem className="flex items-center space-x-2 space-y-0 p-3 border rounded-lg">
                             <FormControl>
                               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
@@ -911,7 +911,7 @@ export const BookingFormWizard: React.FC = () => {
                         <FormItem>
                           <FormLabel>Notes for the Director</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="Special requests, preferred repertoire..." className="min-h-[80px]" {...field} />
+                            <Textarea placeholder="Special requests, preferred repertoire..." className="min-h-[60px]" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -947,25 +947,25 @@ export const BookingFormWizard: React.FC = () => {
 
                 {/* Step 5: Review */}
                 {currentStep === 5 && (
-                  <div className="space-y-6">
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                        <Check className="h-5 w-5 text-primary" />
+                  <div className="space-y-4">
+                    <div className="mb-3">
+                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Check className="h-4 w-4 text-primary" />
                         Review Your Request
                       </h2>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Please review your information before submitting
                       </p>
                     </div>
 
-                    <div className="space-y-4">
-                      <div className="p-4 bg-muted/30 rounded-lg">
+                    <div className="space-y-3">
+                      <div className="p-3 bg-muted/30 rounded-lg">
                         <h3 className="font-medium text-sm text-muted-foreground mb-2">Organization</h3>
                         <p className="font-semibold">{form.getValues('organization_name')}</p>
                         <p className="text-sm">{form.getValues('contact_person_name')} • {form.getValues('contact_email')}</p>
                       </div>
 
-                      <div className="p-4 bg-muted/30 rounded-lg">
+                      <div className="p-3 bg-muted/30 rounded-lg">
                         <h3 className="font-medium text-sm text-muted-foreground mb-2">Event</h3>
                         <p className="font-semibold">{form.getValues('event_name')}</p>
                         <p className="text-sm">
@@ -975,7 +975,7 @@ export const BookingFormWizard: React.FC = () => {
                       </div>
 
                       {form.getValues('honorarium_offered') && (
-                        <div className="p-4 bg-muted/30 rounded-lg">
+                        <div className="p-3 bg-muted/30 rounded-lg">
                           <h3 className="font-medium text-sm text-muted-foreground mb-2">Compensation</h3>
                           <p className="font-semibold">
                             ${form.getValues('honorarium_amount')?.toLocaleString() || 'TBD'}
@@ -984,7 +984,7 @@ export const BookingFormWizard: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="p-4 border border-primary/20 rounded-lg bg-primary/5">
+                    <div className="p-3 border border-primary/20 rounded-lg bg-primary/5">
                       <p className="text-sm text-muted-foreground">
                         By submitting this request, you agree that we will review your booking request and contact you within 5-7 business days.
                       </p>
@@ -993,7 +993,7 @@ export const BookingFormWizard: React.FC = () => {
                 )}
 
                 {/* Navigation */}
-                <div className="flex justify-between mt-8 pt-6 border-t">
+                <div className="flex justify-between mt-6 pt-4 border-t">
                   <Button
                     type="button"
                     variant="outline"
