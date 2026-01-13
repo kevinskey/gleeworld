@@ -110,11 +110,25 @@ export const PinAttendanceEntry: React.FC<PinAttendanceEntryProps> = ({
     setResult(null);
 
     try {
+      // Try to get user location for geofencing
+      let locationData = null;
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        });
+        locationData = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        };
+      } catch (geoErr) {
+        console.log('Geolocation not available:', geoErr);
+      }
+
       const { data, error: rpcError } = await supabase.rpc('process_pin_attendance_scan', {
         pin_code_param: pinCode,
         user_id_param: user.id,
-        scan_location_param: null,
-        user_agent_param: navigator.userAgent
+        scan_location_param: locationData
       });
 
       if (rpcError) throw rpcError;
