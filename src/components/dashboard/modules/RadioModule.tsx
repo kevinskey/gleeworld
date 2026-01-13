@@ -40,7 +40,7 @@ export const RadioModule = () => {
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6 py-6">
+        <CardContent className="space-y-4 p-4">
           {/* Now Playing */}
           {currentTrack && isOnline && (
             <div className="space-y-2">
@@ -67,13 +67,13 @@ export const RadioModule = () => {
           <div className="space-y-5">
             <Button
               variant="outline"
-              size="default"
+              size="lg"
               onClick={() => {
                 console.log('RadioModule: Play/Pause button clicked');
                 togglePlayPause();
               }}
               disabled={isLoading}
-              className="w-full"
+              className="w-full h-12 text-base"
             >
               {isLoading ? (
                 <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
