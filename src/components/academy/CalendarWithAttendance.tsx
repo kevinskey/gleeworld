@@ -59,12 +59,17 @@ interface AttendanceRecord {
 
 interface ExcuseRequest {
   id: string;
-  event_date: string;
-  reason: string;
+  student_id: string;
+  course_id: string;
+  event_ids: string[];
+  excuse_type: string;
+  clarification: string | null;
+  document_url: string | null;
+  document_filename: string | null;
   status: 'pending' | 'approved' | 'denied';
-  submitted_at: string;
-  response_message?: string;
-  responded_at?: string;
+  response_message: string | null;
+  responded_at: string | null;
+  created_at: string;
 }
 
 const EVENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -208,14 +213,34 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
   };
 
   const fetchExcuseRequests = async () => {
-    // For now, we'll simulate excuse requests - in production this would fetch from a real table
-    // This can be connected to a gw_excuse_requests table later
-    setExcuseRequests([
-      // Sample data structure for demonstration
-    ]);
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('gw_excuse_requests')
+        .select('*')
+        .eq('student_id', user.id)
+        .eq('course_id', courseId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      // Cast the status to the expected type
+      const typedData = (data || []).map(d => ({
+        ...d,
+        status: d.status as 'pending' | 'approved' | 'denied'
+      }));
+      setExcuseRequests(typedData);
+    } catch (error) {
+      console.error('Error fetching excuse requests:', error);
+    }
   };
 
   const handleSubmitExcuse = async () => {
+    if (!user) {
+      toast.error('You must be logged in to submit an excuse');
+      return;
+    }
+    
     if (selectedEventIds.length === 0 || !excuseType) {
       toast.error('Please select at least one event and an excuse type');
       return;
@@ -223,28 +248,65 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
 
     setSubmittingExcuse(true);
     try {
-      // In production, this would insert into gw_excuse_requests table
-      // For now, we'll simulate success
+      let documentUrl: string | null = null;
+      let documentFilename: string | null = null;
+
+      // Upload document if provided
+      if (excuseDocument) {
+        const fileExt = excuseDocument.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}-excuse-doc.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('excuse-documents')
+          .upload(fileName, excuseDocument, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Error uploading document:', uploadError);
+          toast.error('Failed to upload document');
+          return;
+        }
+
+        // Get the URL for the uploaded file
+        const { data: urlData } = supabase.storage
+          .from('excuse-documents')
+          .getPublicUrl(uploadData.path);
+        
+        documentUrl = urlData.publicUrl;
+        documentFilename = excuseDocument.name;
+      }
+
+      // Insert excuse request into database
+      const { data: insertData, error: insertError } = await supabase
+        .from('gw_excuse_requests')
+        .insert({
+          student_id: user.id,
+          course_id: courseId,
+          event_ids: selectedEventIds,
+          excuse_type: excuseType,
+          clarification: excuseClarification || null,
+          document_url: documentUrl,
+          document_filename: documentFilename,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
       toast.success('Excuse request submitted successfully');
       setShowExcuseDialog(false);
       resetExcuseForm();
       
       // Add to local state for immediate UI feedback
-      const selectedEventsInfo = events
-        .filter(e => selectedEventIds.includes(e.id))
-        .map(e => e.title)
-        .join(', ');
-      
-      const excuseLabel = EXCUSE_TYPES.find(t => t.value === excuseType)?.label || excuseType;
-      
-      const newRequest: ExcuseRequest = {
-        id: crypto.randomUUID(),
-        event_date: new Date().toISOString(),
-        reason: `${excuseLabel}: ${selectedEventsInfo}${excuseClarification ? ` - ${excuseClarification}` : ''}`,
-        status: 'pending',
-        submitted_at: new Date().toISOString(),
-      };
-      setExcuseRequests(prev => [newRequest, ...prev]);
+      if (insertData) {
+        const typedInsertData = {
+          ...insertData,
+          status: insertData.status as 'pending' | 'approved' | 'denied'
+        };
+        setExcuseRequests(prev => [typedInsertData, ...prev]);
+      }
     } catch (error) {
       console.error('Error submitting excuse:', error);
       toast.error('Failed to submit excuse request');
@@ -408,50 +470,59 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {excuseRequests.map((request) => (
-                      <div 
-                        key={request.id} 
-                        className={cn(
-                          "p-3 rounded-lg border",
-                          request.status === 'approved' && "border-green-200 bg-green-50 dark:bg-green-950/20",
-                          request.status === 'denied' && "border-red-200 bg-red-50 dark:bg-red-950/20",
-                          request.status === 'pending' && "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20"
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm">
-                                {format(new Date(request.event_date), 'MMM d, yyyy')}
-                              </span>
-                              <Badge 
-                                variant="outline" 
-                                className={cn(
-                                  "text-xs",
-                                  request.status === 'approved' && "border-green-400 text-green-700",
-                                  request.status === 'denied' && "border-red-400 text-red-700",
-                                  request.status === 'pending' && "border-yellow-400 text-yellow-700"
-                                )}
-                              >
-                                {request.status === 'approved' && <ThumbsUp className="h-3 w-3 mr-1" />}
-                                {request.status === 'denied' && <ThumbsDown className="h-3 w-3 mr-1" />}
-                                {request.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
-                                {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{request.reason}</p>
-                            {request.response_message && (
-                              <div className="mt-2 pl-3 border-l-2 border-primary/50">
-                                <p className="text-sm italic">"{request.response_message}"</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  — Secretary, {request.responded_at && format(new Date(request.responded_at), 'MMM d')}
-                                </p>
+                    {excuseRequests.map((request) => {
+                      const excuseLabel = EXCUSE_TYPES.find(t => t.value === request.excuse_type)?.label || request.excuse_type;
+                      return (
+                        <div 
+                          key={request.id} 
+                          className={cn(
+                            "p-3 rounded-lg border",
+                            request.status === 'approved' && "border-green-200 bg-green-50 dark:bg-green-950/20",
+                            request.status === 'denied' && "border-red-200 bg-red-50 dark:bg-red-950/20",
+                            request.status === 'pending' && "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium text-sm">
+                                  {format(new Date(request.created_at), 'MMM d, yyyy')}
+                                </span>
+                                <Badge 
+                                  variant="outline" 
+                                  className={cn(
+                                    "text-xs",
+                                    request.status === 'approved' && "border-green-400 text-green-700",
+                                    request.status === 'denied' && "border-red-400 text-red-700",
+                                    request.status === 'pending' && "border-yellow-400 text-yellow-700"
+                                  )}
+                                >
+                                  {request.status === 'approved' && <ThumbsUp className="h-3 w-3 mr-1" />}
+                                  {request.status === 'denied' && <ThumbsDown className="h-3 w-3 mr-1" />}
+                                  {request.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                                  {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                                </Badge>
                               </div>
-                            )}
+                              <p className="text-sm font-medium">{excuseLabel}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {request.event_ids.length} event(s) • {request.document_filename ? 'Document attached' : 'No document'}
+                              </p>
+                              {request.clarification && (
+                                <p className="text-sm text-muted-foreground mt-1">{request.clarification}</p>
+                              )}
+                              {request.response_message && (
+                                <div className="mt-2 pl-3 border-l-2 border-primary/50">
+                                  <p className="text-sm italic">"{request.response_message}"</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    — Secretary, {request.responded_at && format(new Date(request.responded_at), 'MMM d')}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </ScrollArea>
