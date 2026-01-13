@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import gleeWorldLogoCircle from "@/assets/glee-world-logo-circle.png";
 
@@ -53,11 +52,11 @@ export const AuthLayout = ({ children, title, subtitle, theme = "default" }: Aut
         <ArrowLeft className="w-4 h-4 mr-2" />
         {theme === "mus240" ? "Back to Course" : "Back to Home"}
       </Button>
-      <Card className={`w-full max-w-md relative z-10 ${config.cardBg} border border-white/20 shadow-2xl overflow-hidden`}>
+      <div className={`w-full max-w-md relative z-10 ${config.cardBg} border border-white/20 shadow-2xl overflow-hidden rounded-lg`}>
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/3 to-transparent pointer-events-none"></div>
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <CardHeader className="text-center space-y-4 relative z-10">
+        <div className="text-center space-y-4 relative z-10 p-6">
           <div className="flex justify-center">
             <img
               src={gleeWorldLogoCircle}
@@ -73,9 +72,9 @@ export const AuthLayout = ({ children, title, subtitle, theme = "default" }: Aut
               {subtitle}
             </p>
           )}
-        </CardHeader>
-        <CardContent className={`relative z-10 ${theme === "default" ? "text-white" : "text-foreground"}`}>{children}</CardContent>
-      </Card>
+        </div>
+        <div className={`relative z-10 p-6 pt-0 ${theme === "default" ? "text-white" : "text-foreground"}`}>{children}</div>
+      </div>
     </div>
   );
 };
