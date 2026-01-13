@@ -319,8 +319,8 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
   return <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h3 className="text-2xl font-bold text-primary-foreground">Course Enrollment Management</h3>
-          <p className="text-primary-foreground">
+          <h3 className="text-2xl font-bold text-foreground">Course Enrollment Management</h3>
+          <p className="text-muted-foreground">
             Manage student enrollments for {courseCode} {term ? `(${term})` : ''}
           </p>
         </div>
@@ -445,7 +445,7 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex-1 min-w-[200px]">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <h4 className="font-semibold text-primary-foreground">
+                      <h4 className="font-semibold text-foreground">
                         {enrollment.gw_profiles?.full_name || 'Unknown Student'}
                       </h4>
                       <Badge variant={getStatusBadgeVariant(enrollment.enrollment_status)}>
@@ -458,10 +458,10 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
                           {enrollment.academic_level}
                         </Badge>}
                     </div>
-                    <p className="text-sm mb-1 text-secondary-foreground">
+                    <p className="text-sm mb-1 text-muted-foreground">
                       {enrollment.gw_profiles?.email}
                     </p>
-                    <p className="text-sm text-primary-foreground">
+                    <p className="text-sm text-muted-foreground">
                       Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}
                     </p>
                   </div>
