@@ -90,11 +90,14 @@ export const MusicLibraryManager = () => {
 
   const handleSave = async () => {
     try {
+      // Remove fields that don't exist in the database
+      const { audio_reference_url, ...validFormData } = formData as any;
+      
       if (editingItem) {
         // Update existing item
         const { error } = await supabase
           .from('gw_sheet_music')
-          .update(formData)
+          .update(validFormData)
           .eq('id', editingItem.id);
 
         if (error) throw error;
@@ -107,8 +110,8 @@ export const MusicLibraryManager = () => {
         const { error } = await supabase
           .from('gw_sheet_music')
           .insert([{
-            ...formData,
-            title: formData.title || 'Untitled'
+            ...validFormData,
+            title: validFormData.title || 'Untitled'
           }]);
 
         if (error) throw error;
