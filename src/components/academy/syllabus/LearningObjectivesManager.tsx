@@ -324,7 +324,7 @@ export const LearningObjectivesManager: React.FC<Props> = ({ courseId, syllabusI
               const linkedCriteria = getLinkedCriteria(objective.id);
               
               return (
-                <div key={index} className="border rounded-lg p-4 space-y-4">
+                <div key={index} className={`border rounded-lg p-4 space-y-4 ${index % 2 === 0 ? 'bg-muted/30' : 'bg-muted/10'}`}>
                   <div className="flex items-start gap-3">
                     <div className="flex items-center gap-2 text-muted-foreground pt-2">
                       <GripVertical className="h-4 w-4 cursor-move" />
