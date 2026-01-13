@@ -32,12 +32,12 @@ interface AcademicEvent {
 }
 
 const EVENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  class: { bg: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-300 dark:border-blue-700' },
-  rehearsal: { bg: 'bg-purple-100 dark:bg-purple-900/40', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-300 dark:border-purple-700' },
-  assignment_due: { bg: 'bg-orange-100 dark:bg-orange-900/40', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-300 dark:border-orange-700' },
-  test: { bg: 'bg-red-100 dark:bg-red-900/40', text: 'text-red-700 dark:text-red-300', border: 'border-red-300 dark:border-red-700' },
-  office_hours: { bg: 'bg-green-100 dark:bg-green-900/40', text: 'text-green-700 dark:text-green-300', border: 'border-green-300 dark:border-green-700' },
-  special: { bg: 'bg-indigo-100 dark:bg-indigo-900/40', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-300 dark:border-indigo-700' },
+  class: { bg: 'bg-blue-200 dark:bg-blue-800', text: 'text-blue-900 dark:text-blue-100', border: 'border-blue-400 dark:border-blue-600' },
+  rehearsal: { bg: 'bg-purple-200 dark:bg-purple-800', text: 'text-purple-900 dark:text-purple-100', border: 'border-purple-400 dark:border-purple-600' },
+  assignment_due: { bg: 'bg-orange-200 dark:bg-orange-800', text: 'text-orange-900 dark:text-orange-100', border: 'border-orange-400 dark:border-orange-600' },
+  test: { bg: 'bg-red-200 dark:bg-red-800', text: 'text-red-900 dark:text-red-100', border: 'border-red-400 dark:border-red-600' },
+  office_hours: { bg: 'bg-green-200 dark:bg-green-800', text: 'text-green-900 dark:text-green-100', border: 'border-green-400 dark:border-green-600' },
+  special: { bg: 'bg-indigo-200 dark:bg-indigo-800', text: 'text-indigo-900 dark:text-indigo-100', border: 'border-indigo-400 dark:border-indigo-600' },
 };
 
 export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId }) => {
@@ -228,43 +228,57 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
         <ListView />
       ) : (
         /* Calendar Grid View - Expanded for desktop */
-        <Card className="overflow-hidden">
-          <CardContent className="p-2 sm:p-4 lg:p-6">
+        <Card className="overflow-hidden border-2">
+          <CardContent className="p-2 sm:p-4 lg:p-6 bg-card">
             {/* Day Headers */}
-            <div className="grid grid-cols-7 gap-1 sm:gap-2 lg:gap-3 mb-2 lg:mb-4">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="text-center text-xs sm:text-sm lg:text-base font-semibold text-muted-foreground py-2 lg:py-3 uppercase tracking-wide">
+            <div className="grid grid-cols-7 border-b-2 border-border mb-0">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+                <div 
+                  key={day} 
+                  className={cn(
+                    "text-center text-xs sm:text-sm lg:text-base font-bold text-foreground py-3 lg:py-4 uppercase tracking-wide bg-muted/50",
+                    i < 6 && "border-r border-border"
+                  )}
+                >
                   {day}
                 </div>
               ))}
             </div>
 
-            {/* Calendar Days - Larger cells on desktop */}
-            <div className="grid grid-cols-7 gap-1 sm:gap-2 lg:gap-3">
+            {/* Calendar Days - Larger cells on desktop with visible borders */}
+            <div className="grid grid-cols-7">
               {Array.from({ length: days[0].getDay() }).map((_, i) => (
-                <div key={`empty-${i}`} className="min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] bg-muted/20 rounded-lg lg:rounded-xl" />
+                <div 
+                  key={`empty-${i}`} 
+                  className={cn(
+                    "min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] bg-muted/30 border-b border-border",
+                    i < 6 && "border-r border-border"
+                  )} 
+                />
               ))}
               
-              {days.map(day => {
+              {days.map((day, index) => {
                 const dayEvents = getEventsForDay(day);
                 const dayAcademicEvents = getAcademicEventsForDay(day);
                 const hasAcademicEvent = dayAcademicEvents.length > 0;
                 const isCurrent = isToday(day);
                 const totalEvents = dayEvents.length + dayAcademicEvents.length;
                 const maxEventsToShow = 3;
+                const dayOfWeek = (days[0].getDay() + index) % 7;
+                const isLastColumn = dayOfWeek === 6;
                 
                 return (
                   <div
                     key={day.toISOString()}
                     className={cn(
-                      "min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] p-1.5 sm:p-2 lg:p-3 rounded-lg lg:rounded-xl border-2 transition-all cursor-pointer hover:shadow-md",
-                      isCurrent && "border-primary bg-primary/5",
-                      hasAcademicEvent && !isCurrent && "border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20",
-                      !isCurrent && !hasAcademicEvent && "border-transparent hover:border-primary/30"
+                      "min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] p-1.5 sm:p-2 lg:p-3 transition-all cursor-pointer hover:bg-accent/50 border-b border-border",
+                      !isLastColumn && "border-r border-border",
+                      isCurrent && "bg-primary/10 ring-2 ring-inset ring-primary",
+                      hasAcademicEvent && !isCurrent && "bg-amber-50/80 dark:bg-amber-950/30"
                     )}
                   >
                     <div className={cn(
-                      "text-base sm:text-lg lg:text-xl font-bold mb-1 lg:mb-2",
+                      "text-base sm:text-lg lg:text-xl font-bold mb-1 lg:mb-2 text-foreground",
                       isCurrent && "text-primary"
                     )}>
                       {format(day, 'd')}
@@ -273,7 +287,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                       {dayAcademicEvents.slice(0, 1).map((event, idx) => (
                         <div
                           key={`academic-${idx}`}
-                          className="text-[10px] sm:text-xs lg:text-sm font-medium truncate px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 rounded-md lg:rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 cursor-pointer hover:opacity-80"
+                          className="text-[10px] sm:text-xs lg:text-sm font-semibold truncate px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 rounded-md lg:rounded-lg bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 cursor-pointer hover:opacity-80 shadow-sm"
                           onClick={(e) => { e.stopPropagation(); setSelectedAcademicEvent(event); }}
                         >
                           {event.title}
@@ -285,7 +299,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                           <div
                             key={event.id}
                             className={cn(
-                              "text-[10px] sm:text-xs lg:text-sm font-medium truncate px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 rounded-md lg:rounded-lg cursor-pointer hover:opacity-80",
+                              "text-[10px] sm:text-xs lg:text-sm font-semibold truncate px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 rounded-md lg:rounded-lg cursor-pointer hover:opacity-80 shadow-sm",
                               colors.bg, colors.text
                             )}
                             onClick={(e) => { e.stopPropagation(); setSelectedEvent(event); }}
@@ -295,7 +309,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                         );
                       })}
                       {totalEvents > maxEventsToShow && (
-                        <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground font-medium px-1.5 sm:px-2">
+                        <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground font-semibold px-1.5 sm:px-2">
                           +{totalEvents - maxEventsToShow} more
                         </div>
                       )}
