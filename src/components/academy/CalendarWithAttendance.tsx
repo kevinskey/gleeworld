@@ -8,16 +8,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Calendar, Clock, MapPin, ChevronLeft, ChevronRight, List, Grid3X3,
   UserCheck, CheckCircle, XCircle, AlertTriangle, Send, Mail, FileText,
-  ThumbsUp, ThumbsDown, Inbox
+  ThumbsUp, ThumbsDown, Inbox, Upload, User, X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+const EXCUSE_TYPES = [
+  { value: 'class_conflict', label: 'Class Conflict' },
+  { value: 'illness', label: 'Illness' },
+  { value: 'family_emergency', label: 'Family Emergency' },
+  { value: 'death_in_family', label: 'Death in Family' },
+  { value: 'medical_appointment', label: 'Medical Appointment' },
+  { value: 'academic_obligation', label: 'Academic Obligation' },
+  { value: 'religious_observance', label: 'Religious Observance' },
+  { value: 'travel_delay', label: 'Travel Delay' },
+  { value: 'other', label: 'Other' },
+];
 
 interface CalendarWithAttendanceProps {
   courseId: string;
@@ -82,17 +96,39 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
   // Excuse state
   const [excuseRequests, setExcuseRequests] = useState<ExcuseRequest[]>([]);
   const [showExcuseDialog, setShowExcuseDialog] = useState(false);
-  const [excuseDate, setExcuseDate] = useState('');
-  const [excuseReason, setExcuseReason] = useState('');
+  const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
+  const [excuseType, setExcuseType] = useState('');
+  const [excuseDocument, setExcuseDocument] = useState<File | null>(null);
+  const [excuseClarification, setExcuseClarification] = useState('');
   const [submittingExcuse, setSubmittingExcuse] = useState(false);
+  
+  // Student profile
+  const [studentName, setStudentName] = useState('');
 
   useEffect(() => {
     fetchCalendarEvents();
     if (isEnrolled && user) {
       fetchAttendance();
       fetchExcuseRequests();
+      fetchStudentProfile();
     }
   }, [courseId, currentMonth, isEnrolled, user]);
+
+  const fetchStudentProfile = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .single();
+      if (data?.full_name) {
+        setStudentName(data.full_name);
+      }
+    } catch (error) {
+      console.error('Error fetching student profile:', error);
+    }
+  };
 
   const fetchCalendarEvents = async () => {
     try {
@@ -177,8 +213,8 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
   };
 
   const handleSubmitExcuse = async () => {
-    if (!excuseDate || !excuseReason.trim()) {
-      toast.error('Please fill in all fields');
+    if (selectedEventIds.length === 0 || !excuseType) {
+      toast.error('Please select at least one event and an excuse type');
       return;
     }
 
@@ -188,14 +224,20 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
       // For now, we'll simulate success
       toast.success('Excuse request submitted successfully');
       setShowExcuseDialog(false);
-      setExcuseDate('');
-      setExcuseReason('');
+      resetExcuseForm();
       
       // Add to local state for immediate UI feedback
+      const selectedEventsInfo = events
+        .filter(e => selectedEventIds.includes(e.id))
+        .map(e => e.title)
+        .join(', ');
+      
+      const excuseLabel = EXCUSE_TYPES.find(t => t.value === excuseType)?.label || excuseType;
+      
       const newRequest: ExcuseRequest = {
         id: crypto.randomUUID(),
-        event_date: excuseDate,
-        reason: excuseReason,
+        event_date: new Date().toISOString(),
+        reason: `${excuseLabel}: ${selectedEventsInfo}${excuseClarification ? ` - ${excuseClarification}` : ''}`,
         status: 'pending',
         submitted_at: new Date().toISOString(),
       };
@@ -205,6 +247,28 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
       toast.error('Failed to submit excuse request');
     } finally {
       setSubmittingExcuse(false);
+    }
+  };
+
+  const resetExcuseForm = () => {
+    setSelectedEventIds([]);
+    setExcuseType('');
+    setExcuseDocument(null);
+    setExcuseClarification('');
+  };
+
+  const handleEventSelection = (eventId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedEventIds(prev => [...prev, eventId]);
+    } else {
+      setSelectedEventIds(prev => prev.filter(id => id !== eventId));
+    }
+  };
+
+  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setExcuseDocument(file);
     }
   };
 
@@ -280,13 +344,13 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2">
             <Button 
-              variant="outline" 
-              size="sm" 
+              variant="default" 
+              size="lg" 
               onClick={() => setShowExcuseDialog(true)}
-              className="gap-2"
+              className="gap-2 text-base px-6 py-3"
             >
-              <FileText className="h-4 w-4" />
-              Submit Excuse
+              <FileText className="h-5 w-5" />
+              Submit Excuse Request
             </Button>
           </div>
         </CardContent>
@@ -487,8 +551,8 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
       </Card>
 
       {/* Excuse Request Dialog */}
-      <Dialog open={showExcuseDialog} onOpenChange={setShowExcuseDialog}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={showExcuseDialog} onOpenChange={(open) => { setShowExcuseDialog(open); if (!open) resetExcuseForm(); }}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
@@ -498,32 +562,136 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
               Submit an excuse for an absence to the Secretary for review.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-5 py-4">
+            {/* Student Name */}
             <div className="space-y-2">
-              <Label htmlFor="excuse-date">Date of Absence</Label>
-              <Input
-                id="excuse-date"
-                type="date"
-                value={excuseDate}
-                onChange={(e) => setExcuseDate(e.target.value)}
-              />
+              <Label className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Student Name
+              </Label>
+              <div className="px-3 py-2 bg-muted rounded-md text-sm font-medium">
+                {studentName || user?.email || 'Loading...'}
+              </div>
             </div>
+
+            {/* Event Selection */}
             <div className="space-y-2">
-              <Label htmlFor="excuse-reason">Reason for Absence</Label>
+              <Label>Select Event(s) to be Excused *</Label>
+              <ScrollArea className="h-[160px] border rounded-md p-3">
+                {events.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No events found this month
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {events.map(event => (
+                      <div key={event.id} className="flex items-start gap-3 p-2 rounded hover:bg-muted/50">
+                        <Checkbox
+                          id={`event-${event.id}`}
+                          checked={selectedEventIds.includes(event.id)}
+                          onCheckedChange={(checked) => handleEventSelection(event.id, checked as boolean)}
+                        />
+                        <label 
+                          htmlFor={`event-${event.id}`} 
+                          className="text-sm cursor-pointer flex-1"
+                        >
+                          <span className="font-medium">{event.title}</span>
+                          <span className="text-muted-foreground block text-xs">
+                            {format(new Date(event.start_time), 'EEE, MMM d, yyyy • h:mm a')}
+                          </span>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+              {selectedEventIds.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedEventIds.length} event(s) selected
+                </p>
+              )}
+            </div>
+
+            {/* Excuse Type */}
+            <div className="space-y-2">
+              <Label htmlFor="excuse-type">Excuse Type *</Label>
+              <Select value={excuseType} onValueChange={setExcuseType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select excuse type..." />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  {EXCUSE_TYPES.map(type => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Document Upload */}
+            <div className="space-y-2">
+              <Label htmlFor="excuse-document" className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Supporting Document (optional)
+              </Label>
+              <div className="border-2 border-dashed rounded-md p-4 text-center hover:border-primary/50 transition-colors">
+                <input
+                  id="excuse-document"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  onChange={handleDocumentChange}
+                  className="hidden"
+                />
+                {excuseDocument ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">{excuseDocument.name}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6"
+                      onClick={() => setExcuseDocument(null)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label htmlFor="excuse-document" className="cursor-pointer">
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      Click to upload doctor's note, etc.
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PDF, JPG, PNG, DOC up to 10MB
+                    </p>
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Clarification */}
+            <div className="space-y-2">
+              <Label htmlFor="excuse-clarification">Further Clarification (optional)</Label>
               <Textarea
-                id="excuse-reason"
-                placeholder="Please explain the reason for your absence..."
-                value={excuseReason}
-                onChange={(e) => setExcuseReason(e.target.value)}
-                rows={4}
+                id="excuse-clarification"
+                placeholder="Provide any additional details about your absence..."
+                value={excuseClarification}
+                onChange={(e) => setExcuseClarification(e.target.value)}
+                rows={3}
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setShowExcuseDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmitExcuse} disabled={submittingExcuse} className="gap-2">
+            <Button 
+              onClick={handleSubmitExcuse} 
+              disabled={submittingExcuse || selectedEventIds.length === 0 || !excuseType} 
+              className="gap-2"
+              size="lg"
+            >
               <Send className="h-4 w-4" />
               {submittingExcuse ? 'Submitting...' : 'Submit Request'}
             </Button>
