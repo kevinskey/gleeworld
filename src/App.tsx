@@ -1160,6 +1160,10 @@ const App = () => {
                     } 
                    />
                     <Route 
+                      path="/attendance/scan" 
+                      element={<AttendanceScanPage />} 
+                    />
+                    <Route 
                       path="/attendance-scan" 
                       element={<AttendanceScanPage />} 
                     />
