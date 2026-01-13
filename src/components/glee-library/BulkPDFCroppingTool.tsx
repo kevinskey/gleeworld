@@ -5,9 +5,12 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Scissors, FileText, Loader2, CheckCircle, AlertTriangle, Play, Pause } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Scissors, FileText, Loader2, CheckCircle, AlertTriangle, Play, Pause, RotateCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { applyUniformCropToPDF } from "@/utils/pdfCropApply";
 
 interface SheetMusic {
   id: string;
@@ -25,6 +28,14 @@ interface BulkCropStatus {
   recommendations?: any;
 }
 
+interface CropSettings {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+  rotation: number;
+}
+
 export const BulkPDFCroppingTool = () => {
   const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -34,6 +45,15 @@ export const BulkPDFCroppingTool = () => {
   const [bulkStatus, setBulkStatus] = useState<Map<string, BulkCropStatus>>(new Map());
   const [overallProgress, setOverallProgress] = useState(0);
   const [currentItem, setCurrentItem] = useState<string>("");
+  
+  // Crop settings state
+  const [cropSettings, setCropSettings] = useState<CropSettings>({
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    rotation: 0,
+  });
 
   useEffect(() => {
     loadSheetMusic();
@@ -43,8 +63,8 @@ export const BulkPDFCroppingTool = () => {
     try {
       const { data, error } = await supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, pdf_url')
-        .eq('is_public', true)
+        .select('id, title, composer, pdf_url, crop_recommendations')
+        .not('pdf_url', 'is', null)
         .order('title');
 
       if (error) {
@@ -55,14 +75,15 @@ export const BulkPDFCroppingTool = () => {
 
       setSheetMusic(data || []);
       
-      // Initialize status for all items as pending (no crop recommendations in DB yet)
+      // Initialize status for all items
       const statusMap = new Map<string, BulkCropStatus>();
       data?.forEach(item => {
+        const cropRec = item.crop_recommendations as Record<string, unknown> | null;
         statusMap.set(item.id, {
           id: item.id,
-          status: 'pending',
+          status: cropRec?.applied ? 'completed' : 'pending',
           progress: 0,
-          recommendations: null
+          recommendations: item.crop_recommendations
         });
       });
       setBulkStatus(statusMap);
@@ -86,7 +107,7 @@ export const BulkPDFCroppingTool = () => {
   };
 
   const selectAll = () => {
-    const allIds = sheetMusic.map(item => item.id);
+    const allIds = sheetMusic.filter(item => item.pdf_url).map(item => item.id);
     setSelectedItems(new Set(allIds));
   };
 
@@ -96,14 +117,27 @@ export const BulkPDFCroppingTool = () => {
 
   const selectUnprocessed = () => {
     const unprocessedIds = sheetMusic
-      .filter(item => !item.crop_recommendations)
+      .filter(item => {
+        const cropRec = item.crop_recommendations as Record<string, unknown> | null;
+        return item.pdf_url && !cropRec?.applied;
+      })
       .map(item => item.id);
     setSelectedItems(new Set(unprocessedIds));
   };
 
-  const processBulkCropping = async () => {
+  const processMassCrop = async () => {
     if (selectedItems.size === 0) {
-      toast.error('Please select items to process');
+      toast.error('Please select items to crop');
+      return;
+    }
+
+    // Check if any crop settings are applied
+    const hasCropSettings = cropSettings.top > 0 || cropSettings.bottom > 0 || 
+                           cropSettings.left > 0 || cropSettings.right > 0 || 
+                           cropSettings.rotation !== 0;
+    
+    if (!hasCropSettings) {
+      toast.error('Please set at least one crop margin or rotation');
       return;
     }
 
@@ -111,6 +145,7 @@ export const BulkPDFCroppingTool = () => {
     setIsPaused(false);
     const selectedList = Array.from(selectedItems);
     let completed = 0;
+    let errors = 0;
 
     for (const itemId of selectedList) {
       if (isPaused) {
@@ -131,46 +166,94 @@ export const BulkPDFCroppingTool = () => {
       })));
 
       try {
-        // Get signed URL for the PDF
-        const { data: urlData } = await supabase.storage
-          .from('sheet-music')
-          .createSignedUrl(item.pdf_url, 3600);
+        // Update progress - fetching PDF
+        setBulkStatus(prev => new Map(prev.set(itemId, {
+          ...prev.get(itemId)!,
+          progress: 10
+        })));
 
-        if (!urlData?.signedUrl) {
-          throw new Error('Could not get PDF URL');
-        }
+        // Apply crop settings to the PDF
+        const result = await applyUniformCropToPDF(item.pdf_url, cropSettings, {
+          onProgress: (current, total) => {
+            const progress = 10 + ((current / total) * 60);
+            setBulkStatus(prev => new Map(prev.set(itemId, {
+              ...prev.get(itemId)!,
+              progress
+            })));
+          },
+        });
 
-        // For now, we'll simulate the process since PDF.js integration is complex
-        // In a real implementation, you'd convert the PDF to images first
-        
-        // Simulate processing time
-        for (let i = 0; i <= 100; i += 10) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          setBulkStatus(prev => new Map(prev.set(itemId, {
-            ...prev.get(itemId)!,
-            progress: i
-          })));
-          
-          if (isPaused) break;
-        }
+        // Update progress - uploading
+        setBulkStatus(prev => new Map(prev.set(itemId, {
+          ...prev.get(itemId)!,
+          progress: 75
+        })));
 
-        if (!isPaused) {
-          // Mark as completed (in a real implementation, this would have actual recommendations)
-          setBulkStatus(prev => new Map(prev.set(itemId, {
-            ...prev.get(itemId)!,
-            status: 'completed',
-            progress: 100,
-            recommendations: {
-              message: 'Processing would happen here with actual PDF analysis',
-              timestamp: new Date().toISOString()
-            }
-          })));
+        // Upload the cropped PDF to storage
+        const fileName = `${itemId}_cropped_${Date.now()}.pdf`;
+        const filePath = `sheet-music/${fileName}`;
 
-          completed++;
-        }
+        const { error: uploadError } = await supabase.storage
+          .from('glee-library')
+          .upload(filePath, result.blob, {
+            contentType: 'application/pdf',
+            upsert: true,
+          });
+
+        if (uploadError) throw uploadError;
+
+        // Update progress - updating database
+        setBulkStatus(prev => new Map(prev.set(itemId, {
+          ...prev.get(itemId)!,
+          progress: 90
+        })));
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('glee-library')
+          .getPublicUrl(filePath);
+
+        // Update the sheet music record with new PDF URL
+        const cropRecommendationsData = {
+          applied: true,
+          appliedAt: new Date().toISOString(),
+          settings: {
+            top: cropSettings.top,
+            bottom: cropSettings.bottom,
+            left: cropSettings.left,
+            right: cropSettings.right,
+            rotation: cropSettings.rotation,
+          },
+          pageCount: result.pageCount,
+        };
+
+        const { error: updateError } = await supabase
+          .from('gw_sheet_music')
+          .update({
+            pdf_url: urlData.publicUrl,
+            crop_recommendations: cropRecommendationsData,
+          })
+          .eq('id', itemId);
+
+        if (updateError) throw updateError;
+
+        // Mark as completed
+        setBulkStatus(prev => new Map(prev.set(itemId, {
+          ...prev.get(itemId)!,
+          status: 'completed',
+          progress: 100,
+          recommendations: {
+            applied: true,
+            appliedAt: new Date().toISOString(),
+            settings: cropSettings,
+          }
+        })));
+
+        completed++;
 
       } catch (error) {
         console.error(`Error processing ${item.title}:`, error);
+        errors++;
         setBulkStatus(prev => new Map(prev.set(itemId, {
           ...prev.get(itemId)!,
           status: 'error',
@@ -179,14 +262,18 @@ export const BulkPDFCroppingTool = () => {
         })));
       }
 
-      setOverallProgress((completed / selectedList.length) * 100);
+      setOverallProgress(((completed + errors) / selectedList.length) * 100);
     }
 
     setIsProcessing(false);
     setCurrentItem("");
     
     if (!isPaused) {
-      toast.success(`Completed processing ${completed} items`);
+      if (errors > 0) {
+        toast.warning(`Completed ${completed} items, ${errors} errors`);
+      } else {
+        toast.success(`Successfully cropped ${completed} PDFs!`);
+      }
     }
   };
 
@@ -194,10 +281,20 @@ export const BulkPDFCroppingTool = () => {
     setIsPaused(true);
   };
 
+  const resetSettings = () => {
+    setCropSettings({
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      rotation: 0,
+    });
+  };
+
   const getStatusBadge = (status: BulkCropStatus) => {
     switch (status.status) {
       case 'completed':
-        return <Badge className="bg-green-500 text-white">Analyzed</Badge>;
+        return <Badge className="bg-green-500 text-white">Cropped</Badge>;
       case 'processing':
         return <Badge className="bg-blue-500 text-white">Processing</Badge>;
       case 'error':
@@ -223,43 +320,132 @@ export const BulkPDFCroppingTool = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Scissors className="h-5 w-5" />
-          Bulk PDF Cropping Tool
+          Mass PDF Cropping Tool
         </CardTitle>
         <CardDescription>
-          Analyze and optimize multiple PDFs at once using AI-powered margin detection
+          Apply the same crop settings to multiple PDFs at once
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-6">
+        {/* Crop Settings */}
+        <Card className="bg-muted/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Crop Settings</CardTitle>
+              <Button variant="ghost" size="sm" onClick={resetSettings}>
+                <RotateCw className="h-4 w-4 mr-1" />
+                Reset
+              </Button>
+            </div>
+            <CardDescription className="text-xs">
+              Set margins (%) to crop from each edge. These settings will apply to all selected PDFs.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label className="text-sm">Top</Label>
+                  <span className="text-sm text-muted-foreground">{cropSettings.top}%</span>
+                </div>
+                <Slider
+                  value={[cropSettings.top]}
+                  onValueChange={([v]) => setCropSettings(prev => ({ ...prev, top: v }))}
+                  max={50}
+                  step={0.5}
+                  disabled={isProcessing}
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label className="text-sm">Bottom</Label>
+                  <span className="text-sm text-muted-foreground">{cropSettings.bottom}%</span>
+                </div>
+                <Slider
+                  value={[cropSettings.bottom]}
+                  onValueChange={([v]) => setCropSettings(prev => ({ ...prev, bottom: v }))}
+                  max={50}
+                  step={0.5}
+                  disabled={isProcessing}
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label className="text-sm">Left</Label>
+                  <span className="text-sm text-muted-foreground">{cropSettings.left}%</span>
+                </div>
+                <Slider
+                  value={[cropSettings.left]}
+                  onValueChange={([v]) => setCropSettings(prev => ({ ...prev, left: v }))}
+                  max={50}
+                  step={0.5}
+                  disabled={isProcessing}
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label className="text-sm">Right</Label>
+                  <span className="text-sm text-muted-foreground">{cropSettings.right}%</span>
+                </div>
+                <Slider
+                  value={[cropSettings.right]}
+                  onValueChange={([v]) => setCropSettings(prev => ({ ...prev, right: v }))}
+                  max={50}
+                  step={0.5}
+                  disabled={isProcessing}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label className="text-sm">Rotation</Label>
+                <span className="text-sm text-muted-foreground">{cropSettings.rotation}°</span>
+              </div>
+              <Slider
+                value={[cropSettings.rotation]}
+                onValueChange={([v]) => setCropSettings(prev => ({ ...prev, rotation: v }))}
+                min={-180}
+                max={180}
+                step={1}
+                disabled={isProcessing}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Selection Controls */}
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={selectAll}>
-            Select All ({sheetMusic.length})
+          <Button variant="outline" size="sm" onClick={selectAll} disabled={isProcessing}>
+            Select All ({sheetMusic.filter(s => s.pdf_url).length})
           </Button>
-          <Button variant="outline" size="sm" onClick={selectNone}>
+          <Button variant="outline" size="sm" onClick={selectNone} disabled={isProcessing}>
             Select None
           </Button>
-          <Button variant="outline" size="sm" onClick={selectUnprocessed}>
-            Select Unprocessed ({sheetMusic.filter(sm => !sm.crop_recommendations).length})
+          <Button variant="outline" size="sm" onClick={selectUnprocessed} disabled={isProcessing}>
+            Select Uncropped ({sheetMusic.filter(sm => {
+              const cropRec = sm.crop_recommendations as Record<string, unknown> | null;
+              return sm.pdf_url && !cropRec?.applied;
+            }).length})
           </Button>
         </div>
 
         {/* Processing Controls */}
         <div className="flex gap-2">
           <Button 
-            onClick={processBulkCropping}
+            onClick={processMassCrop}
             disabled={isProcessing || selectedItems.size === 0}
             className="flex-1"
           >
             {isProcessing ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Processing...
+                Cropping...
               </>
             ) : (
               <>
-                <Play className="h-4 w-4 mr-2" />
-                Process Selected ({selectedItems.size})
+                <Scissors className="h-4 w-4 mr-2" />
+                Crop Selected ({selectedItems.size})
               </>
             )}
           </Button>
@@ -294,6 +480,8 @@ export const BulkPDFCroppingTool = () => {
             {sheetMusic.map((item) => {
               const status = bulkStatus.get(item.id);
               const isSelected = selectedItems.has(item.id);
+              
+              if (!item.pdf_url) return null;
               
               return (
                 <Card key={item.id} className={`p-3 ${isSelected ? 'ring-2 ring-primary' : ''}`}>
@@ -343,7 +531,7 @@ export const BulkPDFCroppingTool = () => {
             <p className="text-2xl font-bold text-green-600">
               {Array.from(bulkStatus.values()).filter(s => s.status === 'completed').length}
             </p>
-            <p className="text-sm text-muted-foreground">Analyzed</p>
+            <p className="text-sm text-muted-foreground">Cropped</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-blue-600">
