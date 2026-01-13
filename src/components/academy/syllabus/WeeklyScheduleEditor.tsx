@@ -152,7 +152,7 @@ export const WeeklyScheduleEditor: React.FC<Props> = ({
               <Calendar className="h-5 w-5" />
               Weekly Schedule
             </CardTitle>
-            <p className="text-sm mt-1 text-primary-foreground">
+            <p className="text-sm mt-1 text-black">
               Outline topics and activities for each week
             </p>
           </div>
