@@ -681,387 +681,269 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
   console.log('SetlistBuilder render: isCreating =', isCreating, 'createLoading =', createLoading);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-            <Music className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-            <span className="truncate">Setlist Builder</span>
-          </h3>
-        </div>
+    <div className="space-y-2">
+      {/* Compact Header */}
+      <div className="flex items-center justify-between gap-2 px-1">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">My Setlists</span>
         <Button 
           onClick={() => {
             console.log('SetlistBuilder: New Setlist button clicked');
             setIsCreating(!isCreating);
           }} 
-          className="flex items-center gap-1 sm:gap-2 h-9 px-3 sm:px-4 touch-target flex-shrink-0"
+          className="h-6 w-6 p-0"
           disabled={createLoading}
-          variant={isCreating ? "secondary" : "default"}
+          variant={isCreating ? "secondary" : "ghost"}
           size="sm"
         >
-          <Plus className="h-4 w-4" />
-          <span className="hidden xs:inline">{isCreating ? 'Cancel' : 'New'}</span>
-          <span className="xs:hidden">+</span>
+          <Plus className="h-3.5 w-3.5" />
         </Button>
       </div>
 
-      <div className="space-y-6">
-        {/* Setlists Panel */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">My Setlists</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {setlists.map((setlist) => (
-              <div key={setlist.id} className="space-y-3">
-                <div
-                  className={cn(
-                    "p-3 border rounded-lg cursor-pointer transition-colors",
-                    selectedSetlist?.id === setlist.id 
-                      ? "border-primary bg-primary/5" 
-                      : "hover:bg-muted/50"
-                  )}
-                  onClick={() => {
-                    if (selectedSetlist?.id === setlist.id) {
-                      // If clicking the same setlist, deselect it
-                      setSelectedSetlist(null);
-                    } else {
-                      // If clicking a different setlist, select it and load items
-                      setSelectedSetlist(setlist);
-                      loadSetlistItems(setlist.id);
-                    }
-                  }}
-                >
-                  <div className="flex items-start justify-between">
+      {/* Mac-style Setlist List */}
+      <div className="space-y-0.5 max-h-[40vh] overflow-y-auto">
+        {setlists.map((setlist) => (
+          <div key={setlist.id}>
+            {/* Setlist Row */}
+            <div
+              className={cn(
+                "flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors group",
+                selectedSetlist?.id === setlist.id 
+                  ? "bg-primary/10 text-primary" 
+                  : "hover:bg-muted/50"
+              )}
+              onClick={() => {
+                if (selectedSetlist?.id === setlist.id) {
+                  setSelectedSetlist(null);
+                } else {
+                  setSelectedSetlist(setlist);
+                  loadSetlistItems(setlist.id);
+                }
+              }}
+            >
+              <Music className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
+              <span className="flex-1 min-w-0 text-sm font-medium truncate">{setlist.title}</span>
+              {setlist.is_public && (
+                <Users className="h-3 w-3 text-green-600 flex-shrink-0" />
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditSetlist(setlist);
+                }}
+                className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+            </div>
+            
+            {/* Expanded Setlist Items */}
+            {selectedSetlist?.id === setlist.id && (
+              <div className="ml-5 pl-2 border-l border-muted space-y-0.5 py-1">
+                {selectedSetlist.items?.map((item, index) => (
+                  <div 
+                    key={item.id} 
+                    className="flex items-center gap-2 px-2 py-1 rounded hover:bg-muted/30 group/item"
+                  >
+                    <span className="text-xs text-muted-foreground w-4 text-right">{index + 1}</span>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate">{setlist.title}</h4>
-                      {setlist.description && (
-                        <p className="text-sm text-muted-foreground truncate">
-                          {setlist.description}
-                        </p>
+                      <span className="text-sm truncate block">{item.sheet_music?.title}</span>
+                      {item.sheet_music?.composer && (
+                        <span className="text-xs text-muted-foreground truncate block">{item.sheet_music.composer}</span>
                       )}
-                      <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        {setlist.performance_date && (
-                          <span className="flex items-center gap-1">
-                            <CalendarIcon className="h-3 w-3" />
-                            {format(new Date(setlist.performance_date), 'MMM d, yyyy')}
-                          </span>
-                        )}
-                        {setlist.venue && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {setlist.venue}
-                          </span>
-                        )}
-                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditSetlist(setlist);
-                        }}
-                        className="h-8 sm:h-7 px-2 sm:px-2 touch-target"
+                        variant="ghost"
+                        onClick={() => handleViewPdf(item)}
+                        disabled={!item.sheet_music?.pdf_url}
+                        className="h-5 w-5 p-0"
                       >
-                        <Edit className="h-4 w-4 sm:h-3 sm:w-3 sm:mr-1" />
-                        <span className="hidden sm:inline ml-1">Edit</span>
+                        <FileText className="h-3 w-3" />
                       </Button>
-                      {setlist.is_public && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 hidden sm:flex">
-                          <Users className="h-3 w-3 mr-1" />
-                          All Members
-                        </Badge>
-                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openSetlistPlayer(selectedSetlist.id)}
+                        className="h-5 w-5 p-0"
+                      >
+                        <Play className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeFromSetlist(item.id)}
+                        className="h-5 w-5 p-0 text-destructive"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
-                </div>
+                ))}
                 
-                {/* Setlist Items - Show below the card when selected */}
-                {selectedSetlist?.id === setlist.id && (
-                  <div className="ml-2 sm:ml-4 pl-2 sm:pl-4 border-l-2 border-muted space-y-2">
-                    {selectedSetlist.items?.map((item, index) => (
-                      <div key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 sm:p-3 bg-muted/30 rounded-lg">
-                        <div className="flex items-start gap-2 flex-1 min-w-0">
-                          <span className="text-xs sm:text-sm font-medium text-muted-foreground min-w-[1.5rem] mt-0.5">
-                            {index + 1}.
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <h5 className="text-sm sm:text-base font-medium truncate">
-                              {item.sheet_music?.title}
-                            </h5>
-                            {item.sheet_music?.composer && (
-                              <p className="text-xs sm:text-sm text-muted-foreground">
-                                {item.sheet_music.composer}
-                              </p>
-                            )}
-                            {item.notes && (
-                              <p className="text-xs sm:text-sm text-muted-foreground italic mt-1">
-                                {item.notes}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        {/* Mobile: Stack buttons vertically, Desktop: horizontal */}
-                        <div className="flex flex-row sm:flex-row items-center gap-2 w-full sm:w-auto">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleViewPdf(item)}
-                            disabled={!item.sheet_music?.pdf_url}
-                            className="flex-1 sm:flex-none h-9 sm:h-8 touch-target"
-                          >
-                            <FileText className="h-4 w-4 sm:h-3 sm:w-3 sm:mr-0" />
-                            <span className="sm:hidden ml-2">View PDF</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => openSetlistPlayer(selectedSetlist.id)}
-                            className="flex-1 sm:flex-none h-9 sm:h-8 px-3 sm:px-2 text-xs sm:text-xs touch-target"
-                          >
-                            <Play className="h-4 w-4 sm:h-3 sm:w-3 mr-1" />
-                            <span className="hidden sm:inline">Player</span>
-                            <span className="sm:hidden">Open Player</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => removeFromSetlist(item.id)}
-                            className="h-9 sm:h-8 w-9 sm:w-8 p-0 touch-target flex-shrink-0"
-                          >
-                            <Trash2 className="h-4 w-4 sm:h-3 sm:w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {(!selectedSetlist.items || selectedSetlist.items.length === 0) && (
-                      <div className="text-center py-4 text-muted-foreground">
-                        <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-xs">No songs in this setlist</p>
-                      </div>
-                    )}
-                    
-                    {/* Add Sheet Music Section */}
-                    <div className="pt-2 border-t">
-                      <h6 className="text-xs font-medium mb-2">Add Sheet Music</h6>
-                      <Input
-                        placeholder="Search sheet music to add..."
-                        value={sheetMusicSearch}
-                        onChange={(e) => setSheetMusicSearch(e.target.value)}
-                        className="text-xs mb-2"
-                      />
-                      <div className="max-h-32 overflow-y-auto space-y-1">
-                        {filteredSheetMusic.map((music) => (
-                          <div 
-                            key={music.id} 
-                            className="flex items-center justify-between p-1.5 text-xs border rounded cursor-pointer hover:bg-accent/50 transition-colors"
-                            onClick={() => addToSetlist(music.id)}
-                          >
-                            <div className="flex-1 min-w-0">
-                              <h6 className="font-medium truncate">{music.title}</h6>
-                              {music.composer && (
-                                <p className="text-muted-foreground truncate">{music.composer}</p>
-                              )}
-                            </div>
-                            <Plus className="h-3 w-3 text-muted-foreground ml-2 flex-shrink-0" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                {(!selectedSetlist.items || selectedSetlist.items.length === 0) && (
+                  <div className="text-center py-2 text-xs text-muted-foreground">
+                    No songs yet
                   </div>
                 )}
-              </div>
-            ))}
-            
-            {setlists.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Music className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No setlists yet</p>
-                <p className="text-sm">Create your first setlist to get started</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Create/Edit Setlist Form */}
-        {(isCreating || isEditing) && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="text-base">
-                {isEditing ? 'Edit Setlist' : 'Create New Setlist'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Concert Setlist"
-                    disabled={createLoading}
-                  />
-                </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="venue">Venue</Label>
+                {/* Add Sheet Music - Compact */}
+                <div className="pt-1 mt-1 border-t border-dashed">
                   <Input
-                    id="venue"
-                    value={formData.venue}
-                    onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                    placeholder="Concert Hall"
-                    disabled={createLoading}
+                    placeholder="Add sheet music..."
+                    value={sheetMusicSearch}
+                    onChange={(e) => setSheetMusicSearch(e.target.value)}
+                    className="h-7 text-xs"
                   />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Spring concert program..."
-                  rows={3}
-                  disabled={createLoading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Performance Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.performance_date && "text-muted-foreground"
-                      )}
-                      disabled={createLoading}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.performance_date ? (
-                        format(formData.performance_date, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={formData.performance_date}
-                      onSelect={(date) => setFormData({ ...formData, performance_date: date })}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="is_public"
-                    checked={formData.is_public}
-                    onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
-                    className="rounded"
-                    disabled={createLoading}
-                  />
-                  <Label htmlFor="is_public" className="text-sm">
-                    Make this setlist public
-                  </Label>
-                </div>
-                
-              <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => { 
-                      setIsCreating(false);
-                      setIsEditing(false);
-                      resetForm(); 
-                    }}
-                    disabled={createLoading}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={isEditing ? updateSetlist : createSetlist}
-                    disabled={createLoading || !formData.title.trim()}
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {createLoading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Setlist' : 'Create Setlist')}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Available Sheet Music Panel - Show when no setlist is selected */}
-        {!selectedSetlist && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Available Sheet Music</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <Input
-                  placeholder="Search sheet music..."
-                  value={sheetMusicSearch}
-                  onChange={(e) => setSheetMusicSearch(e.target.value)}
-                  className="text-xs"
-                />
-                <div className="max-h-96 overflow-y-auto space-y-2">
-                   {filteredSheetMusic.map((music) => (
-                     <div 
-                       key={music.id} 
-                       className="flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors"
-                     onClick={() => {
-                         console.log('SetlistBuilder: Sheet music clicked:', music.title, music.pdf_url);
-                         if (music.pdf_url) {
-                           onPdfSelect(music.pdf_url, music.title, music.id);
-                         } else {
-                           console.log('SetlistBuilder: No PDF URL for this music');
-                         }
-                       }}
-                     >
-                       <div className="flex-1 min-w-0">
-                         <SheetMusicHoverCard music={music}>
-                           <h4 className="text-sm font-medium truncate hover:underline">{music.title}</h4>
-                         </SheetMusicHoverCard>
-                         {music.composer && (
-                           <p className="text-xs text-muted-foreground">{music.composer}</p>
-                         )}
-                       </div>
-                       {music.pdf_url ? (
-                         <FileText className="h-3 w-3 text-muted-foreground ml-2 flex-shrink-0" />
-                       ) : (
-                         <div className="h-3 w-3 ml-2 flex-shrink-0" />
-                       )}
-                    </div>
-                  ))}
-                  
-                  {filteredSheetMusic.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>No sheet music found</p>
-                      <p className="text-sm">Try adjusting your search terms</p>
+                  {sheetMusicSearch && (
+                    <div className="max-h-24 overflow-y-auto mt-1 space-y-0.5">
+                      {filteredSheetMusic.slice(0, 5).map((music) => (
+                        <div 
+                          key={music.id} 
+                          className="flex items-center gap-2 px-2 py-1 text-xs rounded cursor-pointer hover:bg-accent/50"
+                          onClick={() => addToSetlist(music.id)}
+                        >
+                          <Plus className="h-3 w-3 text-muted-foreground" />
+                          <span className="truncate">{music.title}</span>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
+        ))}
+        
+        {setlists.length === 0 && (
+          <div className="text-center py-4 text-muted-foreground">
+            <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="text-xs">No setlists yet</p>
+          </div>
         )}
       </div>
 
+      {/* Create/Edit Setlist Form */}
+      {(isCreating || isEditing) && (
+        <Card className="mt-2">
+          <CardHeader className="py-3">
+            <CardTitle className="text-sm">
+              {isEditing ? 'Edit Setlist' : 'New Setlist'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-xs">Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Concert Setlist"
+                disabled={createLoading}
+                className="h-8 text-sm"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="venue" className="text-xs">Venue</Label>
+              <Input
+                id="venue"
+                value={formData.venue}
+                onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                placeholder="Concert Hall"
+                disabled={createLoading}
+                className="h-8 text-sm"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-xs">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Spring concert program..."
+                rows={2}
+                disabled={createLoading}
+                className="text-sm"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Performance Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal h-8 text-sm",
+                      !formData.performance_date && "text-muted-foreground"
+                    )}
+                    disabled={createLoading}
+                  >
+                    <CalendarIcon className="mr-2 h-3 w-3" />
+                    {formData.performance_date ? (
+                      format(formData.performance_date, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.performance_date}
+                    onSelect={(date) => setFormData({ ...formData, performance_date: date })}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="is_public"
+                checked={formData.is_public}
+                onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+                className="rounded h-3 w-3"
+                disabled={createLoading}
+              />
+              <Label htmlFor="is_public" className="text-xs">
+                Make public
+              </Label>
+            </div>
+              
+            <div className="flex gap-2 pt-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => { 
+                  setIsCreating(false);
+                  setIsEditing(false);
+                  resetForm(); 
+                }}
+                disabled={createLoading}
+                className="h-7 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button 
+                size="sm"
+                onClick={isEditing ? updateSetlist : createSetlist}
+                disabled={createLoading || !formData.title.trim()}
+                className="h-7 text-xs"
+              >
+                <Save className="h-3 w-3 mr-1" />
+                {createLoading ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
