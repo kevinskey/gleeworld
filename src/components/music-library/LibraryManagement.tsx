@@ -167,7 +167,9 @@ export const LibraryManagement = () => {
 
 
   // Check if user can access import tools (admins and librarians only)
-  const canAccessImportTools = profile?.role && ['admin', 'super-admin', 'librarian'].includes(profile.role);
+  const canAccessImportTools = profile?.is_super_admin || 
+    profile?.is_admin || 
+    (profile?.role && ['admin', 'super-admin', 'librarian'].includes(profile.role));
 
   return (
     <div className="container mx-auto p-2 sm:p-6 space-y-3 sm:space-y-6">
