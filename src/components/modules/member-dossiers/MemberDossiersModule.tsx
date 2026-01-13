@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Search, RefreshCw, Music, BarChart3, Upload, AlertTriangle } from "lucide-react";
+import { Users, Search, RefreshCw, Music, BarChart3, Upload, AlertTriangle, ArrowUpDown, X, Filter } from "lucide-react";
 import { MemberDossierCard } from "./MemberDossierCard";
 import { DirectorDossierView } from "./DirectorDossierView";
 import { MemberDossierAnalytics } from "./MemberDossierAnalytics";
 import { MemberDataUpload } from "./MemberDataUpload";
+import { Badge } from "@/components/ui/badge";
 
 interface MemberProfile {
   user_id: string;
@@ -84,6 +85,18 @@ interface MemberDossiersModuleProps {
   courseId?: string; // If provided, only show students enrolled in this course
 }
 
+type SortOption = 
+  | "name-asc" 
+  | "name-desc" 
+  | "class-year-desc" 
+  | "class-year-asc" 
+  | "satisfaction-desc" 
+  | "satisfaction-asc"
+  | "interview-submitted"
+  | "interview-missing"
+  | "join-date-desc"
+  | "join-date-asc";
+
 const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId }) => {
   const navigate = useNavigate();
   const [members, setMembers] = useState<MemberDossierData[]>([]);
@@ -91,6 +104,10 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [voicePartFilter, setVoicePartFilter] = useState<string>("all");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [interviewFilter, setInterviewFilter] = useState<string>("all");
+  const [classYearFilter, setClassYearFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("name-asc");
   const [selectedMember, setSelectedMember] = useState<MemberDossierData | null>(null);
   const [activeTab, setActiveTab] = useState("members");
   const [missingInterviews, setMissingInterviews] = useState<Array<{ name: string; email: string }>>([]);
@@ -193,22 +210,70 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
     fetchData();
   }, []);
 
-  // Filter members
+  // Filter and sort members
   const filteredMembers = useMemo(() => {
-    return members.filter(member => {
-      // Search filter
+    let result = members.filter(member => {
+      // Search filter - expanded to include more fields
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = !searchQuery || 
         member.profile.full_name?.toLowerCase().includes(searchLower) ||
-        member.profile.email?.toLowerCase().includes(searchLower);
+        member.profile.email?.toLowerCase().includes(searchLower) ||
+        member.profile.student_number?.toLowerCase().includes(searchLower) ||
+        member.profile.phone?.toLowerCase().includes(searchLower) ||
+        member.profile.role?.toLowerCase().includes(searchLower) ||
+        member.profile.exec_board_role?.toLowerCase().includes(searchLower);
 
       // Voice part filter
       const matchesVoicePart = voicePartFilter === "all" || 
         member.profile.voice_part === voicePartFilter;
 
-      return matchesSearch && matchesVoicePart;
+      // Role filter
+      const matchesRole = roleFilter === "all" || 
+        member.profile.role === roleFilter;
+
+      // Interview filter
+      const hasInterview = member.exitInterviews.length > 0;
+      const matchesInterview = interviewFilter === "all" || 
+        (interviewFilter === "submitted" && hasInterview) ||
+        (interviewFilter === "missing" && !hasInterview);
+
+      // Class year filter
+      const matchesClassYear = classYearFilter === "all" || 
+        member.profile.class_year?.toString() === classYearFilter;
+
+      return matchesSearch && matchesVoicePart && matchesRole && matchesInterview && matchesClassYear;
     });
-  }, [members, searchQuery, voicePartFilter]);
+
+    // Apply sorting
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "name-asc":
+          return (a.profile.full_name || "").localeCompare(b.profile.full_name || "");
+        case "name-desc":
+          return (b.profile.full_name || "").localeCompare(a.profile.full_name || "");
+        case "class-year-desc":
+          return (b.profile.class_year || 0) - (a.profile.class_year || 0);
+        case "class-year-asc":
+          return (a.profile.class_year || 0) - (b.profile.class_year || 0);
+        case "satisfaction-desc":
+          return (b.avgSatisfaction || 0) - (a.avgSatisfaction || 0);
+        case "satisfaction-asc":
+          return (a.avgSatisfaction || 0) - (b.avgSatisfaction || 0);
+        case "interview-submitted":
+          return b.exitInterviews.length - a.exitInterviews.length;
+        case "interview-missing":
+          return a.exitInterviews.length - b.exitInterviews.length;
+        case "join-date-desc":
+          return new Date(b.profile.join_date || 0).getTime() - new Date(a.profile.join_date || 0).getTime();
+        case "join-date-asc":
+          return new Date(a.profile.join_date || 0).getTime() - new Date(b.profile.join_date || 0).getTime();
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [members, searchQuery, voicePartFilter, roleFilter, interviewFilter, classYearFilter, sortBy]);
 
   // Get unique voice parts for filter
   const voiceParts = useMemo(() => {
@@ -218,6 +283,38 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
     });
     return Array.from(parts).sort();
   }, [members]);
+
+  // Get unique roles for filter
+  const roles = useMemo(() => {
+    const roleSet = new Set<string>();
+    members.forEach(m => {
+      if (m.profile.role) roleSet.add(m.profile.role);
+    });
+    return Array.from(roleSet).sort();
+  }, [members]);
+
+  // Get unique class years for filter
+  const classYears = useMemo(() => {
+    const years = new Set<number>();
+    members.forEach(m => {
+      if (m.profile.class_year) years.add(m.profile.class_year);
+    });
+    return Array.from(years).sort((a, b) => b - a);
+  }, [members]);
+
+  // Check if any filters are active
+  const hasActiveFilters = searchQuery || voicePartFilter !== "all" || roleFilter !== "all" || 
+    interviewFilter !== "all" || classYearFilter !== "all" || sortBy !== "name-asc";
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setVoicePartFilter("all");
+    setRoleFilter("all");
+    setInterviewFilter("all");
+    setClassYearFilter("all");
+    setSortBy("name-asc");
+  };
 
   // Stats
   const stats = useMemo(() => {
@@ -308,28 +405,128 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
 
           <TabsContent value="members" className="mt-4 space-y-4">
             {/* Search & Filters */}
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
+            <div className="space-y-3">
+              {/* Search Row */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search name, email, phone, student #..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                
+                {/* Sort Dropdown */}
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <ArrowUpDown className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name-asc">Name A-Z</SelectItem>
+                    <SelectItem value="name-desc">Name Z-A</SelectItem>
+                    <SelectItem value="class-year-desc">Class Year (Newest)</SelectItem>
+                    <SelectItem value="class-year-asc">Class Year (Oldest)</SelectItem>
+                    <SelectItem value="satisfaction-desc">Satisfaction (High)</SelectItem>
+                    <SelectItem value="satisfaction-asc">Satisfaction (Low)</SelectItem>
+                    <SelectItem value="interview-submitted">Has Interview First</SelectItem>
+                    <SelectItem value="interview-missing">Missing Interview First</SelectItem>
+                    <SelectItem value="join-date-desc">Recently Joined</SelectItem>
+                    <SelectItem value="join-date-asc">Oldest Members</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={voicePartFilter} onValueChange={setVoicePartFilter}>
-                <SelectTrigger className="w-full sm:w-[140px]">
-                  <Music className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Voice Part" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Parts</SelectItem>
-                  {voiceParts.map(part => (
-                    <SelectItem key={part} value={part}>{part}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+              {/* Filter Row */}
+              <div className="flex flex-wrap gap-2 items-center">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                
+                {/* Voice Part Filter */}
+                <Select value={voicePartFilter} onValueChange={setVoicePartFilter}>
+                  <SelectTrigger className="w-[130px] h-8 text-xs">
+                    <Music className="h-3 w-3 mr-1" />
+                    <SelectValue placeholder="Voice Part" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Parts</SelectItem>
+                    {voiceParts.map(part => (
+                      <SelectItem key={part} value={part}>{part}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Role Filter */}
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger className="w-[120px] h-8 text-xs">
+                    <SelectValue placeholder="Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    {roles.map(role => (
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Interview Status Filter */}
+                <Select value={interviewFilter} onValueChange={setInterviewFilter}>
+                  <SelectTrigger className="w-[140px] h-8 text-xs">
+                    <SelectValue placeholder="Interview Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Interviews</SelectItem>
+                    <SelectItem value="submitted">Submitted</SelectItem>
+                    <SelectItem value="missing">Missing</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Class Year Filter */}
+                <Select value={classYearFilter} onValueChange={setClassYearFilter}>
+                  <SelectTrigger className="w-[110px] h-8 text-xs">
+                    <SelectValue placeholder="Class Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Years</SelectItem>
+                    {classYears.map(year => (
+                      <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Clear Filters Button */}
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs px-2">
+                    <X className="h-3 w-3 mr-1" />
+                    Clear
+                  </Button>
+                )}
+              </div>
+
+              {/* Active Filters Summary */}
+              {hasActiveFilters && (
+                <div className="flex flex-wrap gap-1">
+                  {searchQuery && (
+                    <Badge variant="secondary" className="text-xs">Search: "{searchQuery}"</Badge>
+                  )}
+                  {voicePartFilter !== "all" && (
+                    <Badge variant="secondary" className="text-xs">Part: {voicePartFilter}</Badge>
+                  )}
+                  {roleFilter !== "all" && (
+                    <Badge variant="secondary" className="text-xs">Role: {roleFilter}</Badge>
+                  )}
+                  {interviewFilter !== "all" && (
+                    <Badge variant="secondary" className="text-xs">Interview: {interviewFilter}</Badge>
+                  )}
+                  {classYearFilter !== "all" && (
+                    <Badge variant="secondary" className="text-xs">Class: {classYearFilter}</Badge>
+                  )}
+                  <span className="text-xs text-muted-foreground ml-2">
+                    Showing {filteredMembers.length} of {members.length}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Member List */}
