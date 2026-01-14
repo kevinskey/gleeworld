@@ -665,9 +665,9 @@ export const RadioManagement = () => {
         <TabsContent value="dashboard" className="space-y-4 mt-4">
           {/* Station Selector for DJ Transport Control */}
           {channels.length > 1 && (
-            <div className="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-              <Radio className="h-4 w-4 text-primary" />
-              <span className="text-sm text-muted-foreground">Controlling:</span>
+            <div className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+              <Radio className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Controlling:</span>
               <Select
                 value={selectedChannel?.id || ''}
                 onValueChange={(id) => {
@@ -675,12 +675,12 @@ export const RadioManagement = () => {
                   if (channel) selectChannel(channel);
                 }}
               >
-                <SelectTrigger className="w-[200px] h-8 bg-slate-900 border-slate-600">
+                <SelectTrigger className="w-[220px] h-9 bg-slate-900 border-slate-600">
                   <SelectValue placeholder="Select station..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-slate-900 border-slate-600 z-50 max-h-[300px]">
                   {channels.map((channel) => (
-                    <SelectItem key={channel.id} value={channel.id}>
+                    <SelectItem key={channel.id} value={channel.id} className="text-white hover:bg-slate-700">
                       {channel.name}
                     </SelectItem>
                   ))}
