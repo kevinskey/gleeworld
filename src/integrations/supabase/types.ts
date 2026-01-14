@@ -1991,6 +1991,57 @@ export type Database = {
         }
         Relationships: []
       }
+      class_journal_sessions: {
+        Row: {
+          close_time: string
+          course_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          session_date: string
+          song_artist: string | null
+          song_title: string | null
+          song_url: string | null
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          close_time?: string
+          course_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          session_date?: string
+          song_artist?: string | null
+          song_title?: string | null
+          song_url?: string | null
+          start_time?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          close_time?: string
+          course_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          session_date?: string
+          song_artist?: string | null
+          song_title?: string | null
+          song_url?: string | null
+          start_time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       class_notes: {
         Row: {
           content: string | null
@@ -2041,6 +2092,80 @@ export type Database = {
           visibility?: string
         }
         Relationships: []
+      }
+      class_session_journals: {
+        Row: {
+          close_time: string | null
+          content: string
+          course_id: string
+          created_at: string
+          grade: number | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          instructor_feedback: string | null
+          is_locked: boolean | null
+          session_date: string
+          session_id: string | null
+          song_playing: string | null
+          started_at: string | null
+          student_id: string
+          submitted_at: string | null
+          title: string | null
+          updated_at: string
+          word_count: number | null
+        }
+        Insert: {
+          close_time?: string | null
+          content: string
+          course_id: string
+          created_at?: string
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          instructor_feedback?: string | null
+          is_locked?: boolean | null
+          session_date?: string
+          session_id?: string | null
+          song_playing?: string | null
+          started_at?: string | null
+          student_id: string
+          submitted_at?: string | null
+          title?: string | null
+          updated_at?: string
+          word_count?: number | null
+        }
+        Update: {
+          close_time?: string | null
+          content?: string
+          course_id?: string
+          created_at?: string
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          instructor_feedback?: string | null
+          is_locked?: boolean | null
+          session_date?: string
+          session_id?: string | null
+          song_playing?: string | null
+          started_at?: string | null
+          student_id?: string
+          submitted_at?: string | null
+          title?: string | null
+          updated_at?: string
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_journal_session"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "class_journal_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cohort_members: {
         Row: {

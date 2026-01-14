@@ -26,8 +26,7 @@ import { CourseHandbook } from './handbook/CourseHandbook';
 import { StudentDossierHome } from './StudentDossierHome';
 import { ElectionsModule } from './elections/ElectionsModule';
 import { CourseModules } from './CourseModules';
-
-// Lazy loaded components for performance
+import { ClassSessionJournals } from './journals/ClassSessionJournals';
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
   default: m.AcademyPollSystem
 })));
@@ -372,20 +371,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             )}
 
 
-            {activeTab === 'journals' && <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <PenLine className="h-5 w-5 text-primary" />
-                    Listening Journals
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4">
-                    Submit your listening journals for each week's assigned music. Each journal requires a minimum of 250 words.
-                  </p>
-                  <p className="text-muted-foreground">No journals assigned yet.</p>
-                </CardContent>
-              </Card>}
+            {activeTab === 'journals' && (
+              <ClassSessionJournals courseId={course.id} isAdmin={isAdmin} />
+            )}
 
             {activeTab === 'modules' && (
               <CourseModules courseId={course.id} isEnrolled={isEnrolled || isAdmin} isAdmin={isAdmin} />
