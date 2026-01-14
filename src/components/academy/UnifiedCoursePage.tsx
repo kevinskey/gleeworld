@@ -198,18 +198,16 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             ] : [
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
+              { icon: Calendar, label: 'Calendar', tab: 'calendar' },
               { icon: Bell, label: 'Announcements', tab: 'announcements' },
               { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
               { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
               { icon: PenLine, label: 'Journals', tab: 'journals' },
               { icon: FileCheck, label: 'Tests', tab: 'tests' },
               { icon: BarChart, label: 'Polls', tab: 'polls' },
-              { icon: Brain, label: 'AI Groups', tab: 'ai-groups' },
-              { icon: Library, label: 'Resources', tab: 'resources' },
               { icon: Trophy, label: 'Grades', tab: 'grades' },
               { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
               { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
-              { icon: Calendar, label: 'Calendar', tab: 'calendar' },
             ]).map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 <item.icon className="h-3 w-3 flex-shrink-0" />
                 <span className="text-xs leading-tight">{item.label}</span>
