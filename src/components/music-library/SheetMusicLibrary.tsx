@@ -261,9 +261,10 @@ export const SheetMusicLibrary = ({
       if (columns === 3) return 'grid-cols-3';
       return 'grid-cols-2';
     }
+    // Desktop - responsive grid
     if (columns === 1) return 'grid-cols-1';
-    if (columns === 2) return 'grid-cols-2';
-    if (columns === 3) return 'grid-cols-3';
+    if (columns === 2) return 'grid-cols-1 sm:grid-cols-2';
+    if (columns === 3) return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3';
     return 'grid-cols-1';
   };
 
