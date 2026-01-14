@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown } from 'lucide-react';
+import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCourseTA } from '@/hooks/useCourseTA';
@@ -654,24 +655,9 @@ export const InstructorConsole = () => {
                 </CardContent>
               </Card>}
 
-            {activeTab === 'videos' && <Card>
-                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
-                    <Video className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Video Library
-                  </CardTitle>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Upload and manage video resources</p>
-                </CardHeader>
-                <CardContent className="p-2 sm:p-4 md:p-6">
-                  <div className="text-center py-8">
-                    <Video className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                    <p className="text-muted-foreground mb-4">Video library manager coming soon</p>
-                    <Button variant="outline" onClick={() => navigate('/classes/mus240?section=videos')}>
-                      View Video Library
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>}
+            {activeTab === 'videos' && (
+              <CourseVideoLibrary courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" isInstructor={true} />
+            )}
 
             {activeTab === 'audio' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
