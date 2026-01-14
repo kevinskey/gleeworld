@@ -27,6 +27,7 @@ import { StudentDossierHome } from './StudentDossierHome';
 import { ElectionsModule } from './elections/ElectionsModule';
 import { CourseModules } from './CourseModules';
 import { ClassSessionJournals } from './journals/ClassSessionJournals';
+import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants';
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
   default: m.AcademyPollSystem
 })));
@@ -50,6 +51,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   const {
     currentSemester
   } = useMus240SemesterSafe();
+  
+  // Fetch teaching assistants for this course
+  const { data: teachingAssistants = [] } = useCourseTeachingAssistants(course.courseCode);
 
   // Detect if URL contains /handbook to auto-switch tab
   const getInitialTab = () => {
@@ -270,6 +274,23 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                     <span>kjohns10@spelman.edu</span>
                     <span className="hidden lg:inline">Office: Fine Arts 105</span>
                     <span className="hidden lg:inline">Office Hours: MWF 3-5 PM</span>
+                    {teachingAssistants.length > 0 && (
+                      <>
+                        <span className="text-white/50">|</span>
+                        <span className="flex items-center gap-1">
+                          <GraduationCap className="h-3 w-3" />
+                          <span className="font-medium text-white/90">
+                            TA{teachingAssistants.length > 1 ? 's' : ''}:
+                          </span>
+                          {teachingAssistants.map((ta, idx) => (
+                            <span key={ta.id}>
+                              {ta.profile?.full_name || 'TA'}
+                              {idx < teachingAssistants.length - 1 ? ', ' : ''}
+                            </span>
+                          ))}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
                 <Button 
