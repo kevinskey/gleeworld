@@ -41,6 +41,7 @@ import { SemesterManager } from '@/components/admin/SemesterManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ModuleToggleManager } from '@/components/mus240/instructor/ModuleToggleManager';
+import { Mus240CalendarManager } from '@/components/mus240/instructor/Mus240CalendarManager';
 export const InstructorConsole = () => {
   const {
     isAdmin,
@@ -631,7 +632,8 @@ export const InstructorConsole = () => {
                 </CardContent>
               </Card>}
 
-            {activeTab === 'calendar' && <Card>
+            {activeTab === 'calendar' && (
+              <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
                     <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -640,15 +642,10 @@ export const InstructorConsole = () => {
                   <p className="text-xs sm:text-sm text-muted-foreground mt-1">Schedule course events and deadlines</p>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4 md:p-6">
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                    <p className="text-muted-foreground mb-4">Calendar manager coming soon</p>
-                    <Button variant="outline" onClick={() => navigate('/classes/mus240?section=calendar')}>
-                      View Course Calendar
-                    </Button>
-                  </div>
+                  <Mus240CalendarManager />
                 </CardContent>
-              </Card>}
+              </Card>
+            )}
 
             {activeTab === 'videos' && (
               <CourseVideoLibrary courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" isInstructor={true} />
