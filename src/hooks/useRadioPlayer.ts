@@ -713,8 +713,11 @@ export const useRadioPlayer = () => {
   // Skip to next track
   const skipTrack = useCallback(async () => {
     try {
+      const currentStationId = state.currentStationId;
+      console.log('skipTrack: Using station ID:', currentStationId);
+      
       // Fetch "playing_next" BEFORE skipping so we can optimistically update the LCD
-      const npBefore = await azuraCastService.getNowPlaying();
+      const npBefore = await azuraCastService.getNowPlaying(currentStationId);
       const nextSong = npBefore?.playing_next?.song;
 
       // Optimistically update the display with the upcoming track
@@ -730,8 +733,8 @@ export const useRadioPlayer = () => {
         }));
       }
 
-      // Now actually skip the track
-      await azuraCastService.skipTrack();
+      // Now actually skip the track on the correct station
+      await azuraCastService.skipTrack(currentStationId);
 
       toast({
         title: 'Skipped',
@@ -748,7 +751,7 @@ export const useRadioPlayer = () => {
         variant: 'destructive',
       });
     }
-  }, [toast, refreshNowPlaying, sanitizeArtist]);
+  }, [toast, refreshNowPlaying, sanitizeArtist, state.currentStationId]);
 
   return {
     ...state,
