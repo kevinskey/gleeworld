@@ -615,6 +615,87 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Featured Channel - Black Music Scholar at top */}
+          {(() => {
+            const blackMusicScholar = channels.find(ch => 
+              ch.channel_name?.toLowerCase().includes('black music scholar')
+            );
+            const bmsPlaylists = blackMusicScholar ? getChannelPlaylists(blackMusicScholar.id) : [];
+            
+            if (blackMusicScholar) {
+              return (
+                <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-2 border-primary/20 rounded-xl p-4 mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-red-600 text-white rounded-full p-3 shadow-lg">
+                      <Youtube className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-lg">{blackMusicScholar.channel_name}</h3>
+                        <Badge variant="secondary" className="text-xs">Featured</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {blackMusicScholar.video_count} videos • {blackMusicScholar.subscriber_count?.toLocaleString()} subscribers
+                        {bmsPlaylists.length > 0 && ` • ${bmsPlaylists.length} playlists`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => syncChannel(blackMusicScholar.id)}
+                        disabled={syncing}
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-1 ${syncing ? 'animate-spin' : ''}`} />
+                        Sync
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => window.open(blackMusicScholar.channel_url, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        Visit
+                      </Button>
+                    </div>
+                  </div>
+                  {bmsPlaylists.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-primary/10">
+                      <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <ListVideo className="h-4 w-4" />
+                        Playlists ({bmsPlaylists.length})
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {bmsPlaylists.slice(0, 6).map(playlist => (
+                          <Button
+                            key={playlist.id}
+                            variant="secondary"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => window.open(playlist.playlist_url, '_blank')}
+                          >
+                            {playlist.title}
+                          </Button>
+                        ))}
+                        {bmsPlaylists.length > 6 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => toggleChannelExpansion(blackMusicScholar.id)}
+                          >
+                            +{bmsPlaylists.length - 6} more
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           {/* Search and Filter */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
