@@ -49,6 +49,7 @@ import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 import { MessengerAdminModule } from '../modules/MessengerAdminModule';
 import { AmazonAffiliateModule } from '../modules/AmazonAffiliateModule';
 import { ProductManagement } from '@/pages/ProductManagement';
+import { CourseAttendanceLedger } from '../attendance/CourseAttendanceLedger';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -75,6 +76,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <AttendanceModule />;
       case 'attendance-management':
         return <AttendanceModule />;
+      case 'course-attendance-ledger':
+        return <CourseAttendanceLedger />;
       case 'radio':
         return <RadioModule />;
       case 'radio-management':
