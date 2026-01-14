@@ -8,15 +8,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { 
   PenLine, Clock, Save, Lock, Unlock, Eye, Music2, 
   Calendar, AlertCircle, CheckCircle, Plus, Play, 
-  FileText, Users, Timer, Send
+  FileText, Users, Timer, Send, Settings, Trash2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { format, parseISO, isToday, differenceInSeconds } from 'date-fns';
+import { format, parseISO, isToday, differenceInSeconds, getDay } from 'date-fns';
 
 interface JournalSession {
   id: string;
@@ -57,12 +59,58 @@ interface ClassSessionJournalsProps {
   isAdmin?: boolean;
 }
 
+// Check if today is a class day (MWF = Monday, Wednesday, Friday)
+const isClassDay = (): boolean => {
+  const dayOfWeek = getDay(new Date());
+  // 1 = Monday, 3 = Wednesday, 5 = Friday
+  return dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5;
+};
+
+// Check if current time is within journal window
+const isWithinJournalWindow = (startTime: string, closeTime: string): boolean => {
+  const now = new Date();
+  const [startHour, startMinute] = startTime.split(':').map(Number);
+  const [closeHour, closeMinute] = closeTime.split(':').map(Number);
+  
+  const startDate = new Date();
+  startDate.setHours(startHour, startMinute, 0, 0);
+  
+  const closeDate = new Date();
+  closeDate.setHours(closeHour, closeMinute, 0, 0);
+  
+  return now >= startDate && now <= closeDate;
+};
+
+// Get time until window opens or closes
+const getTimeStatus = (startTime: string, closeTime: string): { 
+  status: 'before' | 'active' | 'closed'; 
+  secondsRemaining: number;
+} => {
+  const now = new Date();
+  const [startHour, startMinute] = startTime.split(':').map(Number);
+  const [closeHour, closeMinute] = closeTime.split(':').map(Number);
+  
+  const startDate = new Date();
+  startDate.setHours(startHour, startMinute, 0, 0);
+  
+  const closeDate = new Date();
+  closeDate.setHours(closeHour, closeMinute, 0, 0);
+  
+  if (now < startDate) {
+    return { status: 'before', secondsRemaining: differenceInSeconds(startDate, now) };
+  } else if (now <= closeDate) {
+    return { status: 'active', secondsRemaining: differenceInSeconds(closeDate, now) };
+  } else {
+    return { status: 'closed', secondsRemaining: 0 };
+  }
+};
+
 export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({ 
   courseId, 
   isAdmin = false 
 }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('write');
+  const [activeTab, setActiveTab] = useState(isAdmin ? 'manage' : 'write');
   const [sessions, setSessions] = useState<JournalSession[]>([]);
   const [myJournals, setMyJournals] = useState<StudentJournal[]>([]);
   const [allJournals, setAllJournals] = useState<StudentJournal[]>([]);
@@ -71,8 +119,7 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
   const [journalContent, setJournalContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-  const [isLocked, setIsLocked] = useState(false);
+  const [timeStatus, setTimeStatus] = useState<{ status: 'before' | 'active' | 'closed'; secondsRemaining: number } | null>(null);
 
   // Create session dialog state
   const [createSessionOpen, setCreateSessionOpen] = useState(false);
@@ -82,6 +129,7 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
     song_title: '',
     song_artist: '',
     song_url: '',
+    start_time: '13:05',
     close_time: '13:10'
   });
 
@@ -92,7 +140,7 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
     try {
       setLoading(true);
       
-      // Fetch active sessions for this course
+      // Fetch all sessions for this course
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('class_journal_sessions')
         .select('*')
@@ -102,7 +150,7 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
       if (sessionsError) throw sessionsError;
       setSessions(sessionsData || []);
       
-      // Find today's active session
+      // Find today's active session (only on class days)
       const todaySession = sessionsData?.find(s => 
         isToday(parseISO(s.session_date)) && s.is_active
       );
@@ -127,7 +175,6 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
         if (todayJournal) {
           setCurrentJournal(todayJournal);
           setJournalContent(todayJournal.content);
-          setIsLocked(todayJournal.is_locked);
         }
       }
       
@@ -153,34 +200,24 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
     fetchData();
   }, [fetchData]);
 
-  // Timer effect for auto-lock
+  // Timer effect for time window checking
   useEffect(() => {
-    if (!activeSession || isLocked) return;
+    if (!activeSession) return;
     
     const checkTime = () => {
-      const now = new Date();
-      const [closeHour, closeMinute] = activeSession.close_time.split(':').map(Number);
-      const closeDate = new Date();
-      closeDate.setHours(closeHour, closeMinute, 0, 0);
+      const status = getTimeStatus(activeSession.start_time, activeSession.close_time);
+      setTimeStatus(status);
       
-      const diff = differenceInSeconds(closeDate, now);
-      
-      if (diff <= 0) {
-        setIsLocked(true);
-        setTimeRemaining(0);
-        // Auto-submit if there's content
-        if (journalContent.trim() && currentJournal) {
-          handleSubmit(true);
-        }
-      } else {
-        setTimeRemaining(diff);
+      // Auto-submit when time closes
+      if (status.status === 'closed' && journalContent.trim() && currentJournal && !currentJournal.is_locked) {
+        handleSubmit(true);
       }
     };
     
     checkTime();
     const interval = setInterval(checkTime, 1000);
     return () => clearInterval(interval);
-  }, [activeSession, isLocked, journalContent, currentJournal]);
+  }, [activeSession, journalContent, currentJournal]);
 
   // Word count
   const wordCount = journalContent.trim().split(/\s+/).filter(Boolean).length;
@@ -192,9 +229,12 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Check if editing is allowed
+  const isEditingAllowed = timeStatus?.status === 'active' && activeSession && isClassDay();
+
   // Start or continue journal
   const handleStartJournal = async () => {
-    if (!user || !activeSession) return;
+    if (!user || !activeSession || !isEditingAllowed) return;
     
     try {
       // Check if journal already exists
@@ -235,7 +275,7 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
 
   // Save journal (auto-save or manual)
   const handleSave = async (showToast = true) => {
-    if (!currentJournal || isLocked) return;
+    if (!currentJournal || !isEditingAllowed) return;
     
     try {
       setSaving(true);
@@ -280,7 +320,6 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
       
       if (error) throw error;
       
-      setIsLocked(true);
       setCurrentJournal(prev => prev ? { ...prev, is_locked: true, submitted_at: new Date().toISOString() } : null);
       
       toast.success(autoSubmit ? 'Time expired - journal auto-submitted' : 'Journal submitted!');
@@ -308,7 +347,7 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
           song_artist: newSession.song_artist || null,
           song_url: newSession.song_url || null,
           session_date: new Date().toISOString().split('T')[0],
-          start_time: new Date().toTimeString().slice(0, 8),
+          start_time: newSession.start_time + ':00',
           close_time: newSession.close_time + ':00',
           is_active: true,
           created_by: user.id
@@ -324,6 +363,7 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
         song_title: '',
         song_artist: '',
         song_url: '',
+        start_time: '13:05',
         close_time: '13:10'
       });
       fetchData();
@@ -333,16 +373,52 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
     }
   };
 
-  // Auto-save every 30 seconds
+  // Toggle session active status
+  const handleToggleSession = async (sessionId: string, isActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('class_journal_sessions')
+        .update({ is_active: isActive })
+        .eq('id', sessionId);
+      
+      if (error) throw error;
+      toast.success(isActive ? 'Session activated' : 'Session deactivated');
+      fetchData();
+    } catch (error) {
+      console.error('Error toggling session:', error);
+      toast.error('Failed to update session');
+    }
+  };
+
+  // Delete session
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!confirm('Delete this session? This will also delete all student journals for this session.')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('class_journal_sessions')
+        .delete()
+        .eq('id', sessionId);
+      
+      if (error) throw error;
+      toast.success('Session deleted');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      toast.error('Failed to delete session');
+    }
+  };
+
+  // Auto-save every 30 seconds when editing is allowed
   useEffect(() => {
-    if (!currentJournal || isLocked || !journalContent) return;
+    if (!currentJournal || !isEditingAllowed || !journalContent) return;
     
     const autoSave = setTimeout(() => {
       handleSave(false);
     }, 30000);
     
     return () => clearTimeout(autoSave);
-  }, [journalContent, currentJournal, isLocked]);
+  }, [journalContent, currentJournal, isEditingAllowed]);
 
   if (loading) {
     return (
@@ -357,257 +433,189 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {/* Active Session Banner */}
-      {activeSession && !isLocked && (
-        <Card className="border-primary bg-primary/5">
-          <CardContent className="py-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-primary text-primary-foreground rounded-full p-2">
-                  <PenLine className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">{activeSession.title}</h3>
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    {activeSession.song_title && (
-                      <>
-                        <Music2 className="h-3 w-3" />
-                        {activeSession.song_title}
-                        {activeSession.song_artist && ` - ${activeSession.song_artist}`}
-                      </>
-                    )}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                {timeRemaining !== null && timeRemaining > 0 && (
-                  <Badge variant={timeRemaining < 300 ? 'destructive' : 'secondary'} className="text-sm">
-                    <Timer className="h-3 w-3 mr-1" />
-                    {formatTimeRemaining(timeRemaining)} remaining
-                  </Badge>
-                )}
-                {!currentJournal ? (
-                  <Button onClick={handleStartJournal}>
-                    <Play className="h-4 w-4 mr-2" />
-                    Start Journaling
-                  </Button>
-                ) : (
-                  <Button variant="outline" onClick={() => setActiveTab('write')}>
-                    <PenLine className="h-4 w-4 mr-2" />
-                    Continue Writing
-                  </Button>
-                )}
-              </div>
-            </div>
+  // Student view - show active session or waiting message
+  const renderStudentView = () => {
+    if (!activeSession) {
+      return (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Active Session</h3>
+            <p className="text-muted-foreground">
+              There's no journal session for today. Check back during class on Monday, Wednesday, or Friday.
+            </p>
           </CardContent>
         </Card>
-      )}
+      );
+    }
 
-      {/* Time Expired Banner */}
-      {activeSession && isLocked && (
+    if (!isClassDay()) {
+      return (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Not a Class Day</h3>
+            <p className="text-muted-foreground">
+              Journaling is available Monday, Wednesday, and Friday during class.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (timeStatus?.status === 'before') {
+      return (
+        <Card className="border-blue-500 bg-blue-50 dark:bg-blue-900/20">
+          <CardContent className="py-8 text-center">
+            <Clock className="h-12 w-12 mx-auto text-blue-600 mb-4" />
+            <h3 className="text-lg font-medium mb-2 text-blue-800 dark:text-blue-200">
+              Journaling Opens Soon
+            </h3>
+            <p className="text-blue-700 dark:text-blue-300 mb-4">
+              Today's session: <strong>{activeSession.title}</strong>
+            </p>
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              <Timer className="h-4 w-4 mr-2" />
+              Opens in {formatTimeRemaining(timeStatus.secondsRemaining)}
+            </Badge>
+            {activeSession.song_title && (
+              <p className="mt-4 text-sm text-blue-600 dark:text-blue-400 flex items-center justify-center gap-2">
+                <Music2 className="h-4 w-4" />
+                {activeSession.song_title} {activeSession.song_artist && `- ${activeSession.song_artist}`}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (timeStatus?.status === 'closed') {
+      return (
         <Card className="border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-          <CardContent className="py-4">
-            <div className="flex items-center gap-3">
-              <Lock className="h-5 w-5 text-amber-600" />
+          <CardContent className="py-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Lock className="h-6 w-6 text-amber-600" />
               <div>
                 <h3 className="font-semibold text-amber-800 dark:text-amber-200">Journaling Closed</h3>
                 <p className="text-sm text-amber-700 dark:text-amber-300">
-                  Today's journal session has ended at {activeSession.close_time.slice(0, 5)}.
+                  Today's session ended at {activeSession.close_time.slice(0, 5)}.
                 </p>
               </div>
             </div>
+            {currentJournal && (
+              <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg">
+                <p className="text-sm font-medium mb-2">Your submission:</p>
+                <p className="text-sm text-muted-foreground line-clamp-3">{currentJournal.content}</p>
+                <p className="text-xs text-muted-foreground mt-2">{currentJournal.word_count} words</p>
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
+      );
+    }
 
-      {/* Main Content */}
+    // Active writing window
+    return (
+      <Card className="border-primary">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary text-primary-foreground rounded-full p-2 animate-pulse">
+                <PenLine className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">{activeSession.title}</CardTitle>
+                {activeSession.song_title && (
+                  <CardDescription className="flex items-center gap-1">
+                    <Music2 className="h-3 w-3" />
+                    {activeSession.song_title} {activeSession.song_artist && `- ${activeSession.song_artist}`}
+                  </CardDescription>
+                )}
+              </div>
+            </div>
+            <Badge variant={timeStatus!.secondsRemaining < 120 ? 'destructive' : 'secondary'} className="text-sm">
+              <Timer className="h-3 w-3 mr-1" />
+              {formatTimeRemaining(timeStatus!.secondsRemaining)}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {activeSession.description && (
+            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+              {activeSession.description}
+            </p>
+          )}
+          
+          {!currentJournal ? (
+            <div className="text-center py-8">
+              <Button size="lg" onClick={handleStartJournal}>
+                <Play className="h-5 w-5 mr-2" />
+                Start Journaling
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Textarea
+                value={journalContent}
+                onChange={(e) => setJournalContent(e.target.value)}
+                placeholder="Write your thoughts as you listen to the music..."
+                className="min-h-[250px] resize-y text-base"
+                autoFocus
+              />
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  {wordCount} words
+                  {wordCount < 50 && (
+                    <span className="text-amber-600 ml-2">(Minimum 50 words recommended)</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => handleSave()} disabled={saving}>
+                    <Save className="h-4 w-4 mr-2" />
+                    {saving ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button onClick={() => handleSubmit()} disabled={saving || wordCount < 10}>
+                    <Send className="h-4 w-4 mr-2" />
+                    Submit
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex items-center justify-between mb-4">
-          <TabsList>
-            <TabsTrigger value="write" className="gap-2">
-              <PenLine className="h-4 w-4" />
-              Write
-            </TabsTrigger>
-            <TabsTrigger value="history" className="gap-2">
-              <FileText className="h-4 w-4" />
-              My Journals
-            </TabsTrigger>
-            {isAdmin && (
+        <TabsList>
+          <TabsTrigger value="write" className="gap-2">
+            <PenLine className="h-4 w-4" />
+            Write
+          </TabsTrigger>
+          <TabsTrigger value="history" className="gap-2">
+            <FileText className="h-4 w-4" />
+            My Journals
+          </TabsTrigger>
+          {isAdmin && (
+            <>
+              <TabsTrigger value="manage" className="gap-2">
+                <Settings className="h-4 w-4" />
+                Manage Sessions
+              </TabsTrigger>
               <TabsTrigger value="all" className="gap-2">
                 <Users className="h-4 w-4" />
                 All Submissions
               </TabsTrigger>
-            )}
-          </TabsList>
-          
-          {isAdmin && (
-            <Dialog open={createSessionOpen} onOpenChange={setCreateSessionOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Session
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Journal Session</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Session Title</Label>
-                    <Input
-                      value={newSession.title}
-                      onChange={(e) => setNewSession(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder={`Class Journal - ${format(new Date(), 'MMM d, yyyy')}`}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Description (optional)</Label>
-                    <Textarea
-                      value={newSession.description}
-                      onChange={(e) => setNewSession(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="What students should focus on..."
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Song Title</Label>
-                      <Input
-                        value={newSession.song_title}
-                        onChange={(e) => setNewSession(prev => ({ ...prev, song_title: e.target.value }))}
-                        placeholder="Song being played"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Artist</Label>
-                      <Input
-                        value={newSession.song_artist}
-                        onChange={(e) => setNewSession(prev => ({ ...prev, song_artist: e.target.value }))}
-                        placeholder="Artist name"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Close Time</Label>
-                    <Input
-                      type="time"
-                      value={newSession.close_time}
-                      onChange={(e) => setNewSession(prev => ({ ...prev, close_time: e.target.value }))}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Journals will auto-submit at this time
-                    </p>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setCreateSessionOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreateSession}>
-                    Create Session
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            </>
           )}
-        </div>
+        </TabsList>
 
         {/* Write Tab */}
         <TabsContent value="write">
-          {currentJournal && activeSession ? (
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{activeSession.title}</CardTitle>
-                    {activeSession.description && (
-                      <CardDescription>{activeSession.description}</CardDescription>
-                    )}
-                  </div>
-                  {isLocked ? (
-                    <Badge variant="secondary">
-                      <Lock className="h-3 w-3 mr-1" />
-                      Submitted
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">
-                      <Unlock className="h-3 w-3 mr-1" />
-                      In Progress
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  value={journalContent}
-                  onChange={(e) => setJournalContent(e.target.value)}
-                  placeholder="Write your thoughts as you listen to the music..."
-                  className="min-h-[300px] resize-y"
-                  disabled={isLocked}
-                />
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    {wordCount} words
-                    {wordCount < 50 && !isLocked && (
-                      <span className="text-amber-600 ml-2">
-                        (Minimum 50 words recommended)
-                      </span>
-                    )}
-                  </div>
-                  {!isLocked && (
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => handleSave()} disabled={saving}>
-                        <Save className="h-4 w-4 mr-2" />
-                        {saving ? 'Saving...' : 'Save Draft'}
-                      </Button>
-                      <Button onClick={() => handleSubmit()} disabled={saving || wordCount < 10}>
-                        <Send className="h-4 w-4 mr-2" />
-                        Submit
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Instructor Feedback */}
-                {currentJournal.instructor_feedback && (
-                  <Card className="bg-muted/50 mt-4">
-                    <CardContent className="py-4">
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        Instructor Feedback
-                        {currentJournal.grade && (
-                          <Badge className="ml-2">{currentJournal.grade}/100</Badge>
-                        )}
-                      </h4>
-                      <p className="text-sm">{currentJournal.instructor_feedback}</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </CardContent>
-            </Card>
-          ) : activeSession ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <PenLine className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Ready to Journal</h3>
-                <p className="text-muted-foreground mb-4">
-                  Click "Start Journaling" above to begin writing your thoughts.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No Active Session</h3>
-                <p className="text-muted-foreground">
-                  There's no active journal session right now. Check back during class.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          {renderStudentView()}
         </TabsContent>
 
         {/* History Tab */}
@@ -674,6 +682,161 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Manage Sessions Tab (Admin) */}
+        {isAdmin && (
+          <TabsContent value="manage">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg">Journal Sessions</CardTitle>
+                    <CardDescription>Create and manage journal sessions for class</CardDescription>
+                  </div>
+                  <Dialog open={createSessionOpen} onOpenChange={setCreateSessionOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Session
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create Journal Session</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label>Session Title</Label>
+                          <Input
+                            value={newSession.title}
+                            onChange={(e) => setNewSession(prev => ({ ...prev, title: e.target.value }))}
+                            placeholder={`Class Journal - ${format(new Date(), 'MMM d, yyyy')}`}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Prompt/Description (optional)</Label>
+                          <Textarea
+                            value={newSession.description}
+                            onChange={(e) => setNewSession(prev => ({ ...prev, description: e.target.value }))}
+                            placeholder="What students should focus on while listening..."
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Song Title</Label>
+                            <Input
+                              value={newSession.song_title}
+                              onChange={(e) => setNewSession(prev => ({ ...prev, song_title: e.target.value }))}
+                              placeholder="Song being played"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Artist</Label>
+                            <Input
+                              value={newSession.song_artist}
+                              onChange={(e) => setNewSession(prev => ({ ...prev, song_artist: e.target.value }))}
+                              placeholder="Artist name"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Start Time</Label>
+                            <Input
+                              type="time"
+                              value={newSession.start_time}
+                              onChange={(e) => setNewSession(prev => ({ ...prev, start_time: e.target.value }))}
+                            />
+                            <p className="text-xs text-muted-foreground">When journaling opens</p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Close Time</Label>
+                            <Input
+                              type="time"
+                              value={newSession.close_time}
+                              onChange={(e) => setNewSession(prev => ({ ...prev, close_time: e.target.value }))}
+                            />
+                            <p className="text-xs text-muted-foreground">Auto-submit time</p>
+                          </div>
+                        </div>
+                        <div className="bg-muted/50 p-3 rounded-md">
+                          <p className="text-sm text-muted-foreground">
+                            📅 Sessions are active on <strong>MWF</strong> (Monday, Wednesday, Friday)<br />
+                            ⏰ Default window: <strong>1:05 PM - 1:10 PM</strong>
+                          </p>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setCreateSessionOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleCreateSession}>
+                          Create Session
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {sessions.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No sessions created yet. Create your first session to start journaling.
+                  </p>
+                ) : (
+                  <ScrollArea className="h-[400px]">
+                    <div className="space-y-3">
+                      {sessions.map(session => (
+                        <Card key={session.id} className={session.is_active ? 'border-primary' : ''}>
+                          <CardContent className="py-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-medium">{session.title}</h4>
+                                  {isToday(parseISO(session.session_date)) && session.is_active && (
+                                    <Badge variant="default" className="text-xs">Today</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {format(parseISO(session.session_date), 'EEEE, MMM d')} • 
+                                  {session.start_time.slice(0, 5)} - {session.close_time.slice(0, 5)}
+                                </p>
+                                {session.song_title && (
+                                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                    <Music2 className="h-3 w-3" />
+                                    {session.song_title}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                  <Switch
+                                    checked={session.is_active}
+                                    onCheckedChange={(checked) => handleToggleSession(session.id, checked)}
+                                  />
+                                  <span className="text-sm text-muted-foreground">
+                                    {session.is_active ? 'Active' : 'Inactive'}
+                                  </span>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => handleDeleteSession(session.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* All Submissions Tab (Admin) */}
         {isAdmin && (
