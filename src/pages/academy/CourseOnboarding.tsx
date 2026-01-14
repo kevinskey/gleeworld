@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   BookOpen, 
   Clock, 
@@ -16,7 +18,8 @@ import {
   CheckCircle2,
   ArrowRight,
   GraduationCap,
-  LogIn
+  LogIn,
+  Loader2
 } from 'lucide-react';
 
 // Helper to convert URL slug to course code
@@ -31,6 +34,7 @@ const CourseOnboarding = () => {
   const { courseCode } = useParams<{ courseCode: string }>();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const [enrolling, setEnrolling] = useState(false);
   
   if (!courseCode) {
     return <Navigate to="/glee-academy" replace />;
@@ -48,18 +52,86 @@ const CourseOnboarding = () => {
 
   const CourseIcon = course.icon;
 
+  // Directly enroll existing logged-in users
+  const handleEnrollExistingUser = async () => {
+    if (!user) return;
+    
+    setEnrolling(true);
+    try {
+      // Get course UUID from database using various formats
+      let courseId: string | null = null;
+      
+      // Try exact match with hyphen
+      const { data: courseData } = await supabase
+        .from('gw_courses')
+        .select('id')
+        .eq('course_code', course.courseCode.replace(' ', '-'))
+        .maybeSingle();
+      
+      if (courseData) {
+        courseId = courseData.id;
+      } else {
+        // Try ilike search
+        const { data: altCourseData } = await supabase
+          .from('gw_courses')
+          .select('id')
+          .ilike('course_code', `%${course.courseCode.replace(' ', '%')}%`)
+          .maybeSingle();
+        
+        if (altCourseData) {
+          courseId = altCourseData.id;
+        }
+      }
+      
+      if (!courseId) {
+        toast.error('Course not found in database. Please contact support.');
+        return;
+      }
+      
+      // Insert enrollment record
+      const { error } = await supabase
+        .from('gw_course_enrollments')
+        .insert({
+          course_id: courseId,
+          user_id: user.id,
+          role: 'student',
+          enrollment_status: 'enrolled'
+        });
+      
+      if (error) {
+        if (error.code === '23505') {
+          toast.info('You are already enrolled in this course!');
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success(`Successfully enrolled in ${course.title}!`);
+      }
+      
+      // Navigate to the course page
+      const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
+      navigate(`/academy/${courseSlug}`);
+      
+    } catch (err: any) {
+      console.error('Enrollment error:', err);
+      toast.error('Failed to enroll. Please try again.');
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
   const handleEnrollClick = () => {
     if (!user) {
       // Redirect to login with return URL
       navigate(`/auth?returnTo=/academy/${courseCode}/onboarding`);
     } else {
-      // Navigate to registration page with course info
-      navigate(`/academy-student-registration?course=${course.courseCode}`);
+      // Directly enroll the existing user
+      handleEnrollExistingUser();
     }
   };
 
   const handleLoginClick = () => {
-    navigate(`/auth?returnTo=/academy/${courseCode}`);
+    navigate(`/auth?returnTo=/academy/${courseCode}/onboarding`);
   };
 
   if (loading) {
@@ -201,9 +273,19 @@ const CourseOnboarding = () => {
                         <Button 
                           className="w-full bg-[#003666] hover:bg-[#002244] text-sm h-9 sm:h-10 md:h-11"
                           onClick={handleEnrollClick}
+                          disabled={enrolling}
                         >
-                          Enroll in Course
-                          <ArrowRight className="h-4 w-4 ml-2" />
+                          {enrolling ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Enrolling...
+                            </>
+                          ) : (
+                            <>
+                              Enroll in Course
+                              <ArrowRight className="h-4 w-4 ml-2" />
+                            </>
+                          )}
                         </Button>
                       </>
                     ) : (
