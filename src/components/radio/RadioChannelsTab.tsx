@@ -8,11 +8,12 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Radio, Plus, Pencil, Trash2, Clock, Music, Calendar, GripVertical, Save, X, RefreshCw } from 'lucide-react';
+import { Radio, Plus, Pencil, Trash2, Clock, Music, Calendar, GripVertical, Save, X, RefreshCw, Mic } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { azuraCastService } from '@/services/azuracast';
+import { StreamersTab } from './StreamersTab';
 
 interface RadioChannel {
   id: string;
@@ -360,8 +361,11 @@ export const RadioChannelsTab = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs defaultValue="channels" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-8">
+          <TabsList className="grid w-full grid-cols-4 h-8">
             <TabsTrigger value="channels" className="text-xs">Channels</TabsTrigger>
+            <TabsTrigger value="streamers" className="text-xs">
+              <Mic className="h-3 w-3 mr-1" />DJs
+            </TabsTrigger>
             <TabsTrigger value="nowplaying" className="text-xs">Now Playing</TabsTrigger>
             <TabsTrigger value="schedule" className="text-xs">Schedule</TabsTrigger>
           </TabsList>
@@ -515,6 +519,11 @@ export const RadioChannelsTab = () => {
                 </div>
               ))}
             </div>
+          </TabsContent>
+
+          {/* Streamers/DJs Tab */}
+          <TabsContent value="streamers" className="mt-3">
+            <StreamersTab />
           </TabsContent>
 
           {/* Now Playing Override Tab */}
