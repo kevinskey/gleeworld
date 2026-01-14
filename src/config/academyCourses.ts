@@ -40,24 +40,6 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'a0000000-0000-0000-0000-000000000210',
-    courseCode: 'MUS 210',
-    title: 'Choral Conducting and Literature',
-    description: 'Master the art of choral conducting with technique, score analysis, and repertoire selection.',
-    icon: Music,
-    level: 'Intermediate',
-    duration: '16 Weeks',
-    highlights: ['Conducting Technique', 'Score Analysis', 'Repertoire', 'Rehearsal Skills'],
-    route: '/academy/mus-210',
-    instructor: {
-      name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
-      office: 'Fine Arts 105',
-      hours: 'MWF 3-5 PM'
-    },
-    isActive: true
-  },
-  {
     id: '23c4ee3c-7bbb-4534-8c0a-eecd88298d37',
     courseCode: 'MUS 240',
     title: 'Survey of African American Music',
@@ -76,15 +58,15 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'a0000000-0000-0000-0000-000000000101',
-    courseCode: 'MUS 101',
-    title: 'Music Fundamentals Theory',
-    description: 'Build a strong foundation in music theory including notation, rhythm, scales, intervals, chords, and basic harmony.',
-    icon: BookOpen,
-    level: 'Beginner',
+    id: 'a0000000-0000-0000-0000-000000000210',
+    courseCode: 'MUS 210',
+    title: 'Choral Conducting and Literature',
+    description: 'Master the art of choral conducting with technique, score analysis, and repertoire selection.',
+    icon: Music,
+    level: 'Intermediate',
     duration: '16 Weeks',
-    highlights: ['Music Notation', 'Rhythm', 'Scales & Keys', 'Harmony Basics'],
-    route: '/academy/mus-101',
+    highlights: ['Conducting Technique', 'Score Analysis', 'Repertoire', 'Rehearsal Skills'],
+    route: '/academy/mus-210',
     instructor: {
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
@@ -112,24 +94,6 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'a0000000-0000-0000-0000-000000000000',
-    courseCode: 'MUS 000',
-    title: 'Sight Singing Institute',
-    description: 'Intensive training in sight-reading and ear training to develop musicianship skills essential for all musicians.',
-    icon: Eye,
-    level: 'All Levels',
-    duration: '8 Weeks',
-    highlights: ['Sight Reading', 'Ear Training', 'Solfege', 'Musicianship'],
-    route: '/academy/mus-000',
-    instructor: {
-      name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
-      office: 'Fine Arts 105',
-      hours: 'MWF 3-5 PM'
-    },
-    isActive: true
-  },
-  {
     id: 'a0000000-0000-0000-0000-0000000e0101',
     courseCode: 'GLEE 101',
     title: 'Leadership Development',
@@ -146,6 +110,42 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
       hours: 'MWF 3-5 PM'
     },
     isActive: true
+  },
+  {
+    id: 'a0000000-0000-0000-0000-000000000000',
+    courseCode: 'GLEE 000',
+    title: 'Sight Singing Institute',
+    description: 'Intensive training in sight-reading and ear training to develop musicianship skills essential for all musicians.',
+    icon: Eye,
+    level: 'All Levels',
+    duration: '8 Weeks',
+    highlights: ['Sight Reading', 'Ear Training', 'Solfege', 'Musicianship'],
+    route: '/academy/glee-000',
+    instructor: {
+      name: 'Dr. Kevin Johnson',
+      email: 'kjohns10@spelman.edu',
+      office: 'Fine Arts 105',
+      hours: 'MWF 3-5 PM'
+    },
+    isActive: true
+  },
+  {
+    id: 'a0000000-0000-0000-0000-000000000101',
+    courseCode: 'MUS 101',
+    title: 'Music Fundamentals Theory',
+    description: 'Build a strong foundation in music theory including notation, rhythm, scales, intervals, chords, and basic harmony.',
+    icon: BookOpen,
+    level: 'Beginner',
+    duration: '16 Weeks',
+    highlights: ['Music Notation', 'Rhythm', 'Scales & Keys', 'Harmony Basics'],
+    route: '/academy/mus-101',
+    instructor: {
+      name: 'Dr. Kevin Johnson',
+      email: 'kjohns10@spelman.edu',
+      office: 'Fine Arts 105',
+      hours: 'MWF 3-5 PM'
+    },
+    isActive: false
   }
 ];
 
