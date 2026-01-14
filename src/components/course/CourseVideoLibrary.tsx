@@ -495,7 +495,7 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
                 disabled={syncing}
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                Sync GleeWorld Radio
+                Sync YouTube
               </Button>
               {isInstructor && (
                 <>
@@ -652,7 +652,7 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
               {videos.length === 0 && (
                 <Button onClick={syncDefaultChannel} disabled={syncing}>
                   <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                  Sync GleeWorld Radio
+                  Sync YouTube
                 </Button>
               )}
             </div>
