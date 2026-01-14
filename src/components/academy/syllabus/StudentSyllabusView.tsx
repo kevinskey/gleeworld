@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
-  BookOpen, FileText, BarChart3, Clock, Calendar, 
-  ChevronUp, ChevronDown, Users, Mail, MapPin, 
-  Target, CheckCircle2, Scale, AlertCircle, ExternalLink
+  BookOpen, Users, Mail, MapPin, Clock, AlertCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AcademyCourse } from '@/config/academyCourses';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mus210InlineSyllabus } from './Mus210InlineSyllabus';
+import { UnifiedSyllabusRenderer, UnifiedSyllabusData, LearningObjective, CourseRequirement } from './UnifiedSyllabusRenderer';
+import { getDefaultSyllabus } from '@/config/academySyllabusDefaults';
 
 interface StudentSyllabusViewProps {
   course: AcademyCourse;
