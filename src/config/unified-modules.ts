@@ -51,6 +51,7 @@ import { CommunityHubModule } from '@/components/modules/CommunityHubModule';
 import { CheckInCheckOutModule } from '@/components/modules/CheckInCheckOutModule';
 import { CalendarModule } from '@/components/modules/CalendarModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
+import { CourseAttendanceLedger } from '@/components/attendance/CourseAttendanceLedger';
 import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
 import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 import { SightSingingModule } from '@/components/modules/SightSingingModule';
@@ -194,6 +195,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: AttendanceModule,
     dbFunctionName: "attendance"
+  },
+  {
+    id: "course-attendance-ledger",
+    name: "course-attendance-ledger",
+    title: "Course Attendance Ledger",
+    description: "Track attendance records by course and semester",
+    icon: BookOpen,
+    iconColor: "teal",
+    category: "member-management",
+    isActive: true,
+    component: CourseAttendanceLedger,
+    dbFunctionName: "course-attendance-ledger",
+    requiredRoles: ['admin', 'super-admin', 'exec-board', 'secretary']
   },
   {
     id: "section-assignment",
