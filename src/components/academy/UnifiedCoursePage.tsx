@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote } from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +25,7 @@ import { StudentSyllabusView } from './syllabus/StudentSyllabusView';
 import { CourseHandbook } from './handbook/CourseHandbook';
 import { StudentDossierHome } from './StudentDossierHome';
 import { ElectionsModule } from './elections/ElectionsModule';
+import { CourseModules } from './CourseModules';
 
 // Lazy loaded components for performance
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
@@ -203,6 +204,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             ] : [
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
+              { icon: Layers, label: 'Modules', tab: 'modules' },
               { icon: Calendar, label: 'Calendar', tab: 'calendar' },
               { icon: Video, label: 'Video Library', tab: 'video-library' },
               { icon: Bell, label: 'Announcements', tab: 'announcements' },
@@ -384,6 +386,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                   <p className="text-muted-foreground">No journals assigned yet.</p>
                 </CardContent>
               </Card>}
+
+            {activeTab === 'modules' && (
+              <CourseModules courseId={course.id} isEnrolled={isEnrolled || isAdmin} isAdmin={isAdmin} />
+            )}
 
             {activeTab === 'tests' && <CourseTestsSection courseId={course.id} legacyCourseId={course.courseCode.toLowerCase().replace(' ', '')} />}
 
