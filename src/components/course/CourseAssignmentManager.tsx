@@ -243,8 +243,10 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     return acc;
   }, {} as Record<string, Assignment[]>);
 
-  // Sort categories properly (handles both "Week X" and "Phase X" formats)
+  // Sort categories properly (handles Phase, Week, and History formats)
   const getCategoryOrder = (category: string): number => {
+    // History & Literature track comes after phases
+    if (category.toLowerCase().includes('history') || category.toLowerCase().includes('literature')) return 50;
     // Handle Phase format (Roman numerals)
     const phaseMatch = category.match(/Phase\s+(I{1,3}|IV|V|VI)/i);
     if (phaseMatch) {
