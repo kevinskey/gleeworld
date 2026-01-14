@@ -243,11 +243,26 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     return acc;
   }, {} as Record<string, Assignment[]>);
 
-  // Sort weeks properly
+  // Sort categories properly (handles both "Week X" and "Phase X" formats)
+  const getCategoryOrder = (category: string): number => {
+    // Handle Phase format (Roman numerals)
+    const phaseMatch = category.match(/Phase\s+(I{1,3}|IV|V|VI)/i);
+    if (phaseMatch) {
+      const romanNumerals: Record<string, number> = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6 };
+      return romanNumerals[phaseMatch[1].toUpperCase()] || 999;
+    }
+    // Handle Week format
+    const weekMatch = category.match(/Week\s+(\d+)/i);
+    if (weekMatch) {
+      return parseInt(weekMatch[1]) || 999;
+    }
+    // Finals/other go last
+    if (category.toLowerCase().includes('final')) return 100;
+    return 999;
+  };
+
   const sortedWeeks = Object.keys(groupedAssignments).sort((a, b) => {
-    const weekA = parseInt(a.replace(/\D/g, '')) || 999;
-    const weekB = parseInt(b.replace(/\D/g, '')) || 999;
-    return weekA - weekB;
+    return getCategoryOrder(a) - getCategoryOrder(b);
   });
   const getTypeBadgeColor = (type: string | null) => {
     switch (type) {
