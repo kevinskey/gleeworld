@@ -241,3 +241,18 @@ ModuleRegistry.registerModule({
   component: YouTubeManagement,
   requiredPermissions: ['admin', 'super-admin']
 });
+
+// Register Course Attendance Ledger
+import { CourseAttendanceLedger } from '@/components/attendance/CourseAttendanceLedger';
+import { BookOpen } from 'lucide-react';
+
+ModuleRegistry.registerModule({
+  id: 'course-attendance-ledger',
+  title: 'Course Attendance Ledger',
+  description: 'Track attendance records by course and semester',
+  icon: BookOpen,
+  iconColor: 'teal',
+  category: 'member-management',
+  component: CourseAttendanceLedger,
+  requiredPermissions: ['admin', 'super-admin', 'exec-board', 'secretary']
+});
