@@ -126,32 +126,27 @@ export const MobileMusicLibrary = ({
 
   return (
     <div className="w-full flex flex-col overflow-hidden h-full bg-background">
-      {/* Ultra-Compact Mobile Header - Single Row with Title, Back & Dropdowns */}
+      {/* Mobile Header - Responsive for all phone sizes */}
       <div className="flex-shrink-0 bg-background border-b border-border safe-top">
-        <div className="flex items-center h-11 px-2 gap-1">
-          {/* Back Button - Minimal */}
+        {/* Primary Row - Navigation */}
+        <div className="flex items-center h-12 px-2 gap-1.5">
+          {/* Back Button */}
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8 flex-shrink-0"
+            className="h-9 w-9 flex-shrink-0"
             onClick={() => navigate('/dashboard')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
 
-          {/* Music Library Title */}
-          <span className="text-sm font-semibold text-foreground whitespace-nowrap">Music Library</span>
-          
-          {/* Divider */}
-          <span className="text-muted-foreground/40 mx-0.5">|</span>
-
           {/* Section Dropdown - Primary Navigation */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 px-1.5 gap-0.5 text-xs font-medium">
-                <CurrentIcon className="h-3.5 w-3.5" />
-                <span className="max-w-[70px] truncate">{currentSection.label}</span>
-                <ChevronDown className="h-3 w-3 opacity-60" />
+              <Button variant="ghost" className="h-9 px-2 gap-1.5 text-sm font-semibold flex-1 justify-start max-w-[180px]">
+                <CurrentIcon className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{currentSection.label}</span>
+                <ChevronDown className="h-3.5 w-3.5 opacity-60 flex-shrink-0 ml-auto" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="z-50 w-48 bg-popover">
@@ -176,68 +171,71 @@ export const MobileMusicLibrary = ({
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Search Toggle */}
-          <Button 
-            variant={searchOpen ? "secondary" : "ghost"} 
-            size="icon" 
-            className="h-9 w-9"
-            onClick={() => setSearchOpen(!searchOpen)}
-          >
-            <Search className="h-4 w-4" />
-          </Button>
+          {/* Action Buttons - Compact */}
+          <div className="flex items-center gap-0.5">
+            {/* Search Toggle */}
+            <Button 
+              variant={searchOpen ? "secondary" : "ghost"} 
+              size="icon" 
+              className="h-9 w-9"
+              onClick={() => setSearchOpen(!searchOpen)}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
 
-          {/* Filter Dropdown - Category & Sort Combined */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 bg-popover">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">Category</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
-                {categories.map((cat) => (
-                  <DropdownMenuRadioItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs text-muted-foreground">Sort By</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
-                {sortOptions.map((opt) => (
-                  <DropdownMenuRadioItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs text-muted-foreground">Grid Size</DropdownMenuLabel>
-              <div className="flex gap-1 p-2">
-                {[1, 2, 3].map((col) => (
-                  <Button
-                    key={col}
-                    variant={columns === col ? "default" : "outline"}
-                    size="sm"
-                    className="flex-1 h-8 text-xs"
-                    onClick={() => setColumns(col)}
-                  >
-                    {col === 1 ? 'L' : col === 2 ? 'M' : 'S'}
-                  </Button>
-                ))}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            {/* Filter Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 bg-popover">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Category</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
+                  {categories.map((cat) => (
+                    <DropdownMenuRadioItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Sort By</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={sortBy} onValueChange={setSortBy}>
+                  {sortOptions.map((opt) => (
+                    <DropdownMenuRadioItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Grid Size</DropdownMenuLabel>
+                <div className="flex gap-1 p-2">
+                  {[1, 2, 3].map((col) => (
+                    <Button
+                      key={col}
+                      variant={columns === col ? "default" : "outline"}
+                      size="sm"
+                      className="flex-1 h-8 text-xs"
+                      onClick={() => setColumns(col)}
+                    >
+                      {col === 1 ? 'L' : col === 2 ? 'M' : 'S'}
+                    </Button>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          {/* View Mode Toggle */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-9 w-9"
-            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-          >
-            {viewMode === 'grid' ? <LayoutList className="h-4 w-4" /> : <Grid3X3 className="h-4 w-4" />}
-          </Button>
+            {/* View Mode Toggle */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-9 w-9"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            >
+              {viewMode === 'grid' ? <LayoutList className="h-4 w-4" /> : <Grid3X3 className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
 
         {/* Expandable Search Bar */}
@@ -249,33 +247,33 @@ export const MobileMusicLibrary = ({
                 placeholder="Search music..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-8 h-9 text-sm"
+                className="pl-9 pr-8 h-10 text-base"
                 autoFocus
               />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                   onClick={() => setSearchQuery("")}
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-4 w-4" />
                 </Button>
               )}
             </div>
           </div>
         )}
 
-        {/* Selected PDF - Minimal Banner */}
+        {/* Selected PDF - Compact Banner */}
         {selectedPdf && (
           <div className="px-2 pb-2">
-            <div className="bg-primary/10 rounded-md p-2 flex items-center gap-2 border border-primary/20">
+            <div className="bg-primary/10 rounded-lg p-2.5 flex items-center gap-2 border border-primary/20">
               <Music className="h-4 w-4 text-primary flex-shrink-0" />
-              <span className="text-sm font-medium text-primary truncate flex-1">
+              <span className="text-sm font-medium text-primary truncate flex-1 min-w-0">
                 {selectedPdf.title}
               </span>
-              <Button size="sm" onClick={openStudyMode} className="h-7 px-2 text-xs">
-                <Eye className="h-3 w-3 mr-1" />
+              <Button size="sm" onClick={openStudyMode} className="h-8 px-3 text-xs flex-shrink-0">
+                <Eye className="h-3.5 w-3.5 mr-1.5" />
                 Open
               </Button>
             </div>
@@ -283,12 +281,12 @@ export const MobileMusicLibrary = ({
         )}
       </div>
 
-      {/* Content Area - Full Height Scroll */}
+      {/* Content Area - Full Height Scroll with proper touch handling */}
       <div 
         ref={scrollContainerRef as any} 
-        className="flex-1 overflow-y-auto overscroll-contain min-h-0 w-full"
+        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain min-h-0 w-full -webkit-overflow-scrolling-touch"
       >
-        <div className="p-2 pb-safe">
+        <div className="p-2 pb-20">
           {activeSection === "library" && (
             <SheetMusicLibrary 
               searchQuery={searchQuery}
