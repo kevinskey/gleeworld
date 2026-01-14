@@ -569,9 +569,13 @@ serve(async (req) => {
     // Fetch and sync channel playlists
     let playlistsCount = 0
     try {
-      console.log('Fetching playlists for channel:', channelId)
-      const playlistsUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&channelId=${channelId}&maxResults=25&key=${youtubeApiKey}`
+      console.log('=== FETCHING PLAYLISTS ===')
+      console.log('Fetching playlists for channel ID:', channelId)
+      console.log('Database channel ID:', dbChannelId)
+      const playlistsUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&channelId=${channelId}&maxResults=50&key=${youtubeApiKey}`
+      console.log('Playlists URL:', playlistsUrl.replace(youtubeApiKey, '[API_KEY]'))
       const playlistsResponse = await fetch(playlistsUrl)
+      console.log('Playlists response status:', playlistsResponse.status)
       
       if (playlistsResponse.ok) {
         const playlistsData = await playlistsResponse.json()
