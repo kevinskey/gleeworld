@@ -446,12 +446,8 @@ export const AssignmentManager = () => {
     return <div>Loading assignments...</div>;
   }
   return <div className="space-y-3 sm:space-y-4 md:space-y-6">
-      {/* Header */}
+      {/* Controls Row */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
-        <div className="w-full lg:w-auto">
-          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-primary-foreground">Assignment Manager</h2>
-          <p className="text-xs sm:text-sm mt-0.5 text-primary-foreground">Create and manage listening journal assignments</p>
-        </div>
         <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
@@ -583,8 +579,8 @@ export const AssignmentManager = () => {
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Prompt:</p>
-                  <p className="text-sm bg-gray-50 p-2 rounded">
+                  <p className="text-sm text-muted-foreground mb-1">Prompt:</p>
+                  <p className="text-sm bg-muted/50 p-2 rounded">
                     {assignment.prompt.length > 200 ? `${assignment.prompt.substring(0, 200)}...` : assignment.prompt}
                   </p>
                 </div>
@@ -690,11 +686,11 @@ export const AssignmentManager = () => {
       </div>
 
       {assignments.length === 0 && <Card>
-          <CardContent className="py-12 text-center">
-            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2 text-primary-foreground">No assignments yet</h3>
-            <p className="mb-4 text-primary-foreground">Create your first listening journal assignment to get started.</p>
-            <Button onClick={() => setIsCreateModalOpen(true)}>
+          <CardContent className="py-8 sm:py-12 text-center">
+            <BookOpen className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50 mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-base sm:text-lg font-medium mb-2 text-foreground">No assignments yet</h3>
+            <p className="text-sm text-muted-foreground mb-4">Create your first listening journal assignment to get started.</p>
+            <Button onClick={() => setIsCreateModalOpen(true)} size="sm" className="sm:size-default">
               <Plus className="h-4 w-4 mr-2" />
               Create Assignment
             </Button>
