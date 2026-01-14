@@ -180,9 +180,12 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
       const start = startOfMonth(currentMonth);
       const end = endOfMonth(currentMonth);
 
-      // Fetch from gw_events for MUS 070 (Glee Club)
+      // Fetch from gw_events ONLY for MUS 070 (Glee Club) - never for other courses
+      const MUS_070_COURSE_ID = 'a0000000-0000-0000-0000-000000000070';
       let gleeEvents: CalendarEvent[] = [];
-      if (courseId === 'a0000000-0000-0000-0000-000000000070') {
+      
+      // Only fetch Glee Club events if this is specifically MUS 070
+      if (courseId === MUS_070_COURSE_ID) {
         const scgcCalendarId = 'b1e077a0-85f3-4665-b006-4767b310a521';
         
         const { data: eventsData, error: eventsError } = await supabase
