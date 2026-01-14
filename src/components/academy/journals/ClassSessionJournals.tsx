@@ -134,7 +134,7 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
     close_time: '13:10'
   });
 
-  // Check if user is truly an instructor (super_admin only, not regular admin or TA)
+  // Check if user is an instructor (super_admin) or TA for this course
   useEffect(() => {
     const checkInstructorStatus = async () => {
       if (!user) {
@@ -142,24 +142,38 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
         return;
       }
       
+      // Check if super_admin
       const { data: profile } = await supabase
         .from('gw_profiles')
         .select('is_super_admin')
         .eq('user_id', user.id)
         .single();
       
-      // Only super_admin can manage journal sessions
       const isSuperAdmin = profile?.is_super_admin || false;
-      setIsInstructor(isSuperAdmin);
+      
+      // Check if TA for this course
+      const normalizedCourseId = courseId.replace(' ', '');
+      const { data: taRecord } = await supabase
+        .from('course_teaching_assistants')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('course_code', normalizedCourseId)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      const isTA = !!taRecord;
+      const hasInstructorAccess = isSuperAdmin || isTA;
+      
+      setIsInstructor(hasInstructorAccess);
       
       // Set initial tab based on instructor status
-      if (isSuperAdmin) {
+      if (hasInstructorAccess) {
         setActiveTab('manage');
       }
     };
     
     checkInstructorStatus();
-  }, [user]);
+  }, [user, courseId]);
 
   // Fetch data
   const fetchData = useCallback(async () => {
