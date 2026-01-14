@@ -2012,17 +2012,11 @@ const App = () => {
                                
                                  <Route 
                                   path="/mus-240/student/dashboard" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <Mus240EnrollmentRoute>
-                                        <StudentDashboard />
-                                      </Mus240EnrollmentRoute>
-                                    </ProtectedRoute>
-                                   }
+                                  element={<Navigate to="/academy/mus-240" replace />}
                                   />
                                   <Route 
                                    path="/mus-240/student-dashboard" 
-                                   element={<Navigate to="/mus-240/student/dashboard" replace />}
+                                   element={<Navigate to="/academy/mus-240" replace />}
                                   />
                                  <Route 
                                   path="/mus-240/student/journal/:journal_id/grade" 

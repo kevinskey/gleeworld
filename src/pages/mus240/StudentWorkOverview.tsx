@@ -279,11 +279,11 @@ export const StudentWorkOverview = () => {
           <Button
             variant="default"
             size="sm"
-            onClick={() => window.open(`/mus-240/student-dashboard`, '_blank')}
+            onClick={() => window.open(`/academy/mus-240`, '_blank')}
             className="bg-primary"
           >
             <ExternalLink className="h-4 w-4 mr-2" />
-            View Student Dashboard
+            View Student Course
           </Button>
         </div>
 
