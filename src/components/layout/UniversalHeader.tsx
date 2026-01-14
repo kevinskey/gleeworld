@@ -28,6 +28,7 @@ import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
 import { HEADER_ICON_SIZES } from "@/components/layout/headerIconSizes";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { LandingPageModal } from "@/components/landing/LandingPageModal";
 
 // import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
 
@@ -83,6 +84,9 @@ export const UniversalHeader = ({
 
   // Quick Actions state
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+  
+  // Landing Page Modal state
+  const [isLandingModalOpen, setIsLandingModalOpen] = useState(false);
   const {
     quickActions: memberQuickActions,
     loading: quickActionsLoading,
@@ -343,7 +347,7 @@ export const UniversalHeader = ({
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Public Pages</DropdownMenuLabel>
                     
-                    <DropdownMenuItem onClick={() => navigate('/')} className="cursor-pointer">
+                    <DropdownMenuItem onClick={() => setIsLandingModalOpen(true)} className="cursor-pointer">
                       <Globe className="mr-2 h-4 w-4" />
                       Landing Page
                     </DropdownMenuItem>
@@ -486,6 +490,12 @@ export const UniversalHeader = ({
 
       {/* Mobile Bottom Navigation */}
       {user && <MobileBottomNav />}
+      
+      {/* Landing Page Modal */}
+      <LandingPageModal 
+        open={isLandingModalOpen} 
+        onOpenChange={setIsLandingModalOpen} 
+      />
     </>
   );
 };
