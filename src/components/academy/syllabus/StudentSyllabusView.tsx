@@ -123,15 +123,16 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
   }
 
   // Courses with custom syllabus pages
-  const customSyllabusRoutes: Record<string, string> = {
-    'MUS 070': '/academy/mus-070/syllabus',
-    'MUS 210': '/academy/mus-210/syllabus',
-  };
+  const customSyllabusRoutes: Array<{ match: (courseCode: string) => boolean; route: string }> = [
+    { match: (c) => c === 'MUS 070' || c.startsWith('MUS 070-'), route: '/academy/mus-070/syllabus' },
+    { match: (c) => c === 'MUS 210' || c.startsWith('MUS 210-'), route: '/academy/mus-210/syllabus' },
+  ];
 
   // If no published syllabus in DB, check for custom syllabus page
   if (!syllabus) {
-    const customRoute = customSyllabusRoutes[course.courseCode];
-    
+    const normalizedCode = (course.courseCode || '').trim().toUpperCase();
+    const customRoute = customSyllabusRoutes.find((r) => r.match(normalizedCode))?.route;
+
     if (customRoute) {
       return (
         <div className="space-y-4">
@@ -144,7 +145,7 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-foreground/80">{course.description}</p>
-              
+
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="font-semibold">Instructor</p>
@@ -156,10 +157,7 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
                 </div>
               </div>
 
-              <Button 
-                onClick={() => navigate(customRoute)}
-                className="w-full gap-2"
-              >
+              <Button onClick={() => navigate(customRoute)} className="w-full gap-2">
                 <FileText className="h-4 w-4" />
                 View Full Syllabus
                 <ExternalLink className="h-4 w-4 ml-auto" />
