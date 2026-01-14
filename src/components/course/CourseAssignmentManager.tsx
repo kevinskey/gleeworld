@@ -293,29 +293,29 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
             <DialogHeader>
               <DialogTitle>{editingAssignment ? 'Edit Assignment' : 'Create Assignment'}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 text-foreground">
               <div className="space-y-2">
-                <Label>Title *</Label>
+                <Label className="text-foreground">Title *</Label>
                 <Input value={formData.title} onChange={e => setFormData({
                 ...formData,
                 title: e.target.value
-              })} placeholder="Assignment title" />
+              })} placeholder="Assignment title" className="text-foreground" />
               </div>
               <div className="space-y-2">
-                <Label>Description</Label>
+                <Label className="text-foreground">Description</Label>
                 <Textarea value={formData.description} onChange={e => setFormData({
                 ...formData,
                 description: e.target.value
-              })} placeholder="Assignment description" rows={3} />
+              })} placeholder="Assignment description" rows={3} className="text-foreground" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Type</Label>
+                  <Label className="text-foreground">Type</Label>
                   <Select value={formData.assignment_type} onValueChange={value => setFormData({
                   ...formData,
                   assignment_type: value
                 })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -326,12 +326,12 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Week/Category</Label>
+                  <Label className="text-foreground">Week/Category</Label>
                   <Select value={formData.category} onValueChange={value => setFormData({
                   ...formData,
                   category: value
                 })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -344,18 +344,18 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Points</Label>
+                  <Label className="text-foreground">Points</Label>
                   <Input type="number" value={formData.points} onChange={e => setFormData({
                   ...formData,
                   points: parseInt(e.target.value) || 0
-                })} />
+                })} className="text-foreground" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Due Date</Label>
+                  <Label className="text-foreground">Due Date</Label>
                   <Input type="datetime-local" value={formData.due_at} onChange={e => setFormData({
                   ...formData,
                   due_at: e.target.value
-                })} />
+                })} className="text-foreground" />
                 </div>
               </div>
             </div>
