@@ -182,10 +182,12 @@ class AzuraCastService {
   }
 
   // Make authenticated request via proxy
-  private async makeProxyRequest(endpoint: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any, options?: { returnEmptyOnError?: boolean }) {
+  private async makeProxyRequest(endpoint: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any, options?: { returnEmptyOnError?: boolean; stationId?: string }) {
     const { supabase } = await import('@/integrations/supabase/client');
     
-    console.log('AzuraCast: Making proxy request to:', endpoint);
+    // Use provided stationId or fall back to default
+    const targetStationId = options?.stationId || this.stationId;
+    console.log('AzuraCast: Making proxy request to:', endpoint, 'for station:', targetStationId);
     
     // Ensure we have a valid session before making the request
     const { data: sessionData } = await supabase.auth.getSession();
@@ -207,7 +209,7 @@ class AzuraCastService {
           endpoint,
           method,
           body,
-          stationId: this.stationId
+          stationId: targetStationId
         }
       });
       data = result.data;
@@ -534,9 +536,9 @@ class AzuraCastService {
   }
 
   // Skip to next track in queue
-  async skipTrack(): Promise<void> {
-    console.log('AzuraCast: Skipping current track...');
-    await this.makeProxyRequest(`/station/{stationId}/backend/skip`, 'POST');
+  async skipTrack(stationId?: string): Promise<void> {
+    console.log('AzuraCast: Skipping current track for station:', stationId || this.stationId);
+    await this.makeProxyRequest(`/station/{stationId}/backend/skip`, 'POST', undefined, { stationId });
   }
 
   // QUEUE MANAGEMENT
