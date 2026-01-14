@@ -32,6 +32,9 @@ const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/Ac
 const GradesAdmin = React.lazy(() => import('@/components/mus240/instructor/GradesAdmin').then(m => ({
   default: m.GradesAdmin
 })));
+const AllVideosGrid = React.lazy(() => import('@/components/youtube/AllVideosGrid').then(m => ({
+  default: m.AllVideosGrid
+})));
 interface UnifiedCoursePageProps {
   course: AcademyCourse;
 }
@@ -199,6 +202,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
               { icon: Calendar, label: 'Calendar', tab: 'calendar' },
+              { icon: Video, label: 'Video Library', tab: 'video-library' },
               { icon: Bell, label: 'Announcements', tab: 'announcements' },
               { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
               { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
@@ -473,7 +477,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </Card>
             )}
 
-            {/* Handbook Tab - Only for MUS 070 */}
+            {/* Video Library Tab - For MUS 210 */}
+            {activeTab === 'video-library' && course.courseCode === 'MUS 210' && (
+              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading videos...</CardContent></Card>}>
+                <AllVideosGrid />
+              </React.Suspense>
+            )}
+
             {activeTab === 'handbook' && course.courseCode === 'MUS 070' && <CourseHandbook courseCode={course.courseCode} />}
 
             {/* Elections Tab - Only for MUS 070 */}
