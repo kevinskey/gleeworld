@@ -53,7 +53,7 @@ export const AcademyStudentRegistration = () => {
     try {
       // Determine the redirect URL based on course
       const redirectUrl = courseParam === 'MUS 240' 
-        ? `${window.location.origin}/classes/mus240`
+        ? `${window.location.origin}/mus-240`
         : `${window.location.origin}/glee-academy`;
 
       // Sign up the user with academy registration metadata
@@ -84,7 +84,7 @@ export const AcademyStudentRegistration = () => {
       // Redirect to the appropriate course page after a short delay
       setTimeout(() => {
         if (courseParam === 'MUS 240') {
-          navigate('/classes/mus240');
+          navigate('/mus-240');
         } else {
           navigate('/glee-academy');
         }
