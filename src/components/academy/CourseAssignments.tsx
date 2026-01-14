@@ -115,9 +115,9 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
   }
 
   return (
-    <Card>
+    <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <ClipboardList className="h-5 w-5 text-primary" />
           Assignments
         </CardTitle>
@@ -134,11 +134,11 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
             {assignments.map(assignment => (
               <div 
                 key={assignment.id} 
-                className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors border border-border"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold">{assignment.title}</h4>
+                    <h4 className="font-semibold text-foreground">{assignment.title}</h4>
                     {getStatusBadge(assignment)}
                   </div>
                   {assignment.description && (
@@ -149,12 +149,12 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
                   <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      Due: {format(new Date(assignment.due_date), 'MMM d, yyyy')}
+                      Due: {assignment.due_date ? format(new Date(assignment.due_date), 'MMM d, yyyy') : 'No due date'}
                     </span>
                     <span>{assignment.points} points</span>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
                   {assignment.submission ? 'View' : 'Start'}
                 </Button>
               </div>
