@@ -220,23 +220,24 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
   };
 
   // Helper to create a corresponding gw_event for a course session
-  const createGwEvent = async (session: { 
+  const createGwEvent = async (session: {
     id: string;
-    title: string; 
-    description: string | null; 
-    session_date: string; 
-    start_time: string; 
-    end_time: string; 
+    title: string;
+    description: string | null;
+    session_date: string;
+    start_time: string;
+    end_time: string;
     location: string | null;
     session_type: string;
   }) => {
     if (!courseInfo?.calendarId) return null;
-    
     try {
       const startDateTime = `${session.session_date}T${session.start_time}:00`;
       const endDateTime = `${session.session_date}T${session.end_time}:00`;
-      
-      const { data: gwEvent, error } = await supabase.from('gw_events').insert({
+      const {
+        data: gwEvent,
+        error
+      } = await supabase.from('gw_events').insert({
         title: session.title,
         description: session.description,
         start_date: startDateTime,
@@ -250,19 +251,17 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
         attendance_required: true,
         created_by: user?.id
       }).select().single();
-      
       if (error) {
         console.error('Error creating gw_event:', error);
         return null;
       }
-      
+
       // Link the session to the gw_event
       if (gwEvent) {
-        await supabase.from('gw_course_class_sessions')
-          .update({ gw_event_id: gwEvent.id })
-          .eq('id', session.id);
+        await supabase.from('gw_course_class_sessions').update({
+          gw_event_id: gwEvent.id
+        }).eq('id', session.id);
       }
-      
       return gwEvent;
     } catch (error) {
       console.error('Error creating gw_event:', error);
@@ -380,7 +379,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
             }).eq('id', qr.event_id);
           }
         }
-        
+
         // Create corresponding gw_events for main calendar visibility
         for (const session of createdSessions) {
           await createGwEvent(session);
@@ -493,7 +492,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               }).eq('id', qr.event_id);
             }
           }
-          
+
           // Create corresponding gw_events for main calendar visibility
           for (const session of createdSessions) {
             await createGwEvent(session);
@@ -548,7 +547,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               qr_code_id: qrCode.id
             }).eq('id', createdSession.id);
           }
-          
+
           // Create corresponding gw_event for main calendar visibility
           await createGwEvent(createdSession);
         }
@@ -1291,7 +1290,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
         <TabsContent value="spelman">
           <Card>
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
-              <CardTitle className="flex items-center gap-2 py-[20px] text-2xl">
+              <CardTitle className="flex items-center gap-2 py-[20px] text-lg">
                 <CalendarIcon className="h-5 w-5" />
                 {getCalendarTitle()}
               </CardTitle>
