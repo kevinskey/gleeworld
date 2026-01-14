@@ -67,12 +67,12 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
-  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set(['Week 1']));
+  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set(['Week 1: Jan 14–20']));
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     assignment_type: 'exercise',
-    category: 'Week 1',
+    category: 'Week 1: Jan 14–20',
     points: 100,
     due_at: ''
   });
@@ -186,7 +186,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       title: '',
       description: '',
       assignment_type: 'exercise',
-      category: 'Week 1',
+      category: 'Week 1: Jan 14–20',
       points: 100,
       due_at: ''
     });
@@ -243,20 +243,20 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     return acc;
   }, {} as Record<string, Assignment[]>);
 
-  // Sort categories properly (handles Phase, Week, and History formats)
+  // Sort categories properly (handles Week with dates, Phase, and History formats)
   const getCategoryOrder = (category: string): number => {
-    // History & Literature track comes after phases
+    // Handle Week format with dates (e.g., "Week 1: Jan 14–20")
+    const weekMatch = category.match(/Week\s+(\d+)/i);
+    if (weekMatch) {
+      return parseInt(weekMatch[1]) || 999;
+    }
+    // History & Literature track comes after weeks
     if (category.toLowerCase().includes('history') || category.toLowerCase().includes('literature')) return 50;
-    // Handle Phase format (Roman numerals)
+    // Handle Phase format (Roman numerals) - legacy support
     const phaseMatch = category.match(/Phase\s+(I{1,3}|IV|V|VI)/i);
     if (phaseMatch) {
       const romanNumerals: Record<string, number> = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6 };
       return romanNumerals[phaseMatch[1].toUpperCase()] || 999;
-    }
-    // Handle Week format
-    const weekMatch = category.match(/Week\s+(\d+)/i);
-    if (weekMatch) {
-      return parseInt(weekMatch[1]) || 999;
     }
     // Finals/other go last
     if (category.toLowerCase().includes('final')) return 100;
@@ -352,9 +352,22 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {[...Array(16)].map((_, i) => <SelectItem key={i} value={i === 15 ? 'Finals Week' : `Week ${i + 1}`}>
-                          {i === 15 ? 'Finals Week' : `Week ${i + 1}`}
-                        </SelectItem>)}
+                      <SelectItem value="Week 1: Jan 14–20">Week 1: Jan 14–20</SelectItem>
+                      <SelectItem value="Week 2: Jan 21–27">Week 2: Jan 21–27</SelectItem>
+                      <SelectItem value="Week 3: Jan 28–Feb 3">Week 3: Jan 28–Feb 3</SelectItem>
+                      <SelectItem value="Week 4: Feb 4–10">Week 4: Feb 4–10</SelectItem>
+                      <SelectItem value="Week 5: Feb 11–17">Week 5: Feb 11–17</SelectItem>
+                      <SelectItem value="Week 6: Feb 18–24">Week 6: Feb 18–24</SelectItem>
+                      <SelectItem value="Week 7: Feb 25–Mar 3">Week 7: Feb 25–Mar 3</SelectItem>
+                      <SelectItem value="Week 8: Mar 4–10">Week 8: Mar 4–10</SelectItem>
+                      <SelectItem value="Week 9: Mar 11–17 (Spring Break)">Week 9: Spring Break</SelectItem>
+                      <SelectItem value="Week 10: Mar 18–24">Week 10: Mar 18–24</SelectItem>
+                      <SelectItem value="Week 11: Mar 25–31">Week 11: Mar 25–31</SelectItem>
+                      <SelectItem value="Week 12: Apr 1–7">Week 12: Apr 1–7</SelectItem>
+                      <SelectItem value="Week 13: Apr 8–14">Week 13: Apr 8–14</SelectItem>
+                      <SelectItem value="Week 14: Apr 15–21">Week 14: Apr 15–21</SelectItem>
+                      <SelectItem value="Week 15: Apr 22–28">Week 15: Apr 22–28</SelectItem>
+                      <SelectItem value="Finals Week">Finals Week</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
