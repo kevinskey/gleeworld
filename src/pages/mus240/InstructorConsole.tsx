@@ -269,7 +269,7 @@ export const InstructorConsole = () => {
                   <Menu className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Menu</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/student/dashboard')} className="hidden sm:flex items-center gap-1 sm:gap-2 whitespace-nowrap h-7 sm:h-8 text-xs sm:text-sm">
+                <Button variant="outline" size="sm" onClick={() => navigate('/academy/mus-240')} className="hidden sm:flex items-center gap-1 sm:gap-2 whitespace-nowrap h-7 sm:h-8 text-xs sm:text-sm">
                   <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Student View</span>
                 </Button>
