@@ -198,7 +198,7 @@ ModuleRegistry.registerModule({
   iconColor: 'purple',
   category: 'administration',
   component: QRCodeManagementModule,
-  requiredPermissions: ['admin', 'super-admin', 'exec']
+  requiredPermissions: ['admin', 'super-admin', 'exec', 'secretary']
 });
 
 // Register Test Builder
