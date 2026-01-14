@@ -172,14 +172,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="flex min-h-screen bg-background">
         {/* Left Sidebar - Navigation - Visible on tablet (md) and up */}
-        <div className="w-[180px] md:w-[200px] lg:w-[220px] min-w-[180px] md:min-w-[200px] lg:min-w-[220px] bg-muted border-r border-border flex-shrink-0 hidden md:block">
-          <div className="p-2 md:p-3 border-b border-border pb-2 md:pb-3 pt-2 md:pt-3">
-            <Mus240SemesterSelector showLabel={false} className="mb-1" />
-            <div className="text-sm font-bold text-foreground pt-1 pl-2">{course.courseCode}</div>
-            <div className="text-sm text-black border-2 border-solid border-primary py-1 px-2 leading-tight">{course.title}</div>
+        <div className="w-[160px] md:w-[180px] lg:w-[200px] min-w-[160px] md:min-w-[180px] lg:min-w-[200px] bg-muted border-r border-border flex-shrink-0 hidden md:block">
+          <div className="px-2 py-1.5 border-b border-border">
+            <Mus240SemesterSelector showLabel={false} className="mb-0.5" />
+            <div className="text-xs font-bold text-foreground pl-1">{course.courseCode}</div>
+            <div className="text-xs text-black border border-solid border-primary py-0.5 px-1.5 leading-tight">{course.title}</div>
           </div>
           
-          <nav className="p-1 space-y-0.5">
+          <nav className="px-1 py-0.5 space-y-px">
             {(course.courseCode === 'MUS 070' ? [
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
@@ -210,42 +210,38 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
               { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
               { icon: Calendar, label: 'Calendar', tab: 'calendar' },
-            ]).map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-xs transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
+            ]).map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 <item.icon className="h-3 w-3 flex-shrink-0" />
-                <span className="text-xs">{item.label}</span>
+                <span className="text-xs leading-tight">{item.label}</span>
               </button>)}
           </nav>
           
           {/* Course Resources Section */}
-          <div className="p-2 border-t border-border space-y-0.5">
-            <h3 className="font-bold text-foreground text-xs mb-1">Resources</h3>
+          <div className="px-1.5 py-1 border-t border-border space-y-px">
+            <h3 className="font-semibold text-foreground text-[10px] uppercase tracking-wide px-1">Resources</h3>
             {[{
               icon: Video,
-              label: 'Video Library',
-              desc: 'Lecture recordings'
+              label: 'Video Library'
             }, {
               icon: Headphones,
-              label: 'Audio Examples',
-              desc: 'Listening materials'
+              label: 'Audio'
             }, {
               icon: Music,
-              label: 'Sheet Music',
-              desc: 'Scores and materials'
+              label: 'Sheet Music'
             }, {
               icon: FileText,
-              label: 'Documents',
-              desc: 'Handouts and readings'
-            }].map((item, i) => <button key={i} className="w-full flex items-center gap-2 px-2 py-1 rounded-md text-xs transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
+              label: 'Documents'
+            }].map((item, i) => <button key={i} className="w-full flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
                 <item.icon className="h-3 w-3" />
                 <span>{item.label}</span>
               </button>)}
           </div>
           
           {/* Instructor Control Center Button */}
-          {isAdmin && <div className="p-2 border-t border-border">
-              <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="w-full text-xs" size="sm">
+          {isAdmin && <div className="px-1.5 py-1 border-t border-border">
+              <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="w-full text-xs h-7" size="sm">
                 <Settings className="h-3 w-3 mr-1" />
-                Instructor Console
+                Instructor
               </Button>
             </div>}
         </div>
