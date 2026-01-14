@@ -38,6 +38,7 @@ export interface RadioPlayerState {
   isOnline: boolean;
   volume: number;
   streamerName?: string;
+  currentStationId: string; // Track which station we're playing for metadata fetching
 }
 
 // Shared audio element to persist across route changes
@@ -60,6 +61,7 @@ export const useRadioPlayer = () => {
     isOnline: false,
     volume: 0.8, // Default to 80% to prevent clipping
     streamerName: undefined,
+    currentStationId: 'glee_world_radio', // Default to main station
   });
 
 
@@ -73,9 +75,13 @@ export const useRadioPlayer = () => {
 
   // Pull "now playing" directly from AzuraCast so the UI updates promptly
   // (DB realtime can lag a few seconds behind stream changes)
-  const refreshNowPlaying = useCallback(async () => {
+  const refreshNowPlaying = useCallback(async (stationIdOverride?: string) => {
     try {
-      const np = await azuraCastService.getNowPlaying();
+      // Use the override if provided, otherwise use current state's station ID
+      const stationId = stationIdOverride || state.currentStationId;
+      console.log('refreshNowPlaying: Fetching for station:', stationId);
+      
+      const np = await azuraCastService.getNowPlaying(stationId);
       const song = np?.now_playing?.song;
 
       if (song?.title) {
@@ -93,7 +99,7 @@ export const useRadioPlayer = () => {
       // Silent fail: stream should keep playing even if metadata fetch fails
       console.warn('useRadioPlayer: refreshNowPlaying failed:', error);
     }
-  }, [sanitizeArtist]);
+  }, [sanitizeArtist, state.currentStationId]);
 
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -372,9 +378,9 @@ export const useRadioPlayer = () => {
         await fetchInitialState();
         
         // Also fetch directly from AzuraCast for the most up-to-date track info
-        // DB can lag behind the actual stream
+        // DB can lag behind the actual stream (use default station on mount)
         try {
-          const np = await azuraCastService.getNowPlaying();
+          const np = await azuraCastService.getNowPlaying('glee_world_radio');
           const song = np?.now_playing?.song;
           if (song?.title && isMounted) {
             setState(prev => ({
@@ -624,10 +630,15 @@ export const useRadioPlayer = () => {
       return;
     }
 
-    // Clear current track immediately and show channel name as placeholder
+    // Extract station ID from the stream URL for metadata fetching
+    const newStationId = azuraCastService.extractStationIdFromUrl(newStreamUrl) || 'glee_world_radio';
+    console.log('Extracted station ID:', newStationId);
+
+    // Clear current track immediately and show channel name as placeholder, update station ID
     setState(prev => ({
       ...prev,
       currentTrack: channelName ? { title: channelName, artist: '' } : null,
+      currentStationId: newStationId,
     }));
 
     const audio = audioRef.current;
@@ -648,8 +659,8 @@ export const useRadioPlayer = () => {
         await audio.play();
         console.log('Successfully switched to:', url);
         setState(prev => ({ ...prev, isPlaying: true }));
-        // Update LCD metadata after a brief delay to let stream settle
-        setTimeout(() => refreshNowPlaying(), 1000);
+        // Update LCD metadata after a brief delay to let stream settle, pass the new station ID
+        setTimeout(() => refreshNowPlaying(newStationId), 1000);
         return; // Success
       } catch (error) {
         console.log('Failed with URL:', url, error);

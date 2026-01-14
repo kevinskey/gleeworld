@@ -102,16 +102,27 @@ class AzuraCastService {
   private apiProxyUrl = 'https://oopmlreysjzuxzylyheb.functions.supabase.co/azuracast-api-proxy';
   private adminApiKey?: string;
 
-  async getNowPlaying(): Promise<AzuraCastNowPlaying | null> {
+  async getNowPlaying(stationId?: string): Promise<AzuraCastNowPlaying | null> {
+    const targetStation = stationId || this.stationId;
     try {
-      console.log('AzuraCast: Fetching now playing data via proxy...');
+      console.log('AzuraCast: Fetching now playing data via proxy for station:', targetStation);
       
       // Use our proxy for API calls to handle CORS and authentication
-      const data = await this.makeProxyRequest(`/nowplaying/${this.stationId}`);
+      const data = await this.makeProxyRequest(`/nowplaying/${targetStation}`);
       console.log('AzuraCast now playing data:', data);
       return data;
     } catch (error) {
       console.error('Error fetching AzuraCast data via proxy:', error);
+      return null;
+    }
+  }
+
+  // Extract station ID from stream URL (e.g., "/listen/conducting/radio.mp3" -> "conducting")
+  extractStationIdFromUrl(streamUrl: string): string | null {
+    try {
+      const match = streamUrl.match(/\/listen\/([^\/]+)\//);
+      return match ? match[1] : null;
+    } catch {
       return null;
     }
   }
