@@ -88,18 +88,23 @@ export const StreamersTab = () => {
   };
 
   const handleSave = async () => {
+    console.log('StreamersTab: handleSave CALLED', form);
+    
     if (!form.streamer_username) {
+      console.log('StreamersTab: Validation failed - no username');
       toast({ title: 'Error', description: 'Username is required.', variant: 'destructive' });
       return;
     }
     
     if (!editingStreamer && !form.streamer_password) {
+      console.log('StreamersTab: Validation failed - no password');
       toast({ title: 'Error', description: 'Password is required for new streamers.', variant: 'destructive' });
       return;
     }
 
+    console.log('StreamersTab: Validation passed, saving...', { editing: !!editingStreamer, form });
+
     try {
-      console.log('StreamersTab: Saving streamer...', { editing: !!editingStreamer, form });
       
       if (editingStreamer) {
         const updateData: any = {
@@ -276,7 +281,7 @@ export const StreamersTab = () => {
                     <Label className="text-xs">Enforce Schedule</Label>
                   </div>
                 </div>
-                <Button onClick={handleSave} className="w-full h-8 text-sm">
+                <Button type="button" onClick={() => { console.log('Button clicked!'); handleSave(); }} className="w-full h-8 text-sm">
                   <Mic className="h-3 w-3 mr-1" /> {editingStreamer ? 'Update DJ' : 'Create DJ Account'}
                 </Button>
               </div>
