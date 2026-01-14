@@ -245,7 +245,7 @@ export const useGroupMessages = () => {
     }
   };
 
-  const sendMessage = async (conversationId: string, message: string) => {
+  const sendMessage = async (conversationId: string, message: string, sendSMS: boolean = true) => {
     if (!user) throw new Error('User not authenticated');
     
     try {
@@ -261,30 +261,35 @@ export const useGroupMessages = () => {
 
       if (inAppError) throw inAppError;
 
-      // Send via SMS (non-blocking - if it fails, in-app message still succeeds)
-      try {
-        const response = await supabase.functions.invoke('send-group-sms', {
-          body: {
-            conversationId,
-            message,
-            senderUserId: user.id,
-            senderName: user.user_metadata?.full_name || 'Unknown User'
-          }
-        });
+      // Send via SMS only if enabled (non-blocking - if it fails, in-app message still succeeds)
+      if (sendSMS) {
+        try {
+          console.log('📱 Sending SMS to group members...');
+          const response = await supabase.functions.invoke('send-group-sms', {
+            body: {
+              conversationId,
+              message,
+              senderUserId: user.id,
+              senderName: user.user_metadata?.full_name || 'Unknown User'
+            }
+          });
 
-        if (response.error) {
-          console.log('SMS delivery issue:', response.error);
-        } else {
-          console.log('SMS sent successfully:', response.data);
+          if (response.error) {
+            console.log('SMS delivery issue:', response.error);
+          } else {
+            console.log('✅ SMS sent successfully:', response.data);
+          }
+        } catch (smsErr) {
+          console.log('SMS send failed (in-app message still delivered):', smsErr);
         }
-      } catch (smsErr) {
-        console.log('SMS send failed (in-app message still delivered):', smsErr);
+      } else {
+        console.log('📱 SMS sending skipped by user preference');
       }
 
       // Refresh messages for this conversation
       await fetchMessagesForConversation(conversationId);
       
-      return { success: true };
+      return { success: true, smsSent: sendSMS };
     } catch (err: any) {
       console.error('Error sending message:', err);
       throw err;
