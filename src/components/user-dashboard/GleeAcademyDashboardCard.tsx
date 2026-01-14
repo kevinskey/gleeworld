@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { GraduationCap, ArrowRight, X, Lock, ChevronDown, Settings } from 'lucide-react';
@@ -14,6 +14,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 
 // Character limit for description to ensure uniform card height
 const DESCRIPTION_CHAR_LIMIT = 120;
+
+const COURSE_SLIDER_ORDER = ['MUS 070', 'MUS 240', 'MUS 210', 'MUS 001', 'GLEE 101', 'GLEE 000'];
+
 export const GleeAcademyDashboardCard = () => {
   const navigate = useNavigate();
   const {
@@ -27,8 +30,29 @@ export const GleeAcademyDashboardCard = () => {
     clearCourseSelection,
     isDefaultCourse
   } = useCourseContext();
-  const activeCourses = ACADEMY_COURSES.filter(course => course.isActive);
+
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+
+  const activeCourses = useMemo(() => {
+    const orderIndex = new Map(COURSE_SLIDER_ORDER.map((code, idx) => [code, idx] as const));
+
+    return ACADEMY_COURSES
+      .filter(course => course.isActive)
+      .slice()
+      .sort((a, b) => {
+        const ai = orderIndex.get(a.courseCode) ?? Number.MAX_SAFE_INTEGER;
+        const bi = orderIndex.get(b.courseCode) ?? Number.MAX_SAFE_INTEGER;
+        return ai - bi;
+      });
+  }, []);
+
   const [isOpen, setIsOpen] = useState(true);
+
+  // Always start the horizontal slider at the left so MUS 070 is visible first
+  useEffect(() => {
+    if (sliderRef.current) sliderRef.current.scrollLeft = 0;
+  }, [isOpen]);
+
   const [notEnrolledDialog, setNotEnrolledDialog] = React.useState<{
     open: boolean;
     courseCode: string;
@@ -142,7 +166,7 @@ export const GleeAcademyDashboardCard = () => {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="px-3 sm:px-6 bg-background py-6">
-              <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+              <div ref={sliderRef} className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
                 {activeCourses.map(course => {
                   const isSelected = selectedCourseId === course.id || (isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070');
                   const truncatedDescription = course.description.length > DESCRIPTION_CHAR_LIMIT 
