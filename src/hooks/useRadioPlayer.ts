@@ -371,6 +371,27 @@ export const useRadioPlayer = () => {
       try {
         await fetchInitialState();
         
+        // Also fetch directly from AzuraCast for the most up-to-date track info
+        // DB can lag behind the actual stream
+        try {
+          const np = await azuraCastService.getNowPlaying();
+          const song = np?.now_playing?.song;
+          if (song?.title && isMounted) {
+            setState(prev => ({
+              ...prev,
+              currentTrack: {
+                title: song.title,
+                artist: sanitizeArtist(song.artist),
+                album: song.album || undefined,
+                art: song.art || undefined,
+              },
+            }));
+            console.log('Updated track from AzuraCast on mount:', song.title);
+          }
+        } catch (azuraError) {
+          console.warn('Failed to fetch from AzuraCast on mount:', azuraError);
+        }
+        
         if (!isMounted) return;
         
         // Create unique channel name to prevent conflicts
