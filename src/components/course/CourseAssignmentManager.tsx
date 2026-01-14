@@ -273,7 +273,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
   return <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Assignments</h2>
+          <h2 className="text-2xl font-bold text-foreground">Assignments</h2>
           <p className="text-muted-foreground">{assignments.length} total assignments</p>
         </div>
         <Dialog open={isCreateOpen || !!editingAssignment} onOpenChange={open => {
@@ -383,9 +383,9 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                   <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors py-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {expandedWeeks.has(week) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                        <CardTitle className="text-lg">{week}</CardTitle>
-                        <Badge variant="outline" className="ml-2 text-primary-foreground">
+                        {expandedWeeks.has(week) ? <ChevronDown className="h-4 w-4 text-foreground" /> : <ChevronRight className="h-4 w-4 text-foreground" />}
+                        <CardTitle className="text-lg text-foreground">{week}</CardTitle>
+                        <Badge variant="outline" className="ml-2 text-foreground border-border">
                           {groupedAssignments[week].length} assignments
                         </Badge>
                       </div>
@@ -398,23 +398,23 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 <CollapsibleContent>
                   <CardContent className="pt-0">
                     <div className="space-y-2">
-                      {groupedAssignments[week].map(assignment => <div key={assignment.id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
+                      {groupedAssignments[week].map(assignment => <div key={assignment.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted hover:bg-muted/80 transition-colors">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <GripVertical className="h-4 w-4 text-muted-foreground/50" />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="font-medium truncate text-primary-foreground">{assignment.title}</span>
+                                <span className="font-medium truncate text-foreground">{assignment.title}</span>
                                 <Badge variant={getTypeBadgeColor(assignment.assignment_type)}>
                                   {assignment.assignment_type || 'task'}
                                 </Badge>
                               </div>
-                              {assignment.description && <p className="text-sm truncate text-secondary-foreground">
+                              {assignment.description && <p className="text-sm truncate text-muted-foreground">
                                   {assignment.description}
                                 </p>}
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className="text-sm font-medium text-primary-foreground">{assignment.points} pts</span>
+                            <span className="text-sm font-medium text-foreground">{assignment.points} pts</span>
                             {assignment.due_at && <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                 <Calendar className="h-3 w-3" />
                                 {format(new Date(assignment.due_at), 'MMM d')}
