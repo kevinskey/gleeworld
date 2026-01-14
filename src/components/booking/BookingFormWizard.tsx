@@ -294,23 +294,23 @@ export const BookingFormWizard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-muted/30 to-background py-3 px-4 relative">
+    <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-muted/30 to-background py-4 md:py-8 px-4 relative">
       {/* Subtle gradient fade at the bottom */}
       <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-4">
-          <h1 className="text-xl md:text-2xl font-bold text-foreground mb-1">
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2">
             Book Our Performance
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base md:text-lg text-foreground/80">
             Spelman College Glee Club
           </p>
         </div>
 
         {/* Progress Steps */}
-        <div className="mb-4">
-          <Progress value={progressPercent} className="h-1.5 mb-3" />
+        <div className="mb-6 md:mb-8">
+          <Progress value={progressPercent} className="h-2 mb-4" />
           <div className="flex justify-between">
             {STEPS.map((step) => {
               const Icon = step.icon;
@@ -323,21 +323,21 @@ export const BookingFormWizard: React.FC = () => {
                   onClick={() => step.id < currentStep && setCurrentStep(step.id)}
                   disabled={step.id > currentStep}
                   className={cn(
-                    "flex flex-col items-center gap-0.5 transition-all",
+                    "flex flex-col items-center gap-1 transition-all",
                     isActive && "text-primary",
                     isCompleted && "text-primary cursor-pointer",
-                    !isActive && !isCompleted && "text-muted-foreground/50"
+                    !isActive && !isCompleted && "text-foreground/40"
                   )}
                 >
                   <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all",
+                    "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border-2 transition-all",
                     isActive && "border-primary bg-primary text-primary-foreground",
                     isCompleted && "border-primary bg-primary/10 text-primary",
-                    !isActive && !isCompleted && "border-muted-foreground/30"
+                    !isActive && !isCompleted && "border-foreground/30"
                   )}>
-                    {isCompleted ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                    {isCompleted ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
                   </div>
-                  <span className="text-[10px] font-medium hidden sm:block">{step.title}</span>
+                  <span className="text-xs md:text-sm font-medium hidden sm:block">{step.title}</span>
                 </button>
               );
             })}
@@ -347,17 +347,17 @@ export const BookingFormWizard: React.FC = () => {
         {/* Form */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <Card className="border-0 shadow-md bg-card">
-              <CardContent className="p-4 md:p-5">
+            <Card className="border-0 shadow-lg bg-card">
+              <CardContent className="p-5 md:p-8 lg:p-10">
                 {/* Step 1: Contact Information */}
                 {currentStep === 1 && (
-                  <div className="space-y-4">
-                    <div className="mb-3">
-                      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                        <Users className="h-4 w-4 text-primary" />
+                  <div className="space-y-5 md:space-y-6">
+                    <div className="mb-4">
+                      <h2 className="text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
+                        <Users className="h-5 w-5 text-primary" />
                         Contact Information
                       </h2>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-sm md:text-base text-foreground/70 mt-1">
                         Tell us about your organization and how to reach you
                       </p>
                     </div>
@@ -367,24 +367,24 @@ export const BookingFormWizard: React.FC = () => {
                       name="organization_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Organization Name *</FormLabel>
+                          <FormLabel className="text-sm md:text-base text-foreground">Organization Name *</FormLabel>
                           <FormControl>
-                            <Input placeholder="Your Organization" {...field} />
+                            <Input className="text-base md:text-lg" placeholder="Your Organization" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                       <FormField
                         control={form.control}
                         name="contact_person_name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Contact Name *</FormLabel>
+                            <FormLabel className="text-sm md:text-base text-foreground">Contact Name *</FormLabel>
                             <FormControl>
-                              <Input placeholder="John Smith" {...field} />
+                              <Input className="text-base md:text-lg" placeholder="John Smith" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -396,9 +396,9 @@ export const BookingFormWizard: React.FC = () => {
                         name="contact_title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Title/Role</FormLabel>
+                            <FormLabel className="text-sm md:text-base text-foreground">Title/Role</FormLabel>
                             <FormControl>
-                              <Input placeholder="Event Coordinator" {...field} />
+                              <Input className="text-base md:text-lg" placeholder="Event Coordinator" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -406,15 +406,15 @@ export const BookingFormWizard: React.FC = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                       <FormField
                         control={form.control}
                         name="contact_email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email *</FormLabel>
+                            <FormLabel className="text-sm md:text-base text-foreground">Email *</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="you@organization.org" {...field} />
+                              <Input className="text-base md:text-lg" type="email" placeholder="you@organization.org" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -426,9 +426,9 @@ export const BookingFormWizard: React.FC = () => {
                         name="contact_phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone *</FormLabel>
+                            <FormLabel className="text-sm md:text-base text-foreground">Phone *</FormLabel>
                             <FormControl>
-                              <Input placeholder="(555) 123-4567" {...field} />
+                              <Input className="text-base md:text-lg" placeholder="(555) 123-4567" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -441,9 +441,9 @@ export const BookingFormWizard: React.FC = () => {
                       name="website"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Website</FormLabel>
+                          <FormLabel className="text-sm md:text-base text-foreground">Website</FormLabel>
                           <FormControl>
-                            <Input placeholder="https://www.organization.org" {...field} />
+                            <Input className="text-base md:text-lg" placeholder="https://www.organization.org" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
