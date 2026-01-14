@@ -177,12 +177,12 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
         <div className="text-center mb-4 md:mb-6">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
             <Youtube className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-red-500" />
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-dancing font-bold text-primary-foreground">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-dancing font-bold text-white drop-shadow-lg">
               All Videos
             </h2>
             <Youtube className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-red-500" />
           </div>
-          <p className="text-primary-foreground/70 text-xs sm:text-sm md:text-base font-medium">
+          <p className="text-white/90 text-sm sm:text-base md:text-lg font-medium">
             {totalCount > 0 ? `${totalCount} videos from our channel` : 'Browse our complete video collection'}
           </p>
         </div>
@@ -256,10 +256,10 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
               </div>
               
               <CardContent className="p-3">
-                <h3 className="font-semibold text-primary-foreground line-clamp-2 text-sm mb-1">
+                <h3 className="font-semibold text-white line-clamp-2 text-sm md:text-base mb-1">
                   {video.title}
                 </h3>
-                <div className="flex items-center gap-2 text-xs text-primary-foreground/70">
+                <div className="flex items-center gap-2 text-sm text-white/80">
                   {video.view_count > 0 && (
                     <>
                       <span>{formatViewCount(video.view_count)} views</span>
@@ -279,7 +279,7 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
             <Loader2 className="h-6 w-6 animate-spin text-primary-foreground" />
           )}
           {!hasMore && videos.length > 0 && (
-            <p className="text-sm text-primary-foreground/70 font-medium">All videos loaded</p>
+            <p className="text-sm text-white/80 font-medium">All videos loaded</p>
           )}
         </div>
       </div>

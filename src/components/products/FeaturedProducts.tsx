@@ -302,7 +302,7 @@ export const FeaturedProducts = ({
             {product.name}
           </h4>
           {(product.short_description || product.description) && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
+            <p className="text-sm text-foreground/70">
               {product.short_description || product.description}
             </p>
           )}
@@ -316,7 +316,7 @@ export const FeaturedProducts = ({
                   <span className="text-2xl font-bold text-green-600">
                     {formatPrice(getCurrentPrice(product))}
                   </span>
-                  <span className="text-sm line-through text-muted-foreground">
+                  <span className="text-sm line-through text-foreground/60">
                     {formatPrice(product.price)}
                   </span>
                 </div>
