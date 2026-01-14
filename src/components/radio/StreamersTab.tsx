@@ -99,6 +99,8 @@ export const StreamersTab = () => {
     }
 
     try {
+      console.log('StreamersTab: Saving streamer...', { editing: !!editingStreamer, form });
+      
       if (editingStreamer) {
         const updateData: any = {
           streamer_username: form.streamer_username,
@@ -111,17 +113,22 @@ export const StreamersTab = () => {
         if (form.streamer_password) {
           updateData.streamer_password = form.streamer_password;
         }
-        await azuraCastService.updateStreamer(editingStreamer.id, updateData);
+        console.log('StreamersTab: Updating streamer:', editingStreamer.id, updateData);
+        const result = await azuraCastService.updateStreamer(editingStreamer.id, updateData);
+        console.log('StreamersTab: Update result:', result);
         toast({ title: 'Streamer Updated', description: `${form.display_name || form.streamer_username} has been updated.` });
       } else {
-        await azuraCastService.createStreamer({
+        const createData = {
           streamer_username: form.streamer_username,
           streamer_password: form.streamer_password,
           display_name: form.display_name || form.streamer_username,
           comments: form.comments || undefined,
           is_active: form.is_active,
           enforce_schedule: form.enforce_schedule,
-        });
+        };
+        console.log('StreamersTab: Creating streamer:', createData);
+        const result = await azuraCastService.createStreamer(createData);
+        console.log('StreamersTab: Create result:', result);
         toast({ title: 'Streamer Created', description: `${form.display_name || form.streamer_username} can now broadcast live!` });
       }
 
@@ -129,9 +136,10 @@ export const StreamersTab = () => {
       setEditingStreamer(null);
       resetForm();
       fetchStreamers();
-    } catch (error) {
-      console.error('Error saving streamer:', error);
-      toast({ title: 'Error', description: 'Failed to save streamer.', variant: 'destructive' });
+    } catch (error: any) {
+      console.error('StreamersTab: Error saving streamer:', error);
+      const errorMessage = error?.message || 'Failed to save streamer. Check console for details.';
+      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
     }
   };
 
