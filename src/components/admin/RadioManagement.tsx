@@ -675,7 +675,7 @@ export const RadioManagement = () => {
                   if (channel) selectChannel(channel);
                 }}
               >
-                <SelectTrigger className="w-[280px] h-12 bg-slate-900 border-slate-600 text-white text-lg">
+                <SelectTrigger className="w-[280px] h-14 bg-slate-900 border-slate-600 text-white text-lg">
                   <SelectValue placeholder="Select station..." />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-600 z-[100] max-h-[400px] w-[280px]">
