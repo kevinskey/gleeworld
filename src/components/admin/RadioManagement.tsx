@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { azuraCastService } from '@/services/azuracast';
 import { cn } from '@/lib/utils';
 import { useRadioChannels } from '@/hooks/useRadioChannels';
+import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { 
   Radio, Music, Play, Pause, Plus, Edit, Trash2, Users, Volume2, Clock, Settings,
   BarChart3, Search, X, GripVertical, ListMusic, Wifi, Upload, Camera, Mic, Library,
@@ -66,6 +67,9 @@ export const RadioManagement = () => {
   
   // Use shared radio channels hook for station selection
   const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
+  
+  // Get switchStream from radio player hook to actually change the audio
+  const { switchStream } = useRadioPlayer();
 
   // Radio stats
   const [radioStats, setRadioStats] = useState<RadioStats>({
@@ -670,9 +674,19 @@ export const RadioManagement = () => {
               <span className="text-sm font-medium text-foreground whitespace-nowrap">Controlling:</span>
               <Select
                 value={selectedChannel?.id || ''}
-                onValueChange={(id) => {
+                onValueChange={async (id) => {
                   const channel = channels.find(c => c.id === id);
-                  if (channel) selectChannel(channel);
+                  if (channel) {
+                    selectChannel(channel);
+                    // Also switch the actual audio stream
+                    if (channel.stream_url) {
+                      await switchStream(channel.stream_url, channel.name);
+                      toast({
+                        title: "Channel Changed",
+                        description: `Now playing: ${channel.name}`,
+                      });
+                    }
+                  }
                 }}
               >
                 <SelectTrigger className="w-[280px] h-14 bg-slate-900 border-slate-600 text-white text-lg">
