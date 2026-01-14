@@ -678,9 +678,13 @@ export const RadioManagement = () => {
                 <SelectTrigger className="w-[200px] h-10 bg-slate-900 border-slate-600 text-white">
                   <SelectValue placeholder="Select station..." />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-600 z-[100] max-h-[300px]">
+                <SelectContent className="bg-slate-900 border-slate-600 z-[100] max-h-[400px]">
                   {channels.map((channel) => (
-                    <SelectItem key={channel.id} value={channel.id} className="text-white hover:bg-slate-700">
+                    <SelectItem 
+                      key={channel.id} 
+                      value={channel.id} 
+                      className="text-white hover:bg-slate-700 py-3 px-4 text-base font-medium"
+                    >
                       {channel.name}
                     </SelectItem>
                   ))}
