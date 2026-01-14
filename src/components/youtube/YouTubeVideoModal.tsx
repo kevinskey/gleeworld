@@ -16,14 +16,15 @@ interface YouTubeVideoModalProps {
   videoId: string;
   title?: string;
   url?: string; // Original URL for playlist detection
+  playlistId?: string; // Direct playlist ID
 }
 
-export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url }: YouTubeVideoModalProps) => {
+export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playlistId: directPlaylistId }: YouTubeVideoModalProps) => {
   const [hasError, setHasError] = useState(false);
   
-  // Check if this is a playlist
-  const playlistId = url ? extractYouTubePlaylistId(url) : null;
-  const isPlaylist = url ? isYouTubePlaylistUrl(url) : false;
+  // Check if this is a playlist - use direct playlistId or extract from URL
+  const playlistId = directPlaylistId || (url ? extractYouTubePlaylistId(url) : null);
+  const isPlaylist = !!playlistId;
   
   // Determine embed URL
   const getEmbedSrc = () => {

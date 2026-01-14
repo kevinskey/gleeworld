@@ -77,6 +77,7 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeChannel, setActiveChannel] = useState<string>('all');
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<YouTubePlaylist | null>(null);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
   
@@ -672,7 +673,11 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
                             variant="secondary"
                             size="sm"
                             className="text-xs"
-                            onClick={() => window.open(playlist.playlist_url, '_blank')}
+                            onClick={() => {
+                              setSelectedPlaylist(playlist);
+                              setSelectedVideo(null);
+                              setVideoModalOpen(true);
+                            }}
                           >
                             {playlist.title}
                           </Button>
@@ -838,12 +843,14 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {channelPlaylists.map(playlist => (
-                          <a
+                          <button
                             key={playlist.id}
-                            href={playlist.playlist_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 p-2 rounded-md bg-background hover:bg-accent transition-colors"
+                            onClick={() => {
+                              setSelectedPlaylist(playlist);
+                              setSelectedVideo(null);
+                              setVideoModalOpen(true);
+                            }}
+                            className="flex items-center gap-2 p-2 rounded-md bg-background hover:bg-accent transition-colors cursor-pointer text-left w-full"
                           >
                             {playlist.thumbnail_url ? (
                               <img 
@@ -862,8 +869,8 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
                                 {playlist.video_count} videos
                               </p>
                             </div>
-                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                          </a>
+                            <Play className="h-3 w-3 text-muted-foreground shrink-0" />
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -881,9 +888,12 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
         onClose={() => {
           setVideoModalOpen(false);
           setSelectedVideo(null);
+          setSelectedPlaylist(null);
         }}
         videoId={selectedVideo?.video_id || ''}
-        title={selectedVideo?.title}
+        title={selectedVideo?.title || selectedPlaylist?.title}
+        url={selectedPlaylist?.playlist_url}
+        playlistId={selectedPlaylist?.playlist_id}
       />
     </div>
   );
