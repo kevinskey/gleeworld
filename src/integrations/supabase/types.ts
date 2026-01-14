@@ -21776,6 +21776,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_module_settings: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          is_locked: boolean | null
+          module_id: string
+          semester: string | null
+          unlock_date: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          is_locked?: boolean | null
+          module_id: string
+          semester?: string | null
+          unlock_date?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          is_locked?: boolean | null
+          module_id?: string
+          semester?: string | null
+          unlock_date?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       mus240_participation_grades: {
         Row: {
           created_at: string
