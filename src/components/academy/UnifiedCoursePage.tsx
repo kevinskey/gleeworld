@@ -367,9 +367,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </Card>
             )}
 
-            {activeTab === 'assignments' && <CourseAssignments courseId={course.id} isEnrolled={isEnrolled} />}
+            {activeTab === 'assignments' && (
+              <CourseAssignments courseId={course.id} isEnrolled={isEnrolled || isAdmin} />
+            )}
 
-            {/* Journals Tab - Available for all courses */}
+
             {activeTab === 'journals' && <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
