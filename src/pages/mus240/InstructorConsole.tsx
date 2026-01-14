@@ -40,6 +40,7 @@ import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240Semester
 import { SemesterManager } from '@/components/admin/SemesterManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ModuleToggleManager } from '@/components/mus240/instructor/ModuleToggleManager';
 export const InstructorConsole = () => {
   const {
     isAdmin,
@@ -604,16 +605,10 @@ export const InstructorConsole = () => {
                     <FolderOpen className="h-4 w-4 sm:h-5 sm:w-5" />
                     Course Modules
                   </CardTitle>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Organize course content into modules</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Toggle modules on/off to control what students can see</p>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4 md:p-6">
-                  <div className="text-center py-8">
-                    <FolderOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                    <p className="text-muted-foreground mb-4">Module editor coming soon</p>
-                    <Button variant="outline" onClick={() => navigate('/classes/mus240?section=modules')}>
-                      View Current Modules
-                    </Button>
-                  </div>
+                  <ModuleToggleManager />
                 </CardContent>
               </Card>}
 
