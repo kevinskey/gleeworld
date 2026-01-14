@@ -110,7 +110,8 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
   isAdmin = false 
 }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState(isAdmin ? 'manage' : 'write');
+  const [isInstructor, setIsInstructor] = useState(false);
+  const [activeTab, setActiveTab] = useState('write');
   const [sessions, setSessions] = useState<JournalSession[]>([]);
   const [myJournals, setMyJournals] = useState<StudentJournal[]>([]);
   const [allJournals, setAllJournals] = useState<StudentJournal[]>([]);
@@ -132,6 +133,33 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
     start_time: '13:05',
     close_time: '13:10'
   });
+
+  // Check if user is truly an instructor (super_admin only, not regular admin or TA)
+  useEffect(() => {
+    const checkInstructorStatus = async () => {
+      if (!user) {
+        setIsInstructor(false);
+        return;
+      }
+      
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('is_super_admin')
+        .eq('user_id', user.id)
+        .single();
+      
+      // Only super_admin can manage journal sessions
+      const isSuperAdmin = profile?.is_super_admin || false;
+      setIsInstructor(isSuperAdmin);
+      
+      // Set initial tab based on instructor status
+      if (isSuperAdmin) {
+        setActiveTab('manage');
+      }
+    };
+    
+    checkInstructorStatus();
+  }, [user]);
 
   // Fetch data
   const fetchData = useCallback(async () => {
@@ -178,8 +206,8 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
         }
       }
       
-      // If admin, fetch all journals
-      if (isAdmin) {
+      // If instructor, fetch all journals
+      if (isInstructor) {
         const { data: allJournalsData } = await supabase
           .from('class_session_journals')
           .select('*')
@@ -194,7 +222,7 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [user, courseId, isAdmin]);
+  }, [user, courseId, isInstructor]);
 
   useEffect(() => {
     fetchData();
@@ -599,7 +627,7 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
             <FileText className="h-4 w-4" />
             My Journals
           </TabsTrigger>
-          {isAdmin && (
+          {isInstructor && (
             <>
               <TabsTrigger value="manage" className="gap-2">
                 <Settings className="h-4 w-4" />
@@ -683,8 +711,8 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Manage Sessions Tab (Admin) */}
-        {isAdmin && (
+        {/* Manage Sessions Tab (Instructor only) */}
+        {isInstructor && (
           <TabsContent value="manage">
             <Card>
               <CardHeader>
@@ -838,8 +866,8 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
           </TabsContent>
         )}
 
-        {/* All Submissions Tab (Admin) */}
-        {isAdmin && (
+        {/* All Submissions Tab (Instructor only) */}
+        {isInstructor && (
           <TabsContent value="all">
             <Card>
               <CardHeader>
