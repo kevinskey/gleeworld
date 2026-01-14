@@ -69,7 +69,7 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const isAdmin = roles?.some(r => r.role === "Super Admin" || r.role === "Admin");
+    const isAdmin = roles?.some(r => r.role === "super_admin" || r.role === "admin");
     if (!isAdmin) {
       console.error("User is not an admin:", user.id);
       return new Response(
