@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { QrCode, Calendar, History, Settings, BarChart } from 'lucide-react';
+import { QrCode, Calendar, History, Settings, BarChart, MapPin } from 'lucide-react';
 import { QRAttendanceGenerator } from '@/components/attendance/QRAttendanceGenerator';
+import { AttendanceSecurityControls } from '@/components/attendance/AttendanceSecurityControls';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +40,8 @@ export const QRCodeManagementModule = () => {
   const [loading, setLoading] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+  const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const [selectedEventTitle, setSelectedEventTitle] = useState<string>('');
   const [stats, setStats] = useState({
     totalGenerated: 0,
     totalScans: 0,
@@ -315,27 +318,69 @@ export const QRCodeManagementModule = () => {
       </div>
 
       <Tabs defaultValue="generator" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="generator" className="flex items-center gap-2">
             <QrCode className="h-4 w-4" />
-            Attendance QR
+            <span className="hidden sm:inline">Attendance QR</span>
+            <span className="sm:hidden">QR</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            <span className="hidden sm:inline">Security</span>
+            <span className="sm:hidden">Geo</span>
           </TabsTrigger>
           <TabsTrigger value="url-generator" className="flex items-center gap-2">
             <Link className="h-4 w-4" />
-            URL QR Code
+            <span className="hidden sm:inline">URL QR Code</span>
+            <span className="sm:hidden">URL</span>
           </TabsTrigger>
           <TabsTrigger value="active" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Active ({stats.activeTokens})
+            <span className="hidden sm:inline">Active ({stats.activeTokens})</span>
+            <span className="sm:hidden">({stats.activeTokens})</span>
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <History className="h-4 w-4" />
-            History
+            <span className="hidden sm:inline">History</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="generator" className="mt-6">
-          <QRAttendanceGenerator onEventChange={loadTokenData} />
+          <QRAttendanceGenerator 
+            onEventChange={(eventId, eventTitle) => {
+              setSelectedEventId(eventId);
+              setSelectedEventTitle(eventTitle || '');
+              loadTokenData();
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="settings" className="mt-6">
+          {selectedEventId ? (
+            <AttendanceSecurityControls
+              eventId={selectedEventId}
+              eventTitle={selectedEventTitle || 'Selected Event'}
+            />
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-lg font-medium mb-2">No Event Selected</p>
+                <p className="text-muted-foreground mb-4">
+                  Select an event in the "Attendance QR" tab first to configure geofencing and security settings.
+                </p>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    const tabsElement = document.querySelector('[value="generator"]');
+                    if (tabsElement instanceof HTMLElement) tabsElement.click();
+                  }}
+                >
+                  Go to Attendance QR
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="url-generator" className="mt-6">
