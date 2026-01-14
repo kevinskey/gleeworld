@@ -58,7 +58,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'a0000000-0000-0000-0000-000000000240',
+    id: '23c4ee3c-7bbb-4534-8c0a-eecd88298d37',
     courseCode: 'MUS 240',
     title: 'Survey of African American Music',
     description: 'Explore the rich tapestry of African American musical traditions, from spirituals and blues to jazz, gospel, R&B, and hip-hop.',

@@ -108,7 +108,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       }
 
       // For MUS 240, check the mus240_enrollments table with current semester
-      if (course.id === 'a0000000-0000-0000-0000-000000000240') {
+      if (course.id === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37' || course.courseCode === 'MUS 240') {
         const {
           data: mus240Enrollment
         } = await supabase.from('mus240_enrollments').select('*').eq('student_id', user.id).eq('semester', currentSemester).eq('enrollment_status', 'enrolled').maybeSingle();
@@ -452,7 +452,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </Card>}
 
             {activeTab === 'calendar' && (
-              (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210')
+              (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'MUS 240')
                 ? <CalendarWithAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} />
                 : <CourseCalendarView courseId={course.id} />
             )}
