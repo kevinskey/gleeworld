@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   BookOpen, FileText, BarChart3, Clock, Calendar, 
   ChevronUp, ChevronDown, Users, Mail, MapPin, 
-  Target, CheckCircle2, Scale, AlertCircle
+  Target, CheckCircle2, Scale, AlertCircle, ExternalLink
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AcademyCourse } from '@/config/academyCourses';
@@ -53,6 +55,7 @@ interface CourseRequirement {
 }
 
 export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course }) => {
+  const navigate = useNavigate();
   const [syllabus, setSyllabus] = useState<SyllabusData | null>(null);
   const [objectives, setObjectives] = useState<LearningObjective[]>([]);
   const [requirements, setRequirements] = useState<CourseRequirement[]>([]);
@@ -119,8 +122,55 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
     );
   }
 
-  // If no published syllabus, show default info from course config
+  // Courses with custom syllabus pages
+  const customSyllabusRoutes: Record<string, string> = {
+    'MUS 070': '/academy/mus-070/syllabus',
+    'MUS 210': '/academy/mus-210/syllabus',
+  };
+
+  // If no published syllabus in DB, check for custom syllabus page
   if (!syllabus) {
+    const customRoute = customSyllabusRoutes[course.courseCode];
+    
+    if (customRoute) {
+      return (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl">{course.title}</CardTitle>
+                <Badge variant="outline">{course.courseCode}</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-foreground/80">{course.description}</p>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-semibold">Instructor</p>
+                  <p className="text-muted-foreground">{course.instructor?.name}</p>
+                </div>
+                <div>
+                  <p className="font-semibold">Email</p>
+                  <p className="text-muted-foreground">{course.instructor?.email}</p>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => navigate(customRoute)}
+                className="w-full gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                View Full Syllabus
+                <ExternalLink className="h-4 w-4 ml-auto" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    // Default fallback for courses without custom syllabus
     return (
       <div className="space-y-4">
         <Card>
@@ -152,19 +202,19 @@ export const StudentSyllabusView: React.FC<StudentSyllabusViewProps> = ({ course
           <CardContent className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">{course.instructor.name}</span>
+              <span className="font-semibold">{course.instructor?.name}</span>
             </div>
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">{course.instructor.email}</span>
+              <span className="text-muted-foreground">{course.instructor?.email}</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Office: {course.instructor.office}</span>
+              <span className="text-muted-foreground">Office: {course.instructor?.office}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Office Hours: {course.instructor.hours}</span>
+              <span className="text-muted-foreground">Office Hours: {course.instructor?.hours}</span>
             </div>
           </CardContent>
         </Card>
