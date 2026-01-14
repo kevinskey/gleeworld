@@ -664,7 +664,7 @@ export const RadioManagement = () => {
         {/* DASHBOARD */}
         <TabsContent value="dashboard" className="space-y-4 mt-4">
           {/* Station Selector for DJ Transport Control */}
-          {channels.length > 1 && (
+          {channels.length >= 1 && (
             <div className="flex flex-wrap items-center gap-3 p-4 bg-slate-800/50 rounded-lg border border-slate-700 overflow-visible min-h-[60px]">
               <Radio className="h-5 w-5 text-primary flex-shrink-0" />
               <span className="text-sm font-medium text-foreground whitespace-nowrap">Controlling:</span>
