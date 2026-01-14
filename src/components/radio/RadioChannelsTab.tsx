@@ -8,10 +8,11 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Radio, Plus, Pencil, Trash2, Clock, Music, Calendar, GripVertical, Save, X } from 'lucide-react';
+import { Radio, Plus, Pencil, Trash2, Clock, Music, Calendar, GripVertical, Save, X, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { azuraCastService } from '@/services/azuracast';
 
 interface RadioChannel {
   id: string;
@@ -52,6 +53,7 @@ export const RadioChannelsTab = () => {
   const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
   const [nowPlayingOverride, setNowPlayingOverride] = useState<NowPlayingOverride | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [editingChannel, setEditingChannel] = useState<RadioChannel | null>(null);
   const [isChannelDialogOpen, setIsChannelDialogOpen] = useState(false);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
@@ -108,6 +110,84 @@ export const RadioChannelsTab = () => {
       console.error('Error fetching radio data:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Sync channels from AzuraCast
+  const syncFromAzuraCast = async () => {
+    setIsSyncing(true);
+    try {
+      // Fetch all stations from AzuraCast
+      const stations = await azuraCastService.getAllStations();
+      console.log('AzuraCast stations fetched:', stations);
+
+      if (!stations || stations.length === 0) {
+        toast({ 
+          title: 'No Stations Found', 
+          description: 'Could not fetch stations from AzuraCast. Check your connection.',
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      // Get existing stream URLs to avoid duplicates
+      const existingUrls = new Set(channels.map(c => c.stream_url.toLowerCase()));
+      
+      let addedCount = 0;
+      let updatedCount = 0;
+      const maxOrder = Math.max(...channels.map(c => c.sort_order), 0);
+
+      for (let i = 0; i < stations.length; i++) {
+        const station = stations[i];
+        // AzuraCast stations have listen_url or we can construct from shortcode
+        const streamUrl = station.listen_url || 
+          `https://radio.gleeworld.org/listen/${station.short_name || station.shortcode}/radio.mp3`;
+        
+        // Check if channel already exists
+        const existingChannel = channels.find(c => 
+          c.stream_url.toLowerCase() === streamUrl.toLowerCase() ||
+          c.name.toLowerCase() === station.name?.toLowerCase()
+        );
+
+        if (existingChannel) {
+          // Optionally update existing channel if needed
+          updatedCount++;
+        } else {
+          // Add new channel
+          const { error } = await supabase.from('gw_radio_channels').insert({
+            name: station.name || station.short_name || 'Unknown Station',
+            description: station.description || null,
+            stream_url: streamUrl,
+            icon: 'Radio',
+            color: '#7BAFD4',
+            is_active: true,
+            is_default: false,
+            sort_order: maxOrder + addedCount + 1,
+          });
+
+          if (!error) {
+            addedCount++;
+          } else {
+            console.error('Error adding station:', station.name, error);
+          }
+        }
+      }
+
+      toast({ 
+        title: 'Sync Complete', 
+        description: `Found ${stations.length} stations. Added ${addedCount} new channels.` 
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error syncing from AzuraCast:', error);
+      toast({ 
+        title: 'Sync Failed', 
+        description: 'Could not sync channels from AzuraCast.',
+        variant: 'destructive' 
+      });
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -290,14 +370,25 @@ export const RadioChannelsTab = () => {
           <TabsContent value="channels" className="space-y-3 mt-3">
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">{channels.length} channels</span>
-              <Dialog open={isChannelDialogOpen} onOpenChange={(open) => {
-                setIsChannelDialogOpen(open);
-                if (!open) {
-                  setEditingChannel(null);
-                  resetChannelForm();
-                }
-              }}>
-                <DialogTrigger asChild>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-7 text-xs"
+                  onClick={syncFromAzuraCast}
+                  disabled={isSyncing}
+                >
+                  <RefreshCw className={cn("h-3 w-3 mr-1", isSyncing && "animate-spin")} />
+                  {isSyncing ? 'Syncing...' : 'Sync from AzuraCast'}
+                </Button>
+                <Dialog open={isChannelDialogOpen} onOpenChange={(open) => {
+                  setIsChannelDialogOpen(open);
+                  if (!open) {
+                    setEditingChannel(null);
+                    resetChannelForm();
+                  }
+                }}>
+                  <DialogTrigger asChild>
                   <Button size="sm" className="h-7 text-xs">
                     <Plus className="h-3 w-3 mr-1" /> Add Channel
                   </Button>
@@ -380,6 +471,7 @@ export const RadioChannelsTab = () => {
                   </div>
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
 
             <div className="space-y-2">
