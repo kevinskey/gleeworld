@@ -1,5 +1,5 @@
 import React from 'react';
-import { Radio, Play, Pause, Volume2, Users } from 'lucide-react';
+import { Radio, Play, Pause, Volume2, Users, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
@@ -16,14 +16,15 @@ export const RadioModule = () => {
       isLive, 
       isOnline,
       listenerCount, 
-      currentTrack, 
+      currentTrack,
+      upNextTrack,
       volume, 
       togglePlayPause, 
       setVolume 
     } = useRadioPlayer();
 
     console.log('RadioModule: Radio state:', { 
-      isPlaying, isLoading, isLive, isOnline, listenerCount, currentTrack 
+      isPlaying, isLoading, isLive, isOnline, listenerCount, currentTrack, upNextTrack 
     });
 
     return (
@@ -41,16 +42,37 @@ export const RadioModule = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 p-4">
-          {/* Now Playing */}
-          {currentTrack && isOnline && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">NOW PLAYING</p>
-              <div>
-                <p className="font-medium">{currentTrack.title}</p>
-                {currentTrack.artist && (
-                  <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
-                )}
-              </div>
+          {/* Now Playing & Up Next */}
+          {isOnline && (
+            <div className="space-y-3">
+              {/* Now Playing */}
+              {currentTrack && (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Now Playing</p>
+                  <div>
+                    <p className="font-medium text-foreground">{currentTrack.title}</p>
+                    {currentTrack.artist && (
+                      <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Up Next */}
+              {upNextTrack && (
+                <div className="space-y-1 pt-2 border-t border-border/50">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                    <SkipForward className="h-3 w-3" />
+                    Up Next
+                  </p>
+                  <div>
+                    <p className="text-sm text-foreground/80">{upNextTrack.title}</p>
+                    {upNextTrack.artist && (
+                      <p className="text-xs text-muted-foreground">{upNextTrack.artist}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

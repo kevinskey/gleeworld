@@ -34,6 +34,7 @@ export interface RadioPlayerState {
   isLoading: boolean;
   listenerCount: number;
   currentTrack: RadioTrack | null;
+  upNextTrack: RadioTrack | null; // What's coming up next
   isLive: boolean;
   isOnline: boolean;
   volume: number;
@@ -57,6 +58,7 @@ export const useRadioPlayer = () => {
     isLoading: false,
     listenerCount: 0,
     currentTrack: null,
+    upNextTrack: null,
     isLive: false,
     isOnline: false,
     volume: 0.8, // Default to 80% to prevent clipping
@@ -83,18 +85,23 @@ export const useRadioPlayer = () => {
       
       const np = await azuraCastService.getNowPlaying(stationId);
       const song = np?.now_playing?.song;
+      const nextSong = np?.playing_next?.song;
 
-      if (song?.title) {
-        setState(prev => ({
-          ...prev,
-          currentTrack: {
-            title: song.title,
-            artist: sanitizeArtist(song.artist),
-            album: song.album || undefined,
-            art: song.art || undefined,
-          },
-        }));
-      }
+      setState(prev => ({
+        ...prev,
+        currentTrack: song?.title ? {
+          title: song.title,
+          artist: sanitizeArtist(song.artist),
+          album: song.album || undefined,
+          art: song.art || undefined,
+        } : prev.currentTrack,
+        upNextTrack: nextSong?.title ? {
+          title: nextSong.title,
+          artist: sanitizeArtist(nextSong.artist),
+          album: nextSong.album || undefined,
+          art: nextSong.art || undefined,
+        } : null,
+      }));
     } catch (error) {
       // Silent fail: stream should keep playing even if metadata fetch fails
       console.warn('useRadioPlayer: refreshNowPlaying failed:', error);
