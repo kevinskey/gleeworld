@@ -287,11 +287,11 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         </CardContent>
       </Card>;
   }
-  return <div className="space-y-2">
-      <div className="flex items-center justify-between py-2">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Assignments</h2>
-          <p className="text-xs text-muted-foreground">{assignments.length} total</p>
+  return <div className="space-y-1">
+      <div className="flex items-center justify-between py-1">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-foreground">Assignments</h2>
+          <span className="text-xs text-muted-foreground">({assignments.length})</span>
         </div>
         <Dialog open={isCreateOpen || !!editingAssignment} onOpenChange={open => {
         if (!open) {
@@ -405,7 +405,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         </Dialog>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-200px)]">
+      <ScrollArea className="h-[calc(100vh-120px)]">
         <div className="space-y-1 pr-2">
           {sortedWeeks.map(week => {
             // Format week display to be more compact
