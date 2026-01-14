@@ -372,3 +372,6 @@ verify_jwt = false
 
 [functions.sync-assignment-to-gleeworld]
 verify_jwt = true
+
+[functions.bulk-password-reset]
+verify_jwt = true
