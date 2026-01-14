@@ -51,6 +51,34 @@ export function extractYouTubeVideoId(input: string): string | null {
   return null;
 }
 
+// Extract YouTube playlist ID from URL
+export function extractYouTubePlaylistId(input: string): string | null {
+  if (!input) return null;
+  
+  // Match playlist ID from URL (list=PLAYLIST_ID)
+  const match = input.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+// Check if URL is a playlist URL
+export function isYouTubePlaylistUrl(url: string): boolean {
+  return /youtube\.com\/playlist\?list=/.test(url) || /[?&]list=[a-zA-Z0-9_-]+/.test(url);
+}
+
+// Get YouTube playlist embed URL
+export function getYouTubePlaylistEmbedUrl(playlistId: string, autoplay = false): string {
+  const params = new URLSearchParams({
+    listType: 'playlist',
+    list: playlistId,
+    rel: '0',
+    modestbranding: '1',
+  });
+  if (autoplay) {
+    params.set('autoplay', '1');
+  }
+  return `https://www.youtube.com/embed/videoseries?${params.toString()}`;
+}
+
 // Check if a string contains a YouTube URL
 export function containsYouTubeUrl(text: string): boolean {
   const youtubePattern = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)[a-zA-Z0-9_-]{11}/;
