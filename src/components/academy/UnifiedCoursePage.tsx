@@ -189,6 +189,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               { icon: Book, label: 'Handbook', tab: 'handbook' },
               { icon: Vote, label: 'Elections', tab: 'elections' },
               { icon: Calendar, label: 'Calendar', tab: 'calendar' },
+              { icon: Video, label: 'Video Library', tab: 'video-library' },
               { icon: Bell, label: 'Announcements', tab: 'announcements' },
               { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
               { icon: Music, label: 'Music Library', tab: 'music-library' },
@@ -477,8 +478,8 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </Card>
             )}
 
-            {/* Video Library Tab - For MUS 210 */}
-            {activeTab === 'video-library' && course.courseCode === 'MUS 210' && (
+            {/* Video Library Tab - Available for all courses */}
+            {activeTab === 'video-library' && (
               <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading videos...</CardContent></Card>}>
                 <AllVideosGrid />
               </React.Suspense>
