@@ -673,7 +673,14 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
             <CardTitle className="text-lg">YouTube Channels</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {channels.map(channel => {
+            {[...channels].sort((a, b) => {
+              // Put Black Music Scholar first
+              const aIsBlackMusicScholar = a.channel_name?.toLowerCase().includes('black music scholar');
+              const bIsBlackMusicScholar = b.channel_name?.toLowerCase().includes('black music scholar');
+              if (aIsBlackMusicScholar && !bIsBlackMusicScholar) return -1;
+              if (!aIsBlackMusicScholar && bIsBlackMusicScholar) return 1;
+              return (a.channel_name || '').localeCompare(b.channel_name || '');
+            }).map(channel => {
               const channelPlaylists = getChannelPlaylists(channel.id);
               const isExpanded = expandedChannels.has(channel.id);
               
