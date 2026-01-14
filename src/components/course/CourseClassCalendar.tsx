@@ -1050,27 +1050,57 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     const isSelected = selectedDate && isSameDay(day, selectedDate);
                     const isCurrentMonth = isSameMonth(day, currentDate);
                     const isLastColumn = i % 7 === 6;
-                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] p-1.5 sm:p-2 lg:p-3 text-left transition-colors border-b border-border", !isLastColumn && "border-r border-border", !isCurrentMonth && "opacity-40 bg-muted/20", isHoliday && "bg-amber-50 dark:bg-amber-950/30", isDayToday && "bg-primary/10 ring-2 ring-inset ring-primary", isSelected && !isDayToday && "bg-accent", !isSelected && !isHoliday && !isDayToday && "hover:bg-accent/50")}>
-                            <div className={cn("text-base sm:text-lg lg:text-xl font-bold mb-1 lg:mb-2 flex items-center gap-1 text-foreground", isDayToday && "text-primary", isHoliday && "text-amber-600")}>
-                              {format(day, 'd')}
-                              {isHoliday && <AlertCircle className="h-3 w-3" />}
+                    return (
+                      <button 
+                        key={i} 
+                        onClick={() => setSelectedDate(day)} 
+                        className={cn(
+                          "h-24 sm:h-28 lg:h-32 p-1 sm:p-1.5 lg:p-2 text-left transition-colors border-b border-border overflow-hidden",
+                          !isLastColumn && "border-r border-border",
+                          !isCurrentMonth && "opacity-40 bg-muted/20",
+                          isHoliday && "bg-amber-50 dark:bg-amber-950/30",
+                          isDayToday && "bg-primary/10 ring-2 ring-inset ring-primary",
+                          isSelected && !isDayToday && "bg-accent",
+                          !isSelected && !isHoliday && !isDayToday && "hover:bg-accent/50"
+                        )}
+                      >
+                        <div className={cn(
+                          "text-sm sm:text-base font-semibold mb-0.5 flex items-center gap-1 text-foreground",
+                          isDayToday && "text-primary",
+                          isHoliday && "text-amber-600"
+                        )}>
+                          {format(day, 'd')}
+                          {isHoliday && <AlertCircle className="h-3 w-3" />}
+                        </div>
+                        <div className="space-y-0.5 overflow-hidden">
+                          {daySpelmanEvents.slice(0, 1).map(event => (
+                            <div 
+                              key={event.id} 
+                              className="text-[9px] sm:text-[10px] font-medium bg-amber-200 dark:bg-amber-800 rounded px-1 py-0.5 truncate text-amber-900 dark:text-amber-100"
+                            >
+                              {event.title}
                             </div>
-                            <div className="space-y-1 lg:space-y-1.5">
-                              {daySpelmanEvents.slice(0, 1).map(event => <div key={event.id} className="text-[10px] sm:text-xs lg:text-sm font-semibold bg-amber-200 dark:bg-amber-800 rounded-md lg:rounded-lg px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 truncate text-amber-900 dark:text-amber-100 shadow-sm">
-                                  {event.title}
-                                </div>)}
-                              {daySessions.slice(0, isHoliday ? 1 : 3).map(session => {
-                          const typeConfig = getSessionTypeConfig(session.session_type);
-                          return <div key={session.id} className="text-[10px] sm:text-xs lg:text-sm font-semibold bg-[#003666] text-white rounded-md lg:rounded-lg px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 truncate flex items-center gap-1 shadow-sm">
-                                    <typeConfig.icon className="h-3 w-3 lg:h-4 lg:w-4 flex-shrink-0" />
-                                    <span className="truncate">{session.title}</span>
-                                  </div>;
-                        })}
-                              {daySessions.length + daySpelmanEvents.length > 3 && <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground font-semibold px-1.5 sm:px-2">
-                                  +{daySessions.length + daySpelmanEvents.length - 3} more
-                                </div>}
+                          ))}
+                          {daySessions.slice(0, isHoliday ? 1 : 2).map(session => {
+                            const typeConfig = getSessionTypeConfig(session.session_type);
+                            return (
+                              <div 
+                                key={session.id} 
+                                className="text-[9px] sm:text-[10px] font-medium bg-primary text-primary-foreground rounded px-1 py-0.5 truncate flex items-center gap-0.5"
+                              >
+                                <typeConfig.icon className="h-2.5 w-2.5 flex-shrink-0" />
+                                <span className="truncate">{session.title}</span>
+                              </div>
+                            );
+                          })}
+                          {daySessions.length + daySpelmanEvents.length > 2 && (
+                            <div className="text-[9px] text-muted-foreground font-medium px-1">
+                              +{daySessions.length + daySpelmanEvents.length - 2} more
                             </div>
-                          </button>;
+                          )}
+                        </div>
+                      </button>
+                    );
                   })}
                     </div>
                   </>}
@@ -1098,30 +1128,62 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     const isDayToday = isSameDay(day, new Date());
                     const isSelected = selectedDate && isSameDay(day, selectedDate);
                     const isLastColumn = i === 6;
-                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[200px] sm:min-h-[240px] lg:min-h-[280px] xl:min-h-[320px] p-2 sm:p-3 lg:p-4 text-left transition-colors border-b border-border", !isLastColumn && "border-r border-border", isHoliday && "bg-amber-50 dark:bg-amber-950/30", isDayToday && "bg-primary/10 ring-2 ring-inset ring-primary", isSelected && !isDayToday && "bg-accent", !isSelected && !isHoliday && !isDayToday && "hover:bg-accent/50")}>
-                            {isHoliday && <div className="flex items-center gap-1 text-amber-600 text-xs font-semibold mb-2">
-                                <AlertCircle className="h-3 w-3" />
-                                Holiday
-                              </div>}
-                            <div className="space-y-1.5">
-                              {daySpelmanEvents.map(event => <div key={event.id} className="text-xs sm:text-sm lg:text-base font-semibold bg-amber-200 dark:bg-amber-800 rounded-md lg:rounded-lg px-2 sm:px-2.5 lg:px-3 py-1.5 sm:py-2 lg:py-2.5 text-amber-900 dark:text-amber-100 shadow-sm">
-                                  {event.title}
-                                </div>)}
-                              {daySessions.map(session => {
-                          const typeConfig = getSessionTypeConfig(session.session_type);
-                          return <div key={session.id} className="text-xs sm:text-sm lg:text-base font-semibold bg-[#003666] text-white rounded-md lg:rounded-lg px-2 sm:px-2.5 lg:px-3 py-1.5 sm:py-2 lg:py-2.5 shadow-sm">
-                                    <div className="flex items-center gap-1.5 font-semibold">
-                                      <typeConfig.icon className="h-3.5 w-3.5 lg:h-4 lg:w-4 flex-shrink-0" />
-                                      <span className="truncate">{session.title}</span>
-                                    </div>
-                                    <div className="text-[10px] sm:text-xs lg:text-sm text-white/80 mt-0.5 lg:mt-1">
-                                      {session.start_time} - {session.end_time}
-                                    </div>
-                                  </div>;
-                        })}
-                              {daySessions.length === 0 && daySpelmanEvents.length === 0 && !isHoliday && <div className="text-xs text-muted-foreground text-center py-4">No sessions</div>}
+                    return (
+                      <button 
+                        key={i} 
+                        onClick={() => setSelectedDate(day)} 
+                        className={cn(
+                          "h-36 sm:h-40 lg:h-48 p-1.5 sm:p-2 text-left transition-colors border-b border-border overflow-hidden",
+                          !isLastColumn && "border-r border-border",
+                          isHoliday && "bg-amber-50 dark:bg-amber-950/30",
+                          isDayToday && "bg-primary/10 ring-2 ring-inset ring-primary",
+                          isSelected && !isDayToday && "bg-accent",
+                          !isSelected && !isHoliday && !isDayToday && "hover:bg-accent/50"
+                        )}
+                      >
+                        {isHoliday && (
+                          <div className="flex items-center gap-1 text-amber-600 text-[10px] font-medium mb-1">
+                            <AlertCircle className="h-3 w-3" />
+                            Holiday
+                          </div>
+                        )}
+                        <div className="space-y-1 overflow-hidden">
+                          {daySpelmanEvents.slice(0, 2).map(event => (
+                            <div 
+                              key={event.id} 
+                              className="text-[10px] sm:text-xs font-medium bg-amber-200 dark:bg-amber-800 rounded px-1.5 py-1 truncate text-amber-900 dark:text-amber-100"
+                            >
+                              {event.title}
                             </div>
-                          </button>;
+                          ))}
+                          {daySessions.slice(0, 3).map(session => {
+                            const typeConfig = getSessionTypeConfig(session.session_type);
+                            return (
+                              <div 
+                                key={session.id} 
+                                className="text-[10px] sm:text-xs font-medium bg-primary text-primary-foreground rounded px-1.5 py-1"
+                              >
+                                <div className="flex items-center gap-1">
+                                  <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
+                                  <span className="truncate">{session.title}</span>
+                                </div>
+                                <div className="text-[9px] opacity-80 mt-0.5">
+                                  {session.start_time} - {session.end_time}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {daySessions.length === 0 && daySpelmanEvents.length === 0 && !isHoliday && (
+                            <div className="text-[10px] text-muted-foreground text-center py-2">No sessions</div>
+                          )}
+                          {daySessions.length + daySpelmanEvents.length > 3 && (
+                            <div className="text-[9px] text-muted-foreground font-medium px-1">
+                              +{daySessions.length + daySpelmanEvents.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
                   })}
                     </div>
                   </>}
@@ -1361,30 +1423,56 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     const isToday = isSameDay(day, new Date());
                     const isSelected = selectedDate && isSameDay(day, selectedDate);
                     const isCurrentMonth = isSameMonth(day, currentDate);
-                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[80px] p-1 rounded-lg border text-left transition-colors bg-card", !isCurrentMonth && "opacity-40", isHoliday && "bg-red-900/30 border-red-500", academicEvent && !isHoliday && "bg-amber-900/30 border-amber-500", isToday && "border-primary ring-1 ring-primary", isSelected && "bg-primary/10 border-primary", !isSelected && !isHoliday && !academicEvent && "hover:bg-accent")}>
-                              <div className={cn("text-sm font-medium mb-1 flex items-center gap-1 text-primary-foreground", isToday && "text-primary", isHoliday && "text-red-600")}>
-                                {format(day, 'd')}
-                                {isHoliday && <AlertCircle className="h-3 w-3" />}
+                    return (
+                      <button 
+                        key={i} 
+                        onClick={() => setSelectedDate(day)} 
+                        className={cn(
+                          "h-20 sm:h-24 p-1 rounded-lg border text-left transition-colors bg-card overflow-hidden",
+                          !isCurrentMonth && "opacity-40",
+                          isHoliday && "bg-red-100 dark:bg-red-950/30 border-red-300",
+                          academicEvent && !isHoliday && "bg-amber-100 dark:bg-amber-950/30 border-amber-300",
+                          isToday && "border-primary ring-1 ring-primary",
+                          isSelected && "bg-primary/10 border-primary",
+                          !isSelected && !isHoliday && !academicEvent && "hover:bg-accent"
+                        )}
+                      >
+                        <div className={cn(
+                          "text-sm font-medium mb-0.5 flex items-center gap-1",
+                          isToday && "text-primary",
+                          isHoliday && "text-red-600"
+                        )}>
+                          {format(day, 'd')}
+                          {isHoliday && <AlertCircle className="h-3 w-3" />}
+                        </div>
+                        <div className="space-y-0.5 overflow-hidden">
+                          {academicEvent && (
+                            <div className="text-[9px] bg-amber-200 text-amber-800 rounded px-1 py-0.5 truncate">
+                              {academicEvent.title}
+                            </div>
+                          )}
+                          {daySpelmanEvents.slice(0, 1).map(event => (
+                            <div key={event.id} className="text-[9px] bg-amber-100 rounded px-1 py-0.5 truncate text-amber-900">
+                              {event.title}
+                            </div>
+                          ))}
+                          {daySessions.slice(0, 1).map(session => {
+                            const typeConfig = getSessionTypeConfig(session.session_type);
+                            return (
+                              <div key={session.id} className="text-[9px] bg-primary/10 text-primary rounded px-1 py-0.5 truncate flex items-center gap-0.5">
+                                <typeConfig.icon className="h-2.5 w-2.5 flex-shrink-0" />
+                                <span className="truncate">{session.title}</span>
                               </div>
-                              <div className="space-y-0.5">
-                                {academicEvent && <div className="text-xs bg-amber-200 text-amber-800 rounded px-1 py-0.5 truncate">
-                                    {academicEvent.title}
-                                  </div>}
-                                {daySpelmanEvents.slice(0, 1).map(event => <div key={event.id} className="text-xs bg-amber-100 rounded px-1 py-0.5 truncate text-black">
-                                    {event.title}
-                                  </div>)}
-                                {daySessions.slice(0, 2).map(session => {
-                          const typeConfig = getSessionTypeConfig(session.session_type);
-                          return <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1 py-0.5 truncate flex items-center gap-1">
-                                      <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
-                                      <span className="truncate">{session.title}</span>
-                                    </div>;
-                        })}
-                                {daySessions.length + daySpelmanEvents.length + (academicEvent ? 1 : 0) > 3 && <div className="text-xs text-muted-foreground">
-                                    +{daySessions.length + daySpelmanEvents.length + (academicEvent ? 1 : 0) - 3} more
-                                  </div>}
-                              </div>
-                            </button>;
+                            );
+                          })}
+                          {daySessions.length + daySpelmanEvents.length + (academicEvent ? 1 : 0) > 2 && (
+                            <div className="text-[9px] text-muted-foreground px-1">
+                              +{daySessions.length + daySpelmanEvents.length + (academicEvent ? 1 : 0) - 2} more
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
                   })}
                       </div>
                     </>}
@@ -1415,33 +1503,61 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     const isHoliday = activeSemester?.exception_dates.includes(format(day, 'yyyy-MM-dd'));
                     const isToday = isSameDay(day, new Date());
                     const isSelected = selectedDate && isSameDay(day, selectedDate);
-                    return <button key={i} onClick={() => setSelectedDate(day)} className={cn("min-h-[200px] p-2 rounded-lg border text-left transition-colors bg-card", isHoliday && "bg-red-900/30 border-red-500", academicEvent && !isHoliday && "bg-amber-900/30 border-amber-500", isToday && "border-primary", isSelected && "bg-primary/10 border-primary ring-1 ring-primary", !isSelected && !isHoliday && !academicEvent && "hover:bg-accent")}>
-                              {isHoliday && <div className="flex items-center gap-1 text-red-600 text-xs mb-2">
-                                  <AlertCircle className="h-3 w-3" />
-                                  Holiday
-                                </div>}
-                              <div className="space-y-1">
-                                {academicEvent && <div className="text-xs bg-amber-200 text-amber-800 rounded px-1.5 py-1">
-                                    {academicEvent.title}
-                                  </div>}
-                                {daySpelmanEvents.map(event => <div key={event.id} className="text-xs bg-amber-100 rounded px-1.5 py-1 text-black">
-                                    {event.title}
-                                  </div>)}
-                                {daySessions.map(session => {
-                          const typeConfig = getSessionTypeConfig(session.session_type);
-                          return <div key={session.id} className="text-xs bg-[#003666]/10 text-[#003666] rounded px-1.5 py-1">
-                                      <div className="flex items-center gap-1 font-medium">
-                                        <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
-                                        <span className="truncate text-primary-foreground">{session.title}</span>
-                                      </div>
-                                      <div className="text-[10px] text-muted-foreground mt-0.5">
-                                        {session.start_time} - {session.end_time}
-                                      </div>
-                                    </div>;
-                        })}
-                                {daySessions.length === 0 && daySpelmanEvents.length === 0 && !academicEvent && !isHoliday && <div className="text-xs text-center py-4 text-primary-foreground">No events</div>}
+                    return (
+                      <button 
+                        key={i} 
+                        onClick={() => setSelectedDate(day)} 
+                        className={cn(
+                          "h-36 sm:h-40 p-1.5 rounded-lg border text-left transition-colors bg-card overflow-hidden",
+                          isHoliday && "bg-red-100 dark:bg-red-950/30 border-red-300",
+                          academicEvent && !isHoliday && "bg-amber-100 dark:bg-amber-950/30 border-amber-300",
+                          isToday && "border-primary",
+                          isSelected && "bg-primary/10 border-primary ring-1 ring-primary",
+                          !isSelected && !isHoliday && !academicEvent && "hover:bg-accent"
+                        )}
+                      >
+                        {isHoliday && (
+                          <div className="flex items-center gap-1 text-red-600 text-[10px] mb-1">
+                            <AlertCircle className="h-3 w-3" />
+                            Holiday
+                          </div>
+                        )}
+                        <div className="space-y-0.5 overflow-hidden">
+                          {academicEvent && (
+                            <div className="text-[10px] bg-amber-200 text-amber-800 rounded px-1 py-0.5 truncate">
+                              {academicEvent.title}
+                            </div>
+                          )}
+                          {daySpelmanEvents.slice(0, 2).map(event => (
+                            <div key={event.id} className="text-[10px] bg-amber-100 rounded px-1 py-0.5 truncate text-amber-900">
+                              {event.title}
+                            </div>
+                          ))}
+                          {daySessions.slice(0, 3).map(session => {
+                            const typeConfig = getSessionTypeConfig(session.session_type);
+                            return (
+                              <div key={session.id} className="text-[10px] bg-primary/10 rounded px-1 py-0.5">
+                                <div className="flex items-center gap-0.5 font-medium text-primary">
+                                  <typeConfig.icon className="h-2.5 w-2.5 flex-shrink-0" />
+                                  <span className="truncate">{session.title}</span>
+                                </div>
+                                <div className="text-[9px] text-muted-foreground">
+                                  {session.start_time} - {session.end_time}
+                                </div>
                               </div>
-                            </button>;
+                            );
+                          })}
+                          {daySessions.length === 0 && daySpelmanEvents.length === 0 && !academicEvent && !isHoliday && (
+                            <div className="text-[10px] text-center py-2 text-muted-foreground">No events</div>
+                          )}
+                          {daySessions.length + daySpelmanEvents.length > 3 && (
+                            <div className="text-[9px] text-muted-foreground px-1">
+                              +{daySessions.length + daySpelmanEvents.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
                   })}
                       </div>
                     </>}
