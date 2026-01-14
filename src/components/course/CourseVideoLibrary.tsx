@@ -11,7 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { 
   Video, Play, RefreshCw, Plus, Search, ExternalLink, Trash2, 
-  Youtube, Clock, Eye, Calendar, Star, StarOff, Link2, X
+  Youtube, Clock, Eye, Calendar, Star, StarOff, Link2, X, 
+  ChevronDown, ChevronRight, ListVideo
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -47,6 +48,18 @@ interface YouTubeChannel {
   video_count: number;
 }
 
+interface YouTubePlaylist {
+  id: string;
+  channel_id: string;
+  playlist_id: string;
+  title: string;
+  description: string | null;
+  thumbnail_url: string | null;
+  video_count: number;
+  playlist_url: string;
+  is_featured?: boolean;
+}
+
 interface CourseVideoLibraryProps {
   courseId: string;
   isInstructor?: boolean;
@@ -58,12 +71,14 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
 }) => {
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [channels, setChannels] = useState<YouTubeChannel[]>([]);
+  const [playlists, setPlaylists] = useState<YouTubePlaylist[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeChannel, setActiveChannel] = useState<string>('all');
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
   
   // Add channel dialog
   const [addChannelOpen, setAddChannelOpen] = useState(false);
@@ -75,7 +90,7 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
   const [newVideoUrl, setNewVideoUrl] = useState('');
   const [addingVideo, setAddingVideo] = useState(false);
 
-  // Fetch videos and channels for this specific course
+  // Fetch videos, channels, and playlists for this specific course
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -101,12 +116,46 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
       if (videosError) throw videosError;
       setVideos(videosData || []);
       
+      // Fetch playlists for the channels we have
+      if (channelsData && channelsData.length > 0) {
+        const channelIds = channelsData.map(c => c.id);
+        const { data: playlistsData, error: playlistsError } = await supabase
+          .from('youtube_playlists')
+          .select('*')
+          .in('channel_id', channelIds)
+          .order('title');
+        
+        if (playlistsError) {
+          console.error('Error fetching playlists:', playlistsError);
+        } else {
+          setPlaylists(playlistsData || []);
+        }
+      }
+      
     } catch (error) {
       console.error('Error fetching video library:', error);
       toast.error('Failed to load video library');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Toggle channel expansion for playlists
+  const toggleChannelExpansion = (channelId: string) => {
+    setExpandedChannels(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(channelId)) {
+        newSet.delete(channelId);
+      } else {
+        newSet.add(channelId);
+      }
+      return newSet;
+    });
+  };
+
+  // Get playlists for a specific channel
+  const getChannelPlaylists = (channelId: string) => {
+    return playlists.filter(p => p.channel_id === channelId);
   };
 
   useEffect(() => {
@@ -623,54 +672,117 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
           <CardHeader>
             <CardTitle className="text-lg">YouTube Channels</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {channels.map(channel => (
-                <div 
-                  key={channel.id}
-                  className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors"
-                >
-                  <div className="bg-red-600 text-white rounded-full p-2">
-                    <Youtube className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm truncate">{channel.channel_name}</h4>
-                    <p className="text-xs text-muted-foreground">
-                      {channel.video_count} videos • {channel.subscriber_count?.toLocaleString()} subscribers
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => syncChannel(`@${channel.channel_name?.replace(/\s/g, '')}`)}
-                      disabled={syncing}
-                    >
-                      <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-                    </Button>
-                    <a
-                      href={channel.channel_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center h-8 w-8 hover:bg-accent rounded-md"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                    {isInstructor && (
+          <CardContent className="space-y-4">
+            {channels.map(channel => {
+              const channelPlaylists = getChannelPlaylists(channel.id);
+              const isExpanded = expandedChannels.has(channel.id);
+              
+              return (
+                <div key={channel.id} className="border rounded-lg overflow-hidden">
+                  {/* Channel Header */}
+                  <div className="flex items-center gap-3 p-3 hover:bg-accent/50 transition-colors">
+                    {channelPlaylists.length > 0 && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => deleteChannel(channel.id, channel.channel_name)}
+                        className="h-6 w-6 shrink-0"
+                        onClick={() => toggleChannelExpansion(channel.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
                       </Button>
                     )}
+                    {channelPlaylists.length === 0 && <div className="w-6" />}
+                    
+                    <div className="bg-red-600 text-white rounded-full p-2 shrink-0">
+                      <Youtube className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm truncate">{channel.channel_name}</h4>
+                      <p className="text-xs text-muted-foreground">
+                        {channel.video_count} videos • {channel.subscriber_count?.toLocaleString()} subscribers
+                        {channelPlaylists.length > 0 && ` • ${channelPlaylists.length} playlists`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => syncChannel(`@${channel.channel_name?.replace(/\s/g, '')}`)}
+                        disabled={syncing}
+                        title="Sync videos & playlists"
+                      >
+                        <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                      </Button>
+                      <a
+                        href={channel.channel_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center h-8 w-8 hover:bg-accent rounded-md"
+                        title="Open on YouTube"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                      {isInstructor && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => deleteChannel(channel.id, channel.channel_name)}
+                          title="Delete channel"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
+                  
+                  {/* Playlists (Expandable) */}
+                  {isExpanded && channelPlaylists.length > 0 && (
+                    <div className="border-t bg-muted/30 p-3">
+                      <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                        <ListVideo className="h-3 w-3" />
+                        Playlists
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {channelPlaylists.map(playlist => (
+                          <a
+                            key={playlist.id}
+                            href={playlist.playlist_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 p-2 rounded-md bg-background hover:bg-accent transition-colors"
+                          >
+                            {playlist.thumbnail_url ? (
+                              <img 
+                                src={playlist.thumbnail_url} 
+                                alt={playlist.title}
+                                className="w-16 h-9 object-cover rounded"
+                              />
+                            ) : (
+                              <div className="w-16 h-9 bg-muted rounded flex items-center justify-center">
+                                <ListVideo className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{playlist.title}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {playlist.video_count} videos
+                              </p>
+                            </div>
+                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </CardContent>
         </Card>
       )}

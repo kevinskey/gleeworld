@@ -566,13 +566,59 @@ serve(async (req) => {
 
     console.log('Successfully synced', videosToUpsert.length, 'videos')
 
+    // Fetch and sync channel playlists
+    let playlistsCount = 0
+    try {
+      console.log('Fetching playlists for channel:', channelId)
+      const playlistsUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&channelId=${channelId}&maxResults=25&key=${youtubeApiKey}`
+      const playlistsResponse = await fetch(playlistsUrl)
+      
+      if (playlistsResponse.ok) {
+        const playlistsData = await playlistsResponse.json()
+        
+        if (playlistsData.items && playlistsData.items.length > 0) {
+          console.log(`Found ${playlistsData.items.length} playlists`)
+          
+          const playlistsToUpsert = playlistsData.items.map((playlist: any) => ({
+            channel_id: dbChannelId,
+            playlist_id: playlist.id,
+            title: playlist.snippet.title,
+            description: playlist.snippet.description || null,
+            thumbnail_url: playlist.snippet.thumbnails?.high?.url || playlist.snippet.thumbnails?.medium?.url || null,
+            video_count: playlist.contentDetails?.itemCount || 0,
+            published_at: playlist.snippet.publishedAt,
+            playlist_url: `https://www.youtube.com/playlist?list=${playlist.id}`
+          }))
+          
+          const { error: playlistsError } = await supabaseClient
+            .from('youtube_playlists')
+            .upsert(playlistsToUpsert, { 
+              onConflict: 'playlist_id',
+              ignoreDuplicates: false 
+            })
+          
+          if (playlistsError) {
+            console.error('Error saving playlists:', playlistsError)
+          } else {
+            playlistsCount = playlistsToUpsert.length
+            console.log('Successfully synced', playlistsCount, 'playlists')
+          }
+        }
+      } else {
+        console.log('Playlists fetch failed:', await playlistsResponse.text())
+      }
+    } catch (playlistError) {
+      console.error('Error fetching playlists:', playlistError)
+    }
+
     return new Response(JSON.stringify({
       success: true,
-      message: `Successfully synced ${videosToUpsert.length} videos from ${channel.snippet.title}`,
+      message: `Successfully synced ${videosToUpsert.length} videos and ${playlistsCount} playlists from ${channel.snippet.title}`,
       channel: {
         id: dbChannelId,
         name: channel.snippet.title,
-        videoCount: videosToUpsert.length
+        videoCount: videosToUpsert.length,
+        playlistCount: playlistsCount
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

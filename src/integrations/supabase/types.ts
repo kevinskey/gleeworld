@@ -26488,6 +26488,59 @@ export type Database = {
           },
         ]
       }
+      youtube_playlists: {
+        Row: {
+          channel_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          playlist_id: string
+          playlist_url: string | null
+          published_at: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_count: number | null
+        }
+        Insert: {
+          channel_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          playlist_id: string
+          playlist_url?: string | null
+          published_at?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_count?: number | null
+        }
+        Update: {
+          channel_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          playlist_id?: string
+          playlist_url?: string | null
+          published_at?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "youtube_playlists_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "youtube_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       youtube_videos: {
         Row: {
           category: string | null
