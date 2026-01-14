@@ -23,7 +23,7 @@ interface GleeEvent {
 
 interface QRAttendanceGeneratorProps {
   selectedEventId?: string;
-  onEventChange?: (eventId: string) => void;
+  onEventChange?: (eventId: string, eventTitle?: string) => void;
 }
 
 export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAttendanceGeneratorProps) => {
@@ -56,9 +56,10 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
   useEffect(() => {
     if (selectedEvent) {
       generateAttendanceQR();
-      onEventChange?.(selectedEvent);
+      const eventData = events.find(e => e.id === selectedEvent);
+      onEventChange?.(selectedEvent, eventData?.title);
     }
-  }, [selectedEvent, expirationMinutes]);
+  }, [selectedEvent, expirationMinutes, events]);
 
   const checkPermissions = async () => {
     if (!user) return;
