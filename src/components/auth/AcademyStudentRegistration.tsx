@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,8 @@ import { Link } from 'react-router-dom';
 
 export const AcademyStudentRegistration = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const courseParam = searchParams.get('course');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -49,12 +51,17 @@ export const AcademyStudentRegistration = () => {
     setLoading(true);
 
     try {
+      // Determine the redirect URL based on course
+      const redirectUrl = courseParam === 'MUS 240' 
+        ? `${window.location.origin}/classes/mus240`
+        : `${window.location.origin}/glee-academy`;
+
       // Sign up the user with academy registration metadata
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/glee-academy`,
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: formData.fullName,
             student_id: formData.studentId,
@@ -74,9 +81,13 @@ export const AcademyStudentRegistration = () => {
 
       toast.success('Welcome to Glee Academy! Please check your email to verify your account.');
       
-      // Redirect to academy home after a short delay
+      // Redirect to the appropriate course page after a short delay
       setTimeout(() => {
-        navigate('/glee-academy');
+        if (courseParam === 'MUS 240') {
+          navigate('/classes/mus240');
+        } else {
+          navigate('/glee-academy');
+        }
       }, 2000);
 
     } catch (error: any) {
