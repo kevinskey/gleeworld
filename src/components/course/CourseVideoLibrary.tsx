@@ -282,6 +282,40 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
     }
   };
 
+  // Delete channel and its videos
+  const deleteChannel = async (channelId: string, channelName: string) => {
+    if (!confirm(`Delete "${channelName}" and all its videos? This cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      // First delete all videos from this channel
+      const { error: videosError } = await supabase
+        .from('youtube_videos')
+        .delete()
+        .eq('channel_id', channelId);
+      
+      if (videosError) throw videosError;
+      
+      // Then delete the channel
+      const { error: channelError } = await supabase
+        .from('youtube_channels')
+        .delete()
+        .eq('id', channelId);
+      
+      if (channelError) throw channelError;
+      
+      // Update local state
+      setChannels(prev => prev.filter(c => c.id !== channelId));
+      setVideos(prev => prev.filter(v => v.channel_id !== channelId));
+      
+      toast.success(`Channel "${channelName}" deleted`);
+    } catch (error) {
+      console.error('Error deleting channel:', error);
+      toast.error('Failed to delete channel');
+    }
+  };
+
   // Filter videos
   const filteredVideos = videos.filter(video => {
     const matchesSearch = !searchQuery || 
@@ -623,6 +657,16 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
                     >
                       <ExternalLink className="h-4 w-4" />
                     </a>
+                    {isInstructor && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => deleteChannel(channel.id, channel.channel_name)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
