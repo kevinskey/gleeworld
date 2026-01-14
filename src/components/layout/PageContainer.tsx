@@ -52,9 +52,9 @@ export const PageContainer = ({
     <div
       className={cn(
         "w-full mx-auto",
-        "px-4 sm:px-6 lg:px-8",
-        padded && "py-6 sm:py-8",
-        sectionSpacing && "space-y-6 sm:space-y-8",
+        "px-3 sm:px-4 lg:px-6",
+        padded && "py-3 sm:py-4",
+        sectionSpacing && "space-y-3 sm:space-y-4",
         maxWidthClasses[maxWidth],
         className
       )}
