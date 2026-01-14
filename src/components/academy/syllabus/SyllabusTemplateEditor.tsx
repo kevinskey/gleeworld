@@ -249,19 +249,19 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
   if (loading) {
     return <div className="p-6 text-center">Loading syllabus...</div>;
   }
-  return <div className="space-y-6">
+  return <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">{courseCode} Syllabus</h2>
-          <p className="text-muted-foreground">{courseTitle}</p>
+          <h2 className="text-base font-bold">{courseCode} Syllabus</h2>
+          <p className="text-xs text-muted-foreground">{courseTitle}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant={syllabus.is_published ? 'default' : 'secondary'}>
+        <div className="flex items-center gap-2">
+          <Badge variant={syllabus.is_published ? 'default' : 'secondary'} className="text-xs">
             {syllabus.is_published ? 'Published' : 'Draft'}
           </Badge>
-          <Button onClick={saveSyllabus} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
+          <Button size="sm" onClick={saveSyllabus} disabled={saving}>
+            <Save className="h-3 w-3 mr-1" />
             {saving ? 'Saving...' : 'Save'}
           </Button>
         </div>
@@ -269,134 +269,134 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full">
-          <TabsTrigger value="info" className="flex items-center gap-1">
-            <User className="h-4 w-4" />
+        <TabsList className="grid grid-cols-5 w-full h-8">
+          <TabsTrigger value="info" className="flex items-center gap-1 text-xs py-1">
+            <User className="h-3 w-3" />
             <span className="hidden sm:inline">Course Info</span>
           </TabsTrigger>
-          <TabsTrigger value="objectives" className="flex items-center gap-1">
-            <Target className="h-4 w-4" />
+          <TabsTrigger value="objectives" className="flex items-center gap-1 text-xs py-1">
+            <Target className="h-3 w-3" />
             <span className="hidden sm:inline">Objectives</span>
           </TabsTrigger>
-          <TabsTrigger value="grading" className="flex items-center gap-1">
-            <ClipboardList className="h-4 w-4" />
+          <TabsTrigger value="grading" className="flex items-center gap-1 text-xs py-1">
+            <ClipboardList className="h-3 w-3" />
             <span className="hidden sm:inline">Grading</span>
           </TabsTrigger>
-          <TabsTrigger value="schedule" className="flex items-center gap-1">
-            <Calendar className="h-4 w-4" />
+          <TabsTrigger value="schedule" className="flex items-center gap-1 text-xs py-1">
+            <Calendar className="h-3 w-3" />
             <span className="hidden sm:inline">Schedule</span>
           </TabsTrigger>
-          <TabsTrigger value="policies" className="flex items-center gap-1">
-            <FileText className="h-4 w-4" />
+          <TabsTrigger value="policies" className="flex items-center gap-1 text-xs py-1">
+            <FileText className="h-3 w-3" />
             <span className="hidden sm:inline">Policies</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Course Info Tab */}
-        <TabsContent value="info" className="space-y-6">
+        <TabsContent value="info" className="space-y-3 mt-3">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5" />
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <GraduationCap className="h-4 w-4" />
                 Course Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Term/Semester</Label>
-                <Input value={syllabus.term} onChange={e => updateField('term', e.target.value)} placeholder="e.g., Spring 2026" />
+            <CardContent className="grid gap-3 md:grid-cols-2 px-4 pb-4">
+              <div className="space-y-1">
+                <Label className="text-xs">Term/Semester</Label>
+                <Input className="h-8 text-sm" value={syllabus.term} onChange={e => updateField('term', e.target.value)} placeholder="e.g., Spring 2026" />
               </div>
-              <div className="space-y-2">
-                <Label>Credits</Label>
-                <Input type="number" value={syllabus.credits} onChange={e => updateField('credits', parseInt(e.target.value) || 0)} />
+              <div className="space-y-1">
+                <Label className="text-xs">Credits</Label>
+                <Input className="h-8 text-sm" type="number" value={syllabus.credits} onChange={e => updateField('credits', parseInt(e.target.value) || 0)} />
               </div>
-              <div className="space-y-2">
-                <Label>Class Time</Label>
-                <Input value={syllabus.class_time} onChange={e => updateField('class_time', e.target.value)} placeholder="e.g., MWF 10:00am - 10:50am" />
+              <div className="space-y-1">
+                <Label className="text-xs">Class Time</Label>
+                <Input className="h-8 text-sm" value={syllabus.class_time} onChange={e => updateField('class_time', e.target.value)} placeholder="e.g., MWF 10:00am - 10:50am" />
               </div>
-              <div className="space-y-2">
-                <Label>Classroom</Label>
-                <Input value={syllabus.classroom} onChange={e => updateField('classroom', e.target.value)} placeholder="e.g., Fine Arts 109" />
+              <div className="space-y-1">
+                <Label className="text-xs">Classroom</Label>
+                <Input className="h-8 text-sm" value={syllabus.classroom} onChange={e => updateField('classroom', e.target.value)} placeholder="e.g., Fine Arts 109" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <User className="h-4 w-4" />
                 Instructor Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Instructor Name</Label>
-                <Input value={syllabus.instructor_name} onChange={e => updateField('instructor_name', e.target.value)} />
+            <CardContent className="grid gap-3 md:grid-cols-2 px-4 pb-4">
+              <div className="space-y-1">
+                <Label className="text-xs">Instructor Name</Label>
+                <Input className="h-8 text-sm" value={syllabus.instructor_name} onChange={e => updateField('instructor_name', e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={syllabus.instructor_email} onChange={e => updateField('instructor_email', e.target.value)} />
+              <div className="space-y-1">
+                <Label className="text-xs">Email</Label>
+                <Input className="h-8 text-sm" type="email" value={syllabus.instructor_email} onChange={e => updateField('instructor_email', e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input value={syllabus.instructor_phone} onChange={e => updateField('instructor_phone', e.target.value)} />
+              <div className="space-y-1">
+                <Label className="text-xs">Phone</Label>
+                <Input className="h-8 text-sm" value={syllabus.instructor_phone} onChange={e => updateField('instructor_phone', e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label>Office</Label>
-                <Input value={syllabus.instructor_office} onChange={e => updateField('instructor_office', e.target.value)} />
+              <div className="space-y-1">
+                <Label className="text-xs">Office</Label>
+                <Input className="h-8 text-sm" value={syllabus.instructor_office} onChange={e => updateField('instructor_office', e.target.value)} />
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Office Hours</Label>
-                <Input value={syllabus.office_hours} onChange={e => updateField('office_hours', e.target.value)} placeholder="e.g., MWF 3-5pm or by appointment" />
+              <div className="space-y-1 md:col-span-2">
+                <Label className="text-xs">Office Hours</Label>
+                <Input className="h-8 text-sm" value={syllabus.office_hours} onChange={e => updateField('office_hours', e.target.value)} placeholder="e.g., MWF 3-5pm or by appointment" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <BookOpen className="h-4 w-4" />
                 Course Purpose
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea value={syllabus.purpose} onChange={e => updateField('purpose', e.target.value)} placeholder="Describe the purpose and focus of this course..." rows={4} />
+            <CardContent className="px-4 pb-4">
+              <Textarea className="text-sm" value={syllabus.purpose} onChange={e => updateField('purpose', e.target.value)} placeholder="Describe the purpose and focus of this course..." rows={3} />
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
+            <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <BookOpen className="h-4 w-4" />
                 Required Textbooks
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={addTextbook}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add Textbook
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={addTextbook}>
+                <Plus className="h-3 w-3 mr-1" />
+                Add
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {syllabus.textbooks.map((textbook, index) => <div key={index} className="grid gap-3 md:grid-cols-4 p-4 border rounded-lg">
+            <CardContent className="space-y-2 px-4 pb-4">
+              {syllabus.textbooks.map((textbook, index) => <div key={index} className="grid gap-2 md:grid-cols-4 p-2 border rounded-lg">
                   <div className="md:col-span-2">
-                    <Label>Title</Label>
-                    <Input value={textbook.title} onChange={e => updateTextbook(index, 'title', e.target.value)} placeholder="Book title" />
+                    <Label className="text-xs">Title</Label>
+                    <Input className="h-8 text-sm" value={textbook.title} onChange={e => updateTextbook(index, 'title', e.target.value)} placeholder="Book title" />
                   </div>
                   <div>
-                    <Label>Author</Label>
-                    <Input value={textbook.author} onChange={e => updateTextbook(index, 'author', e.target.value)} placeholder="Author name" />
+                    <Label className="text-xs">Author</Label>
+                    <Input className="h-8 text-sm" value={textbook.author} onChange={e => updateTextbook(index, 'author', e.target.value)} placeholder="Author name" />
                   </div>
                   <div className="flex items-end gap-2">
                     <div className="flex-1">
-                      <Label>ISBN (optional)</Label>
-                      <Input value={textbook.isbn || ''} onChange={e => updateTextbook(index, 'isbn', e.target.value)} placeholder="ISBN" />
+                      <Label className="text-xs">ISBN</Label>
+                      <Input className="h-8 text-sm" value={textbook.isbn || ''} onChange={e => updateTextbook(index, 'isbn', e.target.value)} placeholder="ISBN" />
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeTextbook(index)} className="text-destructive">
-                      <Trash2 className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeTextbook(index)}>
+                      <Trash2 className="h-3 w-3 text-destructive" />
                     </Button>
                   </div>
                 </div>)}
-              {syllabus.textbooks.length === 0 && <p className="text-center py-4 text-primary-foreground">
-                  No textbooks added yet. Click "Add Textbook" to add one.
+              {syllabus.textbooks.length === 0 && <p className="text-center py-2 text-xs text-muted-foreground">
+                  No textbooks added yet.
                 </p>}
             </CardContent>
           </Card>
