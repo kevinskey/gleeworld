@@ -141,17 +141,13 @@ class AzuraCastService {
     }
   }
 
-  // Fetch all stations from AzuraCast (public API, no auth required)
+  // Fetch all stations from AzuraCast via proxy to avoid CORS
   async getAllStations(): Promise<any[]> {
     try {
-      console.log('AzuraCast: Fetching all stations...');
-      const response = await fetch(`${this.baseUrl}/api/stations`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch stations: ${response.status}`);
-      }
-      const stations = await response.json();
-      console.log('AzuraCast stations:', stations);
-      return stations;
+      console.log('AzuraCast: Fetching all stations via proxy...');
+      const data = await this.makeProxyRequest('/stations');
+      console.log('AzuraCast stations:', data);
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Error fetching AzuraCast stations:', error);
       return [];
