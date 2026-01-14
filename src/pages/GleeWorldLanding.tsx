@@ -328,18 +328,18 @@ export const GleeWorldLanding = () => {
                       }} />
                           </div>
                           <CardContent className="p-3 lg:p-4 flex flex-col gap-2">
-                            <h3 className="text-base lg:text-lg font-semibold text-card-foreground line-clamp-2">{event.title}</h3>
-                            <div className="space-y-1 text-muted-foreground text-sm">
+                            <h3 className="text-base lg:text-lg font-semibold text-card-foreground">{event.title}</h3>
+                            <div className="space-y-1 text-foreground/70 text-sm">
                               <div className="flex items-center">
                                 <Calendar className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
                                 <span>{formatDate(event.start_date)}</span>
                               </div>
                               {event.location && <div className="flex items-center">
                                   <MapPin className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                                  <span className="line-clamp-1">{event.location}</span>
+                                  <span>{event.location}</span>
                                 </div>}
                             </div>
-                            {event.description && <p className="text-card-foreground/80 line-clamp-2 text-sm">{event.description}</p>}
+                            {event.description && <p className="text-foreground/80 text-sm">{event.description}</p>}
                           </CardContent>
                         </Card>)}
                     </div>
@@ -465,7 +465,7 @@ export const GleeWorldLanding = () => {
                     </h2>
                     <AlbumIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-primary animate-pulse" />
                   </div>
-                  <p className="text-muted-foreground text-xs sm:text-sm md:text-base lg:text-lg">Discover our musical journey through our album collection</p>
+                  <p className="text-foreground/70 text-sm sm:text-base md:text-lg">Discover our musical journey through our album collection</p>
                 </div>
                 
                 {/* Horizontal Scroll for All Devices */}
@@ -489,10 +489,10 @@ export const GleeWorldLanding = () => {
                             </div>
                           </div>
                           <CardContent className="p-3 sm:p-4">
-                            <h3 className="font-semibold text-foreground mb-1 line-clamp-1 text-sm sm:text-base">{album.title}</h3>
+                            <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base">{album.title}</h3>
                             
-                            {album.tracks && album.tracks.length > 0 && <p className="text-xs text-muted-foreground mt-1">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>}
-                            {album.release_date && <p className="text-xs text-muted-foreground mt-1">{new Date(album.release_date).getFullYear()}</p>}
+                            {album.tracks && album.tracks.length > 0 && <p className="text-sm text-foreground/70 mt-1">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>}
+                            {album.release_date && <p className="text-sm text-foreground/70 mt-1">{new Date(album.release_date).getFullYear()}</p>}
                           </CardContent>
                         </Card>
                       </CarouselItem>)}

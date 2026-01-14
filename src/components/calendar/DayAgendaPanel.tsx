@@ -36,7 +36,7 @@ export const DayAgendaPanel = ({
         <h2 className="text-sm md:text-base font-bold leading-tight">
           {format(selectedDate, 'EEE, MMM d')}
         </h2>
-        <div className="text-xs text-slate-400">
+        <div className="text-sm text-slate-300">
           {events.length} {events.length === 1 ? 'event' : 'events'}
         </div>
       </div>
@@ -46,16 +46,16 @@ export const DayAgendaPanel = ({
         <div className="p-4 space-y-4">
           {events.length === 0 ? (
             <div className="text-center py-8">
-              <CalendarDays className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500 font-medium">No events scheduled</p>
-              <p className="text-slate-400 text-sm mt-1">Select a date to view events</p>
+              <CalendarDays className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+              <p className="text-slate-600 font-medium text-base">No events scheduled</p>
+              <p className="text-slate-500 text-sm mt-1">Select a date to view events</p>
             </div>
           ) : (
             <>
               {/* Public Events */}
               {publicEvents.length > 0 && (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-600 uppercase tracking-wider">
                     <Globe className="h-4 w-4" />
                     <span>GleeWorld Events</span>
                   </div>
