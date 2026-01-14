@@ -172,15 +172,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="flex min-h-screen bg-background">
         {/* Left Sidebar - Navigation - Visible on tablet (md) and up */}
-        <div className="w-[200px] md:w-[220px] lg:w-[260px] min-w-[200px] md:min-w-[220px] lg:min-w-[260px] bg-muted border-r border-border flex-shrink-0 hidden md:block">
-          <div className="p-3 md:p-4 border-b border-border pb-4 md:pb-6 lg:pb-[30px] pt-3 md:pt-4 lg:pt-[20px]">
-            <Mus240SemesterSelector showLabel={false} className="mb-2" />
-            <div className="text-base md:text-lg font-bold text-foreground pt-2 md:pt-[10px] pl-2 md:pl-4 lg:pl-[20px]">{course.courseCode}</div>
-            <div className="text-lg md:text-xl text-black border-2 md:border-4 border-solid border-primary py-1 md:py-[5px] pr-2 md:pr-[5px] pl-2 md:pl-3 lg:pl-[15px]">{course.title}</div>
+        <div className="w-[180px] md:w-[200px] lg:w-[220px] min-w-[180px] md:min-w-[200px] lg:min-w-[220px] bg-muted border-r border-border flex-shrink-0 hidden md:block">
+          <div className="p-2 md:p-3 border-b border-border pb-2 md:pb-3 pt-2 md:pt-3">
+            <Mus240SemesterSelector showLabel={false} className="mb-1" />
+            <div className="text-sm font-bold text-foreground pt-1 pl-2">{course.courseCode}</div>
+            <div className="text-sm text-black border-2 border-solid border-primary py-1 px-2 leading-tight">{course.title}</div>
           </div>
           
-          <nav className="p-1.5 md:p-2 space-y-0.5 md:space-y-1">
-            {/* MUS 070 specific sidebar order: Home, Syllabus, Handbook, Elections, Calendar, Announcements, Messages, Music Library, Assignments, Tests, Polls, Resources, Grades, Rubrics */}
+          <nav className="p-1 space-y-0.5">
             {(course.courseCode === 'MUS 070' ? [
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
@@ -197,7 +196,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               { icon: Trophy, label: 'Grades', tab: 'grades' },
               { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
             ] : [
-              // Default order for other courses
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
               { icon: Bell, label: 'Announcements', tab: 'announcements' },
@@ -212,15 +210,15 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
               { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
               { icon: Calendar, label: 'Calendar', tab: 'calendar' },
-            ]).map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
-                
-                <span className="text-sm md:text-base lg:text-lg pl-2 md:pl-3 lg:pl-[20px]">{item.label}</span>
+            ]).map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-xs transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
+                <item.icon className="h-3 w-3 flex-shrink-0" />
+                <span className="text-xs">{item.label}</span>
               </button>)}
           </nav>
           
           {/* Course Resources Section */}
-          <div className="p-2 md:p-3 lg:p-4 border-t border-border space-y-1 md:space-y-2">
-            <h3 className="font-bold text-foreground text-xs md:text-sm mb-2 md:mb-3">Resources</h3>
+          <div className="p-2 border-t border-border space-y-0.5">
+            <h3 className="font-bold text-foreground text-xs mb-1">Resources</h3>
             {[{
               icon: Video,
               label: 'Video Library',
@@ -237,16 +235,16 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               icon: FileText,
               label: 'Documents',
               desc: 'Handouts and readings'
-            }].map((item, i) => <button key={i} className="w-full flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
-                <item.icon className="h-3 w-3 md:h-4 md:w-4" />
+            }].map((item, i) => <button key={i} className="w-full flex items-center gap-2 px-2 py-1 rounded-md text-xs transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
+                <item.icon className="h-3 w-3" />
                 <span>{item.label}</span>
               </button>)}
           </div>
           
           {/* Instructor Control Center Button */}
-          {isAdmin && <div className="p-2 md:p-3 lg:p-4 border-t border-border">
-              <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="w-full text-xs md:text-sm" size="sm">
-                <Settings className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+          {isAdmin && <div className="p-2 border-t border-border">
+              <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="w-full text-xs" size="sm">
+                <Settings className="h-3 w-3 mr-1" />
                 Instructor Console
               </Button>
             </div>}
@@ -256,18 +254,18 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
         <div className="flex-1 overflow-y-auto">
           {/* Course Header - Full width dark blue on all screen sizes */}
           <div className="bg-[#003666] w-full">
-            <div className="px-4 sm:px-6 md:px-6 lg:px-12 xl:px-16 py-4 md:py-6">
+            <div className="px-3 sm:px-4 md:px-6 py-2 md:py-3">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 md:gap-3 mb-2">
-                    <Badge variant="secondary" className="font-mono text-xs md:text-sm">{course.courseCode}</Badge>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant="secondary" className="font-mono text-xs">{course.courseCode}</Badge>
                     <Badge variant="outline" className="border-white/30 text-white text-xs md:hidden">
                       {course.level}
                     </Badge>
                   </div>
-                  <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{course.title}</h1>
-                  <p className="text-white/80 mt-2 text-sm md:hidden">{course.description}</p>
-                  <div className="hidden md:flex flex-wrap items-center gap-3 md:gap-4 lg:gap-6 mt-2 md:mt-3 text-xs md:text-sm text-white/80">
+                  <h1 className="text-base md:text-lg font-bold text-white">{course.title}</h1>
+                  <p className="text-white/80 mt-1 text-xs md:hidden">{course.description}</p>
+                  <div className="hidden md:flex flex-wrap items-center gap-3 mt-1 text-xs text-white/80">
                     <span className="font-medium text-white">Dr. Kevin Johnson</span>
                     <span>kjohns10@spelman.edu</span>
                     <span className="hidden lg:inline">Office: Fine Arts 105</span>
@@ -276,17 +274,18 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </div>
                 <Button 
                   variant="ghost" 
+                  size="sm"
                   onClick={() => navigate('/glee-academy')} 
-                  className="hidden md:flex text-white hover:bg-white/10 hover:text-white"
+                  className="hidden md:flex text-white hover:bg-white/10 hover:text-white text-xs"
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Academy
+                  <ArrowLeft className="h-3 w-3 mr-1" />
+                  Back
                 </Button>
               </div>
             </div>
           </div>
 
-          <div className="px-4 sm:px-6 md:px-6 lg:px-12 xl:px-16 space-y-4 md:space-y-6 w-full py-4 md:py-6">
+          <div className="px-3 sm:px-4 md:px-6 space-y-3 md:space-y-4 w-full py-3 md:py-4">
 
             {/* Mobile Tab Navigation - Mobile only (hidden on tablet with sidebar) */}
             <div className="md:hidden relative z-10 -mx-4 px-4">
