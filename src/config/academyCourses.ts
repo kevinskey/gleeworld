@@ -1,4 +1,4 @@
-// Unified Academy Course Configuration
+// Unified Academy Course Configuration - Ordered: MUS 070, MUS 240, MUS 210, MUS 001, GLEE 101, GLEE 000
 import { Users, Music, BookOpen, Mic, Eye, Award, GraduationCap, LucideIcon } from 'lucide-react';
 
 export interface AcademyCourse {
