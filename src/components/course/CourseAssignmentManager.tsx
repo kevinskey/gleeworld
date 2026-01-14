@@ -287,11 +287,11 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         </CardContent>
       </Card>;
   }
-  return <div className="space-y-4">
-      <div className="flex items-center justify-between">
+  return <div className="space-y-2">
+      <div className="flex items-center justify-between py-2">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Assignments</h2>
-          <p className="text-muted-foreground">{assignments.length} total assignments</p>
+          <h2 className="text-lg font-semibold text-foreground">Assignments</h2>
+          <p className="text-xs text-muted-foreground">{assignments.length} total</p>
         </div>
         <Dialog open={isCreateOpen || !!editingAssignment} onOpenChange={open => {
         if (!open) {
@@ -301,9 +301,9 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         }
       }}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Assignment
+            <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+              <Plus className="h-3 w-3 mr-1" />
+              Add
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
@@ -343,7 +343,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Week/Category</Label>
+                  <Label className="text-foreground">Week</Label>
                   <Select value={formData.category} onValueChange={value => setFormData({
                   ...formData,
                   category: value
@@ -352,22 +352,22 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Week 1: Jan 14–20">Week 1: Jan 14–20</SelectItem>
-                      <SelectItem value="Week 2: Jan 21–27">Week 2: Jan 21–27</SelectItem>
-                      <SelectItem value="Week 3: Jan 28–Feb 3">Week 3: Jan 28–Feb 3</SelectItem>
-                      <SelectItem value="Week 4: Feb 4–10">Week 4: Feb 4–10</SelectItem>
-                      <SelectItem value="Week 5: Feb 11–17">Week 5: Feb 11–17</SelectItem>
-                      <SelectItem value="Week 6: Feb 18–24">Week 6: Feb 18–24</SelectItem>
-                      <SelectItem value="Week 7: Feb 25–Mar 3">Week 7: Feb 25–Mar 3</SelectItem>
-                      <SelectItem value="Week 8: Mar 4–10">Week 8: Mar 4–10</SelectItem>
-                      <SelectItem value="Week 9: Mar 11–17 (Spring Break)">Week 9: Spring Break</SelectItem>
-                      <SelectItem value="Week 10: Mar 18–24">Week 10: Mar 18–24</SelectItem>
-                      <SelectItem value="Week 11: Mar 25–31">Week 11: Mar 25–31</SelectItem>
-                      <SelectItem value="Week 12: Apr 1–7">Week 12: Apr 1–7</SelectItem>
-                      <SelectItem value="Week 13: Apr 8–14">Week 13: Apr 8–14</SelectItem>
-                      <SelectItem value="Week 14: Apr 15–21">Week 14: Apr 15–21</SelectItem>
-                      <SelectItem value="Week 15: Apr 22–28">Week 15: Apr 22–28</SelectItem>
-                      <SelectItem value="Finals Week">Finals Week</SelectItem>
+                      <SelectItem value="Week 1: Jan 14–20">Wk 1: Jan 14–20</SelectItem>
+                      <SelectItem value="Week 2: Jan 21–27">Wk 2: Jan 21–27</SelectItem>
+                      <SelectItem value="Week 3: Jan 28–Feb 3">Wk 3: Jan 28–Feb 3</SelectItem>
+                      <SelectItem value="Week 4: Feb 4–10">Wk 4: Feb 4–10</SelectItem>
+                      <SelectItem value="Week 5: Feb 11–17">Wk 5: Feb 11–17</SelectItem>
+                      <SelectItem value="Week 6: Feb 18–24">Wk 6: Feb 18–24</SelectItem>
+                      <SelectItem value="Week 7: Feb 25–Mar 3">Wk 7: Feb 25–Mar 3</SelectItem>
+                      <SelectItem value="Week 8: Mar 4–10">Wk 8: Mar 4–10</SelectItem>
+                      <SelectItem value="Week 9: Mar 11–17 (Spring Break)">Wk 9: Spring Break</SelectItem>
+                      <SelectItem value="Week 10: Mar 18–24">Wk 10: Mar 18–24</SelectItem>
+                      <SelectItem value="Week 11: Mar 25–31">Wk 11: Mar 25–31</SelectItem>
+                      <SelectItem value="Week 12: Apr 1–7">Wk 12: Apr 1–7</SelectItem>
+                      <SelectItem value="Week 13: Apr 8–14">Wk 13: Apr 8–14</SelectItem>
+                      <SelectItem value="Week 14: Apr 15–21">Wk 14: Apr 15–21</SelectItem>
+                      <SelectItem value="Week 15: Apr 22–28">Wk 15: Apr 22–28</SelectItem>
+                      <SelectItem value="Finals Week">Finals</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -405,75 +405,69 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         </Dialog>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-280px)]">
-        <div className="space-y-2 pr-4">
-          {sortedWeeks.map(week => <Collapsible key={week} open={expandedWeeks.has(week)} onOpenChange={() => toggleWeek(week)}>
-              <Card>
+      <ScrollArea className="h-[calc(100vh-200px)]">
+        <div className="space-y-1 pr-2">
+          {sortedWeeks.map(week => {
+            // Format week display to be more compact
+            const weekDisplay = week.replace('Week ', 'Wk ').replace(': Jan', ' Jan').replace(': Feb', ' Feb').replace(': Mar', ' Mar').replace(': Apr', ' Apr');
+            return (
+            <Collapsible key={week} open={expandedWeeks.has(week)} onOpenChange={() => toggleWeek(week)}>
+              <div className="border rounded-md bg-card">
                 <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors py-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {expandedWeeks.has(week) ? <ChevronDown className="h-4 w-4 text-foreground" /> : <ChevronRight className="h-4 w-4 text-foreground" />}
-                        <CardTitle className="text-lg text-foreground">{week}</CardTitle>
-                        <Badge variant="outline" className="ml-2 text-foreground border-border">
-                          {groupedAssignments[week].length} assignments
-                        </Badge>
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        {groupedAssignments[week].reduce((sum, a) => sum + (a.points || 0), 0)} pts
-                      </span>
+                  <div className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      {expandedWeeks.has(week) ? <ChevronDown className="h-3 w-3 text-foreground" /> : <ChevronRight className="h-3 w-3 text-foreground" />}
+                      <span className="text-sm font-medium text-foreground">{weekDisplay}</span>
+                      <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+                        {groupedAssignments[week].length}
+                      </Badge>
                     </div>
-                  </CardHeader>
+                    <span className="text-xs text-muted-foreground">
+                      {groupedAssignments[week].reduce((sum, a) => sum + (a.points || 0), 0)} pts
+                    </span>
+                  </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <CardContent className="pt-0">
-                    <div className="space-y-2">
-                      {groupedAssignments[week].map(assignment => <div key={assignment.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted hover:bg-muted/80 transition-colors">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <GripVertical className="h-4 w-4 text-muted-foreground/50" />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium truncate text-foreground">{assignment.title}</span>
-                                <Badge variant={getTypeBadgeColor(assignment.assignment_type)}>
-                                  {assignment.assignment_type || 'task'}
-                                </Badge>
-                              </div>
-                              {assignment.description && <p className="text-sm truncate text-muted-foreground">
-                                  {assignment.description}
-                                </p>}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-sm font-medium text-foreground">{assignment.points} pts</span>
-                            {assignment.due_at && <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Calendar className="h-3 w-3" />
-                                {format(new Date(assignment.due_at), 'MMM d')}
-                              </div>}
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" onClick={() => handleEdit(assignment)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(assignment.id)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>)}
-                    </div>
-                  </CardContent>
+                  <div className="px-3 pb-2 space-y-1">
+                    {groupedAssignments[week].map(assignment => (
+                      <div key={assignment.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/50 hover:bg-muted transition-colors text-sm">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className="font-medium truncate text-foreground">{assignment.title}</span>
+                          <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-xs px-1.5 py-0 h-4">
+                            {assignment.assignment_type || 'task'}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs text-muted-foreground">{assignment.points} pts</span>
+                          {assignment.due_at && (
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(assignment.due_at), 'M/d')}
+                            </span>
+                          )}
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEdit(assignment)}>
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDelete(assignment.id)}>
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </CollapsibleContent>
-              </Card>
-            </Collapsible>)}
+              </div>
+            </Collapsible>
+          )})}
 
-          {sortedWeeks.length === 0 && <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground mb-4">No assignments yet</p>
-                <Button onClick={() => setIsCreateOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create First Assignment
-                </Button>
-              </CardContent>
-            </Card>}
+          {sortedWeeks.length === 0 && (
+            <div className="border rounded-md p-8 text-center">
+              <p className="text-muted-foreground text-sm mb-3">No assignments yet</p>
+              <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                <Plus className="h-3 w-3 mr-1" />
+                Create First Assignment
+              </Button>
+            </div>
+          )}
         </div>
       </ScrollArea>
     </div>;
