@@ -51,57 +51,57 @@
   [class*="CardFooter"] { padding: 0.75rem !important; padding-top: 0.5rem !important; }
 }
 
-/* Page container variations - mobile-first */
+/* Page container variations - mobile-first with reduced whitespace */
 .page-container {
-  @apply py-3 sm:py-6 md:py-8 px-3 sm:px-4 space-y-3 sm:space-y-6 animate-fade-in;
+  @apply py-2 sm:py-4 md:py-5 px-3 sm:px-4 space-y-3 sm:space-y-4 animate-fade-in;
 }
 
 .page-container-compact {
-  @apply py-2 sm:py-4 md:py-6 px-3 sm:px-4 space-y-2 sm:space-y-4;
+  @apply py-2 sm:py-3 md:py-4 px-3 sm:px-4 space-y-2 sm:space-y-3;
 }
 
 .page-container-loose {
-  @apply py-4 sm:py-8 md:py-12 px-3 sm:px-4 space-y-4 sm:space-y-8;
+  @apply py-3 sm:py-5 md:py-6 px-3 sm:px-4 space-y-3 sm:space-y-5;
 }
 
-/* Page headers */
+/* Page headers - consistent typography scale */
 .page-header {
-  @apply text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 tracking-tight text-foreground;
+  @apply text-base sm:text-lg md:text-xl font-semibold mb-2 sm:mb-3 tracking-tight text-foreground;
 }
 
 .page-title-large {
-  @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 tracking-tight text-foreground;
+  @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-2 sm:mb-3 tracking-tight text-foreground;
 }
 
 .page-subtitle {
-  @apply text-sm sm:text-base text-muted-foreground mt-1 max-w-2xl;
+  @apply text-xs sm:text-sm text-muted-foreground mt-0.5 max-w-2xl;
 }
 
-/* Section spacing */
+/* Section spacing - tighter */
 .section-spacing {
-  @apply space-y-4 sm:space-y-6 md:space-y-8;
+  @apply space-y-3 sm:space-y-4 md:space-y-5;
 }
 
 .section-spacing-tight {
-  @apply space-y-2 sm:space-y-3 md:space-y-4;
+  @apply space-y-2 sm:space-y-2.5 md:space-y-3;
 }
 
-/* Card spacing utilities */
+/* Card spacing utilities - reduced */
 .card-spacing {
-  @apply gap-3 sm:gap-4 md:gap-6;
+  @apply gap-2 sm:gap-3 md:gap-4;
 }
 
 .card-header-compact {
-  @apply pb-2 pt-4;
+  @apply pb-1.5 pt-3;
 }
 
 .card-header-reduced {
-  @apply pb-2 pt-3;
+  @apply pb-1.5 pt-2.5;
 }
 
 /* Card compact utilities */
 .card-compact {
-  @apply p-3 sm:p-4 space-y-2 sm:space-y-3;
+  @apply p-2 sm:p-3 space-y-1.5 sm:space-y-2;
 }
 
 /* =========================================

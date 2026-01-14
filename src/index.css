@@ -62,28 +62,30 @@
     line-height: 1.5;
   }
   
-  /* WCAG AA Typography Standards */
-  /* Minimum font sizes and proper contrast */
+  /* WCAG AA Typography Standards - Compact but readable */
+  /* Consistent body text sizing */
   p, span, label, li, td, th, dd, dt {
-    font-size: max(0.875rem, 14px); /* Never smaller than 14px */
+    font-size: 0.875rem; /* 14px base for body text */
+    line-height: 1.5;
   }
   
-  /* Ensure small text is readable */
+  /* Small text - still readable */
   .text-xs {
-    font-size: max(0.75rem, 12px) !important; /* Never smaller than 12px */
+    font-size: 0.75rem !important; /* 12px */
     line-height: 1.4 !important;
   }
   
   .text-sm {
-    font-size: max(0.875rem, 14px) !important; /* Never smaller than 14px */
-    line-height: 1.5 !important;
+    font-size: 0.8125rem !important; /* 13px */
+    line-height: 1.45 !important;
   }
   
-  /* Headings should be bold and high-contrast */
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    color: hsl(var(--foreground));
-  }
+  /* Headings - consistent scale, not oversized */
+  h1 { font-size: 1.5rem; font-weight: 700; color: hsl(var(--foreground)); }
+  h2 { font-size: 1.25rem; font-weight: 600; color: hsl(var(--foreground)); }
+  h3 { font-size: 1.125rem; font-weight: 600; color: hsl(var(--foreground)); }
+  h4 { font-size: 1rem; font-weight: 600; color: hsl(var(--foreground)); }
+  h5, h6 { font-size: 0.875rem; font-weight: 600; color: hsl(var(--foreground)); }
 
   :root {
     /* High-Contrast Design System for GleeWorld */
