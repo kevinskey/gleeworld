@@ -15,6 +15,7 @@ import { CourseGradebook } from './CourseGradebook';
 import { CourseAttendance } from './CourseAttendance';
 import { CourseCalendarView } from './CourseCalendarView';
 import { CalendarWithAttendance } from './CalendarWithAttendance';
+import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseTestsSection } from './CourseTestsSection';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
@@ -478,11 +479,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </Card>
             )}
 
-            {/* Video Library Tab - Available for all courses */}
+            {/* Video Library Tab - Course-specific videos managed by instructor */}
             {activeTab === 'video-library' && (
-              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading videos...</CardContent></Card>}>
-                <AllVideosGrid />
-              </React.Suspense>
+              <CourseVideoLibrary courseId={course.id} isInstructor={false} />
             )}
 
             {activeTab === 'handbook' && course.courseCode === 'MUS 070' && <CourseHandbook courseCode={course.courseCode} />}
