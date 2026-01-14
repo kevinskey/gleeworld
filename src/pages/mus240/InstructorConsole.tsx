@@ -42,6 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ModuleToggleManager } from '@/components/mus240/instructor/ModuleToggleManager';
 import { Mus240CalendarManager } from '@/components/mus240/instructor/Mus240CalendarManager';
+import { BulkPasswordReset } from '@/components/mus240/admin/BulkPasswordReset';
 export const InstructorConsole = () => {
   const {
     isAdmin,
@@ -524,11 +525,16 @@ export const InstructorConsole = () => {
 
             {activeTab === 'students' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
-                    <UserPlus className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Student Management
-                  </CardTitle>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage course enrollments and student records</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                        <UserPlus className="h-4 w-4 sm:h-5 sm:w-5" />
+                        Student Management
+                      </CardTitle>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage course enrollments and student records</p>
+                    </div>
+                    <BulkPasswordReset />
+                  </div>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4 md:p-6">
                   <EnrollmentManager />
