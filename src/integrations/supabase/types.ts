@@ -17405,7 +17405,10 @@ export type Database = {
           attendance_policy: string | null
           class_time: string | null
           classroom: string | null
+          course_badge: string | null
           course_id: string | null
+          course_model: string | null
+          course_phases: Json | null
           created_at: string
           created_by: string | null
           credits: number | null
@@ -17433,7 +17436,10 @@ export type Database = {
           attendance_policy?: string | null
           class_time?: string | null
           classroom?: string | null
+          course_badge?: string | null
           course_id?: string | null
+          course_model?: string | null
+          course_phases?: Json | null
           created_at?: string
           created_by?: string | null
           credits?: number | null
@@ -17461,7 +17467,10 @@ export type Database = {
           attendance_policy?: string | null
           class_time?: string | null
           classroom?: string | null
+          course_badge?: string | null
           course_id?: string | null
+          course_model?: string | null
+          course_phases?: Json | null
           created_at?: string
           created_by?: string | null
           credits?: number | null
