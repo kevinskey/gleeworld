@@ -42,6 +42,7 @@ import GleeCamGallery from "./pages/GleeCamGallery";
 
 // Unified Course Pages
 import Mus070Page from "./pages/courses/Mus070Page";
+import Mus070SyllabusPage from "./pages/Mus070SyllabusPage";
 import Mus101Page from "./pages/courses/Mus101Page";
 import Mus001Page from "./pages/courses/Mus001Page";
 import Mus000Page from "./pages/courses/Mus000Page";
@@ -584,6 +585,8 @@ const App = () => {
               {/* Legacy redirects to new academy structure */}
               <Route path="/glee-club-course" element={<Navigate to="/academy/mus-070" replace />} />
               <Route path="/mus-070" element={<Navigate to="/academy/mus-070" replace />} />
+              <Route path="/mus-070/syllabus" element={<Mus070SyllabusPage />} />
+              <Route path="/academy/mus-070/syllabus" element={<Mus070SyllabusPage />} />
               <Route path="/mus-101" element={<Navigate to="/academy/mus-101" replace />} />
               <Route path="/mus-001" element={<Navigate to="/academy/mus-001" replace />} />
               <Route path="/mus-000" element={<Navigate to="/academy/mus-000" replace />} />
