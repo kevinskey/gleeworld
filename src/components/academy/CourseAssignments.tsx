@@ -122,13 +122,17 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
           Assignments
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="min-h-[200px]">
         {loading ? (
-          <p className="text-center text-muted-foreground py-4">Loading assignments...</p>
+          <p className="text-center text-muted-foreground py-8">Loading assignments...</p>
         ) : assignments.length === 0 ? (
-          <p className="text-center text-muted-foreground py-4">
-            No assignments available yet.
-          </p>
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center min-h-[180px]">
+            <ClipboardList className="h-12 w-12 text-muted-foreground/40 mb-4" />
+            <p className="text-lg font-medium text-muted-foreground mb-1">No Assignments Yet</p>
+            <p className="text-sm text-muted-foreground/70">
+              Check back later for upcoming assignments and due dates.
+            </p>
+          </div>
         ) : (
           <div className="space-y-4">
             {assignments.map(assignment => (

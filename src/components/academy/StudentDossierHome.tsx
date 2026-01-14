@@ -278,17 +278,17 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Assignments */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Assignments Section */}
-          <Card>
+        {/* Left Column - Assignments - takes full height */}
+        <div className="lg:col-span-2 flex flex-col">
+          {/* Assignments Section - expand to fill available space */}
+          <Card className="flex-1 flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <ClipboardList className="h-5 w-5 text-primary" />
                 My Assignments
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="pt-0 flex-1">
               <CourseAssignments courseId={courseId} isEnrolled={true} />
             </CardContent>
           </Card>

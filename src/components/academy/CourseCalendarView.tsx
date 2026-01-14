@@ -53,21 +53,27 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
     fetchEvents();
   }, [courseId, currentMonth]);
 
+  // Only show these event types in class calendar
+  const ALLOWED_EVENT_TYPES = ['class', 'assignment_due', 'test', 'exam', 'midterm', 'final', 'quiz'];
+
   const fetchEvents = async () => {
     try {
       const start = startOfMonth(currentMonth);
       const end = endOfMonth(currentMonth);
 
+      // Fetch course calendar events - filter to only class meetings, assignments, and tests
       const { data: courseData, error: courseError } = await supabase
         .from('gw_course_calendar')
         .select('*')
         .eq('course_id', courseId)
+        .in('event_type', ALLOWED_EVENT_TYPES)
         .gte('start_time', start.toISOString())
         .lte('start_time', end.toISOString())
         .order('start_time', { ascending: true });
 
       if (courseError) throw courseError;
 
+      // Fetch Spelman academic dates (semester events)
       const { data: semesterData, error: semesterError } = await supabase
         .from('gw_semesters')
         .select('academic_events')
@@ -79,6 +85,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
         setAcademicEvents(Array.isArray(events) ? events : []);
       }
 
+      // For MUS 070 (Glee Club), also include class/rehearsal events
       let gleeEvents: CalendarEvent[] = [];
       if (courseId === 'a0000000-0000-0000-0000-000000000070') {
         const scgcCalendarId = 'b1e077a0-85f3-4665-b006-4767b310a521';
@@ -87,6 +94,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
           .from('gw_events')
           .select('id, title, description, event_type, start_date, location')
           .or(`calendar_id.eq.${scgcCalendarId},title.ilike.%glee%,title.ilike.%scgc%`)
+          .in('event_type', ['class', 'rehearsal', 'meeting'])
           .gte('start_date', start.toISOString())
           .lte('start_date', end.toISOString())
           .order('start_date', { ascending: true });
@@ -97,7 +105,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
           id: event.id,
           title: event.title,
           description: event.description,
-          event_type: event.event_type || 'rehearsal',
+          event_type: event.event_type || 'class',
           start_time: event.start_date,
           end_time: null,
           location: event.location
