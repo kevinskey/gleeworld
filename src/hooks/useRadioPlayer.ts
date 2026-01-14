@@ -75,12 +75,16 @@ export const useRadioPlayer = () => {
     return /^\[?\s*unknown(?:\s+artist)?\s*\]?$/i.test(a) || /^n\/a$/i.test(a) ? '' : a;
   }, []);
 
+  // Use a ref to track current station ID to avoid dependency issues
+  const currentStationIdRef = useRef(state.currentStationId);
+  currentStationIdRef.current = state.currentStationId;
+
   // Pull "now playing" directly from AzuraCast so the UI updates promptly
   // (DB realtime can lag a few seconds behind stream changes)
   const refreshNowPlaying = useCallback(async (stationIdOverride?: string) => {
     try {
-      // Use the override if provided, otherwise use current state's station ID
-      const stationId = stationIdOverride || state.currentStationId;
+      // Use the override if provided, otherwise use current ref's station ID
+      const stationId = stationIdOverride || currentStationIdRef.current;
       console.log('refreshNowPlaying: Fetching for station:', stationId);
       
       const np = await azuraCastService.getNowPlaying(stationId);
@@ -106,7 +110,7 @@ export const useRadioPlayer = () => {
       // Silent fail: stream should keep playing even if metadata fetch fails
       console.warn('useRadioPlayer: refreshNowPlaying failed:', error);
     }
-  }, [sanitizeArtist, state.currentStationId]);
+  }, [sanitizeArtist]); // Removed state.currentStationId - using ref instead
 
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
