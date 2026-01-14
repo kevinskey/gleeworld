@@ -22,43 +22,44 @@ export const useRadioChannels = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<RadioChannel | null>(null);
 
-  useEffect(() => {
-    const fetchChannels = async () => {
-      try {
-        // Fetch from database (stations are synced from AzuraCast)
-        const { data, error } = await supabase
-          .from('gw_radio_channels')
-          .select('*')
-          .eq('is_active', true)
-          .order('sort_order', { ascending: true });
+  const fetchChannels = async () => {
+    try {
+      setIsLoading(true);
+      // Fetch from database (stations are synced from AzuraCast)
+      const { data, error } = await supabase
+        .from('gw_radio_channels')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
 
-        if (error) {
-          console.error('Error fetching radio channels:', error);
-          return;
-        }
-
-        console.log('Radio channels fetched:', data);
-        setChannels(data || []);
-        
-        // Set default channel from localStorage or find default
-        const savedChannelId = localStorage.getItem('gleeworld-radio-channel');
-        const savedChannel = savedChannelId 
-          ? data?.find(c => c.id === savedChannelId)
-          : null;
-        
-        if (savedChannel) {
-          setSelectedChannel(savedChannel);
-        } else {
-          const defaultChannel = data?.find(c => c.is_default) || data?.[0];
-          if (defaultChannel) setSelectedChannel(defaultChannel);
-        }
-      } catch (error) {
+      if (error) {
         console.error('Error fetching radio channels:', error);
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    };
 
+      console.log('Radio channels fetched:', data?.length, 'channels');
+      setChannels(data || []);
+      
+      // Set default channel from localStorage or find default
+      const savedChannelId = localStorage.getItem('gleeworld-radio-channel');
+      const savedChannel = savedChannelId 
+        ? data?.find(c => c.id === savedChannelId)
+        : null;
+      
+      if (savedChannel) {
+        setSelectedChannel(savedChannel);
+      } else {
+        const defaultChannel = data?.find(c => c.is_default) || data?.[0];
+        if (defaultChannel) setSelectedChannel(defaultChannel);
+      }
+    } catch (error) {
+      console.error('Error fetching radio channels:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchChannels();
   }, []);
 
@@ -154,6 +155,7 @@ export const useRadioChannels = () => {
     isRequesting,
     lastRequestMessage,
     isLoading,
+    refetch: fetchChannels,
   };
 };
 
