@@ -20340,6 +20340,51 @@ export type Database = {
         }
         Relationships: []
       }
+      lh100_modules: {
+        Row: {
+          completion_percentage: number | null
+          created_at: string | null
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean | null
+          is_locked: boolean | null
+          learning_objectives: string[] | null
+          start_date: string
+          title: string
+          updated_at: string | null
+          week_number: number
+        }
+        Insert: {
+          completion_percentage?: number | null
+          created_at?: string | null
+          description?: string | null
+          end_date: string
+          id: string
+          is_active?: boolean | null
+          is_locked?: boolean | null
+          learning_objectives?: string[] | null
+          start_date: string
+          title: string
+          updated_at?: string | null
+          week_number: number
+        }
+        Update: {
+          completion_percentage?: number | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          is_locked?: boolean | null
+          learning_objectives?: string[] | null
+          start_date?: string
+          title?: string
+          updated_at?: string | null
+          week_number?: number
+        }
+        Relationships: []
+      }
       library_inventory_entries: {
         Row: {
           copies_found: number | null
