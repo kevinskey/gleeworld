@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers } from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers, Archive } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -222,9 +222,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               { icon: PenLine, label: 'Journals', tab: 'journals' },
               { icon: FileCheck, label: 'Tests', tab: 'tests' },
               { icon: BarChart, label: 'Polls', tab: 'polls' },
+              { icon: Library, label: 'Resources', tab: 'resources' },
               { icon: Trophy, label: 'Grades', tab: 'grades' },
               { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
-              { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
+              { icon: Archive, label: 'Archives', tab: 'archives' },
             ]).map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 <item.icon className="h-3 w-3 flex-shrink-0" />
                 <span className="text-xs leading-tight">{item.label}</span>
@@ -439,31 +440,52 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
 
             {/* Resources Tab - Available for all courses */}
-            {activeTab === 'resources' && <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Library className="h-5 w-5 text-primary" />
-                    Course Resources
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Course Textbook */}
-                  {course.courseCode === 'MUS 210' && <div>
+            {activeTab === 'resources' && (
+              course.courseCode === 'MUS 240' ? (
+                <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading resources...</CardContent></Card>}>
+                  <Mus240ResourcesTab isAdmin={isAdmin} />
+                </React.Suspense>
+              ) : course.courseCode === 'MUS 210' ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Library className="h-5 w-5 text-primary" />
+                      Course Resources
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div>
                       <h3 className="font-semibold mb-3 flex items-center gap-2">
                         <BookOpen className="h-4 w-4" />
                         Course Textbook
                       </h3>
                       <div className="rounded-lg border overflow-hidden">
-                        <iframe src="https://conducting.gleeworld.org" style={{
-                      width: '100%',
-                      height: '600px'
-                    }} allow="fullscreen" title="Course Textbook" className="bg-background" />
+                        <iframe src="https://conducting.gleeworld.org" style={{ width: '100%', height: '600px' }} allow="fullscreen" title="Course Textbook" className="bg-background" />
                       </div>
-                    </div>}
-                  
-                  {course.courseCode !== 'MUS 210' && <p className="text-muted-foreground">No resources uploaded yet.</p>}
-                </CardContent>
-              </Card>}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Library className="h-5 w-5 text-primary" />
+                      Course Resources
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">No resources uploaded yet.</p>
+                  </CardContent>
+                </Card>
+              )
+            )}
+
+            {/* Archives Tab */}
+            {activeTab === 'archives' && (
+              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading archives...</CardContent></Card>}>
+                <JournalArchives courseId={course.id} isAdmin={isAdmin} />
+              </React.Suspense>
+            )}
 
             
 

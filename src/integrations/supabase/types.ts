@@ -2011,6 +2011,7 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean | null
+          is_archived: boolean | null
           session_date: string
           song_artist: string | null
           song_title: string | null
@@ -2027,6 +2028,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean | null
+          is_archived?: boolean | null
           session_date?: string
           song_artist?: string | null
           song_title?: string | null
@@ -2043,6 +2045,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean | null
+          is_archived?: boolean | null
           session_date?: string
           song_artist?: string | null
           song_title?: string | null
@@ -2115,6 +2118,7 @@ export type Database = {
           graded_by: string | null
           id: string
           instructor_feedback: string | null
+          is_archived: boolean | null
           is_locked: boolean | null
           session_date: string
           session_id: string | null
@@ -2136,6 +2140,7 @@ export type Database = {
           graded_by?: string | null
           id?: string
           instructor_feedback?: string | null
+          is_archived?: boolean | null
           is_locked?: boolean | null
           session_date?: string
           session_id?: string | null
@@ -2157,6 +2162,7 @@ export type Database = {
           graded_by?: string | null
           id?: string
           instructor_feedback?: string | null
+          is_archived?: boolean | null
           is_locked?: boolean | null
           session_date?: string
           session_id?: string | null
@@ -4833,6 +4839,7 @@ export type Database = {
           is_published: boolean | null
           passing_score: number | null
           randomize_questions: boolean | null
+          semester: string | null
           show_correct_answers: boolean | null
           title: string
           total_points: number | null
@@ -4853,6 +4860,7 @@ export type Database = {
           is_published?: boolean | null
           passing_score?: number | null
           randomize_questions?: boolean | null
+          semester?: string | null
           show_correct_answers?: boolean | null
           title: string
           total_points?: number | null
@@ -4873,6 +4881,7 @@ export type Database = {
           is_published?: boolean | null
           passing_score?: number | null
           randomize_questions?: boolean | null
+          semester?: string | null
           show_correct_answers?: boolean | null
           title?: string
           total_points?: number | null
@@ -7929,6 +7938,7 @@ export type Database = {
           payment_id: string | null
           registration_status: string | null
           role: string | null
+          semester: string | null
           student_profile_id: string | null
           updated_at: string | null
           user_id: string | null
@@ -7947,6 +7957,7 @@ export type Database = {
           payment_id?: string | null
           registration_status?: string | null
           role?: string | null
+          semester?: string | null
           student_profile_id?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -7965,6 +7976,7 @@ export type Database = {
           payment_id?: string | null
           registration_status?: string | null
           role?: string | null
+          semester?: string | null
           student_profile_id?: string | null
           updated_at?: string | null
           user_id?: string | null
