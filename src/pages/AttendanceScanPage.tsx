@@ -250,21 +250,31 @@ const AttendanceScanPage = () => {
             </div>
           )}
 
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => navigate('/dashboard')} 
-              variant="outline"
-              className="flex-1"
-            >
-              Dashboard
-            </Button>
-            <Button 
-              onClick={() => navigate('/dashboard?module=class-calendar')} 
-              className="flex-1"
-            >
-              View Calendar
-            </Button>
-          </div>
+          {/* Only show buttons if scan wasn't successful (for error cases or retry) */}
+          {(!scanResult || !scanResult.success) && (
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => navigate('/dashboard')} 
+                variant="outline"
+                className="flex-1"
+              >
+                Dashboard
+              </Button>
+              <Button 
+                onClick={() => navigate('/dashboard?module=class-landing')} 
+                className="flex-1"
+              >
+                Go to Class
+              </Button>
+            </div>
+          )}
+
+          {/* Show redirect message on success */}
+          {scanResult?.success && (
+            <p className="text-center text-sm text-muted-foreground">
+              Redirecting to classroom...
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
