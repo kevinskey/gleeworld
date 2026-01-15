@@ -369,10 +369,10 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
                 : 'No matching students found.'}
             </div>
           ) : (
-            <ScrollArea className="w-full max-h-[60vh]">
+            <ScrollArea className="w-full h-[60vh]">
               <div className="min-w-[800px]">
                 {/* Header Row */}
-                <div className="grid grid-cols-[200px_60px_60px_60px_60px_60px_70px_1fr] gap-1 p-2 bg-muted/50 border-b font-medium text-xs sticky top-0">
+                <div className="grid grid-cols-[200px_60px_60px_60px_60px_60px_70px_1fr] gap-1 p-2 bg-muted/50 border-b font-medium text-xs sticky top-0 z-10">
                   <div className="px-2">Student Name</div>
                   <div className="text-center" title="Excused Rehearsal">Ex.R</div>
                   <div className="text-center" title="Unexcused Rehearsal">Un.R</div>
@@ -452,6 +452,7 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
                   </div>
                 ))}
               </div>
+              <ScrollBar orientation="vertical" />
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
           )}
