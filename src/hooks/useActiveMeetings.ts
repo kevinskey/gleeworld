@@ -127,7 +127,9 @@ export const useActiveMeetings = () => {
         });
       });
     } else {
+      // Channel already exists and subscribed - immediately set state from current presence
       setIsLoading(false);
+      setActiveMeetings(parsePresenceState(presenceChannel.presenceState()));
     }
 
     setChannel(presenceChannel);
