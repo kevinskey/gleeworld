@@ -59,13 +59,22 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
 
   // Handle auto-join from URL parameter
   useEffect(() => {
-    if (joinRoomName) {
+    if (joinRoomName && joinRoomName !== activeRoom) {
       handleJoinFromLink(joinRoomName);
     }
   }, [joinRoomName]);
 
   const handleJoinFromLink = async (room: string) => {
     try {
+      // If already in a different meeting, leave it first
+      if (isInMeeting && activeRoom && activeRoom !== room) {
+        console.log(`Switching from ${activeRoom} to ${room}`);
+        setIsInMeeting(false);
+        setIsInWaitingRoom(false);
+        // Small delay to allow cleanup before joining new room
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
       // Check if this is a scheduled meeting
       const { data: meeting } = await supabase
         .from('scheduled_meetings')
