@@ -151,10 +151,13 @@ export const useActiveMeetings = () => {
   const parsePresenceState = (state: Record<string, any[]>): ActiveMeeting[] => {
     const meetingsMap = new Map<string, ActiveMeetingParticipant[]>();
 
+    console.log('[ActiveMeetings] Parsing presence state:', JSON.stringify(state, null, 2));
+
     Object.values(state).forEach((presences) => {
       presences.forEach((presence: any) => {
         const roomName = presence.room_name;
-        if (!roomName) return;
+        // Filter out lobby entries (empty room_name or kind === 'lobby')
+        if (!roomName || presence.kind === 'lobby') return;
 
         if (!meetingsMap.has(roomName)) {
           meetingsMap.set(roomName, []);
@@ -169,10 +172,13 @@ export const useActiveMeetings = () => {
       });
     });
 
-    return Array.from(meetingsMap.entries()).map(([room_name, participants]) => ({
+    const meetings = Array.from(meetingsMap.entries()).map(([room_name, participants]) => ({
       room_name,
       participants,
     }));
+    
+    console.log('[ActiveMeetings] Parsed meetings:', meetings.length, meetings.map(m => m.room_name));
+    return meetings;
   };
 
   return {
