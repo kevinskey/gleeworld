@@ -210,6 +210,15 @@ export const useUserRole = () => {
   };
 
   /**
+   * Secretary/Librarian - Can manage attendance records
+   */
+  const isSecretary = (): boolean => {
+    if (!profile) return false;
+    if (isAdmin()) return true;
+    return profile.exec_board_role === 'librarian' || profile.exec_board_role === 'secretary';
+  };
+
+  /**
    * Course TA check (basic version - full check in useCourseTA)
    */
   const isCourseTA = (courseCode: string = 'MUS240'): boolean => {
@@ -262,6 +271,7 @@ export const useUserRole = () => {
     canDownloadPDF,
     canDownloadMP3,
     isWardrobeManager,
+    isSecretary,
     isCourseTA,
     canManageUsers,
     canDeleteUsers,
