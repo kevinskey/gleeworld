@@ -27,6 +27,8 @@ import { StudentDossierHome } from './StudentDossierHome';
 import { ElectionsModule } from './elections/ElectionsModule';
 import { CourseModules } from './CourseModules';
 import { ClassSessionJournals } from './journals/ClassSessionJournals';
+import { JournalArchives } from './journals/JournalArchives';
+import { Mus240ResourcesTab } from './Mus240ResourcesTab';
 import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants';
 import { useUserRole } from '@/hooks/useUserRole';
 const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager').then(m => ({
