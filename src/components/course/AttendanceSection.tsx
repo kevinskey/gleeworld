@@ -6,6 +6,10 @@ import { UserCheck, Calendar, CheckCircle, XCircle, AlertCircle, Clock, Loader2 
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
+interface AttendanceSectionProps {
+  courseId: string;
+}
+
 interface AttendanceData {
   rehearsalAbsences: number;
   performanceAbsences: number;
