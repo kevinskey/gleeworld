@@ -157,24 +157,32 @@ export const QRAttendanceScanner = () => {
         throw new Error('No response from server');
       }
 
-      const result = typeof data === 'object' && data !== null && !Array.isArray(data) 
-        ? data as unknown as ScanResult 
-        : {
-            success: false,
-            message: 'Invalid response format',
-            error: 'Unexpected response format'
-          };
+      // Parse the response - handle both direct object and stringified JSON
+      let result: ScanResult;
+      if (typeof data === 'string') {
+        try {
+          result = JSON.parse(data);
+        } catch {
+          result = { success: false, message: 'Invalid response format', error: 'Could not parse response' };
+        }
+      } else if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+        result = data as unknown as ScanResult;
+      } else {
+        result = { success: false, message: 'Invalid response format', error: 'Unexpected response format' };
+      }
+      
+      console.log('Parsed result:', result);
       setScanResult(result);
 
       if (result.success) {
         toast({
           title: "Attendance Recorded",
-          description: `Successfully marked present for ${result.event_title}`,
+          description: `Successfully marked present for ${result.event_title || 'this event'}`,
         });
       } else {
         toast({
           title: "Scan Failed",
-          description: result.error || "Failed to record attendance",
+          description: result.message || result.error || "Failed to record attendance",
           variant: "destructive",
         });
       }
