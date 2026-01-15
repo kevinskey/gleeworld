@@ -25,9 +25,9 @@ const GleeAcademy = () => {
         const {
           data,
           error
-        } = await supabase.from('gw_course_enrollments').select('course_id').eq('user_id', user.id);
+        } = await supabase.from('gw_course_enrollments').select('course_id').eq('user_id', user.id).not('course_id', 'is', null);
         if (!error && data) {
-          setEnrolledCourses(data.map(e => e.course_id));
+          setEnrolledCourses(data.map(e => e.course_id).filter(Boolean) as string[]);
         }
       } catch (error) {
         console.error('Error checking enrollments:', error);
