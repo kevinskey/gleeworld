@@ -356,7 +356,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {/* Content Sections */}
             {activeTab === 'home' && (
-              (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'MUS 240') ? (
+              (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'MUS 240' || course.courseCode === 'LH 100') ? (
                 <StudentDossierHome courseId={course.id} />
               ) : (
                 <div className="space-y-4">
