@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,7 @@ interface ScanResult {
 export const QRAttendanceScanner = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -179,6 +181,11 @@ export const QRAttendanceScanner = () => {
           title: "Attendance Recorded",
           description: `Successfully marked present for ${result.event_title || 'this event'}`,
         });
+        
+        // Navigate to course home after a brief delay so user sees the success message
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
       } else {
         toast({
           title: "Scan Failed",
