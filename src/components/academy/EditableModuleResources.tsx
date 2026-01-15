@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   BookOpen, 
   Video, 
@@ -19,11 +21,24 @@ import {
   Loader2,
   Edit2,
   X,
-  GripVertical
+  ChevronDown,
+  Youtube,
+  Music2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+
+interface MusicLinks {
+  prelude?: string | null;
+  opening_song?: string | null;
+  responsorial_psalm?: string | null;
+  preparation_hymn?: string | null;
+  communion_hymn?: string | null;
+  recessional?: string | null;
+  soundcloud_playlist?: string | null;
+  [key: string]: string | null | undefined;
+}
 
 interface ModuleResource {
   id: string;
@@ -35,6 +50,8 @@ interface ModuleResource {
   is_completed?: boolean;
   sort_order: number;
   user_id?: string;
+  music_links?: MusicLinks | null;
+  readings_date?: string | null;
 }
 
 interface EditableModuleResourcesProps {
@@ -48,6 +65,16 @@ const RESOURCE_TYPES = [
   { value: 'audio', label: 'Audio', icon: Music },
   { value: 'reading', label: 'Reading', icon: BookOpen },
 ];
+
+const MUSIC_LINK_LABELS: Record<keyof MusicLinks, string> = {
+  prelude: 'Prelude',
+  opening_song: 'Opening Song',
+  responsorial_psalm: 'Responsorial Psalm',
+  preparation_hymn: 'Preparation Hymn',
+  communion_hymn: 'Communion Hymn',
+  recessional: 'Recessional',
+  soundcloud_playlist: 'SoundCloud Playlist'
+};
 
 const getResourceIcon = (type: string) => {
   const found = RESOURCE_TYPES.find(t => t.value === type);
@@ -74,6 +101,7 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [expandedMusicLinks, setExpandedMusicLinks] = useState<string | null>(null);
   
   // New resource form state
   const [newResource, setNewResource] = useState({
@@ -95,7 +123,12 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
           .order('sort_order', { ascending: true });
 
         if (error) throw error;
-        setResources(data || []);
+        // Cast the data to handle Json type from Supabase
+        const mappedData: ModuleResource[] = (data || []).map(item => ({
+          ...item,
+          music_links: item.music_links as MusicLinks | null
+        }));
+        setResources(mappedData);
       } catch (error) {
         console.error('Error fetching resources:', error);
       } finally {
@@ -124,14 +157,28 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
           url: newResource.url || null,
           duration: newResource.duration || null,
           description: newResource.description || null,
-          sort_order: resources.length
+          sort_order: resources.length,
+          music_links: newResource.resource_type === 'audio' ? {
+            prelude: null,
+            opening_song: null,
+            responsorial_psalm: null,
+            preparation_hymn: null,
+            communion_hymn: null,
+            recessional: null,
+            soundcloud_playlist: null
+          } : null
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      setResources(prev => [...prev, data]);
+      // Cast data to handle Json type
+      const mappedData: ModuleResource = {
+        ...data,
+        music_links: data.music_links as MusicLinks | null
+      };
+      setResources(prev => [...prev, mappedData]);
       setNewResource({
         title: '',
         resource_type: 'document',
@@ -159,7 +206,9 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
           resource_type: resource.resource_type,
           url: resource.url,
           duration: resource.duration,
-          description: resource.description
+          description: resource.description,
+          music_links: resource.music_links,
+          readings_date: resource.readings_date
         })
         .eq('id', resource.id);
 
@@ -209,6 +258,26 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
     } catch (error) {
       console.error('Error toggling complete:', error);
     }
+  };
+
+  const updateMusicLink = (resourceId: string, key: keyof MusicLinks, value: string) => {
+    setResources(prev => prev.map(r => {
+      if (r.id === resourceId) {
+        return {
+          ...r,
+          music_links: {
+            ...(r.music_links || {}),
+            [key]: value || null
+          }
+        };
+      }
+      return r;
+    }));
+  };
+
+  const getMusicLinksCount = (links: MusicLinks | null | undefined): number => {
+    if (!links) return 0;
+    return Object.values(links).filter(v => v && v.trim()).length;
   };
 
   if (loading) {
@@ -320,10 +389,12 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
             const Icon = getResourceIcon(resource.resource_type);
             const colorClass = getResourceColor(resource.resource_type);
             const isEditing = editingId === resource.id;
+            const isMusicResource = resource.resource_type === 'audio' && resource.title.toLowerCase().includes('music');
+            const musicLinksCount = getMusicLinksCount(resource.music_links);
 
             if (isEditing) {
               return (
-                <div key={resource.id} className="p-3 rounded-lg border border-primary bg-primary/5 space-y-2">
+                <div key={resource.id} className="p-3 rounded-lg border border-primary bg-primary/5 space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       value={resource.title}
@@ -368,6 +439,38 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
                       className="h-8 text-sm"
                     />
                   </div>
+                  <Input
+                    placeholder="Description"
+                    value={resource.description || ''}
+                    onChange={(e) => setResources(prev => prev.map(r => 
+                      r.id === resource.id ? { ...r, description: e.target.value } : r
+                    ))}
+                    className="h-8 text-sm"
+                  />
+
+                  {/* Music Links Editor for Audio resources */}
+                  {resource.resource_type === 'audio' && (
+                    <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Youtube className="h-4 w-4 text-red-500" />
+                        <Label className="text-xs font-semibold uppercase">YouTube & SoundCloud Links</Label>
+                      </div>
+                      <div className="grid gap-2">
+                        {(Object.keys(MUSIC_LINK_LABELS) as Array<keyof MusicLinks>).map(key => (
+                          <div key={key} className="flex items-center gap-2">
+                            <Label className="text-xs w-32 flex-shrink-0">{MUSIC_LINK_LABELS[key]}</Label>
+                            <Input
+                              placeholder={`${MUSIC_LINK_LABELS[key]} URL...`}
+                              value={(resource.music_links?.[key] as string) || ''}
+                              onChange={(e) => updateMusicLink(resource.id, key, e.target.value)}
+                              className="h-7 text-xs flex-1"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -392,87 +495,139 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
             }
 
             return (
-              <div 
-                key={resource.id}
-                className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                  resource.is_completed 
-                    ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800/30' 
-                    : 'bg-background hover:bg-muted/50'
-                }`}
-              >
-                <div className={`p-2 rounded-lg bg-muted ${colorClass}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm truncate">{resource.title}</span>
-                    <Badge variant="outline" className="text-xs capitalize">
-                      {resource.resource_type}
-                    </Badge>
+              <div key={resource.id} className="space-y-1">
+                <div 
+                  className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                    resource.is_completed 
+                      ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800/30' 
+                      : 'bg-background hover:bg-muted/50'
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg bg-muted ${colorClass}`}>
+                    <Icon className="h-4 w-4" />
                   </div>
-                  {resource.duration && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {resource.duration}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
-                  {user && !isLocked && (
-                    <>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm truncate">{resource.title}</span>
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {resource.resource_type}
+                      </Badge>
+                      {isMusicResource && musicLinksCount > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Music2 className="h-3 w-3 mr-1" />
+                          {musicLinksCount} links
+                        </Badge>
+                      )}
+                    </div>
+                    {resource.description && (
+                      <p className="text-xs text-muted-foreground truncate">{resource.description}</p>
+                    )}
+                    {resource.duration && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {resource.duration}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {user && !isLocked && (
+                      <>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => setEditingId(resource.id)}
+                          className="h-7 w-7 p-0"
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleDeleteResource(resource.id)}
+                          className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                    {resource.is_completed ? (
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        onClick={() => setEditingId(resource.id)}
+                        onClick={() => toggleComplete(resource)}
                         className="h-7 w-7 p-0"
                       >
-                        <Edit2 className="h-3 w-3" />
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
                       </Button>
+                    ) : (
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        onClick={() => handleDeleteResource(resource.id)}
-                        className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                        onClick={() => resource.url ? window.open(resource.url, '_blank') : toggleComplete(resource)}
+                        className="h-8 px-3"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        {resource.resource_type === 'video' ? (
+                          <>
+                            <Play className="h-3 w-3 mr-1" />
+                            Watch
+                          </>
+                        ) : resource.resource_type === 'audio' ? (
+                          <>
+                            <Headphones className="h-3 w-3 mr-1" />
+                            Listen
+                          </>
+                        ) : (
+                          <>
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Open
+                          </>
+                        )}
                       </Button>
-                    </>
-                  )}
-                  {resource.is_completed ? (
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => toggleComplete(resource)}
-                      className="h-7 w-7 p-0"
-                    >
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    </Button>
-                  ) : (
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => resource.url ? window.open(resource.url, '_blank') : toggleComplete(resource)}
-                      className="h-8 px-3"
-                    >
-                      {resource.resource_type === 'video' ? (
-                        <>
-                          <Play className="h-3 w-3 mr-1" />
-                          Watch
-                        </>
-                      ) : resource.resource_type === 'audio' ? (
-                        <>
-                          <Headphones className="h-3 w-3 mr-1" />
-                          Listen
-                        </>
-                      ) : (
-                        <>
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          Open
-                        </>
-                      )}
-                    </Button>
-                  )}
+                    )}
+                  </div>
                 </div>
+
+                {/* Expandable Music Links Display */}
+                {isMusicResource && musicLinksCount > 0 && (
+                  <Collapsible 
+                    open={expandedMusicLinks === resource.id}
+                    onOpenChange={(open) => setExpandedMusicLinks(open ? resource.id : null)}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="w-full h-7 text-xs justify-between">
+                        <span className="flex items-center gap-1">
+                          <Youtube className="h-3 w-3 text-red-500" />
+                          View Music Links ({musicLinksCount})
+                        </span>
+                        <ChevronDown className={`h-3 w-3 transition-transform ${expandedMusicLinks === resource.id ? 'rotate-180' : ''}`} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="grid gap-1 p-2 bg-muted/30 rounded-lg mt-1">
+                        {(Object.entries(resource.music_links || {}) as [keyof MusicLinks, string | null][])
+                          .filter(([_, url]) => url && url.trim())
+                          .map(([key, url]) => (
+                            <a
+                              key={key}
+                              href={url!}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 p-2 rounded hover:bg-muted text-sm group"
+                            >
+                              {key === 'soundcloud_playlist' ? (
+                                <Music2 className="h-4 w-4 text-orange-500" />
+                              ) : (
+                                <Youtube className="h-4 w-4 text-red-500" />
+                              )}
+                              <span className="flex-1">{MUSIC_LINK_LABELS[key]}</span>
+                              <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </a>
+                          ))
+                        }
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
               </div>
             );
           })
