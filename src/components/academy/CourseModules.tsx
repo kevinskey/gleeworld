@@ -56,7 +56,492 @@ interface CourseModulesProps {
   isAdmin?: boolean;
 }
 
-// LH 100 modules removed
+// LH 100 Bowman Scholars - Liturgical Calendar Modules (Spring 2026)
+const LH100_MODULES: WeeklyModule[] = [
+  {
+    id: 'lh-1',
+    week_number: 1,
+    title: 'Second Sunday in Ordinary Time',
+    description: 'Sunday liturgical preparation and reflection.',
+    start_date: '2026-01-18',
+    end_date: '2026-01-18',
+    is_active: true,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare readings and prayers for Sunday liturgy',
+      'Reflect on the Gospel message',
+      'Plan music ministry for the celebration'
+    ],
+    resources: [
+      { id: 'lh1-1', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh1-2', title: 'Scripture Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh1-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-2',
+    week_number: 2,
+    title: 'Third Sunday in Ordinary Time',
+    description: 'Sunday liturgical preparation and reflection.',
+    start_date: '2026-01-25',
+    end_date: '2026-01-25',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare readings and prayers for Sunday liturgy',
+      'Reflect on the Gospel message',
+      'Plan music ministry for the celebration'
+    ],
+    resources: [
+      { id: 'lh2-1', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh2-2', title: 'Scripture Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh2-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-3',
+    week_number: 3,
+    title: 'Fourth Sunday in Ordinary Time',
+    description: 'Sunday liturgical preparation and reflection.',
+    start_date: '2026-02-01',
+    end_date: '2026-02-01',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare readings and prayers for Sunday liturgy',
+      'Reflect on the Gospel message',
+      'Plan music ministry for the celebration'
+    ],
+    resources: [
+      { id: 'lh3-1', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh3-2', title: 'Scripture Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh3-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-4',
+    week_number: 4,
+    title: 'Presentation of the Lord',
+    description: 'Feast day celebration and liturgical preparation.',
+    start_date: '2026-02-02',
+    end_date: '2026-02-02',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Understand the significance of the Presentation',
+      'Prepare special feast day liturgy',
+      'Plan celebratory music'
+    ],
+    resources: [
+      { id: 'lh4-1', title: 'Feast Day Reflection', type: 'reading', duration: '25 min', completed: false },
+      { id: 'lh4-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh4-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-5',
+    week_number: 5,
+    title: 'Fifth Sunday in Ordinary Time',
+    description: 'Sunday liturgical preparation and reflection.',
+    start_date: '2026-02-08',
+    end_date: '2026-02-08',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare readings and prayers for Sunday liturgy',
+      'Reflect on the Gospel message',
+      'Plan music ministry for the celebration'
+    ],
+    resources: [
+      { id: 'lh5-1', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh5-2', title: 'Scripture Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh5-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-6',
+    week_number: 6,
+    title: 'Sixth Sunday in Ordinary Time',
+    description: 'Sunday liturgical preparation and reflection.',
+    start_date: '2026-02-15',
+    end_date: '2026-02-15',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare readings and prayers for Sunday liturgy',
+      'Reflect on the Gospel message',
+      'Plan music ministry for the celebration'
+    ],
+    resources: [
+      { id: 'lh6-1', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh6-2', title: 'Scripture Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh6-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-7',
+    week_number: 7,
+    title: 'Ash Wednesday',
+    description: 'Beginning of Lent - Major observance preparation.',
+    start_date: '2026-02-18',
+    end_date: '2026-02-18',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Understand the significance of Ash Wednesday',
+      'Prepare penitential liturgy',
+      'Plan appropriate Lenten music'
+    ],
+    resources: [
+      { id: 'lh7-1', title: 'Ash Wednesday Reflection', type: 'reading', duration: '25 min', completed: false },
+      { id: 'lh7-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh7-3', title: 'Lenten Music Selection', type: 'audio', duration: '20 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-8',
+    week_number: 8,
+    title: 'First Sunday of Lent',
+    description: 'Sunday liturgical preparation during Lent.',
+    start_date: '2026-02-22',
+    end_date: '2026-02-22',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare Lenten Sunday liturgy',
+      'Reflect on the temptation narrative',
+      'Plan penitential music'
+    ],
+    resources: [
+      { id: 'lh8-1', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh8-2', title: 'Scripture Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh8-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-9',
+    week_number: 9,
+    title: 'Second Sunday of Lent',
+    description: 'Sunday liturgical preparation during Lent.',
+    start_date: '2026-03-01',
+    end_date: '2026-03-01',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare Lenten Sunday liturgy',
+      'Reflect on the Transfiguration',
+      'Plan appropriate Lenten music'
+    ],
+    resources: [
+      { id: 'lh9-1', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh9-2', title: 'Scripture Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh9-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-10',
+    week_number: 10,
+    title: 'Third Sunday of Lent',
+    description: 'Sunday liturgical preparation during Lent.',
+    start_date: '2026-03-08',
+    end_date: '2026-03-08',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare Lenten Sunday liturgy',
+      'Reflect on the Gospel message',
+      'Plan appropriate Lenten music'
+    ],
+    resources: [
+      { id: 'lh10-1', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh10-2', title: 'Scripture Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh10-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-11',
+    week_number: 11,
+    title: 'Fourth Sunday of Lent (Laetare Sunday)',
+    description: 'Mid-Lent celebration - Sunday of joy.',
+    start_date: '2026-03-15',
+    end_date: '2026-03-15',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Understand the significance of Laetare Sunday',
+      'Prepare rose vestment liturgy',
+      'Plan music reflecting restrained joy'
+    ],
+    resources: [
+      { id: 'lh11-1', title: 'Laetare Sunday Reflection', type: 'reading', duration: '25 min', completed: false },
+      { id: 'lh11-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh11-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-12',
+    week_number: 12,
+    title: 'Saint Joseph, Spouse of the Blessed Virgin Mary',
+    description: 'Solemnity celebration and liturgical preparation.',
+    start_date: '2026-03-19',
+    end_date: '2026-03-19',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Explore the life and virtues of Saint Joseph',
+      'Prepare special liturgical celebration',
+      'Plan festive music for the Solemnity'
+    ],
+    resources: [
+      { id: 'lh12-1', title: 'Saint Joseph Reflection', type: 'reading', duration: '25 min', completed: false },
+      { id: 'lh12-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh12-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-13',
+    week_number: 13,
+    title: 'Fifth Sunday of Lent',
+    description: 'Sunday liturgical preparation as Holy Week approaches.',
+    start_date: '2026-03-22',
+    end_date: '2026-03-22',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare Lenten Sunday liturgy',
+      'Reflect on the approaching Passion',
+      'Plan music for the final weeks of Lent'
+    ],
+    resources: [
+      { id: 'lh13-1', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh13-2', title: 'Scripture Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh13-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-14',
+    week_number: 14,
+    title: 'Annunciation of the Lord',
+    description: 'Solemnity celebrating the Incarnation.',
+    start_date: '2026-03-25',
+    end_date: '2026-03-25',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Understand the mystery of the Incarnation',
+      'Prepare special solemnity liturgy',
+      'Plan Marian and festive music'
+    ],
+    resources: [
+      { id: 'lh14-1', title: 'Annunciation Reflection', type: 'reading', duration: '25 min', completed: false },
+      { id: 'lh14-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh14-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-15',
+    week_number: 15,
+    title: 'Palm Sunday of the Passion of the Lord',
+    description: 'Beginning of Holy Week - Passion Sunday.',
+    start_date: '2026-03-29',
+    end_date: '2026-03-29',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare the Palm Sunday procession',
+      'Plan for the Passion reading',
+      'Select appropriate Holy Week music'
+    ],
+    resources: [
+      { id: 'lh15-1', title: 'Palm Sunday Reflection', type: 'reading', duration: '30 min', completed: false },
+      { id: 'lh15-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh15-3', title: 'Holy Week Music Selection', type: 'audio', duration: '20 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-16',
+    week_number: 16,
+    title: 'Holy Thursday (Thursday of Holy Week)',
+    description: 'Sacred Paschal Triduum begins - Mass of the Lord\'s Supper.',
+    start_date: '2026-04-02',
+    end_date: '2026-04-02',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Understand the institution of the Eucharist',
+      'Prepare the washing of feet ritual',
+      'Plan music for the Evening Mass'
+    ],
+    resources: [
+      { id: 'lh16-1', title: 'Holy Thursday Reflection', type: 'reading', duration: '30 min', completed: false },
+      { id: 'lh16-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh16-3', title: 'Triduum Music Selection', type: 'audio', duration: '25 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-17',
+    week_number: 17,
+    title: 'Good Friday of the Passion of the Lord',
+    description: 'Sacred Paschal Triduum - Celebration of the Passion.',
+    start_date: '2026-04-03',
+    end_date: '2026-04-03',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare the Veneration of the Cross',
+      'Plan the Passion reading',
+      'Select solemn Good Friday music'
+    ],
+    resources: [
+      { id: 'lh17-1', title: 'Good Friday Reflection', type: 'reading', duration: '30 min', completed: false },
+      { id: 'lh17-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh17-3', title: 'Passion Music Selection', type: 'audio', duration: '25 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-18',
+    week_number: 18,
+    title: 'Holy Saturday',
+    description: 'Sacred Paschal Triduum - Day of waiting.',
+    start_date: '2026-04-04',
+    end_date: '2026-04-04',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Understand the significance of Holy Saturday',
+      'Prepare for the Easter Vigil',
+      'Plan the Vigil music and readings'
+    ],
+    resources: [
+      { id: 'lh18-1', title: 'Holy Saturday Reflection', type: 'reading', duration: '25 min', completed: false },
+      { id: 'lh18-2', title: 'Easter Vigil Planning Guide', type: 'document', completed: false },
+      { id: 'lh18-3', title: 'Vigil Music Selection', type: 'audio', duration: '30 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-19',
+    week_number: 19,
+    title: 'Easter Sunday of the Resurrection of the Lord',
+    description: 'Solemnity of Solemnities - The Resurrection.',
+    start_date: '2026-04-05',
+    end_date: '2026-04-05',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Celebrate the joy of the Resurrection',
+      'Prepare the Easter Sunday liturgy',
+      'Plan triumphant Easter music'
+    ],
+    resources: [
+      { id: 'lh19-1', title: 'Easter Reflection', type: 'reading', duration: '25 min', completed: false },
+      { id: 'lh19-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh19-3', title: 'Easter Music Selection', type: 'audio', duration: '25 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-20',
+    week_number: 20,
+    title: 'Second Sunday of Easter (Divine Mercy Sunday)',
+    description: 'Octave of Easter - Divine Mercy celebration.',
+    start_date: '2026-04-12',
+    end_date: '2026-04-12',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Understand Divine Mercy devotion',
+      'Prepare Easter season liturgy',
+      'Plan joyful Easter music'
+    ],
+    resources: [
+      { id: 'lh20-1', title: 'Divine Mercy Reflection', type: 'reading', duration: '25 min', completed: false },
+      { id: 'lh20-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh20-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-21',
+    week_number: 21,
+    title: 'Third Sunday of Easter',
+    description: 'Easter season Sunday liturgical preparation.',
+    start_date: '2026-04-19',
+    end_date: '2026-04-19',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Prepare Easter season liturgy',
+      'Reflect on Resurrection appearances',
+      'Plan Easter season music'
+    ],
+    resources: [
+      { id: 'lh21-1', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh21-2', title: 'Scripture Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh21-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-22',
+    week_number: 22,
+    title: 'Saint Mark, Evangelist',
+    description: 'Feast of the Evangelist.',
+    start_date: '2026-04-25',
+    end_date: '2026-04-25',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Study the life of Saint Mark',
+      'Prepare feast day liturgy',
+      'Plan appropriate feast music'
+    ],
+    resources: [
+      { id: 'lh22-1', title: 'Saint Mark Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh22-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh22-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+  {
+    id: 'lh-23',
+    week_number: 23,
+    title: 'Fourth Sunday of Easter',
+    description: 'Good Shepherd Sunday - World Day of Prayer for Vocations.',
+    start_date: '2026-04-26',
+    end_date: '2026-04-26',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Reflect on Christ as Good Shepherd',
+      'Prepare vocations-focused liturgy',
+      'Plan music celebrating pastoral themes'
+    ],
+    resources: [
+      { id: 'lh23-1', title: 'Good Shepherd Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh23-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh23-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
+];
 
 // Sample data for MUS 240 - Survey of African American Music
 const MUS240_MODULES: WeeklyModule[] = [
@@ -364,6 +849,7 @@ const MUS240_MODULES: WeeklyModule[] = [
 
 // Course modules map
 const COURSE_MODULES: Record<string, WeeklyModule[]> = {
+  'a0000000-0000-0000-0000-000000000100': LH100_MODULES, // LH 100
   '23c4ee3c-7bbb-4534-8c0a-eecd88298d37': MUS240_MODULES, // MUS 240
 };
 
