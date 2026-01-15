@@ -396,13 +396,15 @@ const getResourceColor = (type: ModuleResource['type']) => {
 export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnrolled = true, isAdmin = false }) => {
   const { user } = useAuth();
   
-  // Get modules for the specific course, default to MUS 240
-  const courseModules = COURSE_MODULES[courseId] || MUS240_MODULES;
-  const [modules, setModules] = useState<WeeklyModule[]>(MUS240_MODULES);
+  // Get modules for the specific course - return empty array if not found
+  const courseModules = COURSE_MODULES[courseId] || [];
+  const [modules, setModules] = useState<WeeklyModule[]>(courseModules);
   const [expandedWeeks, setExpandedWeeks] = useState<string[]>(['week-1', 'week-2']);
 
   // Calculate overall progress
-  const overallProgress = modules.reduce((acc, mod) => acc + (mod.completion_percentage || 0), 0) / modules.length;
+  const overallProgress = modules.length > 0 
+    ? modules.reduce((acc, mod) => acc + (mod.completion_percentage || 0), 0) / modules.length
+    : 0;
 
   // Find current week
   const today = new Date();
@@ -411,6 +413,21 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
     const end = new Date(mod.end_date);
     return today >= start && today <= end;
   });
+
+  // Show empty state if no modules
+  if (modules.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">No Modules Available</h3>
+          <p className="text-muted-foreground">
+            Course modules have not been added yet. Check back later.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
