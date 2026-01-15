@@ -90,10 +90,14 @@ const AttendanceScanPage = () => {
           title: "Attendance Recorded!",
           description: result.message || "Your attendance has been successfully recorded.",
         });
-        // Auto-redirect to class landing page after 2 seconds
+
+        const target = '/dashboard?module=glee-academy';
+
+        // Auto-redirect (Safari-safe fallback to hard navigation)
         setTimeout(() => {
-          navigate('/dashboard?module=class-landing');
-        }, 2000);
+          navigate(target, { replace: true });
+          window.location.assign(target);
+        }, 1200);
       } else {
         setError(result.message || 'Failed to record attendance');
         toast({
@@ -261,7 +265,7 @@ const AttendanceScanPage = () => {
                 Dashboard
               </Button>
               <Button 
-                onClick={() => navigate('/dashboard?module=class-landing')} 
+                onClick={() => navigate('/dashboard?module=glee-academy')} 
                 className="flex-1"
               >
                 Go to Class
