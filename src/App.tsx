@@ -557,13 +557,13 @@ const App = () => {
                 }
               />
               
-              {/* LH 100 Bowman Scholars - Custom specialized page */}
+              {/* LH 100 Bowman Scholars - Uses unified course template */}
               <Route 
                 path="/academy/lh-100/*" 
                 element={
-                  <ProtectedRoute>
-                    <LH100BowmanScholars />
-                  </ProtectedRoute>
+                  <PublicRoute>
+                    <AcademyCoursePage />
+                  </PublicRoute>
                 }
               />
               
