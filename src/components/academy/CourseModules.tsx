@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, isAfter, isBefore, startOfWeek, endOfWeek } from 'date-fns';
 import OrderOfMass from './OrderOfMass';
+import EditableModuleResources from './EditableModuleResources';
 
 interface ModuleResource {
   id: string;
@@ -1091,71 +1092,78 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                       />
                     )}
 
-                    {/* Resources List */}
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Module Resources
-                      </h4>
-                      <div className="grid gap-2">
-                        {module.resources.map((resource) => {
-                          const Icon = getResourceIcon(resource.type);
-                          const colorClass = getResourceColor(resource.type);
+                    {/* Resources List - Use editable version for LH100 */}
+                    {courseId === 'lh-100' ? (
+                      <EditableModuleResources 
+                        moduleId={module.id}
+                        isLocked={module.is_locked}
+                      />
+                    ) : (
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Module Resources
+                        </h4>
+                        <div className="grid gap-2">
+                          {module.resources.map((resource) => {
+                            const Icon = getResourceIcon(resource.type);
+                            const colorClass = getResourceColor(resource.type);
 
-                          return (
-                            <div 
-                              key={resource.id}
-                              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
-                                resource.completed 
-                                  ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800/30' 
-                                  : 'bg-background hover:bg-muted/50'
-                              }`}
-                            >
-                              <div className={`p-2 rounded-lg bg-muted ${colorClass}`}>
-                                <Icon className="h-4 w-4" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-sm truncate">{resource.title}</span>
-                                  <Badge variant="outline" className="text-xs capitalize">
-                                    {resource.type}
-                                  </Badge>
+                            return (
+                              <div 
+                                key={resource.id}
+                                className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                                  resource.completed 
+                                    ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800/30' 
+                                    : 'bg-background hover:bg-muted/50'
+                                }`}
+                              >
+                                <div className={`p-2 rounded-lg bg-muted ${colorClass}`}>
+                                  <Icon className="h-4 w-4" />
                                 </div>
-                                {resource.duration && (
-                                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {resource.duration}
-                                  </span>
-                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-sm truncate">{resource.title}</span>
+                                    <Badge variant="outline" className="text-xs capitalize">
+                                      {resource.type}
+                                    </Badge>
+                                  </div>
+                                  {resource.duration && (
+                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      {resource.duration}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {resource.completed ? (
+                                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                  ) : (
+                                    <Button size="sm" variant="ghost" className="h-8 px-3">
+                                      {resource.type === 'video' ? (
+                                        <>
+                                          <Play className="h-3 w-3 mr-1" />
+                                          Watch
+                                        </>
+                                      ) : resource.type === 'audio' ? (
+                                        <>
+                                          <Headphones className="h-3 w-3 mr-1" />
+                                          Listen
+                                        </>
+                                      ) : (
+                                        <>
+                                          <ExternalLink className="h-3 w-3 mr-1" />
+                                          Open
+                                        </>
+                                      )}
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                {resource.completed ? (
-                                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                                ) : (
-                                  <Button size="sm" variant="ghost" className="h-8 px-3">
-                                    {resource.type === 'video' ? (
-                                      <>
-                                        <Play className="h-3 w-3 mr-1" />
-                                        Watch
-                                      </>
-                                    ) : resource.type === 'audio' ? (
-                                      <>
-                                        <Headphones className="h-3 w-3 mr-1" />
-                                        Listen
-                                      </>
-                                    ) : (
-                                      <>
-                                        <ExternalLink className="h-3 w-3 mr-1" />
-                                        Open
-                                      </>
-                                    )}
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </AccordionContent>
