@@ -165,8 +165,8 @@ export const TourManagerLanding = ({
           <CardContent className="px-4 pb-4 pt-0">
             {keyPersonnel.length === 0 ? <div className="text-center py-6">
                 <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="text-sm text-primary-foreground">No personnel assigned</p>
-                <p className="text-xs mt-1 text-primary-foreground">Configure tour personnel in settings</p>
+                <p className="text-sm text-muted-foreground">No personnel assigned</p>
+                <p className="text-xs mt-1 text-muted-foreground">Configure tour personnel in settings</p>
               </div> : <div className="grid grid-cols-2 gap-2">
                 {keyPersonnel.map(person => <div key={`${person.role}-${person.name}`} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
                     <Avatar className="h-7 w-7">
@@ -225,19 +225,19 @@ export const TourManagerLanding = ({
               return <div key={contract.id} className="flex items-start gap-3 p-2 rounded-lg border hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => onNavigate('contracts')}>
                       <div className="flex-shrink-0 w-10 text-center">
                         {performanceDate ? <>
-                            <div className="text-lg font-bold leading-none text-primary-foreground">
+                            <div className="text-lg font-bold leading-none text-foreground">
                               {format(performanceDate, 'd')}
                             </div>
-                            <div className="text-[10px] uppercase text-primary-foreground">
+                            <div className="text-[10px] uppercase text-muted-foreground">
                               {format(performanceDate, 'MMM')}
                             </div>
                           </> : <div className="text-xs text-muted-foreground">TBD</div>}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate text-primary-foreground">
+                        <p className="text-sm font-medium truncate text-foreground">
                           {meta?.host_name || contract.title}
                         </p>
-                        {(meta?.venue_name || location) && <p className="text-xs flex items-center gap-1 truncate text-primary-foreground">
+                        {(meta?.venue_name || location) && <p className="text-xs flex items-center gap-1 truncate text-muted-foreground">
                             <MapPin className="h-3 w-3 flex-shrink-0" />
                             {meta?.venue_name || location}
                           </p>}
@@ -251,7 +251,7 @@ export const TourManagerLanding = ({
             
             {/* Calendar Integration Note */}
             <div className="mt-3 pt-3 border-t">
-              <p className="text-[10px] flex items-center gap-1 text-primary-foreground">
+              <p className="text-[10px] flex items-center gap-1 text-muted-foreground">
                 <CalendarDays className="h-3 w-3" />
                 Tour dates from signed contracts
               </p>
