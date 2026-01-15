@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserCheck, Search, Download, XCircle, Clock, AlertTriangle, Users, Save, Plus, RefreshCw, Calendar, LayoutGrid } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -265,22 +264,85 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
     />
   );
 
+  // If showing event grid view, render the dedicated component
+  if (viewMode === 'events') {
+    return (
+      <div className="space-y-4">
+        {/* Mobile-first View Selector */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex-1">
+            <h2 className="text-base sm:text-lg font-bold flex items-center gap-2">
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <span className="truncate">Attendance: {courseName}</span>
+            </h2>
+          </div>
+          <Select value={viewMode} onValueChange={(v: 'summary' | 'events') => setViewMode(v)}>
+            <SelectTrigger className="w-full sm:w-[180px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="events">
+                <span className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Event Grid (By Date)
+                </span>
+              </SelectItem>
+              <SelectItem value="summary">
+                <span className="flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4" />
+                  Summary Totals
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <SecretaryEventAttendanceGrid courseId={courseId} courseName={courseName} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <UserCheck className="h-5 w-5 text-primary" />
-            Attendance Manager: {courseName}
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Excel-style grid • {enrolledStudents.length} enrolled students
-          </p>
+      {/* Mobile-first Header with Dropdown View Selector */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex-1">
+            <h2 className="text-base sm:text-lg font-bold flex items-center gap-2">
+              <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <span className="truncate">Attendance: {courseName}</span>
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {enrolledStudents.length} enrolled students
+            </p>
+          </div>
+          
+          {/* View Mode Dropdown - Mobile First */}
+          <Select value={viewMode} onValueChange={(v: 'summary' | 'events') => setViewMode(v)}>
+            <SelectTrigger className="w-full sm:w-[180px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="events">
+                <span className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Event Grid (By Date)
+                </span>
+              </SelectItem>
+              <SelectItem value="summary">
+                <span className="flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4" />
+                  Summary Totals
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        
+        {/* Action Buttons - Stack on mobile */}
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={semester} onValueChange={setSemester}>
-            <SelectTrigger className="w-[130px] h-8 text-xs">
+            <SelectTrigger className="w-[120px] sm:w-[130px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -289,61 +351,61 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
               <SelectItem value="FALL 2024">Fall 2024</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-            <RefreshCw className={`h-3 w-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="h-8">
+            <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline ml-1">Refresh</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={exportToCSV}>
-            <Download className="h-3 w-3 mr-1" />
-            Export
+          <Button variant="outline" size="sm" onClick={exportToCSV} className="h-8">
+            <Download className="h-3 w-3" />
+            <span className="hidden sm:inline ml-1">Export</span>
           </Button>
           <Button 
             size="sm" 
             onClick={saveAllChanges} 
             disabled={!hasUnsavedChanges || saving}
-            className={hasUnsavedChanges ? 'bg-green-600 hover:bg-green-700' : ''}
+            className={`h-8 ${hasUnsavedChanges ? 'bg-green-600 hover:bg-green-700' : ''}`}
           >
-            <Save className="h-3 w-3 mr-1" />
-            {saving ? 'Saving...' : 'Save All'}
+            <Save className="h-3 w-3" />
+            <span className="ml-1">{saving ? 'Saving...' : 'Save'}</span>
           </Button>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-4 gap-2">
+      {/* Quick Stats - 2x2 on mobile, 4 cols on desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Card className="p-2">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            <div>
+            <Users className="h-4 w-4 text-primary flex-shrink-0" />
+            <div className="min-w-0">
               <div className="text-lg font-bold">{totalStudents}</div>
-              <p className="text-[10px] text-muted-foreground">Active</p>
+              <p className="text-[10px] text-muted-foreground truncate">Active</p>
             </div>
           </div>
         </Card>
         <Card className="p-2">
           <div className="flex items-center gap-2">
-            <XCircle className="h-4 w-4 text-red-500" />
-            <div>
+            <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+            <div className="min-w-0">
               <div className="text-lg font-bold text-red-600">{droppedStudents}</div>
-              <p className="text-[10px] text-muted-foreground">Dropped</p>
+              <p className="text-[10px] text-muted-foreground truncate">Dropped</p>
             </div>
           </div>
         </Card>
         <Card className="p-2">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-yellow-500" />
-            <div>
+            <AlertTriangle className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+            <div className="min-w-0">
               <div className="text-lg font-bold text-yellow-600">{studentsWithWarning}</div>
-              <p className="text-[10px] text-muted-foreground">3+ Unexcused</p>
+              <p className="text-[10px] text-muted-foreground truncate">3+ Unexcused</p>
             </div>
           </div>
         </Card>
         <Card className="p-2">
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-orange-500" />
-            <div>
+            <Clock className="h-4 w-4 text-orange-500 flex-shrink-0" />
+            <div className="min-w-0">
               <div className="text-lg font-bold text-orange-600">{totalTardies}</div>
-              <p className="text-[10px] text-muted-foreground">Tardies</p>
+              <p className="text-[10px] text-muted-foreground truncate">Tardies</p>
             </div>
           </div>
         </Card>

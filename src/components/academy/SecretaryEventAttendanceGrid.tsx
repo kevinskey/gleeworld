@@ -338,21 +338,12 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Event Attendance Grid: {courseName}
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Excel-style • {students.length} students • {filteredEvents.length} events
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
+    <div className="space-y-3">
+      {/* Controls - Stack on mobile */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={semester} onValueChange={setSemester}>
-            <SelectTrigger className="w-[130px] h-8 text-xs">
+            <SelectTrigger className="w-[110px] sm:w-[130px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -362,7 +353,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
             </SelectContent>
           </Select>
           <Select value={eventFilter} onValueChange={(v: any) => setEventFilter(v)}>
-            <SelectTrigger className="w-[120px] h-8 text-xs">
+            <SelectTrigger className="w-[100px] sm:w-[120px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -371,83 +362,82 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
               <SelectItem value="performance">Performances</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-            <RefreshCw className={`h-3 w-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm" onClick={exportToCSV}>
-            <Download className="h-3 w-3 mr-1" />
-            Export
-          </Button>
-          <Button 
-            size="sm" 
-            onClick={saveAllChanges} 
-            disabled={!hasUnsavedChanges || saving}
-            className={hasUnsavedChanges ? 'bg-green-600 hover:bg-green-700' : ''}
-          >
-            <Save className="h-3 w-3 mr-1" />
-            {saving ? 'Saving...' : 'Save All'}
-          </Button>
+          <div className="flex items-center gap-1 ml-auto">
+            <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="h-8 px-2">
+              <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportToCSV} className="h-8 px-2">
+              <Download className="h-3 w-3" />
+            </Button>
+            <Button 
+              size="sm" 
+              onClick={saveAllChanges} 
+              disabled={!hasUnsavedChanges || saving}
+              className={`h-8 px-2 sm:px-3 ${hasUnsavedChanges ? 'bg-green-600 hover:bg-green-700' : ''}`}
+            >
+              <Save className="h-3 w-3" />
+              <span className="hidden sm:inline ml-1">{saving ? 'Saving...' : 'Save'}</span>
+            </Button>
+          </div>
+        </div>
+        
+        {/* Search - full width on mobile */}
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search students..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8 h-8 text-sm"
+          />
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-4 gap-2">
+      {/* Quick Stats - 2x2 on mobile */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Card className="p-2">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            <div>
+            <Users className="h-4 w-4 text-primary flex-shrink-0" />
+            <div className="min-w-0">
               <div className="text-lg font-bold">{students.length}</div>
-              <p className="text-[10px] text-muted-foreground">Students</p>
+              <p className="text-[10px] text-muted-foreground truncate">Students</p>
             </div>
           </div>
         </Card>
         <Card className="p-2">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-blue-500" />
-            <div>
+            <Calendar className="h-4 w-4 text-blue-500 flex-shrink-0" />
+            <div className="min-w-0">
               <div className="text-lg font-bold">{filteredEvents.length}</div>
-              <p className="text-[10px] text-muted-foreground">Events</p>
+              <p className="text-[10px] text-muted-foreground truncate">Events</p>
             </div>
           </div>
         </Card>
         <Card className="p-2">
           <div className="flex items-center gap-2">
-            <Check className="h-4 w-4 text-green-500" />
-            <div>
+            <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+            <div className="min-w-0">
               <div className="text-lg font-bold">
                 {events.filter(e => e.event_type === 'rehearsal').length}
               </div>
-              <p className="text-[10px] text-muted-foreground">Rehearsals</p>
+              <p className="text-[10px] text-muted-foreground truncate">Rehearsals</p>
             </div>
           </div>
         </Card>
         <Card className="p-2">
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-purple-500" />
-            <div>
+            <AlertCircle className="h-4 w-4 text-purple-500 flex-shrink-0" />
+            <div className="min-w-0">
               <div className="text-lg font-bold">
                 {events.filter(e => e.event_type === 'performance').length}
               </div>
-              <p className="text-[10px] text-muted-foreground">Performances</p>
+              <p className="text-[10px] text-muted-foreground truncate">Performances</p>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Search */}
-      <div className="relative w-full md:w-64">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search students..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-8 h-8 text-sm"
-        />
-      </div>
-
-      {/* Excel-like Grid */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">Loading...</div>
@@ -461,16 +451,16 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
             </div>
           ) : (
             <TooltipProvider>
-              <ScrollArea className="w-full h-[65vh]">
+              <ScrollArea className="w-full h-[55vh] sm:h-[60vh]">
                 <div className="min-w-max">
                   {/* Header Row */}
                   <div 
                     className="flex gap-0 bg-muted/50 border-b font-medium text-xs sticky top-0 z-20"
-                    style={{ minWidth: `${200 + filteredEvents.length * 36 + 200}px` }}
+                    style={{ minWidth: `${140 + filteredEvents.length * 36 + 180}px` }}
                   >
-                    {/* Sticky Student Name Column */}
-                    <div className="w-[180px] min-w-[180px] p-2 border-r bg-muted/50 sticky left-0 z-30">
-                      Student Name
+                    {/* Sticky Student Name Column - narrower on mobile */}
+                    <div className="w-[120px] sm:w-[160px] min-w-[120px] sm:min-w-[160px] p-2 border-r bg-muted/50 sticky left-0 z-30 text-[11px] sm:text-xs">
+                      Student
                     </div>
                     
                     {/* Event Date Columns */}
@@ -499,13 +489,13 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
                       </Tooltip>
                     ))}
 
-                    {/* Totals Header */}
+                    {/* Totals Header - smaller on mobile */}
                     <div className="flex bg-muted sticky right-0 z-30 border-l-2 border-primary/20">
-                      <div className="w-10 p-1 text-center text-[10px] border-r" title="Present">P</div>
-                      <div className="w-10 p-1 text-center text-[10px] border-r" title="Absent">A</div>
-                      <div className="w-10 p-1 text-center text-[10px] border-r" title="Excused">E</div>
-                      <div className="w-10 p-1 text-center text-[10px] border-r" title="Late">L</div>
-                      <div className="w-12 p-1 text-center text-[10px]" title="Attendance Rate">Rate</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-[10px] border-r" title="Present">P</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-[10px] border-r" title="Absent">A</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-[10px] border-r" title="Excused">E</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-[10px] border-r" title="Late">L</div>
+                      <div className="w-10 sm:w-12 p-1 text-center text-[9px] sm:text-[10px]" title="Attendance Rate">Rate</div>
                     </div>
                   </div>
 
@@ -518,10 +508,10 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
                         className={`flex gap-0 border-b items-center text-xs
                           ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}
                         `}
-                        style={{ minWidth: `${200 + filteredEvents.length * 36 + 200}px` }}
+                        style={{ minWidth: `${140 + filteredEvents.length * 36 + 180}px` }}
                       >
-                        {/* Sticky Student Name */}
-                        <div className={`w-[180px] min-w-[180px] p-2 border-r font-medium truncate sticky left-0 z-10
+                        {/* Sticky Student Name - narrower on mobile */}
+                        <div className={`w-[120px] sm:w-[160px] min-w-[120px] sm:min-w-[160px] p-1.5 sm:p-2 border-r font-medium truncate sticky left-0 z-10 text-[11px] sm:text-xs
                           ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}
                         `}>
                           {student.full_name}
@@ -542,23 +532,23 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
                           </div>
                         ))}
 
-                        {/* Totals */}
+                        {/* Totals - smaller on mobile */}
                         <div className={`flex sticky right-0 z-10 border-l-2 border-primary/20
                           ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}
                         `}>
-                          <div className="w-10 p-1 text-center font-medium text-green-600 border-r">
+                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-green-600 border-r text-[10px] sm:text-xs">
                             {totals.present}
                           </div>
-                          <div className="w-10 p-1 text-center font-medium text-red-600 border-r">
+                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-red-600 border-r text-[10px] sm:text-xs">
                             {totals.absent}
                           </div>
-                          <div className="w-10 p-1 text-center font-medium text-blue-600 border-r">
+                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-blue-600 border-r text-[10px] sm:text-xs">
                             {totals.excused}
                           </div>
-                          <div className="w-10 p-1 text-center font-medium text-orange-600 border-r">
+                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-orange-600 border-r text-[10px] sm:text-xs">
                             {totals.late}
                           </div>
-                          <div className={`w-12 p-1 text-center font-bold
+                          <div className={`w-10 sm:w-12 p-1 text-center font-bold text-[10px] sm:text-xs
                             ${totals.attendance_rate >= 90 ? 'text-green-600' : 
                               totals.attendance_rate >= 75 ? 'text-yellow-600' : 'text-red-600'}
                           `}>
@@ -577,27 +567,37 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
         </CardContent>
       </Card>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-        <span className="font-medium">Legend:</span>
-        {STATUS_OPTIONS.slice(0, 4).map(opt => (
-          <span key={opt.value} className="flex items-center gap-1">
-            <div className={`w-6 h-6 flex items-center justify-center rounded ${opt.color}`}>
-              <opt.icon className="h-3 w-3" />
-            </div>
-            {opt.value === 'present' ? 'Present' : 
-             opt.value === 'absent' ? 'Absent' : 
-             opt.value === 'excused' ? 'Excused' : 'Late'}
+      {/* Legend - Wraps on mobile */}
+      <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground flex-wrap">
+        <span className="font-medium w-full sm:w-auto">Legend:</span>
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+          {STATUS_OPTIONS.slice(0, 4).map(opt => (
+            <span key={opt.value} className="flex items-center gap-1">
+              <div className={`w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded ${opt.color}`}>
+                <opt.icon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              </div>
+              <span className="hidden sm:inline">
+                {opt.value === 'present' ? 'Present' : 
+                 opt.value === 'absent' ? 'Absent' : 
+                 opt.value === 'excused' ? 'Excused' : 'Late'}
+              </span>
+              <span className="sm:hidden">
+                {opt.value === 'present' ? 'P' : 
+                 opt.value === 'absent' ? 'A' : 
+                 opt.value === 'excused' ? 'E' : 'L'}
+              </span>
+            </span>
+          ))}
+          <span className="flex items-center gap-1">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-purple-100 dark:bg-purple-900/30 rounded flex items-center justify-center text-[8px] sm:text-[10px] font-bold">P</div>
+            <span className="hidden sm:inline">Performance</span>
+            <span className="sm:hidden">Perf</span>
           </span>
-        ))}
-        <span className="flex items-center gap-1">
-          <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/30 rounded flex items-center justify-center text-[10px] font-bold">P</div>
-          Performance
-        </span>
-        <span className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-yellow-50 ring-2 ring-yellow-400 rounded" />
-          Unsaved
-        </span>
+          <span className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-yellow-50 ring-2 ring-yellow-400 rounded" />
+            <span className="hidden sm:inline">Unsaved</span>
+          </span>
+        </div>
       </div>
     </div>
   );
