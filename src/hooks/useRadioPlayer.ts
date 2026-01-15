@@ -693,18 +693,43 @@ export const useRadioPlayer = () => {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    let last = audio.currentTime;
+    
+    let lastTime = audio.currentTime;
+    let stallCount = 0;
+    const maxStallChecks = 2; // After 2 checks (10 seconds) with no progress, reconnect
+    
     const interval = setInterval(() => {
       if (!audioRef.current) return;
       const a = audioRef.current;
+      
       if (state.isPlaying) {
-        if (a.currentTime <= last + 1) {
-          console.log('Radio health-check: no progress, reconnecting...');
-          play();
+        const currentTime = a.currentTime;
+        const paused = a.paused;
+        const readyState = a.readyState;
+        
+        // Check if we're supposed to be playing but audio isn't progressing
+        if (!paused && currentTime <= lastTime) {
+          stallCount++;
+          console.log(`Radio health-check: no progress (stall count: ${stallCount}/${maxStallChecks}, readyState: ${readyState})`);
+          
+          if (stallCount >= maxStallChecks) {
+            console.log('Radio health-check: stalled too long, reconnecting...');
+            stallCount = 0;
+            play();
+          }
+        } else {
+          // Progress detected, reset stall counter
+          stallCount = 0;
         }
-        last = a.currentTime;
+        
+        lastTime = currentTime;
+      } else {
+        // Not playing, reset counters
+        stallCount = 0;
+        lastTime = audio.currentTime;
       }
-    }, 30000);
+    }, 5000); // Check every 5 seconds instead of 30
+    
     return () => clearInterval(interval);
   }, [state.isPlaying, play]);
 
