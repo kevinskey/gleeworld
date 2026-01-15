@@ -7696,6 +7696,71 @@ export type Database = {
           },
         ]
       }
+      gw_course_attendance_summary: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          dropped_at: string | null
+          dropped_reason: string | null
+          excused_performance_absences: number | null
+          excused_rehearsal_absences: number | null
+          id: string
+          is_dropped: boolean | null
+          notes: string | null
+          semester: string | null
+          student_id: string | null
+          student_name: string
+          tardies: number | null
+          unexcused_performance_absences: number | null
+          unexcused_rehearsal_absences: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          dropped_at?: string | null
+          dropped_reason?: string | null
+          excused_performance_absences?: number | null
+          excused_rehearsal_absences?: number | null
+          id?: string
+          is_dropped?: boolean | null
+          notes?: string | null
+          semester?: string | null
+          student_id?: string | null
+          student_name: string
+          tardies?: number | null
+          unexcused_performance_absences?: number | null
+          unexcused_rehearsal_absences?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          dropped_at?: string | null
+          dropped_reason?: string | null
+          excused_performance_absences?: number | null
+          excused_rehearsal_absences?: number | null
+          id?: string
+          is_dropped?: boolean | null
+          notes?: string | null
+          semester?: string | null
+          student_id?: string | null
+          student_name?: string
+          tardies?: number | null
+          unexcused_performance_absences?: number | null
+          unexcused_rehearsal_absences?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_attendance_summary_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_course_calendar: {
         Row: {
           course_id: string | null
