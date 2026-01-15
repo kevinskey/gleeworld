@@ -20303,6 +20303,8 @@ export type Database = {
           id: string
           is_completed: boolean | null
           module_id: string
+          music_links: Json | null
+          readings_date: string | null
           resource_type: string
           sort_order: number | null
           title: string
@@ -20317,6 +20319,8 @@ export type Database = {
           id?: string
           is_completed?: boolean | null
           module_id: string
+          music_links?: Json | null
+          readings_date?: string | null
           resource_type?: string
           sort_order?: number | null
           title: string
@@ -20331,6 +20335,8 @@ export type Database = {
           id?: string
           is_completed?: boolean | null
           module_id?: string
+          music_links?: Json | null
+          readings_date?: string | null
           resource_type?: string
           sort_order?: number | null
           title?: string
