@@ -601,6 +601,8 @@ const App = () => {
               <Route path="/mus-000" element={<Navigate to="/academy/mus-000" replace />} />
               <Route path="/glee-101" element={<Navigate to="/academy/glee-101" replace />} />
               <Route path="/mus-240" element={<Navigate to="/academy/mus-240" replace />} />
+              <Route path="/bowman-scholars" element={<Navigate to="/academy/lh-100" replace />} />
+              <Route path="/lh-100" element={<Navigate to="/academy/lh-100" replace />} />
               {/* Grand Staff Classroom page */}
               <Route 
                 path="/grand-staff-classroom" 

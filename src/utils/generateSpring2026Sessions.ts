@@ -73,6 +73,21 @@ const COURSES: CourseConfig[] = [
       { type: 'note', label: 'Notes/Announcements' },
     ],
   },
+  {
+    code: 'LH 100',
+    title: 'Bowman Scholars',
+    days: [4, 0], // Thu, Sun
+    startTime: '19:00', // Thursday 7pm, Sunday will override
+    endTime: '21:00',
+    category: 'Formation',
+    templateSections: [
+      { type: 'scripture', label: 'Scripture/Theme' },
+      { type: 'reflection', label: 'Spiritual Reflection' },
+      { type: 'liturgy', label: 'Liturgy Planning' },
+      { type: 'activity', label: 'Ministry Activity' },
+      { type: 'assignment', label: 'Weekly Assignment' },
+    ],
+  },
 ];
 
 // Academic calendar all-day events
