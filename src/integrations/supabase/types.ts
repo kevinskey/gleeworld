@@ -20259,6 +20259,42 @@ export type Database = {
         }
         Relationships: []
       }
+      lh100_mass_songs: {
+        Row: {
+          created_at: string
+          hymn_number: string | null
+          id: string
+          mass_part: string
+          module_id: string
+          notes: string | null
+          song_title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hymn_number?: string | null
+          id?: string
+          mass_part: string
+          module_id: string
+          notes?: string | null
+          song_title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hymn_number?: string | null
+          id?: string
+          mass_part?: string
+          module_id?: string
+          notes?: string | null
+          song_title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       library_inventory_entries: {
         Row: {
           copies_found: number | null
