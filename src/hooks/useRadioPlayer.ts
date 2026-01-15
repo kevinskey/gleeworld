@@ -743,12 +743,14 @@ export const useRadioPlayer = () => {
         const currentTime = a.currentTime;
         const paused = a.paused;
         const readyState = a.readyState;
+        const looksUnhealthy = readyState <= 1; // HAVE_NOTHING (0) / HAVE_METADATA (1)
 
-        // Check if we're supposed to be playing but audio isn't progressing
-        if (!paused && currentTime <= lastTime) {
+        // For live MP3 streams, currentTime can stay at 0 even when audio is flowing.
+        // Only treat "no progress" as a stall when the media element also reports an unhealthy readyState.
+        if (!paused && looksUnhealthy) {
           stallCount++;
           console.log(
-            `Radio health-check: no progress (stall count: ${stallCount}/${maxStallChecks}, readyState: ${readyState})`,
+            `Radio health-check: unhealthy readyState (stall count: ${stallCount}/${maxStallChecks}, readyState: ${readyState})`,
           );
 
           if (stallCount >= maxStallChecks) {
@@ -757,7 +759,6 @@ export const useRadioPlayer = () => {
             play();
           }
         } else {
-          // Progress detected, reset stall counter
           stallCount = 0;
         }
 
