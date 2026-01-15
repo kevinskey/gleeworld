@@ -15,6 +15,7 @@ import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
 import { CourseAssignments } from './CourseAssignments';
 import { ExitInterviewSummaryCard } from '@/components/surveys/ExitInterviewSummaryCard';
 import { CollapsibleMemberExitInterview } from '@/components/surveys/CollapsibleMemberExitInterview';
+import LiturgicalWeekCard from './LiturgicalWeekCard';
 
 interface StudentProfile {
   user_id: string;
@@ -147,8 +148,14 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const avatarUrl = getAvatarUrl(profile?.avatar_url);
   const initials = getInitials(profile?.full_name);
 
+  // Check if this is the LH 100 course
+  const isLH100 = courseId === 'a0000000-0000-0000-0000-000000000100';
+
   return (
     <div className="space-y-6">
+      {/* Liturgical Week Card - Only for LH 100 */}
+      {isLH100 && <LiturgicalWeekCard />}
+
       {/* Profile Hero Card */}
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-r from-primary/20 to-primary/5 p-6 md:p-8">
