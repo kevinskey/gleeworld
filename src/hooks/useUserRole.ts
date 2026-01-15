@@ -211,10 +211,35 @@ export const useUserRole = () => {
 
   /**
    * Secretary/Librarian - Can manage attendance records
+   * Also checks app_roles table for 'secretary' role
    */
+  const [hasSecretaryAppRole, setHasSecretaryAppRole] = useState(false);
+  
+  useEffect(() => {
+    const checkSecretaryRole = async () => {
+      if (!user) {
+        setHasSecretaryAppRole(false);
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('app_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'secretary')
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      setHasSecretaryAppRole(!!data);
+    };
+    
+    checkSecretaryRole();
+  }, [user]);
+  
   const isSecretary = (): boolean => {
     if (!profile) return false;
     if (isAdmin()) return true;
+    if (hasSecretaryAppRole) return true;
     return profile.exec_board_role === 'librarian' || profile.exec_board_role === 'secretary';
   };
 
