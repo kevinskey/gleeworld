@@ -449,7 +449,7 @@ export const HeroManagement = () => {
         transition: formData.transition,
       } as const;
 
-      if (editingId) {
+      if (editingId && editingId !== 'new') {
         // Update existing
         let updateQuery = supabase
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
