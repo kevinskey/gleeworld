@@ -180,28 +180,31 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
       const start = startOfMonth(currentMonth);
       const end = endOfMonth(currentMonth);
 
-      // Fetch from gw_events ONLY for MUS 070 (Glee Club) - never for other courses
-      const MUS_070_COURSE_ID = 'a0000000-0000-0000-0000-000000000070';
-      let gleeEvents: CalendarEvent[] = [];
+      // Course-specific calendar IDs
+      const COURSE_CALENDAR_IDS: Record<string, string> = {
+        'a0000000-0000-0000-0000-000000000070': 'b1e077a0-85f3-4665-b006-4767b310a521', // MUS 070 -> SCGC Calendar
+        'a0000000-0000-0000-0000-000000000100': 'a0000000-0000-0000-0000-000000000100', // LH 100 -> LH 100 Calendar
+      };
       
-      // Only fetch Glee Club events if this is specifically MUS 070
-      if (courseId === MUS_070_COURSE_ID) {
-        const scgcCalendarId = 'b1e077a0-85f3-4665-b006-4767b310a521';
-        
+      let gwEventsData: CalendarEvent[] = [];
+      const calendarId = COURSE_CALENDAR_IDS[courseId];
+      
+      // Fetch from gw_events if this course has an associated calendar
+      if (calendarId) {
         const { data: eventsData, error: eventsError } = await supabase
           .from('gw_events')
           .select('id, title, description, event_type, start_date, location')
-          .or(`calendar_id.eq.${scgcCalendarId},title.ilike.%glee%,title.ilike.%scgc%`)
+          .eq('calendar_id', calendarId)
           .gte('start_date', start.toISOString())
           .lte('start_date', end.toISOString())
           .order('start_date', { ascending: true });
 
-        if (!eventsError) {
-          gleeEvents = (eventsData || []).map(event => ({
+        if (!eventsError && eventsData) {
+          gwEventsData = eventsData.map(event => ({
             id: event.id,
             title: event.title,
             description: event.description,
-            event_type: event.event_type || 'rehearsal',
+            event_type: event.event_type || 'class',
             start_time: event.start_date,
             end_time: null,
             location: event.location
@@ -209,7 +212,7 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
         }
       }
 
-      // Also fetch course-specific calendar events
+      // Also fetch course-specific calendar events from gw_course_calendar
       const { data: courseData } = await supabase
         .from('gw_course_calendar')
         .select('*')
@@ -218,7 +221,7 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
         .lte('start_time', end.toISOString())
         .order('start_time', { ascending: true });
 
-      setEvents([...(courseData || []), ...gleeEvents]);
+      setEvents([...(courseData || []), ...gwEventsData]);
     } catch (error) {
       console.error('Error fetching calendar events:', error);
     } finally {

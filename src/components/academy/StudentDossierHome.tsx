@@ -68,7 +68,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
     if (user) {
       fetchStudentData();
     }
-  }, [user]);
+  }, [user, courseId]);
 
   const fetchStudentData = async () => {
     if (!user) return;
@@ -107,16 +107,38 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         })));
       }
 
-      // Fetch upcoming events
-      const { data: eventsData } = await supabase
-        .from('events')
-        .select('id, title, start_date, location, event_type')
-        .gte('start_date', new Date().toISOString())
-        .order('start_date', { ascending: true })
-        .limit(5);
+      // Course-specific calendar IDs
+      const COURSE_CALENDAR_IDS: Record<string, string> = {
+        'a0000000-0000-0000-0000-000000000070': 'b1e077a0-85f3-4665-b006-4767b310a521', // MUS 070 -> SCGC Calendar
+        'a0000000-0000-0000-0000-000000000100': 'a0000000-0000-0000-0000-000000000100', // LH 100 -> LH 100 Calendar
+      };
 
-      if (eventsData) {
-        setUpcomingEvents(eventsData);
+      // Fetch upcoming events from gw_events based on course calendar
+      const calendarId = COURSE_CALENDAR_IDS[courseId];
+      if (calendarId) {
+        const { data: eventsData } = await supabase
+          .from('gw_events')
+          .select('id, title, start_date, location, event_type')
+          .eq('calendar_id', calendarId)
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+          .limit(5);
+
+        if (eventsData) {
+          setUpcomingEvents(eventsData);
+        }
+      } else {
+        // Fallback to old events table for non-mapped courses
+        const { data: eventsData } = await supabase
+          .from('events')
+          .select('id, title, start_date, location, event_type')
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+          .limit(5);
+
+        if (eventsData) {
+          setUpcomingEvents(eventsData);
+        }
       }
     } catch (error) {
       console.error('Error fetching student data:', error);
