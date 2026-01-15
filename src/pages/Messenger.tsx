@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { VideoSessionManager } from '@/components/video/VideoSessionManager';
+import { ActiveMeetingsSidebar } from '@/components/video/ActiveMeetingsSidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -722,8 +723,18 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                 </TabsContent>
 
                 {/* Video Tab */}
-                <TabsContent value="video" className="flex-1 overflow-auto mt-0 bg-background data-[state=active]:flex data-[state=active]:flex-col p-4">
-                  <VideoSessionManager joinRoomName={joinRoomName} />
+                <TabsContent value="video" className="flex-1 overflow-auto mt-0 bg-background data-[state=active]:flex data-[state=active]:flex-col">
+                  <div className="flex-1 flex gap-0">
+                    {/* Main Video Area */}
+                    <div className="flex-1 overflow-auto p-4">
+                      <VideoSessionManager joinRoomName={joinRoomName} />
+                    </div>
+                    
+                    {/* Right Sidebar - Active Meetings */}
+                    <div className="hidden lg:flex w-72 border-l border-border bg-muted/30 flex-col">
+                      <ActiveMeetingsSidebar />
+                    </div>
+                  </div>
                 </TabsContent>
 
               </Tabs>
