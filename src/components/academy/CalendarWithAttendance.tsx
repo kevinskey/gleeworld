@@ -4,22 +4,22 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import { 
-  Calendar, Clock, MapPin, ChevronLeft, ChevronRight, List, Grid3X3,
+  Calendar, Clock, MapPin, ChevronLeft, ChevronRight,
   UserCheck, CheckCircle, XCircle, AlertTriangle, Send, Mail, FileText,
-  ThumbsUp, ThumbsDown, Inbox, Upload, User, X, Camera
+  ThumbsUp, ThumbsDown, Inbox, Upload, User, X, Camera, TrendingUp, CalendarDays
 } from 'lucide-react';
 import { QuickCameraCapture } from '@/components/camera/QuickCameraCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessenger } from '@/contexts/MessengerContext';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, startOfDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, startOfDay, isSameMonth } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -73,15 +73,6 @@ interface ExcuseRequest {
   created_at: string;
 }
 
-const EVENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  class: { bg: 'bg-blue-200 dark:bg-blue-800', text: 'text-blue-900 dark:text-blue-100', border: 'border-blue-400 dark:border-blue-600' },
-  rehearsal: { bg: 'bg-purple-200 dark:bg-purple-800', text: 'text-purple-900 dark:text-purple-100', border: 'border-purple-400 dark:border-purple-600' },
-  assignment_due: { bg: 'bg-orange-200 dark:bg-orange-800', text: 'text-orange-900 dark:text-orange-100', border: 'border-orange-400 dark:border-orange-600' },
-  test: { bg: 'bg-red-200 dark:bg-red-800', text: 'text-red-900 dark:text-red-100', border: 'border-red-400 dark:border-red-600' },
-  office_hours: { bg: 'bg-green-200 dark:bg-green-800', text: 'text-green-900 dark:text-green-100', border: 'border-green-400 dark:border-green-600' },
-  special: { bg: 'bg-indigo-200 dark:bg-indigo-800', text: 'text-indigo-900 dark:text-indigo-100', border: 'border-indigo-400 dark:border-indigo-600' },
-};
-
 export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({ 
   courseId, 
   isEnrolled = true,
@@ -94,7 +85,7 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Attendance state
@@ -267,7 +258,6 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      // Cast the status to the expected type
       const typedData = (data || []).map(d => ({
         ...d,
         status: d.status as 'pending' | 'approved' | 'denied'
@@ -294,7 +284,6 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
       let documentUrl: string | null = null;
       let documentFilename: string | null = null;
 
-      // Upload document if provided
       if (excuseDocument) {
         const fileExt = excuseDocument.name.split('.').pop();
         const fileName = `${user.id}/${Date.now()}-excuse-doc.${fileExt}`;
@@ -312,7 +301,6 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
           return;
         }
 
-        // Get the URL for the uploaded file
         const { data: urlData } = supabase.storage
           .from('excuse-documents')
           .getPublicUrl(uploadData.path);
@@ -321,7 +309,6 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
         documentFilename = excuseDocument.name;
       }
 
-      // Insert excuse request into database
       const { data: insertData, error: insertError } = await supabase
         .from('gw_excuse_requests')
         .insert({
@@ -342,7 +329,6 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
       setShowExcuseDialog(false);
       resetExcuseForm();
       
-      // Add to local state for immediate UI feedback
       if (insertData) {
         const typedInsertData = {
           ...insertData,
@@ -368,7 +354,6 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
 
   const handleCameraCapture = async (imageUrl: string) => {
     try {
-      // Convert the captured image URL to a file
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       const file = new File([blob], `excuse-doc-${Date.now()}.jpg`, { type: 'image/jpeg' });
@@ -413,12 +398,8 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
     }
   };
 
-  const getEventColors = (type: string) => {
-    return EVENT_COLORS[type] || EVENT_COLORS.class;
-  };
-
   const total = stats.present + stats.absent + stats.late + stats.excused;
-  const attendanceRate = total > 0 ? ((stats.present + stats.late) / total * 100).toFixed(1) : '100';
+  const attendanceRate = total > 0 ? Math.round((stats.present + stats.late) / total * 100) : 100;
 
   const days = eachDayOfInterval({
     start: startOfMonth(currentMonth),
@@ -431,103 +412,297 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
 
   const upcomingEvents = events
     .filter(e => new Date(e.start_time) >= startOfDay(new Date()))
-    .slice(0, 8);
+    .slice(0, 10);
+
+  // Get first day of month to calculate offset
+  const firstDayOfMonth = startOfMonth(currentMonth);
+  const startingDayOfWeek = firstDayOfMonth.getDay();
+
+  // Get events for selected date
+  const selectedDateEvents = selectedDate ? getEventsForDay(selectedDate) : [];
 
   return (
-    <div className="space-y-6">
-      {/* Attendance Summary Section */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <UserCheck className="h-5 w-5 text-primary" />
-            Attendance Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-            <div className="bg-primary/10 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-primary">{attendanceRate}%</div>
-              <p className="text-sm text-muted-foreground">Rate</p>
+    <div className="space-y-4 md:space-y-6">
+      {/* Mobile-First Attendance Stats */}
+      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-2xl p-4 md:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-primary/20 rounded-xl">
+              <TrendingUp className="h-5 w-5 text-primary" />
             </div>
-            <div className="bg-green-100 dark:bg-green-950/30 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-green-600">{stats.present}</div>
-              <p className="text-sm text-muted-foreground">Present</p>
-            </div>
-            <div className="bg-yellow-100 dark:bg-yellow-950/30 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-yellow-600">{stats.late}</div>
-              <p className="text-sm text-muted-foreground">Late</p>
-            </div>
-            <div className="bg-red-100 dark:bg-red-950/30 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-red-600">{stats.absent}</div>
-              <p className="text-sm text-muted-foreground">Absent</p>
-            </div>
-            <div className="bg-blue-100 dark:bg-blue-950/30 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-blue-600">{stats.excused}</div>
-              <p className="text-sm text-muted-foreground">Excused</p>
+            <div>
+              <h3 className="font-semibold text-base md:text-lg">Attendance</h3>
+              <p className="text-xs text-muted-foreground">Your attendance overview</p>
             </div>
           </div>
+          <div className="text-right">
+            <span className="text-3xl md:text-4xl font-bold text-primary">{attendanceRate}%</span>
+            <p className="text-xs text-muted-foreground">Overall Rate</p>
+          </div>
+        </div>
+        
+        <Progress value={attendanceRate} className="h-2 mb-4" />
+        
+        {/* Stats Grid - Mobile: 2x2, Desktop: 4 columns */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-background/60 backdrop-blur-sm rounded-xl p-3 text-center border border-green-500/20">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <span className="text-xl md:text-2xl font-bold text-green-600">{stats.present}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Present</p>
+          </div>
+          <div className="bg-background/60 backdrop-blur-sm rounded-xl p-3 text-center border border-yellow-500/20">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <Clock className="h-4 w-4 text-yellow-500" />
+              <span className="text-xl md:text-2xl font-bold text-yellow-600">{stats.late}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Late</p>
+          </div>
+          <div className="bg-background/60 backdrop-blur-sm rounded-xl p-3 text-center border border-red-500/20">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <XCircle className="h-4 w-4 text-red-500" />
+              <span className="text-xl md:text-2xl font-bold text-red-600">{stats.absent}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Absent</p>
+          </div>
+          <div className="bg-background/60 backdrop-blur-sm rounded-xl p-3 text-center border border-blue-500/20">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <AlertTriangle className="h-4 w-4 text-blue-500" />
+              <span className="text-xl md:text-2xl font-bold text-blue-600">{stats.excused}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Excused</p>
+          </div>
+        </div>
+      </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2">
+      {/* Quick Action Button - Mobile Optimized */}
+      <Button 
+        onClick={() => setShowExcuseDialog(true)}
+        className="w-full md:w-auto gap-2 h-12 text-base font-medium"
+        size="lg"
+      >
+        <FileText className="h-5 w-5" />
+        Submit Excuse Request
+      </Button>
+
+      {/* Calendar Section - Mobile First */}
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-2 px-3 md:px-6">
+          <div className="flex items-center justify-between">
             <Button 
-              variant="default" 
-              size="lg" 
-              onClick={() => setShowExcuseDialog(true)}
-              className="gap-2 text-base px-6 py-3"
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              className="h-9 w-9"
             >
-              <FileText className="h-5 w-5" />
-              Submit Excuse Request
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <h2 className="text-lg md:text-xl font-bold">
+              {format(currentMonth, 'MMMM yyyy')}
+            </h2>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              className="h-9 w-9"
+            >
+              <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
+        </CardHeader>
+        
+        <CardContent className="px-2 md:px-6 pb-4">
+          {/* Day Headers */}
+          <div className="grid grid-cols-7 mb-2">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+              <div key={i} className="text-center text-xs font-medium text-muted-foreground py-2">
+                {day}
+              </div>
+            ))}
+          </div>
+          
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-1">
+            {/* Empty cells for days before the first of the month */}
+            {Array.from({ length: startingDayOfWeek }).map((_, i) => (
+              <div key={`empty-${i}`} className="aspect-square" />
+            ))}
+            
+            {days.map((day) => {
+              const dayEvents = getEventsForDay(day);
+              const hasEvents = dayEvents.length > 0;
+              const isSelected = selectedDate && isSameDay(day, selectedDate);
+              const isTodayDate = isToday(day);
+              
+              return (
+                <button
+                  key={day.toISOString()}
+                  onClick={() => setSelectedDate(isSelected ? null : day)}
+                  className={cn(
+                    "aspect-square relative flex flex-col items-center justify-center rounded-lg text-sm transition-all",
+                    "hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50",
+                    isSelected && "bg-primary text-primary-foreground hover:bg-primary/90",
+                    isTodayDate && !isSelected && "bg-accent font-bold",
+                    !isSameMonth(day, currentMonth) && "text-muted-foreground/50"
+                  )}
+                >
+                  <span className={cn(
+                    "text-xs md:text-sm",
+                    isTodayDate && !isSelected && "text-primary"
+                  )}>
+                    {format(day, 'd')}
+                  </span>
+                  {hasEvents && (
+                    <div className={cn(
+                      "absolute bottom-1 flex gap-0.5",
+                    )}>
+                      {dayEvents.slice(0, 3).map((_, i) => (
+                        <div
+                          key={i}
+                          className={cn(
+                            "w-1 h-1 md:w-1.5 md:h-1.5 rounded-full",
+                            isSelected ? "bg-primary-foreground" : "bg-primary"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          
+          {/* Selected Date Events */}
+          {selectedDate && (
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary" />
+                {format(selectedDate, 'EEEE, MMMM d')}
+              </h4>
+              {selectedDateEvents.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No events scheduled
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {selectedDateEvents.map(event => (
+                    <div
+                      key={event.id}
+                      className="p-3 bg-accent/50 rounded-lg border-l-4 border-primary"
+                    >
+                      <p className="font-medium text-sm">{event.title}</p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {format(new Date(event.start_time), 'h:mm a')}
+                        {event.location && (
+                          <>
+                            <MapPin className="h-3 w-3 ml-2" />
+                            {event.location}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Tabs for Excuse Requests / Mail Log */}
-      <Tabs defaultValue="mail" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="mail" className="gap-2">
-            <Mail className="h-4 w-4" />
-            Mail Log
-          </TabsTrigger>
-          <TabsTrigger value="history" className="gap-2">
+      {/* Upcoming Events - Compact Mobile View */}
+      <Card>
+        <CardHeader className="pb-2 px-4 md:px-6">
+          <CardTitle className="text-base md:text-lg flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            Upcoming Classes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-2 md:px-6 pb-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : upcomingEvents.length === 0 ? (
+            <div className="text-center py-8">
+              <Calendar className="h-10 w-10 mx-auto text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">No upcoming events</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {upcomingEvents.map(event => (
+                <div 
+                  key={event.id}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-accent/30 hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-xl flex flex-col items-center justify-center">
+                    <span className="text-xs text-primary uppercase font-medium">
+                      {format(new Date(event.start_time), 'MMM')}
+                    </span>
+                    <span className="text-lg font-bold text-primary leading-none">
+                      {format(new Date(event.start_time), 'd')}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{event.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>{format(new Date(event.start_time), 'h:mm a')}</span>
+                      {event.location && (
+                        <>
+                          <span className="text-muted-foreground/50">•</span>
+                          <span className="truncate">{event.location}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Tabs for History - Mobile Optimized */}
+      <Tabs defaultValue="history" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 h-11">
+          <TabsTrigger value="history" className="gap-2 text-xs md:text-sm">
             <Inbox className="h-4 w-4" />
-            Excuse History
+            <span className="hidden sm:inline">Excuse</span> History
+          </TabsTrigger>
+          <TabsTrigger value="attendance" className="gap-2 text-xs md:text-sm">
+            <UserCheck className="h-4 w-4" />
+            Attendance <span className="hidden sm:inline">Log</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="mail" className="mt-4">
+        <TabsContent value="history" className="mt-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Mail className="h-4 w-4 text-primary" />
-                Correspondence with Secretary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[200px]">
+            <CardContent className="pt-4">
+              <ScrollArea className="h-[280px] md:h-[320px]">
                 {excuseRequests.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Inbox className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No correspondence yet</p>
-                    <p className="text-sm">Submit an excuse request to start a conversation</p>
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Inbox className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm">No excuse requests yet</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-3 pr-4">
                     {excuseRequests.map((request) => {
                       const excuseLabel = EXCUSE_TYPES.find(t => t.value === request.excuse_type)?.label || request.excuse_type;
                       return (
                         <div 
                           key={request.id} 
                           className={cn(
-                            "p-3 rounded-lg border",
-                            request.status === 'approved' && "border-green-200 bg-green-50 dark:bg-green-950/20",
-                            request.status === 'denied' && "border-red-200 bg-red-50 dark:bg-red-950/20",
-                            request.status === 'pending' && "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20"
+                            "p-4 rounded-xl border",
+                            request.status === 'approved' && "border-green-200 bg-green-50/50 dark:bg-green-950/20",
+                            request.status === 'denied' && "border-red-200 bg-red-50/50 dark:bg-red-950/20",
+                            request.status === 'pending' && "border-yellow-200 bg-yellow-50/50 dark:bg-yellow-950/20"
                           )}
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 <span className="font-medium text-sm">
                                   {format(new Date(request.created_at), 'MMM d, yyyy')}
                                 </span>
@@ -535,9 +710,9 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
                                   variant="outline" 
                                   className={cn(
                                     "text-xs",
-                                    request.status === 'approved' && "border-green-400 text-green-700",
-                                    request.status === 'denied' && "border-red-400 text-red-700",
-                                    request.status === 'pending' && "border-yellow-400 text-yellow-700"
+                                    request.status === 'approved' && "border-green-400 text-green-700 bg-green-100",
+                                    request.status === 'denied' && "border-red-400 text-red-700 bg-red-100",
+                                    request.status === 'pending' && "border-yellow-400 text-yellow-700 bg-yellow-100"
                                   )}
                                 >
                                   {request.status === 'approved' && <ThumbsUp className="h-3 w-3 mr-1" />}
@@ -547,18 +722,12 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
                                 </Badge>
                               </div>
                               <p className="text-sm font-medium">{excuseLabel}</p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-xs text-muted-foreground mt-1">
                                 {request.event_ids.length} event(s) • {request.document_filename ? 'Document attached' : 'No document'}
                               </p>
-                              {request.clarification && (
-                                <p className="text-sm text-muted-foreground mt-1">{request.clarification}</p>
-                              )}
                               {request.response_message && (
-                                <div className="mt-2 pl-3 border-l-2 border-primary/50">
-                                  <p className="text-sm italic">"{request.response_message}"</p>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    — Secretary, {request.responded_at && format(new Date(request.responded_at), 'MMM d')}
-                                  </p>
+                                <div className="mt-2 pl-3 border-l-2 border-primary/30">
+                                  <p className="text-sm italic text-muted-foreground">"{request.response_message}"</p>
                                 </div>
                               )}
                             </div>
@@ -573,35 +742,30 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
           </Card>
         </TabsContent>
 
-        <TabsContent value="history" className="mt-4">
+        <TabsContent value="attendance" className="mt-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <UserCheck className="h-4 w-4 text-primary" />
-                Attendance History
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[200px]">
+            <CardContent className="pt-4">
+              <ScrollArea className="h-[280px] md:h-[320px]">
                 {attendanceRecords.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No attendance records yet
-                  </p>
+                  <div className="text-center py-12 text-muted-foreground">
+                    <UserCheck className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm">No attendance records yet</p>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
-                    {attendanceRecords.slice(0, 10).map(record => (
+                  <div className="space-y-2 pr-4">
+                    {attendanceRecords.slice(0, 15).map(record => (
                       <div 
                         key={record.id}
-                        className="flex items-center justify-between p-2 bg-muted/30 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-accent/30 rounded-xl"
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                           {getStatusIcon(record.status)}
                           <span className="text-sm">
-                            {format(new Date(record.attendance_date), 'EEE, MMM d, yyyy')}
+                            {format(new Date(record.attendance_date), 'EEE, MMM d')}
                           </span>
                         </div>
-                        <Badge variant="outline" className="text-xs">
-                          {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {record.status}
                         </Badge>
                       </div>
                     ))}
@@ -613,135 +777,62 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
         </TabsContent>
       </Tabs>
 
-      {/* Calendar Section */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <h2 className="text-xl font-bold min-w-[180px] text-center">
-                {format(currentMonth, 'MMMM yyyy')}
-              </h2>
-              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              <span className="font-medium">Calendar</span>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-12 text-muted-foreground">Loading...</div>
-          ) : (
-            <div className="space-y-4">
-              {upcomingEvents.length === 0 ? (
-                <div className="text-center py-12">
-                  <Calendar className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <p className="text-muted-foreground">No upcoming events this month</p>
-                </div>
-              ) : (
-                upcomingEvents.map(event => {
-                  const colors = getEventColors(event.event_type);
-                  return (
-                    <div 
-                      key={event.id}
-                      className={cn(
-                        "p-4 rounded-lg border-l-4 bg-card hover:shadow-md transition-all cursor-pointer",
-                        colors.border
-                      )}
-                      onClick={() => setSelectedEvent(event)}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <Badge variant="secondary" className={cn("mb-2", colors.bg, colors.text)}>
-                            {event.event_type.replace('_', ' ')}
-                          </Badge>
-                          <h3 className="font-semibold">{event.title}</h3>
-                          <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1.5">
-                              <Clock className="h-4 w-4" />
-                              {format(new Date(event.start_time), 'EEE, MMM d • h:mm a')}
-                            </span>
-                            {event.location && (
-                              <span className="flex items-center gap-1.5">
-                                <MapPin className="h-4 w-4" />
-                                {event.location}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Excuse Request Dialog */}
+      {/* Excuse Request Dialog - Mobile Optimized */}
       <Dialog open={showExcuseDialog} onOpenChange={(open) => { setShowExcuseDialog(open); if (!open) resetExcuseForm(); }}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto mx-4">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-lg">
               <FileText className="h-5 w-5 text-primary" />
-              Submit Excuse Request
+              Submit Excuse
             </DialogTitle>
-            <DialogDescription>
-              Submit an excuse for an absence to the Secretary for review.
+            <DialogDescription className="text-sm">
+              Submit an absence excuse for review
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-5 py-4">
-            {/* Student Name */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Student Name
-              </Label>
-              <div className="px-3 py-2 bg-muted rounded-md text-sm font-medium">
-                {studentName || user?.email || 'Loading...'}
+          
+          <div className="space-y-4 py-2">
+            {/* Student Info */}
+            <div className="p-3 bg-accent/50 rounded-xl">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-primary" />
+                <span className="font-medium text-sm">{studentName || user?.email || 'Student'}</span>
               </div>
             </div>
 
             {/* Event Selection */}
             <div className="space-y-2">
-              <Label>Select Event(s) to be Excused *</Label>
-              <ScrollArea className="h-[160px] border rounded-md p-3">
+              <Label className="text-sm font-medium">Select Event(s) *</Label>
+              <ScrollArea className="h-[140px] border rounded-xl p-2">
                 {events.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No events found this month
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    No events this month
                   </p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {events.map(event => (
-                      <div key={event.id} className="flex items-start gap-3 p-2 rounded hover:bg-muted/50">
+                      <div 
+                        key={event.id} 
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50 cursor-pointer"
+                        onClick={() => handleEventSelection(event.id, !selectedEventIds.includes(event.id))}
+                      >
                         <Checkbox
                           id={`event-${event.id}`}
                           checked={selectedEventIds.includes(event.id)}
                           onCheckedChange={(checked) => handleEventSelection(event.id, checked as boolean)}
                         />
-                        <label 
-                          htmlFor={`event-${event.id}`} 
-                          className="text-sm cursor-pointer flex-1"
-                        >
-                          <span className="font-medium">{event.title}</span>
-                          <span className="text-muted-foreground block text-xs">
-                            {format(new Date(event.start_time), 'EEE, MMM d, yyyy • h:mm a')}
-                          </span>
-                        </label>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{event.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(event.start_time), 'EEE, MMM d • h:mm a')}
+                          </p>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </ScrollArea>
               {selectedEventIds.length > 0 && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-primary font-medium">
                   {selectedEventIds.length} event(s) selected
                 </p>
               )}
@@ -749,10 +840,10 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
 
             {/* Excuse Type */}
             <div className="space-y-2">
-              <Label htmlFor="excuse-type">Excuse Type *</Label>
+              <Label className="text-sm font-medium">Excuse Type *</Label>
               <Select value={excuseType} onValueChange={setExcuseType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select excuse type..." />
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Select type..." />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
                   {EXCUSE_TYPES.map(type => (
@@ -764,42 +855,38 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
               </Select>
             </div>
 
-            {/* Document Upload / Camera */}
+            {/* Document Upload */}
             <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                Supporting Document (optional)
-              </Label>
+              <Label className="text-sm font-medium">Supporting Document</Label>
               
               {excuseDocument || excuseDocumentPreview ? (
-                <div className="border rounded-md p-4">
+                <div className="border rounded-xl p-3">
                   {excuseDocumentPreview ? (
                     <div className="relative">
                       <img 
                         src={excuseDocumentPreview} 
-                        alt="Captured document" 
-                        className="w-full max-h-48 object-contain rounded-md"
+                        alt="Document" 
+                        className="w-full max-h-32 object-contain rounded-lg"
                       />
                       <Button 
                         variant="destructive" 
                         size="icon" 
-                        className="absolute top-2 right-2 h-8 w-8"
-                        onClick={() => {
-                          setExcuseDocument(null);
-                          setExcuseDocumentPreview(null);
-                        }}
+                        className="absolute top-1 right-1 h-7 w-7"
+                        onClick={() => { setExcuseDocument(null); setExcuseDocumentPreview(null); }}
                       >
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ) : excuseDocument && (
-                    <div className="flex items-center justify-center gap-2">
-                      <FileText className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">{excuseDocument.name}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <span className="text-sm truncate max-w-[200px]">{excuseDocument.name}</span>
+                      </div>
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-6 w-6"
+                        className="h-7 w-7"
                         onClick={() => setExcuseDocument(null)}
                       >
                         <X className="h-4 w-4" />
@@ -808,135 +895,114 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Glee Cam Option */}
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setShowCamera(true)}
-                    className="flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-md hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer"
+                    className="flex flex-col items-center gap-2 p-4 border-2 border-dashed rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-colors"
                   >
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                      <Camera className="h-6 w-6 text-white" />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                      <Camera className="h-5 w-5 text-white" />
                     </div>
-                    <span className="text-sm font-medium">Glee Cam</span>
-                    <span className="text-xs text-muted-foreground text-center">
-                      Take a photo
-                    </span>
+                    <span className="text-xs font-medium">Take Photo</span>
                   </button>
 
-                  {/* File Upload Option */}
-                  <label
-                    htmlFor="excuse-document"
-                    className="flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-md hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer"
-                  >
+                  <label className="flex flex-col items-center gap-2 p-4 border-2 border-dashed rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer">
                     <input
-                      id="excuse-document"
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                       onChange={handleDocumentChange}
                       className="hidden"
                     />
-                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                      <Upload className="h-6 w-6 text-muted-foreground" />
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <Upload className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    <span className="text-sm font-medium">Upload File</span>
-                    <span className="text-xs text-muted-foreground text-center">
-                      PDF, JPG, PNG, DOC
-                    </span>
+                    <span className="text-xs font-medium">Upload File</span>
                   </label>
                 </div>
               )}
             </div>
 
-            {/* Clarification */}
+            {/* Notes */}
             <div className="space-y-2">
-              <Label htmlFor="excuse-clarification">Further Clarification (optional)</Label>
+              <Label className="text-sm font-medium">Additional Notes</Label>
               <Textarea
-                id="excuse-clarification"
-                placeholder="Provide any additional details about your absence..."
+                placeholder="Any additional details..."
                 value={excuseClarification}
                 onChange={(e) => setExcuseClarification(e.target.value)}
-                rows={3}
+                rows={2}
+                className="resize-none"
               />
             </div>
           </div>
+
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setShowExcuseDialog(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowExcuseDialog(false)}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
             <Button 
-              variant="secondary"
-              onClick={handleEmailSecretary}
-              disabled={!secretaryEmail}
-              className="gap-2"
+              onClick={handleSubmitExcuse}
+              disabled={submittingExcuse || selectedEventIds.length === 0 || !excuseType}
+              className="w-full sm:w-auto gap-2"
             >
-              <Mail className="h-4 w-4" />
-              Email Glee Secretary
-            </Button>
-            <Button 
-              onClick={handleSubmitExcuse} 
-              disabled={submittingExcuse || selectedEventIds.length === 0 || !excuseType} 
-              className="gap-2"
-              size="lg"
-            >
-              <Send className="h-4 w-4" />
-              {submittingExcuse ? 'Submitting...' : 'Submit Request'}
+              {submittingExcuse ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Submit Excuse
+                </>
+              )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Camera Dialog */}
+      <Dialog open={showCamera} onOpenChange={setShowCamera}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Capture Document</DialogTitle>
+          </DialogHeader>
+          <QuickCameraCapture
+            onCapture={handleCameraCapture}
+            onClose={() => setShowCamera(false)}
+          />
         </DialogContent>
       </Dialog>
 
       {/* Event Detail Dialog */}
       <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
         <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedEvent?.title}</DialogTitle>
+          </DialogHeader>
           {selectedEvent && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-xl">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  {selectedEvent.title}
-                </DialogTitle>
-                <DialogDescription>
-                  <Badge variant="secondary" className={cn(getEventColors(selectedEvent.event_type).bg, getEventColors(selectedEvent.event_type).text)}>
-                    {selectedEvent.event_type.replace('_', ' ')}
-                  </Badge>
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div className="flex items-center gap-3 text-sm">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <div className="font-semibold">{format(new Date(selectedEvent.start_time), 'EEEE, MMMM d, yyyy')}</div>
-                    <div className="text-muted-foreground">
-                      {format(new Date(selectedEvent.start_time), 'h:mm a')}
-                      {selectedEvent.end_time && ` - ${format(new Date(selectedEvent.end_time), 'h:mm a')}`}
-                    </div>
-                  </div>
-                </div>
-                {selectedEvent.location && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <MapPin className="h-5 w-5 text-muted-foreground" />
-                    <span className="font-medium">{selectedEvent.location}</span>
-                  </div>
-                )}
-                {selectedEvent.description && (
-                  <div className="pt-3 border-t">
-                    <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
-                  </div>
-                )}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                {format(new Date(selectedEvent.start_time), 'EEEE, MMMM d, yyyy • h:mm a')}
               </div>
-            </>
+              {selectedEvent.location && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  {selectedEvent.location}
+                </div>
+              )}
+              {selectedEvent.description && (
+                <p className="text-sm">{selectedEvent.description}</p>
+              )}
+            </div>
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Glee Cam for Document Capture */}
-      {showCamera && (
-        <QuickCameraCapture
-          onClose={() => setShowCamera(false)}
-          onCapture={handleCameraCapture}
-        />
-      )}
     </div>
   );
 };
