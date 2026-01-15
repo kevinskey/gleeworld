@@ -1562,6 +1562,7 @@ export type Database = {
       bowman_scholars: {
         Row: {
           bio: string | null
+          course_id: string | null
           created_at: string | null
           full_name: string | null
           grad_year: number | null
@@ -1574,6 +1575,7 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          course_id?: string | null
           created_at?: string | null
           full_name?: string | null
           grad_year?: number | null
@@ -1586,6 +1588,7 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          course_id?: string | null
           created_at?: string | null
           full_name?: string | null
           grad_year?: number | null
@@ -1596,7 +1599,15 @@ export type Database = {
           resume_url?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bowman_scholars_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       budget_attachments: {
         Row: {

@@ -146,6 +146,24 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
       hours: 'MWF 3-5 PM'
     },
     isActive: false
+  },
+  {
+    id: 'a0000000-0000-0000-0000-000000000100',
+    courseCode: 'LH 100',
+    title: 'Bowman Scholars',
+    description: 'Named after Sister Thea Bowman, this program develops liturgical leaders through spiritual formation, music ministry, and worship planning.',
+    icon: GraduationCap,
+    level: 'Selected Scholars',
+    duration: 'Semester',
+    highlights: ['Liturgical Leadership', 'Worship Planning', 'Spiritual Formation', 'Ministry Development'],
+    route: '/academy/lh-100',
+    instructor: {
+      name: 'Dr. Kevin Johnson',
+      email: 'kjohns10@spelman.edu',
+      office: 'Fine Arts 105',
+      hours: 'By Appointment'
+    },
+    isActive: true
   }
 ];
 
