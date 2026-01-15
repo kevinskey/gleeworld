@@ -3881,6 +3881,7 @@ export type Database = {
           cohort_id: string | null
           contingency: number | null
           coordinator_id: string | null
+          course_id: string | null
           created_at: string
           created_by: string
           date_submitted_for_approval: string | null
@@ -3939,6 +3940,7 @@ export type Database = {
           cohort_id?: string | null
           contingency?: number | null
           coordinator_id?: string | null
+          course_id?: string | null
           created_at?: string
           created_by: string
           date_submitted_for_approval?: string | null
@@ -3997,6 +3999,7 @@ export type Database = {
           cohort_id?: string | null
           contingency?: number | null
           coordinator_id?: string | null
+          course_id?: string | null
           created_at?: string
           created_by?: string
           date_submitted_for_approval?: string | null
@@ -4045,6 +4048,13 @@ export type Database = {
             columns: ["cohort_id"]
             isOneToOne: false
             referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
             referencedColumns: ["id"]
           },
           {

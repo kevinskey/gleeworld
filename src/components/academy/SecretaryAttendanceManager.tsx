@@ -131,6 +131,31 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
     fetchData();
   }, [fetchData]);
 
+  // Real-time subscription for live updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('attendance-summary-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gw_course_attendance_summary',
+          filter: `course_id=eq.${courseId}`
+        },
+        (payload) => {
+          console.log('Real-time attendance update:', payload);
+          // Refresh data when changes occur
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [courseId, fetchData]);
+
   const updateCell = (studentId: string, field: keyof AttendanceRecord, value: number | string | boolean) => {
     setAttendanceRecords(prev => prev.map(record => {
       if (record.student_id === studentId) {
