@@ -344,7 +344,7 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
                 : 'No matching students found.'}
             </div>
           ) : (
-            <ScrollArea className="w-full">
+            <ScrollArea className="w-full max-h-[60vh]">
               <div className="min-w-[800px]">
                 {/* Header Row */}
                 <div className="grid grid-cols-[200px_60px_60px_60px_60px_60px_70px_1fr] gap-1 p-2 bg-muted/50 border-b font-medium text-xs sticky top-0">
