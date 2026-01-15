@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserCheck, Search, Download, XCircle, Clock, AlertTriangle, Users, Save, Plus, RefreshCw } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserCheck, Search, Download, XCircle, Clock, AlertTriangle, Users, Save, Plus, RefreshCw, Calendar, LayoutGrid } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { SecretaryEventAttendanceGrid } from './SecretaryEventAttendanceGrid';
 
 interface SecretaryAttendanceManagerProps {
   courseId: string;
@@ -39,6 +41,7 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
   courseId, 
   courseName = 'Course' 
 }) => {
+  const [viewMode, setViewMode] = useState<'summary' | 'events'>('events');
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudent[]>([]);
   const [loading, setLoading] = useState(true);
