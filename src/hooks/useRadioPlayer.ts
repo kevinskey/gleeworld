@@ -117,6 +117,11 @@ export const useRadioPlayer = () => {
   const isPlayingRef = useRef(false);
   const isReconnectingRef = useRef(false);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Prevent overlapping play() attempts (watchdog + user taps)
+  const playInFlightRef = useRef(false);
+  const playRequestIdRef = useRef(0);
+
   const { toast } = useToast();
 
   // Stable stream URLs - memoize to prevent re-computation
@@ -489,8 +494,17 @@ export const useRadioPlayer = () => {
       return;
     }
 
+    // Avoid overlapping play attempts (causes AbortError due to pause() interruptions)
+    if (playInFlightRef.current) {
+      console.log('useRadioPlayer: play() ignored (already in-flight)');
+      return;
+    }
+
+    const requestId = ++playRequestIdRef.current;
+    playInFlightRef.current = true;
+
     const audio = audioRef.current;
-    
+
     // Debug: log current audio state
     console.log('useRadioPlayer: Audio state before play:', {
       src: audio.src,
@@ -504,7 +518,7 @@ export const useRadioPlayer = () => {
     try {
       // ALWAYS ensure gain is set to audible level when playing
       const targetVolume = state.volume > 0 ? state.volume : 0.8;
-      
+
       // Set Web Audio gain if available
       if (sharedGainNode && sharedAudioContext) {
         try {
@@ -515,7 +529,7 @@ export const useRadioPlayer = () => {
           console.warn('useRadioPlayer: Could not set gain:', gainError);
         }
       }
-      
+
       // Resume AudioContext if suspended
       if (sharedAudioContext && sharedAudioContext.state === 'suspended') {
         try {
@@ -525,6 +539,9 @@ export const useRadioPlayer = () => {
           console.warn('useRadioPlayer: Could not resume AudioContext:', e);
         }
       }
+
+      // If a newer play() started, abort this one
+      if (requestId !== playRequestIdRef.current) return;
 
       // Ensure audio element is ready
       audio.muted = false;
@@ -540,22 +557,24 @@ export const useRadioPlayer = () => {
         console.error('useRadioPlayer: No stream URLs available');
         setState(prev => ({ ...prev, isLoading: false }));
         toast({
-          title: "Radio Unavailable",
-          description: "No stream URLs configured",
-          variant: "destructive",
+          title: 'Radio Unavailable',
+          description: 'No stream URLs configured',
+          variant: 'destructive',
         });
         return;
       }
 
       // Try each stream URL until one works
       for (let i = 0; i < allUrls.length; i++) {
+        if (requestId !== playRequestIdRef.current) return;
+
         const streamUrl = allUrls[i];
         console.log(`useRadioPlayer: Trying stream ${i + 1}/${allUrls.length}: ${streamUrl}`);
-        
+
         try {
-          // Stop any previous stream
+          // Stop any previous stream (but only for the current request)
           audio.pause();
-          
+
           // Set new source with cache buster
           const hasQuery = streamUrl.includes('?');
           const sep = hasQuery ? '&' : '?';
@@ -564,20 +583,30 @@ export const useRadioPlayer = () => {
 
           console.log('useRadioPlayer: Calling audio.play()...');
           await audio.play();
-          
+
+          if (requestId !== playRequestIdRef.current) return;
+
           console.log('useRadioPlayer: Successfully started playing:', streamUrl);
           setState(prev => ({ ...prev, isLoading: false, isPlaying: true }));
+
           // Update LCD metadata immediately
           refreshNowPlaying();
           toast({
-            title: "Now Playing",
-            description: "Glee World Radio is now streaming",
+            title: 'Now Playing',
+            description: 'Glee World Radio is now streaming',
           });
           return; // Success - exit
-
         } catch (playError: any) {
+          // If a newer play() started, ignore errors from the old attempt
+          if (requestId !== playRequestIdRef.current) return;
+
           console.error(`useRadioPlayer: Failed stream ${i + 1}:`, playError?.name, playError?.message);
-          
+
+          // AbortError often means another pause()/play() happened; let watchdog retry later
+          if (playError?.name === 'AbortError') {
+            continue;
+          }
+
           // If autoplay blocked, don't try other URLs
           if (playError?.name === 'NotAllowedError') {
             setState(prev => ({ ...prev, isLoading: false }));
@@ -588,14 +617,14 @@ export const useRadioPlayer = () => {
             });
             return;
           }
-          
+
           // If last URL failed, show error
           if (i === allUrls.length - 1) {
             setState(prev => ({ ...prev, isLoading: false }));
             toast({
-              title: "Radio Unavailable",
-              description: "Could not connect to radio stream. Please try again.",
-              variant: "destructive",
+              title: 'Radio Unavailable',
+              description: 'Could not connect to radio stream. Please try again.',
+              variant: 'destructive',
             });
           }
         }
@@ -603,6 +632,11 @@ export const useRadioPlayer = () => {
     } catch (error) {
       console.error('useRadioPlayer: Unexpected error in play():', error);
       setState(prev => ({ ...prev, isLoading: false }));
+    } finally {
+      // Only clear in-flight if we're still the latest request
+      if (requestId === playRequestIdRef.current) {
+        playInFlightRef.current = false;
+      }
     }
   }, [state.volume, streamUrls, toast, refreshNowPlaying]);
 
@@ -693,25 +727,30 @@ export const useRadioPlayer = () => {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    
+
     let lastTime = audio.currentTime;
     let stallCount = 0;
     const maxStallChecks = 2; // After 2 checks (10 seconds) with no progress, reconnect
-    
+
     const interval = setInterval(() => {
       if (!audioRef.current) return;
       const a = audioRef.current;
-      
+
+      // Don't pile on while a play() attempt is already running
+      if (playInFlightRef.current) return;
+
       if (state.isPlaying) {
         const currentTime = a.currentTime;
         const paused = a.paused;
         const readyState = a.readyState;
-        
+
         // Check if we're supposed to be playing but audio isn't progressing
         if (!paused && currentTime <= lastTime) {
           stallCount++;
-          console.log(`Radio health-check: no progress (stall count: ${stallCount}/${maxStallChecks}, readyState: ${readyState})`);
-          
+          console.log(
+            `Radio health-check: no progress (stall count: ${stallCount}/${maxStallChecks}, readyState: ${readyState})`,
+          );
+
           if (stallCount >= maxStallChecks) {
             console.log('Radio health-check: stalled too long, reconnecting...');
             stallCount = 0;
@@ -721,7 +760,7 @@ export const useRadioPlayer = () => {
           // Progress detected, reset stall counter
           stallCount = 0;
         }
-        
+
         lastTime = currentTime;
       } else {
         // Not playing, reset counters
@@ -729,7 +768,7 @@ export const useRadioPlayer = () => {
         lastTime = audio.currentTime;
       }
     }, 5000); // Check every 5 seconds instead of 30
-    
+
     return () => clearInterval(interval);
   }, [state.isPlaying, play]);
 
