@@ -25,6 +25,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, isAfter, isBefore, startOfWeek, endOfWeek } from 'date-fns';
+import OrderOfMass from './OrderOfMass';
 
 interface ModuleResource {
   id: string;
@@ -1079,6 +1080,15 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                           ))}
                         </ul>
                       </div>
+                    )}
+
+                    {/* Order of Mass - Only for LH100 */}
+                    {courseId === 'lh-100' && (
+                      <OrderOfMass 
+                        moduleId={module.id} 
+                        moduleName={module.title}
+                        isLocked={module.is_locked}
+                      />
                     )}
 
                     {/* Resources List */}
