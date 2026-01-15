@@ -15,7 +15,7 @@ interface SecretaryAttendanceManagerProps {
 }
 
 interface EnrolledStudent {
-  user_id: string;
+  student_profile_id: string;
   full_name: string;
   email: string;
 }
@@ -49,12 +49,12 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch enrolled students for this course
+      // Fetch enrolled students for this course using student_profile_id
       const { data: enrollments, error: enrollError } = await supabase
         .from('gw_course_enrollments')
         .select(`
-          user_id,
-          gw_profiles!inner(full_name, email)
+          student_profile_id,
+          gw_student_profiles!inner(full_name, email)
         `)
         .eq('course_id', courseId)
         .eq('enrollment_status', 'enrolled');
@@ -62,11 +62,11 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
       if (enrollError) throw enrollError;
 
       const students: EnrolledStudent[] = (enrollments || [])
-        .filter(e => e.user_id && e.gw_profiles)
+        .filter(e => e.student_profile_id && e.gw_student_profiles)
         .map(e => ({
-          user_id: e.user_id!,
-          full_name: (e.gw_profiles as any)?.full_name || 'Unknown',
-          email: (e.gw_profiles as any)?.email || ''
+          student_profile_id: e.student_profile_id!,
+          full_name: (e.gw_student_profiles as any)?.full_name || 'Unknown',
+          email: (e.gw_student_profiles as any)?.email || ''
         }));
 
       setEnrolledStudents(students);
@@ -82,11 +82,11 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
 
       // Merge: show enrolled students with their attendance (or create blank records)
       const records: AttendanceRecord[] = students.map(student => {
-        const existing = (attendance || []).find(a => a.student_id === student.user_id);
+        const existing = (attendance || []).find(a => a.student_id === student.student_profile_id);
         if (existing) {
           return {
             id: existing.id,
-            student_id: existing.student_id || student.user_id,
+            student_id: existing.student_id || student.student_profile_id,
             student_name: existing.student_name || student.full_name,
             excused_rehearsal_absences: existing.excused_rehearsal_absences || 0,
             unexcused_rehearsal_absences: existing.unexcused_rehearsal_absences || 0,
@@ -100,8 +100,8 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
           };
         } else {
           return {
-            id: `new-${student.user_id}`,
-            student_id: student.user_id,
+            id: `new-${student.student_profile_id}`,
+            student_id: student.student_profile_id,
             student_name: student.full_name,
             excused_rehearsal_absences: 0,
             unexcused_rehearsal_absences: 0,
