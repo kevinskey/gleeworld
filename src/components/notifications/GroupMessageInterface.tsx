@@ -10,13 +10,15 @@ import { ConversationListItem } from '@/components/messaging/ConversationListIte
 import { GroupHeader } from '@/components/messaging/GroupHeader';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { MessageSquare, Plus, User, X, Search, FolderPlus, Folder, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
+import { MessageSquare, Plus, User, X, Search, FolderPlus, Folder, ChevronDown, ChevronRight, GripVertical, Video, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import useGroupMessages from '@/hooks/useGroupMessages';
 import { useDirectMessages } from '@/hooks/useDirectMessages';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useActiveMeetings } from '@/hooks/useActiveMeetings';
 import { supabase } from '@/integrations/supabase/client';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   user_id: string;
@@ -59,6 +61,8 @@ export const GroupMessageInterface: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { activeMeetings, isLoading: meetingsLoading } = useActiveMeetings();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [showMessages, setShowMessages] = useState(false);
   const [conversationType, setConversationType] = useState<'group' | 'direct'>('group');
@@ -73,6 +77,7 @@ export const GroupMessageInterface: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [activeMeetingsCollapsed, setActiveMeetingsCollapsed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Configure drag sensors with activation constraints to prevent clicks from being treated as drags
@@ -600,6 +605,70 @@ export const GroupMessageInterface: React.FC = () => {
               
               <ScrollArea className="flex-1 bg-background">
                 <div className="min-w-0">
+                  {/* Active Meetings Section */}
+                  {activeMeetings.length > 0 && (
+                    <div className="border-b border-border/30">
+                      <div 
+                        className="px-3 py-2 text-xs font-semibold text-white uppercase bg-primary flex items-center justify-between cursor-pointer"
+                        onClick={() => setActiveMeetingsCollapsed(!activeMeetingsCollapsed)}
+                      >
+                        <span className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                          Live Meetings ({activeMeetings.length})
+                        </span>
+                        {activeMeetingsCollapsed ? (
+                          <ChevronRight className="h-3 w-3" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                      </div>
+                      {!activeMeetingsCollapsed && (
+                        <div className="space-y-1 p-2 bg-primary/5">
+                          {activeMeetings.map((meeting) => {
+                            const displayName = meeting.room_name
+                              .replace(/-/g, ' ')
+                              .replace(/\b\w/g, (l) => l.toUpperCase());
+                            
+                            return (
+                              <button
+                                key={meeting.room_name}
+                                onClick={() => navigate(`/video?room=${encodeURIComponent(meeting.room_name)}`)}
+                                className="w-full flex items-center gap-3 p-2 rounded-lg bg-background hover:bg-muted transition-colors text-left"
+                              >
+                                <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
+                                  <Video className="h-4 w-4 text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-xs truncate">{displayName}</p>
+                                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                    <Users className="h-3 w-3" />
+                                    <span>{meeting.participants.length} in session</span>
+                                  </div>
+                                </div>
+                                <div className="flex -space-x-1">
+                                  {meeting.participants.slice(0, 2).map((p, idx) => (
+                                    <Avatar key={p.user_id || idx} className="h-5 w-5 border border-background">
+                                      <AvatarFallback className="text-[8px] bg-primary text-primary-foreground">
+                                        {p.user_name?.charAt(0)?.toUpperCase() || '?'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  ))}
+                                  {meeting.participants.length > 2 && (
+                                    <Avatar className="h-5 w-5 border border-background">
+                                      <AvatarFallback className="text-[8px] bg-muted">
+                                        +{meeting.participants.length - 2}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Groups Header with New Folder button */}
                   <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase bg-muted/30 flex items-center justify-between">
                     <span>Groups</span>
