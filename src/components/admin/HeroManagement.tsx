@@ -660,191 +660,106 @@ export const HeroManagement = () => {
         </>
       ) : (
         <>
-          {/* Carousel Settings - only for dashboard context */}
+          {/* Quick Settings Bar - only for dashboard context */}
           {selectedContext.id === 'member-dashboard' && (
-            <>
-              {/* Scroll Settings Card */}
-              <Card className="border-2 border-accent/20">
-                <CardHeader className="bg-gradient-to-r from-accent/5 to-accent/10">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-purple-100 text-purple-700">⚙️</div>
-                    Carousel Settings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="auto-scroll">Auto Scroll</Label>
-                      <p className="text-sm text-muted-foreground">Automatically advance slides</p>
-                    </div>
+            <Card className="border border-border/50">
+              <CardContent className="py-4">
+                {/* Compact Settings Row */}
+                <div className="flex flex-wrap items-center gap-6">
+                  {/* Auto Scroll Toggle */}
+                  <div className="flex items-center gap-3">
                     <Switch
                       id="auto-scroll"
                       checked={scrollSettings.auto_scroll_enabled}
                       onCheckedChange={(checked) => setScrollSettings(prev => ({ ...prev, auto_scroll_enabled: checked }))}
                     />
+                    <Label htmlFor="auto-scroll" className="text-sm font-medium cursor-pointer">
+                      Auto Scroll
+                    </Label>
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label>Scroll Speed: {scrollSettings.scroll_speed_seconds}s</Label>
-                      <span className="text-sm text-muted-foreground">(2-30 seconds)</span>
-                    </div>
+
+                  {/* Speed Slider - Compact */}
+                  <div className="flex items-center gap-3 flex-1 min-w-[200px] max-w-[300px]">
+                    <Label className="text-sm text-muted-foreground whitespace-nowrap">Speed:</Label>
                     <Slider
                       value={[scrollSettings.scroll_speed_seconds]}
                       onValueChange={(value) => setScrollSettings(prev => ({ ...prev, scroll_speed_seconds: value[0] }))}
                       min={2}
                       max={30}
                       step={1}
-                      className="w-full"
+                      className="flex-1"
                     />
+                    <span className="text-sm font-mono w-8">{scrollSettings.scroll_speed_seconds}s</span>
                   </div>
 
-                  <Button onClick={updateScrollSettings} className="w-full">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Settings
+                  {/* Save Button */}
+                  <Button onClick={updateScrollSettings} size="sm" variant="outline">
+                    <Save className="h-3 w-3 mr-1" />
+                    Save
                   </Button>
-                </CardContent>
-              </Card>
 
-              {/* YouTube Videos Section */}
-              <Card className="border-2 border-red-200">
-                <CardHeader className="bg-gradient-to-r from-red-50 to-red-100">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-red-100 text-red-700">📺</div>
-                    Dashboard YouTube Videos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6 pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Configure two YouTube videos to display at the top of the dashboard in a two-column layout.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Left Video */}
-                    <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="font-medium text-blue-800 flex items-center gap-2">
-                        <span className="p-1 rounded bg-blue-500 text-white text-xs">1</span>
-                        Left Video
-                      </h4>
-                      <div className="space-y-3">
-                        <div className="space-y-1">
-                          <Label className="text-xs">YouTube Video ID</Label>
-                          <Input
-                            value={leftVideo.video_id}
-                            onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: e.target.value }))}
-                            placeholder="e.g. dQw4w9WgXcQ"
-                            className="h-8 text-sm"
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            The ID from youtube.com/watch?v=<strong>VIDEO_ID</strong>
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Title (optional)</Label>
-                          <Input
-                            value={leftVideo.title}
-                            onChange={(e) => setLeftVideo(prev => ({ ...prev, title: e.target.value }))}
-                            placeholder="Video title"
-                            className="h-8 text-sm"
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs">Active</Label>
-                          <Switch
-                            checked={leftVideo.is_active}
-                            onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, is_active: checked }))}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs">Autoplay</Label>
-                          <Switch
-                            checked={leftVideo.autoplay}
-                            onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, autoplay: checked }))}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs">Muted</Label>
-                          <Switch
-                            checked={leftVideo.muted}
-                            onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, muted: checked }))}
-                          />
-                        </div>
-                        <Button 
-                          onClick={() => saveYouTubeVideo(leftVideo)} 
-                          disabled={!leftVideo.video_id || savingYouTube}
-                          size="sm"
-                          className="w-full"
-                        >
-                          <Save className="h-3 w-3 mr-1" />
-                          {leftVideo.id ? 'Update' : 'Save'} Left Video
-                        </Button>
-                      </div>
+                  {/* Divider */}
+                  <div className="h-6 w-px bg-border hidden md:block" />
+
+                  {/* YouTube Videos - Compact Inline */}
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <span className="text-sm font-medium flex items-center gap-1">
+                      📺 Videos:
+                    </span>
+                    
+                    {/* Left Video Compact */}
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={leftVideo.video_id}
+                        onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: e.target.value }))}
+                        placeholder="Left Video ID"
+                        className="h-8 w-32 text-xs"
+                      />
+                      <Switch
+                        checked={leftVideo.is_active}
+                        onCheckedChange={(checked) => {
+                          setLeftVideo(prev => ({ ...prev, is_active: checked }));
+                        }}
+                      />
+                      <Button 
+                        onClick={() => saveYouTubeVideo(leftVideo)} 
+                        disabled={!leftVideo.video_id || savingYouTube}
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2"
+                      >
+                        <Save className="h-3 w-3" />
+                      </Button>
                     </div>
 
-                    {/* Right Video */}
-                    <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                      <h4 className="font-medium text-green-800 flex items-center gap-2">
-                        <span className="p-1 rounded bg-green-500 text-white text-xs">2</span>
-                        Right Video
-                      </h4>
-                      <div className="space-y-3">
-                        <div className="space-y-1">
-                          <Label className="text-xs">YouTube Video ID</Label>
-                          <Input
-                            value={rightVideo.video_id}
-                            onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: e.target.value }))}
-                            placeholder="e.g. dQw4w9WgXcQ"
-                            className="h-8 text-sm"
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            The ID from youtube.com/watch?v=<strong>VIDEO_ID</strong>
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Title (optional)</Label>
-                          <Input
-                            value={rightVideo.title}
-                            onChange={(e) => setRightVideo(prev => ({ ...prev, title: e.target.value }))}
-                            placeholder="Video title"
-                            className="h-8 text-sm"
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs">Active</Label>
-                          <Switch
-                            checked={rightVideo.is_active}
-                            onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, is_active: checked }))}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs">Autoplay</Label>
-                          <Switch
-                            checked={rightVideo.autoplay}
-                            onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, autoplay: checked }))}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs">Muted</Label>
-                          <Switch
-                            checked={rightVideo.muted}
-                            onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, muted: checked }))}
-                          />
-                        </div>
-                        <Button 
-                          onClick={() => saveYouTubeVideo(rightVideo)} 
-                          disabled={!rightVideo.video_id || savingYouTube}
-                          size="sm"
-                          className="w-full"
-                        >
-                          <Save className="h-3 w-3 mr-1" />
-                          {rightVideo.id ? 'Update' : 'Save'} Right Video
-                        </Button>
-                      </div>
+                    {/* Right Video Compact */}
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={rightVideo.video_id}
+                        onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: e.target.value }))}
+                        placeholder="Right Video ID"
+                        className="h-8 w-32 text-xs"
+                      />
+                      <Switch
+                        checked={rightVideo.is_active}
+                        onCheckedChange={(checked) => {
+                          setRightVideo(prev => ({ ...prev, is_active: checked }));
+                        }}
+                      />
+                      <Button 
+                        onClick={() => saveYouTubeVideo(rightVideo)} 
+                        disabled={!rightVideo.video_id || savingYouTube}
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2"
+                      >
+                        <Save className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Existing Slides with Inline Editing */}
