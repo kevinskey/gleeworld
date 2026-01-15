@@ -27,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format, isAfter, isBefore, startOfWeek, endOfWeek } from 'date-fns';
 import OrderOfMass from './OrderOfMass';
 import EditableModuleResources from './EditableModuleResources';
+import EditableLH100Modules from './EditableLH100Modules';
 
 interface ModuleResource {
   id: string;
@@ -883,6 +884,11 @@ const getResourceColor = (type: ModuleResource['type']) => {
 
 export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnrolled = true, isAdmin = false }) => {
   const { user } = useAuth();
+  
+  // Use editable version for LH100
+  if (courseId === 'lh-100') {
+    return <EditableLH100Modules isEnrolled={isEnrolled} isAdmin={isAdmin} />;
+  }
   
   // Get modules for the specific course - return empty array if not found
   const courseModules = COURSE_MODULES[courseId] || [];
