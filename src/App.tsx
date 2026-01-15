@@ -519,6 +519,11 @@ const App = () => {
                   </PublicRoute>
                 } 
               />
+              {/* Architecture documentation - publicly accessible */}
+              <Route 
+                path="/docs/architecture" 
+                element={<DocsArchitecture />} 
+              />
               {/* Glee Cam Gallery */}
               <Route 
                 path="/glee-cam/:categorySlug" 
@@ -713,11 +718,6 @@ const App = () => {
               <Route 
                 path="/w9-form" 
                 element={<W9FormPage />} 
-              />
-              {/* Architecture documentation - publicly accessible */}
-              <Route 
-                path="/docs/architecture" 
-                element={<DocsArchitecture />} 
               />
               <Route 
                 path="/admin-signing" 
