@@ -147,7 +147,8 @@ serve(async (req) => {
           recording: true,
           transcription: true,
           "outbound-call": true,
-          "sip-outbound-call": true
+          "sip-outbound-call": true,
+          "screen-sharing": true
         },
         room: {
           regex: false
