@@ -153,139 +153,142 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
   return (
     <div className="space-y-6">
-      {/* Liturgical Week Card - Only for LH 100 */}
-      {isLH100 && (
-        <div className="w-full md:w-1/2">
-          <LiturgicalWeekCard />
-        </div>
-      )}
+      {/* Top Row - Liturgical Week Card + Profile Hero Card */}
+      <div className={`flex flex-col ${isLH100 ? 'md:flex-row' : ''} gap-6`}>
+        {/* Liturgical Week Card - Only for LH 100 */}
+        {isLH100 && (
+          <div className="w-full md:w-1/2">
+            <LiturgicalWeekCard />
+          </div>
+        )}
 
-      {/* Profile Hero Card */}
-      <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-primary/20 to-primary/5 p-6 md:p-8">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            {/* Large Profile Image */}
-            <Avatar className="h-32 w-32 md:h-40 md:w-40 border-4 border-background shadow-xl">
-              <AvatarImage src={avatarUrl || undefined} alt={profile?.full_name || 'Student'} />
-              <AvatarFallback className="text-3xl md:text-4xl bg-primary text-primary-foreground">
-                {initials || <User className="h-16 w-16" />}
-              </AvatarFallback>
-            </Avatar>
+        {/* Profile Hero Card */}
+        <Card className={`overflow-hidden ${isLH100 ? 'w-full md:w-1/2' : 'w-full'}`}>
+          <div className="bg-gradient-to-r from-primary/20 to-primary/5 p-6 md:p-8">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+              {/* Large Profile Image */}
+              <Avatar className="h-32 w-32 md:h-40 md:w-40 border-4 border-background shadow-xl">
+                <AvatarImage src={avatarUrl || undefined} alt={profile?.full_name || 'Student'} />
+                <AvatarFallback className="text-3xl md:text-4xl bg-primary text-primary-foreground">
+                  {initials || <User className="h-16 w-16" />}
+                </AvatarFallback>
+              </Avatar>
 
-            {/* Profile Info */}
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                {profile?.full_name || 'Glee Club Member'}
-              </h1>
-              
-              <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3">
-                {profile?.voice_part && (
-                  <Badge variant="secondary" className="text-sm px-3 py-1">
-                    <Music className="h-3.5 w-3.5 mr-1.5" />
-                    {profile.voice_part}
-                  </Badge>
-                )}
-                {profile?.class_year && (
-                  <Badge variant="outline" className="text-sm px-3 py-1">
-                    <GraduationCap className="h-3.5 w-3.5 mr-1.5" />
-                    Class of {profile.class_year}
-                  </Badge>
-                )}
-                {profile?.is_exec_board && (
-                  <Badge variant="default" className="text-sm px-3 py-1">
-                    {profile.exec_board_role || 'Executive Board'}
-                  </Badge>
-                )}
-                {profile?.music_role && (
-                  <Badge variant="secondary" className="text-sm px-3 py-1">
-                    {profile.music_role}
-                  </Badge>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4 text-sm text-muted-foreground">
-                {profile?.email && (
-                  <span className="flex items-center justify-center md:justify-start gap-2">
-                    <Mail className="h-4 w-4" />
-                    {profile.email}
-                  </span>
-                )}
-                {profile?.phone && (
-                  <span className="flex items-center justify-center md:justify-start gap-2">
-                    <Phone className="h-4 w-4" />
-                    {profile.phone}
-                  </span>
-                )}
-                {profile?.join_date && (
-                  <span className="flex items-center justify-center md:justify-start gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Member since {format(new Date(profile.join_date), 'MMMM yyyy')}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Attendance Quick Stat + Settings */}
-            <div className="hidden md:flex flex-col gap-2 items-end">
-              <div className="text-center bg-background/80 rounded-xl p-4 shadow-sm">
-                <div className={`text-3xl font-bold ${attendanceRate >= 90 ? 'text-green-600' : attendanceRate >= 75 ? 'text-amber-600' : 'text-red-600'}`}>
-                  {attendanceRate}%
+              {/* Profile Info */}
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                  {profile?.full_name || 'Glee Club Member'}
+                </h1>
+                
+                <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3">
+                  {profile?.voice_part && (
+                    <Badge variant="secondary" className="text-sm px-3 py-1">
+                      <Music className="h-3.5 w-3.5 mr-1.5" />
+                      {profile.voice_part}
+                    </Badge>
+                  )}
+                  {profile?.class_year && (
+                    <Badge variant="outline" className="text-sm px-3 py-1">
+                      <GraduationCap className="h-3.5 w-3.5 mr-1.5" />
+                      Class of {profile.class_year}
+                    </Badge>
+                  )}
+                  {profile?.is_exec_board && (
+                    <Badge variant="default" className="text-sm px-3 py-1">
+                      {profile.exec_board_role || 'Executive Board'}
+                    </Badge>
+                  )}
+                  {profile?.music_role && (
+                    <Badge variant="secondary" className="text-sm px-3 py-1">
+                      {profile.music_role}
+                    </Badge>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Attendance Rate</p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4 text-sm text-muted-foreground">
+                  {profile?.email && (
+                    <span className="flex items-center justify-center md:justify-start gap-2">
+                      <Mail className="h-4 w-4" />
+                      {profile.email}
+                    </span>
+                  )}
+                  {profile?.phone && (
+                    <span className="flex items-center justify-center md:justify-start gap-2">
+                      <Phone className="h-4 w-4" />
+                      {profile.phone}
+                    </span>
+                  )}
+                  {profile?.join_date && (
+                    <span className="flex items-center justify-center md:justify-start gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Member since {format(new Date(profile.join_date), 'MMMM yyyy')}
+                    </span>
+                  )}
+                </div>
               </div>
-              
-              {/* Settings Button */}
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Settings className="h-4 w-4" />
-                    Settings
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
-                      Student Settings
-                    </SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6 space-y-4">
-                    {/* Current Exit Interview */}
-                    <CollapsibleMemberExitInterview />
-                    
-                    {/* Exit Interview History */}
-                    <ExitInterviewSummaryCard showInSettings />
+
+              {/* Attendance Quick Stat + Settings */}
+              <div className="hidden md:flex flex-col gap-2 items-end">
+                <div className="text-center bg-background/80 rounded-xl p-4 shadow-sm">
+                  <div className={`text-3xl font-bold ${attendanceRate >= 90 ? 'text-green-600' : attendanceRate >= 75 ? 'text-amber-600' : 'text-red-600'}`}>
+                    {attendanceRate}%
                   </div>
-                </SheetContent>
-              </Sheet>
+                  <p className="text-xs text-muted-foreground mt-1">Attendance Rate</p>
+                </div>
+                
+                {/* Settings Button */}
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="overflow-y-auto">
+                    <SheetHeader>
+                      <SheetTitle className="flex items-center gap-2">
+                        <Settings className="h-5 w-5" />
+                        Student Settings
+                      </SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-6 space-y-4">
+                      {/* Current Exit Interview */}
+                      <CollapsibleMemberExitInterview />
+                      
+                      {/* Exit Interview History */}
+                      <ExitInterviewSummaryCard showInSettings />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Mobile Settings Button */}
-        <div className="md:hidden mt-4">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full gap-2">
-                <Settings className="h-4 w-4" />
-                Settings & Exit Interviews
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Student Settings
-                </SheetTitle>
-              </SheetHeader>
-              <div className="mt-6 space-y-4">
-                <CollapsibleMemberExitInterview />
-                <ExitInterviewSummaryCard showInSettings />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </Card>
+          {/* Mobile Settings Button */}
+          <div className="md:hidden mt-4">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full gap-2">
+                  <Settings className="h-4 w-4" />
+                  Settings & Exit Interviews
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Student Settings
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 space-y-4">
+                  <CollapsibleMemberExitInterview />
+                  <ExitInterviewSummaryCard showInSettings />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </Card>
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
