@@ -154,7 +154,11 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   return (
     <div className="space-y-6">
       {/* Liturgical Week Card - Only for LH 100 */}
-      {isLH100 && <LiturgicalWeekCard />}
+      {isLH100 && (
+        <div className="w-full md:w-1/2">
+          <LiturgicalWeekCard />
+        </div>
+      )}
 
       {/* Profile Hero Card */}
       <Card className="overflow-hidden">
