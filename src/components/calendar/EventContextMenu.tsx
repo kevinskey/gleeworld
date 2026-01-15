@@ -107,13 +107,16 @@ export const EventContextMenu: React.FC<EventContextMenuProps> = ({
                 Edit Event
               </ContextMenuItem>}
             
-            {canDelete && <>
-                <ContextMenuSeparator />
-                <ContextMenuItem onClick={() => setShowDeleteDialog(true)} className="gap-2 text-destructive focus:text-destructive focus:bg-destructive/10">
-                  <Trash2 className="h-4 w-4" />
-                  Delete Event
-                </ContextMenuItem>
-              </>}
+             {canDelete && <>
+                 <ContextMenuSeparator />
+                 <ContextMenuItem
+                   onClick={() => setShowDeleteDialog(true)}
+                   className="gap-2 bg-destructive text-destructive-foreground focus:bg-destructive/90 focus:text-destructive-foreground"
+                 >
+                   <Trash2 className="h-4 w-4" />
+                   Delete Event
+                 </ContextMenuItem>
+               </>}
           </ContextMenuContent>}
       </ContextMenu>
 
@@ -148,13 +151,13 @@ export const EventContextMenu: React.FC<EventContextMenuProps> = ({
             
             {canDelete && <>
                 <div className="h-px bg-border my-1" />
-                <button onClick={() => {
-            setShowContextMenu(false);
-            setShowDeleteDialog(true);
-          }} className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-destructive/10 text-destructive text-left">
-                  <Trash2 className="h-4 w-4" />
-                  Delete Event
-                </button>
+                 <button onClick={() => {
+             setShowContextMenu(false);
+             setShowDeleteDialog(true);
+           }} className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded bg-destructive text-destructive-foreground hover:bg-destructive/90 text-left">
+                   <Trash2 className="h-4 w-4" />
+                   Delete Event
+                 </button>
               </>}
           </div>
         </div>}
