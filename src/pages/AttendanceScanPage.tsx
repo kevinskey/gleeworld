@@ -68,9 +68,19 @@ const AttendanceScanPage = () => {
         throw new Error('No response from server');
       }
 
-      const result = typeof data === 'object' && data !== null && !Array.isArray(data) 
-        ? data as any 
-        : { success: false, message: 'Invalid response format' };
+      // Parse the response - handle both direct object and stringified JSON
+      let result: any;
+      if (typeof data === 'string') {
+        try {
+          result = JSON.parse(data);
+        } catch {
+          result = { success: false, message: 'Invalid response format' };
+        }
+      } else if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+        result = data;
+      } else {
+        result = { success: false, message: 'Invalid response format' };
+      }
 
       console.log('Scan result:', result);
       setScanResult(result);
