@@ -255,10 +255,10 @@ const AttendanceScanPage = () => {
               Dashboard
             </Button>
             <Button 
-              onClick={() => navigate('/member/attendance')} 
+              onClick={() => navigate('/dashboard?module=class-calendar')} 
               className="flex-1"
             >
-              View Attendance
+              View Calendar
             </Button>
           </div>
         </CardContent>
