@@ -20295,6 +20295,51 @@ export type Database = {
         }
         Relationships: []
       }
+      lh100_module_resources: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration: string | null
+          id: string
+          is_completed: boolean | null
+          module_id: string
+          resource_type: string
+          sort_order: number | null
+          title: string
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_completed?: boolean | null
+          module_id: string
+          resource_type?: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_completed?: boolean | null
+          module_id?: string
+          resource_type?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       library_inventory_entries: {
         Row: {
           copies_found: number | null
