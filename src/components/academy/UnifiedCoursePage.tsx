@@ -514,7 +514,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </Card>}
 
             {activeTab === 'calendar' && (
-              (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'MUS 240')
+              (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'MUS 240' || course.courseCode === 'LH 100')
                 ? <CalendarWithAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} />
                 : <CourseCalendarView courseId={course.id} />
             )}
