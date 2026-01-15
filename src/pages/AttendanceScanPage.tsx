@@ -90,6 +90,10 @@ const AttendanceScanPage = () => {
           title: "Attendance Recorded!",
           description: result.message || "Your attendance has been successfully recorded.",
         });
+        // Auto-redirect to class landing page after 2 seconds
+        setTimeout(() => {
+          navigate('/dashboard?module=class-landing');
+        }, 2000);
       } else {
         setError(result.message || 'Failed to record attendance');
         toast({
