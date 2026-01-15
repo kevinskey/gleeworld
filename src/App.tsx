@@ -52,6 +52,7 @@ import AcademyCoursePage from "./pages/academy/AcademyCoursePage";
 import CourseOnboarding from "./pages/academy/CourseOnboarding";
 import AcademyCoursesAdmin from "./pages/admin/AcademyCoursesAdmin";
 import CourseInstructorConsole from "./pages/courses/CourseInstructorConsole";
+import LH100BowmanScholars from "./pages/academy/LH100BowmanScholars";
 
 
 import Index from "./pages/Index";
@@ -553,6 +554,16 @@ const App = () => {
                   <PublicRoute>
                     <CourseOnboarding />
                   </PublicRoute>
+                }
+              />
+              
+              {/* LH 100 Bowman Scholars - Custom specialized page */}
+              <Route 
+                path="/academy/lh-100/*" 
+                element={
+                  <ProtectedRoute>
+                    <LH100BowmanScholars />
+                  </ProtectedRoute>
                 }
               />
               

@@ -144,8 +144,19 @@ export default function LH100BowmanScholars() {
     }
   };
 
-  const handleCameraCapture = (imageData: string) => {
-    setFormData(prev => ({ ...prev, headshot_url: imageData }));
+  const handleCameraCapture = async (blob: Blob) => {
+    if (!user) return;
+    try {
+      const filePath = `bowman-scholars/${user.id}/headshot-${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage.from('media').upload(filePath, blob, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath);
+      setFormData(prev => ({ ...prev, headshot_url: publicUrl }));
+      toast.success('Photo captured and uploaded');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload photo');
+    }
     setShowCamera(false);
   };
 
@@ -183,8 +194,8 @@ export default function LH100BowmanScholars() {
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                <GraduationCap className="h-6 w-6 text-white" />
+              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                <GraduationCap className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold">{course?.title || 'Bowman Scholars'}</h1>
@@ -524,7 +535,7 @@ export default function LH100BowmanScholars() {
                   <h3 className="font-medium mb-2">Weekly Meetings</h3>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-background">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <Clock className="h-5 w-5 text-primary" />
                       </div>
                       <div>
@@ -533,7 +544,7 @@ export default function LH100BowmanScholars() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-background">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <Clock className="h-5 w-5 text-primary" />
                       </div>
                       <div>
@@ -551,6 +562,34 @@ export default function LH100BowmanScholars() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Camera Capture Modal */}
+        <CameraCapture 
+          isOpen={showCamera}
+          onCapture={handleCameraCapture} 
+          onCancel={() => setShowCamera(false)}
+        />
+
+        {/* Liturgical Worksheet Form Modal */}
+        {showWorksheetForm && (
+          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <Card className="w-full max-w-2xl my-4">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>{editingWorksheet ? 'Edit Worksheet' : 'New Liturgical Worksheet'}</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => { setShowWorksheetForm(false); setEditingWorksheet(undefined); }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent className="max-h-[70vh] overflow-y-auto">
+                <LiturgicalWorksheetForm 
+                  worksheet={editingWorksheet}
+                  onSave={handleWorksheetSave}
+                  onCancel={() => { setShowWorksheetForm(false); setEditingWorksheet(undefined); }}
+                />
+              </CardContent>
+            </Card>
+          </div>
         )}
 
       </div>
