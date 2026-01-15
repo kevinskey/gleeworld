@@ -73,6 +73,7 @@ import ActivityLogs from "./pages/ActivityLogs";
 import W9FormPage from "./pages/W9FormPage";
 import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
+import DocsArchitecture from "./pages/DocsArchitecture";
 import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
 import TestBuilderPage from "./pages/mus240/TestBuilderPage";
 import TestBuilderEdit from "./pages/TestBuilderEdit";
@@ -712,6 +713,11 @@ const App = () => {
               <Route 
                 path="/w9-form" 
                 element={<W9FormPage />} 
+              />
+              {/* Architecture documentation - publicly accessible */}
+              <Route 
+                path="/docs/architecture" 
+                element={<DocsArchitecture />} 
               />
               <Route 
                 path="/admin-signing" 
