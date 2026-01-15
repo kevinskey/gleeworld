@@ -235,50 +235,45 @@ export const InstructorConsole = () => {
   return <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-background">
         {/* Compact Stats Bar */}
-        <div className="border-b bg-card">
-          <div className="max-w-[1800px] mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 sm:gap-3 md:gap-4">
-              <div className="flex items-center gap-2 sm:gap-4 md:gap-6 overflow-x-auto scrollbar-hide w-full md:w-auto pb-1 md:pb-0">
-                <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
-                  <BookOpen className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
+        <div className="border-b bg-card/80">
+          <div className="max-w-[1800px] mx-auto px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-hide">
+                <div className="flex items-center gap-1 text-[10px] sm:text-xs whitespace-nowrap">
+                  <BookOpen className="h-3 w-3 text-primary flex-shrink-0" />
                   <span className="text-muted-foreground">Assignments:</span>
-                  <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.activeAssignments}</span>
+                  <span className="font-semibold">{statsLoading ? '...' : stats.activeAssignments}</span>
                 </div>
-                <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
-                  <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-emerald-600 flex-shrink-0" />
+                <div className="flex items-center gap-1 text-[10px] sm:text-xs whitespace-nowrap">
+                  <Eye className="h-3 w-3 text-emerald-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Journals:</span>
-                  <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalJournals}</span>
+                  <span className="font-semibold">{statsLoading ? '...' : stats.totalJournals}</span>
                 </div>
-                <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
-                  <BarChart3 className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-orange-600 flex-shrink-0" />
+                <div className="flex items-center gap-1 text-[10px] sm:text-xs whitespace-nowrap">
+                  <BarChart3 className="h-3 w-3 text-orange-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Pending:</span>
-                  <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.pendingGrades}</span>
+                  <span className="font-semibold">{statsLoading ? '...' : stats.pendingGrades}</span>
                 </div>
-                <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
-                  <GraduationCap className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-purple-600 flex-shrink-0" />
+                <div className="flex items-center gap-1 text-[10px] sm:text-xs whitespace-nowrap">
+                  <GraduationCap className="h-3 w-3 text-purple-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Students:</span>
-                  <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalStudents}</span>
+                  <span className="font-semibold">{statsLoading ? '...' : stats.totalStudents}</span>
                 </div>
-                <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
-                  <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-indigo-600 flex-shrink-0" />
+                <div className="hidden sm:flex items-center gap-1 text-[10px] sm:text-xs whitespace-nowrap">
+                  <Users className="h-3 w-3 text-indigo-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Avg:</span>
-                  <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}</span>
+                  <span className="font-semibold">{statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}</span>
                 </div>
               </div>
               
-              <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-end">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <Mus240SemesterSelector className="hidden sm:flex" />
-                <Button variant="outline" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden flex items-center gap-1 sm:gap-2 h-7 sm:h-8 text-xs sm:text-sm">
-                  <Menu className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span>Menu</span>
+                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden h-6 w-6 p-0">
+                  <Menu className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/academy/mus-240')} className="hidden sm:flex items-center gap-1 sm:gap-2 whitespace-nowrap h-7 sm:h-8 text-xs sm:text-sm">
-                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span>Student View</span>
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240')} className="hidden sm:flex items-center gap-1 sm:gap-2 whitespace-nowrap h-7 sm:h-8 text-xs sm:text-sm">
-                  <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span>Course Page</span>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/academy/mus-240')} className="hidden sm:flex h-6 px-2 text-xs">
+                  <Eye className="h-3 w-3 mr-1" />
+                  Student
                 </Button>
               </div>
             </div>
@@ -288,30 +283,29 @@ export const InstructorConsole = () => {
         {/* Main Layout */}
         <div className="flex max-w-[1800px] mx-auto">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-56 xl:w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-[132px]">
-            <div className="p-4 xl:p-6">
-              <div className="mb-6 xl:mb-8 pb-4 xl:pb-6 border-b">
+          <aside className="hidden lg:block w-48 xl:w-52 border-r bg-card/50 min-h-[calc(100vh-8rem)] sticky top-[100px]">
+            <div className="p-2 xl:p-3">
+              <div className="mb-3 pb-2 border-b">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="w-full text-left group hover:bg-accent/50 rounded-lg p-2 -m-2 transition-colors">
+                    <button className="w-full text-left group hover:bg-accent/50 rounded-md p-1.5 -m-1.5 transition-colors">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h2 className="text-lg xl:text-xl font-bold text-foreground">MUS 240</h2>
-                          <p className="text-xs xl:text-sm text-muted-foreground mt-1 xl:mt-1.5">Survey of African American Music</p>
-                          <p className="text-[10px] xl:text-xs text-muted-foreground mt-0.5 xl:mt-1">Dr. Kevin Phillip Johnson</p>
+                          <h2 className="text-sm font-bold text-foreground">MUS 240</h2>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">Survey of African American Music</p>
                         </div>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <ChevronDown className="h-3 w-3 text-muted-foreground" />
                       </div>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-64">
+                  <DropdownMenuContent align="start" className="w-56">
                     {courses?.map((course) => (
                       <DropdownMenuItem 
                         key={course.id}
                         onClick={() => navigate(`/courses/${course.id}/instructor`)}
-                        className="flex flex-col items-start py-2"
+                        className="flex flex-col items-start py-1.5"
                       >
-                        <span className="font-semibold">{course.course_code}</span>
+                        <span className="font-semibold text-sm">{course.course_code}</span>
                         <span className="text-xs text-muted-foreground">{course.title}</span>
                       </DropdownMenuItem>
                     ))}
@@ -361,15 +355,12 @@ export const InstructorConsole = () => {
           </Sheet>
 
           {/* Main Content */}
-          <main className="flex-1 p-2 sm:p-3 md:p-4 lg:p-6 xl:p-8">
-            {/* Page Header */}
-            <div className="mb-4 sm:mb-6 md:mb-8">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1 sm:mb-2">
+          <main className="flex-1 p-2 sm:p-2.5 md:p-3 lg:p-4">
+            {/* Compact inline header */}
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <h1 className="text-base sm:text-lg font-semibold text-foreground">
                 {navItems.find(item => item.value === activeTab)?.label || 'Console'}
               </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Manage your course content, track student progress, and analyze performance
-              </p>
             </div>
 
             {/* Content */}
