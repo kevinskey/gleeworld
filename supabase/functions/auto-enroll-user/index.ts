@@ -23,7 +23,19 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, serviceRole);
+    // Create service role client WITHOUT any auth headers to ensure auth.uid() is NULL in triggers
+    // This allows the trigger's "system-level" bypass to work
+    const supabase = createClient(supabaseUrl, serviceRole, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+      global: {
+        headers: {
+          // Explicitly do NOT pass Authorization header here
+        },
+      },
+    });
 
     // Verify caller auth (must be an authenticated admin)
     const authHeader = req.headers.get("Authorization");
