@@ -28,6 +28,10 @@ import { ElectionsModule } from './elections/ElectionsModule';
 import { CourseModules } from './CourseModules';
 import { ClassSessionJournals } from './journals/ClassSessionJournals';
 import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants';
+import { useUserRole } from '@/hooks/useUserRole';
+const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager').then(m => ({
+  default: m.SecretaryAttendanceManager
+})));
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
   default: m.AcademyPollSystem
 })));
@@ -54,6 +58,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   
   // Fetch teaching assistants for this course
   const { data: teachingAssistants = [] } = useCourseTeachingAssistants(course.courseCode);
+  const { isSecretary } = useUserRole();
 
   // Detect if URL contains /handbook to auto-switch tab
   const getInitialTab = () => {
@@ -244,6 +249,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 <span>{item.label}</span>
               </button>)}
           </div>
+          
+          {/* Secretary Attendance Button - For Librarian/Secretary */}
+          {isSecretary() && <div className="px-1.5 py-1 border-t border-border">
+              <Button onClick={() => setActiveTab('secretary')} variant={activeTab === 'secretary' ? 'default' : 'outline'} className="w-full text-xs h-7" size="sm">
+                <UserCheck className="h-3 w-3 mr-1" />
+                Secretary
+              </Button>
+            </div>}
           
           {/* Instructor Control Center Button */}
           {isAdmin && <div className="px-1.5 py-1 border-t border-border">
@@ -457,6 +470,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </React.Suspense> : <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />)}
 
             {activeTab === 'attendance' && <CourseAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} />}
+
+            {/* Secretary Attendance Manager Tab */}
+            {activeTab === 'secretary' && (
+              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading...</CardContent></Card>}>
+                <SecretaryAttendanceManager courseId={course.id} courseName={course.title} />
+              </React.Suspense>
+            )}
 
             {activeTab === 'rubrics' && <Card>
                 <CardHeader>
