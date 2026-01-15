@@ -632,7 +632,7 @@ export const GroupMessageInterface: React.FC = () => {
                             return (
                               <button
                                 key={meeting.room_name}
-                                onClick={() => navigate(`/video?room=${encodeURIComponent(meeting.room_name)}`)}
+                                onClick={() => navigate(`/messenger?join=${encodeURIComponent(meeting.room_name)}`)}
                                 className="w-full flex items-center gap-3 p-2 rounded-lg bg-background hover:bg-muted transition-colors text-left"
                               >
                                 <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
