@@ -208,6 +208,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               { icon: BarChart, label: 'Polls', tab: 'polls' },
               { icon: Library, label: 'Resources', tab: 'resources' },
               { icon: Trophy, label: 'Grades', tab: 'grades' },
+              { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
               { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
             ] : [
               { icon: Home, label: 'Home', tab: 'home' },
@@ -222,6 +223,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               { icon: FileCheck, label: 'Tests', tab: 'tests' },
               { icon: BarChart, label: 'Polls', tab: 'polls' },
               { icon: Trophy, label: 'Grades', tab: 'grades' },
+              { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
               { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
             ]).map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 <item.icon className="h-3 w-3 flex-shrink-0" />
