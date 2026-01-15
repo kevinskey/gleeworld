@@ -62,7 +62,14 @@ const ForcePasswordChange: React.FC = () => {
         description: 'You can now continue using the app.',
       });
 
-      navigate('/dashboard', { replace: true });
+      // Redirect to stored path or dashboard
+      const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+      if (redirectPath) {
+        sessionStorage.removeItem('redirectAfterAuth');
+        navigate(redirectPath, { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (error: any) {
       // If Supabase says the new password is the same as the old one, it often means
       // the user is trying to set their password to their *current* password.
@@ -82,7 +89,13 @@ const ForcePasswordChange: React.FC = () => {
           description: 'You can continue using the app.',
         });
 
-        navigate('/dashboard', { replace: true });
+        const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
+        if (storedRedirect) {
+          sessionStorage.removeItem('redirectAfterAuth');
+          navigate(storedRedirect, { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
         return;
       }
 
@@ -104,7 +117,13 @@ const ForcePasswordChange: React.FC = () => {
       title: 'Got it',
       description: 'We won\'t ask you again on this device.',
     });
-    navigate('/dashboard', { replace: true });
+    const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
+    if (storedRedirect) {
+      sessionStorage.removeItem('redirectAfterAuth');
+      navigate(storedRedirect, { replace: true });
+    } else {
+      navigate('/dashboard', { replace: true });
+    }
   };
 
   return (
