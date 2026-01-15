@@ -94,11 +94,43 @@ export const QRAttendanceScanner = () => {
     setIsScanning(false);
   };
 
+  const parseQrToken = (raw: string): string => {
+    const input = raw.trim();
+    if (!input) return '';
+
+    // If it's a URL, try to extract token from query string or path
+    try {
+      const url = new URL(input);
+      const tokenParam = url.searchParams.get('token');
+      if (tokenParam) return tokenParam.trim();
+
+      // Common pattern: last path segment is the token
+      const lastSegment = url.pathname.split('/').filter(Boolean).pop();
+      if (lastSegment) return decodeURIComponent(lastSegment).trim();
+    } catch {
+      // Not a valid URL; fall through to string parsing
+    }
+
+    // Common non-URL patterns
+    // e.g. "token=XYZ", "token: XYZ", "token XYZ"
+    const tokenEquals = input.match(/token=([^&\s]+)/i);
+    if (tokenEquals?.[1]) return decodeURIComponent(tokenEquals[1]).trim();
+
+    const tokenColon = input.match(/\btoken\s*[:\-]\s*([^\s]+)/i);
+    if (tokenColon?.[1]) return tokenColon[1].trim();
+
+    const tokenSpace = input.match(/\btoken\s+([^\s]+)/i);
+    if (tokenSpace?.[1]) return tokenSpace[1].trim();
+
+    // Otherwise assume the QR encodes the token directly
+    return input;
+  };
+
   const handleScan = async (qrData: string) => {
     console.log('QR handleScan called with:', qrData);
     console.log('User object:', user);
     console.log('Processing state:', processing);
-    
+
     if (processing || !user) {
       console.log('Scan blocked - processing:', processing, 'user:', !!user);
       return;
@@ -108,28 +140,9 @@ export const QRAttendanceScanner = () => {
     stopScanner(); // Stop scanning while processing
 
     try {
-      // Parse QR code data - can be either a URL or a token string
-      let qrToken = qrData.trim();
-      
-      // If it's a URL, extract the token parameter
-      if (qrToken.includes('token=')) {
-        try {
-          const url = new URL(qrToken);
-          const tokenParam = url.searchParams.get('token');
-          if (tokenParam) {
-            qrToken = tokenParam;
-          }
-        } catch (e) {
-          // Not a valid URL, try to extract token from string
-          const match = qrToken.match(/token=([^&]+)/);
-          if (match) {
-            qrToken = decodeURIComponent(match[1]);
-          }
-        }
-      }
-      
+      const qrToken = parseQrToken(qrData);
       console.log('Parsed QR token:', qrToken);
-      
+
       if (!qrToken) {
         throw new Error('Invalid QR code format');
       }
@@ -139,17 +152,24 @@ export const QRAttendanceScanner = () => {
         user_id_param: user.id,
         scan_location_param: null,
         user_agent_param: navigator.userAgent,
-        ip_address_param: null
+        ip_address_param: null,
       });
 
-      // Call the QR attendance processing function with enhanced logging
-      const { data, error } = await supabase.rpc('process_qr_attendance_scan', {
+      // Timeout protects against "nothing happened" hangs
+      const rpcPromise = supabase.rpc('process_qr_attendance_scan', {
         qr_token_param: qrToken,
         user_id_param: user.id,
         scan_location_param: null, // Could add geolocation here
         user_agent_param: navigator.userAgent,
-        ip_address_param: null // Would need server-side to get real IP
+        ip_address_param: null, // Would need server-side to get real IP
       });
+
+      const timeoutMs = 15000;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        window.setTimeout(() => reject(new Error('Scan timed out. Please try again.')), timeoutMs);
+      });
+
+      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
 
       console.log('RPC response:', { data, error });
 
@@ -172,7 +192,7 @@ export const QRAttendanceScanner = () => {
       } else {
         result = { success: false, message: 'Invalid response format', error: 'Unexpected response format' };
       }
-      
+
       console.log('Parsed result:', result);
       setScanResult(result);
 
@@ -181,7 +201,7 @@ export const QRAttendanceScanner = () => {
           title: "Attendance Recorded",
           description: `Successfully marked present for ${result.event_title || 'this event'}`,
         });
-        
+
         // Navigate to course home after a brief delay so user sees the success message
         setTimeout(() => {
           navigate('/dashboard');
@@ -193,17 +213,16 @@ export const QRAttendanceScanner = () => {
           variant: "destructive",
         });
       }
-
     } catch (error) {
       console.error('Error processing QR scan:', error);
       setScanResult({
         success: false,
         message: 'Error processing scan',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       toast({
         title: "Scan Error",
-        description: "Failed to process QR code scan",
+        description: error instanceof Error ? error.message : "Failed to process QR code scan",
         variant: "destructive",
       });
     } finally {
