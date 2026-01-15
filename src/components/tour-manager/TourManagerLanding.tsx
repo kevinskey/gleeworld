@@ -175,8 +175,8 @@ export const TourManagerLanding = ({
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium truncate text-primary-foreground">{person.name}</p>
-                      <p className="text-[10px] truncate text-primary-foreground">{person.role}</p>
+                      <p className="text-xs font-medium truncate text-foreground">{person.name}</p>
+                      <p className="text-[10px] truncate text-muted-foreground">{person.role}</p>
                     </div>
                   </div>)}
               </div>}
