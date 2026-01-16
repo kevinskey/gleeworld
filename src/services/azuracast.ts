@@ -1,13 +1,10 @@
-import { supabase } from '@/integrations/supabase/client';
-
-interface AzuraCastStation {
-  id: number;
-  name: string;
-  shortcode: string;
-  description: string;
-  frontend: string;
-  backend: string;
-  listen_url: string;
+/**
+ * @deprecated This file is deprecated. Import from '@/services/azuracast' instead.
+ * This file re-exports everything for backward compatibility.
+ */
+export * from './azuracast/index';
+export { azuraCastService } from './azuracast/index';
+export type { AzuraCastNowPlaying } from './azuracast/index';
   is_public: boolean;
   mounts: AzuraCastMount[];
   remotes: any[];
