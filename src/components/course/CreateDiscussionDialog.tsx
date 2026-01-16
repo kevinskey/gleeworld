@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Calendar, Award } from 'lucide-react';
 
 interface CreateDiscussionDialogProps {
   open: boolean;
@@ -25,6 +26,9 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [isGraded, setIsGraded] = useState(false);
+  const [maxPoints, setMaxPoints] = useState(10);
+  const [dueDate, setDueDate] = useState('');
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -39,6 +43,9 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
           created_by: user.id,
           reply_count: 0,
           is_locked: false,
+          is_graded: isGraded,
+          max_points: isGraded ? maxPoints : null,
+          due_date: dueDate ? new Date(dueDate).toISOString() : null,
         })
         .select()
         .single();
@@ -49,8 +56,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['course-discussions', courseId] });
       toast.success('Discussion created successfully');
-      setTitle('');
-      setContent('');
+      resetForm();
       onOpenChange(false);
     },
     onError: (error: Error) => {
@@ -58,10 +64,22 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
     },
   });
 
+  const resetForm = () => {
+    setTitle('');
+    setContent('');
+    setIsGraded(false);
+    setMaxPoints(10);
+    setDueDate('');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
       toast.error('Please fill in all fields');
+      return;
+    }
+    if (isGraded && maxPoints <= 0) {
+      toast.error('Max points must be greater than 0');
       return;
     }
     createMutation.mutate();
@@ -95,6 +113,59 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
               rows={6}
             />
           </div>
+
+          {/* Due Date */}
+          <div className="space-y-2">
+            <Label htmlFor="dueDate" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Due Date (Optional)
+            </Label>
+            <Input
+              id="dueDate"
+              type="datetime-local"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              disabled={createMutation.isPending}
+            />
+          </div>
+
+          {/* Grading Toggle */}
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+            <div className="flex items-center gap-3">
+              <Award className="h-5 w-5 text-primary" />
+              <div>
+                <Label htmlFor="isGraded" className="text-sm font-medium">
+                  Graded Discussion
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Enable grading for student participation
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="isGraded"
+              checked={isGraded}
+              onCheckedChange={setIsGraded}
+              disabled={createMutation.isPending}
+            />
+          </div>
+
+          {/* Max Points (only shown when graded) */}
+          {isGraded && (
+            <div className="space-y-2">
+              <Label htmlFor="maxPoints">Maximum Points</Label>
+              <Input
+                id="maxPoints"
+                type="number"
+                min={1}
+                max={100}
+                value={maxPoints}
+                onChange={(e) => setMaxPoints(parseInt(e.target.value) || 10)}
+                disabled={createMutation.isPending}
+              />
+            </div>
+          )}
+
           <DialogFooter>
             <Button
               type="button"

@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Lock, MessageCircle, Plus } from 'lucide-react';
+import { MessageSquare, Lock, MessageCircle, Plus, Calendar, Award, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format, isPast, isFuture, differenceInHours } from 'date-fns';
 import { CreateDiscussionDialog } from './CreateDiscussionDialog';
 import { DiscussionThread } from './DiscussionThread';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +20,9 @@ interface Discussion {
   is_locked: boolean;
   reply_count: number;
   course_id: string;
+  due_date: string | null;
+  max_points: number | null;
+  is_graded: boolean | null;
 }
 
 interface DiscussionsSectionProps {
@@ -48,6 +51,38 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
       return data as Discussion[];
     }
   });
+
+  const getDueDateBadge = (dueDate: string | null) => {
+    if (!dueDate) return null;
+    
+    const due = new Date(dueDate);
+    const hoursUntilDue = differenceInHours(due, new Date());
+    
+    if (isPast(due)) {
+      return (
+        <Badge variant="destructive" className="flex items-center gap-1">
+          <AlertCircle className="h-3 w-3" />
+          Past Due
+        </Badge>
+      );
+    }
+    
+    if (hoursUntilDue <= 24) {
+      return (
+        <Badge variant="default" className="flex items-center gap-1 bg-orange-500">
+          <Calendar className="h-3 w-3" />
+          Due Soon
+        </Badge>
+      );
+    }
+    
+    return (
+      <Badge variant="outline" className="flex items-center gap-1">
+        <Calendar className="h-3 w-3" />
+        Due {format(due, 'MMM d')}
+      </Badge>
+    );
+  };
 
   if (selectedDiscussion) {
     return (
@@ -99,9 +134,18 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
                           <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         )}
                       </CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {format(new Date(discussion.created_at), 'MMM d, yyyy h:mm a')}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(discussion.created_at), 'MMM d, yyyy h:mm a')}
+                        </p>
+                        {discussion.is_graded && (
+                          <Badge variant="secondary" className="flex items-center gap-1">
+                            <Award className="h-3 w-3" />
+                            {discussion.max_points} pts
+                          </Badge>
+                        )}
+                        {getDueDateBadge(discussion.due_date)}
+                      </div>
                     </div>
                   </div>
                   <Badge variant="secondary" className="flex items-center gap-1 flex-shrink-0">
