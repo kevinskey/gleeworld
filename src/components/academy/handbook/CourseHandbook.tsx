@@ -452,10 +452,10 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Appendix View */}
           {selectedAppendixSlug ? (
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto">
               <div className="p-6">
                 <HandbookAppendixView
                   courseId={courseId}
@@ -463,7 +463,7 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
                   onBack={() => setSelectedAppendixSlug(null)}
                 />
               </div>
-            </ScrollArea>
+            </div>
           ) : isEditing && currentSection ? (
             <HandbookEditor
               content={currentSection.content}
