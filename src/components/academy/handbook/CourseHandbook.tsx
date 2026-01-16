@@ -262,7 +262,7 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col lg:flex-row gap-0 h-[calc(100vh-200px)] min-h-[500px] border rounded-lg overflow-hidden bg-card">
+      <div className="flex flex-col lg:flex-row gap-0 h-[calc(100vh-200px)] min-h-[500px] min-h-0 border rounded-lg overflow-hidden bg-card">
         {/* Mobile Header */}
         <div className="lg:hidden flex items-center justify-between p-3 border-b bg-muted/50">
           <Button
@@ -452,10 +452,10 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
           {/* Appendix View */}
           {selectedAppendixSlug ? (
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-y-auto">
               <div className="p-6">
                 <HandbookAppendixView
                   courseId={courseId}
