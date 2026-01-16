@@ -18,7 +18,8 @@ import {
   Award,
   AlertTriangle,
   CheckCircle,
-  UserCheck
+  UserCheck,
+  MessagesSquare
 } from 'lucide-react';
 import { GroupParticipationAnalyzer } from './GroupParticipationAnalyzer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -43,6 +44,12 @@ interface StudentGradeData {
   }>;
   journal_scores: Array<{
     journal_id: string;
+    score: number;
+    max_points: number;
+  }>;
+  discussion_scores: Array<{
+    discussion_id: string;
+    discussion_title: string;
     score: number;
     max_points: number;
   }>;
@@ -143,6 +150,26 @@ export const GradeCalculationSystem: React.FC = () => {
         .eq('semester', semester);
 
       if (participationError) throw participationError;
+
+      // Get discussion reply grades for participation (discussions = 10% of final grade via participation)
+      const { data: discussionReplies, error: discussionError } = await supabase
+        .from('discussion_replies')
+        .select(`
+          id,
+          created_by,
+          grade,
+          course_discussions!inner(
+            id,
+            title,
+            course_id,
+            is_graded,
+            max_points
+          )
+        `)
+        .in('created_by', studentIds)
+        .not('grade', 'is', null);
+
+      if (discussionError) throw discussionError;
 
       // Get AI/instructor midterm per-question grades (to compute overall when submission.grade is null)
       const submissionIdByUser = new Map<string, string>();
@@ -283,18 +310,34 @@ export const GradeCalculationSystem: React.FC = () => {
         const participationRecord = participation?.find(p => p.student_id === enrollment.student_id);
         const participationScore = participationRecord?.points_earned || 0;
 
+        // Get discussion grades (part of 10% participation)
+        const studentDiscussions = discussionReplies?.filter(r => 
+          r.created_by === enrollment.student_id
+        ) || [];
+        const discussionScores = studentDiscussions.map(r => {
+          const discussion = r.course_discussions as any;
+          return {
+            discussion_id: discussion?.id || '',
+            discussion_title: discussion?.title || 'Discussion',
+            score: r.grade || 0,
+            max_points: discussion?.max_points || 10
+          };
+        });
+        const discussionPoints = discussionScores.reduce((sum, d) => sum + d.score, 0);
+
         // Calculate totals based on syllabus: 760 total points
         // Journals: 260 pts (13×20)
         // Research: 150 pts (3×50)  
         // AI Group: 150 pts (20+30+100)
         // Midterm: 100 pts
         // Final Essay: 50 pts
-        // Participation: 50 pts
+        // Participation: 50 pts (includes discussion grades - 10% of final)
         
         const journalPoints = journalScores.reduce((sum, j) => sum + j.score, 0);
         const assignmentPoints = assignmentScores.reduce((sum, a) => sum + a.score, 0);
         const midtermPoints = midtermScore || 0;
-        const participationPoints = participationScore;
+        // Participation includes discussion grades
+        const participationPoints = participationScore + discussionPoints;
 
         const totalPoints = journalPoints + assignmentPoints + midtermPoints + participationPoints;
         const totalPossible = 760;
@@ -311,7 +354,8 @@ export const GradeCalculationSystem: React.FC = () => {
           midterm_sections: agg?.bySection,
           assignment_scores: assignmentScores,
           journal_scores: journalScores,
-          participation_score: participationScore,
+          discussion_scores: discussionScores,
+          participation_score: participationPoints, // Now includes discussions
           total_points: Math.round(totalPoints * 100) / 100,
           total_possible: totalPossible,
           percentage: Math.round(percentage * 100) / 100,
@@ -508,7 +552,7 @@ export const GradeCalculationSystem: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <FileText className="h-4 w-4" />
@@ -573,16 +617,35 @@ export const GradeCalculationSystem: React.FC = () => {
 
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
+                              <MessagesSquare className="h-4 w-4" />
+                              <span className="text-sm font-medium">Discussions</span>
+                            </div>
+                            <div className="text-lg font-semibold">
+                              {student.discussion_scores.length > 0 
+                                ? `${student.discussion_scores.reduce((sum, d) => sum + d.score, 0)} pts`
+                                : 'No posts'
+                              }
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {student.discussion_scores.length} graded (10% of final)
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
                               <CheckCircle className="h-4 w-4" />
                               <span className="text-sm font-medium">Participation</span>
                             </div>
                             <div className="text-lg font-semibold">
-                              {student.participation_score}%
+                              {student.participation_score} pts
                             </div>
                             <Progress 
-                              value={student.participation_score} 
+                              value={(student.participation_score / 50) * 100} 
                               className="h-2" 
                             />
+                            <div className="text-xs text-gray-600">
+                              Incl. discussions
+                            </div>
                           </div>
                         </div>
 
@@ -662,7 +725,7 @@ export const GradeCalculationSystem: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4" />
@@ -711,16 +774,35 @@ export const GradeCalculationSystem: React.FC = () => {
 
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
+                          <MessagesSquare className="h-4 w-4" />
+                          <span className="text-sm font-medium">Discussions</span>
+                        </div>
+                        <div className="text-lg font-semibold">
+                          {student.discussion_scores.length > 0 
+                            ? `${student.discussion_scores.reduce((sum, d) => sum + d.score, 0)} pts`
+                            : 'No posts'
+                          }
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {student.discussion_scores.length} graded (10% of final)
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4" />
                           <span className="text-sm font-medium">Participation</span>
                         </div>
                         <div className="text-lg font-semibold">
-                          {student.participation_score}%
+                          {student.participation_score} pts
                         </div>
                         <Progress 
-                          value={student.participation_score} 
+                          value={(student.participation_score / 50) * 100} 
                           className="h-2" 
                         />
+                        <div className="text-xs text-gray-600">
+                          Incl. discussions
+                        </div>
                       </div>
                     </div>
 
