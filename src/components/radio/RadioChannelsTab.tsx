@@ -156,9 +156,8 @@ export const RadioChannelsTab = () => {
     }
   };
 
-  // Sync channels from AzuraCast stations
-  // NOTE: In AzuraCast, "listen" URLs are station-based (not playlist-based).
-  // Your admin UI uses channels as stations, so we sync stations into gw_radio_channels.
+  // Sync channels from AzuraCast stations via server-side endpoint
+  // This endpoint normalizes URLs and handles IP-to-domain conversion
   const syncFromAzuraCast = async () => {
     setIsSyncing(true);
     try {
@@ -167,6 +166,7 @@ export const RadioChannelsTab = () => {
           title: 'Please wait',
           description: 'Checking permissions…',
         });
+        setIsSyncing(false);
         return;
       }
 
@@ -176,116 +176,41 @@ export const RadioChannelsTab = () => {
           description: 'Only Admin/Super Admin can sync channels into the database.',
           variant: 'destructive',
         });
+        setIsSyncing(false);
         return;
       }
 
-      // Fetch all stations from AzuraCast.
-      // Stations can be referenced by numeric ID (e.g. /station/23) or shortcode.
-      let stations = await azuraCastService.getAllStations();
-
-      // Some AzuraCast installs (or API permissions) don't expose /api/stations.
-      // In that case, fall back to probing station IDs (1..50) and collecting those that exist.
-      if (!stations || stations.length === 0) {
-        console.warn('AzuraCast: /stations returned empty; probing station IDs as fallback');
-
-        const discovered: AzuraCastStation[] = [];
-        const maxProbeId = 50;
-
-        for (let id = 1; id <= maxProbeId; id++) {
-          try {
-            const station = await apiClient.request<AzuraCastStation>(`/station/${id}`);
-            if (station?.id && station?.name) {
-              discovered.push(station);
-            }
-          } catch {
-            // Ignore missing stations / permission errors and keep probing.
-          }
-        }
-
-        stations = discovered;
-      }
-
-      console.log('AzuraCast stations fetched:', stations);
-      console.log('AzuraCast station IDs:', stations?.map(s => s.id));
-      console.log('AzuraCast station shortcodes:', stations?.map(s => s.shortcode));
-
-      if (!stations || stations.length === 0) {
+      // Use server-side sync endpoint that normalizes URLs
+      console.log('Radio Sync: Calling server-side radio-station-sync endpoint');
+      
+      const { data: result, error } = await supabase.functions.invoke('radio-station-sync');
+      
+      if (error) {
+        console.error('Radio Sync: Edge function error:', error);
         toast({
-          title: 'Nothing Found',
-          description: 'Could not fetch stations from AzuraCast. Check your connection and API key.',
+          title: 'Sync Failed',
+          description: error.message || 'Could not sync channels from AzuraCast.',
           variant: 'destructive',
         });
         return;
       }
 
-      console.log('=== AzuraCast Sync Debug: Stations ===');
-      console.log('Total stations from AzuraCast:', stations.length);
-      stations.forEach(s => console.log(`  - "${s.name}" (id: ${s.id}, shortcode: ${s.shortcode}, public: ${s.is_public})`));
+      console.log('Radio Sync: Result:', result);
 
-      let addedCount = 0;
-      let skippedCount = 0;
-      let failedCount = 0;
-      let firstError: unknown = null;
-      const maxOrder = Math.max(...channels.map(c => c.sort_order), 0);
-
-      for (let i = 0; i < stations.length; i++) {
-        const station = stations[i];
-
-        const shortcode = (station.shortcode || '').trim();
-        const stationId = String(station.id ?? '').trim();
-
-        // If shortcode is missing (unlikely), fall back to station numeric ID.
-        const listenKey = shortcode || stationId;
-        if (!listenKey) {
-          console.warn('AzuraCast station missing id/shortcode:', station);
-          failedCount++;
-          continue;
-        }
-
-        // Prefer AzuraCast-provided listen_url when available
-        const streamUrl = (station.listen_url || `https://radio.gleeworld.org/listen/${listenKey}/radio.mp3`).trim();
-
-        const existingChannel = channels.find(c =>
-          c.stream_url.toLowerCase() === streamUrl.toLowerCase() ||
-          c.name.toLowerCase() === (station.name || '').toLowerCase(),
-        );
-
-        if (existingChannel) {
-          skippedCount++;
-          continue;
-        }
-
-        const { error } = await supabase.from('gw_radio_channels').insert({
-          name: station.name || `Station ${listenKey}`,
-          description: station.description || null,
-          stream_url: streamUrl,
-          icon: 'Radio',
-          color: '#7BAFD4',
-          is_active: station.is_public !== false,
-          is_default: false,
-          sort_order: maxOrder + addedCount + 1,
+      if (result?.success) {
+        toast({
+          title: 'Sync Complete',
+          description: result.message || `Added: ${result.added}, Updated: ${result.updated}`,
         });
-
-        if (error) {
-          failedCount++;
-          firstError = firstError ?? error;
-          console.error('Error adding station:', station.name, error);
-          continue;
-        }
-
-        addedCount++;
+      } else {
+        toast({
+          title: 'Sync Issue',
+          description: result?.error || result?.details || 'Sync completed with issues.',
+          variant: result?.errors?.length > 0 ? 'destructive' : undefined,
+        });
       }
 
-      toast({
-        title: 'Sync Complete',
-        description: `Found ${stations.length} stations. Added ${addedCount}. Skipped ${skippedCount}. Failed ${failedCount}.`,
-        variant: failedCount > 0 ? 'destructive' : undefined,
-      });
-
-      if (failedCount > 0) {
-        console.warn('AzuraCast sync failures (first error):', firstError);
-      }
-
+      // Reload channels list
       fetchData();
     } catch (error) {
       console.error('Error syncing from AzuraCast:', error);
