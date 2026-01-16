@@ -20472,6 +20472,103 @@ export type Database = {
         }
         Relationships: []
       }
+      liturgical_media: {
+        Row: {
+          created_at: string
+          file_type: string | null
+          id: string
+          label: string | null
+          updated_at: string
+          url: string | null
+          week_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_type?: string | null
+          id?: string
+          label?: string | null
+          updated_at?: string
+          url?: string | null
+          week_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_type?: string | null
+          id?: string
+          label?: string | null
+          updated_at?: string
+          url?: string | null
+          week_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liturgical_media_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "liturgical_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      liturgical_music_plan: {
+        Row: {
+          composer: string | null
+          created_at: string
+          id: string
+          key: string | null
+          moment: string | null
+          performance_notes: string | null
+          rehearsal_notes: string | null
+          service_order: number | null
+          status: string | null
+          tempo: string | null
+          title: string | null
+          updated_at: string
+          voicing: string | null
+          week_id: string | null
+        }
+        Insert: {
+          composer?: string | null
+          created_at?: string
+          id?: string
+          key?: string | null
+          moment?: string | null
+          performance_notes?: string | null
+          rehearsal_notes?: string | null
+          service_order?: number | null
+          status?: string | null
+          tempo?: string | null
+          title?: string | null
+          updated_at?: string
+          voicing?: string | null
+          week_id?: string | null
+        }
+        Update: {
+          composer?: string | null
+          created_at?: string
+          id?: string
+          key?: string | null
+          moment?: string | null
+          performance_notes?: string | null
+          rehearsal_notes?: string | null
+          service_order?: number | null
+          status?: string | null
+          tempo?: string | null
+          title?: string | null
+          updated_at?: string
+          voicing?: string | null
+          week_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liturgical_music_plan_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "liturgical_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       liturgical_psalms: {
         Row: {
           created_at: string
@@ -20533,28 +20630,58 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string | null
+          gospel: string | null
           id: string
           lectionary_cycle: string | null
+          liturgical_year: string | null
           notes: string | null
+          psalm: string | null
+          psalm_refrain: string | null
+          psalm_verses: string | null
+          season: string | null
+          sunday_date: string | null
+          sunday_title: string | null
+          theme: string | null
           title: string
+          updated_at: string | null
           week_of: string
         }
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          gospel?: string | null
           id?: string
           lectionary_cycle?: string | null
+          liturgical_year?: string | null
           notes?: string | null
+          psalm?: string | null
+          psalm_refrain?: string | null
+          psalm_verses?: string | null
+          season?: string | null
+          sunday_date?: string | null
+          sunday_title?: string | null
+          theme?: string | null
           title: string
+          updated_at?: string | null
           week_of: string
         }
         Update: {
           created_at?: string | null
           created_by?: string | null
+          gospel?: string | null
           id?: string
           lectionary_cycle?: string | null
+          liturgical_year?: string | null
           notes?: string | null
+          psalm?: string | null
+          psalm_refrain?: string | null
+          psalm_verses?: string | null
+          season?: string | null
+          sunday_date?: string | null
+          sunday_title?: string | null
+          theme?: string | null
           title?: string
+          updated_at?: string | null
           week_of?: string
         }
         Relationships: []
