@@ -129,12 +129,39 @@ Deno.serve(async (req) => {
       'User-Agent': 'GleeWorld-Admin/1.0'
     };
 
-    // Make request to AzuraCast API
-    const azuracastResponse = await fetch(apiUrl, {
-      method,
-      headers: azuracastHeaders,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    // Make request to AzuraCast API with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+    let azuracastResponse: Response;
+    try {
+      azuracastResponse = await fetch(apiUrl, {
+        method,
+        headers: azuracastHeaders,
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error('AzuraCast Proxy: Fetch failed:', fetchError);
+      
+      // Return graceful error for network issues
+      return new Response(
+        JSON.stringify({
+          error: 'Radio server unavailable',
+          details: fetchError instanceof Error && fetchError.name === 'AbortError' 
+            ? 'Request timed out - radio server may be offline' 
+            : 'Network connection failed - radio server may be offline',
+          success: false,
+          offline: true,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
+    }
+    clearTimeout(timeoutId);
 
     console.log('AzuraCast Proxy: Response status:', azuracastResponse.status);
 
