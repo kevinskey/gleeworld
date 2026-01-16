@@ -169,6 +169,7 @@ export const RadioChannelsTab = () => {
       // Fetch all playlists from AzuraCast (channels are playlists in AzuraCast)
       const playlists = await azuraCastService.getPlaylists();
       console.log('AzuraCast playlists fetched:', playlists);
+      console.log('AzuraCast playlist names:', playlists?.map(p => p.name));
 
       if (!playlists || playlists.length === 0) {
         toast({
@@ -178,6 +179,11 @@ export const RadioChannelsTab = () => {
         });
         return;
       }
+
+      // Log all playlist names for debugging
+      console.log('=== AzuraCast Sync Debug ===');
+      console.log('Total playlists from AzuraCast:', playlists.length);
+      playlists.forEach(p => console.log(`  - "${p.name}" (enabled: ${p.is_enabled})`));
 
       let addedCount = 0;
       let skippedCount = 0;
