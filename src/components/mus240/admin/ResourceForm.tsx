@@ -143,9 +143,14 @@ export function ResourceForm({ resource, onSuccess, onCancel }: ResourceFormProp
           <Label htmlFor="url-input">URL</Label>
           <Input
             id="url-input"
-            type="url"
+            type="text"
             value={formData.url}
             onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+            onPaste={(e) => {
+              // Ensure paste works properly
+              const pastedText = e.clipboardData.getData('text');
+              setFormData({ ...formData, url: pastedText });
+            }}
             placeholder="https://example.com"
             required
           />
