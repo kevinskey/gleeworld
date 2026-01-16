@@ -166,24 +166,38 @@ export const RadioChannelsTab = () => {
         return;
       }
 
-      // Fetch all playlists from AzuraCast (channels are playlists in AzuraCast)
+      // Fetch playlists (some "channels" are implemented as playlists)
       const playlists = await azuraCastService.getPlaylists();
       console.log('AzuraCast playlists fetched:', playlists);
       console.log('AzuraCast playlist names:', playlists?.map(p => p.name));
 
-      if (!playlists || playlists.length === 0) {
+      // Fetch stations (some "channels" are implemented as stations)
+      const stations = await azuraCastService.getAllStations();
+      console.log('AzuraCast stations fetched:', stations);
+      console.log('AzuraCast station shortcodes:', stations?.map(s => s.shortcode));
+
+      if ((!playlists || playlists.length === 0) && (!stations || stations.length === 0)) {
         toast({
-          title: 'No Playlists Found',
-          description: 'Could not fetch playlists from AzuraCast. Check your connection.',
+          title: 'Nothing Found',
+          description: 'Could not fetch playlists or stations from AzuraCast. Check your connection.',
           variant: 'destructive',
         });
         return;
       }
 
       // Log all playlist names for debugging
-      console.log('=== AzuraCast Sync Debug ===');
-      console.log('Total playlists from AzuraCast:', playlists.length);
-      playlists.forEach(p => console.log(`  - "${p.name}" (enabled: ${p.is_enabled})`));
+      if (playlists && playlists.length > 0) {
+        console.log('=== AzuraCast Sync Debug: Playlists ===');
+        console.log('Total playlists from AzuraCast:', playlists.length);
+        playlists.forEach(p => console.log(`  - "${p.name}" (short_name: ${p.short_name}, enabled: ${p.is_enabled})`));
+      }
+
+      // Log all station names for debugging
+      if (stations && stations.length > 0) {
+        console.log('=== AzuraCast Sync Debug: Stations ===');
+        console.log('Total stations from AzuraCast:', stations.length);
+        stations.forEach(s => console.log(`  - "${s.name}" (shortcode: ${s.shortcode}, public: ${s.is_public})`));
+      }
 
       let addedCount = 0;
       let skippedCount = 0;
@@ -191,7 +205,8 @@ export const RadioChannelsTab = () => {
       let firstError: unknown = null;
       const maxOrder = Math.max(...channels.map(c => c.sort_order), 0);
 
-      for (let i = 0; i < playlists.length; i++) {
+      // 1) Import playlists as channels
+      for (let i = 0; i < (playlists?.length || 0); i++) {
         const playlist = playlists[i];
 
         // Use AzuraCast playlist.short_name (this is the canonical slug used by AzuraCast)
@@ -235,9 +250,54 @@ export const RadioChannelsTab = () => {
         addedCount++;
       }
 
+      // 2) Import stations as channels (covers cases like "Bowman Scholars")
+      for (let i = 0; i < (stations?.length || 0); i++) {
+        const station = stations[i];
+
+        const shortcode = (station.shortcode || '').trim();
+        if (!shortcode) {
+          console.warn('AzuraCast station missing shortcode:', station);
+          failedCount++;
+          continue;
+        }
+
+        // Prefer AzuraCast-provided listen_url when available
+        const streamUrl = (station.listen_url || `https://radio.gleeworld.org/listen/${shortcode}/radio.mp3`).trim();
+
+        const existingChannel = channels.find(c =>
+          c.stream_url.toLowerCase() === streamUrl.toLowerCase() ||
+          c.name.toLowerCase() === station.name?.toLowerCase(),
+        );
+
+        if (existingChannel) {
+          skippedCount++;
+          continue;
+        }
+
+        const { error } = await supabase.from('gw_radio_channels').insert({
+          name: station.name || shortcode,
+          description: station.description || null,
+          stream_url: streamUrl,
+          icon: 'Radio',
+          color: '#7BAFD4',
+          is_active: station.is_public !== false,
+          is_default: false,
+          sort_order: maxOrder + addedCount + 1,
+        });
+
+        if (error) {
+          failedCount++;
+          firstError = firstError ?? error;
+          console.error('Error adding station:', station.name, error);
+          continue;
+        }
+
+        addedCount++;
+      }
+
       toast({
         title: 'Sync Complete',
-        description: `Found ${playlists.length} playlists. Added ${addedCount}. Skipped ${skippedCount}. Failed ${failedCount}.`,
+        description: `Found ${(playlists?.length || 0)} playlists and ${(stations?.length || 0)} stations. Added ${addedCount}. Skipped ${skippedCount}. Failed ${failedCount}.`,
         variant: failedCount > 0 ? 'destructive' : undefined,
       });
 
