@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,11 +11,27 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Loader2, Calendar, Award, Info } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { format } from 'date-fns';
+
+interface Discussion {
+  id: string;
+  title: string;
+  content: string;
+  created_by: string | null;
+  created_at: string;
+  is_locked: boolean;
+  reply_count: number;
+  course_id: string;
+  due_date: string | null;
+  max_points: number | null;
+  is_graded: boolean | null;
+}
 
 interface CreateDiscussionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   courseId: string;
+  editingDiscussion?: Discussion | null;
 }
 
 const DEFAULT_INSTRUCTIONS = `**Discussion Instructions:**
@@ -41,6 +57,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
   open,
   onOpenChange,
   courseId,
+  editingDiscussion,
 }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -50,6 +67,27 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
   const [maxPoints, setMaxPoints] = useState(10);
   const [dueDate, setDueDate] = useState('');
   const [showInstructions, setShowInstructions] = useState(false);
+
+  const isEditing = !!editingDiscussion;
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editingDiscussion) {
+      setTitle(editingDiscussion.title);
+      setContent(editingDiscussion.content);
+      setIsGraded(editingDiscussion.is_graded ?? true);
+      setMaxPoints(editingDiscussion.max_points ?? 10);
+      if (editingDiscussion.due_date) {
+        // Convert to datetime-local format
+        const date = new Date(editingDiscussion.due_date);
+        setDueDate(format(date, "yyyy-MM-dd'T'HH:mm"));
+      } else {
+        setDueDate('');
+      }
+    } else {
+      resetForm();
+    }
+  }, [editingDiscussion, open]);
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -85,6 +123,37 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingDiscussion) throw new Error('No discussion to update');
+      
+      const { data, error } = await supabase
+        .from('course_discussions')
+        .update({
+          title: title.trim(),
+          content: content.trim(),
+          is_graded: isGraded,
+          max_points: isGraded ? maxPoints : null,
+          due_date: dueDate ? new Date(dueDate).toISOString() : null,
+        })
+        .eq('id', editingDiscussion.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['course-discussions', courseId] });
+      toast.success('Discussion updated successfully');
+      resetForm();
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update discussion');
+    },
+  });
+
   const resetForm = () => {
     setTitle('');
     setContent('');
@@ -103,8 +172,14 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
       toast.error('Max points must be greater than 0');
       return;
     }
-    createMutation.mutate();
+    if (isEditing) {
+      updateMutation.mutate();
+    } else {
+      createMutation.mutate();
+    }
   };
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   const insertInstructions = () => {
     setContent(prev => prev + (prev ? '\n\n' : '') + DEFAULT_INSTRUCTIONS);
@@ -114,7 +189,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Start a New Discussion</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Discussion' : 'Start a New Discussion'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -124,7 +199,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
               placeholder="Enter discussion title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              disabled={createMutation.isPending}
+              disabled={isPending}
             />
           </div>
           
@@ -178,7 +253,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
               placeholder="What would you like students to reflect on?"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              disabled={createMutation.isPending}
+              disabled={isPending}
               rows={8}
             />
           </div>
@@ -194,7 +269,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
               type="datetime-local"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              disabled={createMutation.isPending}
+              disabled={isPending}
             />
           </div>
 
@@ -215,7 +290,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
               id="isGraded"
               checked={isGraded}
               onCheckedChange={setIsGraded}
-              disabled={createMutation.isPending}
+              disabled={isPending}
             />
           </div>
 
@@ -230,7 +305,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
                 max={100}
                 value={maxPoints}
                 onChange={(e) => setMaxPoints(parseInt(e.target.value) || 10)}
-                disabled={createMutation.isPending}
+                disabled={isPending}
               />
               <p className="text-xs text-muted-foreground">
                 Recommended: 10 points (Original Post: 5, Response: 3, Tone/Length: 2)
@@ -243,13 +318,13 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={createMutation.isPending}
+              disabled={isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Create Discussion
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {isEditing ? 'Save Changes' : 'Create Discussion'}
             </Button>
           </DialogFooter>
         </form>
