@@ -7,8 +7,11 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, Church, GripVertical, Loader2, ExternalLink, Eye, EyeOff } from 'lucide-react';
-import { useLykeHouseHero, LykeHouseVideo } from '@/hooks/useLykeHouseHero';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Plus, Edit2, Trash2, Church, Loader2, ExternalLink, Eye, EyeOff, Youtube, Users } from 'lucide-react';
+import { useLykeHouseHero, LykeHouseVideo, YouTubeChannelResult, YouTubeChannelVideo } from '@/hooks/useLykeHouseHero';
 
 // Helper to extract YouTube video ID from various URL formats
 const extractYouTubeId = (input: string): string => {
@@ -32,18 +35,41 @@ const extractYouTubeId = (input: string): string => {
 };
 
 export const LykeHouseHeroManager: React.FC = () => {
-  const { allVideos, loading, addVideo, updateVideo, deleteVideo } = useLykeHouseHero();
+  const { 
+    allVideos, 
+    loading, 
+    fetchingChannel,
+    addVideo, 
+    updateVideo, 
+    deleteVideo,
+    fetchChannelVideos,
+    addVideosFromChannel 
+  } = useLykeHouseHero();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVideo, setEditingVideo] = useState<LykeHouseVideo | null>(null);
+  const [activeTab, setActiveTab] = useState<'video' | 'channel'>('video');
+  
+  // Video form state
   const [formData, setFormData] = useState({
     title: '',
     video_id: '',
     is_active: true,
   });
+  
+  // Channel form state
+  const [channelInput, setChannelInput] = useState('');
+  const [channelResult, setChannelResult] = useState<YouTubeChannelResult | null>(null);
+  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
+  const [addingFromChannel, setAddingFromChannel] = useState(false);
 
   const resetForm = () => {
     setFormData({ title: '', video_id: '', is_active: true });
     setEditingVideo(null);
+    setChannelInput('');
+    setChannelResult(null);
+    setSelectedVideoIds([]);
+    setActiveTab('video');
   };
 
   const handleOpenDialog = (video?: LykeHouseVideo) => {
@@ -54,6 +80,7 @@ export const LykeHouseHeroManager: React.FC = () => {
         video_id: video.video_id,
         is_active: video.is_active ?? true,
       });
+      setActiveTab('video');
     } else {
       resetForm();
     }
@@ -70,6 +97,7 @@ export const LykeHouseHeroManager: React.FC = () => {
       video_url: `https://youtu.be/${videoId}`,
       thumbnail_url: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
       is_active: formData.is_active,
+      source_type: 'video' as const,
     };
 
     if (editingVideo) {
@@ -79,6 +107,41 @@ export const LykeHouseHeroManager: React.FC = () => {
     }
     setIsDialogOpen(false);
     resetForm();
+  };
+
+  const handleFetchChannel = async () => {
+    if (!channelInput.trim()) return;
+    const result = await fetchChannelVideos(channelInput);
+    if (result) {
+      setChannelResult(result);
+      setSelectedVideoIds(result.videos.map(v => v.video_id)); // Select all by default
+    }
+  };
+
+  const handleAddSelectedVideos = async () => {
+    if (!channelResult || selectedVideoIds.length === 0) return;
+    setAddingFromChannel(true);
+    await addVideosFromChannel(channelResult, selectedVideoIds);
+    setAddingFromChannel(false);
+    setIsDialogOpen(false);
+    resetForm();
+  };
+
+  const toggleVideoSelection = (videoId: string) => {
+    setSelectedVideoIds(prev => 
+      prev.includes(videoId) 
+        ? prev.filter(id => id !== videoId)
+        : [...prev, videoId]
+    );
+  };
+
+  const toggleAllVideos = () => {
+    if (!channelResult) return;
+    if (selectedVideoIds.length === channelResult.videos.length) {
+      setSelectedVideoIds([]);
+    } else {
+      setSelectedVideoIds(channelResult.videos.map(v => v.video_id));
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -110,62 +173,225 @@ export const LykeHouseHeroManager: React.FC = () => {
             <Church className="h-5 w-5 text-primary" />
             Lyke House Hero
           </CardTitle>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => handleOpenDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Video
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>{editingVideo ? 'Edit Video' : 'Add Video'}</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>YouTube Video ID or URL</Label>
-                  <Input
-                    value={formData.video_id}
-                    onChange={(e) => setFormData({ ...formData, video_id: e.target.value })}
-                    placeholder="e.g., dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Paste a YouTube URL or just the video ID
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Title (optional)</Label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Video title"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="is-active">Active</Label>
-                  <Switch
-                    id="is-active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                  />
-                </div>
-                {formData.video_id && extractYouTubeId(formData.video_id) && (
-                  <div className="mt-4">
-                    <Label className="mb-2 block">Preview</Label>
-                    <img
-                      src={`https://img.youtube.com/vi/${extractYouTubeId(formData.video_id)}/mqdefault.jpg`}
-                      alt="Video thumbnail preview"
-                      className="w-full rounded-lg"
+              
+              {!editingVideo && (
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'video' | 'channel')}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="video" className="flex items-center gap-2">
+                      <Youtube className="h-4 w-4" />
+                      Single Video
+                    </TabsTrigger>
+                    <TabsTrigger value="channel" className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      From Channel
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="video" className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label>YouTube Video ID or URL</Label>
+                      <Input
+                        value={formData.video_id}
+                        onChange={(e) => setFormData({ ...formData, video_id: e.target.value })}
+                        placeholder="e.g., dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Paste a YouTube URL or just the video ID
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Title (optional)</Label>
+                      <Input
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        placeholder="Video title"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="is-active">Active</Label>
+                      <Switch
+                        id="is-active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                      />
+                    </div>
+                    {formData.video_id && extractYouTubeId(formData.video_id) && (
+                      <div className="mt-4">
+                        <Label className="mb-2 block">Preview</Label>
+                        <img
+                          src={`https://img.youtube.com/vi/${extractYouTubeId(formData.video_id)}/mqdefault.jpg`}
+                          alt="Video thumbnail preview"
+                          className="w-full rounded-lg"
+                        />
+                      </div>
+                    )}
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                      <Button onClick={handleSave} disabled={!formData.video_id}>
+                        Add Video
+                      </Button>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="channel" className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label>YouTube Channel</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={channelInput}
+                          onChange={(e) => setChannelInput(e.target.value)}
+                          placeholder="e.g., @ChannelName or youtube.com/channel/UC..."
+                          className="flex-1"
+                        />
+                        <Button 
+                          onClick={handleFetchChannel} 
+                          disabled={fetchingChannel || !channelInput.trim()}
+                        >
+                          {fetchingChannel ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            'Fetch'
+                          )}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Enter a YouTube channel URL, @handle, or channel ID
+                      </p>
+                    </div>
+                    
+                    {channelResult && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                          <img 
+                            src={channelResult.channel_thumbnail} 
+                            alt={channelResult.channel_title}
+                            className="w-12 h-12 rounded-full"
+                          />
+                          <div>
+                            <p className="font-medium">{channelResult.channel_title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {channelResult.videos.length} videos found
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <Label>Select videos to add</Label>
+                          <Button variant="ghost" size="sm" onClick={toggleAllVideos}>
+                            {selectedVideoIds.length === channelResult.videos.length ? 'Deselect All' : 'Select All'}
+                          </Button>
+                        </div>
+                        
+                        <ScrollArea className="h-64 border rounded-lg">
+                          <div className="p-2 space-y-2">
+                            {channelResult.videos.map((video) => (
+                              <div 
+                                key={video.video_id}
+                                className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-lg cursor-pointer"
+                                onClick={() => toggleVideoSelection(video.video_id)}
+                              >
+                                <Checkbox 
+                                  checked={selectedVideoIds.includes(video.video_id)}
+                                  onCheckedChange={() => toggleVideoSelection(video.video_id)}
+                                />
+                                <img 
+                                  src={video.thumbnail_url} 
+                                  alt={video.title}
+                                  className="w-24 h-14 object-cover rounded"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{video.title}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(video.published_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                        
+                        <div className="flex justify-end gap-2 pt-4">
+                          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                          <Button 
+                            onClick={handleAddSelectedVideos} 
+                            disabled={selectedVideoIds.length === 0 || addingFromChannel}
+                          >
+                            {addingFromChannel ? (
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : null}
+                            Add {selectedVideoIds.length} Video{selectedVideoIds.length !== 1 ? 's' : ''}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!channelResult && !fetchingChannel && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        Enter a channel URL and click Fetch to see available videos
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              )}
+              
+              {editingVideo && (
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>YouTube Video ID or URL</Label>
+                    <Input
+                      value={formData.video_id}
+                      onChange={(e) => setFormData({ ...formData, video_id: e.target.value })}
+                      placeholder="e.g., dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"
                     />
                   </div>
-                )}
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleSave} disabled={!formData.video_id}>
-                  {editingVideo ? 'Update' : 'Add'} Video
-                </Button>
-              </div>
+                  <div className="space-y-2">
+                    <Label>Title (optional)</Label>
+                    <Input
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Video title"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="is-active-edit">Active</Label>
+                    <Switch
+                      id="is-active-edit"
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                    />
+                  </div>
+                  {formData.video_id && extractYouTubeId(formData.video_id) && (
+                    <div className="mt-4">
+                      <Label className="mb-2 block">Preview</Label>
+                      <img
+                        src={`https://img.youtube.com/vi/${extractYouTubeId(formData.video_id)}/mqdefault.jpg`}
+                        alt="Video thumbnail preview"
+                        className="w-full rounded-lg"
+                      />
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSave} disabled={!formData.video_id}>
+                      Update Video
+                    </Button>
+                  </div>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         </div>
@@ -181,6 +407,7 @@ export const LykeHouseHeroManager: React.FC = () => {
                 <TableHead className="w-16">Thumb</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Video ID</TableHead>
+                <TableHead>Source</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
               </TableRow>
@@ -208,6 +435,15 @@ export const LykeHouseHeroManager: React.FC = () => {
                       {video.video_id}
                       <ExternalLink className="h-3 w-3" />
                     </a>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={video.source_type === 'channel' ? 'secondary' : 'outline'}>
+                      {video.source_type === 'channel' ? (
+                        <><Users className="h-3 w-3 mr-1" /> Channel</>
+                      ) : (
+                        <><Youtube className="h-3 w-3 mr-1" /> Direct</>
+                      )}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Button
@@ -248,7 +484,7 @@ export const LykeHouseHeroManager: React.FC = () => {
             <Church className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
             <p className="text-lg font-medium text-foreground mb-2">No videos added yet</p>
             <p className="text-muted-foreground mb-4">
-              Add YouTube videos to display in the Lyke House slider
+              Add YouTube videos individually or import from a channel
             </p>
             <Button onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 mr-2" />

@@ -375,3 +375,6 @@ verify_jwt = true
 
 [functions.bulk-password-reset]
 verify_jwt = true
+
+[functions.youtube-channel-videos]
+verify_jwt = false

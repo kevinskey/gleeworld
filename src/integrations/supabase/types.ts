@@ -20777,11 +20777,13 @@ export type Database = {
       }
       lyke_house_hero: {
         Row: {
+          channel_id: string | null
           created_at: string
           created_by: string | null
           display_order: number | null
           id: string
           is_active: boolean | null
+          source_type: string | null
           thumbnail_url: string | null
           title: string | null
           updated_at: string
@@ -20789,11 +20791,13 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          channel_id?: string | null
           created_at?: string
           created_by?: string | null
           display_order?: number | null
           id?: string
           is_active?: boolean | null
+          source_type?: string | null
           thumbnail_url?: string | null
           title?: string | null
           updated_at?: string
@@ -20801,11 +20805,13 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          channel_id?: string | null
           created_at?: string
           created_by?: string | null
           display_order?: number | null
           id?: string
           is_active?: boolean | null
+          source_type?: string | null
           thumbnail_url?: string | null
           title?: string | null
           updated_at?: string
