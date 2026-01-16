@@ -57,7 +57,9 @@ export const useMus240Enrollment = (semesterOverride?: string) => {
       const { data: gwCourseData, error: gwCourseError } = await supabase
         .from('gw_courses')
         .select('id')
-        .or('course_code.ilike.%MUS 240%,course_code.ilike.%MUS-240%,course_code.eq.MUS 240')
+        .or(
+          'course_code.ilike.%MUS 240%,course_code.ilike.%MUS-240%,course_code.ilike.%MUS240%,course_code.eq.MUS 240,course_code.eq.MUS240',
+        )
         .limit(1)
         .maybeSingle();
 
