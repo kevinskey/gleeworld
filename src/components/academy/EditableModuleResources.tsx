@@ -289,9 +289,9 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3 sm:space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h4 className="text-sm sm:text-base font-semibold uppercase tracking-wide text-muted-foreground">
           Module Resources
         </h4>
         {user && !isLocked && (
@@ -299,16 +299,16 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
             size="sm" 
             variant="outline" 
             onClick={() => setShowAddForm(!showAddForm)}
-            className="h-7 text-xs"
+            className="h-8 sm:h-9 text-xs sm:text-sm"
           >
             {showAddForm ? (
               <>
-                <X className="h-3 w-3 mr-1" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                 Cancel
               </>
             ) : (
               <>
-                <Plus className="h-3 w-3 mr-1" />
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                 Add Resource
               </>
             )}
@@ -379,9 +379,9 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
       )}
 
       {/* Resources List */}
-      <div className="grid gap-2">
+      <div className="grid gap-3 sm:gap-4">
         {resources.length === 0 && !showAddForm ? (
-          <div className="text-center py-4 text-sm text-muted-foreground">
+          <div className="text-center py-6 sm:py-8 text-sm sm:text-base text-muted-foreground border-2 border-dashed rounded-lg">
             No resources yet. {user && 'Click "Add Resource" to create one.'}
           </div>
         ) : (
@@ -494,21 +494,50 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
               );
             }
 
+            const handleResourceClick = () => {
+              if (resource.url) {
+                window.open(resource.url, '_blank', 'noopener,noreferrer');
+              }
+            };
+
+            const getActionLabel = () => {
+              switch (resource.resource_type) {
+                case 'video': return 'Watch';
+                case 'audio': return isMusicResource ? 'Plan Music' : 'Listen';
+                case 'reading': return 'Read';
+                case 'document': return 'Open';
+                default: return 'Open';
+              }
+            };
+
             return (
               <div key={resource.id} className="space-y-1">
                 <div 
-                  className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                  className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-all ${
                     resource.is_completed 
                       ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800/30' 
-                      : 'bg-background hover:bg-muted/50'
+                      : resource.url 
+                        ? 'bg-background hover:bg-muted/50 hover:border-primary/50 cursor-pointer group' 
+                        : 'bg-background hover:bg-muted/50'
                   }`}
+                  onClick={resource.url && !isEditing ? handleResourceClick : undefined}
+                  role={resource.url ? 'button' : undefined}
+                  tabIndex={resource.url ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (resource.url && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      handleResourceClick();
+                    }
+                  }}
                 >
-                  <div className={`p-2 rounded-lg bg-muted ${colorClass}`}>
-                    <Icon className="h-4 w-4" />
+                  <div className={`p-2 sm:p-3 rounded-lg bg-muted ${colorClass} transition-transform group-hover:scale-110`}>
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm truncate">{resource.title}</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-sm sm:text-base lg:text-lg truncate group-hover:text-primary transition-colors">
+                        {resource.title}
+                      </span>
                       <Badge variant="outline" className="text-xs capitalize">
                         {resource.resource_type}
                       </Badge>
@@ -520,33 +549,35 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
                       )}
                     </div>
                     {resource.description && (
-                      <p className="text-xs text-muted-foreground truncate">{resource.description}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mt-1">
+                        {resource.description}
+                      </p>
                     )}
                     {resource.duration && (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
+                      <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                        <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                         {resource.duration}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 sm:gap-2" onClick={(e) => e.stopPropagation()}>
                     {user && !isLocked && (
                       <>
                         <Button 
                           size="sm" 
                           variant="ghost" 
                           onClick={() => setEditingId(resource.id)}
-                          className="h-7 w-7 p-0"
+                          className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                         >
-                          <Edit2 className="h-3 w-3" />
+                          <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                         <Button 
                           size="sm" 
                           variant="ghost" 
                           onClick={() => handleDeleteResource(resource.id)}
-                          className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                          className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-destructive hover:text-destructive"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </>
                     )}
@@ -555,33 +586,44 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
                         size="sm" 
                         variant="ghost" 
                         onClick={() => toggleComplete(resource)}
-                        className="h-7 w-7 p-0"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                       >
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                      </Button>
+                    ) : resource.url ? (
+                      <Button 
+                        size="sm" 
+                        variant="default"
+                        className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+                        onClick={handleResourceClick}
+                      >
+                        {resource.resource_type === 'video' ? (
+                          <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        ) : resource.resource_type === 'audio' ? (
+                          <Headphones className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        ) : (
+                          <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        )}
+                        <span className="hidden sm:inline">{getActionLabel()}</span>
+                      </Button>
+                    ) : isMusicResource ? (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="h-8 sm:h-9 px-3 sm:px-4 text-xs sm:text-sm"
+                        onClick={() => setExpandedMusicLinks(expandedMusicLinks === resource.id ? null : resource.id)}
+                      >
+                        <Music className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="hidden sm:inline">Music Links</span>
                       </Button>
                     ) : (
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        onClick={() => resource.url ? window.open(resource.url, '_blank') : toggleComplete(resource)}
-                        className="h-8 px-3"
+                        onClick={() => toggleComplete(resource)}
+                        className="h-8 sm:h-9 px-3"
                       >
-                        {resource.resource_type === 'video' ? (
-                          <>
-                            <Play className="h-3 w-3 mr-1" />
-                            Watch
-                          </>
-                        ) : resource.resource_type === 'audio' ? (
-                          <>
-                            <Headphones className="h-3 w-3 mr-1" />
-                            Listen
-                          </>
-                        ) : (
-                          <>
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            Open
-                          </>
-                        )}
+                        <CheckCircle2 className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
