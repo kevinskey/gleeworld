@@ -34,37 +34,52 @@ export const useUserRole = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasSecretaryAppRole, setHasSecretaryAppRole] = useState(false);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchUserProfileAndRoles = async () => {
       if (!user) {
         setProfile(null);
+        setHasSecretaryAppRole(false);
         setLoading(false);
         return;
       }
 
       try {
-        const { data, error } = await supabase
-          .from('gw_profiles')
-          .select('id, user_id, email, role, full_name, is_admin, is_super_admin, exec_board_role, is_exec_board, verified')
-          .eq('user_id', user.id)
-          .maybeSingle();
+        // Fetch profile and secretary role in parallel
+        const [profileResult, secretaryResult] = await Promise.all([
+          supabase
+            .from('gw_profiles')
+            .select('id, user_id, email, role, full_name, is_admin, is_super_admin, exec_board_role, is_exec_board, verified')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('app_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .eq('role', 'secretary')
+            .eq('is_active', true)
+            .maybeSingle()
+        ]);
 
-        if (error) {
-          console.error('useUserRole error:', error.message);
+        if (profileResult.error) {
+          console.error('useUserRole error:', profileResult.error.message);
           setProfile(null);
         } else {
-          setProfile(data);
+          setProfile(profileResult.data);
         }
+        
+        setHasSecretaryAppRole(!!secretaryResult.data);
       } catch (error) {
         console.error('useUserRole error:', error);
         setProfile(null);
+        setHasSecretaryAppRole(false);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserProfile();
+    fetchUserProfileAndRoles();
   }, [user]);
 
   /**
@@ -211,31 +226,8 @@ export const useUserRole = () => {
 
   /**
    * Secretary/Librarian - Can manage attendance records
-   * Also checks app_roles table for 'secretary' role
+   * Also checks app_roles table for 'secretary' role (fetched with profile)
    */
-  const [hasSecretaryAppRole, setHasSecretaryAppRole] = useState(false);
-  
-  useEffect(() => {
-    const checkSecretaryRole = async () => {
-      if (!user) {
-        setHasSecretaryAppRole(false);
-        return;
-      }
-      
-      const { data } = await supabase
-        .from('app_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'secretary')
-        .eq('is_active', true)
-        .maybeSingle();
-      
-      setHasSecretaryAppRole(!!data);
-    };
-    
-    checkSecretaryRole();
-  }, [user]);
-  
   const isSecretary = (): boolean => {
     if (!profile) return false;
     if (isAdmin()) return true;
