@@ -187,8 +187,12 @@ export const RadioChannelsTab = () => {
 
       for (let i = 0; i < playlists.length; i++) {
         const playlist = playlists[i];
-        // Construct stream URL from playlist short_name
-        const streamUrl = `https://radio.gleeworld.org/listen/${playlist.short_name}/radio.mp3`;
+        // Convert playlist name to slug format for stream URL (e.g., "Bowman Scholars" -> "bowman_scholars")
+        const slug = playlist.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_|_$/g, '');
+        const streamUrl = `https://radio.gleeworld.org/listen/${slug}/radio.mp3`;
 
         const existingChannel = channels.find(c =>
           c.stream_url.toLowerCase() === streamUrl.toLowerCase() ||
@@ -201,7 +205,7 @@ export const RadioChannelsTab = () => {
         }
 
         const { error } = await supabase.from('gw_radio_channels').insert({
-          name: playlist.name || playlist.short_name || 'Unknown Playlist',
+          name: playlist.name || 'Unknown Playlist',
           description: playlist.description || null,
           stream_url: streamUrl,
           icon: 'Radio',
