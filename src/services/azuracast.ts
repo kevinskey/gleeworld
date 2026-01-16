@@ -628,6 +628,12 @@ class AzuraCastService {
     return await this.makeProxyRequest(`/station/{stationId}/requests`, 'GET', undefined, { returnEmptyOnError: true });
   }
 
+  // Submit a song request using the request_id from getRequestableSongs()
+  async submitSongRequest(requestId: string): Promise<any> {
+    console.log('AzuraCast: Submitting song request:', requestId);
+    return await this.makeProxyRequest(`/station/{stationId}/request/${requestId}`, 'POST');
+  }
+
   // Search for a song in the media library by title
   async searchMedia(query: string): Promise<any[]> {
     console.log('AzuraCast: Searching media for:', query);
