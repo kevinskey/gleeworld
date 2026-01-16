@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown, MessagesSquare } from 'lucide-react';
 import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -43,6 +43,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ModuleToggleManager } from '@/components/mus240/instructor/ModuleToggleManager';
 import { Mus240CalendarManager } from '@/components/mus240/instructor/Mus240CalendarManager';
 import { BulkPasswordReset } from '@/components/mus240/admin/BulkPasswordReset';
+import { DiscussionsSection } from '@/components/course/DiscussionsSection';
+
 export const InstructorConsole = () => {
   const {
     isAdmin,
@@ -161,6 +163,7 @@ export const InstructorConsole = () => {
       label: 'Assessment',
       items: [
         { value: 'assignments', label: 'Assignments', icon: BookOpen },
+        { value: 'discussions', label: 'Discussions', icon: MessagesSquare },
         { value: 'tests', label: 'Tests', icon: ClipboardCheck },
         { value: 'polls', label: 'Polls', icon: BarChart3 },
         { value: 'rubrics', label: 'Rubrics', icon: ListChecks },
@@ -440,6 +443,23 @@ export const InstructorConsole = () => {
                 courseId="mus240"
               />
             </>}
+
+            {activeTab === 'discussions' && (
+              <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <MessagesSquare className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Discussion Forum
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                    Post once, respond once — graded discussions with due dates
+                  </p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <DiscussionsSection courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" />
+                </CardContent>
+              </Card>
+            )}
 
             {activeTab === 'polls' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
