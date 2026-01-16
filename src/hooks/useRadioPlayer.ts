@@ -122,6 +122,9 @@ export const useRadioPlayer = () => {
   const playInFlightRef = useRef(false);
   const playRequestIdRef = useRef(0);
 
+  // Watchdog cooldown: avoid interrupting the initial buffer window (prevents AbortError loops)
+  const lastPlayAttemptAtRef = useRef<number>(0);
+
   const { toast } = useToast();
 
   // Stable stream URLs - memoize to prevent re-computation
@@ -500,6 +503,9 @@ export const useRadioPlayer = () => {
       return;
     }
 
+    // Mark the start of a play attempt so the watchdog doesn't immediately restart us
+    lastPlayAttemptAtRef.current = Date.now();
+
     const requestId = ++playRequestIdRef.current;
     playInFlightRef.current = true;
 
@@ -738,6 +744,9 @@ export const useRadioPlayer = () => {
 
       // Don't pile on while a play() attempt is already running
       if (playInFlightRef.current) return;
+
+      // Give a fresh play attempt time to buffer before we declare it unhealthy
+      if (Date.now() - lastPlayAttemptAtRef.current < 15000) return;
 
       if (state.isPlaying) {
         const currentTime = a.currentTime;
