@@ -232,6 +232,8 @@ const getLiturgicalYear = (date: Date): string => {
 
 const LiturgicalWeekCard: React.FC = () => {
   const [weekData, setWeekData] = useState<LiturgicalWeekData | null>(null);
+  const [readingsOpen, setReadingsOpen] = useState(true);
+  const [feastsOpen, setFeastsOpen] = useState(true);
 
   useEffect(() => {
     const today = new Date();
@@ -287,9 +289,6 @@ const LiturgicalWeekCard: React.FC = () => {
       ? 'hsl(var(--foreground))'
       : '#FFFFFF'
   };
-
-  const [readingsOpen, setReadingsOpen] = useState(true);
-  const [feastsOpen, setFeastsOpen] = useState(true);
 
   return (
     <Card className="overflow-hidden">
