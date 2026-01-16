@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Church, 
   Calendar, 
@@ -9,7 +10,8 @@ import {
   Music,
   Sun,
   Sparkles,
-  Cross
+  Cross,
+  ChevronDown
 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, addDays, isSunday, nextSunday } from 'date-fns';
 
@@ -286,109 +288,116 @@ const LiturgicalWeekCard: React.FC = () => {
       : '#FFFFFF'
   };
 
+  const [readingsOpen, setReadingsOpen] = useState(true);
+  const [feastsOpen, setFeastsOpen] = useState(true);
+
   return (
     <Card className="overflow-hidden">
-      {/* Header with liturgical color */}
+      {/* Header with liturgical color - Enhanced sizing */}
       <div 
-        className="p-4 text-center"
+        className="p-4 sm:p-6 lg:p-8 text-center"
         style={colorStyle}
       >
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Church className="h-5 w-5" />
-          <span className="text-sm font-medium uppercase tracking-wide">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+          <Church className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
+          <span className="text-sm sm:text-base lg:text-lg font-medium uppercase tracking-wide">
             Liturgical Week Profile
           </span>
         </div>
-        <h3 className="text-xl font-bold">{weekData.sundayTitle}</h3>
-        <p className="text-sm opacity-90 mt-1">
+        <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight">{weekData.sundayTitle}</h3>
+        <p className="text-sm sm:text-base lg:text-lg opacity-90 mt-2">
           {format(weekData.sundayDate, 'MMMM d, yyyy')} • Year {weekData.liturgicalYear}
         </p>
       </div>
 
-      <CardContent className="p-4 space-y-4">
-        {/* Season & Color Info */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sun className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{weekData.season}</span>
+      <CardContent className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+        {/* Season & Color Info - Enhanced */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+            <span className="text-sm sm:text-base lg:text-lg font-medium">{weekData.season}</span>
             {weekData.seasonWeek > 0 && (
-              <Badge variant="outline" className="text-xs">Week {weekData.seasonWeek}</Badge>
+              <Badge variant="outline" className="text-xs sm:text-sm">Week {weekData.seasonWeek}</Badge>
             )}
           </div>
           <div className="flex items-center gap-2">
             <div 
-              className="w-4 h-4 rounded-full border-2 border-background shadow-sm"
+              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-background shadow-sm"
               style={{ backgroundColor: weekData.colors.primary }}
             />
-            <span className="text-sm text-muted-foreground">{weekData.colors.name}</span>
+            <span className="text-sm sm:text-base text-muted-foreground">{weekData.colors.name}</span>
           </div>
         </div>
 
-        <Separator />
-
-        {/* Readings */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <BookOpen className="h-4 w-4 text-primary" />
-            <span>Sunday Readings</span>
-          </div>
-          
-          <div className="grid gap-2 text-sm">
-            <div className="flex items-start gap-2 p-2 rounded-md bg-muted/50">
-              <Badge variant="secondary" className="text-xs shrink-0">1st</Badge>
-              <span>{weekData.readings.first}</span>
+        {/* Readings - Collapsible */}
+        <Collapsible open={readingsOpen} onOpenChange={setReadingsOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full py-2 sm:py-3 border-t border-b">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-primary" />
+              <span className="text-base sm:text-lg lg:text-xl font-semibold">Sunday Readings</span>
             </div>
-            
-            <div className="flex items-start gap-2 p-2 rounded-md bg-primary/5 border border-primary/20">
-              <Badge className="text-xs shrink-0 bg-primary/20 text-primary hover:bg-primary/30">Psalm</Badge>
-              <span className="font-medium">{weekData.readings.psalm}</span>
-            </div>
-            
-            {weekData.readings.second && (
-              <div className="flex items-start gap-2 p-2 rounded-md bg-muted/50">
-                <Badge variant="secondary" className="text-xs shrink-0">2nd</Badge>
-                <span>{weekData.readings.second}</span>
+            <ChevronDown className={`h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground transition-transform ${readingsOpen ? 'rotate-180' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-3 sm:pt-4">
+            <div className="grid gap-2 sm:gap-3">
+              <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 lg:p-4 rounded-lg bg-muted/50">
+                <Badge variant="secondary" className="text-xs sm:text-sm shrink-0 mt-0.5">1st</Badge>
+                <span className="text-sm sm:text-base lg:text-lg">{weekData.readings.first}</span>
               </div>
-            )}
-            
-            <div className="flex items-start gap-2 p-2 rounded-md bg-muted/50">
-              <Badge variant="outline" className="text-xs shrink-0 border-primary text-primary">Gospel</Badge>
-              <span>{weekData.readings.gospel}</span>
+              
+              <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 lg:p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <Badge className="text-xs sm:text-sm shrink-0 mt-0.5 bg-primary/20 text-primary hover:bg-primary/30">Psalm</Badge>
+                <span className="text-sm sm:text-base lg:text-lg font-medium">{weekData.readings.psalm}</span>
+              </div>
+              
+              {weekData.readings.second && (
+                <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 lg:p-4 rounded-lg bg-muted/50">
+                  <Badge variant="secondary" className="text-xs sm:text-sm shrink-0 mt-0.5">2nd</Badge>
+                  <span className="text-sm sm:text-base lg:text-lg">{weekData.readings.second}</span>
+                </div>
+              )}
+              
+              <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 lg:p-4 rounded-lg bg-muted/50">
+                <Badge variant="outline" className="text-xs sm:text-sm shrink-0 mt-0.5 border-primary text-primary">Gospel</Badge>
+                <span className="text-sm sm:text-base lg:text-lg">{weekData.readings.gospel}</span>
+              </div>
             </div>
-          </div>
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
 
-        {/* Feast Days */}
+        {/* Feast Days - Collapsible */}
         {weekData.feastDays.length > 0 && (
-          <>
-            <Separator />
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Sparkles className="h-4 w-4 text-amber-500" />
-                <span>Feast Days This Week</span>
+          <Collapsible open={feastsOpen} onOpenChange={setFeastsOpen}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full py-2 sm:py-3 border-t border-b">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-amber-500" />
+                <span className="text-base sm:text-lg lg:text-xl font-semibold">Feast Days This Week</span>
               </div>
-              <div className="space-y-1">
+              <ChevronDown className={`h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground transition-transform ${feastsOpen ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-3 sm:pt-4">
+              <div className="space-y-2 sm:space-y-3">
                 {weekData.feastDays.map((feast, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-sm p-2 rounded-md bg-amber-50 dark:bg-amber-900/10">
-                    <div className="flex items-center gap-2">
-                      <Cross className="h-3 w-3 text-amber-600" />
-                      <span className="font-medium">{feast.name}</span>
+                  <div key={idx} className="flex items-center justify-between p-2 sm:p-3 lg:p-4 rounded-lg bg-amber-50 dark:bg-amber-900/10">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Cross className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                      <span className="text-sm sm:text-base lg:text-lg font-medium">{feast.name}</span>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <span className="text-xs">{format(feast.date, 'EEE, MMM d')}</span>
-                      <Badge variant="outline" className="text-xs">{feast.rank}</Badge>
+                      <span className="text-xs sm:text-sm">{format(feast.date, 'EEE, MMM d')}</span>
+                      <Badge variant="outline" className="text-xs sm:text-sm">{feast.rank}</Badge>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          </>
+            </CollapsibleContent>
+          </Collapsible>
         )}
 
-        {/* Music suggestions hint */}
-        <div className="pt-2 border-t">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Music className="h-3 w-3" />
+        {/* Music suggestions hint - Enhanced */}
+        <div className="pt-3 sm:pt-4 border-t">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm lg:text-base text-muted-foreground">
+            <Music className="h-4 w-4 sm:h-5 sm:w-5" />
             <span>Select hymns for this Sunday in the Modules tab → Order of Mass</span>
           </div>
         </div>
