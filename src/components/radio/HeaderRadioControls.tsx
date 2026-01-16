@@ -228,7 +228,7 @@ export const HeaderRadioControls = () => {
                               preset={preset}
                               slotNumber={slotNumber}
                               isSelected={isSelected}
-                              isLoading={isLoading || presetsLoading}
+                              isLoading={presetsLoading || channelsLoading}
                               onClick={() => {
                                 if (channel) {
                                   handleChannelChange(channel);
