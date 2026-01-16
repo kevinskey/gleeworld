@@ -96,9 +96,26 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   useEffect(() => {
     if (!enrollmentLoading && !isEnrolled && !isAdmin) {
       const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
-      navigate(`/academy/${courseSlug}/onboarding`, { replace: true });
+      const target = `/academy/${courseSlug}/onboarding`;
+      console.log('[UnifiedCoursePage] Redirecting to onboarding', {
+        from: location.pathname,
+        courseCode: course.courseCode,
+        enrollmentLoading,
+        isEnrolled,
+        isAdmin,
+        target,
+      });
+      navigate(target, { replace: true });
+    } else {
+      console.log('[UnifiedCoursePage] No onboarding redirect', {
+        path: location.pathname,
+        courseCode: course.courseCode,
+        enrollmentLoading,
+        isEnrolled,
+        isAdmin,
+      });
     }
-  }, [enrollmentLoading, isEnrolled, isAdmin, course.courseCode, navigate]);
+  }, [enrollmentLoading, isEnrolled, isAdmin, course.courseCode, navigate, location.pathname]);
 
   const checkEnrollmentAndRole = async () => {
     if (!user) {
@@ -191,7 +208,25 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           }
         }
 
-        setIsEnrolled(!!mus240Enrollment || gwEnrolled || adminLikeAccess);
+        const enrolledValue = !!mus240Enrollment || gwEnrolled || adminLikeAccess;
+        console.log('[UnifiedCoursePage] MUS240 enrollment check', {
+          userId: user.id,
+          currentSemester,
+          courseId: course.id,
+          courseCode: course.courseCode,
+          profileRole: profile?.role,
+          profileId: profile?.id,
+          isAdminFlag: profile?.is_admin,
+          isSuperAdminFlag: profile?.is_super_admin,
+          hasCourseStaffAccess,
+          adminLikeAccess,
+          hasLegacyEnrollment: !!mus240Enrollment,
+          hasGwCourse: !!gwCourseData?.id,
+          gwEnrolled,
+          enrolledValue,
+        });
+
+        setIsEnrolled(enrolledValue);
         setEnrollmentLoading(false);
         return;
       }
