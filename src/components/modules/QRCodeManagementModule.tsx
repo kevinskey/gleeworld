@@ -251,73 +251,32 @@ export const QRCodeManagementModule = () => {
     );
   };
 
-  // Mobile Stats Summary
-  const MobileStats = () => (
-    <div className="grid grid-cols-2 gap-3 mb-4">
-      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-4 border border-primary/20">
-        <div className="flex items-center gap-2 mb-1">
-          <Scan className="h-4 w-4 text-primary" />
-          <span className="text-xs text-muted-foreground">Total Scans</span>
-        </div>
-        <div className="text-2xl font-bold">{stats.totalScans}</div>
+  // Compact Stats Bar - minimal footprint
+  const CompactStats = () => (
+    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 p-2 bg-muted/30 rounded-lg border">
+      <div className="flex items-center gap-1.5">
+        <QrCode className="h-3.5 w-3.5 text-primary" />
+        <span className="text-xs text-muted-foreground">Generated:</span>
+        <span className="text-xs font-semibold">{stats.totalGenerated}</span>
       </div>
-      <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-xl p-4 border border-green-500/20">
-        <div className="flex items-center gap-2 mb-1">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <span className="text-xs text-muted-foreground">Active QR</span>
-        </div>
-        <div className="text-2xl font-bold text-green-600">{stats.activeTokens}</div>
+      <div className="hidden sm:block w-px h-4 bg-border" />
+      <div className="flex items-center gap-1.5">
+        <Scan className="h-3.5 w-3.5 text-blue-500" />
+        <span className="text-xs text-muted-foreground">Scans:</span>
+        <span className="text-xs font-semibold">{stats.totalScans}</span>
       </div>
-    </div>
-  );
-
-  // Desktop Stats
-  const DesktopStats = () => (
-    <div className="grid grid-cols-4 gap-4 mb-6">
-      <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Generated</p>
-              <p className="text-2xl font-bold">{stats.totalGenerated}</p>
-            </div>
-            <QrCode className="h-8 w-8 text-primary/60" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="bg-gradient-to-br from-blue-500/5 to-transparent border-blue-500/20">
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Scans</p>
-              <p className="text-2xl font-bold">{stats.totalScans}</p>
-            </div>
-            <BarChart className="h-8 w-8 text-blue-500/60" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="bg-gradient-to-br from-green-500/5 to-transparent border-green-500/20">
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Active</p>
-              <p className="text-2xl font-bold text-green-600">{stats.activeTokens}</p>
-            </div>
-            <CheckCircle2 className="h-8 w-8 text-green-500/60" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="bg-gradient-to-br from-orange-500/5 to-transparent border-orange-500/20">
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Expired</p>
-              <p className="text-2xl font-bold text-orange-600">{stats.expiredTokens}</p>
-            </div>
-            <Clock className="h-8 w-8 text-orange-500/60" />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="hidden sm:block w-px h-4 bg-border" />
+      <div className="flex items-center gap-1.5">
+        <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+        <span className="text-xs text-muted-foreground">Active:</span>
+        <span className="text-xs font-semibold text-green-600">{stats.activeTokens}</span>
+      </div>
+      <div className="hidden sm:block w-px h-4 bg-border" />
+      <div className="flex items-center gap-1.5">
+        <Clock className="h-3.5 w-3.5 text-orange-500" />
+        <span className="text-xs text-muted-foreground">Expired:</span>
+        <span className="text-xs font-semibold text-orange-600">{stats.expiredTokens}</span>
+      </div>
     </div>
   );
 
@@ -338,8 +297,8 @@ export const QRCodeManagementModule = () => {
         </div>
       </div>
 
-      {/* Stats - Responsive */}
-      {isMobile ? <MobileStats /> : <DesktopStats />}
+      {/* Compact Stats Bar */}
+      <CompactStats />
 
       {/* Mobile-First Tabs */}
       <Tabs defaultValue="generator" className="w-full">
