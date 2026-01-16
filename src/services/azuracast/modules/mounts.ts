@@ -97,13 +97,24 @@ export async function getHlsStreams(stationId?: string): Promise<unknown[]> {
 /**
  * Get remote relays
  */
-export async function getRemoteRelays(stationId?: string): Promise<unknown[]> {
-  return apiClient.request<unknown[]>(
+export async function getRemoteRelays(stationId?: string): Promise<AzuraCastRemoteRelay[]> {
+  return apiClient.request<AzuraCastRemoteRelay[]>(
     `/station/{stationId}/remotes`,
     'GET',
     undefined,
-    { stationId }
+    { returnEmptyOnError: true, stationId }
   );
+}
+
+export interface AzuraCastRemoteRelay {
+  id: number;
+  display_name: string;
+  url: string;
+  mount?: string;
+  is_visible_on_public_pages: boolean;
+  enable_autodj?: boolean;
+  autodj_format?: string;
+  autodj_bitrate?: number;
 }
 
 export interface CreateRemoteRelayData {

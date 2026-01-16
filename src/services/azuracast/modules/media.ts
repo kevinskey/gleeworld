@@ -5,7 +5,7 @@
 
 import { apiClient } from '../api-client';
 import { supabase } from '@/integrations/supabase/client';
-import type { AzuraCastMediaFile, AzuraCastFileEntry, MediaMetadata } from '../types';
+import type { AzuraCastMediaFile, AzuraCastFileEntry, MediaMetadata, MediaUploadResult } from '../types';
 
 /**
  * Get files from a specific path in the media library
@@ -243,7 +243,7 @@ export async function uploadMediaFromUrl(
   title?: string,
   artist?: string,
   onProgress?: (status: string, progress?: number) => void
-): Promise<unknown> {
+): Promise<MediaUploadResult> {
   console.log('AzuraCast: Uploading media from URL:', fileUrl);
   
   const { data: { session } } = await supabase.auth.getSession();

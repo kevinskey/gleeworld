@@ -45,7 +45,7 @@ import {
 interface Playlist {
   id: number;
   name: string;
-  description: string;
+  description?: string;
   is_enabled: boolean;
   type: string;
   weight: number;
@@ -82,8 +82,11 @@ interface Mount {
   display_name: string;
   is_default: boolean;
   is_visible_on_public_pages: boolean;
-  url: string;
-  listeners: { current: number; unique: number; total: number };
+  url?: string;
+  relay_url?: string | null;
+  listeners?: { current: number; unique: number; total: number };
+  listeners_unique?: number;
+  listeners_total?: number;
 }
 
 interface Listener {

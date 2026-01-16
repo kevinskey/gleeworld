@@ -9,16 +9,18 @@ export interface AzuraCastStation {
   id: number;
   name: string;
   shortcode: string;
+  short_name?: string;
   description: string;
   frontend: string;
   backend: string;
   listen_url: string;
   is_public: boolean;
-  mounts: AzuraCastMount[];
+  mounts: AzuraCastStationMount[];
   remotes: unknown[];
 }
 
-export interface AzuraCastMount {
+/** Mount as returned in station.mounts (simplified) */
+export interface AzuraCastStationMount {
   id: number;
   name: string;
   url: string;
@@ -94,6 +96,7 @@ export interface AzuraCastNowPlaying {
 export interface AzuraCastPlaylist {
   id: number;
   name: string;
+  description?: string;
   type: 'default' | 'scheduled' | 'once_per_x_songs' | 'once_per_x_minutes';
   source: string;
   order: string;
@@ -137,6 +140,7 @@ export interface AzuraCastFileEntry {
   type: 'file' | 'dir' | 'media' | 'directory';
   path: string;
   is_dir?: boolean;
+  id?: number;
   media?: AzuraCastMediaFile;
 }
 
@@ -145,6 +149,15 @@ export interface MediaMetadata {
   artist?: string;
   album?: string;
   genre?: string;
+}
+
+// Upload result from the upload edge function
+export interface MediaUploadResult {
+  id?: number;
+  mediaId?: number;
+  media_id?: number;
+  success?: boolean;
+  message?: string;
 }
 
 // ============= Streamer Types =============
@@ -209,6 +222,56 @@ export interface CreateScheduleData {
   start_date?: string;
   end_date?: string;
   days?: number[];
+}
+
+// ============= Station Config Types =============
+
+export interface AzuraCastStationConfig {
+  id: number;
+  name: string;
+  shortcode: string;
+  description: string;
+  frontend: string;
+  backend: string;
+  genre: string;
+  url: string;
+  timezone: string;
+  enable_public_page: boolean;
+  enable_on_demand: boolean;
+  default_album_art_url: string | null;
+}
+
+// ============= Listener Types =============
+
+export interface AzuraCastListener {
+  id: number;
+  ip: string;
+  user_agent: string;
+  mount_id: number;
+  mount_name: string;
+  mount_is_local: boolean;
+  connected_on: number;
+  connected_time: number;
+  location?: {
+    city?: string;
+    region?: string;
+    country?: string;
+    lat?: number;
+    lon?: number;
+  };
+}
+
+// ============= Remote Relay Types =============
+
+export interface AzuraCastRemoteRelay {
+  id: number;
+  display_name: string;
+  url: string;
+  mount?: string;
+  is_visible_on_public_pages: boolean;
+  enable_autodj?: boolean;
+  autodj_format?: string;
+  autodj_bitrate?: number;
 }
 
 // ============= API Response Types =============
