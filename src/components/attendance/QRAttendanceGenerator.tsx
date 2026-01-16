@@ -296,7 +296,7 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       <CardContent className="space-y-6">
         {/* Event Selection */}
         <div className="space-y-2">
-          <Label htmlFor="event-select">Select Event/Class</Label>
+          <Label htmlFor="event-select" className="text-base font-medium">Select Event/Class</Label>
           <Select value={selectedEvent} onValueChange={setSelectedEvent}>
             <SelectTrigger>
               <SelectValue placeholder="Choose an event to generate QR code for..." />
