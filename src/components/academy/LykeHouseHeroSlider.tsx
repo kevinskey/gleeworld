@@ -37,7 +37,8 @@ export const LykeHouseHeroSlider: React.FC = () => {
   const scroll = (direction: 'left' | 'right') => {
     const container = scrollContainerRef.current;
     if (container) {
-      const scrollAmount = container.clientWidth * 0.8;
+      // Scroll by full width to move one video at a time
+      const scrollAmount = container.clientWidth;
       container.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth',
@@ -90,16 +91,16 @@ export const LykeHouseHeroSlider: React.FC = () => {
           </Button>
         )}
 
-        {/* Horizontal Scroll Container */}
+        {/* Horizontal Scroll Container - Full width single video */}
         <div
           ref={scrollContainerRef}
-          className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-4 snap-x snap-mandatory"
+          className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {videos.map((video) => (
             <div
               key={video.id}
-              className="flex-shrink-0 w-[280px] snap-start"
+              className="flex-shrink-0 w-full snap-start px-4 pb-4"
             >
               {playingId === video.id ? (
                 <div className="aspect-video rounded-lg overflow-hidden bg-black">
