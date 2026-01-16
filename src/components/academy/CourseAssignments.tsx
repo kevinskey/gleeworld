@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,8 +28,14 @@ interface Assignment {
 
 export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, isEnrolled }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleStartAssignment = (assignment: Assignment) => {
+    // Navigate to MUS-240 assignment submission page
+    navigate(`/mus-240/assignments/${assignment.id}`);
+  };
 
   useEffect(() => {
     if (isEnrolled) {
@@ -158,7 +165,12 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
                     <span>{assignment.points} points</span>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-accent">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-border text-foreground hover:bg-accent"
+                  onClick={() => handleStartAssignment(assignment)}
+                >
                   {assignment.submission ? 'View' : 'Start'}
                 </Button>
               </div>
