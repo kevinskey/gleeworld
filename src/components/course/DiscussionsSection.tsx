@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { CreateDiscussionDialog } from './CreateDiscussionDialog';
 import { DiscussionThread } from './DiscussionThread';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Discussion {
   id: string;
@@ -27,8 +28,12 @@ interface DiscussionsSectionProps {
 
 export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId }) => {
   const { user } = useAuth();
+  const { isInstructor, isAdmin } = useUserRole();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedDiscussion, setSelectedDiscussion] = useState<Discussion | null>(null);
+
+  // Only instructors and admins can create discussions
+  const canCreateDiscussion = isInstructor() || isAdmin();
 
   const { data: discussions, isLoading } = useQuery({
     queryKey: ['course-discussions', courseId],
@@ -67,7 +72,7 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
             Engage with your classmates and instructor
           </p>
         </div>
-        {user && (
+        {canCreateDiscussion && (
           <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New Discussion
@@ -116,9 +121,11 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
               <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="font-medium text-lg mb-2">No discussions yet</h3>
               <p className="text-muted-foreground mb-4">
-                Start a conversation with your classmates!
+                {canCreateDiscussion 
+                  ? "Start a conversation with your students!"
+                  : "Check back later for discussions from your instructor."}
               </p>
-              {user && (
+              {canCreateDiscussion && (
                 <Button onClick={() => setCreateDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Start First Discussion
