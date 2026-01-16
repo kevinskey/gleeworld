@@ -9,13 +9,33 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Loader2, Calendar, Award } from 'lucide-react';
+import { Loader2, Calendar, Award, Info } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface CreateDiscussionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   courseId: string;
 }
+
+const DEFAULT_INSTRUCTIONS = `**Discussion Instructions:**
+
+Post one original reflection responding to the prompts below. Your post should add a clear perspective, not summarize history.
+
+Then, respond thoughtfully to at least one classmate by engaging their idea—agreeing, questioning, or extending it.
+
+This is a conversation, not a debate. There are no "right" answers.
+
+**What Counts as a Strong Original Post:**
+- References at least two different eras of music
+- Uses listening language ("I hear…," "This feels like…," "The music assumes…")
+- Makes one clear claim or question
+
+**What Counts as a Strong Response:**
+- Builds on a peer's idea
+- Gently challenges an assumption
+- Connects their comment to a different era of music
+- 3–5 sentences is enough`;
 
 export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
   open,
@@ -26,9 +46,10 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [isGraded, setIsGraded] = useState(false);
+  const [isGraded, setIsGraded] = useState(true);
   const [maxPoints, setMaxPoints] = useState(10);
   const [dueDate, setDueDate] = useState('');
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -67,7 +88,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
   const resetForm = () => {
     setTitle('');
     setContent('');
-    setIsGraded(false);
+    setIsGraded(true);
     setMaxPoints(10);
     setDueDate('');
   };
@@ -85,9 +106,13 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
     createMutation.mutate();
   };
 
+  const insertInstructions = () => {
+    setContent(prev => prev + (prev ? '\n\n' : '') + DEFAULT_INSTRUCTIONS);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Start a New Discussion</DialogTitle>
         </DialogHeader>
@@ -102,15 +127,59 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
               disabled={createMutation.isPending}
             />
           </div>
+          
+          {/* Instructions Helper */}
+          <Collapsible open={showInstructions} onOpenChange={setShowInstructions}>
+            <CollapsibleTrigger asChild>
+              <Button type="button" variant="outline" size="sm" className="w-full justify-between">
+                <span className="flex items-center gap-2">
+                  <Info className="h-4 w-4" />
+                  Recommended Discussion Structure
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {showInstructions ? 'Hide' : 'Show'}
+                </span>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <div className="p-4 bg-muted/50 rounded-lg text-sm space-y-3">
+                <p className="font-semibold text-primary">Post once. Respond once.</p>
+                <p className="text-muted-foreground">
+                  This structure encourages voice + listening—not performative posting or parallel monologues.
+                </p>
+                <div className="grid gap-2 text-xs">
+                  <div className="p-2 bg-background rounded">
+                    <strong>Grading Rubric:</strong>
+                    <ul className="mt-1 space-y-1 list-disc list-inside text-muted-foreground">
+                      <li><strong>Original Post:</strong> Clear, reflective, engages music</li>
+                      <li><strong>Response:</strong> Thoughtful engagement with peer</li>
+                      <li><strong>Tone:</strong> Respectful, curious</li>
+                      <li><strong>Length:</strong> Concise, not padded</li>
+                    </ul>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={insertInstructions}
+                  className="w-full"
+                >
+                  Insert Default Instructions into Content
+                </Button>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
           <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
+            <Label htmlFor="content">Content & Prompts</Label>
             <Textarea
               id="content"
-              placeholder="What would you like to discuss?"
+              placeholder="What would you like students to reflect on?"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               disabled={createMutation.isPending}
-              rows={6}
+              rows={8}
             />
           </div>
 
@@ -118,7 +187,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
           <div className="space-y-2">
             <Label htmlFor="dueDate" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Due Date (Optional)
+              Due Date
             </Label>
             <Input
               id="dueDate"
@@ -138,7 +207,7 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
                   Graded Discussion
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Enable grading for student participation
+                  Post once + respond once structure
                 </p>
               </div>
             </div>
@@ -163,6 +232,9 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
                 onChange={(e) => setMaxPoints(parseInt(e.target.value) || 10)}
                 disabled={createMutation.isPending}
               />
+              <p className="text-xs text-muted-foreground">
+                Recommended: 10 points (Original Post: 5, Response: 3, Tone/Length: 2)
+              </p>
             </div>
           )}
 
