@@ -43,6 +43,9 @@ const GradesAdmin = React.lazy(() => import('@/components/mus240/instructor/Grad
 const AllVideosGrid = React.lazy(() => import('@/components/youtube/AllVideosGrid').then(m => ({
   default: m.AllVideosGrid
 })));
+const LiturgicalPlanner = React.lazy(() => import('./planner/LiturgicalPlanner').then(m => ({
+  default: m.LiturgicalPlanner
+})));
 interface UnifiedCoursePageProps {
   course: AcademyCourse;
 }
@@ -433,6 +436,12 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {activeTab === 'modules' && (
               <CourseModules courseId={course.id} isEnrolled={isEnrolled || isAdmin} isAdmin={isAdmin} />
+            )}
+
+            {activeTab === 'planner' && course.courseCode === 'LH 100' && (
+              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}>
+                <LiturgicalPlanner isAdmin={isAdmin} />
+              </React.Suspense>
             )}
 
             {activeTab === 'tests' && <CourseTestsSection courseId={course.id} legacyCourseId={course.courseCode.toLowerCase().replace(' ', '')} />}
