@@ -155,7 +155,9 @@ export const RadioChannelsTab = () => {
     }
   };
 
-  // Sync channels from AzuraCast playlists
+  // Sync channels from AzuraCast stations
+  // NOTE: In AzuraCast, "listen" URLs are station-based (not playlist-based).
+  // Your admin UI uses channels as stations, so we sync stations into gw_radio_channels.
   const syncFromAzuraCast = async () => {
     setIsSyncing(true);
     try {
@@ -176,38 +178,25 @@ export const RadioChannelsTab = () => {
         return;
       }
 
-      // Fetch playlists (some "channels" are implemented as playlists)
-      const playlists = await azuraCastService.getPlaylists();
-      console.log('AzuraCast playlists fetched:', playlists);
-      console.log('AzuraCast playlist names:', playlists?.map(p => p.name));
-
-      // Fetch stations (some "channels" are implemented as stations)
+      // Fetch all stations from AzuraCast.
+      // Stations can be referenced by numeric ID (e.g. /station/23) or shortcode.
       const stations = await azuraCastService.getAllStations();
       console.log('AzuraCast stations fetched:', stations);
+      console.log('AzuraCast station IDs:', stations?.map(s => s.id));
       console.log('AzuraCast station shortcodes:', stations?.map(s => s.shortcode));
 
-      if ((!playlists || playlists.length === 0) && (!stations || stations.length === 0)) {
+      if (!stations || stations.length === 0) {
         toast({
           title: 'Nothing Found',
-          description: 'Could not fetch playlists or stations from AzuraCast. Check your connection.',
+          description: 'Could not fetch stations from AzuraCast. Check your connection and API key.',
           variant: 'destructive',
         });
         return;
       }
 
-      // Log all playlist names for debugging
-      if (playlists && playlists.length > 0) {
-        console.log('=== AzuraCast Sync Debug: Playlists ===');
-        console.log('Total playlists from AzuraCast:', playlists.length);
-        playlists.forEach(p => console.log(`  - "${p.name}" (short_name: ${p.short_name}, enabled: ${p.is_enabled})`));
-      }
-
-      // Log all station names for debugging
-      if (stations && stations.length > 0) {
-        console.log('=== AzuraCast Sync Debug: Stations ===');
-        console.log('Total stations from AzuraCast:', stations.length);
-        stations.forEach(s => console.log(`  - "${s.name}" (shortcode: ${s.shortcode}, public: ${s.is_public})`));
-      }
+      console.log('=== AzuraCast Sync Debug: Stations ===');
+      console.log('Total stations from AzuraCast:', stations.length);
+      stations.forEach(s => console.log(`  - "${s.name}" (id: ${s.id}, shortcode: ${s.shortcode}, public: ${s.is_public})`));
 
       let addedCount = 0;
       let skippedCount = 0;
@@ -215,68 +204,26 @@ export const RadioChannelsTab = () => {
       let firstError: unknown = null;
       const maxOrder = Math.max(...channels.map(c => c.sort_order), 0);
 
-      // 1) Import playlists as channels
-      for (let i = 0; i < (playlists?.length || 0); i++) {
-        const playlist = playlists[i];
-
-        // Use AzuraCast playlist.short_name (this is the canonical slug used by AzuraCast)
-        const shortName = (playlist.short_name || '').trim();
-        if (!shortName) {
-          console.warn('AzuraCast playlist missing short_name:', playlist);
-          failedCount++;
-          continue;
-        }
-
-        const streamUrl = `https://radio.gleeworld.org/listen/${shortName}/radio.mp3`;
-
-        const existingChannel = channels.find(c =>
-          c.stream_url.toLowerCase() === streamUrl.toLowerCase() ||
-          c.name.toLowerCase() === playlist.name?.toLowerCase(),
-        );
-
-        if (existingChannel) {
-          skippedCount++;
-          continue;
-        }
-
-        const { error } = await supabase.from('gw_radio_channels').insert({
-          name: playlist.name || 'Unknown Playlist',
-          description: playlist.description || null,
-          stream_url: streamUrl,
-          icon: 'Radio',
-          color: '#7BAFD4',
-          is_active: playlist.is_enabled !== false,
-          is_default: false,
-          sort_order: maxOrder + addedCount + 1,
-        });
-
-        if (error) {
-          failedCount++;
-          firstError = firstError ?? error;
-          console.error('Error adding playlist:', playlist.name, error);
-          continue;
-        }
-
-        addedCount++;
-      }
-
-      // 2) Import stations as channels (covers cases like "Bowman Scholars")
-      for (let i = 0; i < (stations?.length || 0); i++) {
+      for (let i = 0; i < stations.length; i++) {
         const station = stations[i];
 
         const shortcode = (station.shortcode || '').trim();
-        if (!shortcode) {
-          console.warn('AzuraCast station missing shortcode:', station);
+        const stationId = String(station.id ?? '').trim();
+
+        // If shortcode is missing (unlikely), fall back to station numeric ID.
+        const listenKey = shortcode || stationId;
+        if (!listenKey) {
+          console.warn('AzuraCast station missing id/shortcode:', station);
           failedCount++;
           continue;
         }
 
         // Prefer AzuraCast-provided listen_url when available
-        const streamUrl = (station.listen_url || `https://radio.gleeworld.org/listen/${shortcode}/radio.mp3`).trim();
+        const streamUrl = (station.listen_url || `https://radio.gleeworld.org/listen/${listenKey}/radio.mp3`).trim();
 
         const existingChannel = channels.find(c =>
           c.stream_url.toLowerCase() === streamUrl.toLowerCase() ||
-          c.name.toLowerCase() === station.name?.toLowerCase(),
+          c.name.toLowerCase() === (station.name || '').toLowerCase(),
         );
 
         if (existingChannel) {
@@ -285,7 +232,7 @@ export const RadioChannelsTab = () => {
         }
 
         const { error } = await supabase.from('gw_radio_channels').insert({
-          name: station.name || shortcode,
+          name: station.name || `Station ${listenKey}`,
           description: station.description || null,
           stream_url: streamUrl,
           icon: 'Radio',
@@ -307,7 +254,7 @@ export const RadioChannelsTab = () => {
 
       toast({
         title: 'Sync Complete',
-        description: `Found ${(playlists?.length || 0)} playlists and ${(stations?.length || 0)} stations. Added ${addedCount}. Skipped ${skippedCount}. Failed ${failedCount}.`,
+        description: `Found ${stations.length} stations. Added ${addedCount}. Skipped ${skippedCount}. Failed ${failedCount}.`,
         variant: failedCount > 0 ? 'destructive' : undefined,
       });
 
