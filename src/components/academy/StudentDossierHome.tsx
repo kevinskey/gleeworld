@@ -310,6 +310,23 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
             </Sheet>
           </div>
         </Card>
+
+        {/* YouTube Video - Only for LH 100 */}
+        {isLH100 && (
+          <Card className="w-full md:w-1/2 overflow-hidden">
+            <CardContent className="p-0">
+              <div className="aspect-video w-full">
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                  title="LH 100 Featured Video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Main Content Grid */}
