@@ -63,7 +63,8 @@ export const useMus240Enrollment = (semesterOverride?: string) => {
 
       let isEnrolledInGw = false;
       if (gwCourseData && !gwCourseError) {
-        const { data: gwEnrollmentData, error: gwEnrollmentError } = await supabase
+        // First try by user_id
+        const { data: gwEnrollmentByUserId } = await supabase
           .from('gw_course_enrollments')
           .select('id, enrollment_status')
           .eq('course_id', gwCourseData.id)
@@ -71,9 +72,31 @@ export const useMus240Enrollment = (semesterOverride?: string) => {
           .eq('enrollment_status', 'enrolled')
           .maybeSingle();
 
-        if (!gwEnrollmentError && gwEnrollmentData) {
+        if (gwEnrollmentByUserId) {
           isEnrolledInGw = true;
-          console.log('Found MUS 240 enrollment in gw_course_enrollments');
+          console.log('Found MUS 240 enrollment in gw_course_enrollments by user_id');
+        } else {
+          // Also check by student_profile_id (some enrollments use profile ID instead of user ID)
+          const { data: profileData } = await supabase
+            .from('gw_profiles')
+            .select('id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (profileData) {
+            const { data: gwEnrollmentByProfileId } = await supabase
+              .from('gw_course_enrollments')
+              .select('id, enrollment_status')
+              .eq('course_id', gwCourseData.id)
+              .eq('student_profile_id', profileData.id)
+              .eq('enrollment_status', 'enrolled')
+              .maybeSingle();
+
+            if (gwEnrollmentByProfileId) {
+              isEnrolledInGw = true;
+              console.log('Found MUS 240 enrollment in gw_course_enrollments by student_profile_id');
+            }
+          }
         }
       }
 

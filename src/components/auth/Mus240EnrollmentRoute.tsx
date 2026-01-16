@@ -11,12 +11,13 @@ interface Mus240EnrollmentRouteProps {
 
 export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) => {
   const { user, loading: authLoading } = useAuth();
-  const { isAdmin, isSuperAdmin, loading: roleLoading, profile } = useUserRole();
+  const { isAdmin, isSuperAdmin, isInstructor, loading: roleLoading, profile } = useUserRole();
   const { isEnrolled, loading: enrollmentLoading } = useMus240Enrollment();
   
-  // Check admin and enrollment status
+  // Check admin, instructor, and enrollment status
   const adminAccess = isAdmin();
   const superAdminAccess = isSuperAdmin();
+  const instructorAccess = isInstructor();
   const enrolled = isEnrolled();
   
   // Debug logging for MUS 240 access
@@ -28,6 +29,7 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
     enrollmentLoading,
     adminAccess,
     superAdminAccess,
+    instructorAccess,
     enrolled,
     profile: profile?.role
   });
@@ -47,8 +49,8 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
     return <Navigate to="/auth" replace />;
   }
   
-  // Allow admins and super admins access regardless of enrollment
-  if (adminAccess || superAdminAccess) {
+  // Allow admins, super admins, and instructors (TAs) access regardless of enrollment
+  if (adminAccess || superAdminAccess || instructorAccess) {
     return <>{children}</>;
   }
   
