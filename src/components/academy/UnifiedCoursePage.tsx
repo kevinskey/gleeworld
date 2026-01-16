@@ -106,13 +106,36 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       setEnrollmentLoading(false);
       return;
     }
+
     try {
       // Check admin status and role
-      const {
-        data: profile
-      } = await supabase.from('gw_profiles').select('is_admin, is_super_admin, role').eq('user_id', user.id).single();
-      setIsAdmin(profile?.is_admin || profile?.is_super_admin || false);
-      setIsExecutiveBoard(profile?.role === 'executive-board' || profile?.is_admin || profile?.is_super_admin || false);
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('id, is_admin, is_super_admin, role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // Treat course instructors/TAs as "admin" for the purpose of bypassing onboarding redirects
+      // (this does NOT grant global admin privileges; it only affects this page's client-side navigation)
+      let hasCourseStaffAccess = false;
+      if (course.courseCode === 'MUS 240' || course.courseCode === 'MUS240') {
+        const normalizedCode = course.courseCode.replace(' ', '');
+        const { data: taRow } = await supabase
+          .from('course_teaching_assistants')
+          .select('id')
+          .eq('course_code', normalizedCode)
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        hasCourseStaffAccess = !!taRow || profile?.role === 'instructor';
+      }
+
+      const adminLikeAccess = !!(profile?.is_admin || profile?.is_super_admin || hasCourseStaffAccess);
+      setIsAdmin(adminLikeAccess);
+      setIsExecutiveBoard(
+        profile?.role === 'executive-board' || profile?.is_admin || profile?.is_super_admin || false,
+      );
 
       // For MUS 070 (Glee Club), members and admins are auto-enrolled
       if (course.id === 'a0000000-0000-0000-0000-000000000070') {
@@ -123,20 +146,64 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
         }
       }
 
-      // For MUS 240, check the mus240_enrollments table with current semester
+      // For MUS 240, accept enrollment from either mus240_enrollments (semester-based)
+      // OR gw_course_enrollments (user_id OR student_profile_id), OR course staff.
       if (course.id === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37' || course.courseCode === 'MUS 240') {
-        const {
-          data: mus240Enrollment
-        } = await supabase.from('mus240_enrollments').select('*').eq('student_id', user.id).eq('semester', currentSemester).eq('enrollment_status', 'enrolled').maybeSingle();
-        setIsEnrolled(!!mus240Enrollment || profile?.is_admin || profile?.is_super_admin);
+        // 1) legacy mus240_enrollments
+        const { data: mus240Enrollment } = await supabase
+          .from('mus240_enrollments')
+          .select('id')
+          .eq('student_id', user.id)
+          .eq('semester', currentSemester)
+          .eq('enrollment_status', 'enrolled')
+          .maybeSingle();
+
+        // 2) gw_course_enrollments
+        const { data: gwCourseData } = await supabase
+          .from('gw_courses')
+          .select('id')
+          .or('course_code.ilike.%MUS 240%,course_code.ilike.%MUS-240%,course_code.eq.MUS 240')
+          .limit(1)
+          .maybeSingle();
+
+        let gwEnrolled = false;
+        if (gwCourseData?.id) {
+          const { data: gwEnrollmentByUserId } = await supabase
+            .from('gw_course_enrollments')
+            .select('id')
+            .eq('course_id', gwCourseData.id)
+            .eq('user_id', user.id)
+            .eq('enrollment_status', 'enrolled')
+            .maybeSingle();
+
+          if (gwEnrollmentByUserId) {
+            gwEnrolled = true;
+          } else if (profile?.id) {
+            const { data: gwEnrollmentByProfileId } = await supabase
+              .from('gw_course_enrollments')
+              .select('id')
+              .eq('course_id', gwCourseData.id)
+              .eq('student_profile_id', profile.id)
+              .eq('enrollment_status', 'enrolled')
+              .maybeSingle();
+
+            gwEnrolled = !!gwEnrollmentByProfileId;
+          }
+        }
+
+        setIsEnrolled(!!mus240Enrollment || gwEnrolled || adminLikeAccess);
         setEnrollmentLoading(false);
         return;
       }
 
       // Check enrollment for other courses
-      const {
-        data: enrollment
-      } = await supabase.from('gw_course_enrollments').select('*').eq('user_id', user.id).eq('course_id', course.id).maybeSingle();
+      const { data: enrollment } = await supabase
+        .from('gw_course_enrollments')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('course_id', course.id)
+        .maybeSingle();
+
       setIsEnrolled(!!enrollment);
     } catch (error) {
       console.error('Error checking enrollment:', error);
