@@ -2902,8 +2902,11 @@ export type Database = {
           course_id: string
           created_at: string | null
           created_by: string | null
+          due_date: string | null
           id: string
+          is_graded: boolean | null
           is_locked: boolean | null
+          max_points: number | null
           reply_count: number | null
           title: string
           updated_at: string | null
@@ -2913,8 +2916,11 @@ export type Database = {
           course_id: string
           created_at?: string | null
           created_by?: string | null
+          due_date?: string | null
           id?: string
+          is_graded?: boolean | null
           is_locked?: boolean | null
+          max_points?: number | null
           reply_count?: number | null
           title: string
           updated_at?: string | null
@@ -2924,8 +2930,11 @@ export type Database = {
           course_id?: string
           created_at?: string | null
           created_by?: string | null
+          due_date?: string | null
           id?: string
+          is_graded?: boolean | null
           is_locked?: boolean | null
+          max_points?: number | null
           reply_count?: number | null
           title?: string
           updated_at?: string | null
@@ -3346,6 +3355,10 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           discussion_id: string | null
+          feedback: string | null
+          grade: number | null
+          graded_at: string | null
+          graded_by: string | null
           id: string
           updated_at: string | null
         }
@@ -3354,6 +3367,10 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           discussion_id?: string | null
+          feedback?: string | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           updated_at?: string | null
         }
@@ -3362,6 +3379,10 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           discussion_id?: string | null
+          feedback?: string | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           updated_at?: string | null
         }

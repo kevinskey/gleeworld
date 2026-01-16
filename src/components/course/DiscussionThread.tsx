@@ -3,13 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Lock, MessageCircle, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, Lock, MessageCircle, Send, Loader2, Award, Calendar, AlertCircle, Check } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { format } from 'date-fns';
+import { useUserRole } from '@/hooks/useUserRole';
+import { format, isPast } from 'date-fns';
 import { toast } from 'sonner';
+import { calculateLetterGrade, getLetterGradeColor } from '@/utils/grading';
 
 interface Discussion {
   id: string;
@@ -19,6 +23,9 @@ interface Discussion {
   created_at: string;
   is_locked: boolean;
   reply_count: number;
+  due_date?: string | null;
+  max_points?: number | null;
+  is_graded?: boolean | null;
 }
 
 interface Reply {
@@ -26,6 +33,10 @@ interface Reply {
   content: string;
   created_by: string | null;
   created_at: string;
+  grade?: number | null;
+  feedback?: string | null;
+  graded_at?: string | null;
+  graded_by?: string | null;
   profile?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -44,8 +55,15 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
   courseId,
 }) => {
   const { user } = useAuth();
+  const { isInstructor, isAdmin } = useUserRole();
   const queryClient = useQueryClient();
   const [replyContent, setReplyContent] = useState('');
+  const [gradingReplyId, setGradingReplyId] = useState<string | null>(null);
+  const [gradeInput, setGradeInput] = useState<number>(0);
+  const [feedbackInput, setFeedbackInput] = useState('');
+
+  const canGrade = (isInstructor() || isAdmin()) && discussion.is_graded;
+  const isPastDue = discussion.due_date ? isPast(new Date(discussion.due_date)) : false;
 
   // Fetch author profile
   const { data: authorProfile } = useQuery({
@@ -121,10 +139,52 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
     },
   });
 
+  const gradeMutation = useMutation({
+    mutationFn: async ({ replyId, grade, feedback }: { replyId: string; grade: number; feedback: string }) => {
+      if (!user) throw new Error('You must be logged in');
+
+      const { error } = await supabase
+        .from('discussion_replies')
+        .update({
+          grade,
+          feedback: feedback.trim() || null,
+          graded_at: new Date().toISOString(),
+          graded_by: user.id,
+        })
+        .eq('id', replyId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['discussion-replies', discussion.id] });
+      setGradingReplyId(null);
+      setGradeInput(0);
+      setFeedbackInput('');
+      toast.success('Grade saved');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to save grade');
+    },
+  });
+
   const handleSubmitReply = (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyContent.trim()) return;
     replyMutation.mutate(replyContent);
+  };
+
+  const handleSubmitGrade = (replyId: string) => {
+    if (gradeInput < 0 || gradeInput > (discussion.max_points || 10)) {
+      toast.error(`Grade must be between 0 and ${discussion.max_points || 10}`);
+      return;
+    }
+    gradeMutation.mutate({ replyId, grade: gradeInput, feedback: feedbackInput });
+  };
+
+  const startGrading = (reply: Reply) => {
+    setGradingReplyId(reply.id);
+    setGradeInput(reply.grade || 0);
+    setFeedbackInput(reply.feedback || '');
   };
 
   const getInitials = (name: string | null) => {
@@ -157,6 +217,24 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
                   Posted by {authorProfile?.full_name || 'Anonymous'} on{' '}
                   {format(new Date(discussion.created_at), 'MMM d, yyyy h:mm a')}
                 </p>
+                {/* Due date and grading info */}
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  {discussion.is_graded && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Award className="h-3 w-3" />
+                      {discussion.max_points} points
+                    </Badge>
+                  )}
+                  {discussion.due_date && (
+                    <Badge 
+                      variant={isPastDue ? "destructive" : "outline"} 
+                      className="flex items-center gap-1"
+                    >
+                      {isPastDue ? <AlertCircle className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
+                      Due: {format(new Date(discussion.due_date), 'MMM d, yyyy h:mm a')}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
             <Badge variant="secondary" className="flex items-center gap-1">
@@ -188,15 +266,97 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
                     <AvatarFallback>{getInitials(reply.profile?.full_name)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="font-medium text-sm">
                         {reply.profile?.full_name || 'Anonymous'}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {format(new Date(reply.created_at), 'MMM d, yyyy h:mm a')}
                       </span>
+                      {/* Show grade badge if graded */}
+                      {reply.grade !== null && reply.grade !== undefined && discussion.max_points && (
+                        <Badge className={`${getLetterGradeColor(calculateLetterGrade(reply.grade, discussion.max_points))} text-xs`}>
+                          {reply.grade}/{discussion.max_points} ({calculateLetterGrade(reply.grade, discussion.max_points)})
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm whitespace-pre-wrap">{reply.content}</p>
+                    
+                    {/* Feedback display */}
+                    {reply.feedback && (
+                      <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/20">
+                        <p className="text-xs font-medium text-primary">Instructor Feedback:</p>
+                        <p className="text-sm text-muted-foreground">{reply.feedback}</p>
+                      </div>
+                    )}
+
+                    {/* Grading form for instructors */}
+                    {canGrade && gradingReplyId === reply.id && (
+                      <div className="mt-3 p-3 border rounded-lg bg-background space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1">
+                            <Label htmlFor={`grade-${reply.id}`} className="text-xs">
+                              Grade (0-{discussion.max_points})
+                            </Label>
+                            <Input
+                              id={`grade-${reply.id}`}
+                              type="number"
+                              min={0}
+                              max={discussion.max_points || 10}
+                              value={gradeInput}
+                              onChange={(e) => setGradeInput(parseInt(e.target.value) || 0)}
+                              className="h-8"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor={`feedback-${reply.id}`} className="text-xs">
+                            Feedback (optional)
+                          </Label>
+                          <Textarea
+                            id={`feedback-${reply.id}`}
+                            placeholder="Provide feedback..."
+                            value={feedbackInput}
+                            onChange={(e) => setFeedbackInput(e.target.value)}
+                            rows={2}
+                          />
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setGradingReplyId(null)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleSubmitGrade(reply.id)}
+                            disabled={gradeMutation.isPending}
+                          >
+                            {gradeMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4 mr-1" />
+                            )}
+                            Save Grade
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Grade button for instructors */}
+                    {canGrade && gradingReplyId !== reply.id && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => startGrading(reply)}
+                      >
+                        <Award className="h-3 w-3 mr-1" />
+                        {reply.grade !== null && reply.grade !== undefined ? 'Edit Grade' : 'Grade'}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -215,6 +375,12 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
       {!discussion.is_locked && user && (
         <Card>
           <CardContent className="pt-4">
+            {isPastDue && !canGrade && (
+              <div className="mb-3 p-2 bg-destructive/10 text-destructive rounded flex items-center gap-2 text-sm">
+                <AlertCircle className="h-4 w-4" />
+                This discussion is past due. Your response may be marked late.
+              </div>
+            )}
             <form onSubmit={handleSubmitReply} className="space-y-3">
               <Textarea
                 placeholder="Write your reply..."
