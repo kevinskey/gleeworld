@@ -16,6 +16,7 @@ import { CourseAssignments } from './CourseAssignments';
 import { ExitInterviewSummaryCard } from '@/components/surveys/ExitInterviewSummaryCard';
 import { CollapsibleMemberExitInterview } from '@/components/surveys/CollapsibleMemberExitInterview';
 import LiturgicalWeekCard from './LiturgicalWeekCard';
+import { LykeHouseHeroSlider } from './LykeHouseHeroSlider';
 
 interface StudentProfile {
   user_id: string;
@@ -288,22 +289,8 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
             </div>
           </Card>
 
-          {/* YouTube Channel - Only for LH 100 */}
-          {isLH100 && (
-            <Card className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="aspect-video w-full">
-                  <iframe
-                    className="w-full h-full"
-                    src="https://www.youtube.com/embed?listType=user_uploads&list=SpelmanGleeClub"
-                    title="Spelman College Glee Club Channel"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Lyke House Hero Slider - Only for LH 100 */}
+          {isLH100 && <LykeHouseHeroSlider />}
         </div>
       </div>
 
