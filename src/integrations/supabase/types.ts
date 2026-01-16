@@ -13985,6 +13985,9 @@ export type Database = {
           color: string | null
           created_at: string
           description: string | null
+          external_id: string | null
+          external_provider: string | null
+          hls_url: string | null
           icon: string | null
           id: string
           is_active: boolean | null
@@ -13998,6 +14001,9 @@ export type Database = {
           color?: string | null
           created_at?: string
           description?: string | null
+          external_id?: string | null
+          external_provider?: string | null
+          hls_url?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean | null
@@ -14011,6 +14017,9 @@ export type Database = {
           color?: string | null
           created_at?: string
           description?: string | null
+          external_id?: string | null
+          external_provider?: string | null
+          hls_url?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean | null

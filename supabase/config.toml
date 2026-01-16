@@ -378,3 +378,6 @@ verify_jwt = true
 
 [functions.youtube-channel-videos]
 verify_jwt = false
+
+[functions.radio-station-sync]
+verify_jwt = false
