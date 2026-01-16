@@ -8,12 +8,13 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Radio, Plus, Pencil, Trash2, Clock, Music, Calendar, GripVertical, Save, X, RefreshCw, Mic } from 'lucide-react';
+import { Radio, Plus, Pencil, Trash2, Clock, Music, Calendar, GripVertical, Save, X, RefreshCw, Mic, ListMusic, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { azuraCastService } from '@/services/azuracast';
 import { StreamersTab } from './StreamersTab';
+import { QueueManagementTab } from './QueueManagementTab';
 
 interface RadioChannel {
   id: string;
@@ -55,12 +56,21 @@ export const RadioChannelsTab = () => {
   const [nowPlayingOverride, setNowPlayingOverride] = useState<NowPlayingOverride | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isImportingStation, setIsImportingStation] = useState(false);
   const [canManageChannels, setCanManageChannels] = useState(false);
   const [permissionsLoading, setPermissionsLoading] = useState(true);
   const [editingChannel, setEditingChannel] = useState<RadioChannel | null>(null);
   const [isChannelDialogOpen, setIsChannelDialogOpen] = useState(false);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [newSchedule, setNewSchedule] = useState<Partial<ScheduleEntry>>({});
+
+  // Import station form state
+  const [importForm, setImportForm] = useState({
+    stationId: '',
+    name: '',
+    description: '',
+  });
 
   // Channel form state
   const [channelForm, setChannelForm] = useState({
@@ -318,6 +328,80 @@ export const RadioChannelsTab = () => {
     }
   };
 
+  // Import a station by ID (fallback when auto-sync fails)
+  const handleImportStation = async () => {
+    if (!canManageChannels) {
+      toast({ title: 'Permission Required', description: 'Admin/Super Admin can import stations.', variant: 'destructive' });
+      return;
+    }
+
+    const stationIdRaw = importForm.stationId.trim();
+    if (!stationIdRaw) {
+      toast({ title: 'Station ID Required', description: 'Enter a station ID or shortcode.', variant: 'destructive' });
+      return;
+    }
+
+    // Extract numeric ID or shortcode from URL or raw input
+    let stationIdOrShortcode = stationIdRaw;
+    const urlMatch = stationIdRaw.match(/\/station\/(\d+)/);
+    if (urlMatch) {
+      stationIdOrShortcode = urlMatch[1];
+    }
+
+    setIsImportingStation(true);
+    try {
+      // Try to fetch station info from AzuraCast
+      let stationInfo = null;
+      try {
+        stationInfo = await azuraCastService.getStationInfo(stationIdOrShortcode);
+        console.log('Fetched station info:', stationInfo);
+      } catch (err) {
+        console.warn('Could not fetch station info, using manual values:', err);
+      }
+
+      const name = importForm.name.trim() || stationInfo?.name || `Station ${stationIdOrShortcode}`;
+      const description = importForm.description.trim() || stationInfo?.description || null;
+      const shortcode = stationInfo?.shortcode || stationIdOrShortcode;
+      const streamUrl = stationInfo?.listen_url || `https://radio.gleeworld.org/listen/${shortcode}/radio.mp3`;
+
+      // Check if already exists
+      const existing = channels.find(c =>
+        c.stream_url.toLowerCase() === streamUrl.toLowerCase() ||
+        c.name.toLowerCase() === name.toLowerCase()
+      );
+
+      if (existing) {
+        toast({ title: 'Already Exists', description: `"${name}" is already in channels.` });
+        setIsImportDialogOpen(false);
+        return;
+      }
+
+      const maxOrder = Math.max(...channels.map(c => c.sort_order), 0);
+      const { error } = await supabase.from('gw_radio_channels').insert({
+        name,
+        description,
+        stream_url: streamUrl,
+        icon: 'Radio',
+        color: '#7BAFD4',
+        is_active: true,
+        is_default: false,
+        sort_order: maxOrder + 1,
+      });
+
+      if (error) throw error;
+
+      toast({ title: 'Station Imported', description: `"${name}" has been added to channels.` });
+      setIsImportDialogOpen(false);
+      setImportForm({ stationId: '', name: '', description: '' });
+      fetchData();
+    } catch (error) {
+      console.error('Error importing station:', error);
+      toast({ title: 'Import Failed', description: 'Could not import station.', variant: 'destructive' });
+    } finally {
+      setIsImportingStation(false);
+    }
+  };
+
   const handleSaveChannel = async () => {
     try {
       if (editingChannel) {
@@ -487,8 +571,11 @@ export const RadioChannelsTab = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs defaultValue="channels" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-8">
+          <TabsList className="grid w-full grid-cols-5 h-8">
             <TabsTrigger value="channels" className="text-xs">Channels</TabsTrigger>
+            <TabsTrigger value="queue" className="text-xs">
+              <ListMusic className="h-3 w-3 mr-1" />Queue
+            </TabsTrigger>
             <TabsTrigger value="streamers" className="text-xs">
               <Mic className="h-3 w-3 mr-1" />DJs
             </TabsTrigger>
@@ -500,7 +587,7 @@ export const RadioChannelsTab = () => {
           <TabsContent value="channels" className="space-y-3 mt-3">
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">{channels.length} channels</span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button 
                   size="sm" 
                   variant="outline" 
@@ -509,8 +596,71 @@ export const RadioChannelsTab = () => {
                   disabled={isSyncing}
                 >
                   <RefreshCw className={cn("h-3 w-3 mr-1", isSyncing && "animate-spin")} />
-                  {isSyncing ? 'Syncing...' : 'Sync from AzuraCast'}
+                  {isSyncing ? 'Syncing...' : 'Sync'}
                 </Button>
+
+                {/* Import Station Dialog */}
+                <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="h-7 text-xs">
+                      <Download className="h-3 w-3 mr-1" /> Import Station
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Import Station by ID</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs">Station ID or URL *</Label>
+                        <Input
+                          value={importForm.stationId}
+                          onChange={(e) => setImportForm({ ...importForm, stationId: e.target.value })}
+                          placeholder="23 or https://radio.gleeworld.org/station/23"
+                          className="h-8 text-sm"
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Enter the station ID number or paste the full station URL
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Name (optional)</Label>
+                        <Input
+                          value={importForm.name}
+                          onChange={(e) => setImportForm({ ...importForm, name: e.target.value })}
+                          placeholder="Leave blank to auto-detect"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Description (optional)</Label>
+                        <Input
+                          value={importForm.description}
+                          onChange={(e) => setImportForm({ ...importForm, description: e.target.value })}
+                          placeholder="Leave blank to auto-detect"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <Button 
+                        onClick={handleImportStation} 
+                        className="w-full h-8 text-sm"
+                        disabled={isImportingStation}
+                      >
+                        {isImportingStation ? (
+                          <>
+                            <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> Importing...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-3 w-3 mr-1" /> Import Station
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Add Channel Dialog */}
                 <Dialog open={isChannelDialogOpen} onOpenChange={(open) => {
                   setIsChannelDialogOpen(open);
                   if (!open) {
@@ -645,6 +795,11 @@ export const RadioChannelsTab = () => {
                 </div>
               ))}
             </div>
+          </TabsContent>
+
+          {/* Queue Management Tab */}
+          <TabsContent value="queue" className="mt-3">
+            <QueueManagementTab canManage={canManageChannels} />
           </TabsContent>
 
           {/* Streamers/DJs Tab */}
