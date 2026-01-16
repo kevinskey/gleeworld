@@ -193,12 +193,16 @@ export const RadioChannelsTab = () => {
 
       for (let i = 0; i < playlists.length; i++) {
         const playlist = playlists[i];
-        // Convert playlist name to slug format for stream URL (e.g., "Bowman Scholars" -> "bowman_scholars")
-        const slug = playlist.name
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '_')
-          .replace(/^_|_$/g, '');
-        const streamUrl = `https://radio.gleeworld.org/listen/${slug}/radio.mp3`;
+
+        // Use AzuraCast playlist.short_name (this is the canonical slug used by AzuraCast)
+        const shortName = (playlist.short_name || '').trim();
+        if (!shortName) {
+          console.warn('AzuraCast playlist missing short_name:', playlist);
+          failedCount++;
+          continue;
+        }
+
+        const streamUrl = `https://radio.gleeworld.org/listen/${shortName}/radio.mp3`;
 
         const existingChannel = channels.find(c =>
           c.stream_url.toLowerCase() === streamUrl.toLowerCase() ||
