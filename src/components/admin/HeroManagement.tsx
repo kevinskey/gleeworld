@@ -9,6 +9,7 @@ import { Save, Trash2, Eye, EyeOff, Edit, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AdvertisingHeroManager } from "./AdvertisingHeroManager";
+import { LykeHouseHeroManager } from "./LykeHouseHeroManager";
 import { AmazonProductSuggester } from "./AmazonProductSuggester";
 import { UnifiedHeroSelector, HERO_CONTEXTS, type HeroContext } from "./UnifiedHeroSelector";
 import { SlideEditForm } from "./hero/SlideEditForm";
@@ -126,6 +127,12 @@ export const HeroManagement = () => {
         .from('advertising_hero')
         .select('*', { count: 'exact', head: true });
       counts['advertising'] = adCount || 0;
+      
+      // Fetch lyke_house_hero count
+      const { count: lykeCount } = await supabase
+        .from('lyke_house_hero')
+        .select('*', { count: 'exact', head: true });
+      counts['lyke-house'] = lykeCount || 0;
       
       setSlideCounts(counts);
     } catch (error) {
@@ -658,6 +665,8 @@ export const HeroManagement = () => {
           {/* Advertising Hero Manager */}
           <AdvertisingHeroManager />
         </>
+      ) : selectedContext.id === 'lyke-house' ? (
+        <LykeHouseHeroManager />
       ) : (
         <>
           {/* Quick Settings Bar - only for dashboard context */}

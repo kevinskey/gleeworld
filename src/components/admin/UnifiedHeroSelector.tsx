@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Image, Layout, Newspaper, Users, Monitor } from "lucide-react";
+import { Image, Layout, Newspaper, Users, Monitor, Church } from "lucide-react";
 
 export interface HeroContext {
   id: string;
   label: string;
   description: string;
-  table: 'gw_hero_slides' | 'dashboard_hero_slides' | 'alumnae_newsletter_hero_slides' | 'advertising_hero';
+  table: 'gw_hero_slides' | 'dashboard_hero_slides' | 'alumnae_newsletter_hero_slides' | 'advertising_hero' | 'lyke_house_hero';
   usageContext?: string;
   icon: React.ReactNode;
   slideCount?: number;
@@ -43,6 +43,13 @@ const HERO_CONTEXTS: HeroContext[] = [
     description: 'Promotional banners and advertisements',
     table: 'advertising_hero',
     icon: <Monitor className="h-4 w-4" />
+  },
+  {
+    id: 'lyke-house',
+    label: 'Lyke House Hero',
+    description: 'YouTube videos for LH100 Bowman Scholars course',
+    table: 'lyke_house_hero',
+    icon: <Church className="h-4 w-4" />
   }
 ];
 
