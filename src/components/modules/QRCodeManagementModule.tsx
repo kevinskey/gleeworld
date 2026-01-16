@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { QrCode, Calendar, History, Settings, BarChart, MapPin } from 'lucide-react';
+import { QrCode, Calendar, History, BarChart, MapPin, Link, Download, ChevronRight, Smartphone, Scan, Clock, CheckCircle2 } from 'lucide-react';
 import { QRAttendanceGenerator } from '@/components/attendance/QRAttendanceGenerator';
 import { AttendanceSecurityControls } from '@/components/attendance/AttendanceSecurityControls';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 import QRCode from 'qrcode';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link, Download } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QRToken {
   id: string;
@@ -35,6 +35,7 @@ interface QRToken {
 export const QRCodeManagementModule = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [activeTokens, setActiveTokens] = useState<QRToken[]>([]);
   const [historicalTokens, setHistoricalTokens] = useState<QRToken[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,7 +57,6 @@ export const QRCodeManagementModule = () => {
   const loadTokenData = async () => {
     setLoading(true);
     try {
-      // Load active tokens with proper joins
       const { data: activeData, error: activeError } = await supabase
         .from('qr_attendance_tokens')
         .select('*')
@@ -66,7 +66,6 @@ export const QRCodeManagementModule = () => {
 
       if (activeError) throw activeError;
 
-      // Load historical tokens (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
@@ -79,7 +78,6 @@ export const QRCodeManagementModule = () => {
 
       if (historicalError) throw historicalError;
 
-      // Get event details for tokens
       const eventIds = [...new Set([
         ...(activeData?.map(t => t.event_id) || []),
         ...(historicalData?.map(t => t.event_id) || [])
@@ -97,7 +95,6 @@ export const QRCodeManagementModule = () => {
         }
       }
 
-      // Combine token data with event details
       const enrichTokens = (tokens: any[]) => tokens.map(token => ({
         ...token,
         event: eventData.find(e => e.id === token.event_id)
@@ -109,7 +106,6 @@ export const QRCodeManagementModule = () => {
       setActiveTokens(enrichedActiveTokens);
       setHistoricalTokens(enrichedHistoricalTokens);
 
-      // Calculate stats
       const total = enrichedHistoricalTokens.length;
       const totalScans = enrichedHistoricalTokens.reduce((sum, token) => sum + token.scan_count, 0);
       const active = enrichedActiveTokens.length;
@@ -148,7 +144,7 @@ export const QRCodeManagementModule = () => {
         description: "QR code deactivated",
       });
 
-      loadTokenData(); // Refresh data
+      loadTokenData();
     } catch (error) {
       console.error('Error deactivating token:', error);
       toast({
@@ -201,151 +197,216 @@ export const QRCodeManagementModule = () => {
   };
 
   const quickLinks = [
-    { name: 'Bowman Scholars Landing', url: '/bowman-scholars' },
+    { name: 'Bowman Scholars', url: '/bowman-scholars' },
     { name: 'Public Calendar', url: '/calendar' },
     { name: 'Home Page', url: '/' },
   ];
 
+  // Mobile-optimized Token Card
   const TokenCard = ({ token, showActions = false }: { token: QRToken; showActions?: boolean }) => {
     const isExpired = new Date() > new Date(token.expires_at);
     const isActive = token.is_active && !isExpired;
 
     return (
-      <Card className="mb-4">
-        <CardContent className="pt-4">
-          <div className="flex justify-between items-start mb-3">
-            <div className="space-y-1">
-              <h4 className="font-medium">{token.event?.title || 'Unknown Event'}</h4>
-              <div className="flex gap-2">
-                <Badge variant="outline">{token.event?.event_type || 'Unknown'}</Badge>
-                <Badge variant={isActive ? "default" : "secondary"}>
-                  {isActive ? "Active" : isExpired ? "Expired" : "Inactive"}
-                </Badge>
-              </div>
-            </div>
-            {showActions && isActive && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => deactivateToken(token.id)}
+      <div className="bg-card border border-border rounded-xl p-4 mb-3 active:scale-[0.98] transition-transform">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-sm line-clamp-1">{token.event?.title || 'Unknown Event'}</h4>
+            <div className="flex items-center gap-2 mt-1.5">
+              <Badge 
+                variant={isActive ? "default" : "secondary"}
+                className={`text-xs ${isActive ? 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30' : ''}`}
               >
-                Deactivate
-              </Button>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Created:</span>
-              <p>{format(new Date(token.created_at), 'MMM dd, h:mm a')}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Expires:</span>
-              <p>{format(new Date(token.expires_at), 'MMM dd, h:mm a')}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Scans:</span>
-              <p>{token.scan_count}{token.max_scans ? ` / ${token.max_scans}` : ''}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Token ID:</span>
-              <p className="font-mono text-xs">{token.token.substring(0, 12)}...</p>
+                {isActive ? (
+                  <><CheckCircle2 className="h-3 w-3 mr-1" />Active</>
+                ) : isExpired ? (
+                  <><Clock className="h-3 w-3 mr-1" />Expired</>
+                ) : 'Inactive'}
+              </Badge>
+              <span className="text-xs text-muted-foreground">{token.event?.event_type}</span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="text-right shrink-0">
+            <div className="text-2xl font-bold text-primary">{token.scan_count}</div>
+            <div className="text-xs text-muted-foreground">scans</div>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span>Created {format(new Date(token.created_at), 'MMM d, h:mm a')}</span>
+          </div>
+          {showActions && isActive && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => deactivateToken(token.id)}
+              className="h-8 text-xs text-destructive hover:text-destructive"
+            >
+              Deactivate
+            </Button>
+          )}
+        </div>
+      </div>
     );
   };
 
+  // Mobile Stats Summary
+  const MobileStats = () => (
+    <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-4 border border-primary/20">
+        <div className="flex items-center gap-2 mb-1">
+          <Scan className="h-4 w-4 text-primary" />
+          <span className="text-xs text-muted-foreground">Total Scans</span>
+        </div>
+        <div className="text-2xl font-bold">{stats.totalScans}</div>
+      </div>
+      <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-xl p-4 border border-green-500/20">
+        <div className="flex items-center gap-2 mb-1">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <span className="text-xs text-muted-foreground">Active QR</span>
+        </div>
+        <div className="text-2xl font-bold text-green-600">{stats.activeTokens}</div>
+      </div>
+    </div>
+  );
+
+  // Desktop Stats
+  const DesktopStats = () => (
+    <div className="grid grid-cols-4 gap-4 mb-6">
+      <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Generated</p>
+              <p className="text-2xl font-bold">{stats.totalGenerated}</p>
+            </div>
+            <QrCode className="h-8 w-8 text-primary/60" />
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="bg-gradient-to-br from-blue-500/5 to-transparent border-blue-500/20">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Scans</p>
+              <p className="text-2xl font-bold">{stats.totalScans}</p>
+            </div>
+            <BarChart className="h-8 w-8 text-blue-500/60" />
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="bg-gradient-to-br from-green-500/5 to-transparent border-green-500/20">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Active</p>
+              <p className="text-2xl font-bold text-green-600">{stats.activeTokens}</p>
+            </div>
+            <CheckCircle2 className="h-8 w-8 text-green-500/60" />
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="bg-gradient-to-br from-orange-500/5 to-transparent border-orange-500/20">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Expired</p>
+              <p className="text-2xl font-bold text-orange-600">{stats.expiredTokens}</p>
+            </div>
+            <Clock className="h-8 w-8 text-orange-500/60" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   return (
-    <div className="h-full p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">QR Code Management</h1>
-        <p className="text-muted-foreground">
-          Generate and manage attendance QR codes for any event or class
-        </p>
+    <div className="h-full p-4 sm:p-6">
+      {/* Mobile Header */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+            <QrCode className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">QR Management</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Generate & track attendance codes
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Generated</p>
-                <p className="text-2xl font-bold">{stats.totalGenerated}</p>
-              </div>
-              <QrCode className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Scans</p>
-                <p className="text-2xl font-bold">{stats.totalScans}</p>
-              </div>
-              <BarChart className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Active QR Codes</p>
-                <p className="text-2xl font-bold text-green-600">{stats.activeTokens}</p>
-              </div>
-              <Calendar className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Expired</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.expiredTokens}</p>
-              </div>
-              <History className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Stats - Responsive */}
+      {isMobile ? <MobileStats /> : <DesktopStats />}
 
+      {/* Mobile-First Tabs */}
       <Tabs defaultValue="generator" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="generator" className="flex items-center gap-2">
+        <TabsList className="w-full h-auto p-1 bg-muted/50 rounded-xl mb-4 grid grid-cols-3 sm:grid-cols-5 gap-1">
+          <TabsTrigger 
+            value="generator" 
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
             <QrCode className="h-4 w-4" />
-            <span className="hidden sm:inline">Attendance QR</span>
+            <span className="hidden sm:inline">Attendance</span>
             <span className="sm:hidden">QR</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            <span className="hidden sm:inline">Security</span>
-            <span className="sm:hidden">Geo</span>
-          </TabsTrigger>
-          <TabsTrigger value="url-generator" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="url-generator" 
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
             <Link className="h-4 w-4" />
-            <span className="hidden sm:inline">URL QR Code</span>
+            <span className="hidden sm:inline">URL Code</span>
             <span className="sm:hidden">URL</span>
           </TabsTrigger>
-          <TabsTrigger value="active" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Active ({stats.activeTokens})</span>
-            <span className="sm:hidden">({stats.activeTokens})</span>
+          <TabsTrigger 
+            value="active" 
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            <span className="hidden xs:inline">Active</span>
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{stats.activeTokens}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="history" 
+            className="hidden sm:flex flex-1 items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
             <History className="h-4 w-4" />
-            <span className="hidden sm:inline">History</span>
+            <span>History</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="settings" 
+            className="hidden sm:flex flex-1 items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            <MapPin className="h-4 w-4" />
+            <span>Security</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="generator" className="mt-6">
+        {/* Mobile-only extra tabs row */}
+        <div className="sm:hidden grid grid-cols-2 gap-2 mb-4">
+          <TabsList className="w-full h-auto p-1 bg-muted/50 rounded-xl">
+            <TabsTrigger 
+              value="history" 
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-2 text-xs rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
+              <History className="h-4 w-4" />
+              History
+            </TabsTrigger>
+          </TabsList>
+          <TabsList className="w-full h-auto p-1 bg-muted/50 rounded-xl">
+            <TabsTrigger 
+              value="settings" 
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-2 text-xs rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
+              <MapPin className="h-4 w-4" />
+              Security
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="generator" className="mt-0">
           <QRAttendanceGenerator 
             onEventChange={(eventId, eventTitle) => {
               setSelectedEventId(eventId);
@@ -355,65 +416,68 @@ export const QRCodeManagementModule = () => {
           />
         </TabsContent>
 
-        <TabsContent value="settings" className="mt-6">
+        <TabsContent value="settings" className="mt-0">
           {selectedEventId ? (
             <AttendanceSecurityControls
               eventId={selectedEventId}
               eventTitle={selectedEventTitle || 'Selected Event'}
             />
           ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium mb-2">No Event Selected</p>
-                <p className="text-muted-foreground mb-4">
-                  Select an event in the "Attendance QR" tab first to configure geofencing and security settings.
+            <Card className="border-dashed">
+              <CardContent className="py-8 sm:py-12 text-center">
+                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <MapPin className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-base font-medium mb-1">No Event Selected</p>
+                <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
+                  Select an event in the "QR" tab to configure geofencing
                 </p>
                 <Button 
                   variant="outline"
+                  size="sm"
                   onClick={() => {
                     const tabsElement = document.querySelector('[value="generator"]');
                     if (tabsElement instanceof HTMLElement) tabsElement.click();
                   }}
                 >
-                  Go to Attendance QR
+                  Go to QR Generator
                 </Button>
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        <TabsContent value="url-generator" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value="url-generator" className="mt-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Link className="h-5 w-5" />
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <Link className="h-5 w-5 text-primary" />
                   Generate URL QR Code
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="custom-url">Enter URL or Path</Label>
+                  <Label htmlFor="custom-url" className="text-sm">Enter URL or Path</Label>
                   <Input
                     id="custom-url"
                     value={customUrl}
                     onChange={(e) => setCustomUrl(e.target.value)}
-                    placeholder="/bowman-scholars or https://example.com"
-                    className="mt-1"
+                    placeholder="/bowman-scholars or https://..."
+                    className="mt-1.5 h-11"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>Quick Links</Label>
-                  <div className="grid grid-cols-1 gap-2">
+                  <Label className="text-sm">Quick Links</Label>
+                  <div className="flex flex-wrap gap-2">
                     {quickLinks.map((link) => (
                       <Button
                         key={link.url}
                         variant="outline"
                         size="sm"
                         onClick={() => setCustomUrl(link.url)}
-                        className="justify-start"
+                        className="text-xs h-8"
                       >
                         {link.name}
                       </Button>
@@ -424,33 +488,34 @@ export const QRCodeManagementModule = () => {
                 <Button 
                   onClick={() => generateUrlQRCode(customUrl)}
                   disabled={!customUrl.trim()}
-                  className="w-full"
+                  className="w-full h-11"
                 >
+                  <QrCode className="h-4 w-4 mr-2" />
                   Generate QR Code
                 </Button>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Generated QR Code</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg">Generated QR Code</CardTitle>
               </CardHeader>
               <CardContent>
                 {qrCodeDataUrl ? (
                   <div className="space-y-4">
-                    <div className="bg-white p-4 rounded-lg border flex justify-center">
+                    <div className="bg-white p-4 rounded-xl border flex justify-center">
                       <img 
                         src={qrCodeDataUrl} 
                         alt="Generated QR Code" 
-                        className="max-w-full h-auto"
+                        className="max-w-[200px] sm:max-w-full h-auto"
                       />
                     </div>
-                    <div className="text-sm text-muted-foreground text-center">
-                      URL: {customUrl.startsWith('http') ? customUrl : `${window.location.hostname.includes('lovable') ? 'https://gleeworld.org' : window.location.origin}${customUrl}`}
+                    <div className="text-xs text-muted-foreground text-center break-all px-2">
+                      {customUrl.startsWith('http') ? customUrl : `${window.location.hostname.includes('lovable') ? 'https://gleeworld.org' : window.location.origin}${customUrl}`}
                     </div>
                     <Button 
                       onClick={downloadQRCode}
-                      className="w-full"
+                      className="w-full h-11"
                       variant="outline"
                     >
                       <Download className="h-4 w-4 mr-2" />
@@ -458,9 +523,11 @@ export const QRCodeManagementModule = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <QrCode className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                    <p>Enter a URL and click "Generate QR Code" to create a QR code</p>
+                  <div className="text-center py-8 sm:py-12">
+                    <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                      <QrCode className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Enter a URL to generate a QR code</p>
                   </div>
                 )}
               </CardContent>
@@ -468,21 +535,33 @@ export const QRCodeManagementModule = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="active" className="mt-6">
+        <TabsContent value="active" className="mt-0">
           <Card>
-            <CardHeader>
-              <CardTitle>Active QR Codes</CardTitle>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base sm:text-lg">Active QR Codes</CardTitle>
+                <Badge variant="secondary" className="text-xs">
+                  {stats.activeTokens} active
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               {loading ? (
-                <div className="text-center py-8">Loading active QR codes...</div>
+                <div className="text-center py-8">
+                  <div className="animate-pulse flex flex-col items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-muted" />
+                    <div className="h-4 w-32 bg-muted rounded" />
+                  </div>
+                </div>
               ) : activeTokens.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <QrCode className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <p>No active QR codes found</p>
+                <div className="text-center py-8 sm:py-12">
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                    <QrCode className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">No active QR codes</p>
                 </div>
               ) : (
-                <ScrollArea className="h-[600px]">
+                <ScrollArea className="h-[400px] sm:h-[500px] -mx-1 px-1">
                   {activeTokens.map((token) => (
                     <TokenCard key={token.id} token={token} showActions={true} />
                   ))}
@@ -492,21 +571,33 @@ export const QRCodeManagementModule = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="history" className="mt-6">
+        <TabsContent value="history" className="mt-0">
           <Card>
-            <CardHeader>
-              <CardTitle>QR Code History (Last 30 Days)</CardTitle>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base sm:text-lg">History (30 Days)</CardTitle>
+                <Badge variant="outline" className="text-xs">
+                  {historicalTokens.length} records
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               {loading ? (
-                <div className="text-center py-8">Loading QR code history...</div>
+                <div className="text-center py-8">
+                  <div className="animate-pulse flex flex-col items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-muted" />
+                    <div className="h-4 w-32 bg-muted rounded" />
+                  </div>
+                </div>
               ) : historicalTokens.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <History className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <p>No QR codes found</p>
+                <div className="text-center py-8 sm:py-12">
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                    <History className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">No QR codes generated yet</p>
                 </div>
               ) : (
-                <ScrollArea className="h-[600px]">
+                <ScrollArea className="h-[400px] sm:h-[500px] -mx-1 px-1">
                   {historicalTokens.map((token) => (
                     <TokenCard key={token.id} token={token} />
                   ))}
