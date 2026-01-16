@@ -55,6 +55,8 @@ export const RadioChannelsTab = () => {
   const [nowPlayingOverride, setNowPlayingOverride] = useState<NowPlayingOverride | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [canManageChannels, setCanManageChannels] = useState(false);
+  const [permissionsLoading, setPermissionsLoading] = useState(true);
   const [editingChannel, setEditingChannel] = useState<RadioChannel | null>(null);
   const [isChannelDialogOpen, setIsChannelDialogOpen] = useState(false);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
@@ -81,7 +83,36 @@ export const RadioChannelsTab = () => {
     expires_at: '',
   });
 
+  const fetchPermissions = async () => {
+    setPermissionsLoading(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const user = userRes.user;
+      if (!user) {
+        setCanManageChannels(false);
+        return;
+      }
+
+      const { data: profile, error } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching permissions:', error);
+        setCanManageChannels(false);
+        return;
+      }
+
+      setCanManageChannels(Boolean(profile?.is_admin || profile?.is_super_admin));
+    } finally {
+      setPermissionsLoading(false);
+    }
+  };
+
   useEffect(() => {
+    fetchPermissions();
     fetchData();
   }, []);
 
@@ -118,74 +149,95 @@ export const RadioChannelsTab = () => {
   const syncFromAzuraCast = async () => {
     setIsSyncing(true);
     try {
+      if (permissionsLoading) {
+        toast({
+          title: 'Please wait',
+          description: 'Checking permissions…',
+        });
+        return;
+      }
+
+      if (!canManageChannels) {
+        toast({
+          title: 'Permission Required',
+          description: 'Only Admin/Super Admin can sync channels into the database.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Fetch all stations from AzuraCast
       const stations = await azuraCastService.getAllStations();
       console.log('AzuraCast stations fetched:', stations);
 
       if (!stations || stations.length === 0) {
-        toast({ 
-          title: 'No Stations Found', 
+        toast({
+          title: 'No Stations Found',
           description: 'Could not fetch stations from AzuraCast. Check your connection.',
-          variant: 'destructive' 
+          variant: 'destructive',
         });
         return;
       }
 
-      // Get existing stream URLs to avoid duplicates
-      const existingUrls = new Set(channels.map(c => c.stream_url.toLowerCase()));
-      
       let addedCount = 0;
-      let updatedCount = 0;
+      let skippedCount = 0;
+      let failedCount = 0;
+      let firstError: unknown = null;
       const maxOrder = Math.max(...channels.map(c => c.sort_order), 0);
 
       for (let i = 0; i < stations.length; i++) {
         const station = stations[i];
-        // AzuraCast stations have listen_url or we can construct from shortcode
-        const streamUrl = station.listen_url || 
+        const streamUrl = station.listen_url ||
           `https://radio.gleeworld.org/listen/${station.short_name || station.shortcode}/radio.mp3`;
-        
-        // Check if channel already exists
-        const existingChannel = channels.find(c => 
+
+        const existingChannel = channels.find(c =>
           c.stream_url.toLowerCase() === streamUrl.toLowerCase() ||
-          c.name.toLowerCase() === station.name?.toLowerCase()
+          c.name.toLowerCase() === station.name?.toLowerCase(),
         );
 
         if (existingChannel) {
-          // Optionally update existing channel if needed
-          updatedCount++;
-        } else {
-          // Add new channel
-          const { error } = await supabase.from('gw_radio_channels').insert({
-            name: station.name || station.short_name || 'Unknown Station',
-            description: station.description || null,
-            stream_url: streamUrl,
-            icon: 'Radio',
-            color: '#7BAFD4',
-            is_active: true,
-            is_default: false,
-            sort_order: maxOrder + addedCount + 1,
-          });
-
-          if (!error) {
-            addedCount++;
-          } else {
-            console.error('Error adding station:', station.name, error);
-          }
+          skippedCount++;
+          continue;
         }
+
+        const { error } = await supabase.from('gw_radio_channels').insert({
+          name: station.name || station.short_name || 'Unknown Station',
+          description: station.description || null,
+          stream_url: streamUrl,
+          icon: 'Radio',
+          color: '#7BAFD4',
+          is_active: true,
+          is_default: false,
+          sort_order: maxOrder + addedCount + 1,
+        });
+
+        if (error) {
+          failedCount++;
+          firstError = firstError ?? error;
+          console.error('Error adding station:', station.name, error);
+          continue;
+        }
+
+        addedCount++;
       }
 
-      toast({ 
-        title: 'Sync Complete', 
-        description: `Found ${stations.length} stations. Added ${addedCount} new channels.` 
+      toast({
+        title: 'Sync Complete',
+        description: `Found ${stations.length} stations. Added ${addedCount}. Skipped ${skippedCount}. Failed ${failedCount}.`,
+        variant: failedCount > 0 ? 'destructive' : undefined,
       });
-      
+
+      if (failedCount > 0) {
+        console.warn('AzuraCast sync failures (first error):', firstError);
+      }
+
       fetchData();
     } catch (error) {
       console.error('Error syncing from AzuraCast:', error);
-      toast({ 
-        title: 'Sync Failed', 
+      toast({
+        title: 'Sync Failed',
         description: 'Could not sync channels from AzuraCast.',
-        variant: 'destructive' 
+        variant: 'destructive',
       });
     } finally {
       setIsSyncing(false);
