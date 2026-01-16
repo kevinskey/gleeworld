@@ -287,26 +287,26 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <QrCode className="h-5 w-5" />
+      <CardHeader className="pb-4 sm:pb-6">
+        <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl lg:text-2xl">
+          <QrCode className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
           Attendance QR Generator
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 sm:space-y-8">
         {/* Event Selection */}
-        <div className="space-y-2">
-          <Label htmlFor="event-select" className="text-base font-medium">Select Event/Class</Label>
+        <div className="space-y-2 sm:space-y-3">
+          <Label htmlFor="event-select" className="text-base sm:text-lg font-medium">Select Event/Class</Label>
           <Select value={selectedEvent} onValueChange={setSelectedEvent}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 sm:h-12 text-sm sm:text-base">
               <SelectValue placeholder="Choose an event to generate QR code for..." />
             </SelectTrigger>
             <SelectContent>
               {events.map((event) => (
                 <SelectItem key={event.id} value={event.id}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{event.title}</span>
-                    <span className="text-xs text-muted-foreground">
+                  <div className="flex flex-col py-1">
+                    <span className="font-medium text-sm sm:text-base">{event.title}</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">
                       {format(new Date(event.start_date), 'MMM dd, yyyy h:mm a')} • {event.event_type}
                     </span>
                   </div>
@@ -317,9 +317,9 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
         </div>
 
         {/* Expiration Setting */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="expiration">QR Code Expires (minutes)</Label>
+        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+          <div className="space-y-2 sm:space-y-3">
+            <Label htmlFor="expiration" className="text-base sm:text-lg font-medium">QR Code Expires (minutes)</Label>
             <Input
               id="expiration"
               type="number"
@@ -327,6 +327,7 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
               max="180"
               value={expirationMinutes}
               onChange={(e) => setExpirationMinutes(parseInt(e.target.value) || 30)}
+              className="h-11 sm:h-12 text-sm sm:text-base"
             />
           </div>
           <div className="flex items-end">
@@ -334,9 +335,9 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
               onClick={regenerateQR}
               disabled={!selectedEvent || loading}
               variant="outline"
-              className="w-full"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base"
             >
-              <QrCode className="h-4 w-4 mr-2" />
+              <QrCode className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Regenerate
             </Button>
           </div>
