@@ -28,6 +28,7 @@ import { BulkUploadDialog } from '@/components/radio/BulkUploadDialog';
 import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
 import { DJTransportControl } from '@/components/radio/DJTransportControl';
 import { RadioScheduleTimeline } from '@/components/radio/RadioScheduleTimeline';
+import { RadioChannelsTab } from '@/components/radio/RadioChannelsTab';
 
 interface AudioTrack {
   id: string;
@@ -67,9 +68,23 @@ export const RadioManagement = () => {
   
   // Use shared radio channels hook for station selection
   const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
-  
+
   // Get switchStream from radio player hook to actually change the audio
   const { switchStream } = useRadioPlayer();
+
+  const getAzuraStationKey = (streamUrl?: string | null) => {
+    if (!streamUrl) return null;
+
+    const listenMatch = streamUrl.match(/\/listen\/([^/]+)\//i);
+    if (listenMatch?.[1]) return listenMatch[1];
+
+    const stationMatch = streamUrl.match(/\/station\/(\d+)/i);
+    if (stationMatch?.[1]) return stationMatch[1];
+
+    return null;
+  };
+
+  const stationKey = getAzuraStationKey(selectedChannel?.stream_url) || 'glee_world_radio';
 
   // Radio stats
   const [radioStats, setRadioStats] = useState<RadioStats>({
@@ -651,6 +666,7 @@ export const RadioManagement = () => {
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap h-auto gap-1 p-1 bg-slate-800 border border-slate-700">
+          <TabsTrigger value="channels" className="text-xs data-[state=active]:bg-primary"><Layers className="h-3 w-3 mr-1" />Channels</TabsTrigger>
           <TabsTrigger value="dashboard" className="text-xs data-[state=active]:bg-primary"><Radio className="h-3 w-3 mr-1" />Dashboard</TabsTrigger>
           <TabsTrigger value="queue" className="text-xs data-[state=active]:bg-primary"><ListMusic className="h-3 w-3 mr-1" />Queue</TabsTrigger>
           <TabsTrigger value="library" className="text-xs data-[state=active]:bg-primary"><Library className="h-3 w-3 mr-1" />Library</TabsTrigger>
@@ -664,6 +680,11 @@ export const RadioManagement = () => {
           <TabsTrigger value="sftp" className="text-xs data-[state=active]:bg-primary"><HardDrive className="h-3 w-3 mr-1" />SFTP</TabsTrigger>
           <TabsTrigger value="config" className="text-xs data-[state=active]:bg-primary"><Settings className="h-3 w-3 mr-1" />Config</TabsTrigger>
         </TabsList>
+
+        {/* CHANNELS (Website / DB) */}
+        <TabsContent value="channels" className="mt-4">
+          <RadioChannelsTab />
+        </TabsContent>
 
         {/* DASHBOARD */}
         <TabsContent value="dashboard" className="space-y-4 mt-4">
@@ -718,7 +739,7 @@ export const RadioManagement = () => {
               currentArtist: radioStats.currentArtist, 
               listenerCount: radioStats.totalListeners 
             }} 
-            stationId={selectedChannel?.id || 'glee_world_radio'}
+            stationId={stationKey}
             stationName={selectedChannel?.name || 'Glee World Radio'}
             onRefresh={handleSync} 
           />
