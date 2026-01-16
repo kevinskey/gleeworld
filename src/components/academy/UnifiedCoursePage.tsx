@@ -29,6 +29,7 @@ import { CourseModules } from './CourseModules';
 import { ClassSessionJournals } from './journals/ClassSessionJournals';
 import { JournalArchives } from './journals/JournalArchives';
 import { Mus240ResourcesTab } from './Mus240ResourcesTab';
+import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants';
 import { useUserRole } from '@/hooks/useUserRole';
 const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager').then(m => ({
@@ -240,6 +241,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               { icon: Video, label: 'Video Library', tab: 'video-library' },
               { icon: Bell, label: 'Announcements', tab: 'announcements' },
               { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
+              { icon: MessageSquare, label: 'Discussions', tab: 'discussions' },
               { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
               { icon: PenLine, label: 'Journals', tab: 'journals' },
               { icon: FileCheck, label: 'Tests', tab: 'tests' },
@@ -495,6 +497,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {activeTab === 'polls' && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading polls...</CardContent></Card>}>
                 <AcademyPollSystem courseId={course.id} />
               </React.Suspense>}
+
+            {/* Discussions Tab */}
+            {activeTab === 'discussions' && (
+              <DiscussionsSection courseId={course.id} />
+            )}
 
             {/* AI Groups Tab - Available for all courses */}
             {activeTab === 'ai-groups' && <Card>
