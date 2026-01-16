@@ -312,23 +312,69 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                     <span>kjohns10@spelman.edu</span>
                     <span className="hidden lg:inline">Office: Fine Arts 105</span>
                     <span className="hidden lg:inline">Office Hours: MWF 3-5 PM</span>
-                    {teachingAssistants.length > 0 && (
-                      <>
-                        <span className="text-white/50">|</span>
-                        <span className="flex items-center gap-1">
-                          <GraduationCap className="h-3 w-3" />
-                          <span className="font-medium text-white/90">
-                            TA{teachingAssistants.length > 1 ? 's' : ''}:
-                          </span>
-                          {teachingAssistants.map((ta, idx) => (
-                            <span key={ta.id}>
-                              {ta.profile?.full_name || 'TA'}
-                              {idx < teachingAssistants.length - 1 ? ', ' : ''}
-                            </span>
-                          ))}
-                        </span>
-                      </>
-                    )}
+                    {/* Display staff by role */}
+                    {(() => {
+                      const instructors = teachingAssistants.filter(ta => 
+                        ta.notes?.toLowerCase().includes('instructor')
+                      );
+                      const secretaries = teachingAssistants.filter(ta => 
+                        ta.notes?.toLowerCase().includes('secretary')
+                      );
+                      const tas = teachingAssistants.filter(ta => 
+                        !ta.notes?.toLowerCase().includes('instructor') && 
+                        !ta.notes?.toLowerCase().includes('secretary')
+                      );
+                      
+                      return (
+                        <>
+                          {instructors.length > 0 && (
+                            <>
+                              <span className="text-white/50">|</span>
+                              <span className="flex items-center gap-1">
+                                <span className="font-medium text-white/90">Instructor:</span>
+                                {instructors.map((inst, idx) => (
+                                  <span key={inst.id}>
+                                    {inst.profile?.full_name}
+                                    {idx < instructors.length - 1 ? ', ' : ''}
+                                  </span>
+                                ))}
+                              </span>
+                            </>
+                          )}
+                          {secretaries.length > 0 && (
+                            <>
+                              <span className="text-white/50">|</span>
+                              <span className="flex items-center gap-1">
+                                <span className="font-medium text-white/90">Secretary:</span>
+                                {secretaries.map((sec, idx) => (
+                                  <span key={sec.id}>
+                                    {sec.profile?.full_name}
+                                    {idx < secretaries.length - 1 ? ', ' : ''}
+                                  </span>
+                                ))}
+                              </span>
+                            </>
+                          )}
+                          {tas.length > 0 && (
+                            <>
+                              <span className="text-white/50">|</span>
+                              <span className="flex items-center gap-1">
+                                <GraduationCap className="h-3 w-3" />
+                                <span className="font-medium text-white/90">
+                                  TA{tas.length > 1 ? 's' : ''}:
+                                </span>
+                                {tas.map((ta, idx) => (
+                                  <span key={ta.id}>
+                                    {ta.profile?.full_name || 'TA'}
+                                    {idx < tas.length - 1 ? ', ' : ''}
+                                  </span>
+                                ))}
+                              </span>
+                            </>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
                 <Button 
