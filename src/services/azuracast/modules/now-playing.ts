@@ -7,7 +7,8 @@ import { apiClient } from '../api-client';
 import type { 
   AzuraCastNowPlaying, 
   AzuraCastStation, 
-  AzuraCastSongHistory 
+  AzuraCastSongHistory,
+  AzuraCastListener
 } from '../types';
 
 /**
@@ -74,8 +75,8 @@ export async function getStationStatus(stationId?: string): Promise<unknown> {
 /**
  * Get listener count and details
  */
-export async function getListeners(stationId?: string): Promise<unknown[]> {
-  return apiClient.request<unknown[]>(
+export async function getListeners(stationId?: string): Promise<AzuraCastListener[]> {
+  return apiClient.request<AzuraCastListener[]>(
     `/station/{stationId}/listeners`,
     'GET',
     undefined,

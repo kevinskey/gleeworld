@@ -133,7 +133,7 @@ export async function requestSongFromPlaylist(
   playlistId: number,
   excludeIds?: Set<string>,
   stationId?: string
-): Promise<{ success: boolean; message: string; song?: unknown }> {
+): Promise<{ success: boolean; message: string; song?: { id?: string; title?: string; artist?: string } }> {
   console.log('AzuraCast: Requesting random song from playlist:', playlistId);
   
   try {

@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from '../api-client';
-import type { CreateScheduleData, AzuraCastScheduleEntry } from '../types';
+import type { CreateScheduleData, AzuraCastScheduleEntry, AzuraCastStationConfig } from '../types';
 
 // ============= Station Restart =============
 
@@ -80,8 +80,8 @@ export async function restartFrontend(stationId?: string): Promise<void> {
 /**
  * Get station configuration
  */
-export async function getStationConfig(stationId?: string): Promise<unknown> {
-  return apiClient.request(`/station/{stationId}`, 'GET', undefined, { stationId });
+export async function getStationConfig(stationId?: string): Promise<AzuraCastStationConfig> {
+  return apiClient.request<AzuraCastStationConfig>(`/station/{stationId}`, 'GET', undefined, { stationId });
 }
 
 /**
@@ -99,8 +99,8 @@ export async function updateStationConfig(
     default_album_art_url?: string;
   },
   stationId?: string
-): Promise<unknown> {
-  return apiClient.request(`/station/{stationId}`, 'PUT', config, { stationId });
+): Promise<AzuraCastStationConfig> {
+  return apiClient.request<AzuraCastStationConfig>(`/station/{stationId}`, 'PUT', config, { stationId });
 }
 
 // ============= Schedule =============

@@ -3,14 +3,121 @@
  * Main entry point - exports all functionality with backward compatibility
  */
 
-// Re-export types
+// Re-export types (this is the single source of truth for types)
 export * from './types';
 
 // Re-export API client
 export { apiClient, AzuraCastApiClient } from './api-client';
 
-// Re-export all modules
-export * from './modules';
+// Re-export module functions (but NOT their local type definitions)
+export {
+  getNowPlaying,
+  getStationInfo,
+  getAllStations,
+  getSongHistory,
+  getStationStatus,
+  getListeners,
+  disconnectListener,
+} from './modules/now-playing';
+
+export {
+  getPlaylists,
+  createPlaylist,
+  updatePlaylist,
+  deletePlaylist,
+  getPlaylistMedia,
+  getRequestableSongs,
+  submitSongRequest,
+  requestSongFromPlaylist,
+} from './modules/playlists';
+
+export {
+  getFiles,
+  getAllMedia,
+  getMediaCount,
+  getMediaFile,
+  searchMedia,
+  updateMedia,
+  deleteMedia,
+  addToPlaylist,
+  removeFromPlaylist,
+  uploadMediaFromUrl,
+} from './modules/media';
+
+export {
+  getQueue,
+  removeFromQueue,
+  clearQueue,
+  requestSong,
+} from './modules/queue';
+
+export {
+  getStreamers,
+  createStreamer,
+  updateStreamer,
+  deleteStreamer,
+} from './modules/streamers';
+
+export {
+  restartStation,
+  startBackend,
+  stopBackend,
+  restartBackend,
+  skipTrack,
+  startFrontend,
+  stopFrontend,
+  restartFrontend,
+  getStationConfig,
+  updateStationConfig,
+  getSchedule,
+  createScheduleEntry,
+  updateScheduleEntry,
+  deleteScheduleEntry,
+} from './modules/station-control';
+
+export {
+  getMounts,
+  createMount,
+  updateMount,
+  deleteMount,
+  getHlsStreams,
+  getRemoteRelays,
+  createRemoteRelay,
+  deleteRemoteRelay,
+} from './modules/mounts';
+
+export type { 
+  AzuraCastMount as AzuraCastMountDetail,
+  CreateMountData,
+  CreateRemoteRelayData,
+} from './modules/mounts';
+
+export {
+  getWebhooks,
+  createWebhook,
+  updateWebhook,
+  deleteWebhook,
+  testWebhook,
+} from './modules/webhooks';
+
+export {
+  getListenerReport,
+  getPerformanceReport,
+  getSongRequestReport,
+} from './modules/reports';
+
+export {
+  getSftpUsers,
+  createSftpUser,
+  deleteSftpUser,
+} from './modules/sftp';
+
+export {
+  getPodcasts,
+  createPodcast,
+  deletePodcast,
+  getPodcastEpisodes,
+} from './modules/podcasts';
 
 // Import for backward-compatible class
 import { apiClient } from './api-client';
@@ -137,6 +244,3 @@ export class AzuraCastService {
 
 // Default singleton for backward compatibility
 export const azuraCastService = new AzuraCastService();
-
-// Also export the type for the now playing data
-export type { AzuraCastNowPlaying } from './types';
