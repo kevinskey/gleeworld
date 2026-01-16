@@ -12,7 +12,8 @@ import { Radio, Plus, Pencil, Trash2, Clock, Music, Calendar, GripVertical, Save
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { azuraCastService } from '@/services/azuracast';
+import { azuraCastService, apiClient } from '@/services/azuracast';
+import type { AzuraCastStation } from '@/services/azuracast/types';
 import { StreamersTab } from './StreamersTab';
 import { QueueManagementTab } from './QueueManagementTab';
 
@@ -180,7 +181,30 @@ export const RadioChannelsTab = () => {
 
       // Fetch all stations from AzuraCast.
       // Stations can be referenced by numeric ID (e.g. /station/23) or shortcode.
-      const stations = await azuraCastService.getAllStations();
+      let stations = await azuraCastService.getAllStations();
+
+      // Some AzuraCast installs (or API permissions) don't expose /api/stations.
+      // In that case, fall back to probing station IDs (1..50) and collecting those that exist.
+      if (!stations || stations.length === 0) {
+        console.warn('AzuraCast: /stations returned empty; probing station IDs as fallback');
+
+        const discovered: AzuraCastStation[] = [];
+        const maxProbeId = 50;
+
+        for (let id = 1; id <= maxProbeId; id++) {
+          try {
+            const station = await apiClient.request<AzuraCastStation>(`/station/${id}`);
+            if (station?.id && station?.name) {
+              discovered.push(station);
+            }
+          } catch {
+            // Ignore missing stations / permission errors and keep probing.
+          }
+        }
+
+        stations = discovered;
+      }
+
       console.log('AzuraCast stations fetched:', stations);
       console.log('AzuraCast station IDs:', stations?.map(s => s.id));
       console.log('AzuraCast station shortcodes:', stations?.map(s => s.shortcode));
