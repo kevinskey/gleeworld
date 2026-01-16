@@ -12,8 +12,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { HEADER_ICON_SIZES } from '@/components/layout/headerIconSizes';
-import { RadioPresetButton } from './RadioPresetButton';
-import { RadioChannelDrawer } from './RadioChannelDrawer';
+import { RadioChannelSpinner } from './RadioChannelSpinner';
 
 // CSS class added to body when radio bar is open - used by other components to add padding
 const RADIO_OPEN_CLASS = 'radio-bar-open';
@@ -213,42 +212,14 @@ export const HeaderRadioControls = () => {
                       GleeWorld
                     </span>
 
-                    {/* Dynamic Preset Buttons - Show fewer on mobile */}
-                    <div className="flex items-center gap-0.5 flex-shrink-0">
-                      {[1, 2, 3, 4, 5, 6].map((slotNumber) => {
-                        // Only show first 3 presets on mobile
-                        const showOnMobile = slotNumber <= 3;
-                        const preset = presets.find(p => p.slot_number === slotNumber);
-                        const channel = preset?.channel;
-                        const isSelected = selectedChannel?.id === channel?.id;
-                        
-                        return (
-                          <div key={slotNumber} className={cn(!showOnMobile && "hidden sm:block")}>
-                            <RadioPresetButton
-                              preset={preset}
-                              slotNumber={slotNumber}
-                              isSelected={isSelected}
-                              isLoading={presetsLoading || channelsLoading}
-                              onClick={() => {
-                                if (channel) {
-                                  handleChannelChange(channel);
-                                }
-                              }}
-                            />
-                          </div>
-                        );
-                      })}
-                      
-                      {/* Channel Browser Drawer Button */}
-                      <RadioChannelDrawer
-                        channels={channels}
-                        selectedChannel={selectedChannel}
-                        presets={presets}
-                        onChannelSelect={handleChannelChange}
-                        onAddToPreset={setPresetSlot}
-                        isPlaying={isPlaying}
-                      />
-                    </div>
+                    {/* Channel Spinner - Replaces preset buttons */}
+                    <RadioChannelSpinner
+                      channels={channels}
+                      selectedChannel={selectedChannel}
+                      onChannelSelect={handleChannelChange}
+                      isPlaying={isPlaying}
+                      isLoading={channelsLoading}
+                    />
 
                     {/* LCD Display - Give it min-width on mobile */}
                     <div className="flex-1 min-w-[80px] sm:min-w-[100px] mx-0.5 sm:mx-2">
