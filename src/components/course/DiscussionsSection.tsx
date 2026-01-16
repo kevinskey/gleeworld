@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Lock, MessageCircle, Plus, Calendar, Award, AlertCircle } from 'lucide-react';
+import { MessageSquare, Lock, MessageCircle, Plus, Calendar, Award, AlertCircle, Edit } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, isPast, isFuture, differenceInHours } from 'date-fns';
@@ -34,8 +34,9 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
   const { isInstructor, isAdmin } = useUserRole();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedDiscussion, setSelectedDiscussion] = useState<Discussion | null>(null);
+  const [editingDiscussion, setEditingDiscussion] = useState<Discussion | null>(null);
 
-  // Only instructors and admins can create discussions
+  // Only instructors and admins can create/edit discussions
   const canCreateDiscussion = isInstructor() || isAdmin();
 
   const { data: discussions, isLoading } = useQuery({
@@ -82,6 +83,19 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
         Due {format(due, 'MMM d')}
       </Badge>
     );
+  };
+
+  const handleEditClick = (e: React.MouseEvent, discussion: Discussion) => {
+    e.stopPropagation(); // Prevent card click
+    setEditingDiscussion(discussion);
+    setCreateDialogOpen(true);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setCreateDialogOpen(open);
+    if (!open) {
+      setEditingDiscussion(null);
+    }
   };
 
   if (selectedDiscussion) {
@@ -148,10 +162,22 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
                       </div>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="flex items-center gap-1 flex-shrink-0">
-                    <MessageCircle className="h-3 w-3" />
-                    {discussion.reply_count || 0}
-                  </Badge>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {canCreateDiscussion && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => handleEditClick(e, discussion)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <MessageCircle className="h-3 w-3" />
+                      {discussion.reply_count || 0}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -182,8 +208,9 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
 
       <CreateDiscussionDialog
         open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
+        onOpenChange={handleDialogClose}
         courseId={courseId}
+        editingDiscussion={editingDiscussion}
       />
     </div>
   );
