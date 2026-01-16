@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Lock, MessageCircle, Send, Loader2, Award, Calendar, AlertCircle, Check } from 'lucide-react';
+import { ArrowLeft, Lock, MessageCircle, Send, Loader2, Award, Calendar, AlertCircle, Check, CheckCircle2, Circle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +37,7 @@ interface Reply {
   feedback?: string | null;
   graded_at?: string | null;
   graded_by?: string | null;
+  parent_reply_id?: string | null;
   profile?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -58,6 +59,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
   const { isInstructor, isAdmin } = useUserRole();
   const queryClient = useQueryClient();
   const [replyContent, setReplyContent] = useState('');
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [gradingReplyId, setGradingReplyId] = useState<string | null>(null);
   const [gradeInput, setGradeInput] = useState<number>(0);
   const [feedbackInput, setFeedbackInput] = useState('');
@@ -107,6 +109,12 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
       }));
     },
   });
+
+  // Check student's participation status
+  // For "post once, respond once": first post is original, any subsequent is a response
+  const userPosts = replies?.filter(r => r.created_by === user?.id) || [];
+  const hasPostedOriginal = userPosts.length >= 1;
+  const hasRespondedToPeer = userPosts.length >= 2;
 
   const replyMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -199,6 +207,42 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
         Back to Discussions
       </Button>
 
+      {/* Participation Tracker for Students */}
+      {user && !canGrade && discussion.is_graded && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">Your Participation</p>
+                <p className="text-xs text-muted-foreground">Post once, respond once</p>
+              </div>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  {hasPostedOriginal ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Circle className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <span className={hasPostedOriginal ? 'text-green-600' : 'text-muted-foreground'}>
+                    Original Post
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {hasRespondedToPeer ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Circle className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <span className={hasRespondedToPeer ? 'text-green-600' : 'text-muted-foreground'}>
+                    Peer Response
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Original Post */}
       <Card>
         <CardHeader>
@@ -214,7 +258,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
                   {discussion.is_locked && <Lock className="h-4 w-4 text-muted-foreground" />}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Posted by {authorProfile?.full_name || 'Anonymous'} on{' '}
+                  Posted by {authorProfile?.full_name || 'Instructor'} on{' '}
                   {format(new Date(discussion.created_at), 'MMM d, yyyy h:mm a')}
                 </p>
                 {/* Due date and grading info */}
@@ -244,138 +288,192 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-foreground whitespace-pre-wrap">{discussion.content}</p>
+          <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
+            {discussion.content}
+          </div>
         </CardContent>
       </Card>
 
       {/* Replies */}
       <div className="space-y-3">
-        <h3 className="font-semibold text-lg">Replies</h3>
+        <h3 className="font-semibold text-lg">Student Responses</h3>
         
         {repliesLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : replies && replies.length > 0 ? (
-          replies.map((reply) => (
-            <Card key={reply.id} className="bg-muted/30">
-              <CardContent className="pt-4">
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={reply.profile?.avatar_url || undefined} />
-                    <AvatarFallback>{getInitials(reply.profile?.full_name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="font-medium text-sm">
-                        {reply.profile?.full_name || 'Anonymous'}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(reply.created_at), 'MMM d, yyyy h:mm a')}
-                      </span>
-                      {/* Show grade badge if graded */}
-                      {reply.grade !== null && reply.grade !== undefined && discussion.max_points && (
-                        <Badge className={`${getLetterGradeColor(calculateLetterGrade(reply.grade, discussion.max_points))} text-xs`}>
-                          {reply.grade}/{discussion.max_points} ({calculateLetterGrade(reply.grade, discussion.max_points)})
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm whitespace-pre-wrap">{reply.content}</p>
-                    
-                    {/* Feedback display */}
-                    {reply.feedback && (
-                      <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/20">
-                        <p className="text-xs font-medium text-primary">Instructor Feedback:</p>
-                        <p className="text-sm text-muted-foreground">{reply.feedback}</p>
+          replies.map((reply) => {
+            const isOwnPost = reply.created_by === user?.id;
+            const isPeerPost = reply.created_by !== user?.id && reply.created_by !== discussion.created_by;
+            
+            return (
+              <Card key={reply.id} className={`bg-muted/30 ${isOwnPost ? 'border-primary/30' : ''}`}>
+                <CardContent className="pt-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={reply.profile?.avatar_url || undefined} />
+                      <AvatarFallback>{getInitials(reply.profile?.full_name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-medium text-sm">
+                          {reply.profile?.full_name || 'Anonymous'}
+                        </span>
+                        {isOwnPost && (
+                          <Badge variant="outline" className="text-xs">You</Badge>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(reply.created_at), 'MMM d, yyyy h:mm a')}
+                        </span>
+                        {/* Show grade badge if graded */}
+                        {reply.grade !== null && reply.grade !== undefined && discussion.max_points && (
+                          <Badge className={`${getLetterGradeColor(calculateLetterGrade(reply.grade, discussion.max_points))} text-xs`}>
+                            {reply.grade}/{discussion.max_points} ({calculateLetterGrade(reply.grade, discussion.max_points)})
+                          </Badge>
+                        )}
                       </div>
-                    )}
+                      <p className="text-sm whitespace-pre-wrap">{reply.content}</p>
+                      
+                      {/* Feedback display */}
+                      {reply.feedback && (
+                        <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/20">
+                          <p className="text-xs font-medium text-primary">Instructor Feedback:</p>
+                          <p className="text-sm text-muted-foreground">{reply.feedback}</p>
+                        </div>
+                      )}
 
-                    {/* Grading form for instructors */}
-                    {canGrade && gradingReplyId === reply.id && (
-                      <div className="mt-3 p-3 border rounded-lg bg-background space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1">
-                            <Label htmlFor={`grade-${reply.id}`} className="text-xs">
-                              Grade (0-{discussion.max_points})
-                            </Label>
-                            <Input
-                              id={`grade-${reply.id}`}
-                              type="number"
-                              min={0}
-                              max={discussion.max_points || 10}
-                              value={gradeInput}
-                              onChange={(e) => setGradeInput(parseInt(e.target.value) || 0)}
-                              className="h-8"
-                            />
+                      {/* Reply to peer button (for students who haven't responded yet) */}
+                      {user && !canGrade && isPeerPost && !hasRespondedToPeer && !replyingToId && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="mt-2"
+                          onClick={() => setReplyingToId(reply.id)}
+                        >
+                          <MessageCircle className="h-3 w-3 mr-1" />
+                          Respond to {reply.profile?.full_name?.split(' ')[0] || 'this post'}
+                        </Button>
+                      )}
+
+                      {/* Inline reply form */}
+                      {replyingToId === reply.id && (
+                        <div className="mt-3 p-3 border rounded-lg bg-background space-y-2">
+                          <Label className="text-xs">Responding to {reply.profile?.full_name}</Label>
+                          <Textarea
+                            placeholder="Build on their idea, gently challenge an assumption, or connect to a different era..."
+                            value={replyContent}
+                            onChange={(e) => setReplyContent(e.target.value)}
+                            rows={3}
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <Button size="sm" variant="outline" onClick={() => {
+                              setReplyingToId(null);
+                              setReplyContent('');
+                            }}>
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                if (replyContent.trim()) {
+                                  replyMutation.mutate(replyContent);
+                                  setReplyingToId(null);
+                                }
+                              }}
+                              disabled={replyMutation.isPending || !replyContent.trim()}
+                            >
+                              {replyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 mr-1" />}
+                              Post Response
+                            </Button>
                           </div>
                         </div>
-                        <div>
-                          <Label htmlFor={`feedback-${reply.id}`} className="text-xs">
-                            Feedback (optional)
-                          </Label>
-                          <Textarea
-                            id={`feedback-${reply.id}`}
-                            placeholder="Provide feedback..."
-                            value={feedbackInput}
-                            onChange={(e) => setFeedbackInput(e.target.value)}
-                            rows={2}
-                          />
-                        </div>
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setGradingReplyId(null)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleSubmitGrade(reply.id)}
-                            disabled={gradeMutation.isPending}
-                          >
-                            {gradeMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Check className="h-4 w-4 mr-1" />
-                            )}
-                            Save Grade
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Grade button for instructors */}
-                    {canGrade && gradingReplyId !== reply.id && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="mt-2"
-                        onClick={() => startGrading(reply)}
-                      >
-                        <Award className="h-3 w-3 mr-1" />
-                        {reply.grade !== null && reply.grade !== undefined ? 'Edit Grade' : 'Grade'}
-                      </Button>
-                    )}
+                      {/* Grading form for instructors */}
+                      {canGrade && gradingReplyId === reply.id && (
+                        <div className="mt-3 p-3 border rounded-lg bg-background space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-xs">Grade (0-{discussion.max_points})</Label>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={discussion.max_points || 10}
+                                value={gradeInput}
+                                onChange={(e) => setGradeInput(parseInt(e.target.value) || 0)}
+                                className="h-8"
+                              />
+                            </div>
+                            <div className="text-xs text-muted-foreground pt-5">
+                              <p>Original Post: ~5pts</p>
+                              <p>Response: ~3pts</p>
+                              <p>Tone/Length: ~2pts</p>
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-xs">Feedback</Label>
+                            <Textarea
+                              placeholder="Specific, constructive feedback..."
+                              value={feedbackInput}
+                              onChange={(e) => setFeedbackInput(e.target.value)}
+                              rows={2}
+                            />
+                          </div>
+                          <div className="flex gap-2 justify-end">
+                            <Button size="sm" variant="outline" onClick={() => setGradingReplyId(null)}>
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleSubmitGrade(reply.id)}
+                              disabled={gradeMutation.isPending}
+                            >
+                              {gradeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
+                              Save Grade
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Grade button for instructors */}
+                      {canGrade && gradingReplyId !== reply.id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mt-2"
+                          onClick={() => startGrading(reply)}
+                        >
+                          <Award className="h-3 w-3 mr-1" />
+                          {reply.grade !== null && reply.grade !== undefined ? 'Edit Grade' : 'Grade'}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                </CardContent>
+              </Card>
+            );
+          })
         ) : (
           <Card className="bg-muted/30">
             <CardContent className="py-6 text-center text-muted-foreground">
-              No replies yet. Be the first to respond!
+              No responses yet. Be the first to share your reflection!
             </CardContent>
           </Card>
         )}
       </div>
 
-      {/* Reply Form */}
-      {!discussion.is_locked && user && (
-        <Card>
-          <CardContent className="pt-4">
-            {isPastDue && !canGrade && (
+      {/* Original Post Form (for students who haven't posted) */}
+      {!discussion.is_locked && user && !canGrade && !hasPostedOriginal && !replyingToId && (
+        <Card className="border-primary/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Circle className="h-4 w-4" />
+              Share Your Original Reflection
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isPastDue && (
               <div className="mb-3 p-2 bg-destructive/10 text-destructive rounded flex items-center gap-2 text-sm">
                 <AlertCircle className="h-4 w-4" />
                 This discussion is past due. Your response may be marked late.
@@ -383,7 +481,37 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
             )}
             <form onSubmit={handleSubmitReply} className="space-y-3">
               <Textarea
-                placeholder="Write your reply..."
+                placeholder="Add your voice: Reference music, use listening language, make a clear claim or question..."
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                disabled={replyMutation.isPending}
+                rows={4}
+              />
+              <div className="flex justify-between items-center">
+                <p className="text-xs text-muted-foreground">
+                  A strong post uses listening language and engages the music directly.
+                </p>
+                <Button type="submit" disabled={replyMutation.isPending || !replyContent.trim()}>
+                  {replyMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 mr-2" />
+                  )}
+                  Post Reflection
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Instructor reply form */}
+      {!discussion.is_locked && user && canGrade && (
+        <Card>
+          <CardContent className="pt-4">
+            <form onSubmit={handleSubmitReply} className="space-y-3">
+              <Textarea
+                placeholder="Add instructor comment..."
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
                 disabled={replyMutation.isPending}
@@ -396,10 +524,23 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
                   ) : (
                     <Send className="h-4 w-4 mr-2" />
                   )}
-                  Post Reply
+                  Post Comment
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Completion message for students */}
+      {user && !canGrade && hasPostedOriginal && hasRespondedToPeer && (
+        <Card className="border-green-500/30 bg-green-500/5">
+          <CardContent className="py-4 text-center">
+            <CheckCircle2 className="h-8 w-8 text-green-600 mx-auto mb-2" />
+            <p className="font-medium text-green-700">Participation Complete!</p>
+            <p className="text-sm text-muted-foreground">
+              You've added your voice and practiced listening.
+            </p>
           </CardContent>
         </Card>
       )}
