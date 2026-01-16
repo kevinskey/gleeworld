@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from '../api-client';
+import { DEFAULT_CONFIG } from '../types';
 import type { 
   AzuraCastNowPlaying, 
   AzuraCastStation, 
@@ -13,12 +14,30 @@ import type {
 
 /**
  * Fetch now playing data for a station
+ * NOTE: This uses a direct public fetch since /nowplaying is a public API endpoint
+ * that doesn't require authentication.
  */
 export async function getNowPlaying(stationId?: string): Promise<AzuraCastNowPlaying | null> {
   const targetStation = stationId || apiClient.defaultStationId;
   try {
     console.log('AzuraCast: Fetching now playing for station:', targetStation);
-    return await apiClient.request<AzuraCastNowPlaying>(`/nowplaying/${targetStation}`);
+    
+    // Use direct public fetch - /nowplaying endpoint doesn't require auth
+    const response = await fetch(
+      `${DEFAULT_CONFIG.baseUrl}/api/nowplaying/${targetStation}`,
+      {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+      }
+    );
+    
+    if (!response.ok) {
+      console.error('AzuraCast: Now playing request failed:', response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    return data as AzuraCastNowPlaying;
   } catch (error) {
     console.error('AzuraCast: Failed to fetch now playing:', error);
     return null;
