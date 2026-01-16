@@ -1011,6 +1011,330 @@ Your signature indicates that you:
 ---
 
 *Revised January 2024*`
+  },
+  {
+    id: "shadow-responsibilities",
+    slug: "shadow-responsibilities",
+    title: "Shadow Responsibilities and Tasks",
+    shortTitle: "Shadow Tasks",
+    orderIndex: 16,
+    icon: "UserCheck",
+    isVisible: true,
+    content: `# Shadow Responsibilities and Tasks
+
+This section outlines the shadowing responsibilities and tasks for each executive board position. All responsibilities listed must be completed prior to running for the position.
+
+---
+
+## President Shadowing Responsibilities
+
+*Details to be provided by current President.*
+
+---
+
+## Chief of Staff Shadowing Responsibilities
+
+- Have Meeting with Dr. Johnson regarding any request from him
+- Relay all information back to Madam President or have her attend as well
+- Create action item list with Dr. Johnson to share with Madam President
+
+---
+
+## Secretary Shadowing Responsibilities
+
+### Take Attendance
+- Note who is present (came in before 5:05) and who is absent
+- Note tardy students; put "t" in the box and comment with the time they entered
+
+### Take Photos
+- Send photos to the current Secretary
+- Each rehearsal should have a photo taken at 5:05 to show who arrived on time
+- Ensure that everyone is visible—try to take the photo when everyone is sitting
+
+### Process Excusals
+- Put in 5-10 excusals into the spreadsheet
+- Look in the excusal submissions and indicate either "y" for yes or "n" for no; current Secretary will review afterward
+- Replace the relevant absences or tardies with "exc" and comment "excusal form" on the attendance sheet
+
+### Announcements
+- (Occasionally) Make announcements regarding forms, reminders, etc.
+
+---
+
+## Vice President Shadow Tasks
+
+### 1. Event and Bonding Initiative
+- Propose at least one original event or bonding initiative for the organization
+- Include the purpose of the event, target audience, proposed date range, and expected outcomes
+- Provide a brief outline of activities and materials needed
+
+### 2. Community Service Initiative
+- Draft one complete community service proposal
+- Include the organization or population served, alignment with the organization's mission, and estimated number of participants
+- Outline logistics, timeline, and any anticipated costs or partnerships
+
+### 3. Senior Banquet Theme
+- Develop one creative and cohesive theme for the end of year Senior Banquet
+- Include color palette, décor ideas, attire suggestions, and overall tone
+- Provide a short rationale explaining why the theme fits the graduating class
+
+### 4. Administrative and Logistical Experience
+- Make at least one official reservation (venue, meeting space, or vendor)
+- Reserve a room through Dawn following proper procedures and communication etiquette
+- Place at least one food order, including researching options, pricing, and deadlines
+
+### 5. Reflection and Accountability
+- Submit a short reflection describing what was learned from each task and how the Vice President role supports the organization's success
+
+*Everyone will have the opportunity to make at least one announcement.*
+
+---
+
+## Treasurer Shadow Tasks
+
+### 1. Tour Snack Budget
+- Create a detailed snack budget for tour
+- Include itemized costs, quantities, total projected cost, and justification for selections
+- Identify cost saving alternatives if needed
+
+### 2. Tour Stipend Spreadsheet
+- Develop a clear stipend spreadsheet for tour participants
+- Include names, stipend amounts, distribution method, and totals
+- Ensure the spreadsheet is accurate, organized, and ready for review
+
+### 3. Financial Operations Experience
+- Accompany the Treasurer to cash a check
+- Observe and document the process, including required documentation and follow up steps
+- Reflect on accountability and financial responsibility
+
+### 4. Fundraiser or Revenue Generating Event
+- Propose at least one fundraiser or event idea
+- Examples include Valentine Grams, Beats and Bingo, or similar concepts
+- Include projected revenue, expenses, pricing strategy, and timeline
+
+### 5. Reflection and Financial Insight
+- Submit a reflection on financial decision making, budgeting challenges, and how the Treasurer role safeguards the organization
+
+*Everyone will have the opportunity to make at least one announcement.*
+
+---
+
+## Chaplain Shadow Responsibilities
+
+### 1. Create a Lesson Plan with Correlated Scripture
+After rehearsal, write a 5–7 minute mini lesson plan tied to something the group needed that day (confidence, unity, discipline, humility, consistency, etc.).
+
+**Include:**
+- Theme
+- 1–2 scriptures that match the theme
+- 2–3 discussion questions (quick, reflective)
+- 1 practical takeaway for next rehearsal/performance
+
+Submit it to the Chaplain within 24 hours for approval/use.
+
+### 2. Closing Encouragement / Prayer Support
+- After rehearsal, share a 30–60 second encouragement (scripture/affirmation) and help lead a short prayer (if the group is comfortable)
+- Keep a "Rehearsal Reflection" note: vibe + what the group needed (3 bullets)
+- Send the Chaplain 2 devotion options weekly (one scripture + one short reflection)
+
+### 3. Unity & Morale Building
+- After rehearsal, lead a quick "wins + gratitude" moment (2 minutes): one win + one shoutout
+- Draft a recap message (or send with approval): wins + reminders + encouragement
+- Make sure nobody leaves feeling alone—invite quieter members into a quick conversation before dismissing
+
+---
+
+## Librarian Shadow Responsibilities
+
+All responsibilities listed below must be completed at least once prior to running for the position.
+
+### Music Preparation (Before Rehearsal)
+- Assist with preparing music for rehearsal, including printing when necessary and placing all music on the piano
+
+### Inventory & Organization
+- Support inventory management by tracking original copy counts and helping maintain an organized music system
+- Help collect, organize, and properly store music after rehearsal, ensuring all materials are returned to the storage room
+
+### Digital Archiving
+- Scan and upload music to gleeworld.org for digital access and recordkeeping
+
+### General Support
+- Assist general body members as needed during rehearsals and related activities
+
+---
+
+## Musical Leadership (Section Leaders and Student Conductor) Shadowing Responsibilities
+
+### Lead Warm-ups for One Rehearsal
+- Five to ten-minute warm-up that encompasses an alto two to a soprano one range
+- Exercises should work on breathing technique, diction, tone, and/or choir blend
+- Teach a new exercise that SCGC has not done yet! (not a requirement but would be nice to see)
+
+### Lead a Sectional for 15-30 Minutes
+- Draft a lesson plan to share with the section leader and the student conductor
+- Demonstrate adequate piano skills and vocal technique during the sectional
+- After the sectional, have a quick meeting with the section leader to discuss strengths and weaknesses, and how the section can improve
+
+### Create a Music Theory/Vocal Technique Presentation
+- No more than 7 minutes, please
+- While a visual medium isn't required, you may find it makes presenting easier
+- Topic needs to include everyone's level of learning (novice to advanced music majors)
+- Needs to have an interactive portion (e.g., warm-ups work on the vocal technique covered in the lesson or members fill out a short music theory quiz)
+
+### Listening and Aural Skills
+- Listen to your section and write down the strengths and weaknesses of that rehearsal
+- Discuss what you noted with your section leader after rehearsal as well as identify three solutions to any issues you found
+- The goal of this shadowing experience is to demonstrate the ability to critically listen and identify problems and feasible solutions
+
+---
+
+## Road and Tour Manager Tasks
+
+### Road Manager Tasks
+
+#### Event Scenario
+- Draft a contract and an itinerary in response to a mock booking request
+- You must be familiar with the honorarium prices, ensure a green room with water, tea, and food is provided, as well as other accommodations for transporting instruments
+- Additionally, you have to be able to determine whether or not the booking meets our criteria, or if it's better to deny it
+
+#### Leading an Event
+- You will act as Road Manager for the Day! (with guidance of course)
+- You will be in charge of ensuring all members are aware of the call time, set list order, and perform wake up/wellness calls, if necessary, if a member is absent or running behind
+- You will also have to keep things on schedule! If sound check is turning more into a rehearsal, kindly remind everyone that a schedule is in place
+- Read the room energy
+
+#### Go Over the Dos and Don'ts
+- Go over the Dos and Don'ts of Road Management with current Road Manager
+
+#### Christmas Carol Preparation
+- Review the extensive list of things that need to be completed in preparation for A Taste of Christmas, Christmas Carol, and the Toy Drive
+- **ATOC:** Ensure schools are aware of the no outside food policy and ensure they're aware of meal details with the caf. Keep track of reservations for the event
+- **Start the Toy Drive EARLY**—like November 1st really
+- **CC:** Review the 3-day long itinerary outline. Ensure mixed and non-mixed are aware of their call times and responsibilities (if you're in mixed, enlist a non-mixed leader). Keep note of important events such as alumnae chat, glardy, and the banquet
+
+#### Make Announcements
+- Make announcements and keep track of absent and excusal messages
+- Connect with the secretary and student conductor to ensure everyone is aware
+
+### Tour Manager Tasks
+
+#### Make a Plan
+- Look at the past tour stops and determine based on the experience if you would like to contact the host and see if they would like us to come back again
+
+#### Draft 2 Days of Tour
+- Create an itinerary for 2 days of tour
+- This should include meal times (which are paid for by glee or by the host), performance and soundcheck times, and travel times
+
+#### Event Scenario
+- Draft a contract and an itinerary in response to a mock booking request
+- You must be familiar with the honorarium price of $5,000+ the number of rooms needed and meal accommodations
+- Ensure a green room with water, tea, and food is provided, as well as other accommodations for transporting instruments
+- Make sure it lines up with our current tour route
+- Additionally, you have to be able to determine whether or not the booking meets our criteria, or if it's better to deny it
+
+#### Schedule a Mock Tour Retreat
+- Schedule a mock tour retreat for members and review past slideshows to determine what needs to be covered
+- Review past tour itineraries
+
+#### Be Tour Manager for the Day
+- Ensure members are aware of call times, make wakeup/wellness calls if needed for members still asleep
+- Be the first person everywhere, and keep members aware of any updates
+
+---
+
+## Merchandise Manager Tasks
+
+### Create Mock T-shirt Designs
+- Create mock up T-shirt designs for incoming class
+
+### Get Approval
+- Have a meeting to get the design, amount of shirts, and pricing approved by current Merchandise Manager, Treasurer, and Dr. Johnson
+
+### Place the Order
+- Place the order and monitor delivery timeline
+
+### Complete and Lead Inventory Check
+- Send out a message for help in the inventory team chat on GroupMe
+- Divide up tasks between all who are there
+- Input all new numbers in the inventory spreadsheet (will be shared to you)
+
+### Lead Merch During Tour
+- Lead the loading and unloading of merchandise at a chosen stop
+- Lead the organization and set up of merchandise before the concert
+- Lead the selling of merchandise immediately following the concert
+- Divide tasks between selling team members
+
+---
+
+## Public Relations Manager(s) Tasks
+
+### Create Mock Spring Concert Flyer
+- Create mock spring concert flyer and respective promo
+- Meet with current PR and Road managers to brainstorm ideas and gather information needed for promo
+
+### Create a Mock Tour/Spring Concert Program
+- Meet with Dr. Johnson, and find out how he wants the tour/spring concert program to look like (e.g., one pager, minimal or tons of pictures, specific logos, music, etc.)
+
+### Start Capturing and Generating Content
+- Recording in rehearsals
+- Research mock tiktoks and various social media content for SCGC to make leading up to tour (save through personal account for now)
+- Look for trending sounds and audios
+- Trending soundbites for choirs to participate in
+- Funny trends to generate views
+
+### Draft Social Media Posts
+- Draft a TikTok, Instagram photo/reel post
+- Include a proposed caption for the post, including hashtags
+
+---
+
+## Historian Tasks
+
+### Create a Mock Christmas Carol Exhibit
+- Should include photos, props, and what the exhibit will look like; created on Canva or a similar platform
+- Gather archival materials from the library website and Spelman archives
+- Create a budget; how much for display boards, props, etc.
+- Work with PR to find photos and dates
+
+### Research the Stops on Tour
+- When the church/building was built/founded, who founded it? Is there any historical significance in relation to the city
+- Research each city; what it's known for, things to do, and historical significance
+- Present findings on tour to SCGC at specific stops
+
+### Think Like a Researcher
+- Choose a part of SCGC's history (attire, CC, directors, Tour, connection to MCGC, etc.), research it, and present your findings to SCGC
+- ~5 min slideshow with a Q&A portion + sources slide
+
+---
+
+## Wardrobe Mistress Tasks
+
+### Do Spring Inventory
+- Check for damaged dresses, pearls, lipsticks
+- Create new SCGC Sizes spreadsheet for new members (mark changes in sizes as well)
+
+### Manage Makeup Box During Performances
+- Hand out any resources that SCGC members may need (q-tips, deodorant, makeup, pearls, lipstick, etc.)
+
+### Make Wardrobe Announcement
+- Give attire for performances/expectations for submitting hair and nail pictures for approval
+
+---
+
+## Set-Up Crew Manager Tasks
+
+- Speak with current Set-Up Crew Manager about job description
+- Organize the equipment side of the storage room for the spring semester
+- Speak to the tour managers and Doc as we approach the tour about the instruments and equipment needed, and report back to current Set-Up Crew Manager
+- Make two set-up crew announcements that will be sent to you when the time comes
+- Run Set-Up Crew for 2 performances before tour
+- Run Set-Up Crew for 1 performance on tour
+
+---
+
+*All shadow tasks must be completed before running for the respective position.*
+
+*Revised January 2024*`
   }
 ];
 
