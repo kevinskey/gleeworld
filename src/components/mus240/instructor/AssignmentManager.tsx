@@ -186,14 +186,50 @@ export const AssignmentManager = () => {
       console.error('Error fetching grades:', error);
     }
   };
+  // MUS-240 course ID for syncing to gw_course_assignments
+  const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
+
+  const syncToGwCourseAssignments = async (assignmentId: string, data: {
+    title: string;
+    description: string;
+    prompt: string;
+    points: number;
+    due_date: string | null;
+    assignment_type: string;
+    is_active: boolean;
+  }) => {
+    // Check if assignment already exists in gw_course_assignments
+    const { data: existing } = await supabase
+      .from('gw_course_assignments')
+      .select('id')
+      .eq('id', assignmentId)
+      .maybeSingle();
+
+    const gwData = {
+      id: assignmentId,
+      course_id: MUS240_COURSE_ID,
+      title: data.title,
+      description: data.description,
+      instructions: data.prompt,
+      assignment_type: data.assignment_type,
+      points: data.points,
+      due_date: data.due_date,
+      is_published: data.is_active,
+    };
+
+    if (existing) {
+      await supabase.from('gw_course_assignments').update(gwData).eq('id', assignmentId);
+    } else {
+      await supabase.from('gw_course_assignments').insert(gwData);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (editingAssignment) {
-        const {
-          error
-        } = await supabase.from('mus240_assignments').update({
+        const { error } = await supabase.from('mus240_assignments').update({
           title: formData.title,
           description: formData.description,
           prompt: formData.prompt,
@@ -202,19 +238,35 @@ export const AssignmentManager = () => {
           assignment_type: formData.assignment_type
         }).eq('id', editingAssignment.id);
         if (error) throw error;
+        
+        // Sync to gw_course_assignments
+        await syncToGwCourseAssignments(editingAssignment.id, {
+          ...formData,
+          due_date: formData.due_date || null,
+          is_active: editingAssignment.is_active
+        });
+        
         toast.success('Assignment updated successfully');
       } else {
-        const {
-          error
-        } = await supabase.from('mus240_assignments').insert({
+        const { data: newAssignment, error } = await supabase.from('mus240_assignments').insert({
           title: formData.title,
           description: formData.description,
           prompt: formData.prompt,
           points: formData.points,
           due_date: formData.due_date || null,
           assignment_type: formData.assignment_type
-        });
+        }).select().single();
         if (error) throw error;
+        
+        // Sync to gw_course_assignments
+        if (newAssignment) {
+          await syncToGwCourseAssignments(newAssignment.id, {
+            ...formData,
+            due_date: formData.due_date || null,
+            is_active: newAssignment.is_active
+          });
+        }
+        
         toast.success('Assignment created successfully');
       }
       setIsCreateModalOpen(false);
@@ -237,12 +289,17 @@ export const AssignmentManager = () => {
   };
   const toggleAssignmentStatus = async (assignment: Assignment) => {
     try {
-      const {
-        error
-      } = await supabase.from('mus240_assignments').update({
-        is_active: !assignment.is_active
+      const newStatus = !assignment.is_active;
+      const { error } = await supabase.from('mus240_assignments').update({
+        is_active: newStatus
       }).eq('id', assignment.id);
       if (error) throw error;
+      
+      // Sync status to gw_course_assignments
+      await supabase.from('gw_course_assignments')
+        .update({ is_published: newStatus })
+        .eq('id', assignment.id);
+      
       toast.success(assignment.is_active ? 'Assignment deactivated' : 'Assignment activated');
       await fetchAssignments();
     } catch (error) {
