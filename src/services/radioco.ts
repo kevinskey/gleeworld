@@ -4,6 +4,8 @@
  * Station ID: sd0d2e77cf
  */
 
+import { supabase } from "@/integrations/supabase/client";
+
 const DEFAULT_STATION_ID = 'sd0d2e77cf';
 
 export interface RadioCoStatus {
@@ -39,20 +41,19 @@ export interface RadioCoStationInfo {
 
 /**
  * Get station status including online/offline and current track
- * GET https://public.radio.co/stations/{stationId}/status
+ * Uses edge function proxy to avoid CSP issues
  */
 export async function getStatus(stationId: string = DEFAULT_STATION_ID): Promise<RadioCoStatus> {
-  const response = await fetch(`https://public.radio.co/stations/${stationId}/status`, {
-    headers: {
-      'Accept': 'application/json',
-    },
+  const { data, error } = await supabase.functions.invoke('radio-status', {
+    body: { stationId },
   });
   
-  if (!response.ok) {
-    throw new Error(`Radio.co status API error: ${response.status} ${response.statusText}`);
+  if (error) {
+    console.warn('Radio status fetch failed:', error);
+    return { status: 'offline' };
   }
   
-  return response.json();
+  return data as RadioCoStatus;
 }
 
 /**
