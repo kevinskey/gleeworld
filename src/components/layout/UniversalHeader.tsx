@@ -282,11 +282,13 @@ export const UniversalHeader = ({
             {/* Institute Dropdown with Courses */}
             {user && <div className="hidden sm:block">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                      <Landmark className={HEADER_ICON_SIZES.icon} />
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <EnhancedTooltip content="Glee Academy">
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                        <Landmark className={HEADER_ICON_SIZES.icon} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </EnhancedTooltip>
                   <DropdownMenuContent align="end" className="w-64 bg-popover border border-border shadow-xl z-[100]">
                     <DropdownMenuItem onClick={() => navigate('/glee-academy')} className="cursor-pointer font-medium">
                       <Landmark className="w-4 h-4 mr-2" />
