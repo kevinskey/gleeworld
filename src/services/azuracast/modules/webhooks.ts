@@ -26,12 +26,14 @@ export interface CreateWebhookData {
  * Get all webhooks
  */
 export async function getWebhooks(stationId?: string): Promise<AzuraCastWebhook[]> {
-  return apiClient.request<AzuraCastWebhook[]>(
+  const result = await apiClient.request<AzuraCastWebhook[]>(
     `/station/{stationId}/webhooks`,
     'GET',
     undefined,
     { returnEmptyOnError: true, stationId }
   );
+  // Ensure we always return an array, even if API returns non-array data
+  return Array.isArray(result) ? result : [];
 }
 
 /**
