@@ -288,27 +288,17 @@ export const HeaderRadioControls = () => {
                         )}
                       </button>
 
-                      {/* Skip Forward Button */}
-                      <EnhancedTooltip content="Skip to next track">
+                      {/* Skip Forward Button - Disabled for Radio.co streams */}
+                      <EnhancedTooltip content="Skip not available for live radio">
                         <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleSkipTrack();
-                          }}
-                          disabled={!isPlaying || isLoading || isSkipping}
+                          disabled
                           className={cn(
                             "w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all",
                             "bg-gradient-to-b border shadow-md",
-                            isPlaying && !isSkipping
-                              ? "from-zinc-400 to-zinc-600 border-zinc-500 hover:from-zinc-300 hover:to-zinc-500"
-                              : "from-zinc-500 to-zinc-700 border-zinc-600 opacity-50 cursor-not-allowed"
+                            "from-zinc-500 to-zinc-700 border-zinc-600 opacity-50 cursor-not-allowed"
                           )}
                         >
-                          {isSkipping ? (
-                            <Loader2 className="h-2.5 w-2.5 text-white animate-spin" />
-                          ) : (
-                            <SkipForward className="h-2.5 w-2.5 text-white" />
-                          )}
+                          <SkipForward className="h-2.5 w-2.5 text-white" />
                         </button>
                       </EnhancedTooltip>
                     </div>

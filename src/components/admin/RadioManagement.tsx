@@ -251,7 +251,7 @@ export const RadioManagement = () => {
       if (tableName === 'audio_archive') updateData.artist_info = editFormData.artist_info;
       else if (tableName === 'music_tracks') updateData.artist = editFormData.artist_info;
 
-      const { error } = await supabase.from(tableName).update(updateData).eq('id', realId);
+      const { error } = await supabase.from(tableName as 'audio_archive').update(updateData).eq('id', realId);
       if (error) throw error;
       toast({ title: "Saved", description: "Track updated successfully" });
       setShowEditDialog(false);
@@ -271,7 +271,7 @@ export const RadioManagement = () => {
       if (track.source === 'music') tableName = 'music_tracks';
       else if (track.source === 'alumni') tableName = 'alumnae_audio_stories';
 
-      const { error } = await supabase.from(tableName).delete().eq('id', realId);
+      const { error } = await supabase.from(tableName as 'audio_archive').delete().eq('id', realId);
       if (error) throw error;
       toast({ title: "Deleted" });
       await fetchTracks();
