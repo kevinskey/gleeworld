@@ -23,6 +23,7 @@ interface RadioChannel {
   sort_order: number;
   is_active: boolean;
   is_default: boolean;
+  type?: string;
 }
 
 interface NowPlayingOverride {
@@ -113,6 +114,17 @@ export const RadioChannelsTab = () => {
     fetchData();
   }, []);
 
+  const isLegacyAzuraChannel = (channel: Pick<RadioChannel, 'type' | 'stream_url'>) => {
+    const type = (channel.type || '').toLowerCase();
+    const url = (channel.stream_url || '').toLowerCase();
+    return (
+      type === 'azuracast' ||
+      url.includes('azuracast') ||
+      url.includes('azura') ||
+      url.includes('radio.gleeworld.org')
+    );
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -122,7 +134,11 @@ export const RadioChannelsTab = () => {
         supabase.from('gw_radio_now_playing_override').select('*').eq('is_active', true).maybeSingle(),
       ]);
 
-      setChannels(Array.isArray(channelsRes.data) ? channelsRes.data : []);
+      const filteredChannels = (Array.isArray(channelsRes.data) ? channelsRes.data : []).filter(
+        (c) => !isLegacyAzuraChannel(c)
+      );
+
+      setChannels(filteredChannels);
       setSchedule(Array.isArray(scheduleRes.data) ? scheduleRes.data : []);
       if (overrideRes.data) {
         setNowPlayingOverride(overrideRes.data);
