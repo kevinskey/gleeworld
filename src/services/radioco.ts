@@ -100,10 +100,10 @@ export async function getCurrentTrack(stationId: string = DEFAULT_STATION_ID): P
 
 /**
  * Get the listen URL for a station
- * Radio.co uses streaming.radio.co for the main stream
+ * Radio.co uses s5.radio.co for the main stream
  */
 export function getListenUrl(stationId: string = DEFAULT_STATION_ID): string {
-  return `https://s2.radio.co/${stationId}/listen`;
+  return `https://s5.radio.co/${stationId}/listen`;
 }
 
 /**
@@ -112,11 +112,11 @@ export function getListenUrl(stationId: string = DEFAULT_STATION_ID): string {
  */
 export function getStreamUrls(stationId: string = DEFAULT_STATION_ID): string[] {
   return [
-    `https://s2.radio.co/${stationId}/listen`,
+    `https://s5.radio.co/${stationId}/listen`,
     `https://streaming.radio.co/${stationId}/listen`,
+    `https://s2.radio.co/${stationId}/listen`,
     `https://s3.radio.co/${stationId}/listen`,
     `https://s4.radio.co/${stationId}/listen`,
-    `https://s5.radio.co/${stationId}/listen`,
   ];
 }
 
