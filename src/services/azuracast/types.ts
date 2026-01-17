@@ -302,9 +302,9 @@ export interface AzuraCastConfig {
 }
 
 export const DEFAULT_CONFIG: AzuraCastConfig = {
-  baseUrl: 'https://s3.radio.co',
+  baseUrl: 'https://s5.radio.co',
   defaultStationId: 'sd0d2e77cf',
-  directStreamUrl: 'https://s3.radio.co/sd0d2e77cf/listen',
+  directStreamUrl: 'https://s5.radio.co/sd0d2e77cf/listen',
   proxyBaseUrl: 'https://oopmlreysjzuxzylyheb.functions.supabase.co/radio-proxy',
   apiProxyUrl: 'https://oopmlreysjzuxzylyheb.functions.supabase.co/radioco-api-proxy',
 };
@@ -341,7 +341,7 @@ export interface RadioCoStatus {
 
 export const RADIOCO_CONFIG = {
   stationId: 'sd0d2e77cf',
-  streamUrl: 'https://streaming.radio.co/sd0d2e77cf/listen',
+  streamUrl: 'https://s5.radio.co/sd0d2e77cf/listen',
   statusUrl: 'https://public.radio.co/stations/sd0d2e77cf/status',
   djHost: 'sd0d2e77cf.dj.radio.co',
   djPort: 80,

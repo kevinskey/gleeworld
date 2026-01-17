@@ -56,12 +56,53 @@ export class AzuraCastApiClient {
 
   /**
    * Get all available stream URLs (direct + proxied)
+   *
+   * Radio.co sometimes moves stations between streaming hosts (s3, s5, etc.).
+   * If the host we have stored is no longer serving audio, browsers throw:
+   * "NotSupportedError: Failed to load because no supported source was found".
+   *
+   * We pre-compute a small set of host fallbacks and let the player try them.
    */
   getStreamUrls(): string[] {
-    return [
-      this.config.directStreamUrl,
-      `${this.config.proxyBaseUrl}?url=${encodeURIComponent(this.config.directStreamUrl)}`,
-    ];
+    const direct = this.config.directStreamUrl;
+
+    const buildRadioCoHostFallbacks = (url: string): string[] => {
+      try {
+        const u = new URL(url);
+        if (!u.hostname.endsWith('radio.co')) return [url];
+        if (!u.pathname.includes('/listen')) return [url];
+
+        const hostsToTry = [
+          's5.radio.co',
+          's4.radio.co',
+          's3.radio.co',
+          'streaming.radio.co',
+          'streamer.radio.co',
+          u.hostname,
+        ];
+
+        const uniq = new Set<string>();
+        for (const host of hostsToTry) {
+          const next = new URL(url);
+          next.hostname = host;
+          uniq.add(next.toString());
+        }
+        return Array.from(uniq);
+      } catch {
+        return [url];
+      }
+    };
+
+    const directCandidates = buildRadioCoHostFallbacks(direct);
+
+    const urls: string[] = [];
+    for (const candidate of directCandidates) {
+      urls.push(candidate);
+      urls.push(`${this.config.proxyBaseUrl}?url=${encodeURIComponent(candidate)}`);
+    }
+
+    // De-dupe while preserving order
+    return Array.from(new Set(urls));
   }
 
   /**
