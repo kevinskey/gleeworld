@@ -86,42 +86,57 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('SW registered');
-              
-              // Check for updates every 60 seconds
-              setInterval(() => {
-                registration.update();
-              }, 60000);
-              
-              // Listen for updates
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'activated') {
-                    // Notify user of update
-                    if (confirm('New version available! Reload to update?')) {
-                      window.location.reload();
-                    }
+      (function() {
+        // Skip service worker in Lovable preview environments to avoid 412/404 errors
+        const isLovablePreview = window.location.hostname.includes('lovableproject.com') || 
+                                  window.location.hostname.includes('lovable.app');
+        
+        if ('serviceWorker' in navigator && !isLovablePreview) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(registration => {
+                console.log('SW registered');
+                
+                // Check for updates every 60 seconds
+                setInterval(() => {
+                  registration.update().catch(() => {
+                    // Silently handle update failures
+                  });
+                }, 60000);
+                
+                // Listen for updates
+                registration.addEventListener('updatefound', () => {
+                  const newWorker = registration.installing;
+                  if (newWorker) {
+                    newWorker.addEventListener('statechange', () => {
+                      if (newWorker.state === 'activated') {
+                        // Notify user of update
+                        if (confirm('New version available! Reload to update?')) {
+                          window.location.reload();
+                        }
+                      }
+                    });
                   }
                 });
+              })
+              .catch(err => {
+                // Gracefully handle registration failures (404, 412, etc.)
+                console.log('SW registration skipped:', err.message || err);
               });
-            })
-            .catch(err => console.log('SW registration failed:', err));
-        });
-        
-        // Handle controller change (new SW activated)
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload();
-          }
-        });
-      }
+          });
+          
+          // Handle controller change (new SW activated)
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          });
+        } else if (isLovablePreview) {
+          console.log('SW registration skipped in preview environment');
+        }
+      })();
     </script>
   </body>
 </html>
