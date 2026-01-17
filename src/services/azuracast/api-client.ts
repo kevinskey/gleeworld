@@ -89,7 +89,7 @@ export class AzuraCastApiClient {
     let error: Error | null = null;
 
     try {
-      const result = await supabase.functions.invoke('azuracast-api-proxy', {
+      const result = await supabase.functions.invoke('radioco-api-proxy', {
         body: { endpoint, method, body, stationId },
       });
       data = result.data;
