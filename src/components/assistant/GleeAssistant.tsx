@@ -73,8 +73,8 @@ export const GleeAssistant = () => {
   const isOpenRef = useRef(isOpen);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio, setVolume, volume, skipTrack } = useRadioPlayer();
-  const { channels, requestSongFromChannel } = useRadioChannels();
+  const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio, setVolume, volume } = useRadioPlayer();
+  const { channels } = useRadioChannels();
 
   // ElevenLabs voice options
   const voiceOptions = [
@@ -431,8 +431,6 @@ export const GleeAssistant = () => {
                 pauseRadio();
               } else if (action.command === 'toggle') {
                 toggleRadio();
-              } else if (action.command === 'skip') {
-                skipTrack();
               } else if (action.command === 'volume_up') {
                 setVolume(Math.min(1, volume + 0.2));
               } else if (action.command === 'volume_down') {
@@ -446,24 +444,21 @@ export const GleeAssistant = () => {
             }, 500);
             break;
           } else if (action.action === 'request_playlist') {
-            // Request a song from the specified playlist
+            // Request a song from the specified playlist (simplified - just show channel name)
             setTimeout(async () => {
-              if (action.playlist_id || action.playlist_name) {
+              if (action.playlist_name) {
                 const channel = channels.find(c => 
-                  c.azura_playlist_id === action.playlist_id ||
                   c.name.toLowerCase().includes((action.playlist_name || '').toLowerCase())
                 );
                 if (channel) {
-                  const result = await requestSongFromChannel(channel);
                   toast({
-                    title: result.success ? 'Song Requested' : 'Request Failed',
-                    description: result.message,
-                    variant: result.success ? 'default' : 'destructive',
+                    title: 'Channel Found',
+                    description: `Found channel: ${channel.name}`,
                   });
                 } else {
                   toast({
-                    title: 'Playlist Not Found',
-                    description: `Could not find playlist: ${action.playlist_name}`,
+                    title: 'Channel Not Found',
+                    description: `Could not find channel: ${action.playlist_name}`,
                     variant: 'destructive',
                   });
                 }

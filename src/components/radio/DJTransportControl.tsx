@@ -11,27 +11,20 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { supabase } from '@/integrations/supabase/client';
-import { azuraCastService } from '@/services/azuracast';
 import { cn } from '@/lib/utils';
 import {
   Play,
   Pause,
-  SkipForward,
-  SkipBack,
-  Square,
   Mic,
   MicOff,
   Radio,
   Volume2,
   VolumeX,
   Headphones,
-  Zap,
   Clock,
   AlertCircle,
   CheckCircle2,
-  Disc3,
   Waves,
-  Podcast,
   MessageSquare,
   Music,
   RefreshCw,
@@ -40,18 +33,8 @@ import {
   Wifi,
   WifiOff,
   Loader2,
-  Power,
-  PowerOff,
-  RotateCcw
+  ExternalLink
 } from 'lucide-react';
-
-interface UpNextTrack {
-  title: string;
-  artist: string;
-  album?: string;
-  art?: string;
-  duration?: number;
-}
 
 interface DJTransportControlProps {
   stationState: {
@@ -62,8 +45,8 @@ interface DJTransportControlProps {
     currentArtist: string | null;
     listenerCount: number;
   };
-  stationId: string; // The station_id to control (e.g., 'glee_world_radio')
-  stationName?: string; // Display name for the station
+  stationId: string;
+  stationName?: string;
   onRefresh: () => void;
 }
 
@@ -77,7 +60,6 @@ interface LiveInsertion {
 }
 
 export const DJTransportControl = ({ stationState, stationId, stationName, onRefresh }: DJTransportControlProps) => {
-  // Use the shared radio player hook - same as header
   const { 
     isPlaying, 
     isLoading, 
@@ -92,33 +74,20 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
   const [masterVolume, setMasterVolume] = useState([volume * 100]);
   const [micVolume, setMicVolume] = useState([70]);
   const [isMicMuted, setIsMicMuted] = useState(true);
-  const [crossfadeValue, setCrossfadeValue] = useState([50]);
-  const [insertionQueue, setInsertionQueue] = useState<LiveInsertion[]>([]);
-  const [selectedInsertion, setSelectedInsertion] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
-  const [showSettings, setShowSettings] = useState(false);
-  const [streamKey, setStreamKey] = useState('');
   const [activeTab, setActiveTab] = useState('transport');
-  const [serverControlLoading, setServerControlLoading] = useState<'start' | 'stop' | 'skip' | 'restart' | null>(null);
-  const [upNext, setUpNext] = useState<UpNextTrack | null>(null);
-  const [loadingUpNext, setLoadingUpNext] = useState(false);
   const [announcementText, setAnnouncementText] = useState('');
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState('9wYX8b0wRvLUEYtGuzP5'); // Default to KeKe
+  const [selectedVoice, setSelectedVoice] = useState('9wYX8b0wRvLUEYtGuzP5');
   const [eventPromoText, setEventPromoText] = useState("Don't miss our upcoming performances! Visit GleeWorld.org for tickets and event information. Glee World Radio, where music meets legacy.");
-  const [isEditingPromo, setIsEditingPromo] = useState(false);
-  const [promoEditText, setPromoEditText] = useState('');
 
-  // ElevenLabs voice options
   const voiceOptions = [
-    // Black voices
     { id: '9wYX8b0wRvLUEYtGuzP5', name: 'KeKe', description: 'Black woman, sassy' },
     { id: 'CVRACyqNcQefTlxMj9bt', name: 'Lamar Lincoln', description: 'Black male, young raspy' },
     { id: 'OOk3INdXVLRmSaQoAX9D', name: 'Alicia Speaks', description: 'Black woman, calm' },
     { id: '7sXif1ZLnLgbMgmFvs2G', name: 'Denzel', description: 'Black male, deep' },
     { id: '1Y79BeuotytFuNrig6K0', name: 'Kevin J', description: 'Black male' },
-    // Standard voices
     { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', description: 'Young female' },
     { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Soft female' },
     { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Warm female' },
@@ -126,39 +95,11 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
     { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', description: 'Deep male' },
     { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric', description: 'Friendly male' },
   ];
+
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const announcementAudioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
-  // Fetch up next track
-  const fetchUpNext = async () => {
-    try {
-      setLoadingUpNext(true);
-      const nowPlaying = await azuraCastService.getNowPlaying();
-      if (nowPlaying?.playing_next?.song) {
-        setUpNext({
-          title: nowPlaying.playing_next.song.title || 'Unknown Track',
-          artist: nowPlaying.playing_next.song.artist || 'Unknown Artist',
-          album: nowPlaying.playing_next.song.album,
-          art: nowPlaying.playing_next.song.art,
-          duration: nowPlaying.playing_next.duration,
-        });
-      } else {
-        setUpNext(null);
-      }
-    } catch (error) {
-      console.error('Error fetching up next:', error);
-    } finally {
-      setLoadingUpNext(false);
-    }
-  };
-
-  // Fetch up next on mount and when refresh is called
-  useEffect(() => {
-    fetchUpNext();
-  }, [stationState.currentlyPlaying]);
-
-  // Load event promo text from dashboard_settings
   useEffect(() => {
     const loadEventPromo = async () => {
       try {
@@ -172,47 +113,21 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
           setEventPromoText(data.setting_value);
         }
       } catch (error) {
-        // Use default if not found
         console.log('Using default event promo text');
       }
     };
     loadEventPromo();
   }, []);
 
-  // Save event promo text
-  const saveEventPromoText = async (text: string) => {
-    try {
-      const { error } = await supabase
-        .from('dashboard_settings')
-        .upsert({
-          setting_name: 'event_promo_text',
-          setting_value: text,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'setting_name' });
-      
-      if (error) throw error;
-      
-      setEventPromoText(text);
-      setIsEditingPromo(false);
-      toast({ title: "Saved", description: "Event promo text updated" });
-    } catch (error) {
-      console.error('Error saving promo text:', error);
-      toast({ title: "Error", description: "Failed to save promo text", variant: "destructive" });
-    }
-  };
-
-  // Sync master volume slider with radio player volume
   useEffect(() => {
     setMasterVolume([volume * 100]);
   }, [volume]);
 
-  // Handle master volume change
   const handleMasterVolumeChange = (value: number[]) => {
     setMasterVolume(value);
     setVolume(value[0] / 100);
   };
 
-  // Pre-defined live insertions
   const presetInsertions: LiveInsertion[] = [
     { id: 'station-id', type: 'jingle', title: 'Station ID', duration: 10 },
     { id: 'break-bumper', type: 'jingle', title: 'Break Bumper', duration: 5 },
@@ -222,7 +137,6 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
   ];
 
   useEffect(() => {
-    // Sync with station state
     setIsLiveMode(stationState.isLive);
     if (stationState.streamerName) {
       setDjName(stationState.streamerName);
@@ -236,14 +150,10 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
       setConnectionStatus('connecting');
       toast({ title: "Connecting...", description: "Establishing connection to broadcast server" });
       
-      // Test connection via AzuraCast
-      const stationConfig = await azuraCastService.getStationConfig();
-      
-      if (stationConfig) {
-        setIsConnected(true);
-        setConnectionStatus('connected');
-        toast({ title: "Connected", description: "Successfully connected to Glee World Radio" });
-      }
+      // For Radio.co, connection is managed externally
+      setIsConnected(true);
+      setConnectionStatus('connected');
+      toast({ title: "Connected", description: "Successfully connected to Glee World Radio" });
     } catch (error) {
       console.error('Connection error:', error);
       setConnectionStatus('error');
@@ -260,7 +170,6 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
     try {
       setIsLiveMode(true);
       
-      // Update station state in database
       await supabase.from('gw_radio_station_state').update({
         is_live: true,
         streamer_name: djName,
@@ -286,13 +195,11 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
       setIsLiveMode(false);
       setIsMicMuted(true);
       
-      // Stop media stream if active
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
         mediaStreamRef.current = null;
       }
 
-      // Update station state
       await supabase.from('gw_radio_station_state').update({
         is_live: false,
         streamer_name: null,
@@ -310,7 +217,6 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
 
   const handleMicToggle = async () => {
     if (isMicMuted) {
-      // Request microphone access
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaStreamRef.current = stream;
@@ -321,7 +227,6 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
         toast({ title: "Microphone Error", description: "Could not access microphone", variant: "destructive" });
       }
     } else {
-      // Mute microphone
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getAudioTracks().forEach(track => track.enabled = false);
       }
@@ -330,93 +235,14 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
     }
   };
 
-  // Use the shared togglePlayPause from useRadioPlayer hook
   const handlePlayPause = () => {
     togglePlayPause();
   };
 
-  // Server-side skip track (affects all listeners)
-  const handleSkipTrack = async () => {
-    try {
-      setServerControlLoading('skip');
-      toast({ title: "Skipping...", description: "Moving to next track on server" });
-      await azuraCastService.skipTrack();
-      onRefresh();
-      toast({ title: "Skipped", description: "Track skipped on server" });
-    } catch (error) {
-      console.error('Skip track error:', error);
-      toast({ title: "Error", description: "Failed to skip track", variant: "destructive" });
-    } finally {
-      setServerControlLoading(null);
-    }
+  const handleManageInRadioCo = () => {
+    window.open('https://studio.radio.co/', '_blank');
   };
 
-  // Server-side station start (affects all listeners)
-  const handleStartStation = async () => {
-    try {
-      setServerControlLoading('start');
-      toast({ title: "Starting Station...", description: "Starting AutoDJ and stream" });
-      await azuraCastService.startBackend();
-      await azuraCastService.startFrontend();
-      onRefresh();
-      toast({ title: "Station Started", description: "Radio is now broadcasting to all listeners" });
-    } catch (error: any) {
-      console.error('Start station error:', error);
-      const errorMessage = error?.message || String(error) || '';
-      // "AlreadyRunningException" means the station is already running - treat as success
-      if (errorMessage.includes('AlreadyRunning') || errorMessage.includes('already running')) {
-        onRefresh();
-        toast({ title: "Station Online", description: "Radio is already broadcasting" });
-      } else {
-        toast({ title: "Error", description: "Failed to start station", variant: "destructive" });
-      }
-    } finally {
-      setServerControlLoading(null);
-    }
-  };
-
-  // Server-side station stop (affects all listeners)
-  const handleStopStation = async () => {
-    try {
-      setServerControlLoading('stop');
-      toast({ title: "Stopping Station...", description: "Stopping broadcast for all listeners" });
-      await azuraCastService.stopBackend();
-      await azuraCastService.stopFrontend();
-      onRefresh();
-      toast({ title: "Station Stopped", description: "Radio broadcast has been stopped" });
-    } catch (error: any) {
-      console.error('Stop station error:', error);
-      const errorMessage = error?.message || String(error) || '';
-      // "NotRunningException" means the station is already stopped - treat as success
-      if (errorMessage.includes('NotRunning') || errorMessage.includes('not running') || errorMessage.includes('already stopped')) {
-        onRefresh();
-        toast({ title: "Station Offline", description: "Radio is already stopped" });
-      } else {
-        toast({ title: "Error", description: "Failed to stop station", variant: "destructive" });
-      }
-    } finally {
-      setServerControlLoading(null);
-    }
-  };
-
-  // Server-side station restart
-  const handleRestartStation = async () => {
-    try {
-      setServerControlLoading('restart');
-      toast({ title: "Restarting Station...", description: "Restarting AutoDJ and stream" });
-      await azuraCastService.restartBackend();
-      await azuraCastService.restartFrontend();
-      onRefresh();
-      toast({ title: "Station Restarted", description: "Radio has been restarted" });
-    } catch (error) {
-      console.error('Restart station error:', error);
-      toast({ title: "Error", description: "Failed to restart station", variant: "destructive" });
-    } finally {
-      setServerControlLoading(null);
-    }
-  };
-
-  // Pre-defined scripts for each insertion type - promo-1 uses dynamic text
   const insertionScripts: Record<string, string> = {
     'station-id': "You're listening to Glee World Radio, the official voice of the Spelman College Glee Club. To amaze and inspire.",
     'break-bumper': "We'll be right back after this short break. Stay tuned to Glee World Radio.",
@@ -427,7 +253,6 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
 
   const handleLiveInsertion = async (insertion: LiveInsertion) => {
     try {
-      // If it's an announcement type, prompt for text
       if (insertion.type === 'announcement') {
         toast({ 
           title: "Live Announcement", 
@@ -437,7 +262,6 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
         return;
       }
 
-      // Get the script for this insertion type
       const script = insertionScripts[insertion.id];
       if (!script) {
         toast({ title: "No Script", description: "No audio script defined for this insertion", variant: "destructive" });
@@ -450,7 +274,6 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
         description: "Generating and sending to radio..."
       });
 
-      // Use the broadcast-announcement edge function
       const { data, error } = await supabase.functions.invoke('broadcast-announcement', {
         body: { 
           text: script, 
@@ -466,8 +289,6 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
         description: `${insertion.title} will play after current song`
       });
 
-      // Add to insertion queue for UI tracking
-      setInsertionQueue(prev => [...prev, { ...insertion, id: `${insertion.id}-${Date.now()}` }]);
       console.log('Live insertion broadcast:', insertion, data);
     } catch (error) {
       console.error('Insertion broadcast error:', error);
@@ -477,794 +298,226 @@ export const DJTransportControl = ({ stationState, stationId, stationName, onRef
     }
   };
 
-  // Generate and play TTS announcement (local preview)
-  const handleTTSAnnouncement = async () => {
+  const handleBroadcastAnnouncement = async () => {
     if (!announcementText.trim()) {
-      toast({ title: "No Text", description: "Please enter announcement text", variant: "destructive" });
+      toast({ title: "Empty Announcement", description: "Please enter announcement text", variant: "destructive" });
       return;
     }
 
     try {
       setIsGeneratingTTS(true);
-      toast({ title: "Generating...", description: "Creating voice announcement" });
+      toast({ title: "Broadcasting...", description: "Generating and sending announcement" });
 
-      // Use the same Supabase project constants as the frontend client.
-      const SUPABASE_FUNCTIONS_URL = "https://oopmlreysjzuxzylyheb.functions.supabase.co";
-      const SUPABASE_PUBLISHABLE_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg";
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      // Use fetch instead of supabase.functions.invoke for binary audio data
-      const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/elevenlabs-tts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${session?.access_token || SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ text: announcementText, voiceId: selectedVoice }),
+      const { data, error } = await supabase.functions.invoke('broadcast-announcement', {
+        body: { 
+          text: announcementText, 
+          voiceId: selectedVoice,
+          title: 'Live Announcement' 
+        }
       });
 
+      if (error) throw error;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `TTS request failed: ${response.status}`);
-      }
-
-      // Get audio blob directly
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      // Stop current announcement if playing
-      if (announcementAudioRef.current) {
-        announcementAudioRef.current.pause();
-        announcementAudioRef.current = null;
-      }
-
-      const audio = new Audio(audioUrl);
-      announcementAudioRef.current = audio;
-      
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        announcementAudioRef.current = null;
-        toast({ title: "Announcement Complete", description: "Voice announcement finished" });
-      };
-
-      audio.onerror = () => {
-        toast({ title: "Playback Error", description: "Could not play announcement", variant: "destructive" });
-      };
-
-      await audio.play();
-      
-      // Add to queue for tracking
-      setInsertionQueue(prev => [...prev, { 
-        id: `tts-${Date.now()}`, 
-        type: 'announcement', 
-        title: announcementText.substring(0, 30) + (announcementText.length > 30 ? '...' : ''),
-        text: announcementText
-      }]);
-
-      toast({ title: "Playing Announcement", description: "Voice announcement is now playing locally" });
-      
-    } catch (error: any) {
-      console.error('TTS error:', error);
-      toast({ title: "TTS Error", description: error.message || "Could not generate voice announcement", variant: "destructive" });
+      toast({ title: "Announcement Broadcast", description: "Your announcement will play after the current song" });
+      setAnnouncementText('');
+    } catch (error) {
+      console.error('Announcement error:', error);
+      toast({ title: "Broadcast Failed", description: "Could not broadcast announcement", variant: "destructive" });
     } finally {
       setIsGeneratingTTS(false);
     }
   };
 
-  // Broadcast TTS announcement to radio station
-  const handleBroadcastAnnouncement = async () => {
-    if (!announcementText.trim()) {
-      toast({ title: "No Text", description: "Please enter announcement text", variant: "destructive" });
-      return;
-    }
-
-    try {
-      setIsBroadcasting(true);
-      toast({ title: "Broadcasting...", description: "Generating and sending to radio station" });
-
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await supabase.functions.invoke('broadcast-announcement', {
-        body: { text: announcementText, voiceId: selectedVoice }
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      if (response.data?.error) {
-        throw new Error(response.data.error);
-      }
-
-      // AzuraCast plays "requests" after the currently playing track finishes.
-      // Give an ETA so "queued" doesn't feel like it failed.
-      let etaText = "Queued — it will play after the current track.";
-      try {
-        const np = await azuraCastService.getNowPlaying();
-        const remaining = np?.now_playing?.remaining;
-        if (typeof remaining === 'number' && Number.isFinite(remaining)) {
-          const mins = Math.floor(remaining / 60);
-          const secs = Math.max(0, Math.floor(remaining % 60));
-          etaText = `Queued — expected in ~${mins}:${String(secs).padStart(2, '0')} (after current track).`;
-        }
-      } catch {
-        // ignore ETA failures
-      }
-
-      toast({
-        title: "Announcement Queued!",
-        description: etaText,
-      });
-      
-      setAnnouncementText('');
-      onRefresh();
-      
-    } catch (error: any) {
-      console.error('Broadcast error:', error);
-      toast({ 
-        title: "Broadcast Error", 
-        description: error.message || "Could not broadcast announcement", 
-        variant: "destructive" 
-      });
-    } finally {
-      setIsBroadcasting(false);
-    }
-  };
-
-  const removeFromQueue = (id: string) => {
-    setInsertionQueue(prev => prev.filter(item => item.id !== id));
-  };
-
-  const getConnectionStatusColor = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'text-emerald-400';
-      case 'connecting': return 'text-amber-400';
-      case 'error': return 'text-red-400';
-      default: return 'text-slate-400';
-    }
-  };
-
-  const getConnectionStatusIcon = () => {
-    switch (connectionStatus) {
-      case 'connected': return <Wifi className="h-4 w-4" />;
-      case 'connecting': return <RefreshCw className="h-4 w-4 animate-spin" />;
-      case 'error': return <WifiOff className="h-4 w-4" />;
-      default: return <WifiOff className="h-4 w-4" />;
-    }
-  };
-
   return (
-    <Card className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 overflow-hidden">
-      {/* Header with live indicator */}
-      <CardHeader className="py-3 px-4 border-b border-slate-700 bg-slate-900/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              "p-2 rounded-lg",
-              isLiveMode ? "bg-red-500/20" : "bg-primary/20"
-            )}>
-              {isLiveMode ? (
-                <Podcast className="h-5 w-5 text-red-400" />
-              ) : (
-                <Radio className="h-5 w-5 text-primary" />
-              )}
-            </div>
-            <div>
-              <CardTitle className="text-base font-bold text-white flex items-center gap-2">
-                DJ Transport Control
-                {isLiveMode && (
-                  <Badge className="bg-red-500 text-white animate-pulse">
-                    ON AIR
-                  </Badge>
-                )}
-              </CardTitle>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {isLiveMode 
-                  ? `Broadcasting as ${djName}` 
-                  : stationName 
-                    ? `Controlling: ${stationName}` 
-                    : 'Real-time broadcast control'}
-              </p>
-            </div>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <Radio className="h-4 w-4" />
+            DJ Transport Control
+            <Badge variant={isConnected ? (isLiveMode ? "destructive" : "default") : "outline"} className="text-xs">
+              {isLiveMode ? 'LIVE' : isConnected ? 'Connected' : 'Offline'}
+            </Badge>
           </div>
           <div className="flex items-center gap-2">
-            <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-full text-xs", getConnectionStatusColor())}>
-              {getConnectionStatusIcon()}
-              <span className="capitalize">{connectionStatus}</span>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowSettings(!showSettings)}
-              className="text-slate-400 hover:text-white"
-            >
-              <Settings className="h-4 w-4" />
+            <Button size="sm" variant="outline" onClick={onRefresh} className="h-7 text-xs">
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Refresh
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleManageInRadioCo} className="h-7 text-xs">
+              <ExternalLink className="h-3 w-3 mr-1" />
+              Radio.co Studio
             </Button>
           </div>
-        </div>
+        </CardTitle>
       </CardHeader>
-
-      <CardContent className="p-4 space-y-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-4 bg-slate-800/50 p-1">
-            <TabsTrigger value="transport" className="text-xs data-[state=active]:bg-primary">
-              <Play className="h-3 w-3 mr-1" />
-              Transport
-            </TabsTrigger>
-            <TabsTrigger value="live" className="text-xs data-[state=active]:bg-red-500">
-              <Mic className="h-3 w-3 mr-1" />
-              Go Live
-            </TabsTrigger>
-            <TabsTrigger value="insertions" className="text-xs data-[state=active]:bg-amber-500">
-              <Zap className="h-3 w-3 mr-1" />
-              Insertions
-            </TabsTrigger>
-            <TabsTrigger value="mixer" className="text-xs data-[state=active]:bg-purple-500">
-              <Waves className="h-3 w-3 mr-1" />
-              Mixer
-            </TabsTrigger>
+      <CardContent className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3 h-8">
+            <TabsTrigger value="transport" className="text-xs">Transport</TabsTrigger>
+            <TabsTrigger value="live" className="text-xs">Go Live</TabsTrigger>
+            <TabsTrigger value="insertions" className="text-xs">Insertions</TabsTrigger>
           </TabsList>
 
-          {/* Transport Controls */}
-          <TabsContent value="transport" className="mt-4 space-y-4">
-            {/* Main Transport Buttons */}
-            <div className="flex items-center justify-center gap-3">
+          <TabsContent value="transport" className="space-y-4 mt-3">
+            {/* Now Playing Info */}
+            <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground uppercase">Now Playing</span>
+                <Badge variant={stationState.isOnline ? "default" : "outline"} className="text-xs">
+                  {stationState.isOnline ? 'Online' : 'Offline'}
+                </Badge>
+              </div>
+              <p className="font-medium truncate">{stationState.currentlyPlaying || 'No track playing'}</p>
+              {stationState.currentArtist && (
+                <p className="text-sm text-muted-foreground truncate">{stationState.currentArtist}</p>
+              )}
+            </div>
+
+            {/* Playback Controls */}
+            <div className="flex items-center justify-center gap-4">
               <Button
-                variant="outline"
+                variant={isPlaying ? "default" : "outline"}
                 size="lg"
-                className="h-14 w-14 rounded-full border-slate-600 bg-slate-800 hover:bg-slate-700"
-                onClick={() => {}}
-              >
-                <SkipBack className="h-5 w-5 text-slate-300" />
-              </Button>
-              
-              <Button
-                size="lg"
-                className={cn(
-                  "h-20 w-20 rounded-full transition-all",
-                  isLoading
-                    ? "bg-slate-500"
-                    : isPlaying 
-                      ? "bg-amber-500 hover:bg-amber-600" 
-                      : "bg-emerald-500 hover:bg-emerald-600"
-                )}
+                className="h-12 w-24"
                 onClick={handlePlayPause}
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <Loader2 className="h-8 w-8 text-white animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : isPlaying ? (
-                  <Pause className="h-8 w-8 text-white" />
+                  <Pause className="h-5 w-5" />
                 ) : (
-                  <Play className="h-8 w-8 text-white ml-1" />
+                  <Play className="h-5 w-5" />
                 )}
               </Button>
-
-              <Button
-                variant="outline"
-                size="lg"
-                className="h-14 w-14 rounded-full border-slate-600 bg-slate-800 hover:bg-slate-700"
-                onClick={handleSkipTrack}
-              >
-                <SkipForward className="h-5 w-5 text-slate-300" />
-              </Button>
             </div>
 
-            {/* Now Playing Display */}
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 bg-slate-700 rounded-lg flex items-center justify-center">
-                  <Disc3 className={cn("h-6 w-6 text-primary", isPlaying && "animate-spin")} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
-                    {stationState.currentlyPlaying || 'No track playing'}
-                  </p>
-                  <p className="text-xs text-slate-400 truncate">
-                    {stationState.currentArtist || 'Unknown artist'}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-slate-400">Listeners</p>
-                  <p className="text-lg font-bold text-emerald-400">{stationState.listenerCount}</p>
-                </div>
+            {/* Volume Control */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Master Volume</Label>
+                <span className="text-xs text-muted-foreground">{Math.round(masterVolume[0])}%</span>
               </div>
-            </div>
-
-            {/* Up Next Display */}
-            <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
-              <div className="flex items-center gap-2 mb-2">
-                <SkipForward className="h-4 w-4 text-amber-400" />
-                <span className="text-xs font-medium text-amber-400">Up Next</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 ml-auto text-slate-400 hover:text-white"
-                  onClick={fetchUpNext}
-                  disabled={loadingUpNext}
-                >
-                  <RefreshCw className={cn("h-3 w-3", loadingUpNext && "animate-spin")} />
-                </Button>
+              <div className="flex items-center gap-2">
+                <Volume2 className="h-4 w-4 text-muted-foreground" />
+                <Slider
+                  value={masterVolume}
+                  onValueChange={handleMasterVolumeChange}
+                  max={100}
+                  step={1}
+                  className="flex-1"
+                />
               </div>
-              {loadingUpNext ? (
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-slate-700 rounded animate-pulse" />
-                  <div className="flex-1 space-y-1">
-                    <div className="h-3 bg-slate-700 rounded w-3/4 animate-pulse" />
-                    <div className="h-2 bg-slate-700 rounded w-1/2 animate-pulse" />
-                  </div>
-                </div>
-              ) : upNext ? (
-                <div className="flex items-center gap-3">
-                  {upNext.art ? (
-                    <img 
-                      src={upNext.art} 
-                      alt={upNext.title}
-                      className="h-10 w-10 rounded object-cover"
-                    />
-                  ) : (
-                    <div className="h-10 w-10 bg-slate-700 rounded flex items-center justify-center">
-                      <Music className="h-4 w-4 text-slate-400" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-200 truncate">
-                      {upNext.title}
-                    </p>
-                    <p className="text-xs text-slate-400 truncate">
-                      {upNext.artist}
-                    </p>
-                  </div>
-                  {upNext.duration && (
-                    <div className="text-xs text-slate-500">
-                      {Math.floor(upNext.duration / 60)}:{String(upNext.duration % 60).padStart(2, '0')}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-500 italic">No track queued</p>
-              )}
-            </div>
-
-            {/* Station Power Controls */}
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Power className="h-4 w-4 text-amber-400" />
-                  <span className="text-xs font-medium text-amber-400">Station Power Control</span>
-                </div>
-                <Badge variant={stationState.isOnline ? "default" : "destructive"} className="text-xs">
-                  {stationState.isOnline ? 'ONLINE' : 'OFFLINE'}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "border-emerald-600 text-emerald-400 hover:bg-emerald-500/20",
-                    serverControlLoading === 'start' && "opacity-50"
-                  )}
-                  onClick={handleStartStation}
-                  disabled={serverControlLoading !== null}
-                >
-                  {serverControlLoading === 'start' ? (
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  ) : (
-                    <Power className="h-3 w-3 mr-1" />
-                  )}
-                  Start
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "border-red-600 text-red-400 hover:bg-red-500/20",
-                    serverControlLoading === 'stop' && "opacity-50"
-                  )}
-                  onClick={handleStopStation}
-                  disabled={serverControlLoading !== null}
-                >
-                  {serverControlLoading === 'stop' ? (
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  ) : (
-                    <PowerOff className="h-3 w-3 mr-1" />
-                  )}
-                  Stop
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "border-amber-600 text-amber-400 hover:bg-amber-500/20",
-                    serverControlLoading === 'restart' && "opacity-50"
-                  )}
-                  onClick={handleRestartStation}
-                  disabled={serverControlLoading !== null}
-                >
-                  {serverControlLoading === 'restart' ? (
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  ) : (
-                    <RotateCcw className="h-3 w-3 mr-1" />
-                  )}
-                  Restart
-                </Button>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700"
-                onClick={onRefresh}
-              >
-                <RefreshCw className="h-3 w-3 mr-1" />
-                Refresh
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700"
-                onClick={handleConnect}
-              >
-                <Signal className="h-3 w-3 mr-1" />
-                Reconnect
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "border-blue-600 text-blue-400 hover:bg-blue-500/20",
-                  serverControlLoading === 'skip' && "opacity-50"
-                )}
-                onClick={handleSkipTrack}
-                disabled={serverControlLoading !== null}
-              >
-                {serverControlLoading === 'skip' ? (
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                ) : (
-                  <SkipForward className="h-3 w-3 mr-1" />
-                )}
-                Skip Track
-              </Button>
             </div>
           </TabsContent>
 
-          {/* Go Live Tab */}
-          <TabsContent value="live" className="mt-4 space-y-4">
-            {!isLiveMode ? (
-              <>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="dj-name" className="text-slate-300 text-xs">DJ Name / Show Name</Label>
-                    <Input
-                      id="dj-name"
-                      value={djName}
-                      onChange={(e) => setDjName(e.target.value)}
-                      placeholder="Enter your DJ name..."
-                      className="mt-1 bg-slate-800 border-slate-600 text-white"
-                    />
-                  </div>
-                </div>
+          <TabsContent value="live" className="space-y-4 mt-3">
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">DJ Name</Label>
+                <Input
+                  value={djName}
+                  onChange={(e) => setDjName(e.target.value)}
+                  placeholder="Enter your DJ name"
+                  className="h-8 text-sm"
+                />
+              </div>
 
+              {!isLiveMode ? (
                 <Button
                   onClick={handleGoLive}
-                  className="w-full h-16 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold text-lg"
-                  disabled={!isConnected || !djName.trim()}
+                  className="w-full bg-red-600 hover:bg-red-700"
+                  disabled={!djName.trim()}
                 >
-                  <Podcast className="h-6 w-6 mr-2" />
-                  GO LIVE
+                  <Radio className="h-4 w-4 mr-2" />
+                  Go Live
                 </Button>
-
-                <p className="text-xs text-slate-400 text-center">
-                  {!isConnected ? 'Connect to the server first' : 'Enter your name and click to start broadcasting'}
-                </p>
-              </>
-            ) : (
-              <>
-                {/* Live Controls */}
-                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-red-400 font-bold">LIVE</span>
-                    </div>
-                    <span className="text-slate-400 text-sm">Broadcasting as {djName}</span>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="destructive" className="animate-pulse">
+                      <span className="mr-1">●</span> LIVE
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">Broadcasting as {djName}</span>
                   </div>
 
-                  {/* Microphone Control */}
-                  <div className="flex items-center justify-center">
+                  <div className="flex gap-2">
                     <Button
+                      variant={isMicMuted ? "outline" : "default"}
                       onClick={handleMicToggle}
-                      className={cn(
-                        "h-24 w-24 rounded-full transition-all",
-                        isMicMuted 
-                          ? "bg-slate-700 hover:bg-slate-600" 
-                          : "bg-red-500 hover:bg-red-600 animate-pulse"
-                      )}
+                      className="flex-1"
                     >
                       {isMicMuted ? (
-                        <MicOff className="h-10 w-10 text-slate-400" />
+                        <><MicOff className="h-4 w-4 mr-2" /> Mic Off</>
                       ) : (
-                        <Mic className="h-10 w-10 text-white" />
+                        <><Mic className="h-4 w-4 mr-2" /> Mic On</>
                       )}
                     </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleEndLive}
+                    >
+                      End Broadcast
+                    </Button>
                   </div>
-                  <p className="text-center text-xs text-slate-400">
-                    {isMicMuted ? 'Click to unmute microphone' : 'Microphone is LIVE'}
-                  </p>
                 </div>
-
-                <Button
-                  onClick={handleEndLive}
-                  variant="outline"
-                  className="w-full border-red-500/50 text-red-400 hover:bg-red-500/10"
-                >
-                  <Square className="h-4 w-4 mr-2" />
-                  End Broadcast
-                </Button>
-              </>
-            )}
-          </TabsContent>
-
-          {/* Live Insertions Tab */}
-          <TabsContent value="insertions" className="mt-4 space-y-4">
-            <div className="grid grid-cols-2 gap-2">
-              {presetInsertions.map((insertion) => (
-                <Button
-                  key={insertion.id}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleLiveInsertion(insertion)}
-                  className={cn(
-                    "h-16 flex-col gap-1 border-slate-600",
-                    insertion.type === 'emergency' && "border-red-500/50 text-red-400 hover:bg-red-500/10",
-                    insertion.type === 'jingle' && "border-purple-500/50 text-purple-400 hover:bg-purple-500/10",
-                    insertion.type === 'promo' && "border-amber-500/50 text-amber-400 hover:bg-amber-500/10",
-                    insertion.type === 'announcement' && "border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
-                  )}
-                >
-                  {insertion.type === 'emergency' && <AlertCircle className="h-4 w-4" />}
-                  {insertion.type === 'jingle' && <Music className="h-4 w-4" />}
-                  {insertion.type === 'promo' && <Zap className="h-4 w-4" />}
-                  {insertion.type === 'announcement' && <MessageSquare className="h-4 w-4" />}
-                  <span className="text-xs">{insertion.title}</span>
-                </Button>
-              ))}
-            </div>
-
-            {/* Event Promo Editor */}
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-amber-400 text-xs font-medium flex items-center gap-2">
-                  <Zap className="h-3 w-3" />
-                  Event Promo Text
-                </Label>
-                {!isEditingPromo ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs text-amber-400 hover:bg-amber-500/20"
-                    onClick={() => {
-                      setPromoEditText(eventPromoText);
-                      setIsEditingPromo(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
-                ) : (
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-xs text-emerald-400 hover:bg-emerald-500/20"
-                      onClick={() => saveEventPromoText(promoEditText)}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-xs text-slate-400 hover:bg-slate-500/20"
-                      onClick={() => setIsEditingPromo(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                )}
-              </div>
-              {isEditingPromo ? (
-                <textarea
-                  value={promoEditText}
-                  onChange={(e) => setPromoEditText(e.target.value)}
-                  className="w-full bg-slate-800 border border-amber-500/30 rounded p-2 text-xs text-white min-h-[80px] resize-none focus:outline-none focus:border-amber-500"
-                  placeholder="Enter your event promo text..."
-                />
-              ) : (
-                <p className="text-xs text-slate-300 italic">"{eventPromoText}"</p>
               )}
             </div>
+          </TabsContent>
 
-            {insertionQueue.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-slate-300 text-xs">Queue</Label>
-                <div className="space-y-1">
-                  {insertionQueue.map((item) => (
-                    <div 
-                      key={item.id}
-                      className="flex items-center justify-between bg-slate-800/50 rounded px-2 py-1.5 text-xs"
-                    >
-                      <span className="text-slate-300">{item.title}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFromQueue(item.id)}
-                        className="h-6 w-6 p-0 text-slate-400 hover:text-red-400"
-                      >
-                        ×
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+          <TabsContent value="insertions" className="space-y-4 mt-3">
+            <div className="space-y-3">
+              <Label className="text-xs">Quick Insertions</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {presetInsertions.filter(i => i.type !== 'announcement').map(insertion => (
+                  <Button
+                    key={insertion.id}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={() => handleLiveInsertion(insertion)}
+                    disabled={isBroadcasting}
+                  >
+                    {insertion.title}
+                  </Button>
+                ))}
               </div>
-            )}
+            </div>
 
-            {/* Custom Insertion */}
             <div className="space-y-2">
-              <Label className="text-slate-300 text-xs">Quick Text Announcement (TTS)</Label>
-              
-              {/* Voice Selector */}
-              <div className="flex gap-2 items-center">
-                <Label className="text-slate-400 text-xs whitespace-nowrap">Voice:</Label>
+              <Label className="text-xs">Custom Announcement</Label>
+              <div className="flex gap-2">
                 <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-                  <SelectTrigger className="bg-slate-800 border-slate-600 text-white text-xs h-8 flex-1">
-                    <SelectValue placeholder="Select voice" />
+                  <SelectTrigger className="w-32 h-8 text-xs">
+                    <SelectValue placeholder="Voice" />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-600">
-                    {voiceOptions.map((voice) => (
-                      <SelectItem 
-                        key={voice.id} 
-                        value={voice.id}
-                        className="text-white hover:bg-slate-700 text-xs"
-                      >
-                        {voice.name} - {voice.description}
+                  <SelectContent>
+                    {voiceOptions.map(voice => (
+                      <SelectItem key={voice.id} value={voice.id} className="text-xs">
+                        {voice.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="flex gap-2">
-                <Input 
-                  placeholder="Type announcement to broadcast..."
-                  value={announcementText}
-                  onChange={(e) => setAnnouncementText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !isGeneratingTTS && !isBroadcasting && handleBroadcastAnnouncement()}
-                  className="bg-slate-800 border-slate-600 text-white text-sm"
-                  disabled={isGeneratingTTS || isBroadcasting}
-                />
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="border-blue-500 text-blue-400 hover:bg-blue-500/20"
-                  onClick={handleTTSAnnouncement}
-                  disabled={isGeneratingTTS || isBroadcasting || !announcementText.trim()}
-                  title="Preview locally"
-                >
-                  {isGeneratingTTS ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Headphones className="h-3 w-3" />
-                  )}
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="bg-red-500 hover:bg-red-600"
-                  onClick={handleBroadcastAnnouncement}
-                  disabled={isGeneratingTTS || isBroadcasting || !announcementText.trim()}
-                  title="Broadcast to radio"
-                >
-                  {isBroadcasting ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Radio className="h-3 w-3" />
-                  )}
-                </Button>
-              </div>
-              <p className="text-[10px] text-slate-500">
-                <Headphones className="h-3 w-3 inline mr-1" /> Preview locally | <Radio className="h-3 w-3 inline mx-1" /> Broadcast to all listeners
-              </p>
-            </div>
-          </TabsContent>
-
-          {/* Mixer Tab */}
-          <TabsContent value="mixer" className="mt-4 space-y-4">
-            {/* Master Volume */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-slate-300 text-xs flex items-center gap-2">
-                  <Volume2 className="h-3 w-3" />
-                  Master Volume
-                </Label>
-                <span className="text-xs text-slate-400">{masterVolume[0]}%</span>
-              </div>
-              <Slider
-                value={masterVolume}
-                onValueChange={handleMasterVolumeChange}
-                max={100}
-                step={1}
-                className="w-full"
+              <Input
+                value={announcementText}
+                onChange={(e) => setAnnouncementText(e.target.value)}
+                placeholder="Enter announcement text..."
+                className="h-8 text-sm"
               />
-            </div>
-
-            {/* Mic Volume */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-slate-300 text-xs flex items-center gap-2">
-                  <Mic className="h-3 w-3" />
-                  Microphone
-                </Label>
-                <span className="text-xs text-slate-400">{micVolume[0]}%</span>
-              </div>
-              <Slider
-                value={micVolume}
-                onValueChange={setMicVolume}
-                max={100}
-                step={1}
-                className="w-full"
-              />
-            </div>
-
-            {/* Crossfade */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-slate-300 text-xs">Crossfade</Label>
-                <span className="text-xs text-slate-400">{crossfadeValue[0]}%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-500">A</span>
-                <Slider
-                  value={crossfadeValue}
-                  onValueChange={setCrossfadeValue}
-                  max={100}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-[10px] text-slate-500">B</span>
-              </div>
-            </div>
-
-            {/* Audio Meters (visual only) */}
-            <div className="space-y-2">
-              <Label className="text-slate-300 text-xs">Audio Levels</Label>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-500 w-6">L</span>
-                  <div className="flex-1 h-2 bg-slate-800 rounded overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500"
-                      style={{ width: `${Math.random() * 30 + 50}%` }}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-500 w-6">R</span>
-                  <div className="flex-1 h-2 bg-slate-800 rounded overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500"
-                      style={{ width: `${Math.random() * 30 + 45}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
+              <Button
+                onClick={handleBroadcastAnnouncement}
+                disabled={!announcementText.trim() || isGeneratingTTS}
+                className="w-full h-8 text-xs"
+              >
+                {isGeneratingTTS ? (
+                  <><Loader2 className="h-3 w-3 mr-2 animate-spin" /> Broadcasting...</>
+                ) : (
+                  <><MessageSquare className="h-3 w-3 mr-2" /> Broadcast Announcement</>
+                )}
+              </Button>
             </div>
           </TabsContent>
         </Tabs>
