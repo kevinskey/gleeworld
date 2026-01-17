@@ -12,6 +12,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { forceUnlockAudio, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { HEADER_ICON_SIZES } from '@/components/layout/headerIconSizes';
+import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 
 export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '' }) => {
   const [open, setOpen] = useState<{
@@ -81,16 +82,18 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
   return (
     <div className={className}>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            aria-label="Musical Toolkit"
-            onClick={handleDropdownClick}
-            onTouchStart={handleDropdownClick}
-            className={`inline-flex items-center justify-center ${HEADER_ICON_SIZES.button} p-0 transition-colors hover:bg-muted rounded-full text-current`}
-          >
-            <Piano className={HEADER_ICON_SIZES.icon} />
-          </button>
-        </DropdownMenuTrigger>
+        <EnhancedTooltip content="Musical Toolkit">
+          <DropdownMenuTrigger asChild>
+            <button
+              aria-label="Musical Toolkit"
+              onClick={handleDropdownClick}
+              onTouchStart={handleDropdownClick}
+              className={`inline-flex items-center justify-center ${HEADER_ICON_SIZES.button} p-0 transition-colors hover:bg-muted rounded-full text-current`}
+            >
+              <Piano className={HEADER_ICON_SIZES.icon} />
+            </button>
+          </DropdownMenuTrigger>
+        </EnhancedTooltip>
         <DropdownMenuContent 
           align={isMobile ? "center" : "end"} 
           className="w-52 bg-popover text-popover-foreground border border-border shadow-2xl z-[9999]" 
