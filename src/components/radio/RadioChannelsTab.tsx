@@ -122,8 +122,8 @@ export const RadioChannelsTab = () => {
         supabase.from('gw_radio_now_playing_override').select('*').eq('is_active', true).maybeSingle(),
       ]);
 
-      if (channelsRes.data) setChannels(channelsRes.data);
-      if (scheduleRes.data) setSchedule(scheduleRes.data);
+      setChannels(Array.isArray(channelsRes.data) ? channelsRes.data : []);
+      setSchedule(Array.isArray(scheduleRes.data) ? scheduleRes.data : []);
       if (overrideRes.data) {
         setNowPlayingOverride(overrideRes.data);
         setOverrideForm({
@@ -406,7 +406,7 @@ export const RadioChannelsTab = () => {
             </div>
 
             <div className="space-y-2">
-              {channels.map(channel => (
+              {(channels || []).map(channel => (
                 <div
                   key={channel.id}
                   className={cn(
@@ -499,7 +499,7 @@ export const RadioChannelsTab = () => {
                             <SelectValue placeholder="Select channel" />
                           </SelectTrigger>
                           <SelectContent>
-                            {channels.map(c => (
+                            {(channels || []).map(c => (
                               <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                             ))}
                           </SelectContent>
@@ -557,7 +557,7 @@ export const RadioChannelsTab = () => {
             </div>
 
             <div className="space-y-2">
-              {schedule.map(entry => (
+              {(schedule || []).map(entry => (
                 <div
                   key={entry.id}
                   className="flex items-center justify-between p-2 rounded-lg border bg-card"
