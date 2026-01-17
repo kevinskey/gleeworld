@@ -126,21 +126,25 @@ export const useRadioPlayer = () => {
     setState(prev => ({ ...prev, isLoading: true }));
 
     const streamUrls = radioCoService.getStreamUrls();
+    console.log('useRadioPlayer: Attempting to connect to Radio.co streams...');
     
     for (let i = 0; i < streamUrls.length; i++) {
       try {
-        audio.src = withCacheBuster(streamUrls[i]);
+        const url = withCacheBuster(streamUrls[i]);
+        console.log(`useRadioPlayer: Trying stream ${i + 1}:`, url);
+        audio.src = url;
         audio.load();
         await audio.play();
+        console.log(`useRadioPlayer: Successfully connected to stream ${i + 1}`);
         await refreshNowPlaying();
         return;
       } catch (error) {
-        console.warn(`Stream ${i + 1} failed:`, error);
+        console.warn(`useRadioPlayer: Failed stream ${i + 1}:`, error);
       }
     }
 
     setState(prev => ({ ...prev, isLoading: false }));
-    toast({ title: 'Connection Error', description: 'Could not connect to radio stream', variant: 'destructive' });
+    toast({ title: 'Connection Error', description: 'Could not connect to radio stream. The station may be offline.', variant: 'destructive' });
   }, [withCacheBuster, refreshNowPlaying, toast]);
 
   const pause = useCallback(() => {
