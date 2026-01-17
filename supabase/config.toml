@@ -381,3 +381,6 @@ verify_jwt = false
 
 [functions.radio-station-sync]
 verify_jwt = false
+
+[functions.radioco-api-proxy]
+verify_jwt = false

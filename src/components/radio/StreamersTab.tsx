@@ -293,12 +293,12 @@ export const StreamersTab = () => {
       {/* Connection Info Card */}
       <Card className="bg-muted/50">
         <CardContent className="p-3">
-          <p className="text-xs font-medium mb-2">🎙️ Connection Settings for DJs</p>
+          <p className="text-xs font-medium mb-2">🎙️ Radio.co Connection Settings for DJs</p>
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div><span className="text-muted-foreground">Server:</span> radio.gleeworld.org</div>
-            <div><span className="text-muted-foreground">Port:</span> 8000</div>
-            <div><span className="text-muted-foreground">Mount:</span> /live</div>
-            <div><span className="text-muted-foreground">Type:</span> Icecast</div>
+            <div><span className="text-muted-foreground">Server:</span> sd0d2e77cf.dj.radio.co</div>
+            <div><span className="text-muted-foreground">Port:</span> 80</div>
+            <div><span className="text-muted-foreground">Type:</span> Radio.co</div>
+            <div><span className="text-muted-foreground">Protocol:</span> Shoutcast</div>
           </div>
         </CardContent>
       </Card>
