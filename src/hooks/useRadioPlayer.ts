@@ -1,26 +1,7 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { azuraCastService, type AzuraCastNowPlaying } from '@/services/azuracast';
+import { radioCoService } from '@/services/radioco';
 import { supabase } from "@/integrations/supabase/client";
-
-interface RadioStationState {
-  id: string;
-  station_id: string;
-  station_name: string | null;
-  is_online: boolean;
-  is_live: boolean;
-  streamer_name: string | null;
-  listener_count: number;
-  current_song_title: string | null;
-  current_song_artist: string | null;
-  current_song_album: string | null;
-  current_song_art: string | null;
-  song_started_at: string | null;
-  last_event_type: string | null;
-  last_updated: string;
-  created_at: string;
-}
 
 export interface RadioTrack {
   title: string;
@@ -34,25 +15,17 @@ export interface RadioPlayerState {
   isLoading: boolean;
   listenerCount: number;
   currentTrack: RadioTrack | null;
-  upNextTrack: RadioTrack | null; // What's coming up next
+  upNextTrack: RadioTrack | null;
   isLive: boolean;
   isOnline: boolean;
   volume: number;
   streamerName?: string;
-  currentStationId: string; // Track which station we're playing for metadata fetching
+  currentStationId: string;
 }
 
-// Shared audio element to persist across route changes
 let sharedAudio: HTMLAudioElement | null = null;
-let sharedAudioContext: AudioContext | null = null;
-let sharedGainNode: GainNode | null = null;
-let sharedSourceNode: MediaElementAudioSourceNode | null = null;
-
-// Maximum gain to prevent clipping (0.7 = -3dB headroom)
-const MAX_GAIN = 0.7;
 
 export const useRadioPlayer = () => {
-  
   const [state, setState] = useState<RadioPlayerState>({
     isPlaying: false,
     isLoading: false,
@@ -61,595 +34,118 @@ export const useRadioPlayer = () => {
     upNextTrack: null,
     isLive: false,
     isOnline: false,
-    volume: 0.8, // Default to 80% to prevent clipping
+    volume: 0.8,
     streamerName: undefined,
-    currentStationId: 'glee_world_radio', // Default to main station
+    currentStationId: 'sd0d2e77cf',
   });
-
-
-
-  // Helper to sanitize unknown artists
-  const sanitizeArtist = useCallback((name?: string | null): string => {
-    const a = (name || '').trim();
-    if (!a) return '';
-    return /^\[?\s*unknown(?:\s+artist)?\s*\]?$/i.test(a) || /^n\/a$/i.test(a) ? '' : a;
-  }, []);
-
-  // Use a ref to track current station ID to avoid dependency issues
-  const currentStationIdRef = useRef(state.currentStationId);
-  currentStationIdRef.current = state.currentStationId;
-
-  // Pull "now playing" directly from AzuraCast so the UI updates promptly
-  // (DB realtime can lag a few seconds behind stream changes)
-  const refreshNowPlaying = useCallback(async (stationIdOverride?: string) => {
-    try {
-      // Use the override if provided, otherwise use current ref's station ID
-      const stationId = stationIdOverride || currentStationIdRef.current;
-      console.log('refreshNowPlaying: Fetching for station:', stationId);
-      
-      const np = await azuraCastService.getNowPlaying(stationId);
-      const song = np?.now_playing?.song;
-      const nextSong = np?.playing_next?.song;
-
-      setState(prev => ({
-        ...prev,
-        currentTrack: song?.title ? {
-          title: song.title,
-          artist: sanitizeArtist(song.artist),
-          album: song.album || undefined,
-          art: song.art || undefined,
-        } : prev.currentTrack,
-        upNextTrack: nextSong?.title ? {
-          title: nextSong.title,
-          artist: sanitizeArtist(nextSong.artist),
-          album: nextSong.album || undefined,
-          art: nextSong.art || undefined,
-        } : null,
-      }));
-    } catch (error) {
-      // Silent fail: stream should keep playing even if metadata fetch fails
-      console.warn('useRadioPlayer: refreshNowPlaying failed:', error);
-    }
-  }, [sanitizeArtist]); // Removed state.currentStationId - using ref instead
-
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isPlayingRef = useRef(false);
-  const isReconnectingRef = useRef(false);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Prevent overlapping play() attempts (watchdog + user taps)
-  const playInFlightRef = useRef(false);
-  const playRequestIdRef = useRef(0);
-
-  // Watchdog cooldown: avoid interrupting the initial buffer window (prevents AbortError loops)
-  const lastPlayAttemptAtRef = useRef<number>(0);
-
   const { toast } = useToast();
 
-  // Stable stream URLs - memoize to prevent re-computation
-  const streamUrls = useCallback(() => {
+  const refreshNowPlaying = useCallback(async () => {
     try {
-      const urls = azuraCastService.getStreamUrls();
-      console.log('useRadioPlayer: Stream URLs:', urls);
-      return urls;
+      const status = await radioCoService.getStatus();
+      const currentTrack = status?.current_track;
+
+      setState(prev => ({
+        ...prev,
+        isOnline: status?.status === 'online',
+        currentTrack: currentTrack?.title ? {
+          title: currentTrack.title,
+          artist: '',
+          art: currentTrack.artwork_url_large || currentTrack.artwork_url || undefined,
+        } : prev.currentTrack,
+      }));
     } catch (error) {
-      console.error('useRadioPlayer: Error getting stream URLs:', error);
-      return [];
+      console.warn('refreshNowPlaying failed:', error);
     }
   }, []);
 
-  // Append a timestamp to bust caches / reconnect closed streams
   const withCacheBuster = useCallback((url: string) => {
     const hasQuery = url.includes('?');
     const sep = hasQuery ? '&' : '?';
     return `${url}${sep}ts=${Date.now()}`;
   }, []);
 
-  const resetAudio = useCallback(async () => {
-    console.log('useRadioPlayer.resetAudio() called');
-
-    try {
-      // Stop playback immediately
-      if (sharedAudio) {
-        try {
-          sharedAudio.pause();
-        } catch {}
-        sharedAudio.src = '';
-        sharedAudio.load();
-      }
-
-      // Disconnect WebAudio graph
-      try {
-        sharedSourceNode?.disconnect();
-      } catch {}
-      try {
-        sharedGainNode?.disconnect();
-      } catch {}
-
-      sharedSourceNode = null;
-      sharedGainNode = null;
-
-      // Close context (forces a clean re-init next time)
-      if (sharedAudioContext && sharedAudioContext.state !== 'closed') {
-        try {
-          await sharedAudioContext.close();
-        } catch {}
-      }
-      sharedAudioContext = null;
-
-      // Force re-create audio element too
-      sharedAudio = null;
-      audioRef.current = null;
-
-      // Reset local state
-      isPlayingRef.current = false;
-      isReconnectingRef.current = false;
-      setState(prev => ({
-        ...prev,
-        isPlaying: false,
-        isLoading: false,
-      }));
-
-      toast({
-        title: 'Audio Reset',
-        description: 'Radio audio has been reset. Press Play again.',
-      });
-    } catch (e) {
-      console.error('resetAudio failed:', e);
-      toast({
-        title: 'Reset Failed',
-        description: 'Could not reset audio. Try refreshing the page.',
-        variant: 'destructive',
-      });
-    }
-  }, [toast]);
-
   useEffect(() => {
-    console.log('useRadioPlayer: Initializing audio element (singleton)...');
-
-    // Ensure a single shared audio element persists across route changes
     if (!sharedAudio) {
-      const audio = new Audio();
-      // NOTE: do NOT set crossOrigin here; it can cause some browsers to require CORS
-      // headers for playback and break streaming on published domains.
-      audio.preload = 'none';
-      sharedAudio = audio;
-      console.log('Created new shared radio audio element');
-      
-      // NOTE: Web Audio mixer disabled for cross-origin radio streams.
-      // Connecting a cross-origin stream to WebAudio without proper CORS can result in "playing but silent".
-      // We rely on the native HTMLAudioElement volume instead.
-      sharedAudioContext = null;
-      sharedGainNode = null;
-      sharedSourceNode = null;
-    } else {
-      console.log('Reusing existing shared radio audio element');
+      sharedAudio = new Audio();
+      sharedAudio.preload = 'none';
     }
-
-    const audio = sharedAudio!;
+    const audio = sharedAudio;
     audioRef.current = audio;
-
-    // Use native element volume (WebAudio mixer disabled)
     audio.volume = 0.8;
 
-
-    const handleLoadStart = () => {
-      console.log('Radio stream load start');
-      setState(prev => ({ ...prev, isLoading: true }));
-    };
-
-    const handleCanPlay = () => {
-      console.log('Radio stream can play');
-      setState(prev => ({ ...prev, isLoading: false }));
-    };
-
-    const handleError = (e: any) => {
-      console.error('Radio stream error:', e);
-      console.error('Audio error details:', {
-        error: (e as any).target?.error,
-        networkState: (e as any).target?.networkState,
-        readyState: (e as any).target?.readyState,
-        src: (e as any).target?.src,
-        currentTime: (e as any).target?.currentTime,
-        duration: (e as any).target?.duration
-      });
-      
-      setState(prev => ({ 
-        ...prev, 
-        isLoading: false, 
-        isPlaying: false, 
-        isLive: false 
-      }));
-      isPlayingRef.current = false;
-      
-      // Only attempt reconnect if we were playing and not already reconnecting
-      if (isPlayingRef.current && !isReconnectingRef.current) {
-        isReconnectingRef.current = true;
-        
-        // Clear any pending reconnect
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
-        }
-        
-        reconnectTimeoutRef.current = setTimeout(() => {
-          console.log('Attempting to reconnect radio stream after error...');
-          isReconnectingRef.current = false;
-          // Don't auto-reconnect on error - let user manually retry
-        }, 5000);
-      }
-    };
-
     const handlePlay = () => {
-      console.log('Radio stream playing');
       isPlayingRef.current = true;
-      isReconnectingRef.current = false;
-      setState(prev => ({ ...prev, isPlaying: true }));
+      setState(prev => ({ ...prev, isPlaying: true, isLoading: false }));
     };
-
     const handlePause = () => {
-      console.log('Radio stream paused');
       isPlayingRef.current = false;
       setState(prev => ({ ...prev, isPlaying: false }));
     };
-
-    const handleStalled = () => {
-      console.log('Radio stream stalled - waiting for buffer...');
-      // Don't immediately reconnect on stalled - this is normal for streaming
-      // The browser will automatically try to resume buffering
+    const handleError = () => {
+      setState(prev => ({ ...prev, isLoading: false, isPlaying: false }));
+      isPlayingRef.current = false;
     };
+    const handleWaiting = () => setState(prev => ({ ...prev, isLoading: true }));
+    const handleCanPlay = () => setState(prev => ({ ...prev, isLoading: false }));
 
-    const handleSuspend = () => {
-      console.log('Radio stream suspended - browser paused download');
-      // This is normal browser behavior to save bandwidth
-      // Don't trigger reconnection
-    };
-
-    const handleWaiting = () => {
-      console.log('Radio stream buffering...');
-      // Normal buffering, don't do anything aggressive
-    };
-
-    audio.addEventListener('loadstart', handleLoadStart);
-    audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('error', handleError);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
-    audio.addEventListener('stalled', handleStalled);
-    audio.addEventListener('suspend', handleSuspend);
+    audio.addEventListener('error', handleError);
     audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('canplay', handleCanPlay);
 
-    // Sync state if audio is already playing (e.g., HeaderRadioPlayer mounts after RadioModule started playback)
     if (!audio.paused && audio.src) {
-      console.log('useRadioPlayer: Audio already playing on mount, syncing state');
       isPlayingRef.current = true;
-      setState(prev => ({ ...prev, isPlaying: true, isLoading: false }));
+      setState(prev => ({ ...prev, isPlaying: true }));
     }
 
     return () => {
-      console.log('useRadioPlayer: Cleaning up event listeners (not stopping audio)...');
-      audio.removeEventListener('loadstart', handleLoadStart);
-      audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('error', handleError);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('stalled', handleStalled);
-      audio.removeEventListener('suspend', handleSuspend);
+      audio.removeEventListener('error', handleError);
       audio.removeEventListener('waiting', handleWaiting);
-      // Clear any pending reconnect timeout
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-      // Do not pause or clear src; keep sharedAudio alive for seamless playback
+      audio.removeEventListener('canplay', handleCanPlay);
     };
-  }, []); // Empty dependency array - only run once
+  }, []);
 
-  // Subscribe to real-time radio station updates
+  // Poll Radio.co for now playing
   useEffect(() => {
-    console.log('Setting up real-time radio station subscription...');
-    
-    let channel: any = null;
-    let isSubscribed = false;
-    let isMounted = true;
-
-    // Initial fetch of station state
-    const fetchInitialState = async () => {
-      if (!isMounted) return;
-      try {
-        console.log('Fetching initial radio station state...');
-        const { data, error } = await supabase
-          .from('gw_radio_station_state')
-          .select('*')
-          .eq('station_id', 'glee_world_radio')
-          .single();
-
-        if (error) {
-          console.error('Error fetching initial station state:', error);
-          return;
-        }
-
-        if (data) {
-          console.log('Initial station state from DB:', data);
-          setState(prev => ({
-            ...prev,
-            listenerCount: data.listener_count || 0,
-            isLive: data.is_live || false,
-            isOnline: data.is_online || false,
-            streamerName: data.streamer_name || undefined,
-            currentTrack: data.current_song_title ? {
-              title: data.current_song_title,
-              artist: sanitizeArtist(data.current_song_artist),
-              album: data.current_song_album || undefined,
-              art: data.current_song_art || undefined,
-            } : null,
-          }));
-          console.log('Updated radio player state with DB data');
-        }
-      } catch (error) {
-        console.error('Error in initial station state fetch:', error);
-      }
-    };
-
-    const setupRealtimeSubscription = async () => {
-      if (!isMounted) return;
-      
-      try {
-        await fetchInitialState();
-        
-        // Also fetch directly from AzuraCast for the most up-to-date track info
-        // DB can lag behind the actual stream (use default station on mount)
-        try {
-          const np = await azuraCastService.getNowPlaying('glee_world_radio');
-          const song = np?.now_playing?.song;
-          if (song?.title && isMounted) {
-            setState(prev => ({
-              ...prev,
-              currentTrack: {
-                title: song.title,
-                artist: sanitizeArtist(song.artist),
-                album: song.album || undefined,
-                art: song.art || undefined,
-              },
-            }));
-            console.log('Updated track from AzuraCast on mount:', song.title);
-          }
-        } catch (azuraError) {
-          console.warn('Failed to fetch from AzuraCast on mount:', azuraError);
-        }
-        
-        if (!isMounted) return;
-        
-        // Create unique channel name to prevent conflicts
-        const channelName = `radio-station-updates-${Date.now()}-${Math.random()}`;
-        console.log('Creating radio channel:', channelName);
-        
-        // Set up real-time subscription
-        channel = supabase
-          .channel(channelName)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'gw_radio_station_state',
-              filter: 'station_id=eq.glee_world_radio'
-            },
-            (payload) => {
-              if (!isMounted) return;
-              console.log('Real-time radio update received:', payload);
-              
-              if (payload.new) {
-                const data = payload.new as RadioStationState;
-                console.log('Updating radio state with real-time data:', data);
-                setState(prev => ({
-                  ...prev,
-                  listenerCount: data.listener_count || 0,
-                  isLive: data.is_live || false,
-                  isOnline: data.is_online || false,
-                  streamerName: data.streamer_name || undefined,
-                    currentTrack: data.current_song_title ? {
-                      title: data.current_song_title,
-                      artist: sanitizeArtist(data.current_song_artist),
-                      album: data.current_song_album || undefined,
-                      art: data.current_song_art || undefined,
-                    } : null,
-                }));
-              }
-            }
-          );
-
-        if (!isMounted) return;
-
-        // Subscribe only once
-        const subscriptionResult = await channel.subscribe();
-        console.log('Radio subscription status:', subscriptionResult);
-        isSubscribed = true;
-        
-        if (subscriptionResult === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to radio updates');
-        }
-      } catch (error) {
-        console.error('Error setting up radio subscription:', error);
-      }
-    };
-
-    setupRealtimeSubscription();
-
-    return () => {
-      console.log('Cleaning up radio subscription...');
-      isMounted = false;
-      if (channel && isSubscribed) {
-        try {
-          supabase.removeChannel(channel);
-          isSubscribed = false;
-        } catch (error) {
-          console.error('Error cleaning up radio channel:', error);
-        }
-      }
-    };
-  }, []); // Empty dependency array - only run once
+    refreshNowPlaying();
+    const interval = setInterval(refreshNowPlaying, 15000);
+    return () => clearInterval(interval);
+  }, [refreshNowPlaying]);
 
   const play = useCallback(async () => {
-    console.log('useRadioPlayer: play() called');
-
-    if (!audioRef.current) {
-      console.log('useRadioPlayer: No audio ref available');
-      return;
-    }
-
-    // Avoid overlapping play attempts (causes AbortError due to pause() interruptions)
-    if (playInFlightRef.current) {
-      console.log('useRadioPlayer: play() ignored (already in-flight)');
-      return;
-    }
-
-    // Mark the start of a play attempt so the watchdog doesn't immediately restart us
-    lastPlayAttemptAtRef.current = Date.now();
-
-    const requestId = ++playRequestIdRef.current;
-    playInFlightRef.current = true;
-
+    if (!audioRef.current) return;
     const audio = audioRef.current;
-
-    // Debug: log current audio state
-    console.log('useRadioPlayer: Audio state before play:', {
-      src: audio.src,
-      paused: audio.paused,
-      muted: audio.muted,
-      volume: audio.volume,
-    });
 
     setState(prev => ({ ...prev, isLoading: true }));
 
-    try {
-      // ALWAYS ensure gain is set to audible level when playing
-      const targetVolume = state.volume > 0 ? state.volume : 0.8;
-
-      // Set Web Audio gain if available
-      if (sharedGainNode && sharedAudioContext) {
-        try {
-          const actualGain = targetVolume * MAX_GAIN;
-          sharedGainNode.gain.setValueAtTime(actualGain, sharedAudioContext.currentTime);
-          console.log('useRadioPlayer: Gain set to:', actualGain);
-        } catch (gainError) {
-          console.warn('useRadioPlayer: Could not set gain:', gainError);
-        }
-      }
-
-      // Resume AudioContext if suspended
-      if (sharedAudioContext && sharedAudioContext.state === 'suspended') {
-        try {
-          await sharedAudioContext.resume();
-          console.log('useRadioPlayer: AudioContext resumed');
-        } catch (e) {
-          console.warn('useRadioPlayer: Could not resume AudioContext:', e);
-        }
-      }
-
-      // If a newer play() started, abort this one
-      if (requestId !== playRequestIdRef.current) return;
-
-      // Ensure audio element is ready
-      audio.muted = false;
-      audio.volume = targetVolume;
-
-      // Get stream URLs
-      const urls = streamUrls();
-      const publicUrl = azuraCastService.getPublicStreamUrl();
-      const allUrls = [...urls, publicUrl].filter(Boolean);
-      console.log('useRadioPlayer: Stream URLs:', allUrls);
-
-      if (allUrls.length === 0) {
-        console.error('useRadioPlayer: No stream URLs available');
-        setState(prev => ({ ...prev, isLoading: false }));
-        toast({
-          title: 'Radio Unavailable',
-          description: 'No stream URLs configured',
-          variant: 'destructive',
-        });
+    const streamUrls = radioCoService.getStreamUrls();
+    
+    for (let i = 0; i < streamUrls.length; i++) {
+      try {
+        audio.src = withCacheBuster(streamUrls[i]);
+        audio.load();
+        await audio.play();
+        await refreshNowPlaying();
         return;
-      }
-
-      // Try each stream URL until one works
-      for (let i = 0; i < allUrls.length; i++) {
-        if (requestId !== playRequestIdRef.current) return;
-
-        const streamUrl = allUrls[i];
-        console.log(`useRadioPlayer: Trying stream ${i + 1}/${allUrls.length}: ${streamUrl}`);
-
-        try {
-          // Stop any previous stream (but only for the current request)
-          audio.pause();
-
-          // Set new source with cache buster
-          const hasQuery = streamUrl.includes('?');
-          const sep = hasQuery ? '&' : '?';
-          audio.src = `${streamUrl}${sep}ts=${Date.now()}`;
-          audio.load();
-
-          console.log('useRadioPlayer: Calling audio.play()...');
-          await audio.play();
-
-          if (requestId !== playRequestIdRef.current) return;
-
-          console.log('useRadioPlayer: Successfully started playing:', streamUrl);
-          setState(prev => ({ ...prev, isLoading: false, isPlaying: true }));
-
-          // Update LCD metadata immediately
-          refreshNowPlaying();
-          toast({
-            title: 'Now Playing',
-            description: 'Glee World Radio is now streaming',
-          });
-          return; // Success - exit
-        } catch (playError: any) {
-          // If a newer play() started, ignore errors from the old attempt
-          if (requestId !== playRequestIdRef.current) return;
-
-          console.error(`useRadioPlayer: Failed stream ${i + 1}:`, playError?.name, playError?.message);
-
-          // AbortError often means another pause()/play() happened; let watchdog retry later
-          if (playError?.name === 'AbortError') {
-            continue;
-          }
-
-          // If autoplay blocked, don't try other URLs
-          if (playError?.name === 'NotAllowedError') {
-            setState(prev => ({ ...prev, isLoading: false }));
-            toast({
-              title: 'Tap to enable audio',
-              description: 'Browser blocked audio playback. Please tap/click and try again.',
-              variant: 'destructive',
-            });
-            return;
-          }
-
-          // If last URL failed, show error
-          if (i === allUrls.length - 1) {
-            setState(prev => ({ ...prev, isLoading: false }));
-            toast({
-              title: 'Radio Unavailable',
-              description: 'Could not connect to radio stream. Please try again.',
-              variant: 'destructive',
-            });
-          }
-        }
-      }
-    } catch (error) {
-      console.error('useRadioPlayer: Unexpected error in play():', error);
-      setState(prev => ({ ...prev, isLoading: false }));
-    } finally {
-      // Only clear in-flight if we're still the latest request
-      if (requestId === playRequestIdRef.current) {
-        playInFlightRef.current = false;
+      } catch (error) {
+        console.warn(`Stream ${i + 1} failed:`, error);
       }
     }
-  }, [state.volume, streamUrls, toast, refreshNowPlaying]);
+
+    setState(prev => ({ ...prev, isLoading: false }));
+    toast({ title: 'Connection Error', description: 'Could not connect to radio stream', variant: 'destructive' });
+  }, [withCacheBuster, refreshNowPlaying, toast]);
 
   const pause = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
-      setState(prev => ({ ...prev, isPlaying: false }));
     }
   }, []);
 
@@ -663,190 +159,44 @@ export const useRadioPlayer = () => {
 
   const setVolume = useCallback((volume: number) => {
     const clampedVolume = Math.max(0, Math.min(1, volume));
-    setState(prev => ({ ...prev, volume: clampedVolume }));
-
-    // WebAudio mixer is disabled; use native element volume.
     if (audioRef.current) {
       audioRef.current.volume = clampedVolume;
     }
+    setState(prev => ({ ...prev, volume: clampedVolume }));
   }, []);
 
-
-  // Switch to a different stream URL (for channel switching)
-  const switchStream = useCallback(async (newStreamUrl: string, channelName?: string) => {
-    console.log('Radio switchStream() called with:', newStreamUrl, 'channel:', channelName);
-
-    if (!audioRef.current) {
-      console.log('No audio ref available');
-      return;
-    }
-
-    // Extract station ID from the stream URL for metadata fetching
-    const newStationId = azuraCastService.extractStationIdFromUrl(newStreamUrl) || 'glee_world_radio';
-    console.log('Extracted station ID:', newStationId);
-
-    // Clear current track immediately and show channel name as placeholder, update station ID
-    setState(prev => ({
-      ...prev,
-      currentTrack: channelName ? { title: channelName, artist: '' } : null,
-      currentStationId: newStationId,
-    }));
-
+  const switchStream = useCallback(async (streamUrl: string, stationName?: string) => {
+    if (!audioRef.current) return;
     const audio = audioRef.current;
-    const proxyBaseUrl = 'https://oopmlreysjzuxzylyheb.functions.supabase.co/radio-proxy';
+    const wasPlaying = isPlayingRef.current;
 
-    // Radio.co can change streaming hosts (s3 -> s5, etc.). Try a host-upgraded URL first.
-    const upgradedStreamUrl = (() => {
-      if (!newStreamUrl.includes('radio.co')) return newStreamUrl;
-      return newStreamUrl
-        .replace('https://s3.radio.co/', 'https://s5.radio.co/')
-        .replace('https://s4.radio.co/', 'https://s5.radio.co/')
-        .replace('https://streaming.radio.co/', 'https://s5.radio.co/')
-        .replace('https://streamer.radio.co/', 'https://s5.radio.co/');
-    })();
-
-    // Try direct URL first, then proxied URL
-    const directUrl = `${upgradedStreamUrl}?ts=${Date.now()}`;
-    const proxiedUrl = `${proxyBaseUrl}?url=${encodeURIComponent(upgradedStreamUrl)}&ts=${Date.now()}`;
-    const urlsToTry = [directUrl, proxiedUrl];
-
-    // Stop current stream
     audio.pause();
+    audio.src = withCacheBuster(streamUrl);
+    audio.load();
 
-    for (const url of urlsToTry) {
+    if (wasPlaying) {
       try {
-        console.log('Trying stream URL:', url);
-        audio.src = url;
         await audio.play();
-        console.log('Successfully switched to:', url);
-        setState(prev => ({ ...prev, isPlaying: true }));
-        // Update LCD metadata after a brief delay to let stream settle, pass the new station ID
-        setTimeout(() => refreshNowPlaying(newStationId), 1000);
-        return; // Success
-      } catch (error) {
-        console.log('Failed with URL:', url, error);
-        continue; // Try next URL
-      }
-    }
-
-    // All URLs failed
-    console.error('All stream URLs failed');
-    setState(prev => ({ ...prev, isPlaying: false, currentTrack: null }));
-    toast({
-      title: 'Channel Unavailable',
-      description: 'This station may be offline. Try another.',
-      variant: 'destructive',
-    });
-  }, [toast, refreshNowPlaying]);
-
-  // Health check watchdog to auto-reconnect if playback stalls
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    let lastTime = audio.currentTime;
-    let stallCount = 0;
-    const maxStallChecks = 2; // After 2 checks (10 seconds) with no progress, reconnect
-
-    const interval = setInterval(() => {
-      if (!audioRef.current) return;
-      const a = audioRef.current;
-
-      // Don't pile on while a play() attempt is already running
-      if (playInFlightRef.current) return;
-
-      // Give a fresh play attempt time to buffer before we declare it unhealthy
-      if (Date.now() - lastPlayAttemptAtRef.current < 15000) return;
-
-      if (state.isPlaying) {
-        const currentTime = a.currentTime;
-        const paused = a.paused;
-        const readyState = a.readyState;
-        const looksUnhealthy = readyState <= 1; // HAVE_NOTHING (0) / HAVE_METADATA (1)
-
-        // For live MP3 streams, currentTime can stay at 0 even when audio is flowing.
-        // Only treat "no progress" as a stall when the media element also reports an unhealthy readyState.
-        if (!paused && looksUnhealthy) {
-          stallCount++;
-          console.log(
-            `Radio health-check: unhealthy readyState (stall count: ${stallCount}/${maxStallChecks}, readyState: ${readyState})`,
-          );
-
-          if (stallCount >= maxStallChecks) {
-            console.log('Radio health-check: stalled too long, reconnecting...');
-            stallCount = 0;
-            play();
-          }
-        } else {
-          stallCount = 0;
+        await refreshNowPlaying();
+        if (stationName) {
+          toast({ title: 'Now Playing', description: stationName });
         }
-
-        lastTime = currentTime;
-      } else {
-        // Not playing, reset counters
-        stallCount = 0;
-        lastTime = audio.currentTime;
+      } catch (error) {
+        console.error('Failed to play new stream:', error);
       }
-    }, 5000); // Check every 5 seconds instead of 30
-
-    return () => clearInterval(interval);
-  }, [state.isPlaying, play]);
-
-  // Poll AzuraCast metadata while playing so the LCD title changes promptly
-  // Using 5-second interval for more responsive updates
-  useEffect(() => {
-    if (!state.isPlaying) return;
-
-    refreshNowPlaying();
-    const interval = setInterval(() => {
-      refreshNowPlaying();
-    }, 5000); // Reduced from 10s to 5s for faster updates
-
-    return () => clearInterval(interval);
-  }, [state.isPlaying, refreshNowPlaying]);
-
-  // Skip to next track
-  const skipTrack = useCallback(async () => {
-    try {
-      const currentStationId = state.currentStationId;
-      console.log('skipTrack: Using station ID:', currentStationId);
-      
-      // Fetch "playing_next" BEFORE skipping so we can optimistically update the LCD
-      const npBefore = await azuraCastService.getNowPlaying(currentStationId);
-      const nextSong = npBefore?.playing_next?.song;
-
-      // Optimistically update the display with the upcoming track
-      if (nextSong?.title) {
-        setState(prev => ({
-          ...prev,
-          currentTrack: {
-            title: nextSong.title,
-            artist: sanitizeArtist(nextSong.artist),
-            album: nextSong.album || undefined,
-            art: nextSong.art || undefined,
-          },
-        }));
-      }
-
-      // Now actually skip the track on the correct station
-      await azuraCastService.skipTrack(currentStationId);
-
-      toast({
-        title: 'Skipped',
-        description: nextSong?.title ? `Now playing: ${nextSong.title}` : 'Moving to the next track...',
-      });
-
-      // Refresh after a moment to confirm / correct metadata
-      setTimeout(() => refreshNowPlaying(), 1500);
-    } catch (error) {
-      console.error('Failed to skip track:', error);
-      toast({
-        title: 'Skip Failed',
-        description: 'Could not skip to next track.',
-        variant: 'destructive',
-      });
     }
-  }, [toast, refreshNowPlaying, sanitizeArtist, state.currentStationId]);
+  }, [withCacheBuster, refreshNowPlaying, toast]);
+
+  const resetAudio = useCallback(async () => {
+    if (sharedAudio) {
+      sharedAudio.pause();
+      sharedAudio.src = '';
+    }
+    sharedAudio = null;
+    audioRef.current = null;
+    setState(prev => ({ ...prev, isPlaying: false, isLoading: false }));
+    toast({ title: 'Audio Reset', description: 'Press Play to restart.' });
+  }, [toast]);
 
   return {
     ...state,
@@ -855,7 +205,7 @@ export const useRadioPlayer = () => {
     togglePlayPause,
     setVolume,
     switchStream,
-    skipTrack,
     resetAudio,
+    refreshNowPlaying,
   };
 };
