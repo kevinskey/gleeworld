@@ -694,10 +694,20 @@ export const useRadioPlayer = () => {
 
     const audio = audioRef.current;
     const proxyBaseUrl = 'https://oopmlreysjzuxzylyheb.functions.supabase.co/radio-proxy';
-    
+
+    // Radio.co can change streaming hosts (s3 -> s5, etc.). Try a host-upgraded URL first.
+    const upgradedStreamUrl = (() => {
+      if (!newStreamUrl.includes('radio.co')) return newStreamUrl;
+      return newStreamUrl
+        .replace('https://s3.radio.co/', 'https://s5.radio.co/')
+        .replace('https://s4.radio.co/', 'https://s5.radio.co/')
+        .replace('https://streaming.radio.co/', 'https://s5.radio.co/')
+        .replace('https://streamer.radio.co/', 'https://s5.radio.co/');
+    })();
+
     // Try direct URL first, then proxied URL
-    const directUrl = `${newStreamUrl}?ts=${Date.now()}`;
-    const proxiedUrl = `${proxyBaseUrl}?url=${encodeURIComponent(newStreamUrl)}&ts=${Date.now()}`;
+    const directUrl = `${upgradedStreamUrl}?ts=${Date.now()}`;
+    const proxiedUrl = `${proxyBaseUrl}?url=${encodeURIComponent(upgradedStreamUrl)}&ts=${Date.now()}`;
     const urlsToTry = [directUrl, proxiedUrl];
 
     // Stop current stream
