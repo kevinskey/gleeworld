@@ -14,13 +14,34 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const stationId = url.searchParams.get("stationId") || STATION_ID;
+    let body: { stationId?: string; endpoint?: string } = {};
+    
+    // Parse body if present
+    if (req.method === "POST") {
+      try {
+        body = await req.json();
+      } catch {
+        // Ignore JSON parse errors
+      }
+    }
 
-    console.log(`Radio Status Proxy: Fetching status for station ${stationId}`);
+    const url = new URL(req.url);
+    const stationId = body.stationId || url.searchParams.get("stationId") || STATION_ID;
+    const endpoint = body.endpoint || url.searchParams.get("endpoint") || "status";
+
+    // Validate endpoint to prevent abuse
+    const allowedEndpoints = ["status", "history", "next", "embed/schedule"];
+    if (!allowedEndpoints.includes(endpoint)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid endpoint" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Radio Proxy: Fetching ${endpoint} for station ${stationId}`);
 
     const response = await fetch(
-      `https://public.radio.co/stations/${stationId}/status`,
+      `https://public.radio.co/stations/${stationId}/${endpoint}`,
       {
         headers: {
           Accept: "application/json",
@@ -44,13 +65,13 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log(`Radio Status Proxy: Station is ${data.status}`);
+    console.log(`Radio Proxy: Successfully fetched ${endpoint}`);
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Radio Status Proxy error:", error);
+    console.error("Radio Proxy error:", error);
     return new Response(
       JSON.stringify({ 
         error: error.message, 
