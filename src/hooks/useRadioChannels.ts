@@ -26,7 +26,6 @@ export const useRadioChannels = () => {
         .from('gw_radio_channels')
         .select('*')
         .eq('is_active', true)
-        .eq('is_default', true)
         .order('sort_order', { ascending: true });
 
       if (error) {
