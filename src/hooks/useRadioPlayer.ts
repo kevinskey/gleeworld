@@ -174,11 +174,32 @@ export const useRadioPlayer = () => {
     const audio = audioRef.current;
     const wasPlaying = isPlayingRef.current;
 
+    // Pause cleanly first
     audio.pause();
+
+    // Give browser a moment to process the pause before loading new source
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     audio.src = withCacheBuster(streamUrl);
     audio.load();
 
     if (wasPlaying) {
+      // Wait for the new source to be ready before playing
+      await new Promise<void>((resolve, reject) => {
+        const onCanPlay = () => {
+          audio.removeEventListener('canplay', onCanPlay);
+          audio.removeEventListener('error', onError);
+          resolve();
+        };
+        const onError = () => {
+          audio.removeEventListener('canplay', onCanPlay);
+          audio.removeEventListener('error', onError);
+          reject(new Error('Stream failed to load'));
+        };
+        audio.addEventListener('canplay', onCanPlay, { once: true });
+        audio.addEventListener('error', onError, { once: true });
+      });
+
       try {
         await audio.play();
         await refreshNowPlaying();
