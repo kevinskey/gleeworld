@@ -117,7 +117,13 @@ export const RadioChannelsTab = () => {
   const isLegacyAzuraChannel = (channel: Pick<RadioChannel, 'type' | 'stream_url'>) => {
     const type = (channel.type || '').toLowerCase();
     const url = (channel.stream_url || '').toLowerCase();
+
+    // Radio.co streams typically include "radio.co" in the URL.
+    // Anything else is treated as legacy (e.g., AzuraCast) to avoid showing old servers.
+    const isRadioCo = url.includes('radio.co');
+
     return (
+      !isRadioCo ||
       type === 'azuracast' ||
       url.includes('azuracast') ||
       url.includes('azura') ||
