@@ -302,9 +302,47 @@ export interface AzuraCastConfig {
 }
 
 export const DEFAULT_CONFIG: AzuraCastConfig = {
-  baseUrl: 'https://radio.gleeworld.org',
-  defaultStationId: 'glee_world_radio',
-  directStreamUrl: 'https://radio.gleeworld.org/listen/glee_world_radio/radio.mp3',
+  baseUrl: 'https://streaming.radio.co',
+  defaultStationId: 'sd0d2e77cf',
+  directStreamUrl: 'https://streaming.radio.co/sd0d2e77cf/listen',
   proxyBaseUrl: 'https://oopmlreysjzuxzylyheb.functions.supabase.co/radio-proxy',
-  apiProxyUrl: 'https://oopmlreysjzuxzylyheb.functions.supabase.co/azuracast-api-proxy',
+  apiProxyUrl: 'https://oopmlreysjzuxzylyheb.functions.supabase.co/radioco-api-proxy',
+};
+
+// Radio.co specific types
+export interface RadioCoStatus {
+  status: string;
+  source: {
+    type: string;
+    collaborator: string | null;
+    relay: string | null;
+  };
+  collaborators: unknown[];
+  relays: unknown[];
+  current_track: {
+    title: string;
+    start_time: string;
+    artwork_url: string | null;
+    artwork_url_large: string | null;
+  } | null;
+  history: Array<{
+    title: string;
+    start_time: string;
+    artwork_url: string | null;
+  }>;
+  logo_url: string;
+  streaming_hostname: string;
+  outputs: Array<{
+    name: string;
+    format: string;
+    bitrate: number;
+  }>;
+}
+
+export const RADIOCO_CONFIG = {
+  stationId: 'sd0d2e77cf',
+  streamUrl: 'https://streaming.radio.co/sd0d2e77cf/listen',
+  statusUrl: 'https://public.radio.co/stations/sd0d2e77cf/status',
+  djHost: 'sd0d2e77cf.dj.radio.co',
+  djPort: 80,
 };
