@@ -71,22 +71,9 @@ export const HeaderRadioControls = () => {
       togglePlayPause, 
       setVolume,
       switchStream,
-      skipTrack,
     } = useRadioPlayer();
 
-    const [isSkipping, setIsSkipping] = useState(false);
     const [channelNotification, setChannelNotification] = useState<string | null>(null);
-
-    const handleSkipTrack = async () => {
-      if (isSkipping || !isPlaying) return;
-      setIsSkipping(true);
-      try {
-        await skipTrack();
-      } finally {
-        // Reset after a short delay to prevent rapid clicking
-        setTimeout(() => setIsSkipping(false), 2000);
-      }
-    };
 
     const isMuted = volume === 0;
 

@@ -1,17 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Radio, Play, Pause, Volume2, Users, SkipForward, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
-import { SongBrowser } from '@/components/radio/SongBrowser';
-import { useAuth } from '@/contexts/AuthContext';
 
 export const RadioModule = () => {
-  const [showSongBrowser, setShowSongBrowser] = useState(false);
-  const { user } = useAuth();
-  
   console.log('RadioModule: Component rendering');
   
   try {
@@ -112,19 +107,6 @@ export const RadioModule = () => {
               {isLoading ? 'Loading...' : isPlaying ? 'Pause Radio' : 'Play Radio'}
             </Button>
 
-            {/* Request Song Button - only for logged in users */}
-            {user && (
-              <Button
-                variant="secondary"
-                size="lg"
-                onClick={() => setShowSongBrowser(true)}
-                className="w-full h-14 text-base"
-              >
-                <Music className="h-6 w-6 mr-3" />
-                Request a Song
-              </Button>
-            )}
-
             {/* Volume Control */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -148,12 +130,6 @@ export const RadioModule = () => {
             "To Amaze and Inspire" • Official Spelman Glee Club Radio
           </div>
         </CardContent>
-
-        {/* Song Browser Dialog */}
-        <SongBrowser
-          open={showSongBrowser}
-          onOpenChange={setShowSongBrowser}
-        />
       </Card>
     );
   } catch (error) {
