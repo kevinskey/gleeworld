@@ -14,6 +14,17 @@ export interface RadioChannel {
   type?: string;
 }
 
+const isLegacyAzuraChannel = (channel: Pick<RadioChannel, 'type' | 'stream_url'>) => {
+  const type = (channel.type || '').toLowerCase();
+  const url = (channel.stream_url || '').toLowerCase();
+  return (
+    type === 'azuracast' ||
+    url.includes('azuracast') ||
+    url.includes('azura') ||
+    url.includes('radio.gleeworld.org')
+  );
+};
+
 export const useRadioChannels = () => {
   const [channels, setChannels] = useState<RadioChannel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,18 +44,20 @@ export const useRadioChannels = () => {
         return;
       }
 
-      console.log('Radio channels fetched:', data?.length, 'channels');
-      setChannels(data || []);
-      
+      const activeChannels = (data || []).filter((c) => !isLegacyAzuraChannel(c));
+
+      console.log('Radio channels fetched:', activeChannels.length, 'channels');
+      setChannels(activeChannels);
+
       const savedChannelId = localStorage.getItem('gleeworld-radio-channel');
-      const savedChannel = savedChannelId 
-        ? data?.find(c => c.id === savedChannelId)
+      const savedChannel = savedChannelId
+        ? activeChannels.find((c) => c.id === savedChannelId)
         : null;
-      
+
       if (savedChannel) {
         setSelectedChannel(savedChannel);
       } else {
-        const defaultChannel = data?.find(c => c.is_default) || data?.[0];
+        const defaultChannel = activeChannels.find((c) => c.is_default) || activeChannels[0];
         if (defaultChannel) setSelectedChannel(defaultChannel);
       }
     } catch (error) {
@@ -66,7 +79,7 @@ export const useRadioChannels = () => {
   useEffect(() => {
     const savedChannelId = localStorage.getItem('gleeworld-radio-channel');
     if (savedChannelId && channels.length > 0) {
-      const savedChannel = channels.find(c => c.id === savedChannelId);
+      const savedChannel = channels.find((c) => c.id === savedChannelId);
       if (savedChannel) {
         setSelectedChannel(savedChannel);
       }
