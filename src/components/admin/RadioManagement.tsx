@@ -270,14 +270,16 @@ export const RadioManagement = () => {
   const loadStationConfig = async () => { try { setStationConfig(await azuraCastService.getStationConfig()); } catch (e) { console.error(e); } };
   const loadStreamers = async () => { 
     try { 
-      setStreamers(await azuraCastService.getStreamers() || []); 
+      const result = await azuraCastService.getStreamers();
+      setStreamers(Array.isArray(result) ? result : []); 
       setUnsupportedFeatures(prev => { const next = new Set(prev); next.delete('streamers'); return next; });
     } catch (e: any) { 
       console.error(e); 
+      setStreamers([]);
       if (isUnsupportedError(e)) setUnsupportedFeatures(prev => new Set(prev).add('streamers'));
     } 
   };
-  const loadMounts = async () => { try { setMounts(await azuraCastService.getMounts() || []); } catch (e) { console.error(e); } };
+  const loadMounts = async () => { try { const r = await azuraCastService.getMounts(); setMounts(Array.isArray(r) ? r : []); } catch (e) { console.error(e); setMounts([]); } };
   const loadListeners = async () => { try { setListeners(await azuraCastService.getListeners() || []); } catch (e) { console.error(e); } };
   const loadSongHistory = async () => { try { setSongHistory(await azuraCastService.getSongHistory() || []); } catch (e) { console.error(e); } };
   const loadWebhooks = async () => { try { setWebhooks(await azuraCastService.getWebhooks() || []); } catch (e) { console.error(e); } };
