@@ -51,7 +51,7 @@ export const CourseManagementTable: React.FC = () => {
 
       // Fetch assignment counts for each course
       const { data: assignments } = await supabase
-        .from('gw_assignments' as any)
+        .from('gw_course_assignments')
         .select('course_id');
 
       const assignmentCounts = ((assignments as any[]) || []).reduce((acc: any, a: any) => {

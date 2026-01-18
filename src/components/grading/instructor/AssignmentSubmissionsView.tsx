@@ -41,7 +41,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
     queryKey: ['gw-assignment', assignmentId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_assignments' as any)
+        .from('gw_course_assignments')
         .select('*, gw_courses(*)')
         .eq('id', assignmentId)
         .single();

@@ -50,9 +50,11 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.from('gw_assignments').insert({
+      const { error } = await supabase.from('gw_course_assignments').insert({
         course_id: courseId,
         created_by: user.id,
+        is_published: data.is_active,
+        due_date: data.due_at || null,
         ...data,
       });
 

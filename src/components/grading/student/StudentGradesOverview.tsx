@@ -42,9 +42,10 @@ export const StudentGradesOverview: React.FC = () => {
         
         // Get all assignments for this course
         const { data: assignments } = await supabase
-          .from('gw_assignments' as any)
+          .from('gw_course_assignments')
           .select('id, points')
-          .eq('course_id', course.id);
+          .eq('course_id', course.id)
+          .eq('is_published', true);
 
         // Get grades for this student in this course
         const { data: gradesInCourse } = await supabase

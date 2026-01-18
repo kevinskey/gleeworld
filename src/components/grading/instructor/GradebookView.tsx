@@ -41,7 +41,7 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
     queryKey: ['gw-course-assignments', courseId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_assignments' as any)
+        .from('gw_course_assignments')
         .select('*')
         .eq('course_id', courseId)
         .order('created_at', { ascending: true });

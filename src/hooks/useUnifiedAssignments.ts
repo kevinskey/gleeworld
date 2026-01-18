@@ -54,7 +54,7 @@ export const useUnifiedAssignments = (courseCode: string = 'MUS240') => {
         return stats;
       }
       
-      // For other courses, fetch from gw_assignments
+      // For other courses, fetch from gw_course_assignments
       const { data: course } = await supabase
         .from('gw_courses')
         .select('id')
@@ -64,20 +64,21 @@ export const useUnifiedAssignments = (courseCode: string = 'MUS240') => {
       if (!course) return [];
       
       const { data: assignments } = await supabase
-        .from('gw_assignments')
+        .from('gw_course_assignments')
         .select('*')
         .eq('course_id', course.id)
-        .order('due_at', { ascending: true });
+        .eq('is_published', true)
+        .order('due_date', { ascending: true });
       
       return (assignments || []).map(a => ({
         id: a.id,
-        legacy_id: a.legacy_id,
-        legacy_source: a.legacy_source,
+        legacy_id: null,
+        legacy_source: null,
         title: a.title,
         description: a.description,
         assignment_type: a.assignment_type,
         points: a.points,
-        due_at: a.due_at,
+        due_at: a.due_date,
         course_id: a.course_id,
         is_mus240: false
       }));

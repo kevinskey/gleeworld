@@ -21,8 +21,8 @@ interface Assignment {
   assignment_type: string | null;
   category: string | null;
   points: number | null;
-  due_at: string | null;
-  is_active: boolean;
+  due_date: string | null;
+  is_published: boolean;
   created_at: string;
 }
 interface CourseAssignmentManagerProps {
@@ -87,11 +87,11 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       const {
         data,
         error
-      } = await supabase.from('gw_assignments').select('*').eq('course_id', courseId).order('category', {
+      } = await supabase.from('gw_course_assignments').select('*').eq('course_id', courseId).order('category', {
         ascending: true
       });
       if (error) throw error;
-      return data as Assignment[];
+      return (data || []) as unknown as Assignment[];
     },
     enabled: !!courseId
   });
@@ -101,15 +101,15 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     mutationFn: async (data: typeof formData) => {
       const {
         error
-      } = await supabase.from('gw_assignments').insert({
+      } = await supabase.from('gw_course_assignments').insert({
         course_id: courseId,
         title: data.title,
         description: data.description || null,
         assignment_type: data.assignment_type,
         category: data.category,
         points: data.points,
-        due_at: data.due_at || null,
-        is_active: true
+        due_date: data.due_at || null,
+        is_published: true
       });
       if (error) throw error;
     },
@@ -138,13 +138,13 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     }) => {
       const {
         error
-      } = await supabase.from('gw_assignments').update({
+      } = await supabase.from('gw_course_assignments').update({
         title: data.title,
         description: data.description || null,
         assignment_type: data.assignment_type,
         category: data.category,
         points: data.points,
-        due_at: data.due_at || null
+        due_date: data.due_at || null
       }).eq('id', id);
       if (error) throw error;
     },
@@ -167,7 +167,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     mutationFn: async (id: string) => {
       const {
         error
-      } = await supabase.from('gw_assignments').delete().eq('id', id);
+      } = await supabase.from('gw_course_assignments').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -199,7 +199,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       assignment_type: assignment.assignment_type || 'exercise',
       category: assignment.category || 'Week 1',
       points: assignment.points || 100,
-      due_at: assignment.due_at ? format(new Date(assignment.due_at), "yyyy-MM-dd'T'HH:mm") : ''
+      due_at: assignment.due_date ? format(new Date(assignment.due_date), "yyyy-MM-dd'T'HH:mm") : ''
     });
   };
   const handleSubmit = () => {
@@ -439,9 +439,9 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-xs text-muted-foreground">{assignment.points} pts</span>
-                          {assignment.due_at && (
+                          {assignment.due_date && (
                             <span className="text-xs text-muted-foreground">
-                              {format(new Date(assignment.due_at), 'M/d')}
+                              {format(new Date(assignment.due_date), 'M/d')}
                             </span>
                           )}
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEdit(assignment)}>

@@ -413,10 +413,10 @@ async function executeTool(toolName: string, args: any, userId: string) {
   switch (toolName) {
     case "get_assignments_due_today": {
       const { data: assignments, error } = await supabase
-        .from("gw_assignments")
+        .from("gw_course_assignments")
         .select("id, title, description, due_date, course_id")
         .eq("due_date", today)
-        .eq("is_active", true);
+        .eq("is_published", true);
       
       if (error) {
         console.error("Error fetching assignments:", error);

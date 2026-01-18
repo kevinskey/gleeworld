@@ -34,38 +34,15 @@ export const resolveAssignmentId = async (
   if (!identifier) return null;
 
   try {
-    // Try direct UUID lookup first
+    // Try direct UUID lookup in gw_course_assignments
     const { data: directMatch, error: directError } = await supabase
-      .from('gw_assignments')
+      .from('gw_course_assignments')
       .select('*')
       .eq('id', identifier)
       .maybeSingle();
 
     if (directMatch && !directError) {
       return formatAssignment(directMatch);
-    }
-
-    // Try legacy_id lookup (handles "lj1", "lj2", etc.)
-    const { data: legacyMatch, error: legacyError } = await supabase
-      .from('gw_assignments')
-      .select('*')
-      .eq('legacy_id', identifier)
-      .maybeSingle();
-
-    if (legacyMatch && !legacyError) {
-      return formatAssignment(legacyMatch);
-    }
-
-    // Try case-insensitive legacy code match
-    const normalizedId = identifier.toLowerCase();
-    const { data: caseInsensitiveMatch, error: caseError } = await supabase
-      .from('gw_assignments')
-      .select('*')
-      .ilike('legacy_id', normalizedId)
-      .maybeSingle();
-
-    if (caseInsensitiveMatch && !caseError) {
-      return formatAssignment(caseInsensitiveMatch);
     }
 
     console.warn(`Assignment not found for identifier: ${identifier}`);
@@ -86,17 +63,13 @@ export const resolveAssignmentIds = async (
   
   // Batch query for efficiency
   const { data: assignments } = await supabase
-    .from('gw_assignments')
+    .from('gw_course_assignments')
     .select('*')
-    .or(`id.in.(${identifiers.join(',')}),legacy_id.in.(${identifiers.join(',')})`);
+    .in('id', identifiers);
 
   assignments?.forEach(assignment => {
     const resolved = formatAssignment(assignment);
-    // Map both UUID and legacy_id to the same resolved assignment
     results.set(assignment.id, resolved);
-    if (assignment.legacy_id) {
-      results.set(assignment.legacy_id, resolved);
-    }
   });
 
   return results;
@@ -126,31 +99,32 @@ export const isMus240LegacyCode = (identifier: string): boolean => {
 function formatAssignment(data: any): ResolvedAssignment {
   return {
     id: data.id,
-    legacy_id: data.legacy_id,
-    legacy_source: data.legacy_source,
+    legacy_id: null,
+    legacy_source: null,
     title: data.title,
     description: data.description,
     assignment_type: data.assignment_type,
     points: data.points,
-    due_at: data.due_at,
+    due_at: data.due_date,
     course_id: data.course_id,
-    is_mus240: data.legacy_source?.includes('mus240') || false,
-    is_active: data.is_active !== undefined ? data.is_active : true
+    is_mus240: false,
+    is_active: data.is_published !== undefined ? data.is_published : true
   };
 }
 
 /**
- * Get all MUS240 assignments sorted by legacy code
+ * Get all course assignments for a specific course
  */
-export const getMus240Assignments = async (): Promise<ResolvedAssignment[]> => {
+export const getCourseAssignments = async (courseId: string): Promise<ResolvedAssignment[]> => {
   const { data, error } = await supabase
-    .from('gw_assignments')
+    .from('gw_course_assignments')
     .select('*')
-    .or('legacy_source.eq.mus240,legacy_source.eq.mus240_assignments')
-    .order('legacy_id', { ascending: true });
+    .eq('course_id', courseId)
+    .eq('is_published', true)
+    .order('due_date', { ascending: true });
 
   if (error) {
-    console.error('Error fetching MUS240 assignments:', error);
+    console.error('Error fetching course assignments:', error);
     return [];
   }
 
