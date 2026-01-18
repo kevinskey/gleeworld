@@ -20603,6 +20603,7 @@ export type Database = {
         Row: {
           composer: string | null
           created_at: string
+          hymn_number: string | null
           id: string
           key: string | null
           moment: string | null
@@ -20615,10 +20616,12 @@ export type Database = {
           updated_at: string
           voicing: string | null
           week_id: string | null
+          youtube_url: string | null
         }
         Insert: {
           composer?: string | null
           created_at?: string
+          hymn_number?: string | null
           id?: string
           key?: string | null
           moment?: string | null
@@ -20631,10 +20634,12 @@ export type Database = {
           updated_at?: string
           voicing?: string | null
           week_id?: string | null
+          youtube_url?: string | null
         }
         Update: {
           composer?: string | null
           created_at?: string
+          hymn_number?: string | null
           id?: string
           key?: string | null
           moment?: string | null
@@ -20647,6 +20652,7 @@ export type Database = {
           updated_at?: string
           voicing?: string | null
           week_id?: string | null
+          youtube_url?: string | null
         }
         Relationships: [
           {
