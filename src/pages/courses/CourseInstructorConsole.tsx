@@ -14,7 +14,6 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { supabase } from '@/integrations/supabase/client';
 
 // Import shared components that can work with any course
-import { AssignmentManager } from '@/components/mus240/instructor/AssignmentManager';
 import { CourseAssignmentManager } from '@/components/course/CourseAssignmentManager';
 import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
 import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';

@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import { StudentPollInterface } from '@/components/mus240/StudentPollInterface';
 import { AIGroupRoleSubmission } from '@/components/mus240/student/AIGroupRoleSubmission';
-import { useStudentSubmissions } from '@/hooks/useStudentSubmissions';
 import { useMus240Progress } from '@/hooks/useMus240Progress';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,7 +48,8 @@ export const StudentDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentSemester, setCurrentSemester, availableSemesters } = useMus240SemesterSafe();
-  const { submissions, loading: submissionsLoading } = useStudentSubmissions();
+  const submissions: any[] = []; // Listening journals removed
+  const submissionsLoading = false;
   const { gradeSummary, participationGrade, loading: progressLoading } = useMus240Progress();
   
   // Check if user is admin

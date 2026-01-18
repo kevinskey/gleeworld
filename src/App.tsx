@@ -220,10 +220,8 @@ import ExecBoardExitInterview from "./pages/ExecBoardExitInterview";
 
 import ClassLanding from "./pages/mus240/ClassLanding";
 import SyllabusPage from "./pages/mus240/SyllabusPage";
-import AssignmentWeek from "./pages/mus240/AssignmentWeek";
 import ListeningHub from "./pages/mus240/ListeningHub";
 import WeekDetail from "./pages/mus240/WeekDetail";
-import AssignmentJournal from "./pages/mus240/AssignmentJournal";
 import Resources from "./pages/mus240/Resources";
 import Groups from "./pages/mus240/Groups";
 import GroupDetail from "./pages/mus240/GroupDetail";
@@ -233,7 +231,6 @@ import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { StudentMidtermGrading } from "./pages/mus240/StudentMidtermGrading";
 import { StudentWorkOverview } from "./pages/mus240/StudentWorkOverview";
-import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 import { StudentDashboard } from "./pages/mus240/StudentDashboard";
 import { BulkJournalGradingPage } from "./pages/mus240/BulkJournalGradingPage";
 import { PeerReviewBrowserPage } from "./pages/mus240/PeerReviewBrowserPage";
@@ -257,7 +254,6 @@ import ConcertTicketAdmin from "./pages/admin/ConcertTicketAdmin";
 import GrandStaves from "./pages/GrandStaves";
 import GrandStaffClassroom from "./pages/GrandStaffClassroom";
 import { Mus240PollPage } from "./pages/Mus240PollPage";
-import MySubmissionsPage from "./pages/student/MySubmissionsPage";
 import JazzPage from "./pages/mus240/JazzPage";
 import Tour2026Page from "./pages/Tour2026Page";
 import BusInformation from "./pages/BusInformation";
@@ -2030,32 +2026,6 @@ const App = () => {
                                 }
                              />
                                <Route 
-                                 path="/mus-240/assignments" 
-                               element={
-                                   <Mus240EnrollmentRoute>
-                                     <AssignmentWeek />
-                                   </Mus240EnrollmentRoute>
-                               }
-                               />
-                               <Route 
-                                 path="/mus-240/assignments/:assignmentId" 
-                                element={
-                                   <Mus240EnrollmentRoute>
-                                     <AssignmentJournal />
-                                   </Mus240EnrollmentRoute>
-                                }
-                               />
-                               <Route 
-                                 path="/mus-240/my-submissions" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <Mus240EnrollmentRoute>
-                                       <MySubmissionsPage />
-                                     </Mus240EnrollmentRoute>
-                                   </ProtectedRoute>
-                                 }
-                               />
-                               <Route 
                                  path="/mus-240/listening" 
                                 element={
                                   <Mus240EnrollmentRoute>
@@ -2149,14 +2119,7 @@ const App = () => {
                                     </ProtectedRoute>
                                   } 
                                  />
-                               <Route 
-                                 path="/mus-240/grades"
-                                element={
-                                  <Mus240EnrollmentRoute>
-                                    <Mus240GradesPage />
-                                  </Mus240EnrollmentRoute>
-                                }
-                                />
+                               
                                 <Route 
                                   path="/mus-240/jazz"
                                   element={
