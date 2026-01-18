@@ -31,19 +31,43 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasAccess, setHasAccess] = useState(isEnrolled);
 
   const handleStartAssignment = (assignment: Assignment) => {
     // Navigate to MUS-240 assignment submission page
     navigate(`/mus-240/assignments/${assignment.id}`);
   };
 
+  // Check if user has admin access directly from profile
   useEffect(() => {
-    if (isEnrolled) {
+    const checkAdminAccess = async () => {
+      if (isEnrolled) {
+        setHasAccess(true);
+        return;
+      }
+      if (!user?.id) {
+        setHasAccess(false);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      const isAdmin = !!(profile?.is_admin || profile?.is_super_admin);
+      setHasAccess(isEnrolled || isAdmin);
+    };
+    checkAdminAccess();
+  }, [user?.id, isEnrolled]);
+
+  useEffect(() => {
+    if (hasAccess) {
       fetchAssignments();
     } else {
       setLoading(false);
     }
-  }, [courseId, isEnrolled, user]);
+  }, [courseId, hasAccess, user]);
 
   const fetchAssignments = async () => {
     try {
@@ -107,7 +131,7 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
     return <Badge variant="secondary">In Progress</Badge>;
   };
 
-  if (!isEnrolled) {
+  if (!hasAccess) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
