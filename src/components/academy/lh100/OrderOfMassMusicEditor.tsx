@@ -23,11 +23,13 @@ import {
   Save, 
   Loader2,
   Play,
-  ExternalLink
+  ExternalLink,
+  FileText
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Order of Mass liturgical moments
 const LITURGICAL_MOMENTS = [
@@ -83,6 +85,15 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
     url: '',
     title: '',
     type: 'website'
+  });
+  const [scrapedContent, setScrapedContent] = useState<{
+    markdown: string;
+    loading: boolean;
+    error: string | null;
+  }>({
+    markdown: '',
+    loading: false,
+    error: null
   });
 
   useEffect(() => {
@@ -206,12 +217,38 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
     };
   };
 
-  const openLinkModal = (url: string, title: string, type: 'youtube' | 'website', videoId?: string) => {
+  const openLinkModal = async (url: string, title: string, type: 'youtube' | 'website', videoId?: string) => {
     setLinkModal({ open: true, url, title, type, videoId });
+    
+    // If it's a website (not YouTube), scrape the content
+    if (type === 'website') {
+      setScrapedContent({ markdown: '', loading: true, error: null });
+      try {
+        const { data, error } = await supabase.functions.invoke('scrape-url', {
+          body: { url }
+        });
+        
+        if (error) throw error;
+        
+        if (data.success && data.markdown) {
+          setScrapedContent({ markdown: data.markdown, loading: false, error: null });
+        } else {
+          setScrapedContent({ markdown: '', loading: false, error: data.error || 'Failed to load content' });
+        }
+      } catch (err) {
+        console.error('Error scraping URL:', err);
+        setScrapedContent({ 
+          markdown: '', 
+          loading: false, 
+          error: 'Could not load content. Click below to open in new tab.' 
+        });
+      }
+    }
   };
 
   const closeLinkModal = () => {
     setLinkModal({ open: false, url: '', title: '', type: 'website' });
+    setScrapedContent({ markdown: '', loading: false, error: null });
   };
 
   if (loading) {
@@ -347,13 +384,14 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
               {linkModal.type === 'youtube' ? (
                 <Youtube className="h-5 w-5 text-red-500" />
               ) : (
-                <ExternalLink className="h-5 w-5 text-primary" />
+                <FileText className="h-5 w-5 text-primary" />
               )}
               {linkModal.title}
             </DialogTitle>
           </DialogHeader>
-          <div className={linkModal.type === 'youtube' ? 'aspect-video w-full' : 'h-[70vh] w-full'}>
-            {linkModal.type === 'youtube' && linkModal.videoId ? (
+          
+          {linkModal.type === 'youtube' && linkModal.videoId ? (
+            <div className="aspect-video w-full">
               <iframe
                 src={`https://www.youtube.com/embed/${linkModal.videoId}?autoplay=1`}
                 title={linkModal.title}
@@ -361,15 +399,57 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
                 allowFullScreen
                 className="w-full h-full"
               />
-            ) : linkModal.url ? (
-              <iframe
-                src={linkModal.url}
-                title={linkModal.title}
-                className="w-full h-full border-0"
-                sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-              />
-            ) : null}
-          </div>
+            </div>
+          ) : (
+            <div className="h-[70vh] w-full flex flex-col">
+              {scrapedContent.loading ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-2" />
+                    <p className="text-sm text-muted-foreground">Loading content...</p>
+                  </div>
+                </div>
+              ) : scrapedContent.error ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6">
+                  <p className="text-muted-foreground mb-4">{scrapedContent.error}</p>
+                  <Button asChild>
+                    <a href={linkModal.url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Open in New Tab
+                    </a>
+                  </Button>
+                </div>
+              ) : scrapedContent.markdown ? (
+                <ScrollArea className="flex-1 p-6">
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <div 
+                      dangerouslySetInnerHTML={{ 
+                        __html: scrapedContent.markdown
+                          .replace(/^# /gm, '<h1 class="text-2xl font-bold mt-6 mb-4">')
+                          .replace(/^## /gm, '<h2 class="text-xl font-semibold mt-5 mb-3">')
+                          .replace(/^### /gm, '<h3 class="text-lg font-medium mt-4 mb-2">')
+                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                          .replace(/\n\n/g, '</p><p class="my-3">')
+                          .replace(/\n/g, '<br/>')
+                      }} 
+                    />
+                  </div>
+                </ScrollArea>
+              ) : null}
+              
+              {!scrapedContent.loading && (
+                <div className="p-4 border-t bg-muted/30 flex justify-end">
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={linkModal.url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Open Original
+                    </a>
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Card>
