@@ -20424,6 +20424,59 @@ export type Database = {
         }
         Relationships: []
       }
+      lh100_music_selections: {
+        Row: {
+          composer_source: string | null
+          created_at: string
+          ensemble: string | null
+          id: string
+          liturgical_moment: string
+          module_id: string
+          music_key: string | null
+          notes: string | null
+          order_number: number
+          title: string
+          updated_at: string
+          youtube_url: string | null
+        }
+        Insert: {
+          composer_source?: string | null
+          created_at?: string
+          ensemble?: string | null
+          id?: string
+          liturgical_moment: string
+          module_id: string
+          music_key?: string | null
+          notes?: string | null
+          order_number: number
+          title?: string
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Update: {
+          composer_source?: string | null
+          created_at?: string
+          ensemble?: string | null
+          id?: string
+          liturgical_moment?: string
+          module_id?: string
+          music_key?: string | null
+          notes?: string | null
+          order_number?: number
+          title?: string
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lh100_music_selections_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "lh100_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       library_inventory_entries: {
         Row: {
           copies_found: number | null

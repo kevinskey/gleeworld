@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,10 +23,10 @@ import {
   Clock,
   CheckCircle2
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
+import { OrderOfMassMusicEditor } from './OrderOfMassMusicEditor';
 
 export interface LH100Module {
   id: string;
@@ -342,6 +341,12 @@ export const WeeklyModuleEditor: React.FC<WeeklyModuleEditorProps> = ({
           </Card>
         </div>
       </div>
+
+      {/* Order of Mass Music Selections */}
+      <OrderOfMassMusicEditor 
+        moduleId={module.id} 
+        isEditing={isEditing}
+      />
 
       {/* Delete Option (Admin Only) */}
       {isEditing && isAdmin && onDelete && (
