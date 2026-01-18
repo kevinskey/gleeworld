@@ -34,8 +34,8 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
   const [hasAccess, setHasAccess] = useState(isEnrolled);
 
   const handleStartAssignment = (assignment: Assignment) => {
-    // Navigate to MUS-240 assignment submission page
-    navigate(`/mus-240/assignments/${assignment.id}`);
+    // Navigate to the grading system's student assignment page for database-backed assignments
+    navigate(`/grading/student/assignment/${assignment.id}`);
   };
 
   // Check if user has admin access directly from profile
