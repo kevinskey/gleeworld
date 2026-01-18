@@ -486,60 +486,73 @@ export const GleeWorldLanding = () => {
         </div>
       </section>
 
-      {/* Albums Section - Fan Only */}
-      {albums.length > 0 && <FanOnlyMusicSection albumCount={albums.length}>
-          <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full">
-            <div className="w-full">
-              <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
-                <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
-                  <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-                    <AlbumIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-secondary animate-pulse" />
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-dancing font-bold text-foreground mb-2">
-                      Our Music
-                    </h2>
-                    <AlbumIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-primary animate-pulse" />
-                  </div>
-                  <p className="text-foreground/70 text-sm sm:text-base md:text-lg">Discover our musical journey through our album collection</p>
+      {/* Albums Section */}
+      {albums.length > 0 && (
+        <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full">
+          <div className="w-full">
+            <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
+              <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
+                  <AlbumIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-secondary animate-pulse" />
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-dancing font-bold text-foreground mb-2">
+                    Our Music
+                  </h2>
+                  <AlbumIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-primary animate-pulse" />
                 </div>
-                
-                {/* Horizontal Scroll for All Devices */}
-                <Carousel className="w-full">
+                <p className="text-foreground/70 text-sm sm:text-base md:text-lg">Discover our musical journey through our album collection</p>
+              </div>
+              
+              {/* Horizontal Scroll for All Devices */}
+              <Carousel className="w-full">
                 <CarouselContent className="w-full -ml-2 sm:-ml-4 md:-ml-6 lg:-ml-8">
-                    {albums.map(album => <CarouselItem key={album.id} className="pl-1 sm:pl-2 md:pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
-                        <Card className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-card border-2 border-border hover:border-accent group cursor-pointer h-full" onClick={() => handleAlbumClick(album)}>
-                          <div className="aspect-square bg-muted rounded-t-lg flex items-center justify-center relative overflow-hidden">
-                            {album.cover_image_url ? <img src={album.cover_image_url} alt={`${album.title} cover`} className="w-full h-full object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-110 brightness-95 contrast-100" onError={e => {
-                          // Use a placeholder image if cover fails to load
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80";
-                        }} /> : <div className="flex items-center justify-center w-full h-full">
-                                <Music className="h-16 w-16 text-muted-foreground" />
-                              </div>}
-                            <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/20 transition-colors duration-300 flex items-center justify-center">
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="bg-card border-2 border-primary rounded-full p-3">
-                                  <Music className="h-6 w-6 text-primary" />
-                                </div>
+                  {albums.map(album => (
+                    <CarouselItem key={album.id} className="pl-1 sm:pl-2 md:pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                      <Card className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-card border-2 border-border hover:border-accent group cursor-pointer h-full" onClick={() => handleAlbumClick(album)}>
+                        <div className="aspect-square bg-muted rounded-t-lg flex items-center justify-center relative overflow-hidden">
+                          {album.cover_image_url ? (
+                            <img 
+                              src={album.cover_image_url} 
+                              alt={`${album.title} cover`} 
+                              className="w-full h-full object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-110 brightness-95 contrast-100" 
+                              onError={e => {
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80";
+                              }} 
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center w-full h-full">
+                              <Music className="h-16 w-16 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/20 transition-colors duration-300 flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <div className="bg-card border-2 border-primary rounded-full p-3">
+                                <Music className="h-6 w-6 text-primary" />
                               </div>
                             </div>
                           </div>
-                          <CardContent className="p-3 sm:p-4">
-                            <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base">{album.title}</h3>
-                            
-                            {album.tracks && album.tracks.length > 0 && <p className="text-sm text-foreground/70 mt-1">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>}
-                            {album.release_date && <p className="text-sm text-foreground/70 mt-1">{new Date(album.release_date).getFullYear()}</p>}
-                          </CardContent>
-                        </Card>
-                      </CarouselItem>)}
-                  </CarouselContent>
-                  <div className="flex justify-center gap-2 mt-4">
-                    <CarouselPrevious className="static translate-y-0" />
-                    <CarouselNext className="static translate-y-0" />
-                  </div>
-                </Carousel>
-              </Card>
-            </div>
-          </section>
-        </FanOnlyMusicSection>}
+                        </div>
+                        <CardContent className="p-3 sm:p-4">
+                          <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base">{album.title}</h3>
+                          {album.tracks && album.tracks.length > 0 && (
+                            <p className="text-sm text-foreground/70 mt-1">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>
+                          )}
+                          {album.release_date && (
+                            <p className="text-sm text-foreground/70 mt-1">{new Date(album.release_date).getFullYear()}</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <div className="flex justify-center gap-2 mt-4">
+                  <CarouselPrevious className="static translate-y-0" />
+                  <CarouselNext className="static translate-y-0" />
+                </div>
+              </Carousel>
+            </Card>
+          </div>
+        </section>
+      )}
 
       {/* Album Modal */}
       <AlbumModal album={selectedAlbum} isOpen={isAlbumModalOpen} onClose={handleCloseAlbumModal} />
