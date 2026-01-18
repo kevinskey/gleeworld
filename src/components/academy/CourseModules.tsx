@@ -906,8 +906,11 @@ const getResourceColor = (type: ModuleResource['type']) => {
 export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnrolled = true, isAdmin = false }) => {
   const { user } = useAuth();
   
-  // Use editable version for LH100
-  if (courseId === 'lh-100') {
+  // Use editable version for LH100 (check both UUID and slug)
+  const LH100_UUID = 'a0000000-0000-0000-0000-000000000100';
+  const isLH100 = courseId === LH100_UUID || courseId === 'lh-100';
+  
+  if (isLH100) {
     return <EditableLH100Modules isEnrolled={isEnrolled} isAdmin={isAdmin} />;
   }
   
