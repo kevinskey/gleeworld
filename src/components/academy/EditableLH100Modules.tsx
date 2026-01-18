@@ -224,23 +224,24 @@ const EditableLH100Modules: React.FC<EditableLH100ModulesProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Header with Add Button */}
       {user && (
-        <div className="flex justify-end">
+        <div className="flex justify-end px-1">
           <Button 
             size="sm" 
             variant="outline" 
             onClick={() => setShowAddForm(!showAddForm)}
+            className="h-8 sm:h-9 text-xs sm:text-sm"
           >
             {showAddForm ? (
               <>
-                <X className="h-4 w-4 mr-2" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Cancel
               </>
             ) : (
               <>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Add Module
               </>
             )}
@@ -248,63 +249,68 @@ const EditableLH100Modules: React.FC<EditableLH100ModulesProps> = ({
         </div>
       )}
 
-      {/* Add Module Form */}
+      {/* Add Module Form - Mobile First */}
       {showAddForm && (
-        <div className="p-4 rounded-lg border border-dashed border-primary/50 bg-primary/5 space-y-4">
-          <h3 className="font-semibold">Add New Module</h3>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="p-3 sm:p-4 rounded-lg border border-dashed border-primary/50 bg-primary/5 space-y-3 sm:space-y-4">
+          <h3 className="font-semibold text-sm sm:text-base">Add New Module</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <Label>Week Number</Label>
+              <Label className="text-xs sm:text-sm">Week Number</Label>
               <Input
                 type="number"
                 value={newModule.week_number}
                 onChange={(e) => setNewModule(prev => ({ ...prev, week_number: parseInt(e.target.value) || 1 }))}
+                className="h-9 sm:h-10 text-sm"
               />
             </div>
             <div>
-              <Label>Title</Label>
+              <Label className="text-xs sm:text-sm">Title</Label>
               <Input
                 placeholder="Sunday title..."
                 value={newModule.title}
                 onChange={(e) => setNewModule(prev => ({ ...prev, title: e.target.value }))}
+                className="h-9 sm:h-10 text-sm"
               />
             </div>
           </div>
           <div>
-            <Label>Description</Label>
+            <Label className="text-xs sm:text-sm">Description</Label>
             <Textarea
               placeholder="Module description..."
               value={newModule.description}
               onChange={(e) => setNewModule(prev => ({ ...prev, description: e.target.value }))}
+              className="text-sm min-h-[80px]"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <Label>Start Date</Label>
+              <Label className="text-xs sm:text-sm">Start Date</Label>
               <Input
                 type="date"
                 value={newModule.start_date}
                 onChange={(e) => setNewModule(prev => ({ ...prev, start_date: e.target.value }))}
+                className="h-9 sm:h-10 text-sm"
               />
             </div>
             <div>
-              <Label>End Date</Label>
+              <Label className="text-xs sm:text-sm">End Date</Label>
               <Input
                 type="date"
                 value={newModule.end_date}
                 onChange={(e) => setNewModule(prev => ({ ...prev, end_date: e.target.value }))}
+                className="h-9 sm:h-10 text-sm"
               />
             </div>
           </div>
-          <Button onClick={handleAddModule} disabled={saving}>
+          <Button onClick={handleAddModule} disabled={saving} size="sm" className="w-full sm:w-auto">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
             Add Module
           </Button>
         </div>
       )}
 
-      {/* Modules Accordion */}
-      <Accordion type="single" collapsible className="space-y-3">
+      {/* Modules Accordion - Mobile First */}
+      <Accordion type="single" collapsible className="space-y-2 sm:space-y-3">
         {modules.map((module) => {
           const isEditing = editingId === module.id;
           const resourceCount = 3; // From lh100_module_resources table
@@ -315,38 +321,39 @@ const EditableLH100Modules: React.FC<EditableLH100ModulesProps> = ({
               value={module.id}
               className="border rounded-lg bg-card overflow-hidden"
             >
-              <AccordionTrigger className="hover:no-underline px-4 py-3">
-                <div className="flex items-center justify-between w-full pr-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+              <AccordionTrigger className="hover:no-underline px-3 sm:px-4 py-2 sm:py-3">
+                <div className="flex items-center justify-between w-full pr-2 sm:pr-4">
+                  <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+                    <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary font-bold text-xs sm:text-sm flex-shrink-0">
                       {module.week_number}
                     </div>
-                    <div className="text-left">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-foreground">{module.title}</h3>
+                    <div className="text-left min-w-0 flex-1">
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <h3 className="font-semibold text-sm sm:text-base text-foreground truncate">{module.title}</h3>
                         {module.is_locked ? (
-                          <Lock className="h-4 w-4 text-muted-foreground" />
+                          <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
                         ) : (
-                          <Unlock className="h-4 w-4 text-green-600" />
+                          <Unlock className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                      <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-muted-foreground mt-0.5">
                         <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {format(new Date(module.start_date), 'MMM d')} - {format(new Date(module.end_date), 'MMM d')}
+                          <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <span className="hidden xs:inline">{format(new Date(module.start_date), 'MMM d')} - {format(new Date(module.end_date), 'MMM d')}</span>
+                          <span className="xs:hidden">{format(new Date(module.start_date), 'M/d')}</span>
                         </span>
                         <span className="flex items-center gap-1">
-                          📚 0/{resourceCount} items
+                          📚 0/{resourceCount}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-muted-foreground">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <span className="text-xs sm:text-sm font-medium text-muted-foreground">
                       {module.completion_percentage || 0}%
                     </span>
                     {module.is_active && (
-                      <Badge variant="default" className="text-xs">Active</Badge>
+                      <Badge variant="default" className="text-[10px] sm:text-xs hidden sm:flex">Active</Badge>
                     )}
                   </div>
                 </div>
