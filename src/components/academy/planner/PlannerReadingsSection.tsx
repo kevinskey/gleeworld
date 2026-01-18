@@ -16,28 +16,44 @@ const ReadingCard: React.FC<{ reading: USCCBReading; icon: React.ReactNode; colo
   reading, 
   icon, 
   colorClass 
-}) => (
-  <Card className="border-l-4" style={{ borderLeftColor: `var(--${colorClass})` }}>
-    <CardHeader className="pb-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {icon}
-          <CardTitle className="text-sm font-medium">{reading.title}</CardTitle>
+}) => {
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const contentLength = reading.content?.length || 0;
+  const needsExpansion = contentLength > 300;
+  
+  return (
+    <Card className="border-l-4" style={{ borderLeftColor: `var(--${colorClass})` }}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {icon}
+            <CardTitle className="text-sm font-medium">{reading.title}</CardTitle>
+          </div>
+          <Badge variant="outline" className="text-xs">
+            {reading.citation}
+          </Badge>
         </div>
-        <Badge variant="outline" className="text-xs">
-          {reading.citation}
-        </Badge>
-      </div>
-    </CardHeader>
-    <CardContent>
-      <ScrollArea className="max-h-32">
-        <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-          {reading.content}
-        </p>
-      </ScrollArea>
-    </CardContent>
-  </Card>
-);
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <ScrollArea className={isExpanded ? "max-h-96" : "max-h-48"}>
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed pr-4">
+            {reading.content}
+          </p>
+        </ScrollArea>
+        {needsExpansion && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full text-xs"
+          >
+            {isExpanded ? "Show Less" : "Read Full Text"}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 // Ordinary of the Mass sections for music planning
 const ORDINARY_PARTS = [
