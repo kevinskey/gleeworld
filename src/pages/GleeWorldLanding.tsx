@@ -21,7 +21,7 @@ import { MusicStaffIcon } from "@/components/icons/MusicStaffIcon";
 import { FAQNavigationCards } from "@/components/landing/FAQNavigationCards";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, MapPin, ArrowRight, ChevronLeft, ChevronRight, Sparkles, X, Music, Album as AlbumIcon, Youtube, Play, AlertCircle, MessageCircleQuestion } from "lucide-react";
+import { Calendar, MapPin, ArrowRight, ChevronLeft, ChevronRight, Sparkles, X, Music, Album as AlbumIcon, Youtube, Play, AlertCircle, MessageCircleQuestion, Clock } from "lucide-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
@@ -311,7 +311,7 @@ export const GleeWorldLanding = () => {
                   scrollBehavior: 'smooth',
                   WebkitOverflowScrolling: 'touch'
                 }}>
-                      {events.map(event => <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-64 lg:w-72 flex flex-col h-[280px]">
+                      {events.map(event => <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-64 lg:w-72 flex flex-col h-[320px]">
                           {/* Hover overlay button */}
                           <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold border border-white/30" asChild>
@@ -321,14 +321,32 @@ export const GleeWorldLanding = () => {
                             </Button>
                           </div>
                           
-                          <div className="h-36 lg:h-40 bg-muted rounded-t-lg flex items-center justify-center relative overflow-hidden flex-shrink-0">
+                          <div className="h-32 lg:h-36 bg-muted rounded-t-lg flex items-center justify-center relative overflow-hidden flex-shrink-0">
                             <img src={event.image_url || getDefaultEventImage(event.id)} alt={event.title} className="w-full h-full object-cover rounded-t-lg brightness-95 contrast-100" onError={e => {
                         console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                         e.currentTarget.src = getDefaultEventImage(event.id);
                       }} />
                           </div>
-                          <CardContent className="p-3 lg:p-4 flex flex-col flex-grow justify-center">
-                            <h3 className="text-base lg:text-lg font-semibold text-card-foreground line-clamp-2 text-center">{event.title}</h3>
+                          <CardContent className="p-3 lg:p-4 flex flex-col flex-grow">
+                            <h3 className="text-sm lg:text-base font-semibold text-card-foreground line-clamp-2 text-center mb-2">{event.title}</h3>
+                            <div className="space-y-1 text-xs text-muted-foreground mt-auto">
+                              <div className="flex items-center justify-center gap-1">
+                                <Calendar className="h-3 w-3 flex-shrink-0" />
+                                <span>{new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                              </div>
+                              {event.start_date && (
+                                <div className="flex items-center justify-center gap-1">
+                                  <Clock className="h-3 w-3 flex-shrink-0" />
+                                  <span>{new Date(event.start_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+                                </div>
+                              )}
+                              {event.location && (
+                                <div className="flex items-center justify-center gap-1">
+                                  <MapPin className="h-3 w-3 flex-shrink-0" />
+                                  <span className="line-clamp-1">{event.location}</span>
+                                </div>
+                              )}
+                            </div>
                           </CardContent>
                         </Card>)}
                     </div>
@@ -339,7 +357,7 @@ export const GleeWorldLanding = () => {
                     <Carousel className="w-full">
                       <CarouselContent className="-ml-2 sm:-ml-4">
                         {events.map(event => <CarouselItem key={event.id} className="pl-2 sm:pl-4 basis-[85%] sm:basis-[70%]">
-                            <Card className="hover:shadow-2xl transition-all duration-300 relative group bg-card/20 backdrop-blur-md border border-border/30 hover:bg-card/30 flex flex-col h-[280px]">
+                            <Card className="hover:shadow-2xl transition-all duration-300 relative group bg-card/20 backdrop-blur-md border border-border/30 hover:bg-card/30 flex flex-col h-[320px]">
                               {/* Hover overlay button */}
                               <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-border/30" asChild>
@@ -349,14 +367,32 @@ export const GleeWorldLanding = () => {
                                 </Button>
                               </div>
                               
-                              <div className="h-40 sm:h-44 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden flex-shrink-0">
+                              <div className="h-36 sm:h-40 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden flex-shrink-0">
                                 <img src={event.image_url || getDefaultEventImage(event.id)} alt={event.title} className="w-full h-full object-cover rounded-t-lg brightness-95 contrast-100" onError={e => {
                             console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                             e.currentTarget.src = getDefaultEventImage(event.id);
                           }} />
                               </div>
-                              <CardContent className="p-4 flex flex-col flex-grow justify-center">
-                                <h3 className="text-lg font-semibold text-foreground line-clamp-2 text-center">{event.title}</h3>
+                              <CardContent className="p-3 flex flex-col flex-grow">
+                                <h3 className="text-base font-semibold text-foreground line-clamp-2 text-center mb-2">{event.title}</h3>
+                                <div className="space-y-1 text-xs text-muted-foreground mt-auto">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Calendar className="h-3 w-3 flex-shrink-0" />
+                                    <span>{new Date(event.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                  </div>
+                                  {event.start_date && (
+                                    <div className="flex items-center justify-center gap-1">
+                                      <Clock className="h-3 w-3 flex-shrink-0" />
+                                      <span>{new Date(event.start_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+                                    </div>
+                                  )}
+                                  {event.location && (
+                                    <div className="flex items-center justify-center gap-1">
+                                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                                      <span className="line-clamp-1">{event.location}</span>
+                                    </div>
+                                  )}
+                                </div>
                               </CardContent>
                             </Card>
                           </CarouselItem>)}
