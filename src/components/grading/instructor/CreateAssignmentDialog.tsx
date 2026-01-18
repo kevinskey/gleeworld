@@ -98,7 +98,6 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="listening_journal">Listening Journal</SelectItem>
                   <SelectItem value="reflection_paper">Reflection Paper</SelectItem>
                   <SelectItem value="exam">Exam</SelectItem>
                   <SelectItem value="project">Project</SelectItem>
