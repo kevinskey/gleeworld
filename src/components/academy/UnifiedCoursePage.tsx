@@ -302,7 +302,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             ] : course.courseCode === 'LH 100' ? [
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
-              { icon: Layers, label: 'Modules', tab: 'modules' },
               { icon: BookMarked, label: 'Planner', tab: 'planner' },
               { icon: Calendar, label: 'Calendar', tab: 'calendar' },
               { icon: Video, label: 'Video Library', tab: 'video-library' },
