@@ -53,6 +53,7 @@ export interface MusicSelection {
   order_number: number;
   liturgical_moment: string;
   title: string;
+  hymn_number: string;
   composer_source: string;
   music_key: string;
   ensemble: string;
@@ -122,6 +123,7 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
           order_number: moment.order,
           liturgical_moment: moment.name,
           title: '',
+          hymn_number: '',
           composer_source: '',
           music_key: '',
           ensemble: '',
@@ -139,6 +141,7 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
         order_number: moment.order,
         liturgical_moment: moment.name,
         title: '',
+        hymn_number: '',
         composer_source: '',
         music_key: '',
         ensemble: '',
@@ -287,10 +290,11 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="w-12 text-center">#</TableHead>
-                <TableHead className="min-w-[180px]">Liturgical Moment</TableHead>
-                <TableHead className="min-w-[200px]">Title</TableHead>
-                <TableHead className="min-w-[200px]">Link</TableHead>
-                <TableHead className="min-w-[200px]">Notes</TableHead>
+                <TableHead className="min-w-[160px]">Liturgical Moment</TableHead>
+                <TableHead className="min-w-[180px]">Title</TableHead>
+                <TableHead className="w-24">Hymn #</TableHead>
+                <TableHead className="min-w-[160px]">Link</TableHead>
+                <TableHead className="min-w-[160px]">Notes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -328,9 +332,21 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
                     <TableCell>
                       {isEditing ? (
                         <Input
+                          value={selection.hymn_number || ''}
+                          onChange={(e) => updateSelection(selection.order_number, 'hymn_number', e.target.value)}
+                          placeholder="#123"
+                          className="h-8 text-sm w-20"
+                        />
+                      ) : (
+                        <span className="text-sm font-mono">{selection.hymn_number || '—'}</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isEditing ? (
+                        <Input
                           value={selection.youtube_url}
                           onChange={(e) => updateSelection(selection.order_number, 'youtube_url', e.target.value)}
-                          placeholder="URL (YouTube, USCCB, etc.)..."
+                          placeholder="URL..."
                           className="h-8 text-sm"
                         />
                       ) : linkInfo ? (

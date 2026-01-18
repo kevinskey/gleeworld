@@ -20429,6 +20429,7 @@ export type Database = {
           composer_source: string | null
           created_at: string
           ensemble: string | null
+          hymn_number: string | null
           id: string
           liturgical_moment: string
           module_id: string
@@ -20443,6 +20444,7 @@ export type Database = {
           composer_source?: string | null
           created_at?: string
           ensemble?: string | null
+          hymn_number?: string | null
           id?: string
           liturgical_moment: string
           module_id: string
@@ -20457,6 +20459,7 @@ export type Database = {
           composer_source?: string | null
           created_at?: string
           ensemble?: string | null
+          hymn_number?: string | null
           id?: string
           liturgical_moment?: string
           module_id?: string
