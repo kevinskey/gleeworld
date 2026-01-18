@@ -544,6 +544,27 @@ const LH100_MODULES: WeeklyModule[] = [
     ],
     completion_percentage: 0
   },
+  {
+    id: 'lh-24',
+    week_number: 24,
+    title: 'Fifth Sunday of Easter',
+    description: 'Easter season Sunday liturgical preparation - "I am the vine."',
+    start_date: '2026-05-03',
+    end_date: '2026-05-03',
+    is_active: false,
+    is_locked: false,
+    learning_objectives: [
+      'Reflect on Christ as the true vine',
+      'Prepare Easter season liturgy',
+      'Plan music celebrating unity in Christ'
+    ],
+    resources: [
+      { id: 'lh24-1', title: 'The Vine and the Branches Reflection', type: 'reading', duration: '20 min', completed: false },
+      { id: 'lh24-2', title: 'Liturgy Planning Guide', type: 'document', completed: false },
+      { id: 'lh24-3', title: 'Music Selection', type: 'audio', duration: '15 min', completed: false },
+    ],
+    completion_percentage: 0
+  },
 ];
 
 // Sample data for MUS 240 - Survey of African American Music
