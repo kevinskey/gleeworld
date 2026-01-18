@@ -1,12 +1,11 @@
 /**
  * Unified Assignment Hook
- * Provides consistent access to assignments across legacy mus240_assignments 
- * and new gw_assignments tables using the resolver utility
+ * Provides consistent access to assignments using gw_course_assignments
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { resolveAssignmentId, getMus240Assignments, type ResolvedAssignment } from '@/utils/assignmentResolver';
+import { resolveAssignmentId, getCourseAssignments, type ResolvedAssignment } from '@/utils/assignmentResolver';
 
 export interface UnifiedAssignment extends ResolvedAssignment {
   submission_count?: number;
@@ -14,75 +13,37 @@ export interface UnifiedAssignment extends ResolvedAssignment {
 }
 
 /**
- * Fetch all MUS240 assignments with submission stats
+ * Fetch all assignments for a course with submission stats
  */
-export const useUnifiedAssignments = (courseCode: string = 'MUS240') => {
+export const useUnifiedAssignments = (courseId: string) => {
   return useQuery({
-    queryKey: ['unified-assignments', courseCode],
+    queryKey: ['unified-assignments', courseId],
     queryFn: async (): Promise<UnifiedAssignment[]> => {
-      if (courseCode === 'MUS240') {
-        // Get all MUS240 assignments from resolver
-        const assignments = await getMus240Assignments();
-        
-        // Enrich with submission stats from legacy tables
-        const assignmentIds = assignments.map(a => a.legacy_id || a.id);
-        
-        const { data: entries } = await supabase
-          .from('mus240_journal_entries')
-          .select('assignment_id, submitted_at')
-          .in('assignment_id', assignmentIds)
-          .not('submitted_at', 'is', null);
-        
-        const { data: grades } = await supabase
-          .from('mus240_journal_grades')
-          .select('assignment_id, instructor_score, overall_score')
-          .in('assignment_id', assignmentIds);
-        
-        // Calculate stats
-        const stats = assignments.map(assignment => {
-          const assignmentId = assignment.legacy_id || assignment.id;
-          const assignmentEntries = entries?.filter(e => e.assignment_id === assignmentId) || [];
-          const assignmentGrades = grades?.filter(g => g.assignment_id === assignmentId) || [];
-          
-          return {
-            ...assignment,
-            submission_count: assignmentEntries.length,
-            graded_count: assignmentGrades.filter(g => g.instructor_score || g.overall_score).length
-          };
-        });
-        
-        return stats;
-      }
+      if (!courseId) return [];
       
-      // For other courses, fetch from gw_course_assignments
-      const { data: course } = await supabase
-        .from('gw_courses')
-        .select('id')
-        .eq('code', courseCode)
-        .maybeSingle();
+      // Fetch from gw_course_assignments
+      const assignments = await getCourseAssignments(courseId);
       
-      if (!course) return [];
+      // Get submission stats
+      const assignmentIds = assignments.map(a => a.id);
       
-      const { data: assignments } = await supabase
-        .from('gw_course_assignments')
-        .select('*')
-        .eq('course_id', course.id)
-        .eq('is_published', true)
-        .order('due_date', { ascending: true });
+      const { data: submissions } = await supabase
+        .from('assignment_submissions')
+        .select('assignment_id, status')
+        .in('assignment_id', assignmentIds);
       
-      return (assignments || []).map(a => ({
-        id: a.id,
-        legacy_id: null,
-        legacy_source: null,
-        title: a.title,
-        description: a.description,
-        assignment_type: a.assignment_type,
-        points: a.points,
-        due_at: a.due_date,
-        course_id: a.course_id,
-        is_mus240: false
-      }));
-    }
+      // Calculate stats per assignment
+      return assignments.map(assignment => {
+        const assignmentSubmissions = submissions?.filter(s => s.assignment_id === assignment.id) || [];
+        
+        return {
+          ...assignment,
+          submission_count: assignmentSubmissions.length,
+          graded_count: assignmentSubmissions.filter(s => s.status === 'graded').length
+        };
+      });
+    },
+    enabled: !!courseId
   });
 };
 
