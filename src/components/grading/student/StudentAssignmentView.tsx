@@ -43,26 +43,15 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
   const { data: assignment, isLoading: assignmentLoading } = useQuery({
     queryKey: ['gw-course-assignment', assignmentId],
     queryFn: async (): Promise<AssignmentData | null> => {
-      // First try gw_course_assignments (MUS 240 and other course-based assignments)
+      // Query gw_course_assignments (the unified assignment system)
       const { data: courseAssignment, error: courseError } = await supabase
         .from('gw_course_assignments')
         .select('*, gw_courses(*)')
         .eq('id', assignmentId)
         .maybeSingle();
 
-      if (courseAssignment) {
-        return courseAssignment as unknown as AssignmentData;
-      }
-
-      // Fallback to gw_assignments for legacy assignments
-      const { data: legacyAssignment, error: legacyError } = await supabase
-        .from('gw_assignments' as any)
-        .select('*, gw_courses(*)')
-        .eq('id', assignmentId)
-        .maybeSingle();
-
-      if (legacyError) throw legacyError;
-      return legacyAssignment as unknown as AssignmentData;
+      if (courseError) throw courseError;
+      return courseAssignment as unknown as AssignmentData;
     },
   });
 

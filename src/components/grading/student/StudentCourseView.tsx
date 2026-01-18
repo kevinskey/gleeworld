@@ -39,7 +39,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_grades' as any)
-        .select('*, gw_assignments(points)')
+        .select('*, gw_course_assignments(points)')
         .eq('student_id', user?.id)
         .eq('released_to_student', true);
       
@@ -98,17 +98,18 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
       const { start, end } = getCourseWindow();
 
       const { data: assignmentsData, error: assignmentsError } = await supabase
-        .from('gw_assignments' as any)
+        .from('gw_course_assignments')
         .select('*')
         .eq('course_id', courseId)
-        .order('due_at', { ascending: true });
+        .eq('is_published', true)
+        .order('due_date', { ascending: true });
 
       if (assignmentsError) throw assignmentsError;
 
       const filteredAssignments = (assignmentsData as any[] | null | undefined)?.filter((a: any) => {
         if (!start) return true;
-        if (!a?.due_at) return true;
-        const due = new Date(a.due_at);
+        if (!a?.due_date) return true;
+        const due = new Date(a.due_date);
         if (Number.isNaN(due.getTime())) return true;
         if (due < start) return false;
         if (end && due > end) return false;
@@ -133,7 +134,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
   });
 
   const totalEarned = grades?.reduce((sum, g) => sum + (g.points_awarded || 0), 0) || 0;
-  const totalPossible = grades?.reduce((sum, g) => sum + (g.gw_assignments?.points || 0), 0) || 0;
+  const totalPossible = grades?.reduce((sum, g) => sum + (g.gw_course_assignments?.points || 0), 0) || 0;
   const percentage = totalPossible > 0 ? (totalEarned / totalPossible) * 100 : 0;
   const letterGrade = percentage >= 90 ? 'A' : percentage >= 80 ? 'B' : percentage >= 70 ? 'C' : percentage >= 60 ? 'D' : 'F';
 
@@ -204,7 +205,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                       </div>
                     </CardTitle>
                     <CardDescription>
-                      Due: {assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : 'No due date'}
+                      Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">

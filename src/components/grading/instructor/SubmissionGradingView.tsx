@@ -21,7 +21,7 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_assignment_submissions' as any)
-        .select('*, gw_assignments(title, description, points)')
+        .select('*, gw_course_assignments(title, description, points)')
         .eq('id', submissionId)
         .single();
 
@@ -60,7 +60,7 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
         <div>
           <h1 className="text-3xl font-bold">Grade Submission</h1>
           <p className="text-muted-foreground">
-            {submission?.gw_profiles?.full_name} - {submission?.gw_assignments?.title || 'Untitled Assignment'}
+            {submission?.gw_profiles?.full_name} - {submission?.gw_course_assignments?.title || 'Untitled Assignment'}
           </p>
         </div>
       </div>
