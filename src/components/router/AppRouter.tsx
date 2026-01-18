@@ -46,14 +46,11 @@ import BownaScholarLanding from "@/pages/BownaScholarLanding";
 
 // MUS240 Pages
 import ClassLanding from "@/pages/mus240/ClassLanding";
-import AssignmentJournal from "@/pages/mus240/AssignmentJournal";
 import Resources from "@/pages/mus240/Resources";
 import ResourcesAdmin from "@/pages/mus240/admin/ResourcesAdmin";
 import ListeningHub from "@/pages/mus240/ListeningHub";
-import AssignmentWeek from "@/pages/mus240/AssignmentWeek";
 import WeekDetail from "@/pages/mus240/WeekDetail";
 import SyllabusPage from "@/pages/mus240/SyllabusPage";
-import { Mus240GradesPage } from "@/pages/mus240/Mus240GradesPage";
 import GroupsPage from "@/pages/mus240/GroupsPage";
 import SMUS100MidtermExamPage from "@/pages/SMUS100MidtermExamPage";
 import MUS100SightSingingPage from "@/pages/MUS100SightSingingPage";
@@ -249,18 +246,6 @@ export const router = createBrowserRouter([
   {
     path: "/classes/mus240/listening/:weekNumber",
     element: <WeekDetail />,
-  },
-  {
-    path: "/classes/mus240/assignments",
-    element: <AssignmentWeek />,
-  },
-  {
-    path: "/classes/mus240/assignments/:assignmentId",
-    element: <AssignmentJournal />,
-  },
-  {
-    path: "/classes/mus240/grades",
-    element: <Mus240GradesPage />,
   },
   {
     path: "/classes/mus240/groups",
