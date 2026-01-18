@@ -23,11 +23,11 @@ import {
   Save, 
   Loader2,
   Play,
-  X
+  ExternalLink
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { extractYouTubeVideoId, getYouTubeThumbnail } from '@/utils/youtubeUtils';
+import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
 
 // Order of Mass liturgical moments
 const LITURGICAL_MOMENTS = [
@@ -72,10 +72,17 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
   const [selections, setSelections] = useState<MusicSelection[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [videoModal, setVideoModal] = useState<{ open: boolean; videoId: string; title: string }>({
+  const [linkModal, setLinkModal] = useState<{ 
+    open: boolean; 
+    url: string; 
+    title: string;
+    type: 'youtube' | 'website';
+    videoId?: string;
+  }>({
     open: false,
-    videoId: '',
-    title: ''
+    url: '',
+    title: '',
+    type: 'website'
   });
 
   useEffect(() => {
@@ -178,22 +185,33 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
     }
   };
 
-  const getYouTubePreview = (url: string) => {
+  const getLinkInfo = (url: string) => {
+    if (!url || !url.trim()) return null;
+    
     const videoId = extractYouTubeVideoId(url);
-    if (!videoId) return null;
+    if (videoId) {
+      return {
+        type: 'youtube' as const,
+        videoId,
+        url,
+        label: 'Watch'
+      };
+    }
+    
+    // Handle other URLs (USCCB, etc.)
     return {
-      videoId,
-      thumbnail: getYouTubeThumbnail(videoId, 'default'),
-      link: `https://www.youtube.com/watch?v=${videoId}`
+      type: 'website' as const,
+      url,
+      label: 'Open'
     };
   };
 
-  const openVideoModal = (videoId: string, title: string) => {
-    setVideoModal({ open: true, videoId, title });
+  const openLinkModal = (url: string, title: string, type: 'youtube' | 'website', videoId?: string) => {
+    setLinkModal({ open: true, url, title, type, videoId });
   };
 
-  const closeVideoModal = () => {
-    setVideoModal({ open: false, videoId: '', title: '' });
+  const closeLinkModal = () => {
+    setLinkModal({ open: false, url: '', title: '', type: 'website' });
   };
 
   if (loading) {
@@ -234,14 +252,14 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
                 <TableHead className="w-12 text-center">#</TableHead>
                 <TableHead className="min-w-[180px]">Liturgical Moment</TableHead>
                 <TableHead className="min-w-[200px]">Title</TableHead>
-                <TableHead className="min-w-[200px]">YouTube Link</TableHead>
+                <TableHead className="min-w-[200px]">Link</TableHead>
                 <TableHead className="min-w-[200px]">Notes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {selections.map((selection) => {
                 const moment = LITURGICAL_MOMENTS.find(m => m.order === selection.order_number);
-                const ytPreview = getYouTubePreview(selection.youtube_url);
+                const linkInfo = getLinkInfo(selection.youtube_url);
                 
                 return (
                   <TableRow key={selection.order_number} className="group">
@@ -275,18 +293,27 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
                         <Input
                           value={selection.youtube_url}
                           onChange={(e) => updateSelection(selection.order_number, 'youtube_url', e.target.value)}
-                          placeholder="YouTube URL..."
+                          placeholder="URL (YouTube, USCCB, etc.)..."
                           className="h-8 text-sm"
                         />
-                      ) : ytPreview ? (
+                      ) : linkInfo ? (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => openVideoModal(ytPreview.videoId, selection.title || selection.liturgical_moment)}
+                          onClick={() => openLinkModal(
+                            linkInfo.url, 
+                            selection.title || selection.liturgical_moment,
+                            linkInfo.type,
+                            linkInfo.type === 'youtube' ? linkInfo.videoId : undefined
+                          )}
                           className="flex items-center gap-1 text-primary hover:text-primary h-7 px-2"
                         >
-                          <Play className="h-3 w-3 fill-current" />
-                          <span className="text-sm">Watch</span>
+                          {linkInfo.type === 'youtube' ? (
+                            <Play className="h-3 w-3 fill-current" />
+                          ) : (
+                            <ExternalLink className="h-3 w-3" />
+                          )}
+                          <span className="text-sm">{linkInfo.label}</span>
                         </Button>
                       ) : (
                         <span className="text-muted-foreground text-sm">—</span>
@@ -312,27 +339,36 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
         </div>
       </CardContent>
 
-      {/* YouTube Video Modal */}
-      <Dialog open={videoModal.open} onOpenChange={(open) => !open && closeVideoModal()}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+      {/* Link Modal - YouTube or Website */}
+      <Dialog open={linkModal.open} onOpenChange={(open) => !open && closeLinkModal()}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden max-h-[90vh]">
           <DialogHeader className="p-4 pb-2">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2 text-base">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              {linkModal.type === 'youtube' ? (
                 <Youtube className="h-5 w-5 text-red-500" />
-                {videoModal.title}
-              </DialogTitle>
-            </div>
+              ) : (
+                <ExternalLink className="h-5 w-5 text-primary" />
+              )}
+              {linkModal.title}
+            </DialogTitle>
           </DialogHeader>
-          <div className="aspect-video w-full">
-            {videoModal.videoId && (
+          <div className={linkModal.type === 'youtube' ? 'aspect-video w-full' : 'h-[70vh] w-full'}>
+            {linkModal.type === 'youtube' && linkModal.videoId ? (
               <iframe
-                src={`https://www.youtube.com/embed/${videoModal.videoId}?autoplay=1`}
-                title={videoModal.title}
+                src={`https://www.youtube.com/embed/${linkModal.videoId}?autoplay=1`}
+                title={linkModal.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="w-full h-full"
               />
-            )}
+            ) : linkModal.url ? (
+              <iframe
+                src={linkModal.url}
+                title={linkModal.title}
+                className="w-full h-full border-0"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+              />
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>
