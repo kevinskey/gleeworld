@@ -42,15 +42,8 @@ const GleeAcademy = () => {
       window.open('https://readmusic.gleeworld.org', '_blank');
       return;
     }
-    const isEnrolled = enrolledCourses.includes(course.id);
-    const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
-    if (isEnrolled) {
-      // Go to the course page
-      navigate(course.route);
-    } else {
-      // Go to onboarding page
-      navigate(`/academy/${courseSlug}/onboarding`);
-    }
+    // Go directly to the course page (no onboarding required)
+    navigate(course.route);
   };
   const features = [{
     icon: Music,
