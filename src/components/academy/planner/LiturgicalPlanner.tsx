@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Music, BookOpen, FileText, Loader2 } from 'lucide-react';
 import { useLiturgicalWeeks, LiturgicalWeek } from '@/hooks/useLiturgicalWeeks';
+import { useUSCCBSync } from '@/hooks/useUSCCBSync';
 import { PlannerOverviewTab } from './PlannerOverviewTab';
 import { PlannerMusicTab } from './PlannerMusicTab';
 import { PlannerPsalmTab } from './PlannerPsalmTab';
@@ -38,6 +39,18 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
   const { weeks, loading, updateWeek } = useLiturgicalWeeks();
   const [selectedWeek, setSelectedWeek] = useState<LiturgicalWeek | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const { syncLiturgicalData, liturgicalData, isLoading: isSyncingLiturgical, clearData } = useUSCCBSync();
+
+  // Sync liturgical data when week changes
+  useEffect(() => {
+    if (selectedWeek) {
+      const dateStr = selectedWeek.sunday_date || selectedWeek.week_of;
+      if (dateStr) {
+        syncLiturgicalData(dateStr);
+      }
+    }
+    return () => clearData();
+  }, [selectedWeek?.id]);
 
   if (loading) {
     return (
@@ -182,6 +195,9 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
                     <PlannerMusicTab 
                       weekId={selectedWeek.id}
                       isAdmin={isAdmin}
+                      liturgicalData={liturgicalData}
+                      sundayTitle={selectedWeek.sunday_title || selectedWeek.title}
+                      season={selectedWeek.season}
                     />
                   </TabsContent>
                   <TabsContent value="psalm" className="m-0 p-4">
