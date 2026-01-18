@@ -1342,7 +1342,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                   </div>}
               </ScrollArea> : <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p className="text-primary-foreground">Click a date to view sessions</p>
+                <p className="text-muted-foreground">Click a date to view sessions</p>
               </div>}
           </CardContent>
         </Card>
@@ -1384,22 +1384,22 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                   <div className="flex flex-wrap gap-4 mb-4 text-xs">
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded bg-[#003666]/10 border border-[#003666]/30" />
-                      <span className="text-primary-foreground">Class Sessions</span>
+                      <span className="text-foreground">Class Sessions</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded bg-amber-100 border border-amber-300" />
-                      <span className="text-primary-foreground">Spelman Events</span>
+                      <span className="text-foreground">Spelman Events</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded bg-red-100 border border-red-300" />
-                      <span className="text-primary-foreground text-lg">Holiday/Break</span>
+                      <span className="text-foreground">Holiday/Break</span>
                     </div>
                   </div>
 
                   {/* Month View */}
                   {calendarView === 'month' && <>
                       <div className="grid grid-cols-7 gap-1 mb-2">
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <div key={day} className="text-center text-xs font-medium py-2 text-primary-foreground">
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <div key={day} className="text-center text-xs font-medium py-2 text-foreground">
                             {day}
                           </div>)}
                       </div>
