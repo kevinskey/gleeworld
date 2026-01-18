@@ -387,3 +387,6 @@ verify_jwt = false
 
 [functions.scrape-url]
 verify_jwt = false
+
+[functions.suggest-liturgical-music]
+verify_jwt = false

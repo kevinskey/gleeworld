@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Music, Save, Loader2, Play, ExternalLink, Edit2, Check, X } from 'lucide-react';
+import { Music, Save, Loader2, Play, ExternalLink, Edit2, X, Sparkles, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +14,9 @@ import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
 interface PlannerMusicTabProps {
   weekId: string;
   isAdmin?: boolean;
+  liturgicalData?: any;
+  sundayTitle?: string;
+  season?: string;
 }
 
 // Proper of the Mass - liturgical moments in order
@@ -44,11 +47,27 @@ interface MusicEntry {
   youtube_url: string;
 }
 
-export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({ weekId, isAdmin = false }) => {
+interface AISuggestion {
+  moment: string;
+  title: string;
+  hymn_number?: string;
+  reason: string;
+}
+
+export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({ 
+  weekId, 
+  isAdmin = false,
+  liturgicalData,
+  sundayTitle,
+  season 
+}) => {
   const [entries, setEntries] = useState<MusicEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [linkModal, setLinkModal] = useState<{ open: boolean; url: string; title: string; videoId?: string }>({
     open: false, url: '', title: ''
   });
@@ -151,6 +170,67 @@ export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({ weekId, isAdmi
     }
   };
 
+  const getAISuggestions = async () => {
+    setAiLoading(true);
+    setSuggestions([]);
+    setShowSuggestions(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-liturgical-music', {
+        body: {
+          readings: liturgicalData?.readings,
+          season: season || liturgicalData?.season,
+          sundayTitle: sundayTitle || liturgicalData?.celebration || 'Sunday'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.suggestions) {
+        setSuggestions(data.suggestions);
+        toast.success('AI suggestions ready!');
+      } else if (data.rawSuggestions) {
+        toast.info('Received text suggestions - parsing not available');
+      } else if (data.error) {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('Error getting AI suggestions:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to get AI suggestions');
+      setShowSuggestions(false);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applySuggestion = (suggestion: AISuggestion) => {
+    // Find matching moment in entries
+    const momentMap: Record<string, string[]> = {
+      'Entrance Hymn': ['Entrance Hymn', 'Entrance/Opening'],
+      'Responsorial Psalm': ['Responsorial Psalm'],
+      'Gospel Acclamation': ['Gospel Acclamation'],
+      'Offertory': ['Offertory'],
+      'Communion': ['Communion'],
+      'Recessional': ['Recessional'],
+    };
+
+    const matchingMoments = momentMap[suggestion.moment] || [suggestion.moment];
+    const entry = entries.find(e => 
+      matchingMoments.some(m => e.moment.toLowerCase().includes(m.toLowerCase()))
+    );
+
+    if (entry) {
+      setEntries(prev => prev.map(e =>
+        e.order_number === entry.order_number
+          ? { ...e, title: suggestion.title, hymn_number: suggestion.hymn_number || '' }
+          : e
+      ));
+      toast.success(`Applied "${suggestion.title}" to ${entry.moment}`);
+    } else {
+      toast.error(`Could not find matching moment for ${suggestion.moment}`);
+    }
+  };
+
   const hasAnyContent = entries.some(e => e.title.trim() || e.hymn_number.trim());
 
   if (loading) {
@@ -164,33 +244,103 @@ export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({ weekId, isAdmi
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-2">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Music className="h-5 w-5 text-primary" />
           Service Music Plan
         </h3>
-        {isAdmin && (
-          <div className="flex gap-2">
-            {isEditing ? (
-              <>
-                <Button variant="outline" size="sm" onClick={() => { setIsEditing(false); fetchMusicPlan(); }}>
-                  <X className="h-4 w-4 mr-1" />
-                  Cancel
+        <div className="flex gap-2">
+          {isAdmin && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={getAISuggestions}
+              disabled={aiLoading}
+            >
+              {aiLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-1" />
+              )}
+              AI Suggest
+            </Button>
+          )}
+          {isAdmin && (
+            <>
+              {isEditing ? (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => { setIsEditing(false); fetchMusicPlan(); }}>
+                    <X className="h-4 w-4 mr-1" />
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleSave} disabled={saving}>
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                    Save
+                  </Button>
+                </>
+              ) : (
+                <Button size="sm" onClick={() => setIsEditing(true)}>
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  Edit Plan
                 </Button>
-                <Button size="sm" onClick={handleSave} disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-                  Save
-                </Button>
-              </>
-            ) : (
-              <Button size="sm" onClick={() => setIsEditing(true)}>
-                <Edit2 className="h-4 w-4 mr-1" />
-                Edit Plan
-              </Button>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          )}
+        </div>
       </div>
+
+      {/* AI Suggestions Panel */}
+      {showSuggestions && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                AI Music Suggestions
+              </h4>
+              <Button variant="ghost" size="sm" onClick={() => setShowSuggestions(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            {aiLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+                <span className="text-muted-foreground">Analyzing readings and generating suggestions...</span>
+              </div>
+            ) : suggestions.length > 0 ? (
+              <div className="space-y-2">
+                {suggestions.map((s, i) => (
+                  <div key={i} className="flex items-start gap-3 p-2 rounded-lg bg-background hover:bg-muted/50 transition-colors">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">{s.moment}</Badge>
+                        {s.hymn_number && (
+                          <span className="text-xs font-mono text-muted-foreground">{s.hymn_number}</span>
+                        )}
+                      </div>
+                      <p className="font-medium text-sm mt-1">{s.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{s.reason}</p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => { applySuggestion(s); setIsEditing(true); }}
+                      className="shrink-0"
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Apply
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm text-center py-4">
+                No suggestions available. Try again.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="p-0">
