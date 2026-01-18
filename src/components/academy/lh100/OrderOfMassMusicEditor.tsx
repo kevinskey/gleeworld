@@ -212,12 +212,9 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
               <TableRow className="bg-muted/50">
                 <TableHead className="w-12 text-center">#</TableHead>
                 <TableHead className="min-w-[180px]">Liturgical Moment</TableHead>
-                <TableHead className="min-w-[150px]">Title</TableHead>
-                <TableHead className="min-w-[120px]">Composer / Source</TableHead>
-                <TableHead className="w-20">Key</TableHead>
-                <TableHead className="min-w-[100px]">Ensemble</TableHead>
-                <TableHead className="min-w-[120px]">YouTube</TableHead>
-                <TableHead className="min-w-[150px]">Notes</TableHead>
+                <TableHead className="min-w-[200px]">Title</TableHead>
+                <TableHead className="min-w-[200px]">YouTube Link</TableHead>
+                <TableHead className="min-w-[200px]">Notes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -250,44 +247,6 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
                         />
                       ) : (
                         <span className="text-sm">{selection.title || '—'}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <Input
-                          value={selection.composer_source}
-                          onChange={(e) => updateSelection(selection.order_number, 'composer_source', e.target.value)}
-                          placeholder="Composer..."
-                          className="h-8 text-sm"
-                        />
-                      ) : (
-                        <span className="text-sm text-muted-foreground">{selection.composer_source || '—'}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <Input
-                          value={selection.music_key}
-                          onChange={(e) => updateSelection(selection.order_number, 'music_key', e.target.value)}
-                          placeholder="Key"
-                          className="h-8 text-sm w-16"
-                        />
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">
-                          {selection.music_key || '—'}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <Input
-                          value={selection.ensemble}
-                          onChange={(e) => updateSelection(selection.order_number, 'ensemble', e.target.value)}
-                          placeholder="Ensemble..."
-                          className="h-8 text-sm"
-                        />
-                      ) : (
-                        <span className="text-sm text-muted-foreground">{selection.ensemble || '—'}</span>
                       )}
                     </TableCell>
                     <TableCell>
