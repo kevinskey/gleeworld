@@ -25,7 +25,7 @@ const InstructorDashboard: React.FC = () => {
 
   const isInstructor = profile?.role === 'instructor' || profile?.is_admin || profile?.is_super_admin;
   if (!isInstructor) {
-    return <Navigate to="/grading/student/dashboard" replace />;
+    return <Navigate to="/member" replace />;
   }
 
   // Get active courses

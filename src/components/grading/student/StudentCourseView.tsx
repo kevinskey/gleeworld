@@ -145,7 +145,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/grading/student/dashboard')}>
+        <Button variant="ghost" size="icon" onClick={() => navigate('/member')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>

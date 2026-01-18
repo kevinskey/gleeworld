@@ -289,10 +289,6 @@ export const router = createBrowserRouter([
     element: <GradebookPage />,
   },
   {
-    path: "/grading/student/dashboard",
-    element: <StudentDashboard />,
-  },
-  {
     path: "/grading/student/course/:course_id",
     element: <StudentCoursePage />,
   },
