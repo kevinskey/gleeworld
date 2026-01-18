@@ -12,6 +12,23 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { VideoRecordingSubmission } from '@/components/course/VideoRecordingSubmission';
 
+interface AssignmentData {
+  id: string;
+  course_id: string;
+  title: string;
+  description: string | null;
+  instructions?: string | null;
+  assignment_type: string;
+  points: number;
+  due_date: string | null;
+  is_published?: boolean;
+  gw_courses?: {
+    id: string;
+    title: string;
+    course_code: string;
+  } | null;
+}
+
 interface StudentAssignmentViewProps {
   assignmentId: string;
 }
@@ -24,16 +41,28 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
   const [editedContent, setEditedContent] = useState('');
 
   const { data: assignment, isLoading: assignmentLoading } = useQuery({
-    queryKey: ['gw-assignment', assignmentId],
-    queryFn: async () => {
-      const { data, error } = await supabase
+    queryKey: ['gw-course-assignment', assignmentId],
+    queryFn: async (): Promise<AssignmentData | null> => {
+      // First try gw_course_assignments (MUS 240 and other course-based assignments)
+      const { data: courseAssignment, error: courseError } = await supabase
+        .from('gw_course_assignments')
+        .select('*, gw_courses(*)')
+        .eq('id', assignmentId)
+        .maybeSingle();
+
+      if (courseAssignment) {
+        return courseAssignment as unknown as AssignmentData;
+      }
+
+      // Fallback to gw_assignments for legacy assignments
+      const { data: legacyAssignment, error: legacyError } = await supabase
         .from('gw_assignments' as any)
         .select('*, gw_courses(*)')
         .eq('id', assignmentId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      return data as any;
+      if (legacyError) throw legacyError;
+      return legacyAssignment as unknown as AssignmentData;
     },
   });
 
@@ -117,7 +146,7 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
         </Button>
         <div>
           <h1 className="text-3xl font-bold">{assignment?.title}</h1>
-          <p className="text-muted-foreground">{assignment?.gw_courses?.course_name}</p>
+          <p className="text-muted-foreground">{assignment?.gw_courses?.title || assignment?.gw_courses?.course_code}</p>
         </div>
       </div>
 
