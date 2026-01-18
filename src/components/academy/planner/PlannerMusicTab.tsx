@@ -1,118 +1,157 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Edit2, Trash2, Music, GripVertical, Loader2 } from 'lucide-react';
-import { useLiturgicalMusicPlan, LiturgicalMusicPlan } from '@/hooks/useLiturgicalWeeks';
+import { Music, Save, Loader2, Play, ExternalLink, Edit2, Check, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
 
 interface PlannerMusicTabProps {
   weekId: string;
   isAdmin?: boolean;
 }
 
-const MOMENTS = [
-  'Prelude',
-  'Entrance/Opening',
-  'Kyrie',
-  'Gloria',
-  'Responsorial Psalm',
-  'Gospel Acclamation',
-  'Offertory',
-  'Sanctus',
-  'Memorial Acclamation',
-  'Great Amen',
-  'Agnus Dei',
-  'Communion',
-  'Song of Praise',
-  'Recessional',
-  'Postlude'
+// Proper of the Mass - liturgical moments in order
+const PROPER_OF_MASS = [
+  { order: 1, name: 'Prelude', required: false },
+  { order: 2, name: 'Entrance Hymn', required: true },
+  { order: 3, name: 'Kyrie', required: true },
+  { order: 4, name: 'Gloria', required: false },
+  { order: 5, name: 'Responsorial Psalm', required: true },
+  { order: 6, name: 'Gospel Acclamation', required: true },
+  { order: 7, name: 'Offertory', required: true },
+  { order: 8, name: 'Sanctus', required: true },
+  { order: 9, name: 'Memorial Acclamation', required: true },
+  { order: 10, name: 'Great Amen', required: true },
+  { order: 11, name: 'Agnus Dei', required: true },
+  { order: 12, name: 'Communion', required: true },
+  { order: 13, name: 'Meditation/Song of Praise', required: false },
+  { order: 14, name: 'Recessional', required: true },
+  { order: 15, name: 'Postlude', required: false },
 ];
 
-const STATUS_OPTIONS = ['planned', 'confirmed', 'rehearsed', 'performed'];
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'confirmed': return 'bg-blue-500 text-white';
-    case 'rehearsed': return 'bg-amber-500 text-white';
-    case 'performed': return 'bg-green-500 text-white';
-    default: return 'bg-muted text-muted-foreground';
-  }
-};
+interface MusicEntry {
+  id?: string;
+  order_number: number;
+  moment: string;
+  title: string;
+  hymn_number: string;
+  youtube_url: string;
+}
 
 export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({ weekId, isAdmin = false }) => {
-  const { musicPlan, loading, addMusicItem, updateMusicItem, deleteMusicItem } = useLiturgicalMusicPlan(weekId);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<LiturgicalMusicPlan | null>(null);
-  const [formData, setFormData] = useState({
-    moment: '',
-    title: '',
-    composer: '',
-    voicing: '',
-    key: '',
-    tempo: '',
-    status: 'planned',
-    rehearsal_notes: '',
-    performance_notes: '',
+  const [entries, setEntries] = useState<MusicEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [linkModal, setLinkModal] = useState<{ open: boolean; url: string; title: string; videoId?: string }>({
+    open: false, url: '', title: ''
   });
 
-  const resetForm = () => {
-    setFormData({
-      moment: '',
-      title: '',
-      composer: '',
-      voicing: '',
-      key: '',
-      tempo: '',
-      status: 'planned',
-      rehearsal_notes: '',
-      performance_notes: '',
-    });
-    setEditingItem(null);
+  useEffect(() => {
+    fetchMusicPlan();
+  }, [weekId]);
+
+  const fetchMusicPlan = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('liturgical_music_plan')
+        .select('*')
+        .eq('week_id', weekId)
+        .order('service_order');
+
+      if (error) throw error;
+
+      // Merge existing data with all moments
+      const merged = PROPER_OF_MASS.map(moment => {
+        const existing = data?.find(d => d.moment === moment.name || d.service_order === moment.order);
+        return {
+          id: existing?.id,
+          order_number: moment.order,
+          moment: moment.name,
+          title: existing?.title || '',
+          hymn_number: existing?.hymn_number || '',
+          youtube_url: existing?.youtube_url || '',
+        };
+      });
+
+      setEntries(merged);
+    } catch (error) {
+      console.error('Error fetching music plan:', error);
+      // Initialize empty
+      setEntries(PROPER_OF_MASS.map(m => ({
+        order_number: m.order,
+        moment: m.name,
+        title: '',
+        hymn_number: '',
+        youtube_url: '',
+      })));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleOpenDialog = (item?: LiturgicalMusicPlan) => {
-    if (item) {
-      setEditingItem(item);
-      setFormData({
-        moment: item.moment || '',
-        title: item.title || '',
-        composer: item.composer || '',
-        voicing: item.voicing || '',
-        key: item.key || '',
-        tempo: item.tempo || '',
-        status: item.status || 'planned',
-        rehearsal_notes: item.rehearsal_notes || '',
-        performance_notes: item.performance_notes || '',
-      });
-    } else {
-      resetForm();
-    }
-    setIsDialogOpen(true);
+  const updateEntry = (orderNumber: number, field: keyof MusicEntry, value: string) => {
+    setEntries(prev => prev.map(e =>
+      e.order_number === orderNumber ? { ...e, [field]: value } : e
+    ));
   };
 
   const handleSave = async () => {
-    const nextOrder = musicPlan.length + 1;
-    
-    if (editingItem) {
-      await updateMusicItem(editingItem.id, formData);
-    } else {
-      await addMusicItem({ ...formData, service_order: nextOrder });
+    setSaving(true);
+    try {
+      // Delete existing entries for this week
+      await supabase
+        .from('liturgical_music_plan')
+        .delete()
+        .eq('week_id', weekId);
+
+      // Insert entries that have content
+      const toSave = entries.filter(e => e.title.trim() || e.hymn_number.trim());
+      
+      if (toSave.length > 0) {
+        const { error } = await supabase
+          .from('liturgical_music_plan')
+          .insert(toSave.map(e => ({
+            week_id: weekId,
+            service_order: e.order_number,
+            moment: e.moment,
+            title: e.title,
+            hymn_number: e.hymn_number,
+            youtube_url: e.youtube_url,
+            status: 'planned'
+          })));
+
+        if (error) throw error;
+      }
+
+      toast.success('Music plan saved');
+      setIsEditing(false);
+      fetchMusicPlan();
+    } catch (error) {
+      console.error('Error saving music plan:', error);
+      toast.error('Failed to save music plan');
+    } finally {
+      setSaving(false);
     }
-    setIsDialogOpen(false);
-    resetForm();
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this music item?')) {
-      await deleteMusicItem(id);
+  const openVideoModal = (url: string, title: string) => {
+    const videoId = extractYouTubeVideoId(url);
+    if (videoId) {
+      setLinkModal({ open: true, url, title, videoId });
+    } else if (url) {
+      window.open(url, '_blank');
     }
   };
+
+  const hasAnyContent = entries.some(e => e.title.trim() || e.hymn_number.trim());
 
   if (loading) {
     return (
@@ -131,177 +170,148 @@ export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({ weekId, isAdmi
           Service Music Plan
         </h3>
         {isAdmin && (
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" onClick={() => handleOpenDialog()}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Music
+          <div className="flex gap-2">
+            {isEditing ? (
+              <>
+                <Button variant="outline" size="sm" onClick={() => { setIsEditing(false); fetchMusicPlan(); }}>
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave} disabled={saving}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                  Save
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={() => setIsEditing(true)}>
+                <Edit2 className="h-4 w-4 mr-1" />
+                Edit Plan
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingItem ? 'Edit Music Item' : 'Add Music Item'}</DialogTitle>
-              </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                <div className="space-y-2">
-                  <Label>Moment</Label>
-                  <Select
-                    value={formData.moment}
-                    onValueChange={(value) => setFormData({ ...formData, moment: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select moment" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MOMENTS.map((moment) => (
-                        <SelectItem key={moment} value={moment}>{moment}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Song title"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Composer/Arranger</Label>
-                  <Input
-                    value={formData.composer}
-                    onChange={(e) => setFormData({ ...formData, composer: e.target.value })}
-                    placeholder="Composer name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Voicing</Label>
-                  <Input
-                    value={formData.voicing}
-                    onChange={(e) => setFormData({ ...formData, voicing: e.target.value })}
-                    placeholder="e.g., SATB, SSA"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Key</Label>
-                  <Input
-                    value={formData.key}
-                    onChange={(e) => setFormData({ ...formData, key: e.target.value })}
-                    placeholder="e.g., G Major"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Tempo</Label>
-                  <Input
-                    value={formData.tempo}
-                    onChange={(e) => setFormData({ ...formData, tempo: e.target.value })}
-                    placeholder="e.g., Andante, ♩=72"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) => setFormData({ ...formData, status: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map((status) => (
-                        <SelectItem key={status} value={status} className="capitalize">{status}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Rehearsal Notes</Label>
-                  <Textarea
-                    value={formData.rehearsal_notes}
-                    onChange={(e) => setFormData({ ...formData, rehearsal_notes: e.target.value })}
-                    placeholder="Notes for rehearsal..."
-                    rows={2}
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Performance Notes</Label>
-                  <Textarea
-                    value={formData.performance_notes}
-                    onChange={(e) => setFormData({ ...formData, performance_notes: e.target.value })}
-                    placeholder="Notes for performance..."
-                    rows={2}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleSave}>Save</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+            )}
+          </div>
         )}
       </div>
 
-      {musicPlan.length > 0 ? (
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">#</TableHead>
-                <TableHead>Moment</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead className="hidden md:table-cell">Composer</TableHead>
-                <TableHead className="hidden lg:table-cell">Voicing</TableHead>
-                <TableHead>Status</TableHead>
-                {isAdmin && <TableHead className="w-20">Actions</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {musicPlan.map((item, index) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{index + 1}</TableCell>
-                  <TableCell className="font-medium">{item.moment || '-'}</TableCell>
-                  <TableCell>{item.title || '-'}</TableCell>
-                  <TableCell className="hidden md:table-cell">{item.composer || '-'}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{item.voicing || '-'}</TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(item.status)} variant="secondary">
-                      {item.status}
-                    </Badge>
-                  </TableCell>
-                  {isAdmin && (
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDialog(item)}>
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(item.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  )}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="w-10 text-center">#</TableHead>
+                  <TableHead className="min-w-[160px]">Moment</TableHead>
+                  <TableHead className="min-w-[200px]">Title</TableHead>
+                  <TableHead className="w-24">Hymn #</TableHead>
+                  <TableHead className="min-w-[180px]">YouTube Link</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Music className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-            <p className="text-lg font-medium text-foreground mb-2">No music planned yet</p>
-            <p className="text-muted-foreground mb-4">Add music selections for this Sunday's liturgy.</p>
-            {isAdmin && (
-              <Button onClick={() => handleOpenDialog()}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add First Music Item
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              </TableHeader>
+              <TableBody>
+                {entries.map((entry) => {
+                  const moment = PROPER_OF_MASS.find(m => m.order === entry.order_number);
+                  const hasVideo = entry.youtube_url && extractYouTubeVideoId(entry.youtube_url);
+
+                  return (
+                    <TableRow key={entry.order_number} className={entry.title ? '' : 'opacity-60'}>
+                      <TableCell className="text-center font-medium text-muted-foreground">
+                        {entry.order_number}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{entry.moment}</span>
+                          {moment?.required && (
+                            <Badge variant="outline" className="text-[10px] px-1 py-0">
+                              Req
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            value={entry.title}
+                            onChange={(e) => updateEntry(entry.order_number, 'title', e.target.value)}
+                            placeholder="Song title..."
+                            className="h-8 text-sm"
+                          />
+                        ) : (
+                          <span className="text-sm">{entry.title || '—'}</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            value={entry.hymn_number}
+                            onChange={(e) => updateEntry(entry.order_number, 'hymn_number', e.target.value)}
+                            placeholder="#123"
+                            className="h-8 text-sm w-20"
+                          />
+                        ) : (
+                          <span className="text-sm font-mono">{entry.hymn_number || '—'}</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            value={entry.youtube_url}
+                            onChange={(e) => updateEntry(entry.order_number, 'youtube_url', e.target.value)}
+                            placeholder="https://youtube.com/..."
+                            className="h-8 text-sm"
+                          />
+                        ) : hasVideo ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openVideoModal(entry.youtube_url, entry.title || entry.moment)}
+                            className="flex items-center gap-1 text-primary hover:text-primary h-7 px-2"
+                          >
+                            <Play className="h-3 w-3 fill-current" />
+                            <span className="text-sm">Watch</span>
+                          </Button>
+                        ) : entry.youtube_url ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.open(entry.youtube_url, '_blank')}
+                            className="flex items-center gap-1 h-7 px-2"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            <span className="text-sm">Open</span>
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* YouTube Modal */}
+      <Dialog open={linkModal.open} onOpenChange={(open) => !open && setLinkModal({ open: false, url: '', title: '' })}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-2">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Play className="h-5 w-5 text-red-500" />
+              {linkModal.title}
+            </DialogTitle>
+          </DialogHeader>
+          {linkModal.videoId && (
+            <div className="aspect-video w-full">
+              <iframe
+                src={`https://www.youtube.com/embed/${linkModal.videoId}?autoplay=1`}
+                title={linkModal.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
