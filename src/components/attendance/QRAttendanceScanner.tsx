@@ -34,6 +34,7 @@ const COURSE_ROUTES: Record<string, string> = {
   'a0000000-0000-0000-0000-000000000001': '/academy/mus-001',
   'a0000000-0000-0000-0000-0000000e0101': '/academy/glee-101',
   'a0000000-0000-0000-0000-0000000e0000': '/academy/glee-000',
+  'a0000000-0000-0000-0000-000000000100': '/academy/lh-100',
 };
 
 export const QRAttendanceScanner = () => {
