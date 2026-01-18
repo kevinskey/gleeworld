@@ -30,25 +30,25 @@ export function DocumentViewer({
   const [showSlideshow, setShowSlideshow] = useState(false);
   const [showPowerPointViewer, setShowPowerPointViewer] = useState(false);
 
-  const isPDF = fileType === 'application/pdf' || 
-    fileName.toLowerCase().endsWith('.pdf') || 
+  const isPDF = fileType === 'application/pdf' ||
+    fileName.toLowerCase().endsWith('.pdf') ||
     fileUrl.toLowerCase().includes('.pdf') ||
     fileUrl.toLowerCase().includes('pdf');
-  const isPowerPoint = fileType.includes('presentation') || 
-    fileName.toLowerCase().endsWith('.ppt') || 
+  const isPowerPoint = fileType.includes('presentation') ||
+    fileName.toLowerCase().endsWith('.ppt') ||
     fileName.toLowerCase().endsWith('.pptx');
   const isGoogleSlides = fileUrl.includes('docs.google.com/presentation') || fileUrl.includes('slides.google.com');
   const isYouTube = fileUrl.includes('youtu.be') || fileUrl.includes('youtube.com/watch');
-  const isWebsite = !isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && (fileUrl.startsWith('http') || fileUrl.startsWith('https'));
 
+  const lowerName = `${fileName} ${fileUrl}`.toLowerCase();
+  const isAudio = fileType.startsWith('audio/') || ['.mp3', '.wav', '.ogg', '.m4a'].some(ext => lowerName.includes(ext));
+  const isVideoFile = fileType.startsWith('video/') || ['.mp4', '.webm', '.mov'].some(ext => lowerName.includes(ext));
+
+  const isWebsite = !isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isAudio && !isVideoFile && (fileUrl.startsWith('http') || fileUrl.startsWith('https'));
 
   const handleOpenExternal = () => {
-    if (isGoogleSlides) {
-      // Open Google Slides in a new window with specific dimensions
-      window.open(fileUrl, 'googleslideswindow', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-    } else {
-      window.open(fileUrl, '_blank');
-    }
+    // Stay in the same tab (in-app navigation) rather than opening a new window.
+    window.location.assign(fileUrl);
   };
 
   const getFileTypeDisplay = () => {
@@ -56,6 +56,8 @@ export function DocumentViewer({
     if (isPowerPoint) return 'PowerPoint';
     if (isGoogleSlides) return 'Google Slides';
     if (isYouTube) return 'YouTube Video';
+    if (isVideoFile) return 'Video';
+    if (isAudio) return 'Audio';
     if (isWebsite) return 'Website';
     return fileName.split('.').pop()?.toUpperCase() || 'Document';
   };
@@ -214,24 +216,21 @@ export function DocumentViewer({
 
   const renderWebsiteViewer = () => {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center p-8">
-        <div className="bg-blue-100 rounded-full p-6 mb-4">
-          <ExternalLink className="h-12 w-12 text-blue-600" />
-        </div>
-        <h3 className="text-lg font-semibold mb-2">Open Website</h3>
-        <p className="text-muted-foreground mb-6 max-w-md">
-          {title || fileName}
-        </p>
-        <p className="text-sm text-muted-foreground mb-6">
-          This will open in a new tab. This window will stay open so you can easily return.
-        </p>
-        <Button 
-          onClick={() => window.open(fileUrl, '_blank')} 
-          className="flex items-center gap-2"
-        >
-          <ExternalLink className="h-4 w-4" />
-          Open Website
-        </Button>
+      <div className="h-full">
+        <iframe
+          src={fileUrl}
+          className="w-full h-full border-0 rounded-lg"
+          title={`Website - ${title}`}
+          loading="lazy"
+          // Allow basic capabilities but keep this reasonably locked down.
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          referrerPolicy="strict-origin-when-cross-origin"
+          onError={(e) => {
+            console.warn('Website iframe error:', e);
+            toast.error('This site cannot be embedded. Opening in the same tab...');
+            handleOpenExternal();
+          }}
+        />
       </div>
     );
   };
@@ -243,18 +242,12 @@ export function DocumentViewer({
       </div>
       <h3 className="text-lg font-semibold mb-2">Preview Not Available</h3>
       <p className="text-muted-foreground mb-6 max-w-md">
-        This file type cannot be previewed directly. Please download the file to view its contents.
+        This file type cannot be previewed directly. We'll open it in the same tab.
       </p>
-      <div className="flex gap-3">
-        <Button onClick={handleOpenExternal} className="flex items-center gap-2">
-          <ExternalLink className="h-4 w-4" />
-          Open File
-        </Button>
-        <Button variant="outline" onClick={handleOpenExternal} className="flex items-center gap-2">
-          <ExternalLink className="h-4 w-4" />
-          Open in New Tab
-        </Button>
-      </div>
+      <Button onClick={handleOpenExternal} className="flex items-center gap-2">
+        <ExternalLink className="h-4 w-4" />
+        Open
+      </Button>
     </div>
   );
 
@@ -300,8 +293,20 @@ export function DocumentViewer({
           {isPowerPoint && renderPowerPointViewer()}
           {isGoogleSlides && renderGoogleSlidesViewer()}
           {isYouTube && renderYouTubeViewer()}
+          {isVideoFile && (
+            <div className="h-full w-full flex items-center justify-center bg-black rounded-lg overflow-hidden">
+              <video className="w-full h-full" controls playsInline src={fileUrl} />
+            </div>
+          )}
+          {isAudio && (
+            <div className="h-full w-full flex items-center justify-center">
+              <div className="w-full max-w-2xl">
+                <audio className="w-full" controls src={fileUrl} />
+              </div>
+            </div>
+          )}
           {isWebsite && renderWebsiteViewer()}
-          {!isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isWebsite && renderUnsupportedFile()}
+          {!isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isVideoFile && !isAudio && !isWebsite && renderUnsupportedFile()}
         </div>
 
         <div className="flex-shrink-0 pt-4 border-t">

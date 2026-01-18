@@ -195,15 +195,13 @@ export default function Resources() {
                                size="sm" 
                                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0"
                              >
-                               <a 
-                                 href={resource.url} 
-                                 target="_blank" 
-                                 rel="noopener noreferrer"
-                                 className="inline-flex items-center gap-2"
-                               >
-                                 <ExternalLink className="h-4 w-4" />
-                                 Access Resource
-                               </a>
+                                <a 
+                                  href={resource.url}
+                                  className="inline-flex items-center gap-2"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                  Access Resource
+                                </a>
                              </Button>
                            )}
                          </div>

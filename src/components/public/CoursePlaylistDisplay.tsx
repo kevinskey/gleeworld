@@ -145,11 +145,7 @@ export const CoursePlaylistDisplay: React.FC<CoursePlaylistDisplayProps> = ({
           </CardTitle>
           {currentPlaylist?.playlist_url && (
             <Button variant="ghost" size="sm" asChild>
-              <a 
-                href={currentPlaylist.playlist_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
+              <a href={currentPlaylist.playlist_url}>
                 <ExternalLink className="h-4 w-4 mr-2" />
                 YouTube
               </a>
