@@ -163,11 +163,7 @@ export const Mus240ResourcesTab: React.FC<Mus240ResourcesTabProps> = ({ isAdmin 
                           size="sm" 
                           className="w-full"
                         >
-                          <a 
-                            href={resource.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                          >
+                          <a href={resource.url}>
                             <ExternalLink className="h-3 w-3 mr-1" />
                             Open
                           </a>
