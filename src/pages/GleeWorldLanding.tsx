@@ -28,6 +28,7 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { SmartCoverImage } from "@/components/ui/SmartCoverImage";
 import { FeaturedVideoCarousel } from "@/components/public/FeaturedVideoCarousel";
 import { AllVideosGrid } from "@/components/youtube/AllVideosGrid";
+import { YouTubeCarousel } from "@/components/youtube/YouTubeCarousel";
 import { PollReminderPopup } from "@/components/polls/PollReminderPopup";
 import { HeroSlider, adaptDatabaseSlide, type HeroSlide as HeroSliderSlide } from "@/components/hero/HeroSlider";
 interface Event {
@@ -455,12 +456,12 @@ export const GleeWorldLanding = () => {
       </section>
 
 
-      {/* All Videos Section with Infinite Scroll - Only show if there are videos */}
+      {/* YouTube Channel Section with Horizontal Carousel */}
       {hasVideos && (
         <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full">
           <div className="w-full">
             <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
-              <AllVideosGrid maxHeight="700px" showTitle={true} />
+              <YouTubeCarousel limit={12} showTitle={true} />
             </Card>
           </div>
         </section>
