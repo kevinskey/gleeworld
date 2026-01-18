@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, Edit2, X } from 'lucide-react';
+import { Save, Edit2, X, RefreshCw, Loader2, BookOpen } from 'lucide-react';
 import { LiturgicalWeek } from '@/hooks/useLiturgicalWeeks';
+import { useUSCCBSync } from '@/hooks/useUSCCBSync';
+import { PlannerReadingsSection } from './PlannerReadingsSection';
+import { Separator } from '@/components/ui/separator';
 
 interface PlannerOverviewTabProps {
   week: LiturgicalWeek;
@@ -18,6 +21,7 @@ const SEASONS = ['Ordinary Time', 'Advent', 'Christmas', 'Lent', 'Holy Week', 'E
 
 export const PlannerOverviewTab: React.FC<PlannerOverviewTabProps> = ({ week, onUpdate, isAdmin = false }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const { syncLiturgicalData, liturgicalData, isLoading: isSyncing, clearData } = useUSCCBSync();
   const [formData, setFormData] = useState({
     sunday_title: week.sunday_title || '',
     season: week.season || '',
@@ -26,6 +30,15 @@ export const PlannerOverviewTab: React.FC<PlannerOverviewTabProps> = ({ week, on
     theme: week.theme || '',
     notes: week.notes || '',
   });
+
+  // Auto-load USCCB data when week changes
+  useEffect(() => {
+    const dateStr = week.sunday_date || week.week_of;
+    if (dateStr) {
+      syncLiturgicalData(dateStr);
+    }
+    return () => clearData();
+  }, [week.id]);
 
   const handleSave = async () => {
     await onUpdate(week.id, formData);
@@ -44,77 +57,87 @@ export const PlannerOverviewTab: React.FC<PlannerOverviewTabProps> = ({ week, on
     setIsEditing(false);
   };
 
+  const handleRefreshUSCCB = () => {
+    const dateStr = week.sunday_date || week.week_of;
+    if (dateStr) {
+      syncLiturgicalData(dateStr);
+    }
+  };
+
   if (!isEditing) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        {/* Header with Edit/Refresh buttons */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <h3 className="text-lg font-semibold">Liturgical Details</h3>
-          {isAdmin && (
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-              <Edit2 className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Title</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg font-semibold">{week.sunday_title || week.title || 'Not set'}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Season</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg font-semibold">{week.season || 'Not set'}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Psalm</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg font-semibold">{week.psalm || 'Not set'}</p>
-              {week.psalm_refrain && (
-                <p className="text-sm text-muted-foreground mt-1">"{week.psalm_refrain}"</p>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefreshUSCCB}
+              disabled={isSyncing}
+            >
+              {isSyncing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
               )}
-            </CardContent>
-          </Card>
+              {isSyncing ? 'Loading...' : 'Load USCCB Data'}
+            </Button>
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                <Edit2 className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            )}
+          </div>
+        </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Gospel</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg font-semibold">{week.gospel || 'Not set'}</p>
-            </CardContent>
+        {/* Quick Info Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card className="p-3">
+            <p className="text-xs text-muted-foreground mb-1">Title</p>
+            <p className="text-sm font-semibold truncate">{week.sunday_title || week.title || 'Not set'}</p>
           </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Theme</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg">{week.theme || 'No theme set'}</p>
-            </CardContent>
+          <Card className="p-3">
+            <p className="text-xs text-muted-foreground mb-1">Season</p>
+            <p className="text-sm font-semibold">{week.season || 'Not set'}</p>
           </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-base whitespace-pre-wrap">{week.notes || 'No notes'}</p>
-            </CardContent>
+          <Card className="p-3">
+            <p className="text-xs text-muted-foreground mb-1">Psalm</p>
+            <p className="text-sm font-semibold truncate">{week.psalm || 'Not set'}</p>
+          </Card>
+          <Card className="p-3">
+            <p className="text-xs text-muted-foreground mb-1">Gospel</p>
+            <p className="text-sm font-semibold truncate">{week.gospel || liturgicalData?.readings?.gospel?.citation || 'Not set'}</p>
           </Card>
         </div>
+
+        {/* Theme and Notes (collapsible on mobile) */}
+        {(week.theme || week.notes) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {week.theme && (
+              <Card className="p-4">
+                <p className="text-xs text-muted-foreground mb-1">Theme</p>
+                <p className="text-sm">{week.theme}</p>
+              </Card>
+            )}
+            {week.notes && (
+              <Card className="p-4">
+                <p className="text-xs text-muted-foreground mb-1">Notes</p>
+                <p className="text-sm whitespace-pre-wrap">{week.notes}</p>
+              </Card>
+            )}
+          </div>
+        )}
+
+        <Separator />
+
+        {/* USCCB Readings Section */}
+        <PlannerReadingsSection 
+          liturgicalData={liturgicalData} 
+          sundayDate={week.sunday_date || week.week_of}
+        />
       </div>
     );
   }
