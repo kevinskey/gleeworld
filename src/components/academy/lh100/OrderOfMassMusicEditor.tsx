@@ -11,12 +11,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   Music, 
   Youtube, 
   Save, 
   Loader2,
-  ExternalLink
+  Play,
+  X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -65,6 +72,11 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
   const [selections, setSelections] = useState<MusicSelection[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [videoModal, setVideoModal] = useState<{ open: boolean; videoId: string; title: string }>({
+    open: false,
+    videoId: '',
+    title: ''
+  });
 
   useEffect(() => {
     fetchSelections();
@@ -170,9 +182,18 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
     const videoId = extractYouTubeVideoId(url);
     if (!videoId) return null;
     return {
+      videoId,
       thumbnail: getYouTubeThumbnail(videoId, 'default'),
       link: `https://www.youtube.com/watch?v=${videoId}`
     };
+  };
+
+  const openVideoModal = (videoId: string, title: string) => {
+    setVideoModal({ open: true, videoId, title });
+  };
+
+  const closeVideoModal = () => {
+    setVideoModal({ open: false, videoId: '', title: '' });
   };
 
   if (loading) {
@@ -258,16 +279,15 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
                           className="h-8 text-sm"
                         />
                       ) : ytPreview ? (
-                        <a 
-                          href={ytPreview.link} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-primary hover:underline text-sm"
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openVideoModal(ytPreview.videoId, selection.title || selection.liturgical_moment)}
+                          className="flex items-center gap-1 text-primary hover:text-primary h-7 px-2"
                         >
-                          <Youtube className="h-4 w-4 text-red-500" />
-                          <span>Watch</span>
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
+                          <Play className="h-3 w-3 fill-current" />
+                          <span className="text-sm">Watch</span>
+                        </Button>
                       ) : (
                         <span className="text-muted-foreground text-sm">—</span>
                       )}
@@ -291,6 +311,31 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
           </Table>
         </div>
       </CardContent>
+
+      {/* YouTube Video Modal */}
+      <Dialog open={videoModal.open} onOpenChange={(open) => !open && closeVideoModal()}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-2">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <Youtube className="h-5 w-5 text-red-500" />
+                {videoModal.title}
+              </DialogTitle>
+            </div>
+          </DialogHeader>
+          <div className="aspect-video w-full">
+            {videoModal.videoId && (
+              <iframe
+                src={`https://www.youtube.com/embed/${videoModal.videoId}?autoplay=1`}
+                title={videoModal.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
