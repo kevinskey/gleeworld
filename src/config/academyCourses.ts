@@ -47,7 +47,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     icon: BookOpen,
     level: 'All Levels',
     duration: '16 Weeks',
-    highlights: ['Music History', 'Cultural Context', 'Listening Journals', 'Critical Analysis'],
+    highlights: ['Music History', 'Cultural Context', 'Critical Analysis'],
     route: '/academy/mus-240',
     instructor: {
       name: 'Dr. Kevin Johnson',
