@@ -18,6 +18,16 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
+// Map course IDs to their routes
+const COURSE_ROUTES: Record<string, string> = {
+  'a0000000-0000-0000-0000-000000000070': '/academy/mus-070',
+  '23c4ee3c-7bbb-4534-8c0a-eecd88298d37': '/academy/mus-240',
+  'a0000000-0000-0000-0000-000000000210': '/academy/mus-210',
+  'a0000000-0000-0000-0000-000000000001': '/academy/mus-001',
+  'a0000000-0000-0000-0000-0000000e0101': '/academy/glee-101',
+  'a0000000-0000-0000-0000-0000000e0000': '/academy/glee-000',
+};
+
 const AttendanceScanPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -91,7 +101,9 @@ const AttendanceScanPage = () => {
           description: result.message || "Your attendance has been successfully recorded.",
         });
 
-        const target = '/dashboard?module=glee-academy';
+        // Navigate to the specific course home if course_id is available
+        const courseRoute = result.course_id ? COURSE_ROUTES[result.course_id] : null;
+        const target = courseRoute || '/dashboard?module=glee-academy';
 
         // Auto-redirect (Safari-safe fallback to hard navigation)
         setTimeout(() => {
