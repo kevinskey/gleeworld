@@ -384,3 +384,6 @@ verify_jwt = false
 
 [functions.radioco-api-proxy]
 verify_jwt = false
+
+[functions.scrape-url]
+verify_jwt = false
