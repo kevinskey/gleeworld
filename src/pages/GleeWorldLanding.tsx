@@ -256,22 +256,24 @@ export const GleeWorldLanding = () => {
       {/* Concert Ticket Request Hero Banner - REMOVED: Concerts are over */}
 
       {/* Hero Section */}
-      <section className="relative z-30 py-2 sm:py-4 md:py-6 lg:py-8 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full bg-white">
-        <div className="w-full">
+      <section className="relative z-30 py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full bg-white">
+        <div className="w-full max-w-6xl mx-auto">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
             {adaptedSlides.length > 0 ? (
-              <HeroSlider 
-                slides={adaptedSlides}
-                defaultDurationMs={6000}
-                autoplay={true}
-                showControls={false}
-                showProgress={false}
-                showPausePlay={false}
-              />
+              <div className="aspect-[16/9] sm:aspect-[2/1] md:aspect-[21/9] lg:aspect-[3/1]">
+                <HeroSlider 
+                  slides={adaptedSlides}
+                  defaultDurationMs={6000}
+                  autoplay={true}
+                  showControls={false}
+                  showProgress={false}
+                  showPausePlay={false}
+                />
+              </div>
             ) : (
-              <div className="aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] lg:aspect-[21/9] w-full bg-muted flex items-center justify-center">
+              <div className="aspect-[16/9] sm:aspect-[2/1] md:aspect-[21/9] lg:aspect-[3/1] w-full bg-muted flex items-center justify-center">
                 <div className="text-center p-4">
-                  <Calendar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+                  <Calendar className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 text-muted-foreground mx-auto mb-3" />
                   <p className="text-muted-foreground text-sm sm:text-base">No hero slides configured</p>
                 </div>
               </div>
