@@ -6,10 +6,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { BookOpen, Music, FileText, Cross, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { USCCBLiturgicalData, USCCBReading } from '@/hooks/useUSCCBSync';
+import { LiturgicalMusicPlan } from '@/hooks/useLiturgicalWeeks';
 
 interface PlannerReadingsSectionProps {
   liturgicalData: USCCBLiturgicalData | null;
   sundayDate?: string;
+  musicPlan?: LiturgicalMusicPlan[];
 }
 
 const ReadingCard: React.FC<{ reading: USCCBReading; icon: React.ReactNode; colorClass: string }> = ({ 
@@ -76,11 +78,26 @@ const PROPER_PARTS = [
 
 export const PlannerReadingsSection: React.FC<PlannerReadingsSectionProps> = ({ 
   liturgicalData,
-  sundayDate 
+  sundayDate,
+  musicPlan = []
 }) => {
   const season = liturgicalData?.season?.toLowerCase() || 'ordinary time';
   const shouldShowGloria = !['lent', 'advent'].includes(season);
   const alleluiaText = season === 'lent' ? 'Lenten Gospel Acclamation' : 'Alleluia';
+
+  // Helper to find music for a moment
+  const getMusicForMoment = (momentId: string) => {
+    const momentMap: Record<string, string[]> = {
+      'entrance': ['Entrance/Opening', 'Entrance Hymn'],
+      'responsorial': ['Responsorial Psalm'],
+      'alleluia': ['Gospel Acclamation'],
+      'offertory': ['Offertory', 'Preparation of the Gifts'],
+      'communion': ['Communion'],
+      'recessional': ['Recessional', 'Sending Forth'],
+    };
+    const matches = momentMap[momentId] || [];
+    return musicPlan.find(m => matches.some(match => m.moment?.includes(match)));
+  };
 
   // Generate USCCB URL for the date
   const getUSCCBUrl = () => {
@@ -173,25 +190,34 @@ export const PlannerReadingsSection: React.FC<PlannerReadingsSectionProps> = ({
           </AccordionTrigger>
           <AccordionContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              {PROPER_PARTS.map((part) => (
-                <Card key={part.id} className="p-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium text-sm">
-                        {part.id === 'alleluia' ? alleluiaText : part.name}
-                      </p>
-                      {part.id === 'responsorial' && liturgicalData.readings.responsorial_psalm && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {liturgicalData.readings.responsorial_psalm.citation}
+              {PROPER_PARTS.map((part) => {
+                const music = getMusicForMoment(part.id);
+                return (
+                  <Card key={part.id} className="p-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">
+                          {part.id === 'alleluia' ? alleluiaText : part.name}
                         </p>
-                      )}
+                        {music?.title ? (
+                          <p className="text-xs text-primary mt-1 font-medium">
+                            {music.title}
+                          </p>
+                        ) : part.id === 'responsorial' && liturgicalData?.readings?.responsorial_psalm ? (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {liturgicalData.readings.responsorial_psalm.citation}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1 italic">Not assigned</p>
+                        )}
+                      </div>
+                      <Badge variant="secondary" className="text-[10px]">
+                        Variable
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="text-[10px]">
-                      Variable
-                    </Badge>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
           </AccordionContent>
         </AccordionItem>

@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Save, Edit2, X, RefreshCw, Loader2, BookOpen } from 'lucide-react';
-import { LiturgicalWeek } from '@/hooks/useLiturgicalWeeks';
+import { LiturgicalWeek, useLiturgicalMusicPlan } from '@/hooks/useLiturgicalWeeks';
 import { useUSCCBSync } from '@/hooks/useUSCCBSync';
 import { PlannerReadingsSection } from './PlannerReadingsSection';
 import { Separator } from '@/components/ui/separator';
@@ -22,6 +22,7 @@ const SEASONS = ['Ordinary Time', 'Advent', 'Christmas', 'Lent', 'Holy Week', 'E
 export const PlannerOverviewTab: React.FC<PlannerOverviewTabProps> = ({ week, onUpdate, isAdmin = false }) => {
   const [isEditing, setIsEditing] = useState(false);
   const { syncLiturgicalData, liturgicalData, isLoading: isSyncing, clearData } = useUSCCBSync();
+  const { musicPlan } = useLiturgicalMusicPlan(week.id);
   const [formData, setFormData] = useState({
     sunday_title: week.sunday_title || '',
     season: week.season || '',
@@ -137,6 +138,7 @@ export const PlannerOverviewTab: React.FC<PlannerOverviewTabProps> = ({ week, on
         <PlannerReadingsSection 
           liturgicalData={liturgicalData} 
           sundayDate={week.sunday_date || week.week_of}
+          musicPlan={musicPlan}
         />
       </div>
     );
