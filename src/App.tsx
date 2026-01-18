@@ -2331,14 +2331,6 @@ const App = () => {
                                       } 
                                     />
                                    <Route 
-                                     path="/grading/student/dashboard" 
-                                     element={
-                                       <ProtectedRoute>
-                                         <GradingStudentDashboard />
-                                       </ProtectedRoute>
-                                     } 
-                                   />
-                                   <Route 
                                      path="/grading/student/course/:course_id" 
                                      element={
                                        <ProtectedRoute>
