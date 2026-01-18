@@ -102,6 +102,7 @@ export const GleeWorldLanding = () => {
   });
 
   // Use React Query for events - caches data to prevent re-fetching on navigation
+  // Exclude Spelman calendar events (calendar_id: 931a4ae9-2a06-4111-a217-59083632b1a3)
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['homepage-events'],
     queryFn: async () => {
@@ -113,6 +114,7 @@ export const GleeWorldLanding = () => {
         .select('*')
         .gte('start_date', startOfToday.toISOString())
         .eq('is_public', true)
+        .neq('calendar_id', '931a4ae9-2a06-4111-a217-59083632b1a3')
         .order('start_date', { ascending: true })
         .limit(6);
       
