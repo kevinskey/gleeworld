@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Music, Save, Loader2, Play, ExternalLink, Edit2, X, Sparkles, Check } from 'lucide-react';
+import { Music, Save, Loader2, Play, X, Sparkles, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
@@ -64,7 +64,7 @@ export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({
   const [entries, setEntries] = useState<MusicEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -120,6 +120,7 @@ export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({
     setEntries(prev => prev.map(e =>
       e.order_number === orderNumber ? { ...e, [field]: value } : e
     ));
+    setHasChanges(true);
   };
 
   const handleSave = async () => {
@@ -151,7 +152,7 @@ export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({
       }
 
       toast.success('Music plan saved');
-      setIsEditing(false);
+      setHasChanges(false);
       fetchMusicPlan();
     } catch (error) {
       console.error('Error saving music plan:', error);
@@ -265,25 +266,16 @@ export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({
               AI Suggest
             </Button>
           )}
-          {isAdmin && (
+          {isAdmin && hasChanges && (
             <>
-              {isEditing ? (
-                <>
-                  <Button variant="outline" size="sm" onClick={() => { setIsEditing(false); fetchMusicPlan(); }}>
-                    <X className="h-4 w-4 mr-1" />
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={handleSave} disabled={saving}>
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-                    Save
-                  </Button>
-                </>
-              ) : (
-                <Button size="sm" onClick={() => setIsEditing(true)}>
-                  <Edit2 className="h-4 w-4 mr-1" />
-                  Edit Plan
-                </Button>
-              )}
+              <Button variant="outline" size="sm" onClick={() => { setHasChanges(false); fetchMusicPlan(); }}>
+                <X className="h-4 w-4 mr-1" />
+                Discard
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                Save
+              </Button>
             </>
           )}
         </div>
@@ -324,7 +316,7 @@ export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      onClick={() => { applySuggestion(s); setIsEditing(true); }}
+                      onClick={() => applySuggestion(s)}
                       className="shrink-0"
                     >
                       <Check className="h-3 w-3 mr-1" />
@@ -376,60 +368,52 @@ export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({
                         </div>
                       </TableCell>
                       <TableCell>
-                        {isEditing ? (
+                        {isAdmin ? (
                           <Input
                             value={entry.title}
                             onChange={(e) => updateEntry(entry.order_number, 'title', e.target.value)}
                             placeholder="Song title..."
-                            className="h-8 text-sm"
+                            className="h-8 text-sm border-transparent hover:border-input focus:border-input bg-transparent"
                           />
                         ) : (
                           <span className="text-sm">{entry.title || '—'}</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        {isEditing ? (
+                        {isAdmin ? (
                           <Input
                             value={entry.hymn_number}
                             onChange={(e) => updateEntry(entry.order_number, 'hymn_number', e.target.value)}
-                            placeholder="#123"
-                            className="h-8 text-sm w-20"
+                            placeholder="#"
+                            className="h-8 text-sm w-16 border-transparent hover:border-input focus:border-input bg-transparent font-mono"
                           />
                         ) : (
                           <span className="text-sm font-mono">{entry.hymn_number || '—'}</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        {isEditing ? (
-                          <Input
-                            value={entry.youtube_url}
-                            onChange={(e) => updateEntry(entry.order_number, 'youtube_url', e.target.value)}
-                            placeholder="https://youtube.com/..."
-                            className="h-8 text-sm"
-                          />
-                        ) : hasVideo ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openVideoModal(entry.youtube_url, entry.title || entry.moment)}
-                            className="flex items-center gap-1 text-primary hover:text-primary h-7 px-2"
-                          >
-                            <Play className="h-3 w-3 fill-current" />
-                            <span className="text-sm">Watch</span>
-                          </Button>
-                        ) : entry.youtube_url ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => window.open(entry.youtube_url, '_blank')}
-                            className="flex items-center gap-1 h-7 px-2"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            <span className="text-sm">Open</span>
-                          </Button>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {isAdmin ? (
+                            <Input
+                              value={entry.youtube_url}
+                              onChange={(e) => updateEntry(entry.order_number, 'youtube_url', e.target.value)}
+                              placeholder="YouTube link..."
+                              className="h-8 text-sm flex-1 border-transparent hover:border-input focus:border-input bg-transparent"
+                            />
+                          ) : (
+                            <span className="text-muted-foreground text-sm">{entry.youtube_url ? 'Link added' : '—'}</span>
+                          )}
+                          {hasVideo && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openVideoModal(entry.youtube_url, entry.title || entry.moment)}
+                              className="flex items-center gap-1 text-primary hover:text-primary h-7 px-2 shrink-0"
+                            >
+                              <Play className="h-3 w-3 fill-current" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
