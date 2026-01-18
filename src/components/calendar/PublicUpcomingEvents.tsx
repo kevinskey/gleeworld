@@ -118,9 +118,9 @@ export const PublicUpcomingEvents = ({ limit = 6, showHeader = true }: PublicUpc
             upcomingEvents.map((event) => (
               <Card 
                 key={event.id} 
-                className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 flex-shrink-0 w-72 md:w-80 snap-start hover-scale cursor-pointer"
+                className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 flex-shrink-0 w-72 md:w-80 snap-start hover-scale cursor-pointer flex flex-col h-[320px]"
               >
-                <div className="relative">
+                <div className="relative flex-shrink-0">
                   {/* Event Type Badge */}
                   <div className="absolute top-4 right-4 z-10">
                     <Badge variant="secondary" className="bg-white/90 text-primary">
@@ -130,7 +130,7 @@ export const PublicUpcomingEvents = ({ limit = 6, showHeader = true }: PublicUpc
                   
                   {/* Event Image or Default Header */}
                   {event.image_url ? (
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-40 overflow-hidden">
                       <img
                         src={event.image_url}
                         alt={event.title}
@@ -139,24 +139,22 @@ export const PublicUpcomingEvents = ({ limit = 6, showHeader = true }: PublicUpc
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                     </div>
                   ) : (
-                    <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6 border-b">
-                      <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-primary-foreground rounded-full mb-4">
-                          <CalendarIcon className="h-8 w-8" />
-                        </div>
+                    <div className="bg-gradient-to-br from-primary/10 to-primary/5 h-40 flex items-center justify-center border-b">
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-primary-foreground rounded-full">
+                        <CalendarIcon className="h-8 w-8" />
                       </div>
                     </div>
                   )}
-                  
-                  {/* Event Title */}
-                  <div className="p-4 pb-0">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors text-center">
-                      {event.title}
-                    </h3>
-                  </div>
                 </div>
                 
-                <CardContent className="p-4 pt-0">
+                {/* Event Title - Fixed Height */}
+                <div className="p-4 pb-2 flex-grow flex items-start justify-center">
+                  <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors text-center">
+                    {event.title}
+                  </h3>
+                </div>
+                
+                <CardContent className="p-4 pt-0 flex-shrink-0">
                   <Button className="w-full group/btn hover-scale" size="sm">
                     View Details
                     <CalendarIcon className="h-4 w-4 ml-2 group-hover/btn:scale-110 transition-transform" />
