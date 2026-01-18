@@ -179,6 +179,7 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
             order_number: s.order_number,
             liturgical_moment: s.liturgical_moment,
             title: s.title,
+            hymn_number: s.hymn_number,
             composer_source: s.composer_source,
             music_key: s.music_key,
             ensemble: s.ensemble,
