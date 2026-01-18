@@ -1,16 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Music, BookOpen, FileText, Loader2 } from 'lucide-react';
+import { Calendar, Music, BookOpen, FileText, Loader2, Library, FileMusic, Headphones } from 'lucide-react';
 import { useLiturgicalWeeks, LiturgicalWeek } from '@/hooks/useLiturgicalWeeks';
 import { useUSCCBSync } from '@/hooks/useUSCCBSync';
+import { useAuth } from '@/contexts/AuthContext';
 import { PlannerOverviewTab } from './PlannerOverviewTab';
 import { PlannerMusicTab } from './PlannerMusicTab';
 import { PlannerPsalmTab } from './PlannerPsalmTab';
 import { PlannerMediaTab } from './PlannerMediaTab';
 import { format, parseISO } from 'date-fns';
+
+// Lazy load heavy library components
+const SheetMusicLibrary = lazy(() => import('@/components/music-library/SheetMusicLibrary').then(m => ({ default: m.SheetMusicLibrary })));
+const FinderMediaLibrary = lazy(() => import('@/components/media-library/FinderMediaLibrary').then(m => ({ default: m.FinderMediaLibrary })));
+const MusicXMLLibrary = lazy(() => import('@/components/practice-studio/MusicXMLLibrary').then(m => ({ default: m.MusicXMLLibrary })));
 
 interface LiturgicalPlannerProps {
   isAdmin?: boolean;
@@ -40,6 +46,7 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
   const [selectedWeek, setSelectedWeek] = useState<LiturgicalWeek | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const { syncLiturgicalData, liturgicalData, isLoading: isSyncingLiturgical, clearData } = useUSCCBSync();
+  const { user } = useAuth();
 
   // Sync liturgical data when week changes
   useEffect(() => {
@@ -152,7 +159,7 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
             </CardHeader>
             <CardContent className="p-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-                <TabsList className="w-full justify-start rounded-none border-b bg-muted/30 p-0 h-auto">
+                <TabsList className="w-full justify-start rounded-none border-b bg-muted/30 p-0 h-auto flex-wrap">
                   <TabsTrigger 
                     value="overview" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-4"
@@ -165,14 +172,14 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-4"
                   >
                     <Music className="h-4 w-4 mr-2" />
-                    Music Plan
+                    Service Music
                   </TabsTrigger>
                   <TabsTrigger 
                     value="psalm" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-4"
                   >
                     <BookOpen className="h-4 w-4 mr-2" />
-                    Psalm Planner
+                    Psalm
                   </TabsTrigger>
                   <TabsTrigger 
                     value="media" 
@@ -180,6 +187,27 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Media
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="sheet-music" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-4"
+                  >
+                    <Library className="h-4 w-4 mr-2" />
+                    Sheet Music
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="media-library" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-4"
+                  >
+                    <Headphones className="h-4 w-4 mr-2" />
+                    Audio/Video
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="musicxml" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-4"
+                  >
+                    <FileMusic className="h-4 w-4 mr-2" />
+                    MusicXML
                   </TabsTrigger>
                 </TabsList>
 
@@ -212,6 +240,27 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
                       weekId={selectedWeek.id}
                       isAdmin={isAdmin}
                     />
+                  </TabsContent>
+                  <TabsContent value="sheet-music" className="m-0 p-4">
+                    <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /><span className="ml-2">Loading Sheet Music Library...</span></div>}>
+                      <SheetMusicLibrary 
+                        searchQuery=""
+                        selectedCategory="all"
+                        sortBy="title"
+                        sortOrder="asc"
+                        viewMode="grid"
+                      />
+                    </Suspense>
+                  </TabsContent>
+                  <TabsContent value="media-library" className="m-0">
+                    <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /><span className="ml-2">Loading Media Library...</span></div>}>
+                      <FinderMediaLibrary />
+                    </Suspense>
+                  </TabsContent>
+                  <TabsContent value="musicxml" className="m-0 p-4">
+                    <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /><span className="ml-2">Loading MusicXML Library...</span></div>}>
+                      <MusicXMLLibrary user={user} />
+                    </Suspense>
                   </TabsContent>
                 </ScrollArea>
               </Tabs>
