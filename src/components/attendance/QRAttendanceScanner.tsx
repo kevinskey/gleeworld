@@ -202,9 +202,9 @@ export const QRAttendanceScanner = () => {
           description: `Successfully marked present for ${result.event_title || 'this event'}`,
         });
 
-        // Navigate to course home after a brief delay so user sees the success message
+        // Navigate to academy module where attendance is recorded after a brief delay
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/dashboard?module=glee-academy');
         }, 2000);
       } else {
         toast({
