@@ -125,6 +125,20 @@ export const GleeWorldLanding = () => {
     gcTime: 10 * 60 * 1000,
   });
 
+  // Check if there are any YouTube videos to display
+  const { data: hasVideos = false } = useQuery({
+    queryKey: ['homepage-has-videos'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('youtube_videos')
+        .select('*', { count: 'exact', head: true });
+      if (error) throw error;
+      return (count ?? 0) > 0;
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
   const loading = heroLoading || eventsLoading;
   // Convert DB slides to HeroSlider format
   const adaptedSlides = useMemo(() => 
@@ -257,10 +271,10 @@ export const GleeWorldLanding = () => {
 
       {/* Hero Section */}
       <section className="relative z-30 py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full bg-white">
-        <div className="w-full max-w-6xl mx-auto">
+        <div className="w-full max-w-7xl mx-auto">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
             {adaptedSlides.length > 0 ? (
-              <div className="aspect-[16/9] sm:aspect-[2/1] md:aspect-[21/9] lg:aspect-[3/1]">
+              <div className="aspect-[16/9] sm:aspect-[16/9] md:aspect-[16/8] lg:aspect-[16/7]">
                 <HeroSlider 
                   slides={adaptedSlides}
                   defaultDurationMs={6000}
@@ -271,7 +285,7 @@ export const GleeWorldLanding = () => {
                 />
               </div>
             ) : (
-              <div className="aspect-[16/9] sm:aspect-[2/1] md:aspect-[21/9] lg:aspect-[3/1] w-full bg-muted flex items-center justify-center">
+              <div className="aspect-[16/9] sm:aspect-[16/9] md:aspect-[16/8] lg:aspect-[16/7] w-full bg-muted flex items-center justify-center">
                 <div className="text-center p-4">
                   <Calendar className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 text-muted-foreground mx-auto mb-3" />
                   <p className="text-muted-foreground text-sm sm:text-base">No hero slides configured</p>
@@ -441,14 +455,16 @@ export const GleeWorldLanding = () => {
       </section>
 
 
-      {/* All Videos Section with Infinite Scroll */}
-      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full">
-        <div className="w-full">
-          <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
-            <AllVideosGrid maxHeight="700px" showTitle={true} />
-          </Card>
-        </div>
-      </section>
+      {/* All Videos Section with Infinite Scroll - Only show if there are videos */}
+      {hasVideos && (
+        <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full">
+          <div className="w-full">
+            <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
+              <AllVideosGrid maxHeight="700px" showTitle={true} />
+            </Card>
+          </div>
+        </section>
+      )}
 
       {/* Featured Products Section */}
       <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 w-full">
