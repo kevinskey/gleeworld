@@ -156,51 +156,11 @@ export const PublicUpcomingEvents = ({ limit = 6, showHeader = true }: PublicUpc
                   </div>
                 </div>
                 
-                <CardContent className="p-4 pt-0 space-y-3">
-                  <div className="space-y-3 text-sm">
-                    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                      <ClockIcon className="h-5 w-5 text-primary flex-shrink-0" />
-                      <div>
-                        <div className="font-medium">
-                          {format(new Date(event.start_date), 'PPP')}
-                        </div>
-                        <div className="text-muted-foreground">
-                          {format(new Date(event.start_date), 'p')}
-                          {event.end_date && (
-                            <span> - {format(new Date(event.end_date), 'p')}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {(event.location || event.venue_name) && (
-                      <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                        <MapPinIcon className="h-5 w-5 text-primary flex-shrink-0" />
-                        <div className="font-medium truncate">
-                          {(event.venue_name || event.location || '').length > 50 
-                            ? `${(event.venue_name || event.location || '').slice(0, 50)}...` 
-                            : (event.venue_name || event.location)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {event.description && (
-                    <div className="pt-2 border-t h-[60px]">
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {event.description.length > 50 
-                          ? `${event.description.slice(0, 50)}...` 
-                          : event.description}
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="pt-3">
-                    <Button className="w-full group/btn hover-scale" size="sm">
-                      View Details
-                      <CalendarIcon className="h-4 w-4 ml-2 group-hover/btn:scale-110 transition-transform" />
-                    </Button>
-                  </div>
+                <CardContent className="p-4 pt-0">
+                  <Button className="w-full group/btn hover-scale" size="sm">
+                    View Details
+                    <CalendarIcon className="h-4 w-4 ml-2 group-hover/btn:scale-110 transition-transform" />
+                  </Button>
                 </CardContent>
               </Card>
             ))
