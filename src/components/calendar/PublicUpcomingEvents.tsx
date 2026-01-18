@@ -176,17 +176,21 @@ export const PublicUpcomingEvents = ({ limit = 6, showHeader = true }: PublicUpc
                     {(event.location || event.venue_name) && (
                       <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                         <MapPinIcon className="h-5 w-5 text-primary flex-shrink-0" />
-                        <div className="font-medium">
-                          {event.venue_name || event.location}
+                        <div className="font-medium truncate">
+                          {(event.venue_name || event.location || '').length > 50 
+                            ? `${(event.venue_name || event.location || '').slice(0, 50)}...` 
+                            : (event.venue_name || event.location)}
                         </div>
                       </div>
                     )}
                   </div>
                   
                   {event.description && (
-                    <div className="pt-2 border-t">
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {event.description}
+                    <div className="pt-2 border-t h-[60px]">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {event.description.length > 50 
+                          ? `${event.description.slice(0, 50)}...` 
+                          : event.description}
                       </p>
                     </div>
                   )}
