@@ -13362,6 +13362,7 @@ export type Database = {
           images: string[] | null
           inventory_quantity: number | null
           is_active: boolean | null
+          is_featured: boolean | null
           price: number
           product_type: string | null
           requires_shipping: boolean | null
@@ -13380,6 +13381,7 @@ export type Database = {
           images?: string[] | null
           inventory_quantity?: number | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           price?: number
           product_type?: string | null
           requires_shipping?: boolean | null
@@ -13398,6 +13400,7 @@ export type Database = {
           images?: string[] | null
           inventory_quantity?: number | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           price?: number
           product_type?: string | null
           requires_shipping?: boolean | null

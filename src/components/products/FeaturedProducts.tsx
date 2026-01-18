@@ -6,27 +6,25 @@ import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Star, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+// Product interface matching gw_products table
 interface Product {
   id: string;
-  name: string;
+  title: string;
   description: string | null;
-  short_description: string | null;
   price: number;
-  sale_price: number | null;
-  category_id: string | null;
+  compare_at_price: number | null;
+  product_type: string | null;
+  vendor: string | null;
+  tags: string[] | null;
   is_active: boolean;
   is_featured: boolean;
-  images?: ProductImage[];
-  category?: {
-    name: string;
-  };
-}
-
-interface ProductImage {
-  id: string;
-  image_url: string;
-  alt_text: string;
-  is_primary: boolean;
+  inventory_quantity: number;
+  track_inventory: boolean;
+  requires_shipping: boolean;
+  weight: number | null;
+  images: string[] | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface FeaturedSettings {
@@ -121,30 +119,19 @@ export const FeaturedProducts = ({
     try {
       setLoading(true);
       
-      let query = supabase
-        .from('products')
-        .select(`
-          *,
-          category:product_categories(name),
-          images:product_images(*)
-        `)
+      const { data, error } = await supabase
+        .from('gw_products')
+        .select('*')
         .eq('is_active', true)
         .eq('is_featured', true)
         .order('created_at', { ascending: false })
         .limit(settings.featured_display_limit);
 
-      // Filter by categories if specified
-      if (settings.featured_categories.length > 0) {
-        query = query.in('category_id', settings.featured_categories);
-      }
-
-      const { data, error } = await query;
-
       if (error) {
         console.error('Error loading featured products:', error);
         setProducts([]);
       } else {
-        setProducts(data || []);
+        setProducts((data as Product[]) || []);
       }
     } catch (error: any) {
       console.error('Error loading featured products:', error);
@@ -163,20 +150,22 @@ export const FeaturedProducts = ({
 
   const getProductImage = (product: Product) => {
     if (product.images && product.images.length > 0) {
-      return product.images[0].image_url;
+      return product.images[0];
     }
     return '/placeholder.svg';
   };
 
   const getCurrentPrice = (product: Product) => {
-    if (product.sale_price && product.sale_price < product.price) {
-      return product.sale_price;
-    }
+    // If compare_at_price is higher than price, it's the "original" price and price is the sale price
     return product.price;
   };
 
   const hasDiscount = (product: Product) => {
-    return product.sale_price && product.sale_price < product.price;
+    return product.compare_at_price && product.compare_at_price > product.price;
+  };
+
+  const getOriginalPrice = (product: Product) => {
+    return product.compare_at_price || product.price;
   };
 
   const scrollLeft = () => {
@@ -263,7 +252,7 @@ export const FeaturedProducts = ({
       <div className={`relative ${aspectRatioClass} overflow-hidden bg-muted`}>
         <img
           src={getProductImage(product)}
-          alt={product.name}
+          alt={product.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
@@ -278,10 +267,10 @@ export const FeaturedProducts = ({
           </div>
         </div>
         
-        {settings.featured_show_category && product.category && (
+        {settings.featured_show_category && product.product_type && (
           <div className="absolute top-2 right-2">
             <Badge variant="secondary" className="bg-white/90 text-primary">
-              {product.category.name}
+              {product.product_type}
             </Badge>
           </div>
         )}
@@ -299,11 +288,11 @@ export const FeaturedProducts = ({
       <CardContent className="p-4 space-y-3">
         <div className="space-y-1">
           <h4 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors pt-2.5">
-            {product.name}
+            {product.title}
           </h4>
-          {(product.short_description || product.description) && (
-            <p className="text-sm text-foreground/70">
-              {product.short_description || product.description}
+          {product.description && (
+            <p className="text-sm text-foreground/70 line-clamp-2">
+              {product.description}
             </p>
           )}
         </div>
@@ -317,7 +306,7 @@ export const FeaturedProducts = ({
                     {formatPrice(getCurrentPrice(product))}
                   </span>
                   <span className="text-sm line-through text-foreground/60">
-                    {formatPrice(product.price)}
+                    {formatPrice(getOriginalPrice(product))}
                   </span>
                 </div>
               ) : (
