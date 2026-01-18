@@ -311,7 +311,7 @@ export const GleeWorldLanding = () => {
                   scrollBehavior: 'smooth',
                   WebkitOverflowScrolling: 'touch'
                 }}>
-                      {events.map(event => <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-64 lg:w-72 flex flex-col">
+                      {events.map(event => <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-64 lg:w-72 flex flex-col h-[280px]">
                           {/* Hover overlay button */}
                           <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold border border-white/30" asChild>
@@ -321,25 +321,14 @@ export const GleeWorldLanding = () => {
                             </Button>
                           </div>
                           
-                          <div className="h-36 lg:h-40 bg-muted rounded-t-lg flex items-center justify-center relative overflow-hidden">
+                          <div className="h-36 lg:h-40 bg-muted rounded-t-lg flex items-center justify-center relative overflow-hidden flex-shrink-0">
                             <img src={event.image_url || getDefaultEventImage(event.id)} alt={event.title} className="w-full h-full object-cover rounded-t-lg brightness-95 contrast-100" onError={e => {
                         console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                         e.currentTarget.src = getDefaultEventImage(event.id);
                       }} />
                           </div>
-                          <CardContent className="p-3 lg:p-4 flex flex-col gap-2">
-                            <h3 className="text-base lg:text-lg font-semibold text-card-foreground">{event.title}</h3>
-                            <div className="space-y-1 text-foreground/70 text-sm">
-                              <div className="flex items-center">
-                                <Calendar className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                                <span>{formatDate(event.start_date)}</span>
-                              </div>
-                              {event.location && <div className="flex items-center">
-                                  <MapPin className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                                  <span>{event.location}</span>
-                                </div>}
-                            </div>
-                            {event.description && <p className="text-foreground/80 text-sm">{event.description}</p>}
+                          <CardContent className="p-3 lg:p-4 flex flex-col flex-grow justify-center">
+                            <h3 className="text-base lg:text-lg font-semibold text-card-foreground line-clamp-2 text-center">{event.title}</h3>
                           </CardContent>
                         </Card>)}
                     </div>
@@ -350,7 +339,7 @@ export const GleeWorldLanding = () => {
                     <Carousel className="w-full">
                       <CarouselContent className="-ml-2 sm:-ml-4">
                         {events.map(event => <CarouselItem key={event.id} className="pl-2 sm:pl-4 basis-[85%] sm:basis-[70%]">
-                            <Card className="hover:shadow-2xl transition-all duration-300 relative group bg-card/20 backdrop-blur-md border border-border/30 hover:bg-card/30 flex flex-col">
+                            <Card className="hover:shadow-2xl transition-all duration-300 relative group bg-card/20 backdrop-blur-md border border-border/30 hover:bg-card/30 flex flex-col h-[280px]">
                               {/* Hover overlay button */}
                               <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-border/30" asChild>
@@ -360,25 +349,14 @@ export const GleeWorldLanding = () => {
                                 </Button>
                               </div>
                               
-                              <div className="h-40 sm:h-44 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
+                              <div className="h-40 sm:h-44 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden flex-shrink-0">
                                 <img src={event.image_url || getDefaultEventImage(event.id)} alt={event.title} className="w-full h-full object-cover rounded-t-lg brightness-95 contrast-100" onError={e => {
                             console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                             e.currentTarget.src = getDefaultEventImage(event.id);
                           }} />
                               </div>
-                              <CardContent className="p-4 flex flex-col gap-2">
-                                <h3 className="text-lg font-semibold text-foreground line-clamp-2">{event.title}</h3>
-                                <div className="space-y-1 text-muted-foreground text-sm">
-                                  <div className="flex items-center">
-                                    <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-                                    <span>{formatDate(event.start_date)}</span>
-                                  </div>
-                                  {event.location && <div className="flex items-center">
-                                      <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                                      <span className="line-clamp-1">{event.location}</span>
-                                    </div>}
-                                </div>
-                                {event.description && <p className="text-foreground/80 line-clamp-2 text-sm">{event.description}</p>}
+                              <CardContent className="p-4 flex flex-col flex-grow justify-center">
+                                <h3 className="text-lg font-semibold text-foreground line-clamp-2 text-center">{event.title}</h3>
                               </CardContent>
                             </Card>
                           </CarouselItem>)}
