@@ -18,7 +18,7 @@ const StudentAssignmentPage: React.FC = () => {
   }
 
   if (!assignment_id) {
-    return <Navigate to="/member" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (

@@ -18,7 +18,7 @@ const StudentCoursePage: React.FC = () => {
   }
 
   if (!course_id) {
-    return <Navigate to="/member" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
