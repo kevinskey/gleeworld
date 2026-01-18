@@ -13,8 +13,7 @@ import {
   CheckCircle2, 
   Clock, 
   Play, 
-  ExternalLink,
-  Headphones,
+  Eye,
   Plus,
   Trash2,
   Save,
@@ -26,6 +25,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { ResourceViewer } from './ResourceViewer';
 
 interface ModuleResource {
   id: string;
@@ -76,6 +76,9 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editForm, setEditForm] = useState<Partial<ModuleResource>>({});
+  
+  // Resource viewer state
+  const [viewingResource, setViewingResource] = useState<ModuleResource | null>(null);
   
   // New resource form state
   const [newResource, setNewResource] = useState({
@@ -447,16 +450,16 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
                     <CheckCircle2 className={`h-4 w-4 ${resource.is_completed ? 'text-green-500' : 'text-muted-foreground'}`} />
                   </Button>
 
-                  {/* Open URL */}
+                  {/* Open URL in-app */}
                   {resource.url && (
                     <Button
                       size="icon"
                       variant="ghost"
                       className="h-8 w-8"
-                      onClick={() => window.open(resource.url!, '_blank')}
-                      title="Open resource"
+                      onClick={() => setViewingResource(resource)}
+                      title="View resource"
                     >
-                      <ExternalLink className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </Button>
                   )}
 
@@ -491,6 +494,18 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
           })
         )}
       </div>
+      
+      {/* Resource Viewer Modal */}
+      <ResourceViewer
+        isOpen={!!viewingResource}
+        onClose={() => setViewingResource(null)}
+        resource={viewingResource ? {
+          title: viewingResource.title,
+          url: viewingResource.url || '',
+          resource_type: viewingResource.resource_type,
+          description: viewingResource.description
+        } : null}
+      />
     </div>
   );
 };
