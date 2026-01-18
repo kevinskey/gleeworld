@@ -52,6 +52,49 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ['gw-student-assignments', courseId, user?.id],
     queryFn: async () => {
+      const { data: courseData, error: courseError } = await supabase
+        .from('gw_courses' as any)
+        .select('start_date, end_date, semester, term')
+        .eq('id', courseId)
+        .maybeSingle();
+
+      if (courseError) throw courseError;
+
+      const getCourseWindow = () => {
+        const startFromDb = courseData?.start_date ? new Date(courseData.start_date) : null;
+        const endFromDb = courseData?.end_date ? new Date(courseData.end_date) : null;
+        if (startFromDb) return { start: startFromDb, end: endFromDb };
+
+        // Fallback: infer from semester/term strings (prevents last-semester items from lingering)
+        const semesterRaw = String(courseData?.semester ?? courseData?.term ?? '').toUpperCase();
+        const yearMatch = semesterRaw.match(/(20\d{2})/);
+        const year = yearMatch ? Number(yearMatch[1]) : null;
+
+        const month = semesterRaw.includes('SPRING')
+          ? 0
+          : semesterRaw.includes('SUMMER')
+            ? 5
+            : semesterRaw.includes('FALL')
+              ? 7
+              : null;
+
+        // term like 202601 → Jan 1, 2026
+        if (month === null && /^20\d{4,6}$/.test(String(courseData?.term ?? ''))) {
+          const termStr = String(courseData?.term);
+          const y = Number(termStr.slice(0, 4));
+          const m = Number(termStr.slice(4, 6) || '01') - 1;
+          return { start: new Date(y, Math.max(0, Math.min(11, m)), 1), end: null as Date | null };
+        }
+
+        if (year !== null && month !== null) {
+          return { start: new Date(year, month, 1), end: null as Date | null };
+        }
+
+        return { start: null as Date | null, end: null as Date | null };
+      };
+
+      const { start, end } = getCourseWindow();
+
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('gw_assignments' as any)
         .select('*')
@@ -59,6 +102,16 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         .order('due_at', { ascending: true });
 
       if (assignmentsError) throw assignmentsError;
+
+      const filteredAssignments = (assignmentsData as any[] | null | undefined)?.filter((a: any) => {
+        if (!start) return true;
+        if (!a?.due_at) return true;
+        const due = new Date(a.due_at);
+        if (Number.isNaN(due.getTime())) return true;
+        if (due < start) return false;
+        if (end && due > end) return false;
+        return true;
+      });
 
       const { data: submissionsData, error: submissionsError } = await supabase
         .from('gw_assignment_submissions' as any)
@@ -69,9 +122,9 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
       const submissionsMap = new Map(submissionsData?.map((s: any) => [s.assignment_id, s.status]));
 
-      return (assignmentsData as any[])?.map((assignment: any) => ({
+      return (filteredAssignments as any[])?.map((assignment: any) => ({
         ...assignment,
-        submissionStatus: submissionsMap.get(assignment.id) || 'not_submitted'
+        submissionStatus: submissionsMap.get(assignment.id) || 'not_submitted',
       }));
     },
     enabled: !!user,
