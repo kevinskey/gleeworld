@@ -298,27 +298,6 @@ const queryClient = new QueryClient({
 });
 
 // Check if user needs forced password change (Jan 13-17, 2026)
-const needsForcePasswordChange = (): boolean => {
-  // Check if already changed password (persisted in localStorage)
-  if (localStorage.getItem('password_changed_jan2026') === 'true') {
-    return false;
-  }
-  // Also check sessionStorage for backward compatibility
-  if (sessionStorage.getItem('password_changed_jan2026') === 'true') {
-    // Migrate to localStorage so it persists
-    localStorage.setItem('password_changed_jan2026', 'true');
-    return false;
-  }
-  
-  const now = new Date();
-  // Start: Monday Jan 13, 2026 00:00:00 EST
-  const startDate = new Date('2026-01-13T00:00:00-05:00');
-  // End: Friday Jan 17, 2026 12:00:00 EST
-  const endDate = new Date('2026-01-17T12:00:00-05:00');
-  
-  return now >= startDate && now <= endDate;
-};
-
 // Protected route wrapper with profile completion check
 const ProtectedRoute = ({ children, skipProfileCheck = false }: { children: ReactNode; skipProfileCheck?: boolean }) => {
   const location = useLocation();
@@ -340,11 +319,6 @@ const ProtectedRoute = ({ children, skipProfileCheck = false }: { children: Reac
         sessionStorage.setItem('redirectAfterAuth', currentPath);
       }
       return <Navigate to="/auth" replace />;
-    }
-    
-    // Check for forced password change (skip if already on that page)
-    if (needsForcePasswordChange() && location.pathname !== '/force-password-change') {
-      return <Navigate to="/force-password-change" replace />;
     }
     
     // Skip profile check for specific pages
