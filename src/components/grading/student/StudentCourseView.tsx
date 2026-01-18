@@ -52,13 +52,15 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ['gw-student-assignments', courseId, user?.id],
     queryFn: async () => {
-      const { data: courseData, error: courseError } = await supabase
+      const { data: courseDataRaw, error: courseError } = await supabase
         .from('gw_courses' as any)
         .select('start_date, end_date, semester, term')
         .eq('id', courseId)
         .maybeSingle();
 
       if (courseError) throw courseError;
+
+      const courseData = courseDataRaw as unknown as { start_date: string | null; end_date: string | null; semester: string | null; term: string | null } | null;
 
       const getCourseWindow = () => {
         const startFromDb = courseData?.start_date ? new Date(courseData.start_date) : null;
