@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers, Archive } from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers, Archive, Images } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +47,9 @@ const AllVideosGrid = React.lazy(() => import('@/components/youtube/AllVideosGri
 })));
 const LiturgicalPlanner = React.lazy(() => import('./planner/LiturgicalPlanner').then(m => ({
   default: m.LiturgicalPlanner
+})));
+const PhotoGallery = React.lazy(() => import('@/components/gallery/PhotoGallery').then(m => ({
+  default: m.PhotoGallery
 })));
 interface UnifiedCoursePageProps {
   course: AcademyCourse;
@@ -303,6 +306,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
               { icon: BookMarked, label: 'Planner', tab: 'planner' },
+              { icon: Images, label: 'Photo Gallery', tab: 'photo-gallery' },
               { icon: Calendar, label: 'Calendar', tab: 'calendar' },
               { icon: Video, label: 'Video Library', tab: 'video-library' },
               { icon: Headphones, label: 'Playlist', tab: 'playlist' },
@@ -573,6 +577,12 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {activeTab === 'planner' && course.courseCode === 'LH 100' && (
               <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}>
                 <LiturgicalPlanner isAdmin={isAdmin} />
+              </React.Suspense>
+            )}
+
+            {activeTab === 'photo-gallery' && course.courseCode === 'LH 100' && (
+              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Photo Gallery...</CardContent></Card>}>
+                <PhotoGallery />
               </React.Suspense>
             )}
 
