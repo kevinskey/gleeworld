@@ -1,39 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Plus, 
-  Trash2, 
-  GripVertical, 
-  Search,
-  Music2,
-  FileAudio,
-  Play,
-  X,
-  Check
-} from 'lucide-react';
-
-interface MediaItem {
-  id: string;
-  title: string;
-  file_url: string;
-  file_type: string | null;
-  category: string | null;
-}
-
-interface PlaylistMedia {
-  id: string;
-  playlist_id: string;
-  media_id: string;
-  position: number;
-  media?: MediaItem;
-}
+import { Loader2, Search, Plus, Trash2, ChevronUp, ChevronDown, FileAudio, Music } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 interface PlaylistMediaManagerProps {
   playlistId: string;
@@ -42,18 +21,35 @@ interface PlaylistMediaManagerProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const PlaylistMediaManager: React.FC<PlaylistMediaManagerProps> = ({
-  playlistId,
-  playlistTitle,
-  open,
-  onOpenChange
-}) => {
+interface PlaylistMediaItem {
+  id: string;
+  playlist_id: string;
+  media_id: string;
+  position: number;
+  media?: {
+    id: string;
+    title: string | null;
+    file_url: string | null;
+    file_type: string | null;
+    category: string | null;
+  };
+}
+
+interface MediaItem {
+  id: string;
+  title: string | null;
+  file_url: string | null;
+  file_type: string | null;
+  category: string | null;
+}
+
+export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenChange }: PlaylistMediaManagerProps) {
   const { toast } = useToast();
-  const [playlistMedia, setPlaylistMedia] = useState<PlaylistMedia[]>([]);
-  const [availableMedia, setAvailableMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [playlistMedia, setPlaylistMedia] = useState<PlaylistMediaItem[]>([]);
+  const [availableMedia, setAvailableMedia] = useState<MediaItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'current' | 'add'>('current');
+  const [activeTab, setActiveTab] = useState('current');
 
   const fetchPlaylistMedia = useCallback(async () => {
     try {
@@ -96,7 +92,7 @@ export const PlaylistMediaManager: React.FC<PlaylistMediaManagerProps> = ({
       const { data, error } = await supabase
         .from('gw_media_library')
         .select('id, title, file_url, file_type, category')
-        .or('file_type.ilike.%audio%,file_type.ilike.%mp3%,category.eq.audio')
+        .or('file_type.ilike.%audio%,file_type.ilike.%mp3%')
         .order('title');
 
       if (error) throw error;
@@ -108,6 +104,7 @@ export const PlaylistMediaManager: React.FC<PlaylistMediaManagerProps> = ({
 
   useEffect(() => {
     if (open) {
+      setLoading(true);
       fetchPlaylistMedia();
       fetchAvailableMedia();
     }
@@ -192,74 +189,68 @@ export const PlaylistMediaManager: React.FC<PlaylistMediaManagerProps> = ({
     m.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const isAudio = (fileType: string | null) => {
-    return fileType?.includes('audio') || fileType?.includes('mp3');
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Music2 className="h-5 w-5" />
-            Media Library - {playlistTitle}
+            <Music className="h-5 w-5" />
+            Manage Tracks: {playlistTitle}
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'current' | 'add')}>
-          <TabsList className="w-full">
-            <TabsTrigger value="current" className="flex-1">
-              Current ({playlistMedia.length})
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="current">
+              Current Tracks ({playlistMedia.length})
             </TabsTrigger>
-            <TabsTrigger value="add" className="flex-1">
-              <Plus className="h-4 w-4 mr-1" />
+            <TabsTrigger value="add">
               Add Media
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="current" className="mt-4">
             {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
             ) : playlistMedia.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <FileAudio className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No media in this playlist yet.</p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={() => setActiveTab('add')}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Media
-                </Button>
+              <div className="text-center py-8 text-muted-foreground">
+                <FileAudio className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No tracks in this playlist yet.</p>
+                <p className="text-sm">Switch to "Add Media" to add MP3s.</p>
               </div>
             ) : (
               <ScrollArea className="h-[400px]">
-                <div className="space-y-2">
-                  {playlistMedia.map((pm, index) => (
+                <div className="space-y-2 pr-4">
+                  {playlistMedia.map((item, index) => (
                     <div 
-                      key={pm.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30"
+                      key={item.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border bg-card"
                     >
                       <div className="flex flex-col gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6"
+                          onClick={() => moveMedia(item.id, 'up')}
                           disabled={index === 0}
-                          onClick={() => moveMedia(pm.id, 'up')}
                         >
-                          <GripVertical className="h-4 w-4 rotate-180" />
+                          <ChevronUp className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6"
+                          onClick={() => moveMedia(item.id, 'down')}
                           disabled={index === playlistMedia.length - 1}
-                          onClick={() => moveMedia(pm.id, 'down')}
                         >
-                          <GripVertical className="h-4 w-4" />
+                          <ChevronDown className="h-4 w-4" />
                         </Button>
+                      </div>
+                      
+                      <div className="flex items-center justify-center w-8 h-8 rounded bg-muted text-sm font-medium">
+                        {index + 1}
                       </div>
                       
                       <div className="flex items-center justify-center w-10 h-10 rounded bg-primary/10">
@@ -267,28 +258,18 @@ export const PlaylistMediaManager: React.FC<PlaylistMediaManagerProps> = ({
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {pm.media?.title || 'Unknown'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {pm.media?.category || 'Media'}
-                        </p>
+                        <p className="font-medium truncate">{item.media?.title || 'Unknown'}</p>
+                        {item.media?.category && (
+                          <Badge variant="secondary" className="text-xs mt-1">
+                            {item.media.category}
+                          </Badge>
+                        )}
                       </div>
-
-                      {pm.media?.file_url && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => window.open(pm.media?.file_url, '_blank')}
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      )}
                       
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => removeFromPlaylist(pm.id)}
+                        onClick={() => removeFromPlaylist(item.id)}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -302,22 +283,23 @@ export const PlaylistMediaManager: React.FC<PlaylistMediaManagerProps> = ({
 
           <TabsContent value="add" className="mt-4">
             <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                placeholder="Search audio files..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search audio files..."
-                className="pl-9"
+                className="pl-10"
               />
             </div>
 
             <ScrollArea className="h-[350px]">
               {filteredAvailable.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {searchTerm ? 'No matching audio files found' : 'No audio files available'}
+                  <p>No audio files available to add.</p>
+                  <p className="text-sm">Upload MP3s in the Media Library first.</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 pr-4">
                   {filteredAvailable.map((media) => (
                     <div 
                       key={media.id}
@@ -329,15 +311,16 @@ export const PlaylistMediaManager: React.FC<PlaylistMediaManagerProps> = ({
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{media.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {media.category || media.file_type || 'Audio'}
-                        </p>
+                        <p className="font-medium truncate">{media.title || 'Untitled'}</p>
+                        {media.category && (
+                          <Badge variant="outline" className="text-xs mt-1">
+                            {media.category}
+                          </Badge>
+                        )}
                       </div>
-
-                      <Button variant="outline" size="sm">
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add
+                      
+                      <Button variant="ghost" size="icon">
+                        <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
@@ -349,6 +332,4 @@ export const PlaylistMediaManager: React.FC<PlaylistMediaManagerProps> = ({
       </DialogContent>
     </Dialog>
   );
-};
-
-export default PlaylistMediaManager;
+}
