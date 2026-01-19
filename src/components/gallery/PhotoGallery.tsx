@@ -6,13 +6,31 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   Camera, Grid3X3, List, Search, Calendar, Tag, Folder, 
   Image as ImageIcon, Video, Play, X, Download, ExternalLink,
-  ChevronLeft, ChevronRight, Loader2, Clock, Filter
+  ChevronLeft, ChevronRight, Loader2, Clock, Filter, Trash2, Star, Edit
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
+import { toast } from 'sonner';
 
 interface GalleryPhoto {
   id: string;
@@ -47,6 +65,8 @@ export const PhotoGallery: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPhoto, setSelectedPhoto] = useState<GalleryPhoto | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [photoToDelete, setPhotoToDelete] = useState<GalleryPhoto | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch all photos
   useEffect(() => {
@@ -204,85 +224,192 @@ export const PhotoGallery: React.FC = () => {
 
   const isVideo = (photo: GalleryPhoto) => photo.file_type?.includes('video');
 
-  const PhotoCard = ({ photo }: { photo: GalleryPhoto }) => (
-    <div 
-      className="relative group cursor-pointer overflow-hidden rounded-lg bg-muted aspect-square"
-      onClick={() => setSelectedPhoto(photo)}
-    >
-      {isVideo(photo) ? (
-        <>
-          <video 
-            src={photo.file_url} 
-            className="w-full h-full object-cover"
-            muted
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-            <Play className="h-12 w-12 text-white" />
-          </div>
-        </>
-      ) : (
-        <img 
-          src={photo.file_url} 
-          alt={photo.title || 'Gallery photo'}
-          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-        />
-      )}
+  const handleDelete = async (photo: GalleryPhoto) => {
+    setIsDeleting(true);
+    try {
+      const table = photo.source === 'quick_capture' ? 'quick_capture_media' : 'gw_media_library';
       
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="absolute bottom-0 left-0 right-0 p-3">
-          <p className="text-white text-sm font-medium truncate">
-            {photo.title || 'Untitled'}
-          </p>
-          <p className="text-white/70 text-xs">
-            {format(parseISO(photo.created_at), 'MMM d, yyyy')}
-          </p>
-        </div>
-      </div>
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', photo.id);
 
-      {/* Badges */}
-      <div className="absolute top-2 left-2 flex gap-1">
-        {photo.is_featured && (
-          <Badge className="bg-yellow-500 text-black text-xs">Featured</Badge>
+      if (error) throw error;
+
+      setPhotos(prev => prev.filter(p => p.id !== photo.id));
+      toast.success(`${isVideo(photo) ? 'Video' : 'Photo'} deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      toast.error('Failed to delete. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setPhotoToDelete(null);
+    }
+  };
+
+  const handleToggleFeatured = async (photo: GalleryPhoto) => {
+    if (photo.source === 'quick_capture') {
+      toast.error('Cannot feature quick capture photos');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('gw_media_library')
+        .update({ is_featured: !photo.is_featured })
+        .eq('id', photo.id);
+
+      if (error) throw error;
+
+      setPhotos(prev => prev.map(p => 
+        p.id === photo.id ? { ...p, is_featured: !p.is_featured } : p
+      ));
+      toast.success(photo.is_featured ? 'Removed from featured' : 'Added to featured');
+    } catch (error) {
+      console.error('Error toggling featured:', error);
+      toast.error('Failed to update. Please try again.');
+    }
+  };
+
+  const PhotoCard = ({ photo }: { photo: GalleryPhoto }) => (
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <div 
+          className="relative group cursor-pointer overflow-hidden rounded-lg bg-muted aspect-square"
+          onClick={() => setSelectedPhoto(photo)}
+        >
+          {isVideo(photo) ? (
+            <>
+              <video 
+                src={photo.file_url} 
+                className="w-full h-full object-cover"
+                muted
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <Play className="h-12 w-12 text-white" />
+              </div>
+            </>
+          ) : (
+            <img 
+              src={photo.file_url} 
+              alt={photo.title || 'Gallery photo'}
+              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+            />
+          )}
+          
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <p className="text-white text-sm font-medium truncate">
+                {photo.title || 'Untitled'}
+              </p>
+              <p className="text-white/70 text-xs">
+                {format(parseISO(photo.created_at), 'MMM d, yyyy')}
+              </p>
+            </div>
+          </div>
+
+          {/* Badges */}
+          <div className="absolute top-2 left-2 flex gap-1">
+            {photo.is_featured && (
+              <Badge className="bg-yellow-500 text-black text-xs">Featured</Badge>
+            )}
+            {photo.glee_cam_category_id && (
+              <Badge variant="secondary" className="text-xs">
+                <Camera className="h-3 w-3 mr-1" />
+                GleeCam
+              </Badge>
+            )}
+          </div>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem onClick={() => setSelectedPhoto(photo)}>
+          <ExternalLink className="h-4 w-4 mr-2" />
+          View Details
+        </ContextMenuItem>
+        <ContextMenuItem asChild>
+          <a href={photo.file_url} download target="_blank" rel="noopener noreferrer">
+            <Download className="h-4 w-4 mr-2" />
+            Download
+          </a>
+        </ContextMenuItem>
+        {photo.source === 'media_library' && (
+          <ContextMenuItem onClick={() => handleToggleFeatured(photo)}>
+            <Star className={`h-4 w-4 mr-2 ${photo.is_featured ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+            {photo.is_featured ? 'Remove from Featured' : 'Mark as Featured'}
+          </ContextMenuItem>
         )}
-        {photo.glee_cam_category_id && (
-          <Badge variant="secondary" className="text-xs">
-            <Camera className="h-3 w-3 mr-1" />
-            GleeCam
-          </Badge>
-        )}
-      </div>
-    </div>
+        <ContextMenuSeparator />
+        <ContextMenuItem 
+          onClick={() => setPhotoToDelete(photo)}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 
   const PhotoListItem = ({ photo }: { photo: GalleryPhoto }) => (
-    <div 
-      className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted cursor-pointer border"
-      onClick={() => setSelectedPhoto(photo)}
-    >
-      <div className="relative w-20 h-20 rounded overflow-hidden flex-shrink-0">
-        {isVideo(photo) ? (
-          <>
-            <video src={photo.file_url} className="w-full h-full object-cover" muted />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-              <Play className="h-6 w-6 text-white" />
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <div 
+          className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted cursor-pointer border"
+          onClick={() => setSelectedPhoto(photo)}
+        >
+          <div className="relative w-20 h-20 rounded overflow-hidden flex-shrink-0">
+            {isVideo(photo) ? (
+              <>
+                <video src={photo.file_url} className="w-full h-full object-cover" muted />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <Play className="h-6 w-6 text-white" />
+                </div>
+              </>
+            ) : (
+              <img src={photo.file_url} alt={photo.title || ''} className="w-full h-full object-cover" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium truncate">{photo.title || 'Untitled'}</p>
+            <p className="text-sm text-muted-foreground">
+              {format(parseISO(photo.created_at), 'MMM d, yyyy')}
+            </p>
+            <div className="flex gap-1 mt-1">
+              {photo.category && <Badge variant="outline" className="text-xs">{photo.category}</Badge>}
+              {isVideo(photo) && <Badge variant="secondary" className="text-xs"><Video className="h-3 w-3 mr-1" />Video</Badge>}
             </div>
-          </>
-        ) : (
-          <img src={photo.file_url} alt={photo.title || ''} className="w-full h-full object-cover" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium truncate">{photo.title || 'Untitled'}</p>
-        <p className="text-sm text-muted-foreground">
-          {format(parseISO(photo.created_at), 'MMM d, yyyy')}
-        </p>
-        <div className="flex gap-1 mt-1">
-          {photo.category && <Badge variant="outline" className="text-xs">{photo.category}</Badge>}
-          {isVideo(photo) && <Badge variant="secondary" className="text-xs"><Video className="h-3 w-3 mr-1" />Video</Badge>}
+          </div>
         </div>
-      </div>
-    </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem onClick={() => setSelectedPhoto(photo)}>
+          <ExternalLink className="h-4 w-4 mr-2" />
+          View Details
+        </ContextMenuItem>
+        <ContextMenuItem asChild>
+          <a href={photo.file_url} download target="_blank" rel="noopener noreferrer">
+            <Download className="h-4 w-4 mr-2" />
+            Download
+          </a>
+        </ContextMenuItem>
+        {photo.source === 'media_library' && (
+          <ContextMenuItem onClick={() => handleToggleFeatured(photo)}>
+            <Star className={`h-4 w-4 mr-2 ${photo.is_featured ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+            {photo.is_featured ? 'Remove from Featured' : 'Mark as Featured'}
+          </ContextMenuItem>
+        )}
+        <ContextMenuSeparator />
+        <ContextMenuItem 
+          onClick={() => setPhotoToDelete(photo)}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 
   if (loading) {
@@ -498,6 +625,38 @@ export const PhotoGallery: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!photoToDelete} onOpenChange={() => setPhotoToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {photoToDelete && isVideo(photoToDelete) ? 'Video' : 'Photo'}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{photoToDelete?.title || 'Untitled'}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => photoToDelete && handleDelete(photoToDelete)}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
