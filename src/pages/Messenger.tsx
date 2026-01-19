@@ -180,43 +180,66 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     try {
       if (group.type === 'course') {
         // Extract course ID from group id (format: "course:uuid")
-        const courseId = group.id.replace('course:', '');
+        const courseIdFromGroup = group.id.replace('course:', '');
 
         // Step 1: Fetch all enrolled students' user_ids
         const { data: enrollments, error: enrollError } = await supabase
           .from('gw_course_enrollments')
           .select('user_id')
-          .eq('course_id', courseId)
+          .eq('course_id', courseIdFromGroup)
           .eq('role', 'student')
           .eq('enrollment_status', 'enrolled');
         
         if (enrollError) throw enrollError;
         
         if (enrollments && enrollments.length > 0) {
-          // Step 2: Fetch emails for those user_ids from gw_profiles
+          // Step 2: Fetch profiles for those user_ids
           const userIds = enrollments.map(e => e.user_id);
           const { data: profiles, error: profileError } = await supabase
             .from('gw_profiles')
-            .select('email')
+            .select('user_id, full_name, email, phone_number')
             .in('user_id', userIds);
           
           if (profileError) throw profileError;
           
-          const emails = (profiles || [])
-            .map(p => p.email)
-            .filter((email): email is string => !!email && !recipients.includes(email));
-          
-          if (emails.length > 0) {
-            setRecipients([...recipients, ...emails]);
-            toast({
-              title: `Added ${emails.length} students`,
-              description: `From ${group.name.replace('📚 ', '')}`
-            });
-          } else {
-            toast({
-              title: "No new students to add",
-              description: "All students already added or no emails found",
-            });
+          if (composerMode === 'email') {
+            const emails = (profiles || [])
+              .map(p => p.email)
+              .filter((email): email is string => !!email && !recipients.includes(email));
+            
+            if (emails.length > 0) {
+              setRecipients([...recipients, ...emails]);
+              toast({
+                title: `Added ${emails.length} students`,
+                description: `From ${group.name.replace('📚 ', '')}`
+              });
+            } else {
+              toast({
+                title: "No new students to add",
+                description: "All students already added or no emails found",
+              });
+            }
+          } else if (composerMode === 'sms') {
+            const newRecipients = (profiles || [])
+              .filter(p => p.phone_number && !smsRecipients.find(r => r.user_id === p.user_id))
+              .map(p => ({
+                user_id: p.user_id,
+                full_name: p.full_name || 'Unknown',
+                phone_number: p.phone_number!
+              }));
+            
+            if (newRecipients.length > 0) {
+              setSmsRecipients([...smsRecipients, ...newRecipients]);
+              toast({
+                title: `Added ${newRecipients.length} members`,
+                description: `From ${group.name.replace('📚 ', '')}`
+              });
+            } else {
+              toast({
+                title: "No new members to add",
+                description: "All members with phone numbers already added",
+              });
+            }
           }
         } else {
           toast({
@@ -226,11 +249,67 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           });
         }
       } else {
-        // Handle manual groups (existing logic placeholder)
-        toast({
-          title: `Group: ${group.name}`,
-          description: "Manual group recipient fetching coming soon"
-        });
+        // Handle manual groups - fetch from messenger_group_members
+        const groupId = group.id.replace('manual:', '');
+        
+        const { data: members, error: membersError } = await supabase
+          .from('messenger_group_members')
+          .select(`
+            user_id,
+            gw_profiles!inner(user_id, full_name, email, phone_number)
+          `)
+          .eq('group_id', groupId);
+        
+        if (membersError) throw membersError;
+        
+        if (!members || members.length === 0) {
+          toast({
+            title: 'No members',
+            description: `${group.name} has no members yet`,
+            variant: 'destructive'
+          });
+          return;
+        }
+
+        if (composerMode === 'email') {
+          const emails = members
+            .map((m: any) => m.gw_profiles?.email)
+            .filter((email: string) => email && !recipients.includes(email));
+          
+          if (emails.length > 0) {
+            setRecipients([...recipients, ...emails]);
+            toast({
+              title: `Added ${emails.length} members`,
+              description: `From ${group.name}`
+            });
+          } else {
+            toast({
+              title: 'Already added',
+              description: 'All members from this group are already in recipients'
+            });
+          }
+        } else if (composerMode === 'sms') {
+          const newRecipients = members
+            .filter((m: any) => m.gw_profiles?.phone_number && !smsRecipients.find(r => r.user_id === m.user_id))
+            .map((m: any) => ({
+              user_id: m.user_id,
+              full_name: m.gw_profiles?.full_name || 'Unknown',
+              phone_number: m.gw_profiles?.phone_number
+            }));
+          
+          if (newRecipients.length > 0) {
+            setSmsRecipients([...smsRecipients, ...newRecipients]);
+            toast({
+              title: `Added ${newRecipients.length} members`,
+              description: `From ${group.name}`
+            });
+          } else {
+            toast({
+              title: 'No new recipients',
+              description: 'All members with phone numbers are already added'
+            });
+          }
+        }
       }
     } catch (err: any) {
       toast({
