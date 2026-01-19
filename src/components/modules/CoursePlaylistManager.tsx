@@ -10,25 +10,18 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, 
   Trash2, 
   Edit, 
-  Youtube, 
-  Link, 
-  GripVertical, 
   Eye, 
-  EyeOff,
   Star,
-  Play,
-  ExternalLink,
-  ListVideo,
-  Music2
+  Music,
+  Headphones,
+  ListMusic
 } from 'lucide-react';
-import { PlaylistVideoManager } from './PlaylistVideoManager';
 import { PlaylistMediaManager } from './PlaylistMediaManager';
 
 interface Course {
@@ -51,21 +44,7 @@ interface Playlist {
   is_featured: boolean;
   display_order: number;
   created_at: string;
-}
-
-interface Video {
-  id: string;
-  video_id: string;
-  title: string;
-  thumbnail_url: string | null;
-}
-
-interface PlaylistVideo {
-  id: string;
-  playlist_id: string;
-  video_id: string;
-  display_order: number;
-  video?: Video;
+  track_count?: number;
 }
 
 interface CoursePlaylistManagerProps {
@@ -80,14 +59,11 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [availableVideos, setAvailableVideos] = useState<Video[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>(courseId || 'all');
-  const [videoManagerOpen, setVideoManagerOpen] = useState(false);
-  const [selectedPlaylistForVideos, setSelectedPlaylistForVideos] = useState<Playlist | null>(null);
   const [mediaManagerOpen, setMediaManagerOpen] = useState(false);
   const [selectedPlaylistForMedia, setSelectedPlaylistForMedia] = useState<Playlist | null>(null);
   
@@ -96,14 +72,12 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
     course_id: courseId || 'none',
     title: '',
     description: '',
-    playlist_url: '',
     is_public: false,
     is_featured: false
   });
 
   useEffect(() => {
     fetchCourses();
-    fetchAvailableVideos();
   }, []);
 
   // Refetch playlists when courses load or filter changes
@@ -131,7 +105,6 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
   // Filter courses to only those the current user teaches (unless admin)
   const getInstructorCourses = () => {
     if (!user) return courses;
-    // Check if user is the instructor (via created_by or instructor_id)
     return courses.filter(c => 
       c.created_by === user.id || c.instructor_id === user.id
     );
@@ -155,35 +128,29 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
       if (error) throw error;
       
       // Filter playlists to only show those for courses this instructor teaches
-      // or general playlists they created
       const filteredPlaylists = (data || []).filter(playlist => {
-        // If no course_id, only show if user created it
         if (!playlist.course_id) {
           return playlist.created_by === user?.id;
         }
-        // Otherwise, show if it's for a course they teach
         return instructorCourseIds.includes(playlist.course_id);
       });
+
+      // Get track counts for each playlist
+      const playlistsWithCounts = await Promise.all(
+        filteredPlaylists.map(async (playlist) => {
+          const { count } = await supabase
+            .from('gw_course_playlist_media')
+            .select('*', { count: 'exact', head: true })
+            .eq('playlist_id', playlist.id);
+          return { ...playlist, track_count: count || 0 };
+        })
+      );
       
-      setPlaylists(filteredPlaylists);
+      setPlaylists(playlistsWithCounts);
     } catch (err) {
       console.error('Error fetching playlists:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchAvailableVideos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('youtube_videos')
-        .select('id, video_id, title, thumbnail_url')
-        .order('title');
-      
-      if (error) throw error;
-      setAvailableVideos(data || []);
-    } catch (err) {
-      console.error('Error fetching videos:', err);
     }
   };
 
@@ -267,7 +234,6 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
       course_id: courseId || 'none',
       title: '',
       description: '',
-      playlist_url: '',
       is_public: false,
       is_featured: false
     });
@@ -280,7 +246,6 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
       course_id: playlist.course_id || 'none',
       title: playlist.title,
       description: playlist.description || '',
-      playlist_url: playlist.playlist_url || '',
       is_public: playlist.is_public,
       is_featured: playlist.is_featured
     });
@@ -300,11 +265,11 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Youtube className="h-5 w-5 text-red-500" />
-                Course Playlists
+                <Headphones className="h-5 w-5 text-primary" />
+                Audio Playlists
               </CardTitle>
               <CardDescription>
-                Manage YouTube playlists for courses and public display
+                Create and manage MP3 playlists for course listening
               </CardDescription>
             </div>
             
@@ -368,7 +333,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                       <Input
                         value={formData.title}
                         onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder="e.g., Performance Highlights 2024"
+                        placeholder="e.g., Warmup Tracks, Concert Prep"
                         required
                       />
                     </div>
@@ -381,19 +346,6 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                         placeholder="Describe this playlist..."
                         rows={3}
                       />
-                    </div>
-
-                    <div>
-                      <Label>YouTube Playlist URL (optional)</Label>
-                      <Input
-                        type="url"
-                        value={formData.playlist_url}
-                        onChange={(e) => setFormData(prev => ({ ...prev, playlist_url: e.target.value }))}
-                        placeholder="https://youtube.com/playlist?list=..."
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Link to an existing YouTube playlist, or curate videos manually
-                      </p>
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -436,7 +388,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
           ) : playlists.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <Youtube className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No playlists yet. Create one to get started!</p>
             </div>
           ) : (
@@ -450,6 +402,10 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                           <h3 className="font-semibold truncate">{playlist.title}</h3>
                           <Badge variant="outline" className="text-xs">
                             {getCourseName(playlist.course_id)}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            <Music className="h-3 w-3 mr-1" />
+                            {playlist.track_count || 0} tracks
                           </Badge>
                           {playlist.is_public && (
                             <Badge className="bg-green-500/20 text-green-600 text-xs">
@@ -469,17 +425,6 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                             {playlist.description}
                           </p>
                         )}
-                        {playlist.playlist_url && (
-                          <a 
-                            href={playlist.playlist_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline flex items-center gap-1 mt-2"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            View on YouTube
-                          </a>
-                        )}
                       </div>
 
                       <div className="flex items-center gap-1">
@@ -487,23 +432,12 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                           variant="ghost"
                           size="icon"
                           onClick={() => {
-                            setSelectedPlaylistForVideos(playlist);
-                            setVideoManagerOpen(true);
-                          }}
-                          title="Manage YouTube videos"
-                        >
-                          <ListVideo className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
                             setSelectedPlaylistForMedia(playlist);
                             setMediaManagerOpen(true);
                           }}
-                          title="Manage MP3s from Media Library"
+                          title="Manage audio tracks"
                         >
-                          <Music2 className="h-4 w-4" />
+                          <ListMusic className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -511,11 +445,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                           onClick={() => toggleVisibility(playlist, 'is_public')}
                           title={playlist.is_public ? 'Make private' : 'Make public'}
                         >
-                          {playlist.is_public ? (
-                            <Eye className="h-4 w-4" />
-                          ) : (
-                            <EyeOff className="h-4 w-4" />
-                          )}
+                          <Eye className={`h-4 w-4 ${playlist.is_public ? 'text-green-500' : 'opacity-50'}`} />
                         </Button>
                         <Button
                           variant="ghost"
@@ -550,23 +480,16 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
         </CardContent>
       </Card>
 
-      {/* Video Manager Dialog */}
-      {selectedPlaylistForVideos && (
-        <PlaylistVideoManager
-          playlistId={selectedPlaylistForVideos.id}
-          playlistTitle={selectedPlaylistForVideos.title}
-          open={videoManagerOpen}
-          onOpenChange={setVideoManagerOpen}
-        />
-      )}
-
       {/* Media Manager Dialog */}
       {selectedPlaylistForMedia && (
         <PlaylistMediaManager
           playlistId={selectedPlaylistForMedia.id}
           playlistTitle={selectedPlaylistForMedia.title}
           open={mediaManagerOpen}
-          onOpenChange={setMediaManagerOpen}
+          onOpenChange={(open) => {
+            setMediaManagerOpen(open);
+            if (!open) fetchPlaylists(); // Refresh track counts
+          }}
         />
       )}
     </div>
