@@ -8190,6 +8190,45 @@ export type Database = {
           },
         ]
       }
+      gw_course_playlist_media: {
+        Row: {
+          created_at: string
+          id: string
+          media_id: string
+          playlist_id: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          media_id: string
+          playlist_id: string
+          position?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          media_id?: string
+          playlist_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_playlist_media_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "gw_media_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_course_playlist_media_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "gw_course_playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_course_playlist_videos: {
         Row: {
           added_at: string | null

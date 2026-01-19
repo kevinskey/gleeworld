@@ -25,9 +25,11 @@ import {
   Star,
   Play,
   ExternalLink,
-  ListVideo
+  ListVideo,
+  Music2
 } from 'lucide-react';
 import { PlaylistVideoManager } from './PlaylistVideoManager';
+import { PlaylistMediaManager } from './PlaylistMediaManager';
 
 interface Course {
   id: string;
@@ -86,6 +88,8 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>(courseId || 'all');
   const [videoManagerOpen, setVideoManagerOpen] = useState(false);
   const [selectedPlaylistForVideos, setSelectedPlaylistForVideos] = useState<Playlist | null>(null);
+  const [mediaManagerOpen, setMediaManagerOpen] = useState(false);
+  const [selectedPlaylistForMedia, setSelectedPlaylistForMedia] = useState<Playlist | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -486,9 +490,20 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                             setSelectedPlaylistForVideos(playlist);
                             setVideoManagerOpen(true);
                           }}
-                          title="Manage videos"
+                          title="Manage YouTube videos"
                         >
                           <ListVideo className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedPlaylistForMedia(playlist);
+                            setMediaManagerOpen(true);
+                          }}
+                          title="Manage MP3s from Media Library"
+                        >
+                          <Music2 className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -542,6 +557,16 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
           playlistTitle={selectedPlaylistForVideos.title}
           open={videoManagerOpen}
           onOpenChange={setVideoManagerOpen}
+        />
+      )}
+
+      {/* Media Manager Dialog */}
+      {selectedPlaylistForMedia && (
+        <PlaylistMediaManager
+          playlistId={selectedPlaylistForMedia.id}
+          playlistTitle={selectedPlaylistForMedia.title}
+          open={mediaManagerOpen}
+          onOpenChange={setMediaManagerOpen}
         />
       )}
     </div>
