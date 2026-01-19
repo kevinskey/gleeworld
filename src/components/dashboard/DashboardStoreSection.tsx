@@ -149,7 +149,7 @@ export const DashboardStoreSection = () => {
               <div 
                 key={course.id} 
                 onClick={() => navigate(`/academy/${(course.course_code || '').toLowerCase().replace(' ', '-')}`)} 
-                className="flex-shrink-0 w-72 snap-start cursor-pointer bg-white border border-border/40 rounded-xl p-6 sm:p-8 flex flex-col min-h-[280px] shadow-lg hover:shadow-xl transition-shadow duration-200"
+                className="flex-shrink-0 w-[calc(50vw-24px)] sm:w-72 snap-start cursor-pointer bg-white border border-border/40 rounded-xl p-4 sm:p-6 md:p-8 flex flex-col min-h-[200px] sm:min-h-[280px] shadow-lg hover:shadow-xl transition-shadow duration-200"
               >
                 {/* Course Code - Elegant serif style */}
                 <h3 
@@ -208,7 +208,7 @@ export const DashboardStoreSection = () => {
         msOverflowStyle: 'none',
         WebkitOverflowScrolling: 'touch'
       }}>
-            {products.map(product => <div key={product.id} onClick={() => navigate(`/shop/${product.id}`)} className="group cursor-pointer flex-shrink-0 w-72 snap-start">
+            {products.map(product => <div key={product.id} onClick={() => navigate(`/shop/${product.id}`)} className="group cursor-pointer flex-shrink-0 w-[calc(50vw-24px)] sm:w-72 snap-start">
                 {/* Product Image */}
                 <div className="relative aspect-square bg-muted/50 overflow-hidden">
                   {product.images?.[0] ? <img src={product.images[0]} alt={product.title} className="w-full h-full group-hover:scale-105 transition-transform duration-500 object-fill" /> : <div className="w-full h-full flex items-center justify-center">
