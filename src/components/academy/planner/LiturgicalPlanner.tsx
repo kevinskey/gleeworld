@@ -283,6 +283,8 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
                     USCCB Readings
                   </TabsTrigger>
                 </TabsList>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
 
                 <ScrollArea className="h-[calc(100vh-380px)] min-h-[350px]">
                   <TabsContent value="overview" className="m-0 p-4">
