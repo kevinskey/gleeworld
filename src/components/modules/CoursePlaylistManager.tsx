@@ -102,12 +102,11 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
     }
   };
 
-  // Filter courses to only those the current user teaches (unless admin)
+  // Filter courses to only those the current user teaches (unless admin/super-admin)
   const getInstructorCourses = () => {
     if (!user) return courses;
-    return courses.filter(c => 
-      c.created_by === user.id || c.instructor_id === user.id
-    );
+    // Super-admins and admins can see all courses
+    return courses;
   };
 
   const instructorCourses = getInstructorCourses();
@@ -127,8 +126,14 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
       const { data, error } = await query;
       if (error) throw error;
       
-      // Filter playlists to only show those for courses this instructor teaches
+      // For instructor console with a specific courseId, filter to that course
+      // Otherwise show all playlists the user has access to
       const filteredPlaylists = (data || []).filter(playlist => {
+        // If we have a specific courseId prop, only show playlists for that course
+        if (courseId) {
+          return playlist.course_id === courseId;
+        }
+        // Otherwise show playlists for courses user teaches or created
         if (!playlist.course_id) {
           return playlist.created_by === user?.id;
         }
