@@ -81,7 +81,7 @@ const GleeAcademy = () => {
         {/* Courses Section */}
         <div id="courses" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-white pt-[40px]">
           <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
               {ACADEMY_COURSES.map(course => <AcademyCourseCard key={course.id} course={course} onEnter={handleCourseClick} buttonText={enrolledCourses.includes(course.id) ? 'Continue' : 'Enter Course'} />)}
               
               {/* Sight Singing Studio Ad - spans columns 2-3, next to Leadership Development */}

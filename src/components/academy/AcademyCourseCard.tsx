@@ -33,10 +33,10 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
         bg-white 
         border border-border/40
         rounded-xl
-        p-6 sm:p-8
+        p-3 sm:p-6 md:p-8
         flex flex-col
         h-full
-        min-h-[280px]
+        min-h-[180px] sm:min-h-[280px]
         shadow-lg
         hover:shadow-xl
         transition-shadow
@@ -44,19 +44,19 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
         ${className}
       `}>
       {/* Course Code - Elegant serif style */}
-      <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light tracking-wide text-foreground mb-2" style={{
+      <h3 className="text-base sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-light tracking-wide text-foreground mb-1 sm:mb-2" style={{
       fontFamily: 'Georgia, "Times New Roman", serif'
     }}>
         {course.courseCode}
       </h3>
 
       {/* Course Title - Italic style */}
-      <h4 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold text-[#003666] italic mb-4 leading-snug">
+      <h4 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-semibold text-[#003666] italic mb-2 sm:mb-4 leading-snug line-clamp-2">
         {course.title}
       </h4>
 
       {/* Description - Fixed height with truncation */}
-      <p className="text-base sm:text-lg md:text-lg text-muted-foreground leading-relaxed flex-1 mb-6 antialiased">
+      <p className="text-xs sm:text-sm md:text-base lg:text-lg text-muted-foreground leading-relaxed flex-1 mb-3 sm:mb-6 antialiased line-clamp-3 sm:line-clamp-none">
         {truncatedDescription}
       </p>
 
@@ -66,7 +66,7 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
       onEnter(course);
     }} className="
           w-fit
-          px-6 py-2
+          px-3 sm:px-6 py-1.5 sm:py-2
           rounded-full
           border-[#003666]
           text-[#003666]
@@ -75,7 +75,7 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
           hover:text-white
           transition-colors
           font-medium
-          text-sm
+          text-xs sm:text-sm
         ">
         {buttonText}
       </Button>
