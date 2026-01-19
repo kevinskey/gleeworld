@@ -22,7 +22,8 @@ import {
   LayoutDashboard,
   GraduationCap,
   BookOpen,
-  Sofa
+  Sofa,
+  Images
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/constants/permissions";
@@ -96,6 +97,12 @@ export const AppNavigation = () => {
       label: "Modules",
       href: "/modules",
       icon: LayoutDashboard,
+      permission: null
+    },
+    {
+      label: "Photo Gallery",
+      href: "/photo-gallery",
+      icon: Images,
       permission: null
     },
   ];
