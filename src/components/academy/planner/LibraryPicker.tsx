@@ -46,7 +46,7 @@ export const LibraryPicker: React.FC<LibraryPickerProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_media_library')
-        .select('id, title, file_url, thumbnail_url')
+        .select('id, title, file_url')
         .order('created_at', { ascending: false })
         .limit(100);
       
