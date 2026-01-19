@@ -307,24 +307,25 @@ export const LH100ModulesPage: React.FC<LH100ModulesPageProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Admin Controls */}
+    <div className="space-y-3 sm:space-y-4 px-2 sm:px-0">
+      {/* Admin Controls - Responsive grid on mobile */}
       {user && (
-        <div className="flex items-center justify-end gap-2 px-1 flex-wrap">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 px-1">
           {modules.length < 24 && (
             <Button
               size="sm"
               variant="outline"
               onClick={handleAutoGenerate}
               disabled={generating}
-              className="gap-2"
+              className="gap-2 text-xs sm:text-sm"
             >
               {generating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Sparkles className="h-4 w-4" />
               )}
-              {generating ? 'Generating...' : 'Auto-Generate Liturgical Weeks'}
+              <span className="hidden xs:inline">{generating ? 'Generating...' : 'Auto-Generate Liturgical Weeks'}</span>
+              <span className="xs:hidden">{generating ? 'Generating...' : 'Generate Weeks'}</span>
             </Button>
           )}
           <Button
@@ -332,20 +333,22 @@ export const LH100ModulesPage: React.FC<LH100ModulesPageProps> = ({
             variant="outline"
             onClick={handleScrapeUSCCB}
             disabled={scraping}
-            className="gap-2"
+            className="gap-2 text-xs sm:text-sm"
           >
             {scraping ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Download className="h-4 w-4" />
             )}
-            {scraping ? 'Scraping USCCB...' : 'Scrape USCCB Readings (Year C)'}
+            <span className="hidden xs:inline">{scraping ? 'Scraping USCCB...' : 'Scrape USCCB Readings (Year C)'}</span>
+            <span className="xs:hidden">{scraping ? 'Scraping...' : 'Scrape USCCB'}</span>
           </Button>
         </div>
       )}
 
-      <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-240px)] min-h-[600px]">
-        {/* Left Sidebar */}
+      {/* Mobile-first layout: Stack on mobile, side-by-side on desktop */}
+      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 min-h-[60vh] lg:min-h-[600px] lg:h-[calc(100vh-240px)]">
+        {/* Week Selector - Shows as button/sheet on mobile, sidebar on desktop */}
         <WeekSidebar
           modules={modules}
           selectedModuleId={selectedModule?.id || null}
@@ -355,14 +358,14 @@ export const LH100ModulesPage: React.FC<LH100ModulesPageProps> = ({
           canAdd={!!user}
         />
 
-        {/* Main Editor */}
+        {/* Main Editor - Full width on mobile */}
         <Card className="flex-1 overflow-hidden">
           {loading ? (
-            <CardContent className="flex items-center justify-center h-full">
+            <CardContent className="flex items-center justify-center h-64 lg:h-full">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </CardContent>
           ) : selectedModule ? (
-            <CardContent className="p-4 sm:p-6 overflow-y-auto h-full">
+            <CardContent className="p-3 sm:p-4 md:p-6 overflow-y-auto h-full max-h-[70vh] lg:max-h-none">
               <WeeklyModuleEditor
                 module={selectedModule}
                 onUpdate={handleUpdateModule}
@@ -371,11 +374,11 @@ export const LH100ModulesPage: React.FC<LH100ModulesPageProps> = ({
               />
             </CardContent>
           ) : (
-            <CardContent className="flex flex-col items-center justify-center h-full text-center p-8">
-              <Calendar className="h-16 w-16 text-muted-foreground/50 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Select a Week</h3>
-              <p className="text-muted-foreground max-w-md">
-                Choose a week from the sidebar to view and edit its content, learning objectives, and settings.
+            <CardContent className="flex flex-col items-center justify-center h-64 lg:h-full text-center p-4 sm:p-8">
+              <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/50 mb-3 sm:mb-4" />
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">Select a Week</h3>
+              <p className="text-sm text-muted-foreground max-w-md">
+                Choose a week from above to view and edit its content, learning objectives, and settings.
               </p>
               {user && modules.length === 0 && (
                 <Button 

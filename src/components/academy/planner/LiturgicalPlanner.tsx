@@ -1,9 +1,10 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Music, BookOpen, FileText, Loader2, Library, FileMusic, Headphones, ScrollText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, Music, BookOpen, FileText, Loader2, Library, FileMusic, Headphones, ScrollText, ChevronDown } from 'lucide-react';
 import { useLiturgicalWeeks, LiturgicalWeek } from '@/hooks/useLiturgicalWeeks';
 import { useUSCCBSync } from '@/hooks/useUSCCBSync';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +13,8 @@ import { PlannerMusicTab } from './PlannerMusicTab';
 import { PlannerPsalmTab } from './PlannerPsalmTab';
 import { PlannerMediaTab } from './PlannerMediaTab';
 import { format, parseISO } from 'date-fns';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Lazy load heavy library components
 const SheetMusicLibrary = lazy(() => import('@/components/music-library/SheetMusicLibrary').then(m => ({ default: m.SheetMusicLibrary })));
@@ -48,6 +51,8 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
   const [activeTab, setActiveTab] = useState('overview');
   const { syncLiturgicalData, liturgicalData, isLoading: isSyncingLiturgical, clearData } = useUSCCBSync();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
+  const [mobileWeekOpen, setMobileWeekOpen] = useState(false);
 
   // Sync liturgical data when week changes
   useEffect(() => {
@@ -60,77 +65,136 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
     return () => clearData();
   }, [selectedWeek?.id]);
 
+  const handleSelectWeek = (week: LiturgicalWeek) => {
+    setSelectedWeek(week);
+    setMobileWeekOpen(false);
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-lg">Loading Planner...</span>
+      <div className="flex items-center justify-center p-8 sm:p-12">
+        <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
+        <span className="ml-2 text-base sm:text-lg">Loading Planner...</span>
       </div>
     );
   }
 
-  return (
-    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-200px)] min-h-[600px]">
-      {/* Left Sidebar - Sunday List */}
-      <Card className="lg:w-72 xl:w-80 flex-shrink-0">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Calendar className="h-5 w-5 text-primary" />
-            Sundays
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <ScrollArea className="h-[calc(100vh-300px)] min-h-[400px]">
-            <div className="space-y-1 p-2">
-              {weeks.map((week) => {
-                const dateStr = week.sunday_date || week.week_of;
-                const date = dateStr ? parseISO(dateStr) : null;
-                const isSelected = selectedWeek?.id === week.id;
-                
-                return (
-                  <button
-                    key={week.id}
-                    onClick={() => setSelectedWeek(week)}
-                    className={`w-full text-left p-3 rounded-lg transition-all ${
-                      isSelected 
-                        ? 'bg-primary text-primary-foreground shadow-md' 
-                        : 'hover:bg-muted/50 border border-transparent hover:border-border'
-                    }`}
-                  >
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between">
-                        <span className={`font-medium text-sm ${isSelected ? 'text-primary-foreground' : 'text-foreground'}`}>
-                          {date ? format(date, 'MMM d, yyyy') : 'No date'}
-                        </span>
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-[10px] px-1.5 py-0 ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : getSeasonColor(week.season)}`}
-                        >
-                          {week.season || 'Unknown'}
-                        </Badge>
-                      </div>
-                      <span className={`text-sm font-semibold ${isSelected ? 'text-primary-foreground' : 'text-foreground'}`}>
-                        {week.sunday_title || week.title || 'Untitled'}
-                      </span>
-                      {week.psalm && (
-                        <span className={`text-xs ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
-                          {week.psalm}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-              {weeks.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No Sundays configured</p>
-                </div>
+  // Reusable Sunday list component
+  const SundayList = ({ compact = false, onSelect }: { compact?: boolean; onSelect?: (week: LiturgicalWeek) => void }) => (
+    <div className={`space-y-1 ${compact ? 'p-1' : 'p-2'}`}>
+      {weeks.map((week) => {
+        const dateStr = week.sunday_date || week.week_of;
+        const date = dateStr ? parseISO(dateStr) : null;
+        const isSelected = selectedWeek?.id === week.id;
+        
+        return (
+          <button
+            key={week.id}
+            onClick={() => onSelect ? onSelect(week) : setSelectedWeek(week)}
+            className={`w-full text-left ${compact ? 'p-2' : 'p-3'} rounded-lg transition-all ${
+              isSelected 
+                ? 'bg-primary text-primary-foreground shadow-md' 
+                : 'hover:bg-muted/50 border border-transparent hover:border-border'
+            }`}
+          >
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className={`font-medium ${compact ? 'text-xs' : 'text-sm'} ${isSelected ? 'text-primary-foreground' : 'text-foreground'}`}>
+                  {date ? format(date, 'MMM d, yyyy') : 'No date'}
+                </span>
+                <Badge 
+                  variant="secondary" 
+                  className={`text-[10px] px-1.5 py-0 shrink-0 ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : getSeasonColor(week.season)}`}
+                >
+                  {week.season || 'Unknown'}
+                </Badge>
+              </div>
+              <span className={`${compact ? 'text-xs' : 'text-sm'} font-semibold ${isSelected ? 'text-primary-foreground' : 'text-foreground'}`}>
+                {week.sunday_title || week.title || 'Untitled'}
+              </span>
+              {week.psalm && (
+                <span className={`text-xs ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                  {week.psalm}
+                </span>
               )}
             </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+          </button>
+        );
+      })}
+      {weeks.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">No Sundays configured</p>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col gap-3 sm:gap-4 px-2 sm:px-0">
+      {/* Mobile Sunday Selector - Shows as button that opens sheet */}
+      {isMobile && (
+        <Sheet open={mobileWeekOpen} onOpenChange={setMobileWeekOpen}>
+          <SheetTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full justify-between h-auto py-3 px-4"
+            >
+              <div className="flex items-center gap-3 text-left flex-1 min-w-0">
+                <Calendar className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">
+                    {selectedWeek?.sunday_title || selectedWeek?.title || 'Select a Sunday'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedWeek 
+                      ? format(parseISO(selectedWeek.sunday_date || selectedWeek.week_of), 'MMM d, yyyy')
+                      : `${weeks.length} Sundays available`
+                    }
+                  </p>
+                </div>
+                {selectedWeek?.season && (
+                  <Badge className={`${getSeasonColor(selectedWeek.season)} text-[10px] shrink-0`}>
+                    {selectedWeek.season}
+                  </Badge>
+                )}
+              </div>
+              <ChevronDown className="h-5 w-5 text-muted-foreground shrink-0 ml-2" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[70vh] rounded-t-xl">
+            <SheetHeader className="pb-2 border-b">
+              <SheetTitle className="flex items-center gap-2 text-lg">
+                <Calendar className="h-5 w-5 text-primary" />
+                Sundays
+              </SheetTitle>
+              <p className="text-xs text-muted-foreground">
+                {weeks.length} Sundays • Tap to select
+              </p>
+            </SheetHeader>
+            <ScrollArea className="h-[calc(70vh-100px)] mt-2">
+              <SundayList compact onSelect={handleSelectWeek} />
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
+      )}
+
+      {/* Main Layout - Stack on mobile, side by side on desktop */}
+      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 min-h-[60vh] lg:min-h-[600px] lg:h-[calc(100vh-200px)]">
+        {/* Desktop Left Sidebar - Sunday List - Hidden on mobile */}
+        <Card className="hidden lg:block lg:w-72 xl:w-80 shrink-0">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Calendar className="h-5 w-5 text-primary" />
+              Sundays
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[calc(100vh-300px)] min-h-[400px]">
+              <SundayList />
+            </ScrollArea>
+          </CardContent>
+        </Card>
 
       {/* Main Workspace */}
       <Card className="flex-1 overflow-hidden">
@@ -160,7 +224,8 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
             </CardHeader>
             <CardContent className="p-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-                <TabsList className="w-full justify-start rounded-none border-b bg-muted/30 p-0 h-auto flex-wrap">
+                <ScrollArea className="w-full whitespace-nowrap">
+                  <TabsList className="w-max min-w-full justify-start rounded-none border-b bg-muted/30 p-0 h-auto">
                   <TabsTrigger 
                     value="overview" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-4"
@@ -289,6 +354,7 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
           </div>
         )}
       </Card>
+      </div>
     </div>
   );
 };
