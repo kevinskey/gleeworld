@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Music, BookOpen, FileText, Loader2, Library, FileMusic, Headphones } from 'lucide-react';
+import { Calendar, Music, BookOpen, FileText, Loader2, Library, FileMusic, Headphones, ScrollText } from 'lucide-react';
 import { useLiturgicalWeeks, LiturgicalWeek } from '@/hooks/useLiturgicalWeeks';
 import { useUSCCBSync } from '@/hooks/useUSCCBSync';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +17,7 @@ import { format, parseISO } from 'date-fns';
 const SheetMusicLibrary = lazy(() => import('@/components/music-library/SheetMusicLibrary').then(m => ({ default: m.SheetMusicLibrary })));
 const FinderMediaLibrary = lazy(() => import('@/components/media-library/FinderMediaLibrary').then(m => ({ default: m.FinderMediaLibrary })));
 const MusicXMLLibrary = lazy(() => import('@/components/practice-studio/MusicXMLLibrary').then(m => ({ default: m.MusicXMLLibrary })));
+const USCCBReadingsScroll = lazy(() => import('./USCCBReadingsScroll').then(m => ({ default: m.USCCBReadingsScroll })));
 
 interface LiturgicalPlannerProps {
   isAdmin?: boolean;
@@ -209,6 +210,13 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
                     <FileMusic className="h-4 w-4 mr-2" />
                     MusicXML
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="usccb-readings" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3 px-4"
+                  >
+                    <ScrollText className="h-4 w-4 mr-2" />
+                    USCCB Readings
+                  </TabsTrigger>
                 </TabsList>
 
                 <ScrollArea className="h-[calc(100vh-380px)] min-h-[350px]">
@@ -260,6 +268,11 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
                   <TabsContent value="musicxml" className="m-0 p-4">
                     <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /><span className="ml-2">Loading MusicXML Library...</span></div>}>
                       <MusicXMLLibrary user={user} />
+                    </Suspense>
+                  </TabsContent>
+                  <TabsContent value="usccb-readings" className="m-0">
+                    <Suspense fallback={<div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /><span className="ml-2">Loading USCCB Readings...</span></div>}>
+                      <USCCBReadingsScroll />
                     </Suspense>
                   </TabsContent>
                 </ScrollArea>
