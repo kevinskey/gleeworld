@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -10,10 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, Plus, Trash2, ChevronUp, ChevronDown, FileAudio, Music } from 'lucide-react';
+import { Loader2, Search, Plus, Trash2, ChevronUp, ChevronDown, FileAudio, Music, Upload } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-
+import { Label } from '@/components/ui/label';
 interface PlaylistMediaManagerProps {
   playlistId: string;
   playlistTitle: string;
@@ -50,6 +50,8 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
   const [availableMedia, setAvailableMedia] = useState<MediaItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('current');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchPlaylistMedia = useCallback(async () => {
     try {
@@ -182,6 +184,90 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    let successCount = 0;
+
+    try {
+      for (const file of Array.from(files)) {
+        if (!file.type.includes('audio') && !file.name.toLowerCase().endsWith('.mp3')) {
+          toast({ title: `Skipped ${file.name}`, description: 'Not an audio file', variant: 'destructive' });
+          continue;
+        }
+
+        // Generate unique filename
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `audio/${fileName}`;
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('media-library')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          toast({ title: `Failed to upload ${file.name}`, description: uploadError.message, variant: 'destructive' });
+          continue;
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('media-library')
+          .getPublicUrl(filePath);
+
+        // Add to media library
+        const { data: mediaData, error: mediaError } = await supabase
+          .from('gw_media_library')
+          .insert({
+            title: file.name.replace(/\.[^/.]+$/, ''),
+            file_url: urlData.publicUrl,
+            file_path: filePath,
+            file_type: file.type || 'audio/mpeg',
+            file_size: file.size,
+            category: 'audio',
+            original_filename: file.name
+          })
+          .select()
+          .single();
+
+        if (mediaError) {
+          console.error('Media library error:', mediaError);
+          toast({ title: `Failed to save ${file.name}`, description: mediaError.message, variant: 'destructive' });
+          continue;
+        }
+
+        // Add to playlist
+        const maxPosition = playlistMedia.length + successCount;
+        await supabase
+          .from('gw_course_playlist_media')
+          .insert({
+            playlist_id: playlistId,
+            media_id: mediaData.id,
+            position: maxPosition
+          });
+
+        successCount++;
+      }
+
+      if (successCount > 0) {
+        toast({ title: `Added ${successCount} track(s) to playlist` });
+        fetchPlaylistMedia();
+        fetchAvailableMedia();
+      }
+    } catch (err: any) {
+      toast({ title: 'Upload error', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const currentMediaIds = new Set(playlistMedia.map(pm => pm.media_id));
   
   const filteredAvailable = availableMedia.filter(m => 
@@ -282,21 +368,50 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
           </TabsContent>
 
           <TabsContent value="add" className="mt-4">
+            {/* Upload Section */}
+            <div className="mb-4 p-4 border-2 border-dashed rounded-lg bg-muted/30">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="audio/*,.mp3"
+                multiple
+                className="hidden"
+                id="mp3-upload"
+              />
+              <Label
+                htmlFor="mp3-upload"
+                className="flex flex-col items-center gap-2 cursor-pointer"
+              >
+                {uploading ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                ) : (
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                )}
+                <span className="text-sm font-medium">
+                  {uploading ? 'Uploading...' : 'Click to upload MP3 files'}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Files will be added to Media Library and this playlist
+                </span>
+              </Label>
+            </div>
+
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search audio files..."
+                placeholder="Search existing audio files..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
 
-            <ScrollArea className="h-[350px]">
+            <ScrollArea className="h-[280px]">
               {filteredAvailable.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>No audio files available to add.</p>
-                  <p className="text-sm">Upload MP3s in the Media Library first.</p>
+                  <p className="text-sm">Upload MP3s above or browse existing files.</p>
                 </div>
               ) : (
                 <div className="space-y-2 pr-4">
