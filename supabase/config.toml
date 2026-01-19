@@ -393,3 +393,6 @@ verify_jwt = false
 
 [functions.scrape-usccb-readings]
 verify_jwt = false
+
+[functions.scrape-images]
+verify_jwt = false

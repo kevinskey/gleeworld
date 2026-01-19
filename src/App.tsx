@@ -38,7 +38,7 @@ import NotationBasics from "./pages/music-theory/NotationBasics";
 import GleeAcademy from "./pages/GleeAcademy";
 import Contact from "./pages/Contact";
 import GleeCamGallery from "./pages/GleeCamGallery";
-
+import PhotoGalleryPage from "./pages/PhotoGalleryPage";
 
 // Unified Course Pages
 import Mus070Page from "./pages/courses/Mus070Page";
@@ -1402,6 +1402,14 @@ const App = () => {
                                 element={
                                   <ProtectedRoute>
                                     <MediaLibrary />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/photo-gallery" 
+                                element={
+                                  <ProtectedRoute>
+                                    <PhotoGalleryPage />
                                   </ProtectedRoute>
                                 } 
                               />
