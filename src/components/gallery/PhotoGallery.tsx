@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
+import heic2any from 'heic2any';
 
 interface GalleryPhoto {
   id: string;
@@ -223,6 +224,74 @@ export const PhotoGallery: React.FC = () => {
   }, [photos, searchQuery, organizeBy, activeFilter, gleeCamCategories]);
 
   const isVideo = (photo: GalleryPhoto) => photo.file_type?.includes('video');
+  const isHeic = (photo: GalleryPhoto) => 
+    photo.file_type?.toLowerCase().includes('heic') || 
+    photo.file_url?.toLowerCase().endsWith('.heic');
+
+  // HEIC-aware image component with conversion
+  const HeicImage = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+    const [imageSrc, setImageSrc] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+      const isHeicFile = src.toLowerCase().includes('.heic');
+      
+      if (!isHeicFile) {
+        setImageSrc(src);
+        setLoading(false);
+        return;
+      }
+
+      // Convert HEIC to JPEG
+      const convertHeic = async () => {
+        try {
+          const response = await fetch(src);
+          const blob = await response.blob();
+          const convertedBlob = await heic2any({
+            blob,
+            toType: 'image/jpeg',
+            quality: 0.8
+          });
+          
+          const result = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          const url = URL.createObjectURL(result);
+          setImageSrc(url);
+        } catch (err) {
+          console.error('HEIC conversion error:', err);
+          setError(true);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      convertHeic();
+
+      return () => {
+        if (imageSrc && imageSrc.startsWith('blob:')) {
+          URL.revokeObjectURL(imageSrc);
+        }
+      };
+    }, [src]);
+
+    if (loading) {
+      return (
+        <div className={`flex items-center justify-center bg-muted ${className}`}>
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+
+    if (error || !imageSrc) {
+      return (
+        <div className={`flex items-center justify-center bg-muted ${className}`}>
+          <ImageIcon className="h-8 w-8 text-muted-foreground" />
+        </div>
+      );
+    }
+
+    return <img src={imageSrc} alt={alt} className={className} />;
+  };
 
   const handleDelete = async (photo: GalleryPhoto) => {
     setIsDeleting(true);
@@ -290,7 +359,7 @@ export const PhotoGallery: React.FC = () => {
               </div>
             </>
           ) : (
-            <img 
+            <HeicImage 
               src={photo.file_url} 
               alt={photo.title || 'Gallery photo'}
               className="w-full h-full object-cover transition-transform group-hover:scale-105"
@@ -368,7 +437,7 @@ export const PhotoGallery: React.FC = () => {
                 </div>
               </>
             ) : (
-              <img src={photo.file_url} alt={photo.title || ''} className="w-full h-full object-cover" />
+              <HeicImage src={photo.file_url} alt={photo.title || ''} className="w-full h-full object-cover" />
             )}
           </div>
           <div className="flex-1 min-w-0">
