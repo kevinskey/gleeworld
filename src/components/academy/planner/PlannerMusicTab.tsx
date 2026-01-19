@@ -4,12 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Music, Save, Loader2, Play, X, Sparkles, Check } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Music, Save, Loader2, Play, X, Sparkles, Check, Library, FileText, Music2, FileAudio, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
+import { LibraryPicker, LinkedResource } from './LibraryPicker';
+import { getSignedUrl } from '@/utils/storage';
 
 interface PlannerMusicTabProps {
   weekId: string;
@@ -45,6 +48,12 @@ interface MusicEntry {
   title: string;
   hymn_number: string;
   youtube_url: string;
+  sheet_music_id?: string | null;
+  media_id?: string | null;
+  linked_resources?: {
+    sheet_music?: { id: string; title: string; pdf_url?: string | null; xml_url?: string | null; xml_content?: string | null };
+    media?: { id: string; title: string; file_url?: string | null; media_type?: string };
+  };
 }
 
 interface AISuggestion {

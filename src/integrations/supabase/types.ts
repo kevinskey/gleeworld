@@ -20606,10 +20606,12 @@ export type Database = {
           hymn_number: string | null
           id: string
           key: string | null
+          media_id: string | null
           moment: string | null
           performance_notes: string | null
           rehearsal_notes: string | null
           service_order: number | null
+          sheet_music_id: string | null
           status: string | null
           tempo: string | null
           title: string | null
@@ -20624,10 +20626,12 @@ export type Database = {
           hymn_number?: string | null
           id?: string
           key?: string | null
+          media_id?: string | null
           moment?: string | null
           performance_notes?: string | null
           rehearsal_notes?: string | null
           service_order?: number | null
+          sheet_music_id?: string | null
           status?: string | null
           tempo?: string | null
           title?: string | null
@@ -20642,10 +20646,12 @@ export type Database = {
           hymn_number?: string | null
           id?: string
           key?: string | null
+          media_id?: string | null
           moment?: string | null
           performance_notes?: string | null
           rehearsal_notes?: string | null
           service_order?: number | null
+          sheet_music_id?: string | null
           status?: string | null
           tempo?: string | null
           title?: string | null
@@ -20655,6 +20661,20 @@ export type Database = {
           youtube_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "liturgical_music_plan_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "gw_media_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liturgical_music_plan_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "liturgical_music_plan_week_id_fkey"
             columns: ["week_id"]
