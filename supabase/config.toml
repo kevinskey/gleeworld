@@ -390,3 +390,6 @@ verify_jwt = false
 
 [functions.suggest-liturgical-music]
 verify_jwt = false
+
+[functions.scrape-usccb-readings]
+verify_jwt = true

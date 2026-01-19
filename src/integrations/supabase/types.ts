@@ -26429,6 +26429,72 @@ export type Database = {
         }
         Relationships: []
       }
+      usccb_readings: {
+        Row: {
+          created_at: string | null
+          first_reading: string | null
+          first_reading_reference: string | null
+          full_content: string | null
+          gospel: string | null
+          gospel_acclamation: string | null
+          gospel_reference: string | null
+          id: string
+          liturgical_date: string
+          liturgical_day: string
+          liturgical_season: string | null
+          psalm_response: string | null
+          responsorial_psalm: string | null
+          scraped_at: string | null
+          second_reading: string | null
+          second_reading_reference: string | null
+          source_url: string | null
+          updated_at: string | null
+          year_cycle: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          first_reading?: string | null
+          first_reading_reference?: string | null
+          full_content?: string | null
+          gospel?: string | null
+          gospel_acclamation?: string | null
+          gospel_reference?: string | null
+          id?: string
+          liturgical_date: string
+          liturgical_day: string
+          liturgical_season?: string | null
+          psalm_response?: string | null
+          responsorial_psalm?: string | null
+          scraped_at?: string | null
+          second_reading?: string | null
+          second_reading_reference?: string | null
+          source_url?: string | null
+          updated_at?: string | null
+          year_cycle?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          first_reading?: string | null
+          first_reading_reference?: string | null
+          full_content?: string | null
+          gospel?: string | null
+          gospel_acclamation?: string | null
+          gospel_reference?: string | null
+          id?: string
+          liturgical_date?: string
+          liturgical_day?: string
+          liturgical_season?: string | null
+          psalm_response?: string | null
+          responsorial_psalm?: string | null
+          scraped_at?: string | null
+          second_reading?: string | null
+          second_reading_reference?: string | null
+          source_url?: string | null
+          updated_at?: string | null
+          year_cycle?: string | null
+        }
+        Relationships: []
+      }
       user_dashboard_categories: {
         Row: {
           category_id: string
