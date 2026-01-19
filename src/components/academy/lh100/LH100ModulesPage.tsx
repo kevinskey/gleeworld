@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Loader2, BookOpen, Sparkles, RefreshCw } from 'lucide-react';
+import { Calendar, Loader2, BookOpen, Sparkles, RefreshCw, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -117,6 +117,7 @@ export const LH100ModulesPage: React.FC<LH100ModulesPageProps> = ({
   const [modules, setModules] = useState<LH100Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [scraping, setScraping] = useState(false);
   const [selectedModule, setSelectedModule] = useState<LH100Module | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
 
@@ -279,24 +280,66 @@ export const LH100ModulesPage: React.FC<LH100ModulesPageProps> = ({
     }
   };
 
+  // Scrape USCCB readings
+  const handleScrapeUSCCB = async () => {
+    if (!user) {
+      toast.error('You must be logged in');
+      return;
+    }
+
+    setScraping(true);
+    toast.info('Starting USCCB scrape for Year C... This may take a few minutes.');
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-usccb-readings', {
+        body: { cycle: 'C', batchSize: 5 }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Scraped ${data?.scraped || 0} USCCB readings successfully!`);
+    } catch (error) {
+      console.error('Error scraping USCCB:', error);
+      toast.error('Failed to scrape USCCB readings');
+    } finally {
+      setScraping(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Admin Controls */}
-      {user && modules.length < 24 && (
-        <div className="flex items-center justify-end gap-2 px-1">
+      {user && (
+        <div className="flex items-center justify-end gap-2 px-1 flex-wrap">
+          {modules.length < 24 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleAutoGenerate}
+              disabled={generating}
+              className="gap-2"
+            >
+              {generating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {generating ? 'Generating...' : 'Auto-Generate Liturgical Weeks'}
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"
-            onClick={handleAutoGenerate}
-            disabled={generating}
+            onClick={handleScrapeUSCCB}
+            disabled={scraping}
             className="gap-2"
           >
-            {generating ? (
+            {scraping ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Sparkles className="h-4 w-4" />
+              <Download className="h-4 w-4" />
             )}
-            {generating ? 'Generating...' : 'Auto-Generate Liturgical Weeks'}
+            {scraping ? 'Scraping USCCB...' : 'Scrape USCCB Readings (Year C)'}
           </Button>
         </div>
       )}
