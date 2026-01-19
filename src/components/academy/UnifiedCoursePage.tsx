@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers, Archive, Images } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -488,25 +489,55 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 console.log('Tab changed to:', val);
                 setActiveTab(val);
               }}>
-                <TabsList className="w-full grid grid-cols-4 h-auto">
-                  <TabsTrigger value="home" className="text-xs px-2">Home</TabsTrigger>
-                  <TabsTrigger value="messages" className="text-xs px-2">Messages</TabsTrigger>
-                  <TabsTrigger value="assignments" className="text-xs px-2">Assignments</TabsTrigger>
-                  <TabsTrigger value="tests" className="text-xs px-2">Tests</TabsTrigger>
-                </TabsList>
-                <TabsList className={`w-full grid h-auto mt-1 ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'}`}>
-                  <TabsTrigger value="lounge" className="text-xs px-2">Lounge</TabsTrigger>
-                  <TabsTrigger value="grades" className="text-xs px-2">Grades</TabsTrigger>
-                  <TabsTrigger value="syllabus" className="text-xs px-2">Syllabus</TabsTrigger>
-                  <TabsTrigger value="resources" className="text-xs px-2">Resources</TabsTrigger>
-                  {isAdmin && <TabsTrigger value="instructor" className="text-xs px-2" onClick={e => {
-                    e.preventDefault();
-                    navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`);
-                  }}>
-                      <Settings className="h-3 w-3 mr-1" />
-                      Instructor
-                    </TabsTrigger>}
-                </TabsList>
+                <ScrollArea className="w-full whitespace-nowrap pb-2">
+                  <TabsList className="inline-flex w-max gap-1 h-auto bg-muted/50 p-1">
+                    {course.courseCode === 'LH 100' ? (
+                      <>
+                        <TabsTrigger value="home" className="text-xs px-3 py-2"><Home className="h-3 w-3 mr-1" />Home</TabsTrigger>
+                        <TabsTrigger value="syllabus" className="text-xs px-3 py-2"><FileText className="h-3 w-3 mr-1" />Syllabus</TabsTrigger>
+                        <TabsTrigger value="planner" className="text-xs px-3 py-2"><BookMarked className="h-3 w-3 mr-1" />Planner</TabsTrigger>
+                        <TabsTrigger value="photo-gallery" className="text-xs px-3 py-2"><Images className="h-3 w-3 mr-1" />Photos</TabsTrigger>
+                        <TabsTrigger value="calendar" className="text-xs px-3 py-2"><Calendar className="h-3 w-3 mr-1" />Calendar</TabsTrigger>
+                        <TabsTrigger value="video-library" className="text-xs px-3 py-2"><Video className="h-3 w-3 mr-1" />Videos</TabsTrigger>
+                        <TabsTrigger value="playlist" className="text-xs px-3 py-2"><Headphones className="h-3 w-3 mr-1" />Playlist</TabsTrigger>
+                        <TabsTrigger value="announcements" className="text-xs px-3 py-2"><Bell className="h-3 w-3 mr-1" />Announce</TabsTrigger>
+                        <TabsTrigger value="messages" className="text-xs px-3 py-2"><MessagesSquare className="h-3 w-3 mr-1" />Messages</TabsTrigger>
+                        <TabsTrigger value="assignments" className="text-xs px-3 py-2"><ClipboardList className="h-3 w-3 mr-1" />Assign</TabsTrigger>
+                        <TabsTrigger value="journals" className="text-xs px-3 py-2"><PenLine className="h-3 w-3 mr-1" />Journals</TabsTrigger>
+                        <TabsTrigger value="tests" className="text-xs px-3 py-2"><FileCheck className="h-3 w-3 mr-1" />Tests</TabsTrigger>
+                        <TabsTrigger value="polls" className="text-xs px-3 py-2"><BarChart className="h-3 w-3 mr-1" />Polls</TabsTrigger>
+                        <TabsTrigger value="resources" className="text-xs px-3 py-2"><Library className="h-3 w-3 mr-1" />Resources</TabsTrigger>
+                        <TabsTrigger value="grades" className="text-xs px-3 py-2"><Trophy className="h-3 w-3 mr-1" />Grades</TabsTrigger>
+                        <TabsTrigger value="attendance" className="text-xs px-3 py-2"><UserCheck className="h-3 w-3 mr-1" />Attend</TabsTrigger>
+                        <TabsTrigger value="archives" className="text-xs px-3 py-2"><Archive className="h-3 w-3 mr-1" />Archives</TabsTrigger>
+                        {isAdmin && <TabsTrigger value="instructor" className="text-xs px-3 py-2" onClick={e => {
+                          e.preventDefault();
+                          navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`);
+                        }}>
+                          <Settings className="h-3 w-3 mr-1" />Instructor
+                        </TabsTrigger>}
+                      </>
+                    ) : (
+                      <>
+                        <TabsTrigger value="home" className="text-xs px-3 py-2">Home</TabsTrigger>
+                        <TabsTrigger value="messages" className="text-xs px-3 py-2">Messages</TabsTrigger>
+                        <TabsTrigger value="assignments" className="text-xs px-3 py-2">Assignments</TabsTrigger>
+                        <TabsTrigger value="tests" className="text-xs px-3 py-2">Tests</TabsTrigger>
+                        <TabsTrigger value="lounge" className="text-xs px-3 py-2">Lounge</TabsTrigger>
+                        <TabsTrigger value="grades" className="text-xs px-3 py-2">Grades</TabsTrigger>
+                        <TabsTrigger value="syllabus" className="text-xs px-3 py-2">Syllabus</TabsTrigger>
+                        <TabsTrigger value="resources" className="text-xs px-3 py-2">Resources</TabsTrigger>
+                        {isAdmin && <TabsTrigger value="instructor" className="text-xs px-3 py-2" onClick={e => {
+                          e.preventDefault();
+                          navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`);
+                        }}>
+                          <Settings className="h-3 w-3 mr-1" />Instructor
+                        </TabsTrigger>}
+                      </>
+                    )}
+                  </TabsList>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
               </Tabs>
             </div>
 
