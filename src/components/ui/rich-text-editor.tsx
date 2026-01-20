@@ -48,6 +48,8 @@ import {
   Heading3,
   Loader2,
   Search,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -131,6 +133,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
   const [imageWidth, setImageWidth] = useState('300');
   const [imageAlign, setImageAlign] = useState<'inline' | 'left' | 'center' | 'right'>('inline');
+  const [toolbarExpanded, setToolbarExpanded] = useState(false);
 
   // Fetch media library images when dialog opens
   useEffect(() => {
@@ -421,8 +424,163 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   return (
     <>
       <div className={`border rounded-lg overflow-hidden bg-background ${className}`}>
-        {/* Toolbar Row 1 - History, Font, Size */}
-        <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
+        {/* Mobile Compact Toolbar - Always visible on mobile */}
+        <div className="flex sm:hidden items-center justify-between gap-1 p-2 border-b bg-muted/30">
+          <div className="flex items-center gap-1 flex-wrap flex-1">
+            <ToolbarButton onClick={() => exec('bold')} icon={Bold} title="Bold" />
+            <ToolbarButton onClick={() => exec('italic')} icon={Italic} title="Italic" />
+            <ToolbarButton onClick={() => exec('underline')} icon={Underline} title="Underline" />
+            <ToolbarDivider />
+            <ToolbarButton onClick={() => exec('insertUnorderedList')} icon={List} title="Bullet List" />
+            <ToolbarButton onClick={() => exec('insertOrderedList')} icon={ListOrdered} title="Numbered List" />
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-xs flex items-center gap-1"
+            onClick={() => setToolbarExpanded(!toolbarExpanded)}
+          >
+            {toolbarExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <span className="sr-only sm:not-sr-only">More</span>
+          </Button>
+        </div>
+
+        {/* Mobile Expanded Toolbar - Hidden by default on mobile */}
+        {toolbarExpanded && (
+          <div className="sm:hidden flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
+            <ToolbarButton onClick={() => exec('undo')} icon={Undo} title="Undo" />
+            <ToolbarButton onClick={() => exec('redo')} icon={Redo} title="Redo" />
+            <ToolbarDivider />
+            
+            {/* Font Family - Compact on mobile */}
+            <Select onValueChange={(val) => exec('fontName', val)}>
+              <SelectTrigger className="h-8 w-28 text-xs">
+                <SelectValue placeholder="Font" />
+              </SelectTrigger>
+              <SelectContent className="max-h-80">
+                {FONT_FAMILIES.map((font) => (
+                  <SelectItem key={font.value} value={font.value} style={{ fontFamily: font.value }} className="text-sm">
+                    {font.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Font Size */}
+            <Select onValueChange={(val) => exec('fontSize', val)}>
+              <SelectTrigger className="h-8 w-20 text-xs">
+                <SelectValue placeholder="Size" />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_SIZES.map((size) => (
+                  <SelectItem key={size.value} value={size.value} className="text-xs">
+                    {size.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <ToolbarDivider />
+            <ToolbarButton onClick={() => exec('formatBlock', 'h1')} icon={Heading1} title="Heading 1" />
+            <ToolbarButton onClick={() => exec('formatBlock', 'h2')} icon={Heading2} title="Heading 2" />
+            <ToolbarButton onClick={() => exec('formatBlock', 'h3')} icon={Heading3} title="Heading 3" />
+            <ToolbarButton onClick={() => exec('formatBlock', 'p')} icon={Type} title="Paragraph" />
+            
+            <ToolbarDivider />
+            <ToolbarButton onClick={() => exec('strikeThrough')} icon={Strikethrough} title="Strikethrough" />
+            
+            {/* Text Color */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Text Color">
+                  <Palette className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2" align="start">
+                <div className="grid grid-cols-10 gap-1">
+                  {COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => exec('foreColor', color)}
+                      className="w-5 h-5 rounded border border-border hover:scale-110 transition-transform"
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <ToolbarDivider />
+            <ToolbarButton onClick={() => exec('formatBlock', 'blockquote')} icon={Quote} title="Quote" />
+            <ToolbarButton onClick={() => exec('justifyLeft')} icon={AlignLeft} title="Align Left" />
+            <ToolbarButton onClick={() => exec('justifyCenter')} icon={AlignCenter} title="Align Center" />
+            <ToolbarButton onClick={() => exec('justifyRight')} icon={AlignRight} title="Align Right" />
+            
+            <ToolbarDivider />
+            
+            {/* Link */}
+            <Popover open={showLinkPopover} onOpenChange={setShowLinkPopover}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Insert Link">
+                  <LinkIcon className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="start">
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Insert Link</Label>
+                  <Input
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    placeholder="https://example.com"
+                    onKeyDown={(e) => e.key === 'Enter' && insertLink()}
+                  />
+                  <Button size="sm" onClick={insertLink} className="w-full">Insert Link</Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Image */}
+            <ToolbarButton 
+              onClick={() => {
+                saveSelection();
+                setShowMediaLibrary(true);
+              }} 
+              icon={Image} 
+              title="Insert Image" 
+            />
+
+            {/* Video */}
+            <Popover open={showVideoPopover} onOpenChange={setShowVideoPopover}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Insert Video">
+                  <Video className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="start">
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Insert Video</Label>
+                  <p className="text-xs text-muted-foreground">Paste YouTube or Vimeo URL</p>
+                  <Input
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://youtube.com/watch?v=..."
+                    onKeyDown={(e) => e.key === 'Enter' && insertVideo()}
+                  />
+                  <Button size="sm" onClick={insertVideo} className="w-full">Insert Video</Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <ToolbarDivider />
+            <ToolbarButton onClick={() => exec('insertHorizontalRule')} icon={Minus} title="Horizontal Line" />
+            <ToolbarButton onClick={() => exec('removeFormat')} icon={RemoveFormatting} title="Clear Formatting" />
+          </div>
+        )}
+
+        {/* Desktop Toolbar Row 1 - History, Font, Size (hidden on mobile) */}
+        <div className="hidden sm:flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
           <ToolbarButton onClick={() => exec('undo')} icon={Undo} title="Undo" />
           <ToolbarButton onClick={() => exec('redo')} icon={Redo} title="Redo" />
           <ToolbarDivider />
@@ -464,8 +622,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <ToolbarButton onClick={() => exec('formatBlock', 'p')} icon={Type} title="Paragraph" />
         </div>
 
-        {/* Toolbar Row 2 - Formatting */}
-        <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
+        {/* Desktop Toolbar Row 2 - Formatting (hidden on mobile) */}
+        <div className="hidden sm:flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
           <ToolbarButton onClick={() => exec('bold')} icon={Bold} title="Bold (Ctrl+B)" />
           <ToolbarButton onClick={() => exec('italic')} icon={Italic} title="Italic (Ctrl+I)" />
           <ToolbarButton onClick={() => exec('underline')} icon={Underline} title="Underline (Ctrl+U)" />
