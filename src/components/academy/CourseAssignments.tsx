@@ -83,12 +83,12 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
       // Fetch submissions for current user
       if (user && data) {
         const { data: submissions } = await supabase
-          .from('gw_course_submissions')
-          .select('assignment_id, status, grade')
-          .eq('student_id', user.id)
+          .from('gw_assignment_submissions')
+          .select('assignment_id, status, score_value')
+          .eq('user_id', user.id)
           .in('assignment_id', data.map(a => a.id));
 
-        const submissionMap = new Map(submissions?.map(s => [s.assignment_id, s]) || []);
+        const submissionMap = new Map(submissions?.map(s => [s.assignment_id, { status: s.status, grade: s.score_value }]) || []);
 
         const enrichedAssignments = data.map(assignment => ({
           ...assignment,
