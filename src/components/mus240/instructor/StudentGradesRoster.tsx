@@ -39,33 +39,38 @@ export const StudentGradesRoster: React.FC = () => {
       const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
 
       // Get all enrolled students from unified gw_course_enrollments table
-      const result = await supabase
+      const { data: enrollments, error: enrollError } = await supabase
         .from('gw_course_enrollments')
-        .select('user_id, gw_profiles!gw_course_enrollments_user_id_fkey(user_id, full_name, email)')
+        .select('user_id')
         .eq('course_id', MUS240_COURSE_ID)
         .eq('semester', currentSemester)
         .eq('enrollment_status', 'enrolled');
-      const enrollments: any[] = result.data || [];
-      const enrollError = result.error;
       if (enrollError) throw enrollError;
       
-      const studentGradesPromises = enrollments
-        .filter((e: any) => e.user_id) // Only process enrollments with user_id
-        .map(async enrollment => {
-          const studentId = enrollment.user_id;
-          const profile = enrollment.gw_profiles;
+      const studentIds = (enrollments || []).filter((e: any) => e.user_id).map((e: any) => e.user_id);
+      
+      // Fetch profiles separately (no FK constraint exists)
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', studentIds);
+      
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      
+      const studentGradesPromises = studentIds.map(async (studentId: string) => {
+        const profile = profileMap.get(studentId);
 
-          // Fetch all grade data for this student
-          const [assignmentPoints, participationPoints, submissionsCount] = await Promise.all([fetchAssignmentPoints(studentId), fetchParticipationPoints(studentId), fetchSubmissionsCount(studentId)]);
+        // Fetch all grade data for this student
+        const [assignmentPoints, participationPoints, submissionsCount] = await Promise.all([fetchAssignmentPoints(studentId), fetchParticipationPoints(studentId), fetchSubmissionsCount(studentId)]);
 
-          // Calculate overall score
-          const totalEarned = assignmentPoints.earned + participationPoints;
-          const totalPossible = 725; // 650 assignments + 75 participation
-          const overallPercentage = totalPossible > 0 ? totalEarned / totalPossible * 100 : 0;
-          return {
-            student_id: studentId,
-            student_name: profile?.full_name || 'Unknown',
-            student_email: profile?.email || '',
+        // Calculate overall score
+        const totalEarned = assignmentPoints.earned + participationPoints;
+        const totalPossible = 725; // 650 assignments + 75 participation
+        const overallPercentage = totalPossible > 0 ? totalEarned / totalPossible * 100 : 0;
+        return {
+          student_id: studentId,
+          student_name: profile?.full_name || 'Unknown',
+          student_email: profile?.email || '',
             assignment_points: assignmentPoints.earned,
             participation_points: participationPoints,
             overall_score: totalEarned,
