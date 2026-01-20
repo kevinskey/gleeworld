@@ -109,6 +109,7 @@ import ExecBoardInterviewsModule from '@/components/modules/ExecBoardInterviewsM
 import TreeLightingSurveyModule from '@/components/modules/TreeLightingSurveyModule';
 import MemberDossiersModule from '@/components/modules/member-dossiers/MemberDossiersModule';
 import { GleeLoungeAnalyticsModule } from '@/components/modules/GleeLoungeAnalyticsModule';
+import { UsageAnalyticsModule } from '@/components/modules/UsageAnalyticsModule';
 import StipendPaymentModule from '@/components/modules/StipendPaymentModule';
 import { NotificationSoundsModule } from '@/components/admin/NotificationSoundsModule';
 import RehearsalTranscriptionModule from '@/components/modules/RehearsalTranscriptionModule';
