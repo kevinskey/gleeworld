@@ -3940,6 +3940,8 @@ export type Database = {
           is_private: boolean | null
           is_recurring: boolean | null
           is_travel_involved: boolean | null
+          linked_assignment_id: string | null
+          linked_attendance_session_id: string | null
           location: string | null
           misc_supplies: number | null
           net_total: number | null
@@ -3953,6 +3955,7 @@ export type Database = {
           recurring_interval: number | null
           recurring_occurrence_date: string | null
           recurring_parent_id: string | null
+          requires_grading: boolean | null
           send_contracts: boolean
           start_date: string
           ticket_sales: number | null
@@ -3999,6 +4002,8 @@ export type Database = {
           is_private?: boolean | null
           is_recurring?: boolean | null
           is_travel_involved?: boolean | null
+          linked_assignment_id?: string | null
+          linked_attendance_session_id?: string | null
           location?: string | null
           misc_supplies?: number | null
           net_total?: number | null
@@ -4012,6 +4017,7 @@ export type Database = {
           recurring_interval?: number | null
           recurring_occurrence_date?: string | null
           recurring_parent_id?: string | null
+          requires_grading?: boolean | null
           send_contracts?: boolean
           start_date: string
           ticket_sales?: number | null
@@ -4058,6 +4064,8 @@ export type Database = {
           is_private?: boolean | null
           is_recurring?: boolean | null
           is_travel_involved?: boolean | null
+          linked_assignment_id?: string | null
+          linked_attendance_session_id?: string | null
           location?: string | null
           misc_supplies?: number | null
           net_total?: number | null
@@ -4071,6 +4079,7 @@ export type Database = {
           recurring_interval?: number | null
           recurring_occurrence_date?: string | null
           recurring_parent_id?: string | null
+          requires_grading?: boolean | null
           send_contracts?: boolean
           start_date?: string
           ticket_sales?: number | null
@@ -4093,6 +4102,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_linked_attendance_session_id_fkey"
+            columns: ["linked_attendance_session_id"]
+            isOneToOne: false
+            referencedRelation: "gw_attendance_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -6521,6 +6537,137 @@ export type Database = {
           },
         ]
       }
+      gw_attendance_records: {
+        Row: {
+          attendance_session_id: string
+          check_in_method: string | null
+          created_at: string
+          id: string
+          marked_at: string
+          marked_by: string | null
+          note: string | null
+          status: string
+          student_profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          attendance_session_id: string
+          check_in_method?: string | null
+          created_at?: string
+          id?: string
+          marked_at?: string
+          marked_by?: string | null
+          note?: string | null
+          status?: string
+          student_profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          attendance_session_id?: string
+          check_in_method?: string | null
+          created_at?: string
+          id?: string
+          marked_at?: string
+          marked_by?: string | null
+          note?: string | null
+          status?: string
+          student_profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_attendance_records_attendance_session_id_fkey"
+            columns: ["attendance_session_id"]
+            isOneToOne: false
+            referencedRelation: "gw_attendance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_attendance_sessions: {
+        Row: {
+          allow_late_checkin: boolean
+          closes_at: string
+          course_id: string | null
+          created_at: string
+          created_by: string | null
+          custom_group_ids: string[] | null
+          description: string | null
+          event_id: string | null
+          grade_weight: number | null
+          id: string
+          late_threshold_minutes: number | null
+          mode: string
+          opens_at: string
+          qr_expires_at: string | null
+          qr_token_hash: string | null
+          requires_grading: boolean
+          roster_scope: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allow_late_checkin?: boolean
+          closes_at?: string
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_group_ids?: string[] | null
+          description?: string | null
+          event_id?: string | null
+          grade_weight?: number | null
+          id?: string
+          late_threshold_minutes?: number | null
+          mode?: string
+          opens_at?: string
+          qr_expires_at?: string | null
+          qr_token_hash?: string | null
+          requires_grading?: boolean
+          roster_scope?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allow_late_checkin?: boolean
+          closes_at?: string
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_group_ids?: string[] | null
+          description?: string | null
+          event_id?: string | null
+          grade_weight?: number | null
+          id?: string
+          late_threshold_minutes?: number | null
+          mode?: string
+          opens_at?: string
+          qr_expires_at?: string | null
+          qr_token_hash?: string | null
+          requires_grading?: boolean
+          roster_scope?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_attendance_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_attendance_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_audio_files: {
         Row: {
           bitrate: number | null
@@ -7001,6 +7148,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      gw_calendar_subscriptions: {
+        Row: {
+          calendar_id: string
+          color_override: string | null
+          id: string
+          is_visible: boolean
+          notification_enabled: boolean
+          subscribed_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_id: string
+          color_override?: string | null
+          id?: string
+          is_visible?: boolean
+          notification_enabled?: boolean
+          subscribed_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_id?: string
+          color_override?: string | null
+          id?: string
+          is_visible?: boolean
+          notification_enabled?: boolean
+          subscribed_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_calendar_subscriptions_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "gw_calendars"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_calendars: {
         Row: {
@@ -7814,6 +8002,7 @@ export type Database = {
       }
       gw_course_calendar: {
         Row: {
+          calendar_id: string | null
           course_id: string | null
           created_at: string | null
           created_by: string | null
@@ -7821,13 +8010,18 @@ export type Database = {
           end_time: string | null
           event_type: string | null
           id: string
+          is_enabled_in_course: boolean
+          is_recommended: boolean
           is_recurring: boolean | null
           location: string | null
+          post_permission: string
           recurrence_rule: string | null
+          sort_order: number | null
           start_time: string
           title: string
         }
         Insert: {
+          calendar_id?: string | null
           course_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -7835,13 +8029,18 @@ export type Database = {
           end_time?: string | null
           event_type?: string | null
           id?: string
+          is_enabled_in_course?: boolean
+          is_recommended?: boolean
           is_recurring?: boolean | null
           location?: string | null
+          post_permission?: string
           recurrence_rule?: string | null
+          sort_order?: number | null
           start_time: string
           title: string
         }
         Update: {
+          calendar_id?: string | null
           course_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -7849,13 +8048,24 @@ export type Database = {
           end_time?: string | null
           event_type?: string | null
           id?: string
+          is_enabled_in_course?: boolean
+          is_recommended?: boolean
           is_recurring?: boolean | null
           location?: string | null
+          post_permission?: string
           recurrence_rule?: string | null
+          sort_order?: number | null
           start_time?: string
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "gw_course_calendar_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "gw_calendars"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gw_course_calendar_course_id_fkey"
             columns: ["course_id"]
@@ -27897,6 +28107,13 @@ export type Database = {
       }
       emergency_admin_bootstrap: { Args: never; Returns: boolean }
       encrypt_square_token: { Args: { token: string }; Returns: string }
+      generate_attendance_qr_token: {
+        Args: { p_expires_in_minutes?: number; p_session_id: string }
+        Returns: {
+          expires_at: string
+          qr_token: string
+        }[]
+      }
       generate_course_qr_code: {
         Args: {
           p_content: string
@@ -28358,6 +28575,14 @@ export type Database = {
       mark_notification_read: {
         Args: { p_notification_id: string }
         Returns: boolean
+      }
+      process_attendance_qr_checkin: {
+        Args: { p_qr_token: string; p_student_id?: string }
+        Returns: {
+          message: string
+          status: string
+          success: boolean
+        }[]
       }
       process_pin_attendance_scan: {
         Args: {
