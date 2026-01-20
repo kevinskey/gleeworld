@@ -173,6 +173,7 @@ export const InstructorConsole = () => {
       label: 'Students',
       items: [
         { value: 'students', label: 'Enrollment', icon: UserPlus },
+        { value: 'attendance', label: 'Attendance', icon: UserCheck },
         { value: 'analytics', label: 'Analytics', icon: BarChart },
         { value: 'communications', label: 'Communications', icon: Mail },
       ]
