@@ -31,7 +31,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
-import heic2any from 'heic2any';
+// heic2any is dynamically imported to avoid CSP/Web Worker security errors
 
 interface GalleryPhoto {
   id: string;
@@ -243,12 +243,17 @@ export const PhotoGallery: React.FC = () => {
         return;
       }
 
-      // Convert HEIC to JPEG
+      // Convert HEIC to JPEG using dynamic import to avoid CSP issues
       const convertHeic = async () => {
         try {
           const response = await fetch(src);
           const blob = await response.blob();
-          const convertedBlob = await heic2any({
+          
+          // Dynamically import heic2any to prevent Web Worker initialization on module load
+          const heic2anyModule = await import('heic2any');
+          const heic2anyFn = (heic2anyModule as any).default || heic2anyModule;
+          
+          const convertedBlob = await heic2anyFn({
             blob,
             toType: 'image/jpeg',
             quality: 0.8
@@ -259,6 +264,8 @@ export const PhotoGallery: React.FC = () => {
           setImageSrc(url);
         } catch (err) {
           console.error('HEIC conversion error:', err);
+          // Fall back to original source if conversion fails (may not display but won't crash)
+          setImageSrc(src);
           setError(true);
         } finally {
           setLoading(false);
