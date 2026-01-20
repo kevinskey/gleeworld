@@ -136,14 +136,59 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
       if (assignmentsData) {
         const now = new Date();
-        setAssignments(assignmentsData.map((a: any) => ({
-          id: a.id,
-          title: a.title,
-          due_date: a.due_date,
-          points: a.max_points || 100,
-          course_id: a.course_id,
-          status: new Date(a.due_date) < now ? 'overdue' : 'pending'
-        })));
+        const assignmentIds = assignmentsData.map((a: any) => a.id);
+
+        // Fetch submissions from BOTH tables (essays vs performance/sight-reading)
+        const [{ data: videoSubmissions }, { data: essaySubmissions }] = await Promise.all([
+          supabase
+            .from('gw_assignment_submissions')
+            .select('assignment_id, status')
+            .eq('user_id', user.id)
+            .in('assignment_id', assignmentIds),
+          supabase
+            .from('gw_course_submissions')
+            .select('assignment_id, status')
+            .eq('student_id', user.id)
+            .in('assignment_id', assignmentIds),
+        ]);
+
+        const submissionStatusByAssignmentId = new Map<string, string>();
+        videoSubmissions?.forEach((s: any) => submissionStatusByAssignmentId.set(s.assignment_id, s.status));
+        essaySubmissions?.forEach((s: any) => submissionStatusByAssignmentId.set(s.assignment_id, s.status));
+
+        const mappedAssignments: Assignment[] = assignmentsData.map((a: any) => {
+          const submissionStatus = submissionStatusByAssignmentId.get(a.id);
+          const due = a.due_date ? new Date(a.due_date) : null;
+
+          let status: Assignment['status'] = 'pending';
+          if (submissionStatus) {
+            status = submissionStatus === 'graded' ? 'graded' : 'submitted';
+          } else if (due && due < now) {
+            status = 'overdue';
+          }
+
+          return {
+            id: a.id,
+            title: a.title,
+            due_date: a.due_date,
+            points: a.max_points || 100,
+            course_id: a.course_id,
+            status,
+          };
+        });
+
+        setAssignments(mappedAssignments);
+
+        // Mock current module data - in production, fetch from mus240_module_settings or similar
+        if (mappedAssignments.length > 0) {
+          setCurrentModule({
+            id: '1',
+            title: 'African Roots',
+            week_number: 2,
+            content_types: ['Video', 'Reading', 'Listening'],
+            assignments: mappedAssignments.slice(0, 2),
+          });
+        }
       }
 
       // Course-specific calendar IDs
@@ -178,16 +223,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         }
       }
 
-      // Mock current module data - in production, fetch from mus240_module_settings or similar
-      if (assignments.length > 0) {
-        setCurrentModule({
-          id: '1',
-          title: 'African Roots',
-          week_number: 2,
-          content_types: ['Video', 'Reading', 'Listening'],
-          assignments: assignments.slice(0, 2)
-        });
-      }
+      // (Current module is set above from mappedAssignments to avoid stale state.)
     } catch (error) {
       console.error('Error fetching student data:', error);
     } finally {
