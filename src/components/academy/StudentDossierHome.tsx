@@ -3,20 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { 
-  User, Music, GraduationCap, Mail, Phone, Calendar, 
-  ClipboardList, CheckCircle, XCircle, Clock, FileText, Settings
+  User, Calendar, ClipboardList, CheckCircle, XCircle, Clock, 
+  FileText, AlertCircle, Play, MoreHorizontal, Mail
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
-import { CourseAssignments } from './CourseAssignments';
-import { ExitInterviewSummaryCard } from '@/components/surveys/ExitInterviewSummaryCard';
-import { CollapsibleMemberExitInterview } from '@/components/surveys/CollapsibleMemberExitInterview';
-import LiturgicalWeekCard from './LiturgicalWeekCard';
-import { LykeHouseHeroSlider } from './LykeHouseHeroSlider';
+import { useNavigate } from 'react-router-dom';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { getCourseByCode } from '@/config/academyCourses';
 
 interface StudentProfile {
   user_id: string;
@@ -33,8 +30,6 @@ interface StudentProfile {
   join_date: string | null;
   is_exec_board?: boolean | null;
   exec_board_role?: string | null;
-  music_role?: string | null;
-  dues_paid?: boolean | null;
 }
 
 interface AttendanceRecord {
@@ -54,16 +49,39 @@ interface UpcomingEvent {
   event_type?: string;
 }
 
+interface Assignment {
+  id: string;
+  title: string;
+  due_date: string;
+  points: number;
+  status?: 'pending' | 'submitted' | 'graded' | 'overdue';
+  course_id: string;
+}
+
+interface CurrentModule {
+  id: string;
+  title: string;
+  week_number: number;
+  content_types: string[];
+  assignments: Assignment[];
+}
+
 interface StudentDossierHomeProps {
   courseId: string;
 }
 
 export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { currentSemester } = useMus240SemesterSafe();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [currentModule, setCurrentModule] = useState<CurrentModule | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
 
   useEffect(() => {
     if (user) {
@@ -108,13 +126,32 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         })));
       }
 
+      // Fetch assignments for this course
+      const { data: assignmentsData } = await supabase
+        .from('gw_course_assignments')
+        .select('*')
+        .eq('course_id', courseId)
+        .order('due_date', { ascending: true })
+        .limit(10);
+
+      if (assignmentsData) {
+        const now = new Date();
+        setAssignments(assignmentsData.map((a: any) => ({
+          id: a.id,
+          title: a.title,
+          due_date: a.due_date,
+          points: a.max_points || 100,
+          course_id: a.course_id,
+          status: new Date(a.due_date) < now ? 'overdue' : 'pending'
+        })));
+      }
+
       // Course-specific calendar IDs
       const COURSE_CALENDAR_IDS: Record<string, string> = {
-        'a0000000-0000-0000-0000-000000000070': 'b1e077a0-85f3-4665-b006-4767b310a521', // MUS 070 -> SCGC Calendar
-        'a0000000-0000-0000-0000-000000000100': 'a0000000-0000-0000-0000-000000000100', // LH 100 -> LH 100 Calendar
+        'a0000000-0000-0000-0000-000000000070': 'b1e077a0-85f3-4665-b006-4767b310a521',
+        'a0000000-0000-0000-0000-000000000100': 'a0000000-0000-0000-0000-000000000100',
       };
 
-      // Fetch upcoming events from gw_events based on course calendar
       const calendarId = COURSE_CALENDAR_IDS[courseId];
       if (calendarId) {
         const { data: eventsData } = await supabase
@@ -129,7 +166,6 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
           setUpcomingEvents(eventsData);
         }
       } else {
-        // Fallback to old events table for non-mapped courses
         const { data: eventsData } = await supabase
           .from('events')
           .select('id, title, start_date, location, event_type')
@@ -141,6 +177,17 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
           setUpcomingEvents(eventsData);
         }
       }
+
+      // Mock current module data - in production, fetch from mus240_module_settings or similar
+      if (assignments.length > 0) {
+        setCurrentModule({
+          id: '1',
+          title: 'African Roots',
+          week_number: 2,
+          content_types: ['Video', 'Reading', 'Listening'],
+          assignments: assignments.slice(0, 2)
+        });
+      }
     } catch (error) {
       console.error('Error fetching student data:', error);
     } finally {
@@ -151,14 +198,8 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const attendanceStats = {
     present: attendance.filter(a => a.status === 'present').length,
     absent: attendance.filter(a => a.status === 'absent').length,
-    excused: attendance.filter(a => a.status === 'excused').length,
     late: attendance.filter(a => a.status === 'late').length,
-    total: attendance.length
   };
-
-  const attendanceRate = attendanceStats.total > 0 
-    ? Math.round(((attendanceStats.present + attendanceStats.excused) / attendanceStats.total) * 100) 
-    : 100;
 
   if (loading) {
     return (
@@ -171,250 +212,279 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const avatarUrl = getAvatarUrl(profile?.avatar_url);
   const initials = getInitials(profile?.full_name);
 
-  // Check if this is the LH 100 course
-  const isLH100 = courseId === 'a0000000-0000-0000-0000-000000000100';
+  // Find the most urgent assignment
+  const urgentAssignment = assignments.find(a => a.status === 'overdue') || assignments[0];
 
   return (
-    <div className="space-y-6">
-      {/* Top Row - Liturgical Week Card + Profile Hero Card */}
-      <div className={`flex flex-col ${isLH100 ? 'md:flex-row' : ''} gap-6`}>
-        {/* Liturgical Week Card - Only for LH 100 */}
-        {isLH100 && (
-          <div className="w-full md:w-1/2">
-            <LiturgicalWeekCard />
-          </div>
-        )}
-
-        {/* Profile Hero Card + YouTube Channel Column */}
-        <div className={`flex flex-col gap-4 ${isLH100 ? 'w-full md:w-1/2' : 'w-full'}`}>
-          <Card className="overflow-hidden">
-            <div className="bg-gradient-to-r from-primary/20 to-primary/5 p-6 md:p-8">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                {/* Large Profile Image */}
-                <Avatar className="h-32 w-32 md:h-40 md:w-40 border-4 border-background shadow-xl">
-                  <AvatarImage src={avatarUrl || undefined} alt={profile?.full_name || 'Student'} />
-                  <AvatarFallback className="text-3xl md:text-4xl bg-primary text-primary-foreground">
-                    {initials || <User className="h-16 w-16" />}
-                  </AvatarFallback>
-                </Avatar>
-
-                {/* Profile Info */}
-                <div className="flex-1 text-center md:text-left">
-                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                    {profile?.full_name || 'Glee Club Member'}
-                  </h1>
-                  
-                  <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3">
-                    {profile?.voice_part && (
-                      <Badge variant="secondary" className="text-sm px-3 py-1">
-                        <Music className="h-3.5 w-3.5 mr-1.5" />
-                        {profile.voice_part}
-                      </Badge>
-                    )}
-                    {profile?.class_year && (
-                      <Badge variant="outline" className="text-sm px-3 py-1">
-                        <GraduationCap className="h-3.5 w-3.5 mr-1.5" />
-                        Class of {profile.class_year}
-                      </Badge>
-                    )}
-                    {profile?.is_exec_board && (
-                      <Badge variant="default" className="text-sm px-3 py-1">
-                        {profile.exec_board_role || 'Executive Board'}
+    <div className="flex gap-6">
+      {/* Main Content Column - 70% */}
+      <div className="flex-1 space-y-6 min-w-0">
+        
+        {/* What's Due Next Card */}
+        {urgentAssignment && (
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                What's Due Next
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 bg-card rounded-lg border">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg">{urgentAssignment.title}</h3>
+                    {urgentAssignment.status === 'overdue' && (
+                      <Badge variant="destructive" className="text-xs flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Overdue
                       </Badge>
                     )}
                   </div>
-
-                  {profile?.email && (
-                    <p className="text-sm text-muted-foreground mt-3 flex items-center justify-center md:justify-start gap-1.5">
-                      <Mail className="h-4 w-4" />
-                      {profile.email}
-                    </p>
-                  )}
-                  {profile?.phone && (
-                    <p className="text-sm text-muted-foreground mt-1 flex items-center justify-center md:justify-start gap-1.5">
-                      <Phone className="h-4 w-4" />
-                      {profile.phone}
-                    </p>
-                  )}
+                  <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Due: {format(new Date(urgentAssignment.due_date), 'MMM d')} · {urgentAssignment.points} pts
+                    {urgentAssignment.status === 'overdue' && ' · OVERDUE'}
+                  </p>
                 </div>
+                <Button className="bg-primary hover:bg-primary/90">
+                  Start Assignment
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-                {/* Desktop Settings Button */}
-                <div className="hidden md:block">
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9">
-                        <Settings className="h-5 w-5 text-muted-foreground" />
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent className="overflow-y-auto">
-                      <SheetHeader>
-                        <SheetTitle className="flex items-center gap-2">
-                          <Settings className="h-5 w-5" />
-                          Student Settings
-                        </SheetTitle>
-                      </SheetHeader>
-                      <div className="mt-6 space-y-4">
-                        <CollapsibleMemberExitInterview />
-                        {/* Exit Interview History */}
-                        <ExitInterviewSummaryCard showInSettings />
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-                </div>
+        {/* Current Module / Week */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                Current Module / Week
+              </CardTitle>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Module Header */}
+            <div>
+              <h3 className="text-xl font-bold">Week 2: African Roots</h3>
+              <div className="flex gap-2 text-sm text-muted-foreground mt-1">
+                <span className="flex items-center gap-1">
+                  <Play className="h-3 w-3" />Video
+                </span>
+                <span>·</span>
+                <span>Reading</span>
+                <span>·</span>
+                <span>Listening</span>
               </div>
             </div>
 
-            {/* Mobile Settings Button */}
-            <div className="md:hidden mt-4 px-4 pb-4">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full gap-2">
-                    <Settings className="h-4 w-4" />
-                    Settings & Exit Interviews
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
-                      Student Settings
-                    </SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6 space-y-4">
-                    <CollapsibleMemberExitInterview />
-                    <ExitInterviewSummaryCard showInSettings />
+            {/* Module Assignment Preview */}
+            {urgentAssignment && (
+              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm">{urgentAssignment.title}</span>
+                    {urgentAssignment.status === 'overdue' && (
+                      <Badge variant="destructive" className="text-xs">
+                        <AlertCircle className="h-2.5 w-2.5 mr-0.5" />
+                        Overdue
+                      </Badge>
+                    )}
                   </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-          </Card>
+                  <p className="text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3 inline mr-1" />
+                    Due: {format(new Date(urgentAssignment.due_date), 'MMM d')} · {urgentAssignment.points} pts
+                  </p>
+                </div>
+                <Button size="sm" className="bg-primary hover:bg-primary/90 text-xs">
+                  Start Assignment
+                </Button>
+              </div>
+            )}
 
-          {/* Lyke House Hero Slider - Only for LH 100 */}
-          {isLH100 && <LykeHouseHeroSlider />}
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Assignments - takes full height */}
-        <div className="lg:col-span-2 flex flex-col">
-          {/* Assignments Section - expand to fill available space */}
-          <Card className="flex-1 flex flex-col">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <ClipboardList className="h-5 w-5 text-primary" />
-                My Assignments
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 flex-1">
-              <CourseAssignments courseId={courseId} isEnrolled={true} />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column - Events & Attendance */}
-        <div className="space-y-6">
-          {/* Upcoming Events */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Calendar className="h-5 w-5 text-primary" />
-                Upcoming Events
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {upcomingEvents.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No upcoming events
-                </p>
+            {/* Assignments List */}
+            <div className="space-y-3">
+              <h4 className="font-semibold text-base">Assignments</h4>
+              {assignments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No assignments yet</p>
               ) : (
-                <div className="space-y-3">
-                  {upcomingEvents.map((event) => (
-                    <div key={event.id} className="flex items-start gap-3 p-3 rounded-lg bg-accent/30">
-                      <div className="flex-shrink-0 w-12 text-center">
-                        <div className="text-xs text-muted-foreground uppercase">
-                          {format(new Date(event.start_date), 'MMM')}
+                <div className="space-y-2">
+                  {assignments.slice(0, 4).map((assignment, idx) => (
+                    <div key={assignment.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground">•</span>
+                          <FileText className="h-4 w-4 text-muted-foreground" />
                         </div>
-                        <div className="text-xl font-bold">
-                          {format(new Date(event.start_date), 'd')}
+                        <div>
+                          <p className="text-sm font-medium">{assignment.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Due: {format(new Date(assignment.due_date), 'MMM d')} · {assignment.points} pts
+                          </p>
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{event.title}</p>
-                        {event.location && (
-                          <p className="text-xs text-muted-foreground truncate">{event.location}</p>
-                        )}
-                        {event.event_type && (
-                          <Badge variant="outline" className="text-xs mt-1">{event.event_type}</Badge>
+                      <div className="text-right">
+                        {assignment.status === 'overdue' ? (
+                          <span className="text-xs text-destructive font-medium">Overdue</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">{assignment.points} pts</span>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Attendance Summary */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="h-5 w-5 text-primary" />
-                Attendance Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {attendance.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No attendance records yet
+            {/* Announcements Section */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-base">Announcements</h4>
+                <Button variant="outline" size="sm" className="text-xs h-7">
+                  <FileText className="h-3 w-3 mr-1" />
+                  Dismiss
+                </Button>
+              </div>
+              <Card className="bg-muted/20">
+                <CardContent className="p-4">
+                  <p className="font-medium text-sm">MLK Day:</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Just a reminder to listen to the assigned tracks for Wednesday's MLK Day special 
+                    and come prepared to discuss in class. Make sure to complete the related listening 
+                    quiz by Wednesday evening!
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right Sidebar - 30% */}
+      <div className="w-80 flex-shrink-0 space-y-6 hidden lg:block">
+        
+        {/* Course Snapshot - Student Profile */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              Course Snapshot
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-4">
+              <Avatar className="h-16 w-16 border-2 border-primary/20">
+                <AvatarImage src={avatarUrl || undefined} alt={profile?.full_name || 'Student'} />
+                <AvatarFallback className="text-lg bg-primary text-primary-foreground">
+                  {initials || <User className="h-8 w-8" />}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-base truncate">
+                  {profile?.full_name || 'Student Name'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {course.courseCode} · {profile?.voice_part || 'B2'}
                 </p>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-center">
-                      <CheckCircle className="h-5 w-5 mx-auto text-green-600 mb-1" />
-                      <p className="text-lg font-bold text-green-600">{attendanceStats.present}</p>
-                      <p className="text-xs text-muted-foreground">Present</p>
-                    </div>
-                    <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-3 text-center">
-                      <XCircle className="h-5 w-5 mx-auto text-red-600 mb-1" />
-                      <p className="text-lg font-bold text-red-600">{attendanceStats.absent}</p>
-                      <p className="text-xs text-muted-foreground">Absent</p>
-                    </div>
-                    <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
-                      <Clock className="h-5 w-5 mx-auto text-amber-600 mb-1" />
-                      <p className="text-lg font-bold text-amber-600">{attendanceStats.late}</p>
-                      <p className="text-xs text-muted-foreground">Late</p>
-                    </div>
-                    <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 text-center">
-                      <Calendar className="h-5 w-5 mx-auto text-blue-600 mb-1" />
-                      <p className="text-lg font-bold text-blue-600">{attendanceStats.excused}</p>
-                      <p className="text-xs text-muted-foreground">Excused</p>
-                    </div>
-                  </div>
+                {profile?.email && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <Mail className="h-3 w-3" />
+                    <span className="truncate">{profile.email}</span>
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                  <Clock className="h-3 w-3" />
+                  Thu 1-3 PM, Fri 12 AM, 9-10 AM
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                  {/* Recent Attendance */}
-                  <div className="max-h-48 overflow-y-auto">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Recent Records</p>
-                    <div className="space-y-2">
-                      {attendance.slice(0, 8).map((record) => (
-                        <div key={record.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
-                          <span className="truncate flex-1">{record.event_title || 'Event'}</span>
-                          <Badge 
-                            variant={record.status === 'present' ? 'default' : record.status === 'absent' ? 'destructive' : 'secondary'}
-                            className="text-xs ml-2"
-                          >
-                            {record.status}
-                          </Badge>
-                        </div>
-                      ))}
+        {/* Upcoming Events */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              Upcoming Events
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {upcomingEvents.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No upcoming events
+              </p>
+            ) : (
+              upcomingEvents.map((event) => (
+                <div 
+                  key={event.id} 
+                  className="flex items-start gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex-shrink-0 w-10 text-center">
+                    <div className="text-[10px] text-primary font-semibold uppercase">
+                      {format(new Date(event.start_date), 'MMM')}
+                    </div>
+                    <div className="text-lg font-bold text-foreground">
+                      {format(new Date(event.start_date), 'd')}
                     </div>
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{event.title}</p>
+                    {event.location && (
+                      <p className="text-xs text-muted-foreground truncate">{event.location}</p>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Attendance Summary */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              Attendance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-center">
+                <div className="flex justify-center mb-1">
+                  <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                    <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                  </div>
+                </div>
+                <p className="text-lg font-bold text-green-600">{attendanceStats.present}</p>
+                <p className="text-[10px] text-muted-foreground">Present</p>
+              </div>
+              <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-3 text-center">
+                <div className="flex justify-center mb-1">
+                  <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                    <XCircle className="h-3.5 w-3.5 text-red-600" />
+                  </div>
+                </div>
+                <p className="text-lg font-bold text-red-600">{attendanceStats.absent}</p>
+                <p className="text-[10px] text-muted-foreground">Absent</p>
+              </div>
+              <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
+                <div className="flex justify-center mb-1">
+                  <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                    <Clock className="h-3.5 w-3.5 text-amber-600" />
+                  </div>
+                </div>
+                <p className="text-lg font-bold text-amber-600">{attendanceStats.late}</p>
+                <p className="text-[10px] text-muted-foreground">Late</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
