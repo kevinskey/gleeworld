@@ -1068,6 +1068,20 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     requiredRoles: ["admin", "super-admin", "exec"]
   },
   {
+    id: "usage-analytics",
+    name: "usage-analytics",
+    title: "Usage Analytics",
+    description: "Track student engagement, page views, sessions, and module usage",
+    icon: BarChart,
+    iconColor: "blue",
+    category: "member-management",
+    isActive: true,
+    isNew: true,
+    component: UsageAnalyticsModule,
+    dbFunctionName: "usage-analytics",
+    requiredRoles: ["admin", "super-admin", "instructor"]
+  },
+  {
     id: "stipend-payments",
     name: "stipend-payments",
     title: "Stipend Payments",
