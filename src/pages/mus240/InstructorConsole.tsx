@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown, MessagesSquare, UserCheck } from 'lucide-react';
 import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
+import { CourseAssignmentManager } from '@/components/course/CourseAssignmentManager';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCourseTA } from '@/hooks/useCourseTA';
@@ -367,6 +368,21 @@ export const InstructorConsole = () => {
             </div>
 
             {/* Content */}
+            {activeTab === 'assignments' && (
+              <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Assignments
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Create, edit, and manage course assignments</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <CourseAssignmentManager courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" courseName="MUS 240" />
+                </CardContent>
+              </Card>
+            )}
+
             {activeTab === 'tests' && <>
               <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
