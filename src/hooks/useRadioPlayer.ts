@@ -40,10 +40,12 @@ export const useRadioPlayer = () => {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isPlayingRef = useRef(false);
+  const wasPlayingBeforeHiddenRef = useRef(false);
   const reconnectAttemptRef = useRef(0);
   const maxReconnectAttempts = 5;
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentStreamUrlIndexRef = useRef(0);
+  const lastKnownStreamUrlRef = useRef<string>('');
   const { toast } = useToast();
 
   const refreshNowPlaying = useCallback(async () => {
@@ -60,6 +62,22 @@ export const useRadioPlayer = () => {
           art: currentTrack.artwork_url_large || currentTrack.artwork_url || undefined,
         } : prev.currentTrack,
       }));
+      
+      // Update Media Session metadata if available
+      if ('mediaSession' in navigator && currentTrack?.title) {
+        try {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: currentTrack.title,
+            artist: 'GleeWorld Radio',
+            album: 'Live Stream',
+            artwork: currentTrack.artwork_url_large ? [
+              { src: currentTrack.artwork_url_large, sizes: '512x512', type: 'image/jpeg' }
+            ] : []
+          });
+        } catch (e) {
+          // Ignore media session errors
+        }
+      }
     } catch (error) {
       console.warn('refreshNowPlaying failed:', error);
     }
@@ -70,6 +88,37 @@ export const useRadioPlayer = () => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Resume playback - used for visibility change recovery
+  const resumePlayback = useCallback(async () => {
+    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    
+    console.log('useRadioPlayer: Attempting to resume playback...');
+    
+    try {
+      // If audio is paused but we should be playing, resume
+      if (audio.paused && isPlayingRef.current) {
+        await audio.play();
+        console.log('useRadioPlayer: Playback resumed successfully');
+      }
+    } catch (error) {
+      console.warn('useRadioPlayer: Resume failed, will reconnect...', error);
+      // If resume fails, try reconnecting to the stream
+      reconnectAttemptRef.current = 0;
+      
+      if (lastKnownStreamUrlRef.current) {
+        try {
+          audio.src = lastKnownStreamUrlRef.current;
+          audio.load();
+          await audio.play();
+          console.log('useRadioPlayer: Reconnected after resume failure');
+        } catch (reconnectError) {
+          console.error('useRadioPlayer: Full reconnect also failed', reconnectError);
+        }
+      }
     }
   }, []);
 
@@ -103,6 +152,7 @@ export const useRadioPlayer = () => {
     
     try {
       audio.src = url;
+      lastKnownStreamUrlRef.current = url;
       audio.load();
       await audio.play();
       console.log('useRadioPlayer: Reconnected successfully');
@@ -116,25 +166,73 @@ export const useRadioPlayer = () => {
     }
   }, [refreshNowPlaying, toast]);
 
+  // Setup Media Session API for lock screen controls
+  const setupMediaSession = useCallback(() => {
+    if (!('mediaSession' in navigator)) return;
+    
+    try {
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (audioRef.current && !isPlayingRef.current) {
+          isPlayingRef.current = true;
+          audioRef.current.play().catch(console.error);
+        }
+      });
+      
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (audioRef.current) {
+          isPlayingRef.current = false;
+          audioRef.current.pause();
+        }
+      });
+      
+      navigator.mediaSession.setActionHandler('stop', () => {
+        if (audioRef.current) {
+          isPlayingRef.current = false;
+          audioRef.current.pause();
+          audioRef.current.src = '';
+        }
+      });
+      
+      console.log('useRadioPlayer: Media Session API configured');
+    } catch (e) {
+      console.warn('useRadioPlayer: Media Session setup failed', e);
+    }
+  }, []);
+
   useEffect(() => {
     if (!sharedAudio) {
       sharedAudio = new Audio();
       sharedAudio.preload = 'none';
+      // Enable background playback on iOS
+      sharedAudio.setAttribute('playsinline', 'true');
+      sharedAudio.setAttribute('webkit-playsinline', 'true');
     }
     const audio = sharedAudio;
     audioRef.current = audio;
     audio.volume = 0.8;
+    
+    // Setup Media Session for lock screen controls
+    setupMediaSession();
 
     const handlePlay = () => {
       isPlayingRef.current = true;
-      reconnectAttemptRef.current = 0; // Reset reconnect counter on successful play
+      reconnectAttemptRef.current = 0;
       setState(prev => ({ ...prev, isPlaying: true, isLoading: false }));
+      
+      // Update Media Session playback state
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing';
+      }
     };
     
     const handlePause = () => {
-      isPlayingRef.current = false;
-      clearReconnectTimeout();
+      // Don't clear isPlayingRef on pause - we may want to auto-resume
+      // Only clear it if user explicitly paused
       setState(prev => ({ ...prev, isPlaying: false }));
+      
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
+      }
     };
     
     const handleError = (e: Event) => {
@@ -162,10 +260,8 @@ export const useRadioPlayer = () => {
     
     const handleStalled = () => {
       console.warn('useRadioPlayer: Stream stalled');
-      // Only trigger reconnect if playing and stalled for too long
       if (isPlayingRef.current) {
         clearReconnectTimeout();
-        // Wait 3 seconds before attempting reconnect for stalled streams
         reconnectTimeoutRef.current = setTimeout(() => {
           if (audio.readyState < 3 && isPlayingRef.current) {
             console.log('useRadioPlayer: Stream still stalled, reconnecting...');
@@ -177,11 +273,16 @@ export const useRadioPlayer = () => {
     
     const handleEnded = () => {
       console.log('useRadioPlayer: Stream ended unexpectedly');
-      // Live streams shouldn't end - attempt reconnect
       if (isPlayingRef.current) {
         clearReconnectTimeout();
         reconnectTimeoutRef.current = setTimeout(attemptReconnect, 1000);
       }
+    };
+    
+    // Handle suspend (iOS may fire this when backgrounding)
+    const handleSuspend = () => {
+      console.log('useRadioPlayer: Audio suspended (possibly backgrounded)');
+      // Don't do anything immediately - let visibility handler manage it
     };
 
     audio.addEventListener('play', handlePlay);
@@ -191,6 +292,7 @@ export const useRadioPlayer = () => {
     audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('stalled', handleStalled);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('suspend', handleSuspend);
 
     if (!audio.paused && audio.src) {
       isPlayingRef.current = true;
@@ -205,9 +307,65 @@ export const useRadioPlayer = () => {
       audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('stalled', handleStalled);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('suspend', handleSuspend);
       clearReconnectTimeout();
     };
-  }, [attemptReconnect, clearReconnectTimeout]);
+  }, [attemptReconnect, clearReconnectTimeout, setupMediaSession]);
+
+  // Handle visibility change for PWA background playback
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // App going to background
+        wasPlayingBeforeHiddenRef.current = isPlayingRef.current;
+        console.log('useRadioPlayer: App hidden, wasPlaying:', wasPlayingBeforeHiddenRef.current);
+      } else {
+        // App coming to foreground
+        console.log('useRadioPlayer: App visible, wasPlaying:', wasPlayingBeforeHiddenRef.current);
+        
+        if (wasPlayingBeforeHiddenRef.current && audioRef.current) {
+          // Check if audio is still playing
+          if (audioRef.current.paused) {
+            console.log('useRadioPlayer: Audio paused while hidden, resuming...');
+            // Small delay to let the browser settle
+            setTimeout(() => {
+              resumePlayback();
+            }, 100);
+          }
+        }
+      }
+    };
+    
+    // Also handle page show for iOS PWA back navigation
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted && wasPlayingBeforeHiddenRef.current) {
+        console.log('useRadioPlayer: Page restored from bfcache, resuming...');
+        setTimeout(() => {
+          resumePlayback();
+        }, 100);
+      }
+    };
+    
+    // Handle online/offline for network recovery
+    const handleOnline = () => {
+      console.log('useRadioPlayer: Network online');
+      if (isPlayingRef.current && audioRef.current?.paused) {
+        console.log('useRadioPlayer: Was playing, attempting to resume after network recovery...');
+        reconnectAttemptRef.current = 0;
+        attemptReconnect();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('online', handleOnline);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [resumePlayback, attemptReconnect]);
 
   // Poll Radio.co for now playing
   useEffect(() => {
@@ -233,6 +391,7 @@ export const useRadioPlayer = () => {
         console.log(`useRadioPlayer: Trying stream ${i + 1}:`, url);
         currentStreamUrlIndexRef.current = i;
         audio.src = url;
+        lastKnownStreamUrlRef.current = url;
         audio.load();
         
         // Set isPlaying intent before attempting play
@@ -255,6 +414,7 @@ export const useRadioPlayer = () => {
   const pause = useCallback(() => {
     clearReconnectTimeout();
     isPlayingRef.current = false;
+    wasPlayingBeforeHiddenRef.current = false; // User explicitly paused
     if (audioRef.current) {
       audioRef.current.pause();
     }
@@ -290,6 +450,7 @@ export const useRadioPlayer = () => {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     audio.src = streamUrl;
+    lastKnownStreamUrlRef.current = streamUrl;
     audio.load();
 
     if (wasPlaying) {
@@ -341,7 +502,9 @@ export const useRadioPlayer = () => {
     sharedAudio = null;
     audioRef.current = null;
     isPlayingRef.current = false;
+    wasPlayingBeforeHiddenRef.current = false;
     reconnectAttemptRef.current = 0;
+    lastKnownStreamUrlRef.current = '';
     setState(prev => ({ ...prev, isPlaying: false, isLoading: false }));
     toast({ title: 'Audio Reset', description: 'Press Play to restart.' });
   }, [clearReconnectTimeout, toast]);
