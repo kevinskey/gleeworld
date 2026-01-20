@@ -84,12 +84,9 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
 
       // Get enrolled students from unified gw_course_enrollments table
-      const {
-        data: enrollments,
-        error: enrollError
-      } = await supabase
+      const { data: enrollments, error: enrollError } = await supabase
         .from('gw_course_enrollments')
-        .select('user_id, gw_profiles!gw_course_enrollments_user_id_fkey(user_id, full_name)')
+        .select('user_id')
         .eq('course_id', MUS240_COURSE_ID)
         .eq('semester', currentSemester)
         .eq('enrollment_status', 'enrolled');
@@ -107,6 +104,14 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         setStudents([]);
         return;
       }
+
+      // Fetch profiles separately (no FK constraint exists)
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name')
+        .in('user_id', studentIds);
+      
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
       // Fetch all grade data in parallel
       const [journalData, midtermData, finalExamData, pollsData, groupData] = await Promise.all([
@@ -190,7 +195,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       // Calculate grades for each student
       const studentGrades: StudentGradeRow[] = uniqueEnrollments.map((enrollment: any) => {
         const studentId = enrollment.user_id;
-        const studentName = enrollment.gw_profiles?.full_name || 'Unknown';
+        const studentName = profileMap.get(studentId)?.full_name || 'Unknown';
 
         // Assignments (journals): curved based on max score
         const journalPoints = Math.min(journalsByStudent.get(studentId) || 0, 200);
