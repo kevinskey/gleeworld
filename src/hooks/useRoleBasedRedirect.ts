@@ -47,11 +47,16 @@ export const useRoleBasedRedirect = () => {
       const publicPages = ['/', '/about', '/events', '/contact', '/shop', '/calendar', '/press-kit'];
       const isOnPublicPage = publicPages.includes(location.pathname);
       
-      if (!isOnPublicPage && location.pathname !== '/onboarding') {
+      // Allow academy/course pages without requiring profile completion
+      const isOnAcademyPage = location.pathname.startsWith('/academy') || 
+                              location.pathname.startsWith('/classes/mus240') ||
+                              location.pathname.startsWith('/grading');
+      
+      if (!isOnPublicPage && !isOnAcademyPage && location.pathname !== '/onboarding') {
         console.log('useRoleBasedRedirect: Not on public page, redirecting to onboarding');
         navigate('/onboarding', { replace: true });
-      } else if (isOnPublicPage) {
-        console.log('useRoleBasedRedirect: On public page, allowing access without profile');
+      } else if (isOnPublicPage || isOnAcademyPage) {
+        console.log('useRoleBasedRedirect: On public/academy page, allowing access without profile');
       }
       return;
     }
@@ -123,7 +128,9 @@ export const useRoleBasedRedirect = () => {
                           location.pathname.includes('/dashboard') || 
                           location.pathname.includes('/fan') || 
                           location.pathname.includes('/alumnae') ||
-                          location.pathname.startsWith('/classes/mus240');
+                          location.pathname.startsWith('/classes/mus240') ||
+                          location.pathname.startsWith('/academy') ||
+                          location.pathname.startsWith('/grading');
     
     if (!isOnAuthPage && !isOnRootPage && isOnTargetPage) {
       console.log('useRoleBasedRedirect: Already on target page, skipping redirect');
@@ -136,8 +143,10 @@ export const useRoleBasedRedirect = () => {
       const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
       const isPostLogin = redirectAfterAuth !== null || location.pathname === '/auth';
       
-      // Don't redirect if user is on MUS 240 pages or other specific areas
+      // Don't redirect if user is on MUS 240 pages, academy, or other specific areas
       if (location.pathname.startsWith('/classes/mus240') || 
+          location.pathname.startsWith('/academy') ||
+          location.pathname.startsWith('/grading') ||
           location.pathname.startsWith('/admin') ||
           location.pathname.includes('/dashboard')) {
         console.log('🛑 useRoleBasedRedirect: User on specific area, not redirecting');
