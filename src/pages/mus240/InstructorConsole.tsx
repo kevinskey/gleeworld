@@ -39,6 +39,7 @@ import { SemesterManager } from '@/components/admin/SemesterManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ModuleToggleManager } from '@/components/mus240/instructor/ModuleToggleManager';
+import { Mus240ModuleEditor } from '@/components/mus240/instructor/Mus240ModuleEditor';
 import { Mus240CalendarManager } from '@/components/mus240/instructor/Mus240CalendarManager';
 import { BulkPasswordReset } from '@/components/mus240/admin/BulkPasswordReset';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
@@ -608,10 +609,10 @@ export const InstructorConsole = () => {
                     <FolderOpen className="h-4 w-4 sm:h-5 sm:w-5" />
                     Course Modules
                   </CardTitle>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Toggle modules on/off to control what students can see</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Create, edit, and manage weekly course modules and resources</p>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4 md:p-6">
-                  <ModuleToggleManager />
+                  <Mus240ModuleEditor />
                 </CardContent>
               </Card>}
 

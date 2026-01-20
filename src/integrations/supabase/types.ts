@@ -22332,36 +22332,99 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_module_resources: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          duration: string | null
+          id: string
+          is_required: boolean | null
+          module_id: string
+          resource_type: string
+          title: string
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          duration?: string | null
+          id?: string
+          is_required?: boolean | null
+          module_id: string
+          resource_type: string
+          title: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          duration?: string | null
+          id?: string
+          is_required?: boolean | null
+          module_id?: string
+          resource_type?: string
+          title?: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       mus240_module_settings: {
         Row: {
+          description: string | null
+          end_date: string | null
           id: string
           is_active: boolean | null
           is_locked: boolean | null
+          learning_objectives: Json | null
           module_id: string
           semester: string | null
+          start_date: string | null
+          title: string | null
           unlock_date: string | null
           updated_at: string | null
           updated_by: string | null
+          week_number: number | null
         }
         Insert: {
+          description?: string | null
+          end_date?: string | null
           id?: string
           is_active?: boolean | null
           is_locked?: boolean | null
+          learning_objectives?: Json | null
           module_id: string
           semester?: string | null
+          start_date?: string | null
+          title?: string | null
           unlock_date?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          week_number?: number | null
         }
         Update: {
+          description?: string | null
+          end_date?: string | null
           id?: string
           is_active?: boolean | null
           is_locked?: boolean | null
+          learning_objectives?: Json | null
           module_id?: string
           semester?: string | null
+          start_date?: string | null
+          title?: string | null
           unlock_date?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          week_number?: number | null
         }
         Relationships: []
       }
