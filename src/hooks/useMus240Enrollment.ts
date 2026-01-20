@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
+// MUS 240 course ID from gw_courses (canonical source)
+const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
+
 export interface Mus240Enrollment {
   id: string;
   student_id: string;
@@ -20,7 +23,6 @@ export const useMus240Enrollment = (semesterOverride?: string) => {
   const { currentSemester, setCurrentSemester } = useMus240SemesterSafe();
   const semester = semesterOverride || currentSemester;
   const [enrollment, setEnrollment] = useState<Mus240Enrollment | null>(null);
-  const [gwEnrollment, setGwEnrollment] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,109 +41,66 @@ export const useMus240Enrollment = (semesterOverride?: string) => {
       setLoading(true);
       setError(null);
 
-      // Check BOTH enrollment tables - legacy mus240_enrollments AND gw_course_enrollments
-      
-      // 1. First check the legacy mus240_enrollments table
-      const { data: legacyData, error: legacyError } = await supabase
-        .from('mus240_enrollments')
-        .select('*')
-        .eq('student_id', user.id)
+      // Check gw_course_enrollments - the unified source of truth
+      const { data: enrollmentData, error: enrollError } = await supabase
+        .from('gw_course_enrollments')
+        .select('id, user_id, semester, enrollment_status, enrolled_at, grade, created_at, updated_at')
+        .eq('course_id', MUS240_COURSE_ID)
+        .eq('user_id', user.id)
         .eq('semester', semester)
+        .eq('enrollment_status', 'enrolled')
         .maybeSingle();
 
-      if (legacyError) {
-        console.error('Error checking legacy enrollment:', legacyError);
+      if (enrollError) {
+        console.error('Error checking enrollment:', enrollError);
       }
 
-      // 2. Also check gw_course_enrollments for MUS 240
-      const { data: gwCourseData, error: gwCourseError } = await supabase
-        .from('gw_courses')
-        .select('id')
-        .or(
-          'course_code.ilike.%MUS 240%,course_code.ilike.%MUS-240%,course_code.ilike.%MUS240%,course_code.eq.MUS 240,course_code.eq.MUS240',
-        )
-        .limit(1)
-        .maybeSingle();
-
-      let isEnrolledInGw = false;
-      if (gwCourseData && !gwCourseError) {
-        // First try by user_id
-        const { data: gwEnrollmentByUserId } = await supabase
-          .from('gw_course_enrollments')
-          .select('id, enrollment_status')
-          .eq('course_id', gwCourseData.id)
-          .eq('user_id', user.id)
-          .eq('enrollment_status', 'enrolled')
-          .maybeSingle();
-
-        if (gwEnrollmentByUserId) {
-          isEnrolledInGw = true;
-          console.log('Found MUS 240 enrollment in gw_course_enrollments by user_id');
-        } else {
-          // Also check by student_profile_id (some enrollments use profile ID instead of user ID)
-          const { data: profileData } = await supabase
-            .from('gw_profiles')
-            .select('id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-          if (profileData) {
-            const { data: gwEnrollmentByProfileId } = await supabase
-              .from('gw_course_enrollments')
-              .select('id, enrollment_status')
-              .eq('course_id', gwCourseData.id)
-              .eq('student_profile_id', profileData.id)
-              .eq('enrollment_status', 'enrolled')
-              .maybeSingle();
-
-            if (gwEnrollmentByProfileId) {
-              isEnrolledInGw = true;
-              console.log('Found MUS 240 enrollment in gw_course_enrollments by student_profile_id');
-            }
-          }
-        }
-      }
-
-      setGwEnrollment(isEnrolledInGw);
-
-      // If enrolled in gw_course_enrollments but not in legacy, that's still valid
-      if (isEnrolledInGw && !legacyData) {
-        // Create a synthetic enrollment object for compatibility
+      if (enrollmentData) {
+        // Map to legacy format for compatibility
         setEnrollment({
-          id: 'gw-enrollment',
-          student_id: user.id,
-          semester: semester,
-          enrollment_status: 'enrolled',
-          enrolled_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          id: enrollmentData.id,
+          student_id: enrollmentData.user_id,
+          semester: enrollmentData.semester || semester,
+          enrollment_status: enrollmentData.enrollment_status || 'enrolled',
+          enrolled_at: enrollmentData.enrolled_at,
+          final_grade: enrollmentData.grade,
+          created_at: enrollmentData.created_at,
+          updated_at: enrollmentData.updated_at,
         });
         setLoading(false);
         return;
       }
 
-      // If not enrolled in current semester's legacy table, check any semester
-      if (!legacyData && !isEnrolledInGw) {
-        const { data: anyEnrollment, error: anyError } = await supabase
-          .from('mus240_enrollments')
-          .select('*')
-          .eq('student_id', user.id)
-          .eq('enrollment_status', 'enrolled')
-          .order('enrolled_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+      // If not enrolled in current semester, check if enrolled in any semester
+      const { data: anyEnrollment, error: anyError } = await supabase
+        .from('gw_course_enrollments')
+        .select('id, user_id, semester, enrollment_status, enrolled_at, grade, created_at, updated_at')
+        .eq('course_id', MUS240_COURSE_ID)
+        .eq('user_id', user.id)
+        .eq('enrollment_status', 'enrolled')
+        .order('enrolled_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-        if (!anyError && anyEnrollment && anyEnrollment.semester !== semester) {
-          // User is enrolled in a different semester - auto-switch to it
-          console.log(`Auto-switching from ${semester} to enrolled semester: ${anyEnrollment.semester}`);
-          setCurrentSemester(anyEnrollment.semester);
-          setEnrollment(anyEnrollment);
-          setLoading(false);
-          return;
-        }
+      if (!anyError && anyEnrollment && anyEnrollment.semester !== semester) {
+        // User is enrolled in a different semester - auto-switch to it
+        console.log(`Auto-switching from ${semester} to enrolled semester: ${anyEnrollment.semester}`);
+        setCurrentSemester(anyEnrollment.semester);
+        setEnrollment({
+          id: anyEnrollment.id,
+          student_id: anyEnrollment.user_id,
+          semester: anyEnrollment.semester || semester,
+          enrollment_status: anyEnrollment.enrollment_status || 'enrolled',
+          enrolled_at: anyEnrollment.enrolled_at,
+          final_grade: anyEnrollment.grade,
+          created_at: anyEnrollment.created_at,
+          updated_at: anyEnrollment.updated_at,
+        });
+        setLoading(false);
+        return;
       }
 
-      setEnrollment(legacyData);
+      setEnrollment(null);
     } catch (err) {
       console.error('Error checking enrollment:', err);
       setError('Failed to check enrollment status');
@@ -151,8 +110,7 @@ export const useMus240Enrollment = (semesterOverride?: string) => {
   };
 
   const isEnrolled = () => {
-    // User is enrolled if they have a legacy enrollment OR a gw_course_enrollments entry
-    return enrollment?.enrollment_status === 'enrolled' || gwEnrollment;
+    return enrollment?.enrollment_status === 'enrolled';
   };
 
   return {

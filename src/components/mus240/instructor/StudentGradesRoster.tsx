@@ -35,34 +35,45 @@ export const StudentGradesRoster: React.FC = () => {
     try {
       setLoading(true);
 
-      // Get all enrolled students  
-      const result = await supabase.from('mus240_enrollments' as any).select('student_id, gw_profiles(user_id, full_name, email)').eq('semester', currentSemester).eq('enrollment_status', 'enrolled');
+      // MUS 240 course ID from gw_courses
+      const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
+
+      // Get all enrolled students from unified gw_course_enrollments table
+      const result = await supabase
+        .from('gw_course_enrollments')
+        .select('user_id, gw_profiles!gw_course_enrollments_user_id_fkey(user_id, full_name, email)')
+        .eq('course_id', MUS240_COURSE_ID)
+        .eq('semester', currentSemester)
+        .eq('enrollment_status', 'enrolled');
       const enrollments: any[] = result.data || [];
       const enrollError = result.error;
       if (enrollError) throw enrollError;
-      const studentGradesPromises = enrollments.map(async enrollment => {
-        const studentId = enrollment.student_id;
-        const profile = enrollment.gw_profiles;
+      
+      const studentGradesPromises = enrollments
+        .filter((e: any) => e.user_id) // Only process enrollments with user_id
+        .map(async enrollment => {
+          const studentId = enrollment.user_id;
+          const profile = enrollment.gw_profiles;
 
-        // Fetch all grade data for this student
-        const [assignmentPoints, participationPoints, submissionsCount] = await Promise.all([fetchAssignmentPoints(studentId), fetchParticipationPoints(studentId), fetchSubmissionsCount(studentId)]);
+          // Fetch all grade data for this student
+          const [assignmentPoints, participationPoints, submissionsCount] = await Promise.all([fetchAssignmentPoints(studentId), fetchParticipationPoints(studentId), fetchSubmissionsCount(studentId)]);
 
-        // Calculate overall score
-        const totalEarned = assignmentPoints.earned + participationPoints;
-        const totalPossible = 725; // 650 assignments + 75 participation
-        const overallPercentage = totalPossible > 0 ? totalEarned / totalPossible * 100 : 0;
-        return {
-          student_id: studentId,
-          student_name: profile?.full_name || 'Unknown',
-          student_email: profile?.email || '',
-          assignment_points: assignmentPoints.earned,
-          participation_points: participationPoints,
-          overall_score: totalEarned,
-          overall_possible: totalPossible,
-          letter_grade: getLetterGrade(overallPercentage),
-          submissions_count: submissionsCount
-        };
-      });
+          // Calculate overall score
+          const totalEarned = assignmentPoints.earned + participationPoints;
+          const totalPossible = 725; // 650 assignments + 75 participation
+          const overallPercentage = totalPossible > 0 ? totalEarned / totalPossible * 100 : 0;
+          return {
+            student_id: studentId,
+            student_name: profile?.full_name || 'Unknown',
+            student_email: profile?.email || '',
+            assignment_points: assignmentPoints.earned,
+            participation_points: participationPoints,
+            overall_score: totalEarned,
+            overall_possible: totalPossible,
+            letter_grade: getLetterGrade(overallPercentage),
+            submissions_count: submissionsCount
+          };
+        });
       const studentGrades = await Promise.all(studentGradesPromises);
 
       // Sort by overall percentage descending
