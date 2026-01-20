@@ -58,29 +58,32 @@ export const AttendanceLiveRoster: React.FC<AttendanceLiveRosterProps> = ({
 
   const fetchEnrolledStudents = async () => {
     try {
-      const { data, error } = await supabase
+      // Cast to any to avoid deep type instantiation errors
+      const { data: rawEnrollments, error } = await (supabase as any)
         .from('gw_course_enrollments')
         .select('id, user_id')
         .eq('course_id', courseId)
         .eq('status', 'active');
 
       if (error) throw error;
-
-      // Fetch profiles separately
-      const userIds = (data || []).map(e => e.user_id);
+      
+      const enrollments = (rawEnrollments || []) as Array<{ id: string; user_id: string }>;
+      const userIds = enrollments.map(e => e.user_id);
+      
       if (userIds.length === 0) {
         setEnrolledStudents([]);
         return;
       }
       
-      const { data: profiles } = await supabase
+      const { data: rawProfiles } = await (supabase as any)
         .from('gw_profiles')
         .select('user_id, full_name, email')
         .in('user_id', userIds);
+        
+      const profiles = (rawProfiles || []) as Array<{ user_id: string; full_name: string | null; email: string | null }>;
+      const profileMap = new Map(profiles.map(p => [p.user_id, p]));
 
-      const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
-
-      const students: EnrolledStudent[] = (data || []).map(enrollment => {
+      const students: EnrolledStudent[] = enrollments.map(enrollment => {
         const profile = profileMap.get(enrollment.user_id);
         return {
           id: enrollment.id,

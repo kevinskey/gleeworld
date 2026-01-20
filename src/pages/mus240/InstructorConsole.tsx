@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown, MessagesSquare } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown, MessagesSquare, UserCheck } from 'lucide-react';
 import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
