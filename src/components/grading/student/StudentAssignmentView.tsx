@@ -72,34 +72,60 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
   });
 
   useEffect(() => {
-    if (submission?.notes) {
-      setEditedContent(submission.notes);
-    }
+    const existingText = submission?.content ?? submission?.notes;
+    if (existingText) setEditedContent(existingText);
   }, [submission]);
 
   const isVideoAssignment = assignment?.assignment_type === 'exercise' || 
     assignment?.title?.toLowerCase().includes('conducting') ||
     assignment?.title?.toLowerCase().includes('video');
 
+  // IMPORTANT: `gw_assignment_submissions.assignment_id` references `gw_sight_reading_assignments(id)`.
+  // Essay / general course assignments live in `gw_course_assignments`, so their submissions must go to `gw_course_submissions`.
+  const submissionTable = isVideoAssignment ? 'gw_assignment_submissions' : 'gw_course_submissions';
+
   const updateMutation = useMutation({
     mutationFn: async ({ content, recordingUrl }: { content?: string; recordingUrl?: string }) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      const nowIso = new Date().toISOString();
+
+      // Video / sight-reading style submissions
+      if (submissionTable === 'gw_assignment_submissions') {
+        const updateData: any = {
+          assignment_id: assignmentId,
+          user_id: user.id,
+          status: 'submitted',
+          submitted_at: nowIso,
+        };
+
+        if (content !== undefined) updateData.notes = content;
+        if (recordingUrl) updateData.recording_url = recordingUrl;
+
+        const { error } = await supabase
+          .from('gw_assignment_submissions' as any)
+          .upsert(updateData);
+
+        if (error) throw error;
+        return;
+      }
+
+      // Essay / general course submissions
       const updateData: any = {
         assignment_id: assignmentId,
-        user_id: user?.id,
+        student_id: user.id,
         status: 'submitted',
-        submitted_at: new Date().toISOString(),
+        submitted_at: nowIso,
       };
-      
+
       if (content !== undefined) {
-        updateData.notes = content;
+        updateData.content = content;
+        updateData.word_count = content.trim() ? content.trim().split(/\s+/).length : 0;
       }
-      if (recordingUrl) {
-        updateData.recording_url = recordingUrl;
-      }
-      
+
       const { error } = await supabase
-        .from('gw_assignment_submissions' as any)
-        .upsert(updateData);
+        .from('gw_course_submissions' as any)
+        .upsert(updateData, { onConflict: 'assignment_id,student_id' });
       
       if (error) throw error;
     },
@@ -212,9 +238,9 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
                 </div>
               ) : (
                 <>
-                  {submission.notes && (
+                  {(submission.content || submission.notes) && (
                     <div className="p-4 bg-muted rounded-lg">
-                      <pre className="whitespace-pre-wrap">{submission.notes}</pre>
+                      <pre className="whitespace-pre-wrap">{submission.content ?? submission.notes}</pre>
                     </div>
                   )}
                   <p className="text-sm text-muted-foreground mt-2">
