@@ -908,7 +908,9 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
   
   // Use editable version for LH100 (check both UUID and slug)
   const LH100_UUID = 'a0000000-0000-0000-0000-000000000100';
+  const MUS240_UUID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
   const isLH100 = courseId === LH100_UUID || courseId === 'lh-100';
+  const isMUS240 = courseId === MUS240_UUID || courseId === 'mus-240';
   
   if (isLH100) {
     return <EditableLH100Modules isEnrolled={isEnrolled} isAdmin={isAdmin} />;
@@ -918,6 +920,53 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
   const courseModules = COURSE_MODULES[courseId] || [];
   const [modules, setModules] = useState<WeeklyModule[]>(courseModules);
   const [expandedWeeks, setExpandedWeeks] = useState<string[]>(['week-1', 'week-2']);
+
+  // For MUS 240, fetch module settings and filter by is_active for students
+  useEffect(() => {
+    const fetchMUS240ModuleSettings = async () => {
+      if (!isMUS240) return;
+
+      try {
+        const { data: settings, error } = await supabase
+          .from('mus240_module_settings')
+          .select('module_id, is_active, is_locked, title, description, learning_objectives');
+
+        if (error) {
+          console.error('Error fetching module settings:', error);
+          return;
+        }
+
+        const settingsMap = new Map(settings?.map(s => [s.module_id, s]) || []);
+        
+        // Merge settings with hardcoded modules
+        let mergedModules = MUS240_MODULES.map(mod => {
+          const setting = settingsMap.get(mod.id);
+          if (setting) {
+            return {
+              ...mod,
+              is_active: setting.is_active ?? mod.is_active,
+              is_locked: setting.is_locked ?? mod.is_locked,
+              title: setting.title || mod.title,
+              description: setting.description || mod.description,
+              learning_objectives: (setting.learning_objectives as string[]) || mod.learning_objectives,
+            };
+          }
+          return mod;
+        });
+
+        // Filter out inactive modules for non-admin users
+        if (!isAdmin) {
+          mergedModules = mergedModules.filter(mod => mod.is_active);
+        }
+
+        setModules(mergedModules);
+      } catch (err) {
+        console.error('Error in fetchMUS240ModuleSettings:', err);
+      }
+    };
+
+    fetchMUS240ModuleSettings();
+  }, [isMUS240, isAdmin]);
 
   // Calculate overall progress
   const overallProgress = modules.length > 0 
