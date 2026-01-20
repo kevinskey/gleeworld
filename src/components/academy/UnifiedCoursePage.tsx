@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers, Archive, Images } from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers, Archive, Images, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -277,110 +277,129 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="flex min-h-screen bg-background">
         {/* Left Sidebar - Navigation - Visible on tablet (md) and up */}
-        <div className="w-[160px] md:w-[180px] lg:w-[200px] min-w-[160px] md:min-w-[180px] lg:min-w-[200px] bg-muted border-r border-border flex-shrink-0 hidden md:block">
-          <div className="px-2 py-1.5 border-b border-border">
-            <Mus240SemesterSelector showLabel={false} className="mb-0.5" />
-            <div className="text-xs font-bold text-foreground pl-1">{course.courseCode}</div>
-            <div className="text-xs text-black border border-solid border-primary py-0.5 px-1.5 leading-tight">{course.title}</div>
+        <div className="w-[180px] md:w-[200px] lg:w-[220px] min-w-[180px] md:min-w-[200px] lg:min-w-[220px] bg-card border-r border-border flex-shrink-0 hidden md:flex md:flex-col h-[calc(100vh-var(--gw-header-h,4rem))]">
+          {/* Sidebar Header with menu icon */}
+          <div className="px-3 py-2 border-b border-border bg-muted/30">
+            <div className="flex items-center gap-2">
+              <button className="p-1 hover:bg-muted rounded">
+                <div className="space-y-1">
+                  <div className="w-4 h-0.5 bg-foreground/60"></div>
+                  <div className="w-4 h-0.5 bg-foreground/60"></div>
+                  <div className="w-4 h-0.5 bg-foreground/60"></div>
+                </div>
+              </button>
+            </div>
           </div>
           
-          <nav className="px-1 py-0.5 space-y-px">
-            {(course.courseCode === 'MUS 070' ? [
-              { icon: Home, label: 'Home', tab: 'home' },
-              { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
-              { icon: Book, label: 'Handbook', tab: 'handbook' },
-              { icon: Vote, label: 'Elections', tab: 'elections' },
-              { icon: Calendar, label: 'Calendar', tab: 'calendar' },
-              { icon: Video, label: 'Video Library', tab: 'video-library' },
-              { icon: Headphones, label: 'Playlist', tab: 'playlist' },
-              { icon: Bell, label: 'Announcements', tab: 'announcements' },
-              { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
-              { icon: Music, label: 'Music Library', tab: 'music-library' },
-              { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
-              { icon: FileCheck, label: 'Tests', tab: 'tests' },
-              { icon: BarChart, label: 'Polls', tab: 'polls' },
-              { icon: Library, label: 'Resources', tab: 'resources' },
-              { icon: Trophy, label: 'Grades', tab: 'grades' },
-              { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
-              { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
-            ] : course.courseCode === 'LH 100' ? [
-              { icon: Home, label: 'Home', tab: 'home' },
-              { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
-              { icon: BookMarked, label: 'Planner', tab: 'planner' },
-              { icon: Images, label: 'Photo Gallery', tab: 'photo-gallery' },
-              { icon: Calendar, label: 'Calendar', tab: 'calendar' },
-              { icon: Video, label: 'Video Library', tab: 'video-library' },
-              { icon: Headphones, label: 'Playlist', tab: 'playlist' },
-              { icon: Bell, label: 'Announcements', tab: 'announcements' },
-              { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
-              { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
-              { icon: PenLine, label: 'Journals', tab: 'journals' },
-              { icon: FileCheck, label: 'Tests', tab: 'tests' },
-              { icon: BarChart, label: 'Polls', tab: 'polls' },
-              { icon: Library, label: 'Resources', tab: 'resources' },
-              { icon: Trophy, label: 'Grades', tab: 'grades' },
-              { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
-              { icon: Archive, label: 'Archives', tab: 'archives' },
-            ] : [
+          {/* Primary Navigation */}
+          <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
+            {[
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
               { icon: Layers, label: 'Modules', tab: 'modules' },
-              { icon: Calendar, label: 'Calendar', tab: 'calendar' },
-              { icon: Video, label: 'Video Library', tab: 'video-library' },
-              { icon: Headphones, label: 'Playlist', tab: 'playlist' },
-              { icon: Bell, label: 'Announcements', tab: 'announcements' },
-              { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
-              { icon: MessageSquare, label: 'Discussions', tab: 'discussions' },
               { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
+              { icon: MessageSquare, label: 'Discussions', tab: 'discussions' },
               { icon: PenLine, label: 'Journals', tab: 'journals' },
-              { icon: FileCheck, label: 'Tests', tab: 'tests' },
               { icon: BarChart, label: 'Polls', tab: 'polls' },
-              { icon: Library, label: 'Resources', tab: 'resources' },
+              { icon: FileCheck, label: 'Tests', tab: 'tests' },
               { icon: Trophy, label: 'Grades', tab: 'grades' },
-              { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
-              { icon: Archive, label: 'Archives', tab: 'archives' },
-            ]).map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
-                <item.icon className="h-3 w-3 flex-shrink-0" />
-                <span className="text-xs leading-tight">{item.label}</span>
-              </button>)}
+            ].map(item => (
+              <button 
+                key={item.tab} 
+                onClick={() => setActiveTab(item.tab)} 
+                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors ${
+                  activeTab === item.tab 
+                    ? 'bg-primary text-primary-foreground font-medium' 
+                    : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+            
+            {/* Course Core Section */}
+            <div className="pt-4">
+              <h3 className="font-semibold text-foreground text-xs px-2.5 mb-1">Course Core</h3>
+              {[
+                { icon: Users, label: 'Engagement', tab: 'engagement' },
+                { icon: Video, label: 'Video', tab: 'video-library' },
+                { icon: Headphones, label: 'Audio', tab: 'playlist' },
+                { icon: Music, label: 'Sheet Music', tab: 'music-library' },
+                { icon: Library, label: 'Resources', tab: 'resources' },
+              ].map(item => (
+                <button 
+                  key={item.tab} 
+                  onClick={() => setActiveTab(item.tab)} 
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors ${
+                    activeTab === item.tab 
+                      ? 'bg-primary text-primary-foreground font-medium' 
+                      : 'text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
           </nav>
           
-          {/* Course Resources Section */}
-          <div className="px-1.5 py-1 border-t border-border space-y-px">
-            <h3 className="font-semibold text-foreground text-[10px] uppercase tracking-wide px-1">Resources</h3>
-            {[{
-              icon: Video,
-              label: 'Video Library'
-            }, {
-              icon: Headphones,
-              label: 'Audio'
-            }, {
-              icon: Music,
-              label: 'Sheet Music'
-            }, {
-              icon: FileText,
-              label: 'Documents'
-            }].map((item, i) => <button key={i} className="w-full flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
-                <item.icon className="h-3 w-3" />
+          {/* User Profile Section at bottom */}
+          <div className="border-t border-border px-2 py-3 space-y-0.5">
+            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-foreground">
+              <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+              <span className="truncate text-sm">{user?.email?.split('@')[0] || 'Student'}</span>
+            </div>
+            
+            {[
+              { icon: Users, label: 'Access & DC', tab: 'access' },
+              { icon: Settings, label: 'Settings', tab: 'settings' },
+              { icon: ArrowLeft, label: 'Navigate', tab: 'navigate' },
+            ].map(item => (
+              <button 
+                key={item.tab} 
+                onClick={() => {
+                  if (item.tab === 'navigate') {
+                    navigate('/glee-academy');
+                  } else {
+                    setActiveTab(item.tab);
+                  }
+                }} 
+                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <item.icon className="h-4 w-4 flex-shrink-0" />
                 <span>{item.label}</span>
-              </button>)}
-          </div>
-          
-          {/* Secretary Attendance Button - For Librarian/Secretary */}
-          {isSecretary() && <div className="px-1.5 py-1 border-t border-border">
-              <Button onClick={() => setActiveTab('secretary')} variant={activeTab === 'secretary' ? 'default' : 'outline'} className="w-full text-xs h-7" size="sm">
-                <UserCheck className="h-3 w-3 mr-1" />
+              </button>
+            ))}
+            
+            {/* Secretary Attendance Button */}
+            {isSecretary() && (
+              <Button 
+                onClick={() => setActiveTab('secretary')} 
+                variant={activeTab === 'secretary' ? 'default' : 'outline'} 
+                className="w-full text-xs h-8 mt-2" 
+                size="sm"
+              >
+                <UserCheck className="h-3.5 w-3.5 mr-1.5" />
                 Secretary
               </Button>
-            </div>}
-          
-          {/* Instructor Control Center Button */}
-          {isAdmin && <div className="px-1.5 py-1 border-t border-border">
-              <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="w-full text-xs h-7" size="sm">
-                <Settings className="h-3 w-3 mr-1" />
+            )}
+            
+            {/* Instructor Control Center Button */}
+            {isAdmin && (
+              <Button 
+                onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} 
+                variant="default" 
+                className="w-full text-xs h-8 mt-2" 
+                size="sm"
+              >
+                <Settings className="h-3.5 w-3.5 mr-1.5" />
                 Instructor
               </Button>
-            </div>}
+            )}
+          </div>
         </div>
 
         {/* Main Content Area */}
