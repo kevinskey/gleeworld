@@ -80,21 +80,29 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
     try {
       setLoading(true);
 
-      // Get enrolled students
+      // MUS 240 course ID from gw_courses
+      const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
+
+      // Get enrolled students from unified gw_course_enrollments table
       const {
         data: enrollments,
         error: enrollError
-      } = await supabase.from('mus240_enrollments').select('student_id, gw_profiles(user_id, full_name)').eq('semester', currentSemester).eq('enrollment_status', 'enrolled');
+      } = await supabase
+        .from('gw_course_enrollments')
+        .select('user_id, gw_profiles!gw_course_enrollments_user_id_fkey(user_id, full_name)')
+        .eq('course_id', MUS240_COURSE_ID)
+        .eq('semester', currentSemester)
+        .eq('enrollment_status', 'enrolled');
       if (enrollError) throw enrollError;
 
-      // Deduplicate enrollments by student_id
+      // Deduplicate enrollments by user_id
       const seenIds = new Set<string>();
       const uniqueEnrollments = (enrollments || []).filter((e: any) => {
-        if (seenIds.has(e.student_id)) return false;
-        seenIds.add(e.student_id);
+        if (!e.user_id || seenIds.has(e.user_id)) return false;
+        seenIds.add(e.user_id);
         return true;
       });
-      const studentIds = uniqueEnrollments.map((e: any) => e.student_id);
+      const studentIds = uniqueEnrollments.map((e: any) => e.user_id);
       if (studentIds.length === 0) {
         setStudents([]);
         return;
@@ -181,7 +189,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
 
       // Calculate grades for each student
       const studentGrades: StudentGradeRow[] = uniqueEnrollments.map((enrollment: any) => {
-        const studentId = enrollment.student_id;
+        const studentId = enrollment.user_id;
         const studentName = enrollment.gw_profiles?.full_name || 'Unknown';
 
         // Assignments (journals): curved based on max score
