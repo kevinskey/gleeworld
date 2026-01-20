@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AcademyCourse } from '@/config/academyCourses';
+import { getCourseTemplateConfig, CourseNavItem } from '@/config/courseTemplateConfig';
 import { CourseAssignments } from './CourseAssignments';
 import { CourseGradebook } from './CourseGradebook';
 import { CourseAttendance } from './CourseAttendance';
@@ -34,6 +35,7 @@ import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 import { CoursePlaylistPlayer } from '@/components/course/CoursePlaylistPlayer';
 import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants';
 import { useUserRole } from '@/hooks/useUserRole';
+
 const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager').then(m => ({
   default: m.SecretaryAttendanceManager
 })));
@@ -81,6 +83,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   const [enrollmentLoading, setEnrollmentLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isExecutiveBoard, setIsExecutiveBoard] = useState(false);
+  
+  // Get course template configuration (Course Template v1)
+  const templateConfig = useMemo(() => getCourseTemplateConfig(course.id), [course.id]);
 
   // Sync tab with URL changes
   useEffect(() => {
@@ -291,19 +296,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
           </div>
           
-          {/* Primary Navigation */}
+          {/* Primary Navigation - Course Template v1 */}
           <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
-            {[
-              { icon: Home, label: 'Home', tab: 'home' },
-              { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
-              { icon: Layers, label: 'Modules', tab: 'modules' },
-              { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
-              { icon: MessageSquare, label: 'Discussions', tab: 'discussions' },
-              { icon: PenLine, label: 'Journals', tab: 'journals' },
-              { icon: BarChart, label: 'Polls', tab: 'polls' },
-              { icon: FileCheck, label: 'Tests', tab: 'tests' },
-              { icon: Trophy, label: 'Grades', tab: 'grades' },
-            ].map(item => (
+            {templateConfig.primaryNav.map(item => (
               <button 
                 key={item.tab} 
                 onClick={() => setActiveTab(item.tab)} 
@@ -318,16 +313,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </button>
             ))}
             
-            {/* Course Core Section */}
+            {/* Course Core Section - Course Template v1 */}
             <div className="pt-4">
               <h3 className="font-semibold text-foreground text-xs px-2.5 mb-1">Course Core</h3>
-              {[
-                { icon: Users, label: 'Engagement', tab: 'engagement' },
-                { icon: Video, label: 'Video', tab: 'video-library' },
-                { icon: Headphones, label: 'Audio', tab: 'playlist' },
-                { icon: Music, label: 'Sheet Music', tab: 'music-library' },
-                { icon: Library, label: 'Resources', tab: 'resources' },
-              ].map(item => (
+              {templateConfig.courseCore.map(item => (
                 <button 
                   key={item.tab} 
                   onClick={() => setActiveTab(item.tab)} 
@@ -342,6 +331,27 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </button>
               ))}
             </div>
+            
+            {/* Extension Modules - Course-specific features */}
+            {templateConfig.extensions && templateConfig.extensions.length > 0 && (
+              <div className="pt-4">
+                <h3 className="font-semibold text-foreground text-xs px-2.5 mb-1">Extensions</h3>
+                {templateConfig.extensions.map(item => (
+                  <button 
+                    key={item.tab} 
+                    onClick={() => setActiveTab(item.tab)} 
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors ${
+                      activeTab === item.tab 
+                        ? 'bg-primary text-primary-foreground font-medium' 
+                        : 'text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </nav>
           
           {/* User Profile Section at bottom */}
