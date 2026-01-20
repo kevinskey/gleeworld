@@ -247,7 +247,10 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                     {urgentAssignment.status === 'overdue' && ' · OVERDUE'}
                   </p>
                 </div>
-                <Button className="bg-primary hover:bg-primary/90">
+                <Button 
+                  className="bg-primary hover:bg-primary/90"
+                  onClick={() => navigate(`/grading/student/assignment/${urgentAssignment.id}`)}
+                >
                   Start Assignment
                 </Button>
               </div>
@@ -301,7 +304,11 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                     Due: {format(new Date(urgentAssignment.due_date), 'MMM d')} · {urgentAssignment.points} pts
                   </p>
                 </div>
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-xs">
+                <Button 
+                  size="sm" 
+                  className="bg-primary hover:bg-primary/90 text-xs"
+                  onClick={() => navigate(`/grading/student/assignment/${urgentAssignment.id}`)}
+                >
                   Start Assignment
                 </Button>
               </div>
