@@ -10,6 +10,7 @@ import { FileText, ArrowLeft, BarChart3, BookOpen } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { StudentPollInterface } from '@/components/course/StudentPollInterface';
+import { ACADEMY_COURSES } from '@/config/academyCourses';
 
 interface StudentCourseViewProps {
   courseId: string;
@@ -145,7 +146,11 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
+        <Button variant="ghost" size="icon" onClick={() => {
+          // Navigate to the course landing page if found, otherwise fallback to dashboard
+          const courseConfig = ACADEMY_COURSES.find(c => c.id === courseId);
+          navigate(courseConfig?.route || '/dashboard');
+        }}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
