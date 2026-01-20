@@ -26693,6 +26693,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_engagement_daily: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          modules_visited: string[] | null
+          page_views: number | null
+          session_count: number | null
+          total_time_minutes: number | null
+          unique_pages: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          modules_visited?: string[] | null
+          page_views?: number | null
+          session_count?: number | null
+          total_time_minutes?: number | null
+          unique_pages?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          modules_visited?: string[] | null
+          page_views?: number | null
+          session_count?: number | null
+          total_time_minutes?: number | null
+          unique_pages?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_module_permissions: {
         Row: {
           created_at: string
@@ -26775,6 +26814,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_page_views: {
+        Row: {
+          browser: string | null
+          created_at: string | null
+          device_type: string | null
+          id: string
+          module_id: string | null
+          page_path: string
+          page_title: string | null
+          referrer: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          module_id?: string | null
+          page_path: string
+          page_title?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          module_id?: string | null
+          page_path?: string
+          page_title?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       user_payments: {
         Row: {
@@ -26998,6 +27076,45 @@ export type Database = {
           created_at?: string | null
           role?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          browser: string | null
+          device_type: string | null
+          id: string
+          ip_address: string | null
+          is_active: boolean | null
+          last_activity: string | null
+          page_count: number | null
+          session_end: string | null
+          session_start: string | null
+          user_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          page_count?: number | null
+          session_end?: string | null
+          session_start?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          page_count?: number | null
+          session_end?: string | null
+          session_start?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

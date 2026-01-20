@@ -29,6 +29,7 @@ import { HomeRoute } from "@/components/routing/HomeRoute";
 import { ScrollToTop } from "@/components/routing/ScrollToTop";
 import { ModuleRouteRedirect } from "@/components/routing/module-route-redirect";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { UsageTracker } from "@/components/tracking/UsageTracker";
 import MusicTheoryFundamentals from "./pages/MusicTheoryFundamentals";
 import ChoralConductingLiterature from "./pages/ChoralConductingLiterature";
 import Mus210 from "./pages/Mus210";
@@ -357,6 +358,7 @@ const App = () => {
                   <GleeAssistant />
                   <MessengerModal />
                   <DesignSystemEnforcer />
+                  <UsageTracker>
                   <Suspense
                     fallback={
                       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -2358,6 +2360,7 @@ const App = () => {
                                    <Route path="*" element={<NotFound />} />
                                </Routes>
                       </Suspense>
+                      </UsageTracker>
                     <GlobalMusicPlayer />
                     <PWAInstallPrompt />
                    </div>
