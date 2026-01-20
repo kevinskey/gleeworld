@@ -55,20 +55,36 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
     },
   });
 
-  const { data: submission, isLoading: submissionLoading } = useQuery({
-    queryKey: ['gw-student-submission', assignmentId, user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_assignment_submissions' as any)
-        .select('*')
-        .eq('assignment_id', assignmentId)
-        .eq('user_id', user?.id)
-        .maybeSingle();
+  // Determine assignment type to pick the correct submission table
+  const isVideoAssignmentType = assignment?.assignment_type === 'exercise' || 
+    assignment?.title?.toLowerCase().includes('conducting') ||
+    assignment?.title?.toLowerCase().includes('video');
 
-      if (error) throw error;
-      return data as any;
+  const { data: submission, isLoading: submissionLoading } = useQuery({
+    queryKey: ['gw-student-submission', assignmentId, user?.id, isVideoAssignmentType],
+    queryFn: async () => {
+      // Video assignments use gw_assignment_submissions, essays use gw_course_submissions
+      if (isVideoAssignmentType) {
+        const { data, error } = await supabase
+          .from('gw_assignment_submissions' as any)
+          .select('*')
+          .eq('assignment_id', assignmentId)
+          .eq('user_id', user?.id)
+          .maybeSingle();
+        if (error) throw error;
+        return data as any;
+      } else {
+        const { data, error } = await supabase
+          .from('gw_course_submissions' as any)
+          .select('*')
+          .eq('assignment_id', assignmentId)
+          .eq('student_id', user?.id)
+          .maybeSingle();
+        if (error) throw error;
+        return data as any;
+      }
     },
-    enabled: !!user,
+    enabled: !!user && assignment !== undefined,
   });
 
   useEffect(() => {
@@ -76,13 +92,9 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
     if (existingText) setEditedContent(existingText);
   }, [submission]);
 
-  const isVideoAssignment = assignment?.assignment_type === 'exercise' || 
-    assignment?.title?.toLowerCase().includes('conducting') ||
-    assignment?.title?.toLowerCase().includes('video');
-
   // IMPORTANT: `gw_assignment_submissions.assignment_id` references `gw_sight_reading_assignments(id)`.
   // Essay / general course assignments live in `gw_course_assignments`, so their submissions must go to `gw_course_submissions`.
-  const submissionTable = isVideoAssignment ? 'gw_assignment_submissions' : 'gw_course_submissions';
+  const submissionTable = isVideoAssignmentType ? 'gw_assignment_submissions' : 'gw_course_submissions';
 
   const updateMutation = useMutation({
     mutationFn: async ({ content, recordingUrl }: { content?: string; recordingUrl?: string }) => {
@@ -132,8 +144,12 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gw-student-submission', assignmentId, user?.id] });
       queryClient.invalidateQueries({ queryKey: ['gw-student-assignments'] });
-      toast.success(submission ? 'Submission updated successfully' : 'Submission created successfully');
+      toast.success(submission ? 'Submission updated successfully' : 'Assignment submitted successfully!');
       setIsEditing(false);
+      // Navigate back to course page after successful submission
+      if (assignment?.course_id) {
+        navigate(`/academy/mus-240`);
+      }
     },
     onError: (error) => {
       toast.error('Failed to save submission');
@@ -189,7 +205,7 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
             <h3 className="font-semibold mb-2">Description:</h3>
             <p className="text-muted-foreground">{assignment?.description || 'No description provided'}</p>
           </div>
-          {isVideoAssignment && (
+          {isVideoAssignmentType && (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Video className="h-4 w-4 text-primary" />
@@ -251,7 +267,7 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
             </div>
           ) : (
             <div className="space-y-4">
-              {!isVideoAssignment && (
+              {!isVideoAssignmentType && (
                 <>
                   <p className="text-muted-foreground">You haven't submitted this assignment yet.</p>
                   <div className="space-y-2">
