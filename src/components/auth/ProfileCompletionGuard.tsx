@@ -16,6 +16,9 @@ const EXEMPT_PATHS = [
   '/auth',
   '/reset-password',
   '/onboarding',
+  '/academy',        // Allow academy course access without complete profile
+  '/classes/mus240', // Legacy MUS 240 path
+  '/grading',        // Assignment grading pages
 ];
 
 export const ProfileCompletionGuard: React.FC<ProfileCompletionGuardProps> = ({ children }) => {
