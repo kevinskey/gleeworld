@@ -80,15 +80,34 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
 
       if (error) throw error;
 
-      // Fetch submissions for current user
+      // Fetch submissions for current user from BOTH tables
       if (user && data) {
-        const { data: submissions } = await supabase
+        const assignmentIds = data.map(a => a.id);
+        
+        // Check gw_assignment_submissions (video/sight-reading assignments)
+        const { data: videoSubmissions } = await supabase
           .from('gw_assignment_submissions')
           .select('assignment_id, status, score_value')
           .eq('user_id', user.id)
-          .in('assignment_id', data.map(a => a.id));
+          .in('assignment_id', assignmentIds);
 
-        const submissionMap = new Map(submissions?.map(s => [s.assignment_id, { status: s.status, grade: s.score_value }]) || []);
+        // Check gw_course_submissions (essay/general assignments)
+        const { data: essaySubmissions } = await supabase
+          .from('gw_course_submissions')
+          .select('assignment_id, status, points_earned')
+          .eq('student_id', user.id)
+          .in('assignment_id', assignmentIds);
+
+        // Merge both submission sources into a single map
+        const submissionMap = new Map<string, { status: string; grade: number | null }>();
+        
+        videoSubmissions?.forEach(s => {
+          submissionMap.set(s.assignment_id, { status: s.status, grade: s.score_value });
+        });
+        
+        essaySubmissions?.forEach(s => {
+          submissionMap.set(s.assignment_id, { status: s.status, grade: s.points_earned });
+        });
 
         const enrichedAssignments = data.map(assignment => ({
           ...assignment,
