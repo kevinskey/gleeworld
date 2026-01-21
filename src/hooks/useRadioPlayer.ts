@@ -283,18 +283,21 @@ export const useRadioPlayer = () => {
         navigator.mediaSession.playbackState = 'paused';
       }
       
-      // Use a small delay before checking if we should auto-resume
-      // This allows userPausedRef to be set by the pause() function first
+      // Use a longer delay to ensure userPausedRef is set by pause() function first
+      // This prevents the auto-resume loop when user explicitly pauses
       setTimeout(() => {
-        // If we didn't explicitly pause and should be playing, try to resume
-        if (!userPausedRef.current && isPlayingRef.current) {
+        // Only auto-resume if:
+        // 1. User didn't explicitly pause (userPausedRef is false)
+        // 2. We were supposed to be playing (isPlayingRef is true)
+        // 3. The audio is actually paused (double-check state)
+        if (!userPausedRef.current && isPlayingRef.current && audioRef.current?.paused) {
           console.log('useRadioPlayer: Browser paused audio unexpectedly, will try to resume...');
           clearReconnectTimeout();
           reconnectTimeoutRef.current = setTimeout(() => {
             resumePlayback();
           }, 500);
         }
-      }, 50);
+      }, 100); // Increased delay to 100ms for more reliable flag checking
     };
     
     const handleError = (e: Event) => {
@@ -489,11 +492,16 @@ export const useRadioPlayer = () => {
   }, [refreshNowPlaying, toast, startHeartbeat]);
 
   const pause = useCallback(() => {
-    clearReconnectTimeout();
-    clearHeartbeat();
+    // IMPORTANT: Set flags BEFORE calling audio.pause() to prevent race condition
+    // The handlePause event listener checks these refs, so they must be set first
     userPausedRef.current = true;
     isPlayingRef.current = false;
     wasPlayingBeforeHiddenRef.current = false;
+    
+    // Clear any pending reconnect/heartbeat
+    clearReconnectTimeout();
+    clearHeartbeat();
+    
     if (audioRef.current) {
       audioRef.current.pause();
     }
