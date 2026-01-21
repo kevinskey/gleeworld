@@ -7,6 +7,7 @@ export interface ParsedSlide {
   notes?: string;
   shapes: SlideShape[];
   images: SlideImage[];
+  audio: SlideAudio[];
   backgroundColor?: string;
 }
 
@@ -34,12 +35,20 @@ export interface SlideImage {
   height?: number;
 }
 
+export interface SlideAudio {
+  id: string;
+  src: string;
+  name?: string;
+  autoplay?: boolean;
+}
+
 export interface PPTXParseResult {
   slides: ParsedSlide[];
   title?: string;
   author?: string;
   slideCount: number;
   images: Map<string, string>;
+  audioFiles: Map<string, string>;
 }
 
 // EMU (English Metric Units) to pixels conversion
@@ -97,6 +106,7 @@ function parseSlideXml(xml: string, slideIndex: number): ParsedSlide {
   
   const shapes: SlideShape[] = [];
   const images: SlideImage[] = [];
+  const audio: SlideAudio[] = [];
   let fullText = '';
   
   // Find all shape trees
@@ -208,6 +218,7 @@ function parseSlideXml(xml: string, slideIndex: number): ParsedSlide {
     content: fullText,
     shapes,
     images,
+    audio,
     backgroundColor
   };
 }
@@ -325,6 +336,34 @@ export async function parsePowerPoint(fileUrl: string): Promise<PPTXParseResult>
   // Parse each slide
   const slides: ParsedSlide[] = [];
   const allImages = new Map<string, string>();
+  const allAudio = new Map<string, string>();
+  
+  // First, extract all audio files from the media folder
+  const audioExtensions = ['mp3', 'wav', 'wma', 'm4a', 'ogg', 'aac'];
+  zip.forEach((relativePath) => {
+    const ext = relativePath.split('.').pop()?.toLowerCase();
+    if (relativePath.startsWith('ppt/media/') && ext && audioExtensions.includes(ext)) {
+      // Mark for extraction
+      allAudio.set(relativePath, '');
+    }
+  });
+  
+  // Extract audio files
+  for (const [audioPath] of allAudio) {
+    const audioData = await zip.file(audioPath)?.async('base64');
+    if (audioData) {
+      const ext = audioPath.split('.').pop()?.toLowerCase();
+      let mimeType = 'audio/mpeg';
+      if (ext === 'wav') mimeType = 'audio/wav';
+      else if (ext === 'wma') mimeType = 'audio/x-ms-wma';
+      else if (ext === 'm4a') mimeType = 'audio/mp4';
+      else if (ext === 'ogg') mimeType = 'audio/ogg';
+      else if (ext === 'aac') mimeType = 'audio/aac';
+      
+      allAudio.set(audioPath, `data:${mimeType};base64,${audioData}`);
+      console.log('[pptx-parser] Extracted audio:', audioPath);
+    }
+  }
   
   for (let i = 0; i < slideFiles.length; i++) {
     const slideFile = slideFiles[i];
@@ -333,7 +372,7 @@ export async function parsePowerPoint(fileUrl: string): Promise<PPTXParseResult>
     if (slideContent) {
       const slide = parseSlideXml(slideContent, i + 1);
       
-      // Get relationships for this slide to resolve image references
+      // Get relationships for this slide to resolve image and audio references
       const relsPath = slideFile.replace('slides/', 'slides/_rels/').replace('.xml', '.xml.rels');
       const relsContent = await zip.file(relsPath)?.async('string');
       
@@ -367,6 +406,27 @@ export async function parsePowerPoint(fileUrl: string): Promise<PPTXParseResult>
             img.src = allImages.get(imgPath) || '';
           }
         }
+        
+        // Check for audio relationships
+        rels.forEach((target, relId) => {
+          const ext = target.split('.').pop()?.toLowerCase();
+          if (ext && audioExtensions.includes(ext)) {
+            const audioPath = target.startsWith('../') 
+              ? 'ppt/' + target.substring(3)
+              : 'ppt/slides/' + target;
+            
+            const audioSrc = allAudio.get(audioPath);
+            if (audioSrc) {
+              const fileName = audioPath.split('/').pop() || 'audio';
+              slide.audio.push({
+                id: relId,
+                src: audioSrc,
+                name: fileName
+              });
+              console.log('[pptx-parser] Added audio to slide', i + 1, ':', fileName);
+            }
+          }
+        });
       }
       
       slides.push(slide);
@@ -389,11 +449,14 @@ export async function parsePowerPoint(fileUrl: string): Promise<PPTXParseResult>
     if (creatorEl) author = creatorEl.textContent || undefined;
   }
   
+  console.log('[pptx-parser] Parse complete. Slides:', slides.length, 'Audio files:', allAudio.size);
+  
   return {
     slides,
     title,
     author,
     slideCount: slides.length,
-    images: allImages
+    images: allImages,
+    audioFiles: allAudio
   };
 }

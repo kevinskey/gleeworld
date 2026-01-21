@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,11 @@ import {
   Presentation,
   Loader2,
   AlertCircle,
-  Grid3X3
+  Grid3X3,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause
 } from 'lucide-react';
 import { parsePowerPoint, type PPTXParseResult, type ParsedSlide } from '@/lib/pptx-parser';
 import { cn } from '@/lib/utils';
@@ -38,6 +42,9 @@ export function NativePowerPointViewer({
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Parse the PPTX file when opened
   useEffect(() => {
@@ -107,6 +114,35 @@ export function NativePowerPointViewer({
     setShowThumbnails(false);
   };
 
+  // Handle audio for current slide
+  const currentSlideData = presentation?.slides[currentSlide];
+  const slideAudio = currentSlideData?.audio?.[0]; // Get first audio on slide
+
+  const toggleAudio = () => {
+    if (audioRef.current) {
+      if (isAudioPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+    }
+  };
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      audioRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  // Handle slide change - pause audio when changing slides
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsAudioPlaying(false);
+    }
+  }, [currentSlide]);
+
   const renderSlide = (slide: ParsedSlide) => {
     return (
       <div 
@@ -172,9 +208,49 @@ export function NativePowerPointViewer({
             )
           ))}
         </div>
+
+        {/* Audio player for slide */}
+        {slide.audio && slide.audio.length > 0 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-3 shadow-lg border">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={toggleAudio}
+            >
+              {isAudioPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {slide.audio[0].name || 'Audio'}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={toggleMute}
+            >
+              {isMuted ? (
+                <VolumeX className="h-4 w-4" />
+              ) : (
+                <Volume2 className="h-4 w-4" />
+              )}
+            </Button>
+            <audio
+              ref={audioRef}
+              src={slide.audio[0].src}
+              onPlay={() => setIsAudioPlaying(true)}
+              onPause={() => setIsAudioPlaying(false)}
+              onEnded={() => setIsAudioPlaying(false)}
+            />
+          </div>
+        )}
         
         {/* Empty slide message */}
-        {slide.shapes.length === 0 && slide.images.length === 0 && (
+        {slide.shapes.length === 0 && slide.images.length === 0 && (!slide.audio || slide.audio.length === 0) && (
           <div className="text-muted-foreground text-center">
             <Presentation className="h-16 w-16 mx-auto mb-4 opacity-50" />
             <p>This slide has no displayable content</p>
