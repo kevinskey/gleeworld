@@ -135,6 +135,17 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [imageAlign, setImageAlign] = useState<'inline' | 'left' | 'center' | 'right'>('inline');
   const [toolbarExpanded, setToolbarExpanded] = useState(false);
 
+  // Initialize editor content from value prop
+  useEffect(() => {
+    if (editorRef.current && !isInternalChange.current) {
+      // Only update if value differs from current content to avoid cursor jumping
+      if (editorRef.current.innerHTML !== value) {
+        editorRef.current.innerHTML = value || '';
+      }
+    }
+    isInternalChange.current = false;
+  }, [value]);
+
   // Fetch media library images when dialog opens
   useEffect(() => {
     if (showMediaLibrary) {
