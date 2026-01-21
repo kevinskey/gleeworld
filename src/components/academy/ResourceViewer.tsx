@@ -77,13 +77,12 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
     if (isOpen && resource) {
       setError(false);
       setShowPptxViewer(false);
-      // Only show loading for embeddable content
+      // Only show loading for embeddable content (PDFs and videos)
       const lowerUrl = resource.url.toLowerCase();
       const isPdf = lowerUrl.includes('.pdf');
       const isPowerPoint = lowerUrl.includes('.ppt') || lowerUrl.includes('.pptx');
       const isVideo = resource.resource_type === 'video' || isYouTubeUrl(resource.url) || resource.url.includes('vimeo');
-      const isWebsite = resource.resource_type === 'website';
-      const needsIframe = isPdf || isVideo || isWebsite;
+      const needsIframe = isPdf || isVideo;
       setLoading(needsIframe && !isPowerPoint);
     } else {
       setLoading(false);
@@ -119,11 +118,11 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   // Determine what can be embedded in an iframe
   // - PDFs work via Google Docs Viewer
   // - YouTube works with embed URLs
-  // - Websites work if they allow framing
+  // - Most websites block iframing (X-Frame-Options, CSP), so we open them externally
   // - PowerPoint files need special handling
   // - External readings/audio open in new tab
-  const canEmbed = isPdf || isVideo || isWebsite;
-  const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint;
+  const canEmbed = isPdf || isVideo;  // Only PDFs and videos are reliably embeddable
+  const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint || isWebsite;
 
   const handleOpenExternal = () => {
     window.open(resource.url, '_blank', 'noopener,noreferrer');
