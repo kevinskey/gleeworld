@@ -166,7 +166,7 @@ export const GleeAcademyDashboardCard = () => {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="px-3 sm:px-6 bg-background py-6">
-              <div ref={sliderRef} className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+              <div ref={sliderRef} className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
                 {activeCourses.map(course => {
                   const isSelected = selectedCourseId === course.id || (isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070');
                   const truncatedDescription = course.description.length > DESCRIPTION_CHAR_LIMIT 
@@ -177,37 +177,51 @@ export const GleeAcademyDashboardCard = () => {
                     <div 
                       key={course.id} 
                       onClick={() => handleCourseClick(course)} 
-                      className={`flex-shrink-0 w-72 snap-start cursor-pointer bg-white border rounded-xl p-6 sm:p-8 flex flex-col min-h-[280px] shadow-lg hover:shadow-xl transition-all duration-200 ${isSelected ? 'ring-2 ring-primary border-primary' : 'border-border/40'}`}
+                      className={`
+                        flex-shrink-0 snap-start cursor-pointer bg-white border rounded-xl 
+                        shadow-lg hover:shadow-xl transition-all duration-200
+                        /* Mobile: compact centered cards */
+                        w-32 p-3 min-h-[100px] items-center justify-center text-center
+                        /* Desktop: full cards with descriptions */
+                        sm:w-72 sm:p-8 sm:min-h-[280px] sm:items-start sm:justify-start sm:text-left
+                        flex flex-col
+                        ${isSelected ? 'ring-2 ring-primary border-primary' : 'border-border/40'}
+                      `}
                     >
                       {/* Course Code - Elegant serif style */}
                       <h3 
-                        className="text-xl sm:text-2xl font-light tracking-wide text-foreground mb-2" 
+                        className="text-sm sm:text-2xl font-light tracking-wide text-foreground mb-1 sm:mb-2" 
                         style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
                       >
                         {course.courseCode}
                       </h3>
 
                       {/* Course Title - Italic style */}
-                      <h4 className="text-base sm:text-lg font-semibold text-[#003666] italic mb-4 leading-snug line-clamp-2">
+                      <h4 className="text-xs sm:text-lg font-semibold text-[#003666] italic leading-snug line-clamp-2 sm:mb-4">
                         {course.title}
                       </h4>
 
-                      {/* Description - Fixed height with truncation */}
-                      <p className="text-base text-muted-foreground leading-relaxed flex-1 mb-6 antialiased">
+                      {/* Description - Hidden on mobile, shown on desktop */}
+                      <p className="hidden sm:block text-base text-muted-foreground leading-relaxed flex-1 mb-6 antialiased">
                         {truncatedDescription}
                       </p>
 
-                      {/* Enter Course Button - Rounded pill style */}
+                      {/* Enter Course Button - Hidden on mobile (tap card instead) */}
                       <Button 
                         variant="outline" 
                         onClick={(e) => {
                           e.stopPropagation();
                           handleCourseClick(course);
                         }}
-                        className={`w-fit px-6 py-2 rounded-full border-[#003666] text-[#003666] bg-transparent hover:bg-[#003666] hover:text-white transition-colors font-medium text-sm ${isSelected ? 'bg-[#003666] text-white' : ''}`}
+                        className={`hidden sm:inline-flex w-fit px-6 py-2 rounded-full border-[#003666] text-[#003666] bg-transparent hover:bg-[#003666] hover:text-white transition-colors font-medium text-sm ${isSelected ? 'bg-[#003666] text-white' : ''}`}
                       >
                         {isSelected ? 'Active' : 'Enter Course'}
                       </Button>
+                      
+                      {/* Mobile: Show active indicator */}
+                      {isSelected && (
+                        <span className="sm:hidden text-[10px] mt-1 text-primary font-medium">Active</span>
+                      )}
                     </div>
                   );
                 })}
