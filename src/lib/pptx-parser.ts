@@ -348,9 +348,9 @@ export async function parsePowerPoint(fileUrl: string): Promise<PPTXParseResult>
     }
   });
   
-  // Extract audio files
+  // Extract audio files - use Blob URLs instead of base64 to avoid CSP issues
   for (const [audioPath] of allAudio) {
-    const audioData = await zip.file(audioPath)?.async('base64');
+    const audioData = await zip.file(audioPath)?.async('arraybuffer');
     if (audioData) {
       const ext = audioPath.split('.').pop()?.toLowerCase();
       let mimeType = 'audio/mpeg';
@@ -360,8 +360,11 @@ export async function parsePowerPoint(fileUrl: string): Promise<PPTXParseResult>
       else if (ext === 'ogg') mimeType = 'audio/ogg';
       else if (ext === 'aac') mimeType = 'audio/aac';
       
-      allAudio.set(audioPath, `data:${mimeType};base64,${audioData}`);
-      console.log('[pptx-parser] Extracted audio:', audioPath);
+      // Create Blob URL - this works with CSP that allows 'blob:'
+      const blob = new Blob([audioData], { type: mimeType });
+      const blobUrl = URL.createObjectURL(blob);
+      allAudio.set(audioPath, blobUrl);
+      console.log('[pptx-parser] Extracted audio as Blob URL:', audioPath);
     }
   }
   
