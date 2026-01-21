@@ -969,7 +969,12 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                 ) : (
                   <div className="space-y-4 pt-2">
                     {/* Description */}
-                    <p className="text-sm text-muted-foreground">{module.description}</p>
+                    {module.description ? (
+                      <div 
+                        className="text-sm text-muted-foreground prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: module.description }}
+                      />
+                    ) : null}
 
                     {/* Learning Objectives */}
                     {module.learning_objectives && module.learning_objectives.length > 0 && (
