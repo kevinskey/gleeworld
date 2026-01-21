@@ -8154,6 +8154,69 @@ export type Database = {
           },
         ]
       }
+      gw_course_discussions: {
+        Row: {
+          author_id: string
+          content: string
+          course_id: string
+          created_at: string
+          id: string
+          is_announcement: boolean | null
+          is_locked: boolean | null
+          is_pinned: boolean | null
+          module_id: string | null
+          parent_id: string | null
+          title: string
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          author_id: string
+          content: string
+          course_id: string
+          created_at?: string
+          id?: string
+          is_announcement?: boolean | null
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          module_id?: string | null
+          parent_id?: string | null
+          title: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          is_announcement?: boolean | null
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          module_id?: string | null
+          parent_id?: string | null
+          title?: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_discussions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_course_discussions_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "gw_course_discussions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_course_enrollments: {
         Row: {
           academic_level: string | null
@@ -8339,6 +8402,135 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "gw_course_lounge_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_module_resources: {
+        Row: {
+          course_id: string
+          created_at: string
+          description: string | null
+          display_order: number | null
+          duration_minutes: number | null
+          id: string
+          is_required: boolean | null
+          media_id: string | null
+          module_id: string
+          resource_type: string
+          resource_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          duration_minutes?: number | null
+          id?: string
+          is_required?: boolean | null
+          media_id?: string | null
+          module_id: string
+          resource_type: string
+          resource_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          duration_minutes?: number | null
+          id?: string
+          is_required?: boolean | null
+          media_id?: string | null
+          module_id?: string
+          resource_type?: string
+          resource_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_module_resources_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_course_module_resources_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "gw_media_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_course_module_resources_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "gw_course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_modules: {
+        Row: {
+          course_id: string
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          is_locked: boolean | null
+          learning_objectives: Json | null
+          module_id: string
+          semester: string | null
+          title: string
+          unlock_date: string | null
+          updated_at: string
+          week_number: number | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_locked?: boolean | null
+          learning_objectives?: Json | null
+          module_id: string
+          semester?: string | null
+          title: string
+          unlock_date?: string | null
+          updated_at?: string
+          week_number?: number | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_locked?: boolean | null
+          learning_objectives?: Json | null
+          module_id?: string
+          semester?: string | null
+          title?: string
+          unlock_date?: string | null
+          updated_at?: string
+          week_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
             referencedColumns: ["id"]
           },
         ]
