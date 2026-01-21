@@ -780,20 +780,21 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           </div>
 
                           {/* Content */}
-                          <div className="space-y-1 flex-1 flex flex-col min-h-0">
+                          <div className="space-y-1">
                             <Label className="text-sm font-medium text-foreground">Message:</Label>
-                            <div className="flex-1 min-h-[200px] lg:min-h-[300px]">
-                              <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="300px" />
+                            <div className="min-h-[180px] max-h-[250px] overflow-hidden">
+                              <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="180px" />
                             </div>
                           </div>
                         </div>
                         
-                        {/* Send Button */}
-                        <div className="flex-shrink-0 p-4 bg-muted border-t border-border">
+                        {/* Send Button - Always Visible */}
+                        <div className="flex-shrink-0 p-4 bg-muted border-t border-border sticky bottom-0">
                           <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full">
                             {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
                           </Button>
                         </div>
+                        
                       </div>
                     </div>
 
