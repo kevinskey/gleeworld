@@ -59,6 +59,15 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
     resource.url.includes('bible.usccb.org') ||
     resource.url.includes('usccb.org');
 
+  // Use Google Docs Viewer for PDFs (handles large files better than pdfjs)
+  const getEmbedUrl = () => {
+    if (isPdf) {
+      // Google Docs Viewer handles large PDFs much better
+      return `https://docs.google.com/viewer?url=${encodeURIComponent(resource.url)}&embedded=true`;
+    }
+    return resource.url;
+  };
+
   // For external sites like USCCB, we need to handle them differently
   const canEmbed = isPdf || isVideo || (!isExternalReading && !isAudio);
 
@@ -122,7 +131,7 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
           </div>
         ) : canEmbed ? (
           <iframe
-            src={resource.url}
+            src={getEmbedUrl()}
             className="w-full h-full border-0"
             title={resource.title}
             onLoad={() => setLoading(false)}
