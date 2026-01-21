@@ -23164,6 +23164,36 @@ export type Database = {
           },
         ]
       }
+      mus240_student_resource_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          module_id: string
+          resource_id: string
+          student_id: string
+          time_spent_seconds: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          module_id: string
+          resource_id: string
+          student_id: string
+          time_spent_seconds?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          module_id?: string
+          resource_id?: string
+          student_id?: string
+          time_spent_seconds?: number | null
+        }
+        Relationships: []
+      }
       mus240_submission_grades: {
         Row: {
           ai_feedback: string | null
