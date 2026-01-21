@@ -23,17 +23,19 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
   title,
   musicId,
 }) => {
-  const { isAdmin, profile } = useUserRole();
+  const { isAdmin, isInstructor, profile } = useUserRole();
   const [showCropEditor, setShowCropEditor] = useState(false);
 
+  // Only admin, super_admin, instructor, or librarian can crop PDFs
   const canCropPDF = useMemo(() => {
     return (
       isAdmin() ||
+      isInstructor() ||
       profile?.is_super_admin ||
       profile?.exec_board_role?.toLowerCase() === 'librarian' ||
       profile?.role?.toLowerCase() === 'librarian'
     );
-  }, [isAdmin, profile]);
+  }, [isAdmin, isInstructor, profile]);
 
   const handleSaveCroppedPDF = async (blob: Blob) => {
     if (!musicId) {
