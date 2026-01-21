@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   User, Calendar, ClipboardList, CheckCircle, XCircle, Clock, 
-  FileText, AlertCircle, Play, MoreHorizontal, Mail
+  FileText, AlertCircle, Play, MoreHorizontal, Mail, ChevronDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,6 +60,7 @@ interface Assignment {
   points: number;
   status?: 'pending' | 'submitted' | 'graded' | 'overdue';
   course_id: string;
+  description?: string;
 }
 
 interface CurrentModule {
@@ -179,6 +181,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
             points: a.max_points || 100,
             course_id: a.course_id,
             status,
+            description: a.description || '',
           };
         });
 
@@ -320,26 +323,44 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between p-4 bg-card rounded-lg border">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-lg">{urgentAssignment.title}</h3>
-                    {getStatusBadge(urgentAssignment.status)}
+              <div className="p-4 bg-card rounded-lg border space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-lg">{urgentAssignment.title}</h3>
+                      {getStatusBadge(urgentAssignment.status)}
+                    </div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Calendar className="h-3.5 w-3.5" />
+                      Due: {format(new Date(urgentAssignment.due_date), 'MMM d')} · {urgentAssignment.points} pts
+                      {urgentAssignment.status === 'overdue' && ' · OVERDUE'}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <Calendar className="h-3.5 w-3.5" />
-                    Due: {format(new Date(urgentAssignment.due_date), 'MMM d')} · {urgentAssignment.points} pts
-                    {urgentAssignment.status === 'overdue' && ' · OVERDUE'}
-                  </p>
+                  <Button 
+                    className="bg-primary hover:bg-primary/90"
+                    onClick={() => navigate(`/grading/student/assignment/${urgentAssignment.id}`)}
+                  >
+                    {urgentAssignment.status === 'submitted' || urgentAssignment.status === 'graded' 
+                      ? 'View Submission' 
+                      : 'Start Assignment'}
+                  </Button>
                 </div>
-                <Button 
-                  className="bg-primary hover:bg-primary/90"
-                  onClick={() => navigate(`/grading/student/assignment/${urgentAssignment.id}`)}
-                >
-                  {urgentAssignment.status === 'submitted' || urgentAssignment.status === 'graded' 
-                    ? 'View Submission' 
-                    : 'Start Assignment'}
-                </Button>
+                {urgentAssignment.description && (
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground hover:text-foreground p-2">
+                        <span className="text-sm">View Assignment Description</span>
+                        <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-2">
+                      <div 
+                        className="text-sm text-muted-foreground bg-muted/50 rounded-md p-3 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: urgentAssignment.description }}
+                      />
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -375,26 +396,44 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
             {/* Module Assignment Preview - show first pending/overdue assignment */}
             {urgentAssignment && (
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{urgentAssignment.title}</span>
-                    {getStatusBadge(urgentAssignment.status)}
+              <div className="p-3 bg-muted/30 rounded-lg border space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{urgentAssignment.title}</span>
+                      {getStatusBadge(urgentAssignment.status)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3 inline mr-1" />
+                      Due: {format(new Date(urgentAssignment.due_date), 'MMM d')} · {urgentAssignment.points} pts
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3 inline mr-1" />
-                    Due: {format(new Date(urgentAssignment.due_date), 'MMM d')} · {urgentAssignment.points} pts
-                  </p>
+                  <Button 
+                    size="sm" 
+                    className="bg-primary hover:bg-primary/90 text-xs"
+                    onClick={() => navigate(`/grading/student/assignment/${urgentAssignment.id}`)}
+                  >
+                    {urgentAssignment.status === 'submitted' || urgentAssignment.status === 'graded' 
+                      ? 'View Submission' 
+                      : 'Start Assignment'}
+                  </Button>
                 </div>
-                <Button 
-                  size="sm" 
-                  className="bg-primary hover:bg-primary/90 text-xs"
-                  onClick={() => navigate(`/grading/student/assignment/${urgentAssignment.id}`)}
-                >
-                  {urgentAssignment.status === 'submitted' || urgentAssignment.status === 'graded' 
-                    ? 'View Submission' 
-                    : 'Start Assignment'}
-                </Button>
+                {urgentAssignment.description && (
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground hover:text-foreground p-1.5 h-auto">
+                        <span className="text-xs">View Description</span>
+                        <ChevronDown className="h-3 w-3 transition-transform duration-200 data-[state=open]:rotate-180" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-1">
+                      <div 
+                        className="text-xs text-muted-foreground bg-background/50 rounded-md p-2 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: urgentAssignment.description }}
+                      />
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
               </div>
             )}
 
@@ -406,31 +445,53 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
               ) : (
                 <div className="space-y-2">
                   {assignments.slice(0, 4).map((assignment) => (
-                    <div key={assignment.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <FileText className="h-4 w-4 text-muted-foreground" />
+                    <Collapsible key={assignment.id}>
+                      <div className="py-2 border-b last:border-0">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-muted-foreground">•</span>
+                              <FileText className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{assignment.title}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Due: {format(new Date(assignment.due_date), 'MMM d')} · {assignment.points} pts
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {assignment.description && (
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground">
+                                  <ChevronDown className="h-3 w-3 mr-1 transition-transform duration-200 data-[state=open]:rotate-180" />
+                                  Details
+                                </Button>
+                              </CollapsibleTrigger>
+                            )}
+                            <div className="text-right min-w-[60px]">
+                              {assignment.status === 'submitted' ? (
+                                <span className="text-xs text-primary font-medium">Submitted</span>
+                              ) : assignment.status === 'graded' ? (
+                                <span className="text-xs text-green-600 font-medium">Graded</span>
+                              ) : assignment.status === 'overdue' ? (
+                                <span className="text-xs text-destructive font-medium">Overdue</span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">{assignment.points} pts</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium">{assignment.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Due: {format(new Date(assignment.due_date), 'MMM d')} · {assignment.points} pts
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {assignment.status === 'submitted' ? (
-                          <span className="text-xs text-primary font-medium">Submitted</span>
-                        ) : assignment.status === 'graded' ? (
-                          <span className="text-xs text-green-600 font-medium">Graded</span>
-                        ) : assignment.status === 'overdue' ? (
-                          <span className="text-xs text-destructive font-medium">Overdue</span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">{assignment.points} pts</span>
+                        {assignment.description && (
+                          <CollapsibleContent className="pt-2 pl-8">
+                            <div 
+                              className="text-xs text-muted-foreground bg-muted/50 rounded-md p-2 prose prose-sm max-w-none"
+                              dangerouslySetInnerHTML={{ __html: assignment.description }}
+                            />
+                          </CollapsibleContent>
                         )}
                       </div>
-                    </div>
+                    </Collapsible>
                   ))}
                 </div>
               )}
