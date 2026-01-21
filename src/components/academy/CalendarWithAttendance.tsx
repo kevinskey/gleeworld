@@ -595,12 +595,16 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
                     <div className={cn(
                       "absolute bottom-1 flex gap-0.5",
                     )}>
-                      {dayEvents.slice(0, 3).map((_, i) => (
+                      {dayEvents.slice(0, 3).map((event, i) => (
                         <div
                           key={i}
                           className={cn(
                             "w-1 h-1 md:w-1.5 md:h-1.5 rounded-full",
-                            isSelected ? "bg-primary-foreground" : "bg-primary"
+                            isSelected 
+                              ? "bg-primary-foreground" 
+                              : event.event_type === 'discussion' 
+                                ? "bg-orange-400" 
+                                : "bg-primary"
                           )}
                         />
                       ))}
@@ -675,13 +679,25 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
               {upcomingEvents.map(event => (
                 <div 
                   key={event.id}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-accent/30 hover:bg-accent/50 transition-colors"
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-xl bg-accent/30 hover:bg-accent/50 transition-colors border-l-4",
+                    event.event_type === 'discussion' ? "border-orange-400" : "border-transparent"
+                  )}
                 >
-                  <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-xl flex flex-col items-center justify-center">
-                    <span className="text-xs text-primary uppercase font-medium">
+                  <div className={cn(
+                    "flex-shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center",
+                    event.event_type === 'discussion' ? "bg-orange-100" : "bg-primary/10"
+                  )}>
+                    <span className={cn(
+                      "text-xs uppercase font-medium",
+                      event.event_type === 'discussion' ? "text-orange-600" : "text-primary"
+                    )}>
                       {format(new Date(event.start_time), 'MMM')}
                     </span>
-                    <span className="text-lg font-bold text-primary leading-none">
+                    <span className={cn(
+                      "text-lg font-bold leading-none",
+                      event.event_type === 'discussion' ? "text-orange-600" : "text-primary"
+                    )}>
                       {format(new Date(event.start_time), 'd')}
                     </span>
                   </div>
