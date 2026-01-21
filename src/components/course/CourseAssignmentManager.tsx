@@ -19,11 +19,11 @@ interface Assignment {
   title: string;
   description: string | null;
   assignment_type: string | null;
-  category: string | null;
   points: number | null;
   due_date: string | null;
   is_published: boolean;
   created_at: string;
+  display_order: number | null;
 }
 interface CourseAssignmentManagerProps {
   courseId: string;
@@ -72,7 +72,6 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     title: '',
     description: '',
     assignment_type: 'exercise',
-    category: 'Week 1: Jan 14–20',
     points: 100,
     due_at: ''
   });
@@ -87,7 +86,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       const {
         data,
         error
-      } = await supabase.from('gw_course_assignments').select('*').eq('course_id', courseId).order('category', {
+      } = await supabase.from('gw_course_assignments').select('*').eq('course_id', courseId).order('due_date', {
         ascending: true
       });
       if (error) throw error;
@@ -106,7 +105,6 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         title: data.title,
         description: data.description || null,
         assignment_type: data.assignment_type,
-        category: data.category,
         points: data.points,
         due_date: data.due_at || null,
         is_published: true
@@ -142,7 +140,6 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         title: data.title,
         description: data.description || null,
         assignment_type: data.assignment_type,
-        category: data.category,
         points: data.points,
         due_date: data.due_at || null
       }).eq('id', id);
@@ -186,7 +183,6 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       title: '',
       description: '',
       assignment_type: 'exercise',
-      category: 'Week 1: Jan 14–20',
       points: 100,
       due_at: ''
     });
@@ -197,7 +193,6 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       title: assignment.title,
       description: assignment.description || '',
       assignment_type: assignment.assignment_type || 'exercise',
-      category: assignment.category || 'Week 1',
       points: assignment.points || 100,
       due_at: assignment.due_date ? format(new Date(assignment.due_date), "yyyy-MM-dd'T'HH:mm") : ''
     });
@@ -233,38 +228,25 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     });
   };
 
-  // Group assignments by category (week)
+  // Group assignments by due date month
   const groupedAssignments = assignments.reduce((acc, assignment) => {
-    const category = assignment.category || 'Uncategorized';
-    if (!acc[category]) {
-      acc[category] = [];
+    let group = 'No Due Date';
+    if (assignment.due_date) {
+      const dueDate = new Date(assignment.due_date);
+      group = format(dueDate, 'MMMM yyyy');
     }
-    acc[category].push(assignment);
+    if (!acc[group]) {
+      acc[group] = [];
+    }
+    acc[group].push(assignment);
     return acc;
   }, {} as Record<string, Assignment[]>);
 
-  // Sort categories properly (handles Week with dates, Phase, and History formats)
-  const getCategoryOrder = (category: string): number => {
-    // Handle Week format with dates (e.g., "Week 1: Jan 14–20")
-    const weekMatch = category.match(/Week\s+(\d+)/i);
-    if (weekMatch) {
-      return parseInt(weekMatch[1]) || 999;
-    }
-    // History & Literature track comes after weeks
-    if (category.toLowerCase().includes('history') || category.toLowerCase().includes('literature')) return 50;
-    // Handle Phase format (Roman numerals) - legacy support
-    const phaseMatch = category.match(/Phase\s+(I{1,3}|IV|V|VI)/i);
-    if (phaseMatch) {
-      const romanNumerals: Record<string, number> = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6 };
-      return romanNumerals[phaseMatch[1].toUpperCase()] || 999;
-    }
-    // Finals/other go last
-    if (category.toLowerCase().includes('final')) return 100;
-    return 999;
-  };
-
-  const sortedWeeks = Object.keys(groupedAssignments).sort((a, b) => {
-    return getCategoryOrder(a) - getCategoryOrder(b);
+  // Sort groups by date
+  const sortedGroups = Object.keys(groupedAssignments).sort((a, b) => {
+    if (a === 'No Due Date') return 1;
+    if (b === 'No Due Date') return -1;
+    return new Date(a).getTime() - new Date(b).getTime();
   });
   const getTypeBadgeColor = (type: string | null) => {
     switch (type) {
@@ -343,50 +325,19 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Week</Label>
-                  <Select value={formData.category} onValueChange={value => setFormData({
-                  ...formData,
-                  category: value
-                })}>
-                    <SelectTrigger className="text-foreground">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Week 1: Jan 14–20">Wk 1: Jan 14–20</SelectItem>
-                      <SelectItem value="Week 2: Jan 21–27">Wk 2: Jan 21–27</SelectItem>
-                      <SelectItem value="Week 3: Jan 28–Feb 3">Wk 3: Jan 28–Feb 3</SelectItem>
-                      <SelectItem value="Week 4: Feb 4–10">Wk 4: Feb 4–10</SelectItem>
-                      <SelectItem value="Week 5: Feb 11–17">Wk 5: Feb 11–17</SelectItem>
-                      <SelectItem value="Week 6: Feb 18–24">Wk 6: Feb 18–24</SelectItem>
-                      <SelectItem value="Week 7: Feb 25–Mar 3">Wk 7: Feb 25–Mar 3</SelectItem>
-                      <SelectItem value="Week 8: Mar 4–10">Wk 8: Mar 4–10</SelectItem>
-                      <SelectItem value="Week 9: Mar 11–17 (Spring Break)">Wk 9: Spring Break</SelectItem>
-                      <SelectItem value="Week 10: Mar 18–24">Wk 10: Mar 18–24</SelectItem>
-                      <SelectItem value="Week 11: Mar 25–31">Wk 11: Mar 25–31</SelectItem>
-                      <SelectItem value="Week 12: Apr 1–7">Wk 12: Apr 1–7</SelectItem>
-                      <SelectItem value="Week 13: Apr 8–14">Wk 13: Apr 8–14</SelectItem>
-                      <SelectItem value="Week 14: Apr 15–21">Wk 14: Apr 15–21</SelectItem>
-                      <SelectItem value="Week 15: Apr 22–28">Wk 15: Apr 22–28</SelectItem>
-                      <SelectItem value="Finals Week">Finals</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
                   <Label className="text-foreground">Points</Label>
                   <Input type="number" value={formData.points} onChange={e => setFormData({
                   ...formData,
                   points: parseInt(e.target.value) || 0
                 })} className="text-foreground" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-foreground">Due Date</Label>
-                  <Input type="datetime-local" value={formData.due_at} onChange={e => setFormData({
-                  ...formData,
-                  due_at: e.target.value
-                })} className="text-foreground" />
-                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">Due Date</Label>
+                <Input type="datetime-local" value={formData.due_at} onChange={e => setFormData({
+                ...formData,
+                due_at: e.target.value
+              })} className="text-foreground" />
               </div>
             </div>
             <DialogFooter>
@@ -407,29 +358,27 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
 
       <ScrollArea className="h-[calc(100vh-120px)]">
         <div className="space-y-1 pr-2">
-          {sortedWeeks.map(week => {
-            // Format week display to be more compact
-            const weekDisplay = week.replace('Week ', 'Wk ').replace(': Jan', ' Jan').replace(': Feb', ' Feb').replace(': Mar', ' Mar').replace(': Apr', ' Apr');
+          {sortedGroups.map(group => {
             return (
-            <Collapsible key={week} open={expandedWeeks.has(week)} onOpenChange={() => toggleWeek(week)}>
+            <Collapsible key={group} open={expandedWeeks.has(group)} onOpenChange={() => toggleWeek(group)}>
               <div className="border rounded-md bg-card">
                 <CollapsibleTrigger asChild>
                   <div className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-2">
-                      {expandedWeeks.has(week) ? <ChevronDown className="h-3 w-3 text-foreground" /> : <ChevronRight className="h-3 w-3 text-foreground" />}
-                      <span className="text-sm font-medium text-foreground">{weekDisplay}</span>
+                      {expandedWeeks.has(group) ? <ChevronDown className="h-3 w-3 text-foreground" /> : <ChevronRight className="h-3 w-3 text-foreground" />}
+                      <span className="text-sm font-medium text-foreground">{group}</span>
                       <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
-                        {groupedAssignments[week].length}
+                        {groupedAssignments[group].length}
                       </Badge>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {groupedAssignments[week].reduce((sum, a) => sum + (a.points || 0), 0)} pts
+                      {groupedAssignments[group].reduce((sum, a) => sum + (a.points || 0), 0)} pts
                     </span>
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="px-3 pb-2 space-y-1">
-                    {groupedAssignments[week].map(assignment => (
+                    {groupedAssignments[group].map(assignment => (
                       <div key={assignment.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/50 hover:bg-muted transition-colors text-sm">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <span className="font-medium truncate text-foreground">{assignment.title}</span>
@@ -459,7 +408,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
             </Collapsible>
           )})}
 
-          {sortedWeeks.length === 0 && (
+          {sortedGroups.length === 0 && (
             <div className="border rounded-md p-8 text-center">
               <p className="text-muted-foreground text-sm mb-3">No assignments yet</p>
               <Button size="sm" onClick={() => setIsCreateOpen(true)}>
