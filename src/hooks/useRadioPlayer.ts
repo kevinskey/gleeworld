@@ -24,6 +24,26 @@ export interface RadioPlayerState {
 
 let sharedAudio: HTMLAudioElement | null = null;
 
+/**
+ * IMPORTANT:
+ * useRadioPlayer is used from multiple UI entry points (UniversalHeader, Header, etc.).
+ * Since we also share a singleton <audio> element (sharedAudio), we MUST also share the
+ * control refs that drive auto-resume/reconnect behavior.
+ *
+ * Otherwise, one hook instance can set `pause()` (userPaused=true) while another instance
+ * still has userPaused=false/isPlaying=true and will auto-resume on the shared audio
+ * element's `pause` event, creating a "can't stop" loop (especially noticeable in prod).
+ */
+const sharedIsPlayingRef: { current: boolean } = { current: false };
+const sharedUserPausedRef: { current: boolean } = { current: false };
+const sharedWasPlayingBeforeHiddenRef: { current: boolean } = { current: false };
+const sharedReconnectAttemptRef: { current: number } = { current: 0 };
+const sharedReconnectTimeoutRef: { current: NodeJS.Timeout | null } = { current: null };
+const sharedCurrentStreamUrlIndexRef: { current: number } = { current: 0 };
+const sharedLastKnownStreamUrlRef: { current: string } = { current: '' };
+const sharedLastTimeUpdateRef: { current: number } = { current: Date.now() };
+const sharedHeartbeatIntervalRef: { current: NodeJS.Timeout | null } = { current: null };
+
 export const useRadioPlayer = () => {
   const [state, setState] = useState<RadioPlayerState>({
     isPlaying: false,
@@ -39,16 +59,17 @@ export const useRadioPlayer = () => {
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isPlayingRef = useRef(false);
-  const userPausedRef = useRef(false); // Track if user explicitly paused
-  const wasPlayingBeforeHiddenRef = useRef(false);
-  const reconnectAttemptRef = useRef(0);
+  // Shared refs (see note above)
+  const isPlayingRef = sharedIsPlayingRef;
+  const userPausedRef = sharedUserPausedRef; // Track if user explicitly paused
+  const wasPlayingBeforeHiddenRef = sharedWasPlayingBeforeHiddenRef;
+  const reconnectAttemptRef = sharedReconnectAttemptRef;
   const maxReconnectAttempts = 5;
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const currentStreamUrlIndexRef = useRef(0);
-  const lastKnownStreamUrlRef = useRef<string>('');
-  const lastTimeUpdateRef = useRef<number>(Date.now());
-  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = sharedReconnectTimeoutRef;
+  const currentStreamUrlIndexRef = sharedCurrentStreamUrlIndexRef;
+  const lastKnownStreamUrlRef = sharedLastKnownStreamUrlRef;
+  const lastTimeUpdateRef = sharedLastTimeUpdateRef;
+  const heartbeatIntervalRef = sharedHeartbeatIntervalRef;
   const { toast } = useToast();
 
   const refreshNowPlaying = useCallback(async () => {
