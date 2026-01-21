@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown, MessagesSquare, UserCheck } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown, MessagesSquare, UserCheck, Megaphone } from 'lucide-react';
 import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 import { CourseAssignmentManager } from '@/components/course/CourseAssignmentManager';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -44,6 +44,7 @@ import { Mus240ModuleEditor } from '@/components/mus240/instructor/Mus240ModuleE
 import { Mus240CalendarManager } from '@/components/mus240/instructor/Mus240CalendarManager';
 import { BulkPasswordReset } from '@/components/mus240/admin/BulkPasswordReset';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
+import { CourseAnnouncementsManager } from '@/components/course/CourseAnnouncementsManager';
 
 export const InstructorConsole = () => {
   const {
@@ -155,6 +156,7 @@ export const InstructorConsole = () => {
       items: [
         { value: 'syllabus', label: 'Syllabus', icon: FileText },
         { value: 'modules', label: 'Modules', icon: FolderOpen },
+        { value: 'announcements', label: 'Announcements', icon: Megaphone },
         { value: 'class-notes', label: 'Class Notes', icon: BookOpen },
         { value: 'calendar', label: 'Calendar', icon: Calendar },
       ]
@@ -663,6 +665,21 @@ export const InstructorConsole = () => {
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4 md:p-6">
                   <Mus240CalendarManager />
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'announcements' && (
+              <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <Megaphone className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Course Announcements
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Create and manage announcements for students</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <CourseAnnouncementsManager courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" />
                 </CardContent>
               </Card>
             )}
