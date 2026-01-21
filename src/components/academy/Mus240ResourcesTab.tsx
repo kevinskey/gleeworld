@@ -261,7 +261,7 @@ export const Mus240ResourcesTab: React.FC<Mus240ResourcesTabProps> = ({ isAdmin 
               return (
                 <Card 
                   key={resource.id} 
-                  className="group border-2 border-primary/20 shadow-md shadow-primary/10 hover:shadow-lg hover:shadow-primary/20 hover:border-primary/40 hover:-translate-y-1 transition-all duration-200 bg-card"
+                  className="group border-2 border-primary/40 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:border-primary/60 hover:-translate-y-1 transition-all duration-200 bg-card"
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
