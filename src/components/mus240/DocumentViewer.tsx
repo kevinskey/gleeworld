@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, ExternalLink, X, ZoomIn, ZoomOut, RotateCw, Presentation, Play, AlertCircle } from 'lucide-react';
+import { ExternalLink, X, Presentation } from 'lucide-react';
 import { toast } from 'sonner';
 import { PresentationViewer } from './PresentationViewer';
 import { NativePowerPointViewer } from './NativePowerPointViewer';
@@ -148,27 +148,35 @@ export function DocumentViewer({
   const renderPowerPointViewer = () => {
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-1 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg overflow-hidden flex items-center justify-center">
-          <div className="text-center p-8 max-w-md">
-            <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg mx-auto mb-6 flex items-center justify-center">
-              <Presentation className="h-10 w-10 text-white" />
+        <div className="flex-1 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+          <div className="text-center p-8 max-w-md space-y-4">
+            <div className="w-16 h-16 bg-primary/10 rounded-lg mx-auto flex items-center justify-center">
+              <Presentation className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-4">Content Protected</h3>
-            <h4 className="text-lg font-medium text-amber-300 mb-4">{fileName}</h4>
-            
-            <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4">
-              <p className="text-sm text-slate-200">
-                This PowerPoint presentation is protected and cannot be viewed or downloaded directly.
-              </p>
-              <p className="text-xs text-slate-300 mt-2">
-                Please contact your instructor for access to this content.
-              </p>
+            <div>
+              <h3 className="text-lg font-semibold">PowerPoint Slideshow</h3>
+              <p className="text-sm text-muted-foreground mt-1">{fileName}</p>
             </div>
+
+            <Button onClick={() => setShowPowerPointViewer(true)} className="w-full">
+              Open Slideshow
+            </Button>
+
+            <p className="text-xs text-muted-foreground">
+              If the slideshow fails to load, try re-uploading or exporting from PowerPoint as “.pptx (Standard)”.
+            </p>
           </div>
         </div>
       </div>
     );
   };
+
+  // Auto-open the native slideshow for ppt/pptx when the DocumentViewer modal opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!isPowerPoint) return;
+    setShowPowerPointViewer(true);
+  }, [isOpen, isPowerPoint]);
 
   const renderGoogleSlidesViewer = () => {
     const embedUrl = getGoogleSlidesEmbedUrl(fileUrl);
@@ -327,7 +335,10 @@ export function DocumentViewer({
         {isPowerPoint && (
           <NativePowerPointViewer
             isOpen={showPowerPointViewer}
-            onClose={() => setShowPowerPointViewer(false)}
+            onClose={() => {
+              setShowPowerPointViewer(false);
+              onClose();
+            }}
             fileUrl={fileUrl}
             fileName={fileName}
             title={title}
