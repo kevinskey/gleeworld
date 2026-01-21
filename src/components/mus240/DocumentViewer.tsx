@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Download, ExternalLink, X, ZoomIn, ZoomOut, RotateCw, Presentation, Play, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { PresentationViewer } from './PresentationViewer';
-import { PowerPointViewer } from './PowerPointViewer';
+import { NativePowerPointViewer } from './NativePowerPointViewer';
 import { FastPDFViewer } from '@/components/FastPDFViewer';
 
 interface DocumentViewerProps {
@@ -323,9 +323,9 @@ export function DocumentViewer({
           </div>
         </div>
         
-        {/* PowerPoint Online Viewer */}
+        {/* Native PowerPoint Slideshow Viewer */}
         {isPowerPoint && (
-          <PowerPointViewer
+          <NativePowerPointViewer
             isOpen={showPowerPointViewer}
             onClose={() => setShowPowerPointViewer(false)}
             fileUrl={fileUrl}
