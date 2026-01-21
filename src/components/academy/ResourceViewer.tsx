@@ -77,18 +77,20 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
     if (isOpen && resource) {
       setError(false);
       setShowPptxViewer(false);
-      // Only show loading for embeddable content (PDFs and videos)
+      // Only show loading for embeddable content (PDFs, videos, Google Slides)
       const lowerUrl = resource.url.toLowerCase();
       const isPdf = lowerUrl.includes('.pdf');
       const isPowerPoint = lowerUrl.includes('.ppt') || lowerUrl.includes('.pptx');
       const isVideo = resource.resource_type === 'video' || isYouTubeUrl(resource.url) || resource.url.includes('vimeo');
-      const needsIframe = isPdf || isVideo;
+      const isGoogleSlides = resource.url.includes('docs.google.com/presentation') || 
+        resource.url.includes('slides.google.com');
+      const needsIframe = isPdf || isVideo || isGoogleSlides;
       setLoading(needsIframe && !isPowerPoint);
     } else {
       setLoading(false);
       setError(false);
     }
-  }, [isOpen, resource?.url]);
+  }, [isOpen, resource?.url, resource?.resource_type]);
 
   if (!resource) return null;
 
@@ -104,8 +106,12 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   const isExternalReading = resource.resource_type === 'reading' ||
     resource.url.includes('bible.usccb.org') ||
     resource.url.includes('usccb.org');
+  
+  // Detect Google Slides/Presentations (these can be embedded)
+  const isGoogleSlides = resource.url.includes('docs.google.com/presentation') || 
+    resource.url.includes('slides.google.com');
 
-  // Use Google Docs Viewer for PDFs, YouTube embed for videos
+  // Use Google Docs Viewer for PDFs, YouTube embed for videos, Google Slides directly
   const getEmbedUrl = () => {
     if (isPdf) {
       return `https://docs.google.com/viewer?url=${encodeURIComponent(resource.url)}&embedded=true`;
@@ -113,18 +119,28 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
     if (isYouTube) {
       return getYouTubeEmbedUrl(resource.url);
     }
+    if (isGoogleSlides) {
+      // Convert to embed format if it's a published presentation
+      if (resource.url.includes('/pub?')) {
+        return resource.url.replace('/pub?', '/embed?');
+      }
+      return resource.url;
+    }
     return resource.url;
   };
 
   // Determine what can be embedded in an iframe
-  // - PDFs work via Google Docs Viewer
-  // - YouTube works with embed URLs
-  // - Most websites block iframing (X-Frame-Options, CSP), so we open them externally
-  // - PowerPoint files need special handling
-  // - External readings/audio open in new tab
-  // SharePoint and similar sites block iframing, so exclude them
-  const canEmbed = (isPdf || isVideo) && !isSharePoint;
-  const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint || isWebsite || isSharePoint;
+  // - PDFs work via Google Docs Viewer (but not SharePoint PDFs)
+  // - YouTube and Vimeo work with embed URLs
+  // - Google Slides work with embed URLs
+  // - Most external websites block iframing (X-Frame-Options, CSP), so we open them externally
+  // - PowerPoint files need special native viewer handling
+  // - External readings/audio/generic websites open in new tab
+  const canEmbed = ((isPdf && !isSharePoint) || isVideo || isGoogleSlides) && !isSharePoint;
+  
+  // For websites that aren't known embeddable types, show open button
+  const isGenericWebsite = isWebsite && !isPdf && !isVideo && !isGoogleSlides && !isPowerPoint;
+  const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint || isGenericWebsite || isSharePoint;
 
   const handleOpenExternal = () => {
     window.open(resource.url, '_blank', 'noopener,noreferrer');
@@ -214,7 +230,7 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
               setLoading(false);
               setError(true);
             }}
-            sandbox={isYouTube ? undefined : "allow-scripts allow-same-origin allow-popups allow-forms"}
+            sandbox={(isYouTube || isGoogleSlides) ? undefined : "allow-scripts allow-same-origin allow-popups allow-forms"}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
