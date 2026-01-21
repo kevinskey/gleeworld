@@ -8,7 +8,7 @@ import {
   Eye, Settings, Video, Music, Database, Loader2 
 } from 'lucide-react';
 import { useMus240Resources, type Mus240Resource } from '@/integrations/supabase/hooks/useMus240Resources';
-import { DocumentViewer } from '@/components/mus240/DocumentViewer';
+import { ResourceViewer } from '@/components/academy/ResourceViewer';
 
 interface Mus240ResourcesTabProps {
   isAdmin?: boolean;
@@ -184,16 +184,16 @@ export const Mus240ResourcesTab: React.FC<Mus240ResourcesTabProps> = ({ isAdmin 
         )}
       </CardContent>
 
-      {viewerState.resource && (
-        <DocumentViewer
-          isOpen={viewerState.isOpen}
-          onClose={closeViewer}
-          fileUrl={viewerState.resource.url}
-          fileName={viewerState.resource.file_name || 'document'}
-          fileType={viewerState.resource.mime_type || ''}
-          title={viewerState.resource.title}
-        />
-      )}
+      <ResourceViewer
+        isOpen={viewerState.isOpen}
+        onClose={closeViewer}
+        resource={viewerState.resource ? {
+          title: viewerState.resource.title,
+          url: viewerState.resource.url,
+          resource_type: viewerState.resource.category,
+          description: viewerState.resource.description
+        } : null}
+      />
     </Card>
   );
 };
