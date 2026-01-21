@@ -216,7 +216,8 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-4xl h-[80vh] p-0 flex flex-col overflow-hidden">
+        <DialogContent className="max-w-4xl h-[80vh] p-0 flex flex-col overflow-hidden" aria-describedby="resource-viewer-desc">
+          <span id="resource-viewer-desc" className="sr-only">View resource: {resource.title}</span>
           <DialogHeader className="sr-only">
             <DialogTitle>{resource.title}</DialogTitle>
           </DialogHeader>
