@@ -288,7 +288,11 @@ export function NativePowerPointViewer({
             ? "max-w-[100vw] max-h-[100vh] w-screen h-screen rounded-none" 
             : "max-w-7xl max-h-[90vh] h-[90vh]"
         )}
+        aria-describedby="pptx-viewer-description"
       >
+        <span id="pptx-viewer-description" className="sr-only">
+          PowerPoint presentation viewer with slide navigation
+        </span>
         <DialogHeader className="flex-shrink-0 pb-4 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

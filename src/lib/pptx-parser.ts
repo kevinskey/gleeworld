@@ -231,14 +231,48 @@ function parseRelationships(xml: string): Map<string, string> {
 }
 
 export async function parsePowerPoint(fileUrl: string): Promise<PPTXParseResult> {
-  // Fetch the PPTX file
-  const response = await fetch(fileUrl);
+  console.log('Parsing PowerPoint from URL:', fileUrl);
+  
+  // Fetch the PPTX file with CORS mode
+  let response: Response;
+  try {
+    response = await fetch(fileUrl, {
+      mode: 'cors',
+      credentials: 'omit',
+    });
+  } catch (corsError) {
+    console.error('CORS fetch failed, trying no-cors fallback:', corsError);
+    // Try with different approach - this will fail for opaque responses but provides better error info
+    throw new Error('Unable to fetch the PowerPoint file. The file may be in a private bucket or have CORS restrictions.');
+  }
+  
   if (!response.ok) {
-    throw new Error(`Failed to fetch PowerPoint file: ${response.statusText}`);
+    console.error('Fetch response not OK:', response.status, response.statusText);
+    throw new Error(`Failed to fetch PowerPoint file: ${response.status} ${response.statusText}`);
+  }
+  
+  // Verify we got binary data, not HTML error page
+  const contentType = response.headers.get('content-type') || '';
+  console.log('Response content-type:', contentType);
+  
+  if (contentType.includes('text/html')) {
+    throw new Error('Received HTML instead of PowerPoint file. The file URL may be invalid or access denied.');
   }
   
   const arrayBuffer = await response.arrayBuffer();
-  const zip = await JSZip.loadAsync(arrayBuffer);
+  console.log('Fetched file size:', arrayBuffer.byteLength, 'bytes');
+  
+  if (arrayBuffer.byteLength === 0) {
+    throw new Error('Downloaded file is empty');
+  }
+  
+  let zip: JSZip;
+  try {
+    zip = await JSZip.loadAsync(arrayBuffer);
+  } catch (zipError) {
+    console.error('Failed to parse as ZIP:', zipError);
+    throw new Error('File is not a valid PowerPoint (.pptx) file. Make sure the file was created in PowerPoint 2007 or later.');
+  }
   
   // Get slide count from content types or by listing slides
   const slideFiles: string[] = [];
