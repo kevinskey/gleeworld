@@ -46,7 +46,9 @@ export function DocumentViewer({
   const isAudio = fileType.startsWith('audio/') || ['.mp3', '.wav', '.ogg', '.m4a'].some(ext => lowerName.includes(ext));
   const isVideoFile = fileType.startsWith('video/') || ['.mp4', '.webm', '.mov'].some(ext => lowerName.includes(ext));
 
-  const isWebsite = !isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isAudio && !isVideoFile && (fileUrl.startsWith('http') || fileUrl.startsWith('https'));
+  // Supabase storage URLs cannot be iframed due to CSP - treat them as unsupported files (will show download option)
+  const isSupabaseStorage = fileUrl.includes('supabase.co/storage');
+  const isWebsite = !isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isAudio && !isVideoFile && !isSupabaseStorage && (fileUrl.startsWith('http') || fileUrl.startsWith('https'));
 
   const handleOpenExternal = () => {
     // Stay in the same tab (in-app navigation) rather than opening a new window.
