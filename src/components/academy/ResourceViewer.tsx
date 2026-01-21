@@ -75,8 +75,8 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   };
 
   // For external sites like USCCB, we need to handle them differently
-  // Exclude PowerPoint files and Supabase storage URLs from iframing (CSP blocks them)
-  const canEmbed = isPdf || isVideo || (!isExternalReading && !isAudio && !isPowerPoint && !isSupabaseStorage);
+  // Only exclude PowerPoint files from direct iframing (CSP blocks them, but PDFs work via Google Docs Viewer)
+  const canEmbed = isPdf || isVideo || (!isExternalReading && !isAudio && !isPowerPoint);
 
   const handleOpenExternal = () => {
     window.open(resource.url, '_blank', 'noopener,noreferrer');
