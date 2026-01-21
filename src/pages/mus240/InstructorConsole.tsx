@@ -45,6 +45,7 @@ import { Mus240CalendarManager } from '@/components/mus240/instructor/Mus240Cale
 import { BulkPasswordReset } from '@/components/mus240/admin/BulkPasswordReset';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 import { CourseAnnouncementsManager } from '@/components/course/CourseAnnouncementsManager';
+import { Mus240ResourcesTab } from '@/components/academy/Mus240ResourcesTab';
 
 export const InstructorConsole = () => {
   const {
@@ -185,6 +186,7 @@ export const InstructorConsole = () => {
       label: 'Resources',
       items: [
         { value: 'resources', label: 'Course Materials', icon: BookOpen },
+        { value: 'student-resources', label: 'Resources (Student View)', icon: FolderOpen },
         { value: 'videos', label: 'Video Library', icon: Video },
         { value: 'audio', label: 'Audio Examples', icon: Headphones },
       ]
@@ -602,6 +604,21 @@ export const InstructorConsole = () => {
                   <ResourcesAdmin />
                 </CardContent>
               </Card>}
+
+            {activeTab === 'student-resources' && (
+              <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <FolderOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Resources (Student View)
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Preview resources as students see them</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <Mus240ResourcesTab isAdmin={true} />
+                </CardContent>
+              </Card>
+            )}
 
             {activeTab === 'syllabus' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
