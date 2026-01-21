@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { radioCoService } from '@/services/radioco';
+import { forceUnlockAudio, unlockAudioContext } from '@/utils/mobileAudioUnlock';
 
 export interface RadioTrack {
   title: string;
@@ -473,6 +474,19 @@ export const useRadioPlayer = () => {
   const play = useCallback(async () => {
     if (!audioRef.current) return;
     const audio = audioRef.current;
+
+    // CRITICAL: Unlock audio context for iOS/Safari/mobile before attempting playback
+    // This must happen synchronously within the user gesture
+    console.log('useRadioPlayer: Unlocking audio context for mobile...');
+    forceUnlockAudio();
+    
+    // Also try async unlock for additional compatibility
+    try {
+      await unlockAudioContext();
+      console.log('useRadioPlayer: Audio context unlocked successfully');
+    } catch (e) {
+      console.warn('useRadioPlayer: Async audio unlock failed, continuing anyway...', e);
+    }
 
     userPausedRef.current = false;
     setState(prev => ({ ...prev, isLoading: true }));
