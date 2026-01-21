@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,8 @@ import {
   Download,
   Maximize2,
   Loader2,
-  Presentation
+  Presentation,
+  Globe
 } from 'lucide-react';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { NativePowerPointViewer } from '@/components/mus240/NativePowerPointViewer';
@@ -34,9 +35,31 @@ const getResourceIcon = (type: string) => {
     case 'video': return Video;
     case 'audio': return Music;
     case 'reading': return BookOpen;
+    case 'website': return Globe;
     case 'document':
     default: return FileText;
   }
+};
+
+// Check if URL is a YouTube video
+const isYouTubeUrl = (url: string) => {
+  return url.includes('youtube.com') || url.includes('youtu.be');
+};
+
+// Convert YouTube URL to embed format
+const getYouTubeEmbedUrl = (url: string) => {
+  let videoId = '';
+  
+  if (url.includes('youtube.com/watch')) {
+    const urlObj = new URL(url);
+    videoId = urlObj.searchParams.get('v') || '';
+  } else if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1]?.split('?')[0] || '';
+  } else if (url.includes('youtube.com/embed/')) {
+    return url; // Already an embed URL
+  }
+  
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
 };
 
 export const ResourceViewer: React.FC<ResourceViewerProps> = ({
@@ -45,9 +68,28 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   resource
 }) => {
   const isPhone = useIsPhone();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [showPptxViewer, setShowPptxViewer] = useState(false);
+
+  // Reset state when resource changes or dialog opens/closes
+  useEffect(() => {
+    if (isOpen && resource) {
+      setError(false);
+      setShowPptxViewer(false);
+      // Only show loading for embeddable content
+      const lowerUrl = resource.url.toLowerCase();
+      const isPdf = lowerUrl.includes('.pdf');
+      const isPowerPoint = lowerUrl.includes('.ppt') || lowerUrl.includes('.pptx');
+      const isVideo = resource.resource_type === 'video' || isYouTubeUrl(resource.url) || resource.url.includes('vimeo');
+      const isWebsite = resource.resource_type === 'website';
+      const needsIframe = isPdf || isVideo || isWebsite;
+      setLoading(needsIframe && !isPowerPoint);
+    } else {
+      setLoading(false);
+      setError(false);
+    }
+  }, [isOpen, resource?.url]);
 
   if (!resource) return null;
 
@@ -55,28 +97,33 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   const lowerUrl = resource.url.toLowerCase();
   const isPdf = lowerUrl.includes('.pdf');
   const isPowerPoint = lowerUrl.includes('.ppt') || lowerUrl.includes('.pptx');
-  const isSupabaseStorage = resource.url.includes('supabase.co/storage');
-  const isVideo = resource.resource_type === 'video' || 
-    resource.url.includes('youtube') || 
-    resource.url.includes('vimeo');
-  const isAudio = resource.resource_type === 'audio' || 
-    resource.url.includes('soundcloud');
+  const isYouTube = isYouTubeUrl(resource.url);
+  const isVideo = resource.resource_type === 'video' || isYouTube || resource.url.includes('vimeo');
+  const isAudio = resource.resource_type === 'audio' || resource.url.includes('soundcloud');
+  const isWebsite = resource.resource_type === 'website';
   const isExternalReading = resource.resource_type === 'reading' ||
     resource.url.includes('bible.usccb.org') ||
     resource.url.includes('usccb.org');
 
-  // Use Google Docs Viewer for PDFs (handles large files better than pdfjs)
+  // Use Google Docs Viewer for PDFs, YouTube embed for videos
   const getEmbedUrl = () => {
     if (isPdf) {
-      // Google Docs Viewer handles large PDFs much better
       return `https://docs.google.com/viewer?url=${encodeURIComponent(resource.url)}&embedded=true`;
+    }
+    if (isYouTube) {
+      return getYouTubeEmbedUrl(resource.url);
     }
     return resource.url;
   };
 
-  // For external sites like USCCB, we need to handle them differently
-  // Only exclude PowerPoint files from direct iframing (CSP blocks them, but PDFs work via Google Docs Viewer)
-  const canEmbed = isPdf || isVideo || (!isExternalReading && !isAudio && !isPowerPoint);
+  // Determine what can be embedded in an iframe
+  // - PDFs work via Google Docs Viewer
+  // - YouTube works with embed URLs
+  // - Websites work if they allow framing
+  // - PowerPoint files need special handling
+  // - External readings/audio open in new tab
+  const canEmbed = isPdf || isVideo || isWebsite;
+  const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint;
 
   const handleOpenExternal = () => {
     window.open(resource.url, '_blank', 'noopener,noreferrer');
@@ -166,8 +213,9 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
               setLoading(false);
               setError(true);
             }}
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+            sandbox={isYouTube ? undefined : "allow-scripts allow-same-origin allow-popups allow-forms"}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
           />
         ) : (
           // For external readings and audio, show a preview with open button
