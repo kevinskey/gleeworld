@@ -248,15 +248,30 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const avatarUrl = getAvatarUrl(profile?.avatar_url);
   const initials = getInitials(profile?.full_name);
 
-  // Find the most urgent assignment
-  const urgentAssignment = assignments.find(a => a.status === 'overdue') || assignments[0];
+  // Find the most urgent assignment (prioritize overdue, then pending, skip submitted/graded)
+  const pendingAssignments = assignments.filter(a => a.status === 'pending' || a.status === 'overdue');
+  const urgentAssignment = pendingAssignments.find(a => a.status === 'overdue') || pendingAssignments[0];
+
+  // Helper to get status badge
+  const getStatusBadge = (status: Assignment['status']) => {
+    switch (status) {
+      case 'submitted':
+        return <Badge variant="default" className="text-xs flex items-center gap-1"><CheckCircle className="h-3 w-3" />Submitted</Badge>;
+      case 'graded':
+        return <Badge variant="outline" className="text-xs flex items-center gap-1 bg-green-50 text-green-700 border-green-200"><CheckCircle className="h-3 w-3" />Graded</Badge>;
+      case 'overdue':
+        return <Badge variant="destructive" className="text-xs flex items-center gap-1"><AlertCircle className="h-3 w-3" />Overdue</Badge>;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="flex gap-6">
       {/* Main Content Column - 70% */}
       <div className="flex-1 space-y-6 min-w-0">
         
-        {/* What's Due Next Card */}
+        {/* What's Due Next Card - only show if there's a pending/overdue assignment */}
         {urgentAssignment && (
           <Card className="border-l-4 border-l-primary">
             <CardHeader className="pb-2">
@@ -270,12 +285,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-lg">{urgentAssignment.title}</h3>
-                    {urgentAssignment.status === 'overdue' && (
-                      <Badge variant="destructive" className="text-xs flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        Overdue
-                      </Badge>
-                    )}
+                    {getStatusBadge(urgentAssignment.status)}
                   </div>
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
                     <Calendar className="h-3.5 w-3.5" />
@@ -322,18 +332,13 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
               </div>
             </div>
 
-            {/* Module Assignment Preview */}
+            {/* Module Assignment Preview - show first pending/overdue assignment */}
             {urgentAssignment && (
               <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">{urgentAssignment.title}</span>
-                    {urgentAssignment.status === 'overdue' && (
-                      <Badge variant="destructive" className="text-xs">
-                        <AlertCircle className="h-2.5 w-2.5 mr-0.5" />
-                        Overdue
-                      </Badge>
-                    )}
+                    {getStatusBadge(urgentAssignment.status)}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3 inline mr-1" />
@@ -357,7 +362,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                 <p className="text-sm text-muted-foreground">No assignments yet</p>
               ) : (
                 <div className="space-y-2">
-                  {assignments.slice(0, 4).map((assignment, idx) => (
+                  {assignments.slice(0, 4).map((assignment) => (
                     <div key={assignment.id} className="flex items-center justify-between py-2 border-b last:border-0">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1">
@@ -372,7 +377,11 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                         </div>
                       </div>
                       <div className="text-right">
-                        {assignment.status === 'overdue' ? (
+                        {assignment.status === 'submitted' ? (
+                          <span className="text-xs text-primary font-medium">Submitted</span>
+                        ) : assignment.status === 'graded' ? (
+                          <span className="text-xs text-green-600 font-medium">Graded</span>
+                        ) : assignment.status === 'overdue' ? (
                           <span className="text-xs text-destructive font-medium">Overdue</span>
                         ) : (
                           <span className="text-xs text-muted-foreground">{assignment.points} pts</span>
