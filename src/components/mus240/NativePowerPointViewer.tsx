@@ -362,7 +362,7 @@ export function NativePowerPointViewer({
           "flex flex-col",
           isFullscreen 
             ? "max-w-[100vw] max-h-[100vh] w-screen h-screen rounded-none" 
-            : "max-w-7xl max-h-[90vh] h-[90vh]"
+            : "max-w-4xl max-h-[70vh] h-[70vh]"
         )}
         aria-describedby="pptx-viewer-description"
       >
