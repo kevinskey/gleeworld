@@ -28,6 +28,7 @@ import { format, isAfter, isBefore, startOfWeek, endOfWeek } from 'date-fns';
 import OrderOfMass from './OrderOfMass';
 import EditableModuleResources from './EditableModuleResources';
 import EditableLH100Modules from './EditableLH100Modules';
+import { ResourceViewer } from './ResourceViewer';
 
 interface ModuleResource {
   id: string;
@@ -618,6 +619,12 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
   const [expandedWeeks, setExpandedWeeks] = useState<string[]>(['week-1', 'week-2']);
   const [loading, setLoading] = useState(isMUS240);
   const [studentProgress, setStudentProgress] = useState<Set<string>>(new Set());
+  const [selectedResource, setSelectedResource] = useState<{
+    title: string;
+    url: string;
+    resource_type: string;
+    description?: string | null;
+  } | null>(null);
 
   // For MUS 240, fetch everything from database
   useEffect(() => {
@@ -1026,10 +1033,15 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                               return (
                                 <div 
                                   key={resource.id}
-                                  onClick={() => {
-                                    // Open resource if it has a URL
+                                onClick={() => {
+                                    // Open resource in in-app viewer if it has a URL
                                     if (resource.url) {
-                                      window.open(resource.url, '_blank');
+                                      setSelectedResource({
+                                        title: resource.title,
+                                        url: resource.url,
+                                        resource_type: resource.type,
+                                        description: resource.description,
+                                      });
                                     }
                                   }}
                                   className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
@@ -1086,7 +1098,12 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                                         className="h-8 px-3"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          window.open(resource.url, '_blank');
+                                          setSelectedResource({
+                                            title: resource.title,
+                                            url: resource.url!,
+                                            resource_type: resource.type,
+                                            description: resource.description,
+                                          });
                                         }}
                                       >
                                         {resource.type === 'video' ? (
@@ -1122,6 +1139,13 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
           );
         })}
       </Accordion>
+
+      {/* In-app Resource Viewer */}
+      <ResourceViewer
+        isOpen={!!selectedResource}
+        onClose={() => setSelectedResource(null)}
+        resource={selectedResource}
+      />
     </div>
   );
 };
