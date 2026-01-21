@@ -24,6 +24,14 @@ interface Assignment {
   is_published: boolean;
   created_at: string;
   display_order: number | null;
+  rubric_id: string | null;
+}
+
+interface Rubric {
+  id: string;
+  name: string;
+  description: string | null;
+  total_points: number;
 }
 interface CourseAssignmentManagerProps {
   courseId: string;
@@ -76,7 +84,21 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     description: '',
     assignment_type: 'exercise',
     points: 100,
-    due_at: ''
+    due_at: '',
+    rubric_id: ''
+  });
+
+  // Fetch available rubrics
+  const { data: rubrics = [] } = useQuery({
+    queryKey: ['universal-rubrics'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_universal_rubrics')
+        .select('id, name, description, total_points')
+        .order('name');
+      if (error) throw error;
+      return (data || []) as Rubric[];
+    }
   });
 
   // Fetch assignments
@@ -110,6 +132,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         assignment_type: data.assignment_type,
         points: data.points,
         due_date: data.due_at || null,
+        rubric_id: data.rubric_id || null,
         is_published: true
       });
       if (error) throw error;
@@ -144,7 +167,8 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         description: data.description || null,
         assignment_type: data.assignment_type,
         points: data.points,
-        due_date: data.due_at || null
+        due_date: data.due_at || null,
+        rubric_id: data.rubric_id || null
       }).eq('id', id);
       if (error) throw error;
     },
@@ -187,7 +211,8 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       description: '',
       assignment_type: 'exercise',
       points: 100,
-      due_at: ''
+      due_at: '',
+      rubric_id: ''
     });
   };
   const handleEdit = (assignment: Assignment) => {
@@ -197,7 +222,8 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       description: assignment.description || '',
       assignment_type: assignment.assignment_type || 'exercise',
       points: assignment.points || 100,
-      due_at: assignment.due_date ? format(new Date(assignment.due_date), "yyyy-MM-dd'T'HH:mm") : ''
+      due_at: assignment.due_date ? format(new Date(assignment.due_date), "yyyy-MM-dd'T'HH:mm") : '',
+      rubric_id: assignment.rubric_id || ''
     });
   };
   const handleSubmit = () => {
@@ -341,6 +367,28 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 ...formData,
                 due_at: e.target.value
               })} className="text-foreground" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">Grading Rubric</Label>
+                <Select value={formData.rubric_id} onValueChange={value => setFormData({
+                  ...formData,
+                  rubric_id: value
+                })}>
+                  <SelectTrigger className="text-foreground">
+                    <SelectValue placeholder="Select a rubric..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No rubric</SelectItem>
+                    {rubrics.map(rubric => (
+                      <SelectItem key={rubric.id} value={rubric.id}>
+                        {rubric.name} ({rubric.total_points} pts)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Rubric will be used for AI-assisted grading
+                </p>
               </div>
             </div>
             <DialogFooter>
