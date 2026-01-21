@@ -259,7 +259,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         if (discussionIds.length > 0 && user?.id) {
           // Use rpc or direct query with explicit typing to avoid TypeScript issues
           const repliesQuery = supabase.from('discussion_replies').select('discussion_id');
-          const { data: repliesData } = await (repliesQuery as any).eq('user_id', user.id);
+          const { data: repliesData } = await (repliesQuery as any).eq('created_by', user.id);
           if (repliesData) {
             repliedDiscussionIds = new Set(
               (repliesData as any[])
