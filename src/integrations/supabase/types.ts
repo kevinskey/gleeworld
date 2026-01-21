@@ -5563,6 +5563,92 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_ai_draft_grades: {
+        Row: {
+          ai_criteria_scores: Json | null
+          ai_detection_confidence: string | null
+          ai_detection_flagged: boolean | null
+          ai_detection_indicators: Json | null
+          ai_detection_reasoning: string | null
+          ai_improvements: string | null
+          ai_letter_grade: string | null
+          ai_max_score: number | null
+          ai_overall_feedback: string | null
+          ai_percentage: number | null
+          ai_strengths: string | null
+          ai_total_score: number | null
+          assignment_id: string
+          course_id: string
+          created_at: string
+          id: string
+          instructor_id: string | null
+          instructor_notes: string | null
+          instructor_reviewed_at: string | null
+          status: string | null
+          student_id: string
+          submission_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_criteria_scores?: Json | null
+          ai_detection_confidence?: string | null
+          ai_detection_flagged?: boolean | null
+          ai_detection_indicators?: Json | null
+          ai_detection_reasoning?: string | null
+          ai_improvements?: string | null
+          ai_letter_grade?: string | null
+          ai_max_score?: number | null
+          ai_overall_feedback?: string | null
+          ai_percentage?: number | null
+          ai_strengths?: string | null
+          ai_total_score?: number | null
+          assignment_id: string
+          course_id: string
+          created_at?: string
+          id?: string
+          instructor_id?: string | null
+          instructor_notes?: string | null
+          instructor_reviewed_at?: string | null
+          status?: string | null
+          student_id: string
+          submission_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_criteria_scores?: Json | null
+          ai_detection_confidence?: string | null
+          ai_detection_flagged?: boolean | null
+          ai_detection_indicators?: Json | null
+          ai_detection_reasoning?: string | null
+          ai_improvements?: string | null
+          ai_letter_grade?: string | null
+          ai_max_score?: number | null
+          ai_overall_feedback?: string | null
+          ai_percentage?: number | null
+          ai_strengths?: string | null
+          ai_total_score?: number | null
+          assignment_id?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          instructor_id?: string | null
+          instructor_notes?: string | null
+          instructor_reviewed_at?: string | null
+          status?: string | null
+          student_id?: string
+          submission_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_ai_draft_grades_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_alumnae_notifications: {
         Row: {
           content: string
@@ -10549,6 +10635,87 @@ export type Database = {
             columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "gw_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_final_grades: {
+        Row: {
+          ai_draft_id: string | null
+          assignment_id: string
+          course_id: string
+          created_at: string
+          criteria_scores: Json | null
+          graded_at: string
+          graded_by: string
+          id: string
+          instructor_comment: string | null
+          is_published: boolean | null
+          letter_grade: string
+          max_score: number
+          overall_feedback: string | null
+          percentage: number
+          published_at: string | null
+          student_id: string
+          submission_id: string
+          total_score: number
+          updated_at: string
+        }
+        Insert: {
+          ai_draft_id?: string | null
+          assignment_id: string
+          course_id: string
+          created_at?: string
+          criteria_scores?: Json | null
+          graded_at?: string
+          graded_by: string
+          id?: string
+          instructor_comment?: string | null
+          is_published?: boolean | null
+          letter_grade: string
+          max_score: number
+          overall_feedback?: string | null
+          percentage: number
+          published_at?: string | null
+          student_id: string
+          submission_id: string
+          total_score: number
+          updated_at?: string
+        }
+        Update: {
+          ai_draft_id?: string | null
+          assignment_id?: string
+          course_id?: string
+          created_at?: string
+          criteria_scores?: Json | null
+          graded_at?: string
+          graded_by?: string
+          id?: string
+          instructor_comment?: string | null
+          is_published?: boolean | null
+          letter_grade?: string
+          max_score?: number
+          overall_feedback?: string | null
+          percentage?: number
+          published_at?: string | null
+          student_id?: string
+          submission_id?: string
+          total_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_final_grades_ai_draft_id_fkey"
+            columns: ["ai_draft_id"]
+            isOneToOne: false
+            referencedRelation: "gw_ai_draft_grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_final_grades_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
             referencedColumns: ["id"]
           },
         ]
@@ -19112,6 +19279,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      gw_universal_rubrics: {
+        Row: {
+          assignment_id: string | null
+          course_id: string | null
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          description: string | null
+          id: string
+          is_visible_after_grading: boolean | null
+          is_visible_before_submission: boolean | null
+          name: string
+          total_points: number
+          updated_at: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          description?: string | null
+          id?: string
+          is_visible_after_grading?: boolean | null
+          is_visible_before_submission?: boolean | null
+          name: string
+          total_points?: number
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          description?: string | null
+          id?: string
+          is_visible_after_grading?: boolean | null
+          is_visible_before_submission?: boolean | null
+          name?: string
+          total_points?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_universal_rubrics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_universal_slider_slides: {
         Row: {

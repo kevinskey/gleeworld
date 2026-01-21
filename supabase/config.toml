@@ -396,3 +396,9 @@ verify_jwt = false
 
 [functions.scrape-images]
 verify_jwt = false
+
+[functions.universal-ai-grade]
+verify_jwt = true
+
+[functions.approve-ai-grade]
+verify_jwt = true
