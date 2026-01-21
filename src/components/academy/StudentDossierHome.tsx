@@ -47,6 +47,9 @@ interface UpcomingEvent {
   start_date: string;
   location?: string;
   event_type?: string;
+  is_assignment?: boolean;
+  assignment_status?: 'pending' | 'submitted' | 'graded' | 'overdue';
+  points?: number;
 }
 
 interface Assignment {
@@ -191,20 +194,62 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
             assignments: mappedAssignments.slice(0, 2),
           });
         }
-      }
 
-      // Unified approach: All courses fetch upcoming events by course_id
-      // This ensures each course only shows its own events
-      const { data: eventsData } = await supabase
-        .from('gw_events')
-        .select('id, title, start_date, location, event_type')
-        .eq('course_id', courseId)
-        .gte('start_date', new Date().toISOString())
-        .order('start_date', { ascending: true })
-        .limit(5);
+        // Unified approach: All courses fetch upcoming events by course_id
+        // This ensures each course only shows its own events
+        const { data: eventsData } = await supabase
+          .from('gw_events')
+          .select('id, title, start_date, location, event_type')
+          .eq('course_id', courseId)
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+          .limit(5);
 
-      if (eventsData) {
-        setUpcomingEvents(eventsData);
+        // Merge assignments with due dates into upcoming events
+        const assignmentEvents: UpcomingEvent[] = (assignmentsData || [])
+          .filter((a: any) => a.due_date && new Date(a.due_date) >= new Date())
+          .map((a: any) => {
+            const submissionStatus = submissionStatusByAssignmentId.get(a.id);
+            const due = a.due_date ? new Date(a.due_date) : null;
+            let status: 'pending' | 'submitted' | 'graded' | 'overdue' = 'pending';
+            if (submissionStatus) {
+              status = submissionStatus === 'graded' ? 'graded' : 'submitted';
+            } else if (due && due < new Date()) {
+              status = 'overdue';
+            }
+            
+            return {
+              id: `assignment-${a.id}`,
+              title: a.title,
+              start_date: a.due_date,
+              event_type: 'assignment',
+              is_assignment: true,
+              assignment_status: status,
+              points: a.max_points || a.points || 100
+            };
+          });
+
+        // Combine events and assignments, sort by date
+        const allEvents: UpcomingEvent[] = [
+          ...(eventsData || []).map(e => ({ ...e, is_assignment: false })),
+          ...assignmentEvents
+        ].sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
+         .slice(0, 8);
+
+        setUpcomingEvents(allEvents);
+      } else {
+        // No assignments, just fetch events
+        const { data: eventsData } = await supabase
+          .from('gw_events')
+          .select('id, title, start_date, location, event_type')
+          .eq('course_id', courseId)
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+          .limit(5);
+        
+        if (eventsData) {
+          setUpcomingEvents(eventsData.map(e => ({ ...e, is_assignment: false })));
+        }
       }
 
       // (Current module is set above from mappedAssignments to avoid stale state.)
@@ -446,27 +491,39 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
           </CardContent>
         </Card>
 
-        {/* Upcoming Events */}
+        {/* Upcoming Events & Assignments */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              Upcoming Events
+              Upcoming
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {upcomingEvents.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No upcoming events
+                No upcoming events or assignments
               </p>
             ) : (
               upcomingEvents.map((event) => (
                 <div 
                   key={event.id} 
-                  className="flex items-start gap-3 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors"
+                  className={`flex items-start gap-3 p-3 rounded-lg transition-colors cursor-pointer ${
+                    event.is_assignment 
+                      ? 'bg-primary/10 hover:bg-primary/20 border-l-2 border-l-primary' 
+                      : 'bg-accent/30 hover:bg-accent/50'
+                  }`}
+                  onClick={() => {
+                    if (event.is_assignment) {
+                      const assignmentId = event.id.replace('assignment-', '');
+                      navigate(`/academy/${courseId}/assignments/${assignmentId}`);
+                    }
+                  }}
                 >
                   <div className="flex-shrink-0 w-10 text-center">
-                    <div className="text-[10px] text-primary font-semibold uppercase">
+                    <div className={`text-[10px] font-semibold uppercase ${
+                      event.is_assignment ? 'text-primary' : 'text-muted-foreground'
+                    }`}>
                       {format(new Date(event.start_date), 'MMM')}
                     </div>
                     <div className="text-lg font-bold text-foreground">
@@ -474,11 +531,33 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{event.title}</p>
-                    {event.location && (
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm truncate">{event.title}</p>
+                      {event.is_assignment && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
+                          {event.points} pts
+                        </Badge>
+                      )}
+                    </div>
+                    {event.is_assignment ? (
+                      <p className="text-xs text-muted-foreground">
+                        Due {format(new Date(event.start_date), 'h:mm a')}
+                        {event.assignment_status === 'submitted' && (
+                          <span className="ml-2 text-green-600">✓ Submitted</span>
+                        )}
+                        {event.assignment_status === 'graded' && (
+                          <span className="ml-2 text-blue-600">✓ Graded</span>
+                        )}
+                      </p>
+                    ) : event.location ? (
                       <p className="text-xs text-muted-foreground truncate">{event.location}</p>
-                    )}
+                    ) : null}
                   </div>
+                  {event.is_assignment && (
+                    <div className="flex-shrink-0">
+                      <ClipboardList className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
                 </div>
               ))
             )}
