@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Video, Headphones, FileText, Play, File, X } from 'lucide-react';
+import { Video, Headphones, FileText, Play, File, X, Presentation } from 'lucide-react';
 import { useCourseResources } from '@/hooks/useCourseResources';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { NativePowerPointViewer } from '@/components/mus240/NativePowerPointViewer';
 
 interface CourseResourcesListProps {
   courseId: string;
@@ -21,6 +22,7 @@ type ViewerItem = {
 export const CourseResourcesList: React.FC<CourseResourcesListProps> = ({ courseId, type }) => {
   const { videos, audios, documents, loading } = useCourseResources(courseId);
   const [viewer, setViewer] = useState<ViewerItem | null>(null);
+  const [showPptxViewer, setShowPptxViewer] = useState(false);
 
   const resourceData = useMemo(() => {
     switch (type) {
@@ -53,6 +55,12 @@ export const CourseResourcesList: React.FC<CourseResourcesListProps> = ({ course
   const getYouTubeEmbedUrl = (url: string) => {
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
     return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=0&rel=0&modestbranding=1` : url;
+  };
+
+  const getGoogleDocsEmbedUrl = (url: string) => {
+    // Avoid iframing Supabase URLs directly (CSP blocks frame-src).
+    // Google Docs viewer is allowed by CSP and handles PDFs well.
+    return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
   };
 
   const resolveItemUrl = (item: any): ViewerItem | null => {
@@ -183,16 +191,62 @@ export const CourseResourcesList: React.FC<CourseResourcesListProps> = ({ course
             )}
 
             {viewer?.kind === 'document' && (
-              <iframe
-                src={viewer.url}
-                title={viewer.title}
-                className="w-full h-full"
-                loading="lazy"
-              />
+              (() => {
+                const lowerUrl = viewer.url.toLowerCase();
+                const isPdf = lowerUrl.includes('.pdf');
+                const isPowerPoint = lowerUrl.includes('.ppt') || lowerUrl.includes('.pptx');
+                const isSupabaseStorage = viewer.url.includes('supabase.co');
+
+                if (isPowerPoint) {
+                  return (
+                    <div className="w-full h-full flex items-center justify-center p-6">
+                      <div className="text-center max-w-sm">
+                        <div className="p-4 rounded-full bg-primary/10 inline-block mb-4">
+                          <Presentation className="h-12 w-12 text-primary" />
+                        </div>
+                        <h4 className="font-semibold mb-2">{viewer.title}</h4>
+                        {viewer.description && (
+                          <p className="text-sm text-muted-foreground mb-4">{viewer.description}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground mb-4">
+                          This presentation will open in the slideshow viewer.
+                        </p>
+                        <Button size="lg" onClick={() => setShowPptxViewer(true)} className="w-full sm:w-auto">
+                          <Presentation className="h-4 w-4 mr-2" />
+                          Open Slideshow
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                const iframeUrl = isSupabaseStorage && isPdf ? getGoogleDocsEmbedUrl(viewer.url) : viewer.url;
+
+                return (
+                  <iframe
+                    src={iframeUrl}
+                    title={viewer.title}
+                    className="w-full h-full"
+                    loading="lazy"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                  />
+                );
+              })()
             )}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Native slideshow for PPT/PPTX opened from CourseResourcesList */}
+      {viewer?.kind === 'document' && (
+        <NativePowerPointViewer
+          isOpen={showPptxViewer}
+          onClose={() => setShowPptxViewer(false)}
+          fileUrl={viewer.url}
+          fileName={viewer.title}
+          title={viewer.title}
+        />
+      )}
     </>
   );
 };
