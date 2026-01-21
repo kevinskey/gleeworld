@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ParsedSlide {
   index: number;
@@ -231,36 +232,67 @@ function parseRelationships(xml: string): Map<string, string> {
 }
 
 export async function parsePowerPoint(fileUrl: string): Promise<PPTXParseResult> {
-  console.log('Parsing PowerPoint from URL:', fileUrl);
+  console.log('[pptx-parser] Parsing PowerPoint from URL:', fileUrl);
   
-  // Fetch the PPTX file with CORS mode
+  let fetchUrl = fileUrl;
+  
+  // If this is a Supabase storage URL, we need to create a signed URL for private buckets
+  // or use the download endpoint for proper CORS handling
+  if (fileUrl.includes('supabase.co/storage')) {
+    console.log('[pptx-parser] Detected Supabase storage URL, attempting to get signed URL...');
+    
+    // Extract bucket and path from the URL
+    // Format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
+    // or: https://{project}.supabase.co/storage/v1/object/{bucket}/{path}
+    const urlMatch = fileUrl.match(/\/storage\/v1\/object\/(?:public\/)?([^/]+)\/(.+)/);
+    
+    if (urlMatch) {
+      const [, bucket, path] = urlMatch;
+      console.log('[pptx-parser] Bucket:', bucket, 'Path:', path);
+      
+      // Try to create a signed URL (works for both public and private buckets)
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(path, 3600); // 1 hour expiry
+      
+      if (signedUrlError) {
+        console.error('[pptx-parser] Failed to create signed URL:', signedUrlError);
+        // Fall back to trying the original URL
+      } else if (signedUrlData?.signedUrl) {
+        fetchUrl = signedUrlData.signedUrl;
+        console.log('[pptx-parser] Using signed URL for fetch');
+      }
+    }
+  }
+  
+  // Fetch the PPTX file
   let response: Response;
   try {
-    response = await fetch(fileUrl, {
+    console.log('[pptx-parser] Fetching from:', fetchUrl.substring(0, 100) + '...');
+    response = await fetch(fetchUrl, {
       mode: 'cors',
       credentials: 'omit',
     });
   } catch (corsError) {
-    console.error('CORS fetch failed, trying no-cors fallback:', corsError);
-    // Try with different approach - this will fail for opaque responses but provides better error info
+    console.error('[pptx-parser] CORS fetch failed:', corsError);
     throw new Error('Unable to fetch the PowerPoint file. The file may be in a private bucket or have CORS restrictions.');
   }
   
   if (!response.ok) {
-    console.error('Fetch response not OK:', response.status, response.statusText);
+    console.error('[pptx-parser] Fetch response not OK:', response.status, response.statusText);
     throw new Error(`Failed to fetch PowerPoint file: ${response.status} ${response.statusText}`);
   }
   
   // Verify we got binary data, not HTML error page
   const contentType = response.headers.get('content-type') || '';
-  console.log('Response content-type:', contentType);
+  console.log('[pptx-parser] Response content-type:', contentType);
   
   if (contentType.includes('text/html')) {
     throw new Error('Received HTML instead of PowerPoint file. The file URL may be invalid or access denied.');
   }
   
   const arrayBuffer = await response.arrayBuffer();
-  console.log('Fetched file size:', arrayBuffer.byteLength, 'bytes');
+  console.log('[pptx-parser] Fetched file size:', arrayBuffer.byteLength, 'bytes');
   
   if (arrayBuffer.byteLength === 0) {
     throw new Error('Downloaded file is empty');
