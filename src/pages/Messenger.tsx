@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2, History } from "lucide-react";
+import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2, History, ChevronDown, ChevronRight } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { BackNavigation } from "@/components/shared/BackNavigation";
 import { useAuth } from '@/contexts/AuthContext';
@@ -722,19 +723,46 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           {/* Recipients */}
                           <div className="space-y-1">
                             <Label className="text-sm font-medium text-foreground">To:</Label>
-                            <div className="flex flex-wrap gap-2 p-3 min-h-[48px] border border-border rounded-lg bg-background">
-                              {recipients.map((r, i) => <Badge key={i} variant="secondary" className="gap-1 pr-1">
-                                  {r}
-                                  <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </Badge>)}
-                              <div className="relative flex-1 min-w-[200px]">
+                            <div className="border border-border rounded-lg bg-background">
+                              {/* Collapsible recipients when there are many */}
+                              {recipients.length > 3 ? (
+                                <Collapsible defaultOpen={false}>
+                                  <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 text-left hover:bg-muted/50 transition-colors">
+                                    <ChevronRight className="h-4 w-4 transition-transform [[data-state=open]>&]:rotate-90" />
+                                    <span className="text-sm font-medium">{recipients.length} recipients selected</span>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent>
+                                    <div className="flex flex-wrap gap-2 px-3 pb-3 max-h-[200px] overflow-y-auto">
+                                      {recipients.map((r, i) => (
+                                        <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                                          {r}
+                                          <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </CollapsibleContent>
+                                </Collapsible>
+                              ) : (
+                                <div className="flex flex-wrap gap-2 p-3 min-h-[48px]">
+                                  {recipients.map((r, i) => (
+                                    <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                                      {r}
+                                      <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                              {/* Search input always visible */}
+                              <div className="relative p-3 pt-0">
                                 <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
-                                if (e.key === 'Enter' && searchQuery.includes('@')) {
-                                  addRecipient(searchQuery);
-                                }
-                              }} placeholder="Search or type email..." className="border-0 h-8 p-0 focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground" />
+                                  if (e.key === 'Enter' && searchQuery.includes('@')) {
+                                    addRecipient(searchQuery);
+                                  }
+                                }} placeholder="Search or type email..." className="h-8 bg-transparent text-foreground placeholder:text-muted-foreground" />
                                 {filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                     {filteredContacts.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
                                         <span className="font-medium">{result.full_name}</span>
