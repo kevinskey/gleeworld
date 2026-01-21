@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 interface ModuleSetting {
   id: string;
@@ -594,11 +595,11 @@ export const Mus240ModuleEditor: React.FC = () => {
 
               <div>
                 <Label>Description</Label>
-                <Textarea
+                <RichTextEditor
                   value={editingModule.description || ''}
-                  onChange={(e) => setEditingModule({ ...editingModule, description: e.target.value })}
+                  onChange={(val) => setEditingModule({ ...editingModule, description: val })}
                   placeholder="Module description (shown to students)"
-                  rows={3}
+                  minHeight="150px"
                 />
               </div>
 
