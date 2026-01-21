@@ -302,31 +302,31 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               <button 
                 key={item.tab} 
                 onClick={() => setActiveTab(item.tab)} 
-                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors ${
+                className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-md text-base transition-colors ${
                   activeTab === item.tab 
                     ? 'bg-primary text-primary-foreground font-medium' 
                     : 'text-foreground hover:bg-muted'
                 }`}
               >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <item.icon className="h-5 w-5 flex-shrink-0" />
                 <span>{item.label}</span>
               </button>
             ))}
             
             {/* Course Core Section - Course Template v1 */}
             <div className="pt-4">
-              <h3 className="font-semibold text-foreground text-xs px-2.5 mb-1">Course Core</h3>
+              <h3 className="font-semibold text-foreground text-sm px-2.5 mb-1.5">Course Core</h3>
               {templateConfig.courseCore.map(item => (
                 <button 
                   key={item.tab} 
                   onClick={() => setActiveTab(item.tab)} 
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors ${
+                  className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-md text-base transition-colors ${
                     activeTab === item.tab 
                       ? 'bg-primary text-primary-foreground font-medium' 
                       : 'text-foreground hover:bg-muted'
                   }`}
                 >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -335,18 +335,18 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {/* Extension Modules - Course-specific features */}
             {templateConfig.extensions && templateConfig.extensions.length > 0 && (
               <div className="pt-4">
-                <h3 className="font-semibold text-foreground text-xs px-2.5 mb-1">Extensions</h3>
+                <h3 className="font-semibold text-foreground text-sm px-2.5 mb-1.5">Extensions</h3>
                 {templateConfig.extensions.map(item => (
                   <button 
                     key={item.tab} 
                     onClick={() => setActiveTab(item.tab)} 
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors ${
+                    className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-md text-base transition-colors ${
                       activeTab === item.tab 
                         ? 'bg-primary text-primary-foreground font-medium' 
                         : 'text-foreground hover:bg-muted'
                     }`}
                   >
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
                     <span>{item.label}</span>
                   </button>
                 ))}
