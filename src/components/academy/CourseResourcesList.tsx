@@ -151,7 +151,8 @@ export const CourseResourcesList: React.FC<CourseResourcesListProps> = ({ course
       </Card>
 
       <Dialog open={!!viewer} onOpenChange={(open) => !open && setViewer(null)}>
-        <DialogContent className="max-w-5xl h-[80vh] flex flex-col">
+        <DialogContent className="max-w-5xl h-[80vh] flex flex-col" aria-describedby="course-resource-viewer-desc">
+          <span id="course-resource-viewer-desc" className="sr-only">Viewing course resource</span>
           <DialogHeader className="flex-shrink-0">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
