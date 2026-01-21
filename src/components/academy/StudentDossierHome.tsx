@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
 
@@ -73,6 +73,7 @@ interface StudentDossierHomeProps {
 export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentSemester } = useMus240SemesterSafe();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
@@ -83,11 +84,12 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
   const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
 
+  // Refetch when user navigates back to this page (location.key changes on navigation)
   useEffect(() => {
     if (user) {
       fetchStudentData();
     }
-  }, [user, courseId]);
+  }, [user, courseId, location.key]);
 
   const fetchStudentData = async () => {
     if (!user) return;
@@ -297,7 +299,9 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                   className="bg-primary hover:bg-primary/90"
                   onClick={() => navigate(`/grading/student/assignment/${urgentAssignment.id}`)}
                 >
-                  Start Assignment
+                  {urgentAssignment.status === 'submitted' || urgentAssignment.status === 'graded' 
+                    ? 'View Submission' 
+                    : 'Start Assignment'}
                 </Button>
               </div>
             </CardContent>
@@ -350,7 +354,9 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                   className="bg-primary hover:bg-primary/90 text-xs"
                   onClick={() => navigate(`/grading/student/assignment/${urgentAssignment.id}`)}
                 >
-                  Start Assignment
+                  {urgentAssignment.status === 'submitted' || urgentAssignment.status === 'graded' 
+                    ? 'View Submission' 
+                    : 'Start Assignment'}
                 </Button>
               </div>
             )}
