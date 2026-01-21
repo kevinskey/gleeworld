@@ -415,9 +415,14 @@ export const Mus240ModuleEditor: React.FC = () => {
                     
                     <div>
                       <p className="text-sm font-medium">Description:</p>
-                      <p className="text-sm text-muted-foreground">
-                        {module.description || <em className="opacity-50">No description set</em>}
-                      </p>
+                      {module.description ? (
+                        <div 
+                          className="text-sm text-muted-foreground prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: module.description }}
+                        />
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic opacity-50">No description set</p>
+                      )}
                     </div>
 
                     {module.learning_objectives && module.learning_objectives.length > 0 && (
