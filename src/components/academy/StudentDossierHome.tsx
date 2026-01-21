@@ -206,15 +206,25 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
           .limit(5);
 
         // Merge assignments with due dates into upcoming events
+        // Include future assignments AND recent overdue ones (within 7 days) that aren't submitted
+        const currentTime = new Date();
+        const sevenDaysAgo = new Date(currentTime.getTime() - 7 * 24 * 60 * 60 * 1000);
+        
         const assignmentEvents: UpcomingEvent[] = (assignmentsData || [])
-          .filter((a: any) => a.due_date && new Date(a.due_date) >= new Date())
+          .filter((a: any) => {
+            if (!a.due_date) return false;
+            const dueDate = new Date(a.due_date);
+            const submissionStatus = submissionStatusByAssignmentId.get(a.id);
+            // Show if: future OR (recent past AND not submitted/graded)
+            return dueDate >= currentTime || (dueDate >= sevenDaysAgo && !submissionStatus);
+          })
           .map((a: any) => {
             const submissionStatus = submissionStatusByAssignmentId.get(a.id);
             const due = a.due_date ? new Date(a.due_date) : null;
             let status: 'pending' | 'submitted' | 'graded' | 'overdue' = 'pending';
             if (submissionStatus) {
               status = submissionStatus === 'graded' ? 'graded' : 'submitted';
-            } else if (due && due < new Date()) {
+            } else if (due && due < currentTime) {
               status = 'overdue';
             }
             
