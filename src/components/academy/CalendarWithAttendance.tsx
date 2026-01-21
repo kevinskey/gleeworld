@@ -171,17 +171,45 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
       const start = startOfMonth(currentMonth);
       const end = endOfMonth(currentMonth);
 
-      // Course-specific calendar IDs
+      // Course-specific calendar IDs - maps courseId to calendarId
       const COURSE_CALENDAR_IDS: Record<string, string> = {
         'a0000000-0000-0000-0000-000000000070': 'b1e077a0-85f3-4665-b006-4767b310a521', // MUS 070 -> SCGC Calendar
         'a0000000-0000-0000-0000-000000000100': 'a0000000-0000-0000-0000-000000000100', // LH 100 -> LH 100 Calendar
+        '23c4ee3c-7bbb-4534-8c0a-eecd88298d37': '9b0267e7-5b30-4288-b33f-99a056279011', // MUS 240 -> MUS 240 Calendar
       };
       
       let gwEventsData: CalendarEvent[] = [];
       const calendarId = COURSE_CALENDAR_IDS[courseId];
       
-      // Fetch from gw_events if this course has an associated calendar
-      if (calendarId) {
+      // For MUS 240, fetch ONLY from gw_events filtered by course_id (not other calendars)
+      const MUS_240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
+      
+      if (courseId === MUS_240_COURSE_ID) {
+        // MUS 240: Only show events specifically for this course
+        const { data: eventsData, error: eventsError } = await supabase
+          .from('gw_events')
+          .select('id, title, description, event_type, start_date, location')
+          .eq('course_id', MUS_240_COURSE_ID)
+          .gte('start_date', start.toISOString())
+          .lte('start_date', end.toISOString())
+          .order('start_date', { ascending: true });
+
+        if (!eventsError && eventsData) {
+          gwEventsData = eventsData.map(event => ({
+            id: event.id,
+            title: event.title,
+            description: event.description,
+            event_type: event.event_type || 'class',
+            start_time: event.start_date,
+            end_time: null,
+            location: event.location
+          }));
+        }
+        
+        // MUS 240 only uses gw_events, not gw_course_calendar
+        setEvents(gwEventsData);
+      } else if (calendarId) {
+        // Other courses: fetch from gw_events by calendar_id
         const { data: eventsData, error: eventsError } = await supabase
           .from('gw_events')
           .select('id, title, description, event_type, start_date, location')
@@ -201,18 +229,29 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
             location: event.location
           }));
         }
+
+        // Also fetch course-specific calendar events from gw_course_calendar
+        const { data: courseData } = await supabase
+          .from('gw_course_calendar')
+          .select('*')
+          .eq('course_id', courseId)
+          .gte('start_time', start.toISOString())
+          .lte('start_time', end.toISOString())
+          .order('start_time', { ascending: true });
+
+        setEvents([...(courseData || []), ...gwEventsData]);
+      } else {
+        // Fallback: only gw_course_calendar
+        const { data: courseData } = await supabase
+          .from('gw_course_calendar')
+          .select('*')
+          .eq('course_id', courseId)
+          .gte('start_time', start.toISOString())
+          .lte('start_time', end.toISOString())
+          .order('start_time', { ascending: true });
+
+        setEvents(courseData || []);
       }
-
-      // Also fetch course-specific calendar events from gw_course_calendar
-      const { data: courseData } = await supabase
-        .from('gw_course_calendar')
-        .select('*')
-        .eq('course_id', courseId)
-        .gte('start_time', start.toISOString())
-        .lte('start_time', end.toISOString())
-        .order('start_time', { ascending: true });
-
-      setEvents([...(courseData || []), ...gwEventsData]);
     } catch (error) {
       console.error('Error fetching calendar events:', error);
     } finally {
