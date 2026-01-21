@@ -19,6 +19,8 @@ serve(async (req) => {
       throw new Error('Submission ID is required');
     }
 
+    console.log('[grade-submission-ai] Starting grading for submission:', submissionId);
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
@@ -29,46 +31,83 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch submission with assignment details
+    // Fetch submission with assignment details and linked rubric
     const { data: submission, error: subError } = await supabase
-      .from('assignment_submissions')
+      .from('gw_assignment_submissions')
       .select(`
         *,
-        gw_assignments(
+        gw_course_assignments(
+          id,
           title,
           description,
           points,
-          rubric_criteria
+          assignment_type,
+          rubric_id
         )
       `)
       .eq('id', submissionId)
       .single();
 
-    if (subError) throw subError;
+    if (subError) {
+      console.error('[grade-submission-ai] Error fetching submission:', subError);
+      throw subError;
+    }
 
-    // Use assignment rubric if available, otherwise use provided rubric
-    const criteria = rubricCriteria || submission.gw_assignments?.rubric_criteria || [
-      {
-        name: "Content Quality",
-        description: "Accuracy, depth, and relevance of content",
-        maxPoints: 40
-      },
-      {
-        name: "Analysis & Critical Thinking",
-        description: "Demonstrates understanding and insightful analysis",
-        maxPoints: 35
-      },
-      {
-        name: "Communication",
-        description: "Clarity, organization, and proper writing mechanics",
-        maxPoints: 25
+    console.log('[grade-submission-ai] Submission found:', {
+      id: submission.id,
+      assignmentId: submission.assignment_id,
+      assignmentTitle: submission.gw_course_assignments?.title,
+      rubricId: submission.gw_course_assignments?.rubric_id
+    });
+
+    // Fetch the linked rubric from gw_universal_rubrics if available
+    let rubricFromDb = null;
+    if (submission.gw_course_assignments?.rubric_id) {
+      const { data: rubric, error: rubricError } = await supabase
+        .from('gw_universal_rubrics')
+        .select('*')
+        .eq('id', submission.gw_course_assignments.rubric_id)
+        .single();
+      
+      if (rubricError) {
+        console.warn('[grade-submission-ai] Error fetching rubric:', rubricError);
+      } else {
+        rubricFromDb = rubric;
+        console.log('[grade-submission-ai] Rubric loaded:', rubric.name, 'with', rubric.criteria?.length, 'criteria');
       }
-    ];
+    }
+
+    // Transform rubric criteria to the format expected by the AI
+    // Priority: 1) Passed rubricCriteria, 2) Linked rubric from DB, 3) Fallback
+    let criteria;
+    
+    if (rubricCriteria && rubricCriteria.length > 0) {
+      // Use explicitly passed rubric criteria
+      criteria = rubricCriteria;
+      console.log('[grade-submission-ai] Using passed rubric criteria');
+    } else if (rubricFromDb?.criteria && Array.isArray(rubricFromDb.criteria)) {
+      // Transform DB rubric format to AI format
+      criteria = rubricFromDb.criteria.map((c: any) => ({
+        name: c.name,
+        description: c.description,
+        maxPoints: c.max_points || c.maxPoints
+      }));
+      console.log('[grade-submission-ai] Using linked rubric from database:', rubricFromDb.name);
+    } else {
+      // Fallback criteria based on assignment type
+      const assignmentType = submission.gw_course_assignments?.assignment_type;
+      criteria = getFallbackCriteria(assignmentType);
+      console.log('[grade-submission-ai] Using fallback criteria for type:', assignmentType);
+    }
 
     const totalMaxPoints = criteria.reduce((sum: number, c: any) => sum + c.maxPoints, 0);
-    const contentText = submission?.file_url
-      ? `File URL: ${submission.file_url}`
-      : 'No inline content available';
+    
+    // Get content from submission
+    const contentText = submission.content || 
+                       submission.notes || 
+                       (submission.file_url ? `File URL: ${submission.file_url}` : 'No content available');
+
+    console.log('[grade-submission-ai] Content length:', contentText.length);
 
     // Build AI grading prompt with detection
     const systemPrompt = `You are an expert educator providing fair, transparent, and defensible grading. 
@@ -77,12 +116,15 @@ Your evaluation must be:
 - Balanced: acknowledge strengths and areas for improvement
 - Constructive: provide actionable feedback
 - Mathematically sound: scores must add up correctly
-- Vigilant: detect AI-generated content and academic dishonesty`;
+- Vigilant: detect AI-generated content and academic dishonesty
+
+IMPORTANT: Score each criterion on a scale from 0 to the max_points. Be precise and fair.`;
 
     const userPrompt = `Grade this student submission using the rubric below AND analyze if it was AI-generated.
 
-ASSIGNMENT: ${submission.gw_assignments?.title}
-${submission.gw_assignments?.description ? `Description: ${submission.gw_assignments.description}` : ''}
+ASSIGNMENT: ${submission.gw_course_assignments?.title || 'Assignment'}
+${submission.gw_course_assignments?.description ? `Description: ${submission.gw_course_assignments.description}` : ''}
+Maximum Points: ${submission.gw_course_assignments?.points || totalMaxPoints}
 
 STUDENT SUBMISSION:
 ${contentText}
@@ -91,8 +133,10 @@ RUBRIC CRITERIA:
 ${criteria.map((c: any, i: number) => `${i + 1}. ${c.name} (${c.maxPoints} points max)
    ${c.description}`).join('\n')}
 
+TOTAL POSSIBLE POINTS: ${totalMaxPoints}
+
 TASKS:
-1. Grade each criterion with evidence and feedback
+1. Grade each criterion with evidence and feedback. Assign points between 0 and the max for that criterion.
 2. Analyze for AI detection:
    - Look for generic, overly polished language
    - Unusually perfect grammar/structure for student level
@@ -178,7 +222,7 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
         });
       }
       const errorText = await response.text();
-      console.error('AI API error:', response.status, errorText);
+      console.error('[grade-submission-ai] AI API error:', response.status, errorText);
       throw new Error('AI grading failed');
     }
 
@@ -212,26 +256,43 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
                        percentage >= 63 ? 'D' :
                        percentage >= 60 ? 'D-' : 'F';
 
-    // Save grade to database with AI detection flag
+    console.log('[grade-submission-ai] Grading complete:', {
+      totalScore,
+      totalMaxPoints,
+      percentage: Math.round(percentage * 10) / 10,
+      letterGrade,
+      criteriaCount: gradingResult.criteria_scores.length,
+      aiDetected: gradingResult.ai_detection.is_flagged
+    });
+
+    // Save grade to gw_assignment_submissions with AI detection flag
     const { error: updateError } = await supabase
-      .from('assignment_submissions')
+      .from('gw_assignment_submissions')
       .update({
-        grade: Math.round(percentage),
-        feedback: JSON.stringify({
+        score_value: totalScore,
+        ai_feedback: JSON.stringify({
+          totalScore,
+          maxPoints: totalMaxPoints,
+          percentage: Math.round(percentage * 10) / 10,
           letterGrade,
           criteriaScores: gradingResult.criteria_scores,
           overallStrengths: gradingResult.overall_strengths,
           areasForImprovement: gradingResult.areas_for_improvement,
           overallFeedback: gradingResult.overall_feedback,
-          aiDetection: gradingResult.ai_detection
+          aiDetection: gradingResult.ai_detection,
+          rubricName: rubricFromDb?.name || 'Default Rubric',
+          rubricId: submission.gw_course_assignments?.rubric_id || null,
+          gradedAt: new Date().toISOString()
         }),
         graded_at: new Date().toISOString(),
-        graded_by: 'ai_system',
         status: gradingResult.ai_detection.is_flagged ? 'flagged' : 'ai_graded'
       })
       .eq('id', submissionId);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('[grade-submission-ai] Error updating submission:', updateError);
+      throw updateError;
+    }
 
     return new Response(
       JSON.stringify({
@@ -246,6 +307,8 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
           areasForImprovement: gradingResult.areas_for_improvement,
           overallFeedback: gradingResult.overall_feedback,
           aiDetection: gradingResult.ai_detection,
+          rubricName: rubricFromDb?.name || 'Default Rubric',
+          rubricId: submission.gw_course_assignments?.rubric_id || null,
           gradedAt: new Date().toISOString()
         }
       }),
@@ -253,7 +316,7 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
     );
 
   } catch (error) {
-    console.error('Error in grade-submission-ai:', error);
+    console.error('[grade-submission-ai] Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
@@ -263,3 +326,65 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
     );
   }
 });
+
+// Fallback criteria based on assignment type
+function getFallbackCriteria(assignmentType: string | null) {
+  switch (assignmentType) {
+    case 'writing':
+      return [
+        { name: "Thesis & Central Argument", description: "Clear thesis with well-developed argument", maxPoints: 25 },
+        { name: "Evidence & Support", description: "Strong use of evidence and sources", maxPoints: 25 },
+        { name: "Organization & Structure", description: "Logical flow with clear intro and conclusion", maxPoints: 20 },
+        { name: "Critical Analysis", description: "Deep thinking and insightful interpretation", maxPoints: 15 },
+        { name: "Grammar & Mechanics", description: "Proper grammar, spelling, and punctuation", maxPoints: 15 }
+      ];
+    case 'listening_journal':
+    case 'journal':
+      return [
+        { name: "Musical Elements Identification", description: "Accurate identification of musical elements", maxPoints: 30 },
+        { name: "Cultural & Historical Context", description: "Understanding of cultural significance", maxPoints: 25 },
+        { name: "Personal Response & Reflection", description: "Thoughtful personal engagement", maxPoints: 20 },
+        { name: "Connections & Comparisons", description: "Meaningful connections to course material", maxPoints: 15 },
+        { name: "Writing Quality", description: "Clear, coherent writing", maxPoints: 10 }
+      ];
+    case 'reflection_paper':
+      return [
+        { name: "Depth of Reflection", description: "Deep, genuine reflection with insights", maxPoints: 30 },
+        { name: "Connection to Course Content", description: "Connects to course concepts", maxPoints: 25 },
+        { name: "Self-Awareness & Growth", description: "Honest self-assessment", maxPoints: 20 },
+        { name: "Specificity & Examples", description: "Uses specific examples", maxPoints: 15 },
+        { name: "Presentation & Clarity", description: "Well-organized and clear", maxPoints: 10 }
+      ];
+    case 'video':
+    case 'presentation':
+      return [
+        { name: "Content Quality", description: "Accurate and substantive content", maxPoints: 30 },
+        { name: "Presentation Skills", description: "Clear delivery and professional demeanor", maxPoints: 25 },
+        { name: "Preparation & Organization", description: "Thorough preparation", maxPoints: 20 },
+        { name: "Technical Quality", description: "Good audio/video quality", maxPoints: 15 },
+        { name: "Creativity & Engagement", description: "Creative and engaging approach", maxPoints: 10 }
+      ];
+    case 'essay':
+      return [
+        { name: "Thesis Statement", description: "Clear, arguable thesis", maxPoints: 20 },
+        { name: "Argument Development", description: "Well-developed arguments", maxPoints: 25 },
+        { name: "Use of Sources", description: "Effective source integration", maxPoints: 20 },
+        { name: "Essay Structure", description: "Clear intro, body, conclusion", maxPoints: 20 },
+        { name: "Style & Conventions", description: "Academic tone and proper grammar", maxPoints: 15 }
+      ];
+    case 'exercise':
+    case 'quiz':
+      return [
+        { name: "Accuracy & Correctness", description: "Correct answers and completion", maxPoints: 40 },
+        { name: "Completeness", description: "All parts completed as instructed", maxPoints: 30 },
+        { name: "Effort & Engagement", description: "Evidence of genuine effort", maxPoints: 20 },
+        { name: "Timeliness", description: "Submitted on time", maxPoints: 10 }
+      ];
+    default:
+      return [
+        { name: "Content Quality", description: "Accuracy, depth, and relevance of content", maxPoints: 40 },
+        { name: "Analysis & Critical Thinking", description: "Demonstrates understanding and insightful analysis", maxPoints: 35 },
+        { name: "Communication", description: "Clarity, organization, and proper writing mechanics", maxPoints: 25 }
+      ];
+  }
+}
