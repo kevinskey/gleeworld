@@ -178,9 +178,29 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   };
   const handleAddGroup = async (group: RecipientGroup) => {
     try {
+      // Validate group has required properties
+      if (!group || !group.id || !group.type) {
+        toast({
+          title: 'Invalid group',
+          description: 'Group data is missing or incomplete',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       if (group.type === 'course') {
         // Extract course ID from group id (format: "course:uuid")
         const courseIdFromGroup = group.id.replace('course:', '');
+        
+        // Validate the extracted ID
+        if (!courseIdFromGroup || courseIdFromGroup === 'null' || courseIdFromGroup === 'undefined') {
+          toast({
+            title: 'Invalid course',
+            description: 'Course ID is missing',
+            variant: 'destructive'
+          });
+          return;
+        }
 
         // Step 1: Fetch all enrolled students' user_ids
         const { data: enrollments, error: enrollError } = await supabase
@@ -248,9 +268,19 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
             variant: "destructive"
           });
         }
-      } else {
+      } else if (group.type === 'manual') {
         // Handle manual groups - fetch from messenger_group_members
         const groupId = group.id.replace('manual:', '');
+        
+        // Validate the extracted ID
+        if (!groupId || groupId === 'null' || groupId === 'undefined') {
+          toast({
+            title: 'Invalid group',
+            description: 'Group ID is missing',
+            variant: 'destructive'
+          });
+          return;
+        }
         
         const { data: members, error: membersError } = await supabase
           .from('messenger_group_members')

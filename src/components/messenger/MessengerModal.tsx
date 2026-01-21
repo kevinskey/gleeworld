@@ -158,6 +158,18 @@ export const MessengerModal: React.FC = () => {
 
   // Add group members to recipients
   const handleAddGroup = async (group: RecipientGroup) => {
+    // Validate group has required properties
+    if (!group || !group.id) {
+      toast({ title: 'Invalid group', description: 'Group data is missing or incomplete', variant: 'destructive' });
+      return;
+    }
+    
+    // Validate the group ID is a valid UUID (not 'null' or 'undefined' string)
+    if (group.id === 'null' || group.id === 'undefined') {
+      toast({ title: 'Invalid group', description: 'Group ID is invalid', variant: 'destructive' });
+      return;
+    }
+    
     setAddingGroup(group.id);
     try {
       // Fetch group members with their profiles
