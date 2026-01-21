@@ -171,105 +171,66 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
       const start = startOfMonth(currentMonth);
       const end = endOfMonth(currentMonth);
 
-      // Course-specific calendar IDs - maps courseId to calendarId
-      const COURSE_CALENDAR_IDS: Record<string, string> = {
-        'a0000000-0000-0000-0000-000000000070': 'b1e077a0-85f3-4665-b006-4767b310a521', // MUS 070 -> SCGC Calendar
-        'a0000000-0000-0000-0000-000000000100': 'a0000000-0000-0000-0000-000000000100', // LH 100 -> LH 100 Calendar
-        '23c4ee3c-7bbb-4534-8c0a-eecd88298d37': '9b0267e7-5b30-4288-b33f-99a056279011', // MUS 240 -> MUS 240 Calendar
-      };
+      // Unified approach: All courses fetch events by course_id from gw_events
+      // and include assignments from gw_course_assignments
       
+      // Fetch course events from gw_events filtered by course_id
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('gw_events')
+        .select('id, title, description, event_type, start_date, location')
+        .eq('course_id', courseId)
+        .gte('start_date', start.toISOString())
+        .lte('start_date', end.toISOString())
+        .order('start_date', { ascending: true });
+
       let gwEventsData: CalendarEvent[] = [];
-      const calendarId = COURSE_CALENDAR_IDS[courseId];
-      
-      // For MUS 240, fetch ONLY from gw_events filtered by course_id (not other calendars)
-      const MUS_240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
-      
-      if (courseId === MUS_240_COURSE_ID) {
-        // MUS 240: Fetch events specifically for this course
-        const { data: eventsData, error: eventsError } = await supabase
-          .from('gw_events')
-          .select('id, title, description, event_type, start_date, location')
-          .eq('course_id', MUS_240_COURSE_ID)
-          .gte('start_date', start.toISOString())
-          .lte('start_date', end.toISOString())
-          .order('start_date', { ascending: true });
-
-        if (!eventsError && eventsData) {
-          gwEventsData = eventsData.map(event => ({
-            id: event.id,
-            title: event.title,
-            description: event.description,
-            event_type: event.event_type || 'class',
-            start_time: event.start_date,
-            end_time: null,
-            location: event.location
-          }));
-        }
-        
-        // Also fetch MUS 240 assignments to show on calendar
-        const { data: assignmentsData } = await supabase
-          .from('gw_course_assignments')
-          .select('id, title, description, due_date')
-          .eq('course_id', MUS_240_COURSE_ID)
-          .gte('due_date', start.toISOString())
-          .lte('due_date', end.toISOString())
-          .order('due_date', { ascending: true });
-
-        const assignmentEvents: CalendarEvent[] = (assignmentsData || []).map(a => ({
-          id: a.id,
-          title: a.title,
-          description: a.description,
-          event_type: 'assignment_due',
-          start_time: a.due_date,
+      if (!eventsError && eventsData) {
+        gwEventsData = eventsData.map(event => ({
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          event_type: event.event_type || 'class',
+          start_time: event.start_date,
           end_time: null,
-          location: null
+          location: event.location
         }));
-        
-        setEvents([...gwEventsData, ...assignmentEvents]);
-      } else if (calendarId) {
-        // Other courses: fetch from gw_events by calendar_id
-        const { data: eventsData, error: eventsError } = await supabase
-          .from('gw_events')
-          .select('id, title, description, event_type, start_date, location')
-          .eq('calendar_id', calendarId)
-          .gte('start_date', start.toISOString())
-          .lte('start_date', end.toISOString())
-          .order('start_date', { ascending: true });
-
-        if (!eventsError && eventsData) {
-          gwEventsData = eventsData.map(event => ({
-            id: event.id,
-            title: event.title,
-            description: event.description,
-            event_type: event.event_type || 'class',
-            start_time: event.start_date,
-            end_time: null,
-            location: event.location
-          }));
-        }
-
-        // Also fetch course-specific calendar events from gw_course_calendar
-        const { data: courseData } = await supabase
-          .from('gw_course_calendar')
-          .select('*')
-          .eq('course_id', courseId)
-          .gte('start_time', start.toISOString())
-          .lte('start_time', end.toISOString())
-          .order('start_time', { ascending: true });
-
-        setEvents([...(courseData || []), ...gwEventsData]);
-      } else {
-        // Fallback: only gw_course_calendar
-        const { data: courseData } = await supabase
-          .from('gw_course_calendar')
-          .select('*')
-          .eq('course_id', courseId)
-          .gte('start_time', start.toISOString())
-          .lte('start_time', end.toISOString())
-          .order('start_time', { ascending: true });
-
-        setEvents(courseData || []);
       }
+      
+      // Fetch course assignments to show on calendar
+      const { data: assignmentsData } = await supabase
+        .from('gw_course_assignments')
+        .select('id, title, description, due_date')
+        .eq('course_id', courseId)
+        .gte('due_date', start.toISOString())
+        .lte('due_date', end.toISOString())
+        .order('due_date', { ascending: true });
+
+      const assignmentEvents: CalendarEvent[] = (assignmentsData || []).map(a => ({
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        event_type: 'assignment_due',
+        start_time: a.due_date,
+        end_time: null,
+        location: null
+      }));
+
+      // Also fetch from gw_course_calendar for legacy course calendar events
+      const { data: courseCalendarData } = await supabase
+        .from('gw_course_calendar')
+        .select('*')
+        .eq('course_id', courseId)
+        .gte('start_time', start.toISOString())
+        .lte('start_time', end.toISOString())
+        .order('start_time', { ascending: true });
+      
+      // Combine all sources, avoiding duplicates by id
+      const allEvents = [...gwEventsData, ...assignmentEvents, ...(courseCalendarData || [])];
+      const uniqueEvents = allEvents.filter((event, index, self) => 
+        index === self.findIndex(e => e.id === event.id)
+      );
+      
+      setEvents(uniqueEvents);
     } catch (error) {
       console.error('Error fetching calendar events:', error);
     } finally {
