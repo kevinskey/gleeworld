@@ -627,7 +627,10 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
                   {selectedDateEvents.map(event => (
                     <div
                       key={event.id}
-                      className="p-3 bg-accent/50 rounded-lg border-l-4 border-primary"
+                      className={cn(
+                        "p-3 bg-accent/50 rounded-lg border-l-4",
+                        event.event_type === 'discussion' ? "border-orange-400" : "border-primary"
+                      )}
                     >
                       <p className="font-medium text-sm">{event.title}</p>
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
