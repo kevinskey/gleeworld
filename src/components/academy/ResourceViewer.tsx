@@ -100,6 +100,7 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   const isVideo = resource.resource_type === 'video' || isYouTube || resource.url.includes('vimeo');
   const isAudio = resource.resource_type === 'audio' || resource.url.includes('soundcloud');
   const isWebsite = resource.resource_type === 'website';
+  const isSharePoint = resource.url.includes('sharepoint.com') || resource.url.includes('sharepoint-my.com');
   const isExternalReading = resource.resource_type === 'reading' ||
     resource.url.includes('bible.usccb.org') ||
     resource.url.includes('usccb.org');
@@ -121,8 +122,9 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   // - Most websites block iframing (X-Frame-Options, CSP), so we open them externally
   // - PowerPoint files need special handling
   // - External readings/audio open in new tab
-  const canEmbed = isPdf || isVideo;  // Only PDFs and videos are reliably embeddable
-  const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint || isWebsite;
+  // SharePoint and similar sites block iframing, so exclude them
+  const canEmbed = (isPdf || isVideo) && !isSharePoint;
+  const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint || isWebsite || isSharePoint;
 
   const handleOpenExternal = () => {
     window.open(resource.url, '_blank', 'noopener,noreferrer');
