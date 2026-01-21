@@ -213,8 +213,20 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
         if (enrollError) throw enrollError;
         
         if (enrollments && enrollments.length > 0) {
-          // Step 2: Fetch profiles for those user_ids
-          const userIds = enrollments.map(e => e.user_id);
+          // Step 2: Fetch profiles for those user_ids (filter out null/undefined)
+          const userIds = enrollments
+            .map(e => e.user_id)
+            .filter((id): id is string => !!id && id !== 'null');
+          
+          if (userIds.length === 0) {
+            toast({
+              title: 'No valid members',
+              description: 'No valid user IDs found in this group',
+              variant: 'destructive'
+            });
+            return;
+          }
+          
           const { data: profiles, error: profileError } = await supabase
             .from('gw_profiles')
             .select('user_id, full_name, email, phone_number')
