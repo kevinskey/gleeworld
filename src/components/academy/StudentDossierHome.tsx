@@ -499,7 +499,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
               Upcoming
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 max-h-64 overflow-y-auto">
             {upcomingEvents.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
                 No upcoming events or assignments
