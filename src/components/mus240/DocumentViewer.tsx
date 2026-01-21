@@ -36,7 +36,9 @@ export function DocumentViewer({
     fileUrl.toLowerCase().includes('pdf');
   const isPowerPoint = fileType.includes('presentation') ||
     fileName.toLowerCase().endsWith('.ppt') ||
-    fileName.toLowerCase().endsWith('.pptx');
+    fileName.toLowerCase().endsWith('.pptx') ||
+    fileUrl.toLowerCase().includes('.ppt') ||
+    fileUrl.toLowerCase().includes('.pptx');
   const isGoogleSlides = fileUrl.includes('docs.google.com/presentation') || fileUrl.includes('slides.google.com');
   const isYouTube = fileUrl.includes('youtu.be') || fileUrl.includes('youtube.com/watch');
 
