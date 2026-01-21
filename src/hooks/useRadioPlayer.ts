@@ -276,22 +276,25 @@ export const useRadioPlayer = () => {
     };
     
     const handlePause = () => {
-      // Only update UI state, don't clear isPlayingRef (browser may auto-pause)
-      // We rely on userPausedRef to know if user explicitly paused
+      // Update UI state
       setState(prev => ({ ...prev, isPlaying: false }));
       
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
       }
       
-      // If we didn't explicitly pause and should be playing, try to resume
-      if (!userPausedRef.current && isPlayingRef.current) {
-        console.log('useRadioPlayer: Browser paused audio unexpectedly, will try to resume...');
-        clearReconnectTimeout();
-        reconnectTimeoutRef.current = setTimeout(() => {
-          resumePlayback();
-        }, 500);
-      }
+      // Use a small delay before checking if we should auto-resume
+      // This allows userPausedRef to be set by the pause() function first
+      setTimeout(() => {
+        // If we didn't explicitly pause and should be playing, try to resume
+        if (!userPausedRef.current && isPlayingRef.current) {
+          console.log('useRadioPlayer: Browser paused audio unexpectedly, will try to resume...');
+          clearReconnectTimeout();
+          reconnectTimeoutRef.current = setTimeout(() => {
+            resumePlayback();
+          }, 500);
+        }
+      }, 50);
     };
     
     const handleError = (e: Event) => {
