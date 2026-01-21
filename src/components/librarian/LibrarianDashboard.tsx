@@ -27,6 +27,7 @@ import { CSVImportExport } from './CSVImportExport';
 import { DocumentScanner } from './DocumentScanner';
 import { MusicLibraryManager } from './MusicLibraryManager';
 import { BulkPDFCroppingTool } from '@/components/glee-library/BulkPDFCroppingTool';
+import { SinglePDFCropTool } from './SinglePDFCropTool';
 
 export const LibrarianDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -221,7 +222,8 @@ export const LibrarianDashboard = () => {
           <PDFImportManager />
         </TabsContent>
 
-        <TabsContent value="ai-tools" className="space-y-4">
+        <TabsContent value="ai-tools" className="space-y-6">
+          <SinglePDFCropTool />
           <BulkPDFCroppingTool />
         </TabsContent>
 
