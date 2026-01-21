@@ -185,7 +185,7 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
       const MUS_240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
       
       if (courseId === MUS_240_COURSE_ID) {
-        // MUS 240: Only show events specifically for this course
+        // MUS 240: Fetch events specifically for this course
         const { data: eventsData, error: eventsError } = await supabase
           .from('gw_events')
           .select('id, title, description, event_type, start_date, location')
@@ -206,8 +206,26 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
           }));
         }
         
-        // MUS 240 only uses gw_events, not gw_course_calendar
-        setEvents(gwEventsData);
+        // Also fetch MUS 240 assignments to show on calendar
+        const { data: assignmentsData } = await supabase
+          .from('gw_course_assignments')
+          .select('id, title, description, due_date')
+          .eq('course_id', MUS_240_COURSE_ID)
+          .gte('due_date', start.toISOString())
+          .lte('due_date', end.toISOString())
+          .order('due_date', { ascending: true });
+
+        const assignmentEvents: CalendarEvent[] = (assignmentsData || []).map(a => ({
+          id: a.id,
+          title: a.title,
+          description: a.description,
+          event_type: 'assignment_due',
+          start_time: a.due_date,
+          end_time: null,
+          location: null
+        }));
+        
+        setEvents([...gwEventsData, ...assignmentEvents]);
       } else if (calendarId) {
         // Other courses: fetch from gw_events by calendar_id
         const { data: eventsData, error: eventsError } = await supabase
