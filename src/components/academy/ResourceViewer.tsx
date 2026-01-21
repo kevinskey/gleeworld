@@ -12,9 +12,11 @@ import {
   BookOpen,
   Download,
   Maximize2,
-  Loader2
+  Loader2,
+  Presentation
 } from 'lucide-react';
 import { useIsPhone } from '@/hooks/use-mobile';
+import { NativePowerPointViewer } from '@/components/mus240/NativePowerPointViewer';
 
 interface ResourceViewerProps {
   isOpen: boolean;
@@ -45,11 +47,15 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   const isPhone = useIsPhone();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [showPptxViewer, setShowPptxViewer] = useState(false);
 
   if (!resource) return null;
 
   const Icon = getResourceIcon(resource.resource_type);
-  const isPdf = resource.url.toLowerCase().includes('.pdf');
+  const lowerUrl = resource.url.toLowerCase();
+  const isPdf = lowerUrl.includes('.pdf');
+  const isPowerPoint = lowerUrl.includes('.ppt') || lowerUrl.includes('.pptx');
+  const isSupabaseStorage = resource.url.includes('supabase.co/storage');
   const isVideo = resource.resource_type === 'video' || 
     resource.url.includes('youtube') || 
     resource.url.includes('vimeo');
@@ -69,7 +75,8 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   };
 
   // For external sites like USCCB, we need to handle them differently
-  const canEmbed = isPdf || isVideo || (!isExternalReading && !isAudio);
+  // Exclude PowerPoint files and Supabase storage URLs from iframing (CSP blocks them)
+  const canEmbed = isPdf || isVideo || (!isExternalReading && !isAudio && !isPowerPoint && !isSupabaseStorage);
 
   const handleOpenExternal = () => {
     window.open(resource.url, '_blank', 'noopener,noreferrer');
@@ -126,6 +133,26 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
               <Button onClick={handleOpenExternal} className="w-full sm:w-auto">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Open in Browser
+              </Button>
+            </div>
+          </div>
+        ) : isPowerPoint ? (
+          // PowerPoint files get special handling with native slideshow viewer
+          <div className="flex items-center justify-center h-full p-6">
+            <div className="text-center max-w-sm">
+              <div className="p-4 rounded-full bg-primary/10 inline-block mb-4">
+                <Presentation className="h-12 w-12 text-primary" />
+              </div>
+              <h4 className="font-semibold mb-2">{resource.title}</h4>
+              {resource.description && (
+                <p className="text-sm text-muted-foreground mb-4">{resource.description}</p>
+              )}
+              <p className="text-xs text-muted-foreground mb-4">
+                Click below to view the PowerPoint presentation.
+              </p>
+              <Button onClick={() => setShowPptxViewer(true)} size="lg" className="w-full sm:w-auto">
+                <Presentation className="h-4 w-4 mr-2" />
+                Open Slideshow
               </Button>
             </div>
           </div>
@@ -187,14 +214,25 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl h-[80vh] p-0 flex flex-col overflow-hidden">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{resource.title}</DialogTitle>
-        </DialogHeader>
-        {content}
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="max-w-4xl h-[80vh] p-0 flex flex-col overflow-hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{resource.title}</DialogTitle>
+          </DialogHeader>
+          {content}
+        </DialogContent>
+      </Dialog>
+
+      {/* Native PowerPoint Viewer for PPTX files */}
+      <NativePowerPointViewer
+        isOpen={showPptxViewer}
+        onClose={() => setShowPptxViewer(false)}
+        fileUrl={resource.url}
+        fileName={resource.title}
+        title={resource.title}
+      />
+    </>
   );
 };
 
