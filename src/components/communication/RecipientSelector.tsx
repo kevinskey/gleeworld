@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { RecipientGroup, RECIPIENT_GROUPS } from '@/types/communication';
 import { GroupManagement } from './GroupManagement';
-import { Users, Search, UserCheck, Settings } from 'lucide-react';
+import { Users, Search, UserCheck, Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RecipientSelectorProps {
@@ -170,23 +171,30 @@ export const RecipientSelector = ({
           />
         </div>
 
-        {/* Selected Groups Preview */}
+        {/* Selected Groups Preview - Collapsible */}
         {selectedGroups.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Selected Groups:</h4>
-            <div className="flex flex-wrap gap-1">
-              {selectedGroups.map((group) => (
-                <Badge
-                  key={group.id}
-                  variant="default"
-                  className="cursor-pointer hover:bg-destructive"
-                  onClick={() => onGroupToggle(group)}
-                >
-                  {group.label} ×
-                </Badge>
-              ))}
-            </div>
-          </div>
+          <Collapsible defaultOpen={false} className="space-y-2">
+            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left hover:bg-muted/50 p-2 rounded-md transition-colors">
+              <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
+              <h4 className="text-sm font-medium">
+                Selected Recipients ({selectedGroups.length})
+              </h4>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-6">
+              <div className="flex flex-wrap gap-1">
+                {selectedGroups.map((group) => (
+                  <Badge
+                    key={group.id}
+                    variant="default"
+                    className="cursor-pointer hover:bg-destructive"
+                    onClick={() => onGroupToggle(group)}
+                  >
+                    {group.label} ×
+                  </Badge>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
 
         {/* Direct Recipient */}
