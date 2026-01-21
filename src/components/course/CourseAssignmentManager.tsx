@@ -30,6 +30,9 @@ interface CourseAssignmentManagerProps {
   courseName?: string;
 }
 const ASSIGNMENT_TYPES = [{
+  value: 'writing',
+  label: 'Writing'
+}, {
   value: 'exercise',
   label: 'Exercise'
 }, {
