@@ -49,6 +49,7 @@ interface UpcomingEvent {
   location?: string;
   event_type?: string;
   is_assignment?: boolean;
+  is_discussion?: boolean;
   assignment_status?: 'pending' | 'submitted' | 'graded' | 'overdue';
   points?: number;
 }
@@ -61,6 +62,7 @@ interface Assignment {
   status?: 'pending' | 'submitted' | 'graded' | 'overdue';
   course_id: string;
   description?: string;
+  is_discussion?: boolean;
 }
 
 interface CurrentModule {
@@ -242,10 +244,94 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
             };
           });
 
-        // Combine events and assignments, sort by date
+        // Fetch discussions with due dates for this course
+        const { data: discussionsData } = await supabase
+          .from('course_discussions')
+          .select('id, title, content, due_date, is_graded, max_points, course_id')
+          .eq('course_id', courseId)
+          .not('due_date', 'is', null)
+          .order('due_date', { ascending: true })
+          .limit(10);
+
+        // Check which discussions the user has replied to
+        const discussionIds: string[] = (discussionsData || []).map((d: any) => d.id as string);
+        let repliedDiscussionIds = new Set<string>();
+        if (discussionIds.length > 0 && user?.id) {
+          // Use rpc or direct query with explicit typing to avoid TypeScript issues
+          const repliesQuery = supabase.from('discussion_replies').select('discussion_id');
+          const { data: repliesData } = await (repliesQuery as any).eq('user_id', user.id);
+          if (repliesData) {
+            repliedDiscussionIds = new Set(
+              (repliesData as any[])
+                .filter((r: any) => discussionIds.includes(r.discussion_id))
+                .map((r: any) => r.discussion_id as string)
+            );
+          }
+        }
+
+        // repliedDiscussionIds is already defined above
+
+        // Map discussions to assignment-like objects for the "What's Due Next" card
+        const discussionAssignments: Assignment[] = (discussionsData || [])
+          .filter((d: any) => d.due_date)
+          .map((d: any) => {
+            const due = new Date(d.due_date);
+            const hasReplied = repliedDiscussionIds.has(d.id);
+            let status: Assignment['status'] = 'pending';
+            if (hasReplied) {
+              status = 'submitted';
+            } else if (due < currentTime) {
+              status = 'overdue';
+            }
+            return {
+              id: d.id,
+              title: `💬 ${d.title}`,
+              due_date: d.due_date,
+              points: d.max_points || 10,
+              status,
+              course_id: d.course_id,
+              description: d.content,
+              is_discussion: true
+            };
+          });
+
+        // Include discussions in the assignments list for urgentAssignment logic
+        setAssignments([...mappedAssignments, ...discussionAssignments]);
+
+        // Create discussion events for the upcoming events list
+        const discussionEvents: UpcomingEvent[] = (discussionsData || [])
+          .filter((d: any) => {
+            if (!d.due_date) return false;
+            const dueDate = new Date(d.due_date);
+            const hasReplied = repliedDiscussionIds.has(d.id);
+            // Show if: future OR (recent past AND not replied)
+            return dueDate >= currentTime || (dueDate >= sevenDaysAgo && !hasReplied);
+          })
+          .map((d: any) => {
+            const due = new Date(d.due_date);
+            const hasReplied = repliedDiscussionIds.has(d.id);
+            let status: 'pending' | 'submitted' | 'graded' | 'overdue' = 'pending';
+            if (hasReplied) {
+              status = 'submitted';
+            } else if (due < currentTime) {
+              status = 'overdue';
+            }
+            return {
+              id: `discussion-${d.id}`,
+              title: `💬 ${d.title}`,
+              start_date: d.due_date,
+              event_type: 'discussion',
+              is_discussion: true,
+              assignment_status: status,
+              points: d.max_points || 10
+            };
+          });
+
+        // Combine events, assignments, and discussions, sort by date
         const allEvents: UpcomingEvent[] = [
-          ...(eventsData || []).map(e => ({ ...e, is_assignment: false })),
-          ...assignmentEvents
+          ...(eventsData || []).map(e => ({ ...e, is_assignment: false, is_discussion: false })),
+          ...assignmentEvents,
+          ...discussionEvents
         ].sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
          .slice(0, 8);
 
@@ -338,11 +424,20 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                   </div>
                   <Button 
                     className="bg-primary hover:bg-primary/90"
-                    onClick={() => navigate(`/grading/student/assignment/${urgentAssignment.id}`)}
+                    onClick={() => {
+                      if (urgentAssignment.is_discussion) {
+                        // Navigate to discussions tab
+                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
+                      } else {
+                        navigate(`/grading/student/assignment/${urgentAssignment.id}`);
+                      }
+                    }}
                   >
-                    {urgentAssignment.status === 'submitted' || urgentAssignment.status === 'graded' 
-                      ? 'View Submission' 
-                      : 'Start Assignment'}
+                    {urgentAssignment.is_discussion 
+                      ? (urgentAssignment.status === 'submitted' ? 'View Discussion' : 'Join Discussion')
+                      : (urgentAssignment.status === 'submitted' || urgentAssignment.status === 'graded' 
+                        ? 'View Submission' 
+                        : 'Start Assignment')}
                   </Button>
                 </div>
                 {urgentAssignment.description && (

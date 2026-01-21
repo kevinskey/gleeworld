@@ -215,6 +215,26 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
         location: null
       }));
 
+      // Fetch course discussions with due dates to show on calendar
+      const { data: discussionsData } = await supabase
+        .from('course_discussions')
+        .select('id, title, content, due_date, is_graded, max_points')
+        .eq('course_id', courseId)
+        .not('due_date', 'is', null)
+        .gte('due_date', start.toISOString())
+        .lte('due_date', end.toISOString())
+        .order('due_date', { ascending: true });
+
+      const discussionEvents: CalendarEvent[] = (discussionsData || []).map(d => ({
+        id: `discussion-${d.id}`,
+        title: `💬 ${d.title}`,
+        description: d.content,
+        event_type: 'discussion',
+        start_time: d.due_date,
+        end_time: null,
+        location: null
+      }));
+
       // Also fetch from gw_course_calendar for legacy course calendar events
       const { data: courseCalendarData } = await supabase
         .from('gw_course_calendar')
@@ -225,7 +245,7 @@ export const CalendarWithAttendance: React.FC<CalendarWithAttendanceProps> = ({
         .order('start_time', { ascending: true });
       
       // Combine all sources, avoiding duplicates by id
-      const allEvents = [...gwEventsData, ...assignmentEvents, ...(courseCalendarData || [])];
+      const allEvents = [...gwEventsData, ...assignmentEvents, ...discussionEvents, ...(courseCalendarData || [])];
       const uniqueEvents = allEvents.filter((event, index, self) => 
         index === self.findIndex(e => e.id === event.id)
       );
