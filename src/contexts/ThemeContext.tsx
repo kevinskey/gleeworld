@@ -137,6 +137,19 @@ export function useTheme() {
 function applyThemeToDocument(theme: ThemeTemplate, isDarkMode: boolean) {
   const root = document.documentElement;
 
+  // Colors in our system are stored as HSL triplets (e.g. "0 0% 100%").
+  // Some legacy/admin-edited values may include an alpha segment (e.g. "0 0% 100% / 0.15").
+  // Since Tailwind tokens are defined as `hsl(var(--token))`, the CSS variable must be a
+  // *plain* triplet; alpha should be applied at usage sites with `hsl(var(--token) / a)`.
+  const normalizeHslTriplet = (value: string) => {
+    const v = (value || '').trim();
+    if (!v) return v;
+    // Strip wrapping `hsl(...)` if someone accidentally stored it.
+    const unwrapped = v.startsWith('hsl(') && v.endsWith(')') ? v.slice(4, -1).trim() : v;
+    // Strip any slash alpha segment.
+    return unwrapped.split('/')[0].trim();
+  };
+
   // Determine if dark mode should be applied
   const forceDark = theme.is_dark_theme;
   const forceLight = !theme.is_dark_theme && theme.glass_effect; // Glass themes are always light
@@ -161,21 +174,21 @@ function applyThemeToDocument(theme: ThemeTemplate, isDarkMode: boolean) {
   root.classList.toggle('glass-theme', theme.glass_effect);
 
   // Apply color variables
-  root.style.setProperty('--primary', theme.color_primary);
-  root.style.setProperty('--primary-foreground', theme.color_primary_foreground);
-  root.style.setProperty('--secondary', theme.color_secondary);
-  root.style.setProperty('--secondary-foreground', theme.color_secondary_foreground);
-  root.style.setProperty('--accent', theme.color_accent);
-  root.style.setProperty('--accent-foreground', theme.color_accent_foreground);
-  root.style.setProperty('--background', theme.color_background);
-  root.style.setProperty('--foreground', theme.color_foreground);
-  root.style.setProperty('--card', theme.color_card);
-  root.style.setProperty('--card-foreground', theme.color_card_foreground);
-  root.style.setProperty('--muted', theme.color_muted);
-  root.style.setProperty('--muted-foreground', theme.color_muted_foreground);
-  root.style.setProperty('--border', theme.color_border);
-  root.style.setProperty('--destructive', theme.color_destructive);
-  root.style.setProperty('--destructive-foreground', theme.color_destructive_foreground);
+  root.style.setProperty('--primary', normalizeHslTriplet(theme.color_primary));
+  root.style.setProperty('--primary-foreground', normalizeHslTriplet(theme.color_primary_foreground));
+  root.style.setProperty('--secondary', normalizeHslTriplet(theme.color_secondary));
+  root.style.setProperty('--secondary-foreground', normalizeHslTriplet(theme.color_secondary_foreground));
+  root.style.setProperty('--accent', normalizeHslTriplet(theme.color_accent));
+  root.style.setProperty('--accent-foreground', normalizeHslTriplet(theme.color_accent_foreground));
+  root.style.setProperty('--background', normalizeHslTriplet(theme.color_background));
+  root.style.setProperty('--foreground', normalizeHslTriplet(theme.color_foreground));
+  root.style.setProperty('--card', normalizeHslTriplet(theme.color_card));
+  root.style.setProperty('--card-foreground', normalizeHslTriplet(theme.color_card_foreground));
+  root.style.setProperty('--muted', normalizeHslTriplet(theme.color_muted));
+  root.style.setProperty('--muted-foreground', normalizeHslTriplet(theme.color_muted_foreground));
+  root.style.setProperty('--border', normalizeHslTriplet(theme.color_border));
+  root.style.setProperty('--destructive', normalizeHslTriplet(theme.color_destructive));
+  root.style.setProperty('--destructive-foreground', normalizeHslTriplet(theme.color_destructive_foreground));
 
   // Apply typography
   root.style.setProperty('--font-family', theme.font_family);
@@ -189,5 +202,6 @@ function applyThemeToDocument(theme: ThemeTemplate, isDarkMode: boolean) {
   }
 
   // Apply background
+  // Used by global CSS as the page background (solid/gradient/url). Keep as-is.
   root.style.setProperty('--theme-background', theme.background_value);
 }

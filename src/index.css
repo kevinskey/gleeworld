@@ -56,8 +56,12 @@
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
-    /* Use design token so themes (and dark mode) can't get color-tinted by a hardcoded base */
+    /* Page background should follow the active theme (solid/gradient/image). */
+    background: var(--theme-background);
     background-color: hsl(var(--background));
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
     /* WCAG AA: Base font size 16px minimum */
     font-size: 16px;
     line-height: 1.5;
