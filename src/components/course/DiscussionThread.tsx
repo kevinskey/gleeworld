@@ -356,12 +356,25 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
                         </Button>
                       )}
 
+                      {/* Reply button for instructors */}
+                      {user && canGrade && !isOwnPost && !replyingToId && !discussion.is_locked && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="mt-2"
+                          onClick={() => setReplyingToId(reply.id)}
+                        >
+                          <MessageCircle className="h-3 w-3 mr-1" />
+                          Reply to {reply.profile?.full_name?.split(' ')[0] || 'this post'}
+                        </Button>
+                      )}
+
                       {/* Inline reply form */}
                       {replyingToId === reply.id && (
                         <div className="mt-3 p-3 border rounded-lg bg-background space-y-2">
                           <Label className="text-xs">Responding to {reply.profile?.full_name}</Label>
                           <Textarea
-                            placeholder="Build on their idea, gently challenge an assumption, or connect to a different era..."
+                            placeholder={canGrade ? "Add instructor comment..." : "Build on their idea, gently challenge an assumption, or connect to a different era..."}
                             value={replyContent}
                             onChange={(e) => setReplyContent(e.target.value)}
                             rows={3}
@@ -384,7 +397,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
                               disabled={replyMutation.isPending || !replyContent.trim()}
                             >
                               {replyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 mr-1" />}
-                              Post Response
+                              {canGrade ? 'Post Comment' : 'Post Response'}
                             </Button>
                           </div>
                         </div>
