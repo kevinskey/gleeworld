@@ -14,10 +14,13 @@ const GRADE_WEIGHTS = {
   // Journals
   midterm: 20,
   finalExam: 30,
-  aiProject: 25,
+  aiProject: 15, // Reduced from 25% to make room for discussions
+  discussions: 10, // New
   polls: 15
 };
 const FINAL_EXAM_TEST_ID = '5efe7df8-6eb6-4611-b2d6-61ddf0319c7e';
+const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
+
 interface StudentGradeRow {
   student_id: string;
   student_name: string;
@@ -25,10 +28,11 @@ interface StudentGradeRow {
   midterm_pct: number;
   final_exam_pct: number;
   ai_project_pct: number;
+  discussions_pct: number;
   polls_pct: number;
   final_grade_pct: number;
 }
-type GradeField = 'assignments_pct' | 'midterm_pct' | 'final_exam_pct' | 'ai_project_pct' | 'polls_pct';
+type GradeField = 'assignments_pct' | 'midterm_pct' | 'final_exam_pct' | 'ai_project_pct' | 'discussions_pct' | 'polls_pct';
 type SortField = 'student_name' | GradeField | 'final_grade';
 type SortDirection = 'asc' | 'desc';
 export const SimpleGradeSpreadsheet: React.FC = () => {
@@ -48,6 +52,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       midterm_pct: GRADE_WEIGHTS.midterm,
       final_exam_pct: GRADE_WEIGHTS.finalExam,
       ai_project_pct: GRADE_WEIGHTS.aiProject,
+      discussions_pct: GRADE_WEIGHTS.discussions,
       polls_pct: GRADE_WEIGHTS.polls
     };
     const clampedValue = Math.min(Math.max(0, value), maxValues[field]);
@@ -63,7 +68,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
     return overrides[student.student_id]?.[field] ?? student[field];
   };
   const getRawTotal = (student: StudentGradeRow): number => {
-    return getEffectiveValue(student, 'assignments_pct') + getEffectiveValue(student, 'midterm_pct') + getEffectiveValue(student, 'final_exam_pct') + getEffectiveValue(student, 'ai_project_pct') + getEffectiveValue(student, 'polls_pct');
+    return getEffectiveValue(student, 'assignments_pct') + getEffectiveValue(student, 'midterm_pct') + getEffectiveValue(student, 'final_exam_pct') + getEffectiveValue(student, 'ai_project_pct') + getEffectiveValue(student, 'discussions_pct') + getEffectiveValue(student, 'polls_pct');
   };
 
   // Calculate curved final grade - highest raw total gets 100%
@@ -79,9 +84,6 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
   const fetchGrades = async () => {
     try {
       setLoading(true);
-
-      // MUS 240 course ID from gw_courses
-      const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
 
       // Get enrolled students from unified gw_course_enrollments table
       const { data: enrollments, error: enrollError } = await supabase
@@ -113,18 +115,31 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
+      // Get discussion prompts for this course
+      const { data: discussionPrompts } = await supabase
+        .from('discussion_prompts')
+        .select('id')
+        .eq('course_id', MUS240_COURSE_ID);
+      
+      const discussionIds = (discussionPrompts || []).map((d: any) => d.id);
+
       // Fetch all grade data in parallel
-      const [journalData, midtermData, finalExamData, pollsData, groupData] = await Promise.all([
-      // Journals (assignments) - max 200 points (10 journals × 20 pts)
-      supabase.from('mus240_journal_grades').select('student_id, overall_score, instructor_score').in('student_id', studentIds),
-      // Midterm - max 100 points
-      supabase.from('mus240_midterm_submissions').select('user_id, grade').in('user_id', studentIds).eq('is_submitted', true),
-      // Final Exam - from test_submissions
-      supabase.from('test_submissions').select('student_id, total_score').eq('test_id', FINAL_EXAM_TEST_ID).in('student_id', studentIds),
-      // Polls - count of unique polls answered
-      supabase.from('mus240_poll_responses').select('student_id, poll_id').in('student_id', studentIds),
-      // AI Group membership
-      supabase.from('mus240_group_memberships').select('member_id').in('member_id', studentIds)]);
+      const [journalData, midtermData, finalExamData, pollsData, groupData, discussionData] = await Promise.all([
+        // Journals (assignments) - max 200 points (10 journals × 20 pts)
+        supabase.from('mus240_journal_grades').select('student_id, overall_score, instructor_score').in('student_id', studentIds),
+        // Midterm - max 100 points
+        supabase.from('mus240_midterm_submissions').select('user_id, grade').in('user_id', studentIds).eq('is_submitted', true),
+        // Final Exam - from test_submissions
+        supabase.from('test_submissions').select('student_id, total_score').eq('test_id', FINAL_EXAM_TEST_ID).in('student_id', studentIds),
+        // Polls - count of unique polls answered
+        supabase.from('mus240_poll_responses').select('student_id, poll_id').in('student_id', studentIds),
+        // AI Group membership
+        supabase.from('mus240_group_memberships').select('member_id').in('member_id', studentIds),
+        // Discussion grades
+        discussionIds.length > 0 
+          ? supabase.from('discussion_grades').select('student_id, total_score').in('discussion_id', discussionIds).in('student_id', studentIds)
+          : Promise.resolve({ data: [] })
+      ]);
 
       // Process data
       const journals = journalData.data || [];
@@ -132,6 +147,17 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       const finals = finalExamData.data || [];
       const polls = pollsData.data || [];
       const groups = groupData.data || [];
+      const discussions = (discussionData as any)?.data || [];
+
+      // Discussion grades by student (average across all discussions)
+      const discussionsByStudent = new Map<string, { total: number; count: number }>();
+      discussions.forEach((d: any) => {
+        const existing = discussionsByStudent.get(d.student_id) || { total: 0, count: 0 };
+        discussionsByStudent.set(d.student_id, {
+          total: existing.total + (d.total_score || 0),
+          count: existing.count + 1
+        });
+      });
 
       // Group journals by student
       const journalsByStudent = new Map<string, number>();
@@ -209,15 +235,22 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         const finalScore = finalByStudent.get(studentId) || 0;
         const finalExamPct = maxFinalScore > 0 ? finalScore / maxFinalScore * GRADE_WEIGHTS.finalExam : 0;
 
-        // AI Project: Everyone gets 100% (full 25%)
+        // AI Project: Everyone gets full credit
         const aiProjectPct = GRADE_WEIGHTS.aiProject;
+
+        // Discussions: average score across all discussions (out of 100)
+        const discussionInfo = discussionsByStudent.get(studentId);
+        const discussionAvg = discussionInfo && discussionInfo.count > 0 
+          ? discussionInfo.total / discussionInfo.count 
+          : 0;
+        const discussionsPct = (discussionAvg / 100) * GRADE_WEIGHTS.discussions;
 
         // Polls: curved based on max polls answered by any student
         const pollsAnswered = pollCountByStudent.get(studentId)?.size || 0;
         const pollsPct = maxPollsAnswered > 0 ? pollsAnswered / maxPollsAnswered * GRADE_WEIGHTS.polls : 0;
 
         // Final grade: sum of all percentages (will be curved after)
-        const finalGradePct = assignmentsPct + midtermPct + finalExamPct + aiProjectPct + pollsPct;
+        const finalGradePct = assignmentsPct + midtermPct + finalExamPct + aiProjectPct + discussionsPct + pollsPct;
         return {
           student_id: studentId,
           student_name: studentName,
@@ -225,6 +258,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
           midterm_pct: Math.round(midtermPct * 100) / 100,
           final_exam_pct: Math.round(finalExamPct * 100) / 100,
           ai_project_pct: Math.round(aiProjectPct * 100) / 100,
+          discussions_pct: Math.round(discussionsPct * 100) / 100,
           polls_pct: Math.round(pollsPct * 100) / 100,
           final_grade_pct: Math.round(finalGradePct * 100) / 100
         };
@@ -252,8 +286,8 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
     }
   };
   const exportToCSV = () => {
-    const headers = ['Student Name', 'Assignments (%)', 'Midterm (%)', 'Final Exam (%)', 'AI Project (%)', 'Polls (%)', 'Final Grade (%)'];
-    const rows = filteredStudents.map(s => [s.student_name, getEffectiveValue(s, 'assignments_pct').toFixed(1), getEffectiveValue(s, 'midterm_pct').toFixed(1), getEffectiveValue(s, 'final_exam_pct').toFixed(1), getEffectiveValue(s, 'ai_project_pct').toFixed(1), getEffectiveValue(s, 'polls_pct').toFixed(1), calculateTotal(s).toFixed(1)]);
+    const headers = ['Student Name', 'Assignments (%)', 'Midterm (%)', 'Final Exam (%)', 'AI Project (%)', 'Discussions (%)', 'Polls (%)', 'Final Grade (%)'];
+    const rows = filteredStudents.map(s => [s.student_name, getEffectiveValue(s, 'assignments_pct').toFixed(1), getEffectiveValue(s, 'midterm_pct').toFixed(1), getEffectiveValue(s, 'final_exam_pct').toFixed(1), getEffectiveValue(s, 'ai_project_pct').toFixed(1), getEffectiveValue(s, 'discussions_pct').toFixed(1), getEffectiveValue(s, 'polls_pct').toFixed(1), calculateTotal(s).toFixed(1)]);
     const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], {
       type: 'text/csv'
@@ -327,7 +361,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         <div className="text-sm text-muted-foreground mt-2">
           Weights: Assignments {GRADE_WEIGHTS.assignments}% | Midterm {GRADE_WEIGHTS.midterm}% | 
           Final Exam {GRADE_WEIGHTS.finalExam}% | AI Project {GRADE_WEIGHTS.aiProject}% | 
-          Polls {GRADE_WEIGHTS.polls}%
+          Discussions {GRADE_WEIGHTS.discussions}% | Polls {GRADE_WEIGHTS.polls}%
         </div>
       </CardHeader>
       <CardContent className="text-primary-foreground">
@@ -369,6 +403,13 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
                       <span className="text-xs text-primary-foreground">({GRADE_WEIGHTS.aiProject}%)</span>
                     </div>
                   </TableHead>
+                  <TableHead className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[80px]" onClick={() => handleSort('discussions_pct')}>
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="hidden sm:inline text-primary-foreground">Discussions</span>
+                      <span className="sm:hidden">Disc</span>
+                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.discussions}%)</span>
+                    </div>
+                  </TableHead>
                   <TableHead className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[60px]" onClick={() => handleSort('polls_pct')}>
                     <div className="flex flex-col items-center justify-center">
                       <span className="text-primary-foreground">Polls</span>
@@ -398,6 +439,9 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
                     </TableCell>
                     <TableCell className="text-center p-1">
                       <Input type="number" step="0.1" min="0" max={GRADE_WEIGHTS.aiProject} value={getEffectiveValue(student, 'ai_project_pct').toFixed(1)} onChange={e => handleOverride(student.student_id, 'ai_project_pct', parseFloat(e.target.value) || 0)} className="w-16 h-8 text-center text-sm mx-auto" />
+                    </TableCell>
+                    <TableCell className="text-center p-1">
+                      <Input type="number" step="0.1" min="0" max={GRADE_WEIGHTS.discussions} value={getEffectiveValue(student, 'discussions_pct').toFixed(1)} onChange={e => handleOverride(student.student_id, 'discussions_pct', parseFloat(e.target.value) || 0)} className="w-16 h-8 text-center text-sm mx-auto" />
                     </TableCell>
                     <TableCell className="text-center p-1">
                       <Input type="number" step="0.1" min="0" max={GRADE_WEIGHTS.polls} value={getEffectiveValue(student, 'polls_pct').toFixed(1)} onChange={e => handleOverride(student.student_id, 'polls_pct', parseFloat(e.target.value) || 0)} className="w-16 h-8 text-center text-sm mx-auto" />
