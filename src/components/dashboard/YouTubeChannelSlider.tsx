@@ -51,7 +51,7 @@ export const YouTubeChannelSlider: React.FC = () => {
       </button>
 
       {/* Video Slider */}
-      <div className="bg-gradient-to-b from-[hsl(208,100%,14%)] to-[hsl(208,100%,10%)] py-4 px-3 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-b from-[hsl(208,100%,14%)] to-[hsl(208,100%,10%)] p-5">
         {isLoading ? (
           <div className="flex gap-4">
             {[1, 2, 3].map((i) => (
