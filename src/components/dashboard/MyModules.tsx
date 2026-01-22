@@ -147,21 +147,28 @@ export const MyModules = ({
             <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
-              return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="h-24 md:h-28 py-3 px-3 flex flex-col items-center justify-center gap-2 bg-card hover:bg-accent border-border hover:border-primary/40 transition-all shadow-sm">
+              return <button 
+                  key={module.id} 
+                  onClick={() => navigate(module.route)} 
+                  className="h-24 md:h-28 py-3 px-3 flex flex-col items-center justify-center gap-2 rounded-md border border-border bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground hover:border-primary/40 transition-all shadow-sm"
+                >
                     <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
                       <IconComponent className="h-6 w-6 md:h-7 md:w-7 text-primary" />
                     </div>
-                    <span className="text-xs md:text-sm text-center leading-tight line-clamp-2 text-foreground px-1 font-medium break-words w-full">
+                    <span className="text-xs md:text-sm text-center leading-tight line-clamp-2 px-1 font-medium break-words w-full">
                       {module.title}
                     </span>
-                  </Button>;
+                  </button>;
             })}
-              {showAdminSettings && <Button variant="outline" className="h-24 md:h-28 py-3 px-3 flex flex-col items-center justify-center gap-2 bg-card hover:bg-accent border-border hover:border-primary/40 transition-all shadow-sm" onClick={() => navigate('/dashboard?module=admin-settings')}>
+              {showAdminSettings && <button 
+                  className="h-24 md:h-28 py-3 px-3 flex flex-col items-center justify-center gap-2 rounded-md border border-border bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground hover:border-primary/40 transition-all shadow-sm" 
+                  onClick={() => navigate('/dashboard?module=admin-settings')}
+                >
                   <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
                     <Settings className="h-6 w-6 md:h-7 md:w-7 text-primary" />
                   </div>
-                  <span className="text-xs md:text-sm text-center leading-tight font-medium text-foreground">Admin Settings</span>
-                </Button>}
+                  <span className="text-xs md:text-sm text-center leading-tight font-medium">Admin Settings</span>
+                </button>}
             </div>
           </CardContent>
         </CollapsibleContent>
