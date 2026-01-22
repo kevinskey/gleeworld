@@ -187,58 +187,5 @@ export const DashboardStoreSection = () => {
         <div className="h-[25px] bg-[#003666] w-full" />
       </div>
 
-      {/* My Modules - Edge to Edge */}
-      <div className="h-[12px] bg-background w-full" />
-      <Button onClick={() => navigate('/modules')} variant="ghost" style={{
-      fontFamily: "'Cinzel', serif"
-    }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] text-white [&_svg]:text-white justify-start text-left px-3 sm:px-6 lg:px-8 rounded-none shadow-lg border-t border-t-white/20 hover:brightness-110">
-        <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
-        My Modules
-      </Button>
-
-      {/* Modules Section with Search and Sort */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-white">
-        {/* Search Bar and Sort Controls */}
-        <div className="flex gap-2 mb-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600" />
-            <input type="text" placeholder="Search modules..." value={moduleSearch} onChange={e => setModuleSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 rounded-full border-2 border-gray-400 bg-gray-50 text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#003666] focus:border-[#003666] shadow-sm" />
-          </div>
-          {/* Sort Buttons */}
-          <div className="flex gap-1">
-            <button onClick={() => setSortOrder('a-z')} className={cn("p-2.5 rounded-full border-2 transition-all", sortOrder === 'a-z' ? "bg-[#003666] border-[#003666] text-white" : "bg-gray-50 border-gray-400 text-gray-600 hover:bg-gray-100")} title="Sort A-Z">
-              <ArrowUpAZ className="h-4 w-4" />
-            </button>
-            <button onClick={() => setSortOrder('z-a')} className={cn("p-2.5 rounded-full border-2 transition-all", sortOrder === 'z-a' ? "bg-[#003666] border-[#003666] text-white" : "bg-gray-50 border-gray-400 text-gray-600 hover:bg-gray-100")} title="Sort Z-A">
-              <ArrowDownAZ className="h-4 w-4" />
-            </button>
-            <button onClick={() => setSortOrder('category')} className={cn("p-2.5 rounded-full border-2 transition-all", sortOrder === 'category' ? "bg-[#003666] border-[#003666] text-white" : "bg-gray-50 border-gray-400 text-gray-600 hover:bg-gray-100")} title="Sort by Category">
-              <Folder className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Modules 2-Column Grid with Pill Buttons */}
-        {modulesLoading ? <div className="text-center py-8 text-muted-foreground">Loading modules...</div> : filteredModules.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-            {moduleSearch ? 'No modules match your search' : 'No modules available'}
-          </div> : <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 max-h-[180px] overflow-y-auto" style={{
-        scrollbarWidth: 'thin'
-      }}>
-            {filteredModules.map(module => {
-          const unifiedModule = UNIFIED_MODULES.find(m => m.id === module.id);
-          const IconComponent = unifiedModule?.icon;
-          const Icon = IconComponent || LayoutGrid;
-          return <button key={module.id} onClick={() => navigate(`/dashboard?module=${module.id}`)} className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#002244] to-[#003666] hover:from-[#003666] hover:to-[#0B5A8B] transition-all duration-200 shadow-md hover:shadow-lg text-left" style={{
-            color: '#ffffff'
-          }}>
-                  <Icon className="h-3.5 w-3.5 flex-shrink-0 text-white" />
-                  <span className="text-xs font-normal truncate text-white">{module.title.toLowerCase()}</span>
-                </button>;
-        })}
-          </div>}
-      </div>
-
-      {/* Fan Zone - Edge to Edge */}
-      
     </div>;
 };
