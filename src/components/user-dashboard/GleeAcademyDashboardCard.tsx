@@ -39,12 +39,12 @@ export const GleeAcademyDashboardCard = () => {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(true);
 
-  // Get courses with badges first, then others
+  // Get ALL active courses - sorted by order
   const activeCourses = useMemo(() => {
     const orderIndex = new Map(COURSE_SLIDER_ORDER.map((code, idx) => [code, idx] as const));
 
     return ACADEMY_COURSES
-      .filter(course => course.isActive && COURSE_BADGES[course.courseCode]) // Only show courses with badges
+      .filter(course => course.isActive)
       .slice()
       .sort((a, b) => {
         const ai = orderIndex.get(a.courseCode) ?? Number.MAX_SAFE_INTEGER;
@@ -165,15 +165,23 @@ export const GleeAcademyDashboardCard = () => {
                       onClick={() => handleCourseClick(course)} 
                       className={`
                         flex-shrink-0 snap-center cursor-pointer 
-                        transition-all duration-300 hover:scale-105 hover:brightness-110
+                        transition-all duration-300 hover:scale-105
                         ${isSelected ? 'ring-4 ring-amber-400 rounded-2xl scale-105' : ''}
                       `}
                     >
-                      <img 
-                        src={badgeImage} 
-                        alt={`${course.courseCode} - ${course.title}`}
-                        className="h-28 sm:h-44 md:h-52 w-auto object-contain drop-shadow-2xl"
-                      />
+                      {badgeImage ? (
+                        <img 
+                          src={badgeImage} 
+                          alt={`${course.courseCode} - ${course.title}`}
+                          className="h-28 sm:h-44 md:h-52 w-auto object-contain drop-shadow-2xl hover:brightness-110"
+                        />
+                      ) : (
+                        <div className="h-28 sm:h-44 md:h-52 w-36 sm:w-48 md:w-56 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
+                          <span className="text-white font-bold text-lg sm:text-xl">{course.courseCode}</span>
+                          <span className="text-white/80 text-xs sm:text-sm text-center mt-2 line-clamp-2">{course.title}</span>
+                          <span className="text-amber-400 text-xs mt-3 font-medium">Enter Course →</span>
+                        </div>
+                      )}
                       {isSelected && (
                         <div className="text-center mt-2">
                           <span className="text-xs text-amber-400 font-semibold bg-black/30 px-3 py-1 rounded-full">
