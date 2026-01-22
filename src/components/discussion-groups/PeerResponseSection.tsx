@@ -92,8 +92,12 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
     onResponseAdded?.();
   };
   
+  // Combine all posts (group + my) to find responses, removing duplicates by id
+  const allPosts = [...groupPosts, ...myPosts];
+  const uniquePosts = Array.from(new Map(allPosts.map(p => [p.id, p])).values());
+  
   const getPostResponses = (postId: string) => {
-    return groupPosts.filter(p => p.parent_post_id === postId && p.post_type === 'peer_response');
+    return uniquePosts.filter(p => p.parent_post_id === postId && p.post_type === 'peer_response');
   };
   
   return (
