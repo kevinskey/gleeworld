@@ -343,8 +343,8 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
                         </div>
                       )}
 
-                      {/* Reply to peer button (for students who haven't responded yet) */}
-                      {user && !canGrade && isPeerPost && !hasRespondedToPeer && !replyingToId && (
+                      {/* Reply to peer button (for students who have posted their original) */}
+                      {user && !canGrade && isPeerPost && hasPostedOriginal && !replyingToId && !discussion.is_locked && (
                         <Button
                           size="sm"
                           variant="ghost"
