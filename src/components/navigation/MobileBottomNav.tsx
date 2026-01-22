@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Camera, Library } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsPhone } from '@/hooks/use-mobile';
@@ -15,14 +15,30 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isPhone = useIsPhone();
+  const previousPath = useRef<string>('/dashboard');
   
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
+
+  // Track the previous path before navigating to music library
+  useEffect(() => {
+    if (location.pathname !== '/music-library') {
+      previousPath.current = location.pathname;
+    }
+  }, [location.pathname]);
 
   // Only show on phones (not tablets or desktop)
   if (!isPhone) return null;
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLibraryClick = () => {
+    if (isActive('/music-library')) {
+      navigate(previousPath.current || '/dashboard');
+    } else {
+      navigate('/music-library');
+    }
+  };
 
   return (
     <>
@@ -50,7 +66,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
 
           {/* Music Library */}
           <button
-            onClick={() => isActive('/music-library') ? navigate(-1) : navigate('/music-library')}
+            onClick={handleLibraryClick}
             className={cn(
               "relative flex items-center justify-center w-12 h-12 rounded-full transition-all",
               isActive('/music-library')
