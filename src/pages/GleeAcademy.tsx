@@ -1,115 +1,199 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { Music, Users, Calendar, Trophy, Star } from 'lucide-react';
+import { Music, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { AcademyCourseCard } from '@/components/academy/AcademyCourseCard';
+
+interface CourseBadge {
+  id: string;
+  course_code: string;
+  course_title: string;
+  badge_image_url: string;
+  link_url: string | null;
+  display_order: number;
+  is_active: boolean;
+}
+
 const GleeAcademy = () => {
   const navigate = useNavigate();
-  const {
-    user
-  } = useAuth();
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+  const { user } = useAuth();
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
-  const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+  const [badges, setBadges] = useState<CourseBadge[]>([]);
+  const [loadingBadges, setLoadingBadges] = useState(true);
+
+  // Fetch badges from database
+  useEffect(() => {
+    const fetchBadges = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('academy_course_badges')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        setBadges(data || []);
+      } catch (error) {
+        console.error('Error fetching academy badges:', error);
+      } finally {
+        setLoadingBadges(false);
+      }
+    };
+    fetchBadges();
+  }, []);
+
   useEffect(() => {
     const checkEnrollments = async () => {
       if (!user) {
         setEnrolledCourses([]);
         return;
       }
-      setCheckingEnrollment(true);
       try {
-        const {
-          data,
-          error
-        } = await supabase.from('gw_course_enrollments').select('course_id').eq('user_id', user.id).not('course_id', 'is', null);
+        const { data, error } = await supabase
+          .from('gw_course_enrollments')
+          .select('course_id')
+          .eq('user_id', user.id)
+          .not('course_id', 'is', null);
         if (!error && data) {
           setEnrolledCourses(data.map(e => e.course_id).filter(Boolean) as string[]);
         }
       } catch (error) {
         console.error('Error checking enrollments:', error);
-      } finally {
-        setCheckingEnrollment(false);
       }
     };
     checkEnrollments();
   }, [user]);
-  const handleCourseClick = (course: typeof ACADEMY_COURSES[0]) => {
-    if (course.courseCode === 'MUS 000') {
-      window.open('https://readmusic.gleeworld.org', '_blank');
-      return;
+
+  const scrollSlider = (direction: 'left' | 'right') => {
+    if (sliderRef.current) {
+      const scrollAmount = 300;
+      sliderRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
     }
-    // Go directly to the course page (no onboarding required)
-    navigate(course.route);
   };
-  const features = [{
-    icon: Music,
-    title: 'Expert Instruction',
-    description: 'Learn from world-class musicians and educators'
-  }, {
-    icon: Users,
-    title: 'Community',
-    description: 'Join a supportive community of fellow musicians'
-  }, {
-    icon: Trophy,
-    title: 'Excellence',
-    description: 'Pursue the highest standards in choral music'
-  }, {
-    icon: Calendar,
-    title: 'Flexible Learning',
-    description: 'Access course materials anytime, anywhere'
-  }];
-  return <PublicLayout>
-      <div className="min-h-screen bg-white">
+
+  const handleBadgeClick = (badge: CourseBadge) => {
+    if (badge.link_url) {
+      navigate(badge.link_url);
+    }
+  };
+
+  return (
+    <PublicLayout>
+      <div className="min-h-screen bg-[#1a3a5c]">
         {/* Header Banner */}
-        <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{
-        backgroundColor: '#003666'
-      }}>
+        <div 
+          className="w-full py-6 sm:py-8 flex items-center justify-center"
+          style={{ backgroundColor: '#003666' }}
+        >
           <div className="container mx-auto px-4">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center tracking-wide">
+            <h1 
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center tracking-wide"
+              style={{ fontFamily: "'Cinzel', serif" }}
+            >
               Glee Academy
             </h1>
-            <p className="text-white/70 text-center mt-1 text-xs sm:text-sm max-w-xl mx-auto">
+            <p className="text-white/70 text-center mt-2 text-sm sm:text-base max-w-xl mx-auto">
               Find the perfect course for your musical journey.
             </p>
           </div>
         </div>
 
-        {/* Courses Section */}
-        <div id="courses" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-white pt-[40px]">
-          <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
-              {ACADEMY_COURSES.map(course => <AcademyCourseCard key={course.id} course={course} onEnter={handleCourseClick} buttonText={enrolledCourses.includes(course.id) ? 'Continue' : 'Enter Course'} />)}
-              
-              {/* Sight Singing Studio Ad - spans columns 2-3, next to Leadership Development */}
-              <a href="https://www.sightsingingstudio.com" target="_blank" rel="noopener noreferrer" className="md:col-span-2 bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 rounded-xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-shadow duration-200 flex flex-col items-center justify-center text-center min-h-[200px]">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
-                    <Music className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <span className="text-xl font-bold text-white">Sight Singing Studio</span>
+        {/* Course Badges Slider */}
+        <div className="w-full bg-[#1a3a5c] relative py-8 sm:py-12">
+          {/* Navigation arrows */}
+          <button 
+            onClick={() => scrollSlider('left')}
+            className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-3 transition-colors"
+          >
+            <ChevronLeft className="h-6 w-6 text-white" />
+          </button>
+          <button 
+            onClick={() => scrollSlider('right')}
+            className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-3 transition-colors"
+          >
+            <ChevronRight className="h-6 w-6 text-white" />
+          </button>
+
+          {/* Badge Slider */}
+          <div 
+            ref={sliderRef} 
+            className="flex gap-6 sm:gap-8 overflow-x-auto py-4 px-6 sm:px-16 snap-x snap-mandatory scroll-smooth items-center justify-start"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+          >
+            {loadingBadges ? (
+              <div className="flex gap-6 w-full justify-center">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="h-40 sm:h-56 md:h-64 w-40 sm:w-56 bg-white/10 animate-pulse rounded-xl flex-shrink-0" />
+                ))}
+              </div>
+            ) : badges.length > 0 ? (
+              badges.map(badge => (
+                <div 
+                  key={badge.id} 
+                  onClick={() => handleBadgeClick(badge)}
+                  className="flex-shrink-0 snap-center cursor-pointer transition-all duration-300 hover:scale-105"
+                >
+                  {badge.badge_image_url ? (
+                    <img 
+                      src={badge.badge_image_url} 
+                      alt={`${badge.course_code} - ${badge.course_title}`}
+                      className="h-40 sm:h-56 md:h-64 w-auto object-contain drop-shadow-2xl hover:brightness-110"
+                    />
+                  ) : (
+                    <div className="h-40 sm:h-56 md:h-64 w-40 sm:w-56 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
+                      <span className="text-white font-bold text-xl sm:text-2xl">{badge.course_code}</span>
+                      <span className="text-white/80 text-sm text-center mt-2 line-clamp-2">{badge.course_title}</span>
+                      <span className="text-amber-400 text-sm mt-3 font-medium">Enter Course →</span>
+                    </div>
+                  )}
                 </div>
-                <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
-                  Master sight singing, <span className="italic">one phrase at a time</span>
-                </h3>
-                <p className="text-white/90 text-base sm:text-lg mb-4 max-w-xl">
-                  Practice sight reading with real notation, adjustable tempo, and progress tracking.
-                </p>
-                <Button className="bg-purple-600 text-white hover:bg-purple-700 rounded-full px-6 border-2 border-white">
-                  Get Started →
-                </Button>
-              </a>
-            </div>
+              ))
+            ) : (
+              <div className="text-white/60 text-center py-8 w-full">
+                No course badges available.
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Sight Singing Studio Ad */}
+        <div className="px-6 sm:px-16 pb-8">
+          <a 
+            href="https://www.sightsingingstudio.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="block bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 rounded-xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-shadow duration-200 text-center"
+          >
+            <div className="flex items-center gap-3 mb-4 justify-center">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+                <Music className="h-6 w-6 text-purple-600" />
+              </div>
+              <span className="text-xl font-bold text-white">Sight Singing Studio</span>
+            </div>
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
+              Master sight singing, <span className="italic">one phrase at a time</span>
+            </h3>
+            <p className="text-white/90 text-base sm:text-lg mb-4 max-w-xl mx-auto">
+              Practice sight reading with real notation, adjustable tempo, and progress tracking.
+            </p>
+            <Button className="bg-purple-600 text-white hover:bg-purple-700 rounded-full px-6 border-2 border-white">
+              Get Started →
+            </Button>
+          </a>
+        </div>
+
         {/* CTA Section */}
-        <div className="py-12 sm:py-16 md:py-20" style={{
-        backgroundColor: '#003666'
-      }}>
+        <div 
+          className="py-12 sm:py-16 md:py-20"
+          style={{ backgroundColor: '#003666' }}
+        >
           <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
             <div className="max-w-3xl mx-auto text-center">
               <Star className="h-10 w-10 sm:h-12 sm:w-12 text-white mx-auto mb-4 sm:mb-6" />
@@ -120,10 +204,19 @@ const GleeAcademy = () => {
                 Join our community of musicians and experience the transformative power of music education rooted in excellence and tradition.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                <Button size="lg" className="bg-white text-[#003666] hover:bg-gray-100" onClick={() => navigate('/booking')}>
+                <Button 
+                  size="lg" 
+                  className="bg-white text-[#003666] hover:bg-gray-100" 
+                  onClick={() => navigate('/booking')}
+                >
                   Apply Now
                 </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-[#003666]" onClick={() => navigate('/contact')}>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white text-white hover:bg-white hover:text-[#003666]" 
+                  onClick={() => navigate('/contact')}
+                >
                   Contact Us
                 </Button>
               </div>
@@ -131,6 +224,8 @@ const GleeAcademy = () => {
           </div>
         </div>
       </div>
-    </PublicLayout>;
+    </PublicLayout>
+  );
 };
+
 export default GleeAcademy;
