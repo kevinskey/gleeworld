@@ -543,13 +543,22 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                     <Collapsible key={assignment.id}>
                       <div className="py-2 border-b last:border-0">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
+                          <div 
+                            className="flex items-center gap-3 cursor-pointer hover:opacity-80 flex-1"
+                            onClick={() => {
+                              if (assignment.is_discussion) {
+                                navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
+                              } else {
+                                navigate(`/grading/student/assignment/${assignment.id}`);
+                              }
+                            }}
+                          >
                             <div className="flex items-center gap-1">
                               <span className="text-xs text-muted-foreground">•</span>
                               <FileText className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div>
-                              <p className="text-sm font-medium">{assignment.title}</p>
+                              <p className="text-sm font-medium hover:underline">{assignment.title}</p>
                               <p className="text-xs text-muted-foreground">
                                 Due: {format(new Date(assignment.due_date), 'MMM d')} · {assignment.points} pts
                               </p>
@@ -564,17 +573,28 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                                 </Button>
                               </CollapsibleTrigger>
                             )}
-                            <div className="text-right min-w-[60px]">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => {
+                                if (assignment.is_discussion) {
+                                  navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
+                                } else {
+                                  navigate(`/grading/student/assignment/${assignment.id}`);
+                                }
+                              }}
+                            >
                               {assignment.status === 'submitted' ? (
-                                <span className="text-xs text-primary font-medium">Submitted</span>
+                                <span className="text-primary font-medium">View →</span>
                               ) : assignment.status === 'graded' ? (
-                                <span className="text-xs text-green-600 font-medium">Graded</span>
+                                <span className="text-green-600 font-medium">Graded →</span>
                               ) : assignment.status === 'overdue' ? (
-                                <span className="text-xs text-destructive font-medium">Overdue</span>
+                                <span className="text-destructive font-medium">Overdue</span>
                               ) : (
-                                <span className="text-xs text-muted-foreground">{assignment.points} pts</span>
+                                <span className="text-muted-foreground">{assignment.points} pts</span>
                               )}
-                            </div>
+                            </Button>
                           </div>
                         </div>
                         {assignment.description && (
