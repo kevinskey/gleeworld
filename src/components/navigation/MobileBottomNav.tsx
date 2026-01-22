@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import { Camera, Mic } from 'lucide-react';
+import { Camera, Library } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from '@/components/quick-capture/QuickCaptureCategorySelector';
 import { CategorizedQuickCapture } from '@/components/quick-capture/CategorizedQuickCapture';
 import { MusicalToolkit } from '@/components/musical-toolkit/MusicalToolkit';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { useAssistant } from '@/contexts/AssistantContext';
 
 interface MobileBottomNavProps {
   className?: string;
@@ -17,8 +15,6 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isPhone = useIsPhone();
-  const { toast } = useToast();
-  const { isWakeWordActive, setIsWakeWordActive, wakeWordStatus } = useAssistant();
   
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
@@ -27,34 +23,6 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   if (!isPhone) return null;
 
   const isActive = (path: string) => location.pathname === path;
-
-  const toggleAssistant = async () => {
-    // Request microphone permission first if activating
-    if (!isWakeWordActive) {
-      try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        setIsWakeWordActive(true);
-        toast({
-          title: "Hey Glee Enabled",
-          description: "Say \"Hey Glee\" to activate the assistant.",
-          duration: 3000,
-        });
-      } catch (e) {
-        toast({
-          title: "Microphone Required",
-          description: "Please allow microphone access to use voice assistant.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      setIsWakeWordActive(false);
-      toast({
-        title: "Assistant Off",
-        description: "Voice assistant disabled",
-        duration: 2000,
-      });
-    }
-  };
 
   return (
     <>
@@ -80,23 +48,17 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
             <Camera className="h-7 w-7" />
           </button>
 
-          {/* Voice Assistant Toggle */}
+          {/* Music Library */}
           <button
-            onClick={toggleAssistant}
+            onClick={() => navigate('/music-library')}
             className={cn(
               "relative flex items-center justify-center w-12 h-12 rounded-full transition-all",
-              isWakeWordActive 
-                ? "text-white bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg animate-pulse" 
+              isActive('/music-library')
+                ? "text-primary bg-primary/10" 
                 : "text-foreground hover:bg-muted"
             )}
           >
-            <Mic className="h-7 w-7" />
-            {isWakeWordActive && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background animate-ping" />
-            )}
-            {isWakeWordActive && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background" />
-            )}
+            <Library className="h-7 w-7" />
           </button>
         </div>
       </nav>
