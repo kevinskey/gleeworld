@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
 import { FourCardLayout } from './FourCardLayout';
 import { DashboardStoreSection } from './DashboardStoreSection';
+import { YouTubeChannelSlider } from './YouTubeChannelSlider';
 
 // Lazy load heavy components
 const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then(m => ({
@@ -358,6 +359,19 @@ export const UnifiedDashboard = () => {
 
       {/* Modern Store Section */}
       <DashboardStoreSection />
+
+      {/* YouTube Channel Slider */}
+      <YouTubeChannelSlider />
+
+      {/* My Modules Section */}
+      <MyModules userProfile={{
+        user_id: profile.user_id,
+        role: profile.role,
+        exec_board_role: profile.exec_board_role,
+        is_exec_board: profile.is_exec_board,
+        is_admin: profile.is_admin,
+        is_super_admin: profile.is_super_admin
+      }} />
       
       {/* Messages Panel Overlay */}
       {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
