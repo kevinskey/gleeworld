@@ -291,15 +291,16 @@
   }
 }
 
-/* Glass Theme Styles - DISABLED for cleaner look */
+/* Theme overrides should respect design tokens (especially in dark mode).
+   These theme classes are meant to tweak accent styling, not hard-force white UI. */
 .glass-theme [data-component="card"],
 .glass-theme .bg-card,
 .spelman-blue-theme [data-component="card"],
 .spelman-blue-theme .bg-card {
-  background: hsl(0 0% 100%) !important;
+  background: hsl(var(--card)) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border: 1px solid hsl(0 0% 90%) !important;
+  border: 1px solid hsl(var(--border)) !important;
 }
 
 /* Module cards - clean white design with subtle accents */
@@ -321,24 +322,24 @@ button.module-card-solid:hover,
   box-shadow: 0 4px 12px rgba(17, 68, 139, 0.12) !important;
 }
 
-/* Module cards should have solid WHITE backgrounds in blue theme */
+/* Module cards should follow tokens (works for both light + dark) */
 .spelman-blue-theme button.module-card-solid,
 .spelman-blue-theme .module-card-solid,
 .glass-theme button.module-card-solid,
 .glass-theme .module-card-solid {
-  background-color: hsl(0 0% 100%) !important;
+  background-color: hsl(var(--card)) !important;
   background-image: none !important;
-  background: hsl(0 0% 100%) !important;
+  background: hsl(var(--card)) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  color: hsl(220 25% 15%) !important;
-  border: 2px solid hsl(220 15% 85%) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border: 2px solid hsl(var(--border)) !important;
 }
 
-/* Force background to white/neutral in blue theme */
+/* Theme classes should not override the base background token */
 .spelman-blue-theme .bg-background,
 .glass-theme .bg-background {
-  background-color: hsl(0 0% 98%) !important;
+  background-color: hsl(var(--background)) !important;
   background-image: none !important;
 }
 
