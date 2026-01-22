@@ -718,8 +718,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                       </div>
 
                       {/* Compose form - hide on mobile when viewing history */}
-                      <div className={`flex-1 flex flex-col ${showEmailHistory ? 'hidden lg:flex' : 'flex'}`}>
-                        <div className="flex-1 bg-muted/50 p-4 lg:p-6 space-y-4 overflow-auto">
+                      <div className={`flex-1 flex flex-col min-h-0 ${showEmailHistory ? 'hidden lg:flex' : 'flex'}`}>
+                        <div className="flex-1 bg-muted/50 p-4 lg:p-6 space-y-4 overflow-y-auto min-h-0">
                           {/* Recipients */}
                           <div className="space-y-1">
                             <Label className="text-sm font-medium text-foreground">To:</Label>
@@ -780,10 +780,10 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           </div>
 
                           {/* Content */}
-                          <div className="space-y-1">
-                            <Label className="text-sm font-medium text-foreground">Message:</Label>
-                            <div className="min-h-[180px] max-h-[250px] overflow-hidden">
-                              <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="180px" />
+                          <div className="space-y-1 flex-1 flex flex-col min-h-0">
+                            <Label className="text-sm font-medium text-foreground flex-shrink-0">Message:</Label>
+                            <div className="flex-1 min-h-[200px] max-h-[400px] overflow-hidden">
+                              <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="200px" />
                             </div>
                           </div>
                         </div>
