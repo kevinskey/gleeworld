@@ -115,7 +115,7 @@ export const UnifiedSyllabusRenderer: React.FC<UnifiedSyllabusRendererProps> = (
 
   return (
     <div className="space-y-4">
-      {/* Course Header */}
+      {/* Course Header with Instructor */}
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">
@@ -132,7 +132,8 @@ export const UnifiedSyllabusRenderer: React.FC<UnifiedSyllabusRendererProps> = (
             )}
           </div>
         </CardHeader>
-        <CardContent className="pt-2">
+        <CardContent className="pt-2 space-y-4">
+          {/* Meeting Times & Location */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="font-semibold">Meeting Times</p>
@@ -143,30 +144,28 @@ export const UnifiedSyllabusRenderer: React.FC<UnifiedSyllabusRendererProps> = (
               <p className="text-muted-foreground">{syllabus.classroom || 'TBA'}</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Instructor */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Instructor</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="font-semibold">{syllabus.instructor_name || course.instructor.name}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">{syllabus.instructor_email || course.instructor.email}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Office: {syllabus.instructor_office || course.instructor.office}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Office Hours: {syllabus.office_hours || course.instructor.hours}</span>
+          
+          {/* Instructor Info */}
+          <div className="border-t pt-4">
+            <p className="font-semibold text-sm mb-2">Instructor</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">{syllabus.instructor_name || course.instructor.name}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">{syllabus.instructor_email || course.instructor.email}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">{syllabus.instructor_office || course.instructor.office}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">{syllabus.office_hours || course.instructor.hours}</span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
