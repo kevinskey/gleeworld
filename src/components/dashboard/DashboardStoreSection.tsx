@@ -130,28 +130,7 @@ export const DashboardStoreSection = () => {
         Glee Academy
       </Button>
 
-      {/* Courses Section - Academic Black & White Design */}
-      <div className="w-full">
-        {/* Courses Horizontal Scroll - No Gap, Full Width */}
-        <div className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth" style={{
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none',
-        WebkitOverflowScrolling: 'touch'
-      }}>
-          {courses.length > 0 ? courses.map(course => {
-          const truncatedDescription = course.description && course.description.length > DESCRIPTION_CHAR_LIMIT ? `${course.description.slice(0, DESCRIPTION_CHAR_LIMIT).trim()}...` : course.description;
-          return (
-            <div key={course.id} className="flex-shrink-0 w-72 snap-start bg-white rounded-xl p-6 min-h-[200px] shadow-lg">
-              <h3 className="font-bold text-foreground">{course.title}</h3>
-              <p className="text-sm text-muted-foreground mt-2">{truncatedDescription || 'No description'}</p>
-            </div>
-          );
-        }) : <div className="flex-shrink-0 w-72 snap-start bg-white rounded-xl p-6 flex items-center justify-center min-h-[200px] shadow-lg">
-              <p className="text-sm text-muted-foreground">No courses available</p>
-            </div>}
-        </div>
-        <div className="h-[25px] bg-[#003666] w-full" />
-      </div>
+      <div className="h-[25px] bg-[#003666] w-full" />
 
       {/* Shop Section Header - Edge to Edge */}
       <div className="h-[12px] bg-background w-full" />
