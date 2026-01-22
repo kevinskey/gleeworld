@@ -58,11 +58,10 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
   // Get my responses
   const myResponses = myPosts.filter(p => p.post_type === 'peer_response');
   
-  // Track which specific posts I've already responded to (not just authors)
-  const respondedToPostIds = new Set(myResponses.map(r => r.parent_post_id));
+  // Track responses for display purposes only (no longer restricting)
+  const myResponseCount = myResponses.length;
   
-  const requiredResponses = 2;
-  const completedResponses = myResponses.length;
+  const suggestedResponses = 2; // Suggested minimum, not enforced
   
   const toggleExpanded = (postId: string) => {
     const newExpanded = new Set(expandedPosts);
@@ -109,21 +108,20 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
             Discussion Forum
           </CardTitle>
           <div className="flex items-center gap-2">
-            {completedResponses >= requiredResponses ? (
+            {myResponseCount >= suggestedResponses ? (
               <Badge variant="outline" className="text-green-600 border-green-600">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                Complete ({completedResponses}/{requiredResponses})
+                {myResponseCount} responses
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-orange-600 border-orange-600">
-                <AlertCircle className="h-3 w-3 mr-1" />
-                {completedResponses}/{requiredResponses} responses required
+              <Badge variant="outline" className="text-muted-foreground">
+                {myResponseCount}/{suggestedResponses} suggested
               </Badge>
             )}
           </div>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Read your peers' posts and respond to at least {requiredResponses} different posts.
+          Engage with your peers' posts. We suggest responding to at least {suggestedResponses} posts.
         </p>
       </CardHeader>
       
@@ -143,16 +141,12 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
         {/* Forum-style threaded posts */}
         {peerPosts.map(post => {
           const responses = getPostResponses(post.id);
-          const hasResponded = respondedToPostIds.has(post.id);
           const isExpanded = expandedPosts.has(post.id);
           
           return (
             <div key={post.id} className="border rounded-lg overflow-hidden">
               {/* Original Post */}
-              <div className={cn(
-                "p-4 bg-card",
-                hasResponded && "border-l-4 border-l-green-500"
-              )}>
+              <div className="p-4 bg-card">
                 <div className="flex items-start gap-3">
                   <Avatar className="h-10 w-10 shrink-0">
                     <AvatarFallback>
@@ -187,13 +181,6 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
                         {responses.length} {responses.length === 1 ? 'response' : 'responses'}
                         {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </button>
-                      
-                      {hasResponded && (
-                        <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          You responded
-                        </Badge>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -259,8 +246,8 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
                     </div>
                   )}
                   
-                  {/* Reply Form - only show if phase is active and haven't responded to this post */}
-                  {isPhaseActive && !hasResponded && (
+                  {/* Reply Form - always show if phase is active */}
+                  {isPhaseActive && (
                     <div className="p-4 pl-8 md:pl-12 border-t">
                       {replyingTo !== post.id ? (
                         <Button 
@@ -337,13 +324,6 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
                           </div>
                         </div>
                       )}
-                    </div>
-                  )}
-                  
-                  {/* Show message if already responded */}
-                  {isPhaseActive && hasResponded && responses.length === 0 && (
-                    <div className="p-4 pl-8 md:pl-12 text-sm text-muted-foreground">
-                      You've already responded to this post.
                     </div>
                   )}
                 </div>
