@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_course_badges: {
+        Row: {
+          badge_image_url: string
+          course_code: string
+          course_title: string
+          created_at: string
+          created_by: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          link_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          badge_image_url: string
+          course_code: string
+          course_title: string
+          created_at?: string
+          created_by?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          link_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          badge_image_url?: string
+          course_code?: string
+          course_title?: string
+          created_at?: string
+          created_by?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          link_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           action_type: string

@@ -140,7 +140,12 @@ export const DashboardStoreSection = () => {
       }}>
           {courses.length > 0 ? courses.map(course => {
           const truncatedDescription = course.description && course.description.length > DESCRIPTION_CHAR_LIMIT ? `${course.description.slice(0, DESCRIPTION_CHAR_LIMIT).trim()}...` : course.description;
-          return;
+          return (
+            <div key={course.id} className="flex-shrink-0 w-72 snap-start bg-white rounded-xl p-6 min-h-[200px] shadow-lg">
+              <h3 className="font-bold text-foreground">{course.title}</h3>
+              <p className="text-sm text-muted-foreground mt-2">{truncatedDescription || 'No description'}</p>
+            </div>
+          );
         }) : <div className="flex-shrink-0 w-72 snap-start bg-white rounded-xl p-6 flex items-center justify-center min-h-[200px] shadow-lg">
               <p className="text-sm text-muted-foreground">No courses available</p>
             </div>}
