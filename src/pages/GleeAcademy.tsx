@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { Music, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Music, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { ACADEMY_COURSES } from '@/config/academyCourses';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -19,7 +18,6 @@ interface CourseBadge {
 
 const GleeAcademy = () => {
   const navigate = useNavigate();
-  const sliderRef = useRef<HTMLDivElement | null>(null);
   const { user } = useAuth();
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
   const [badges, setBadges] = useState<CourseBadge[]>([]);
@@ -68,15 +66,6 @@ const GleeAcademy = () => {
     checkEnrollments();
   }, [user]);
 
-  const scrollSlider = (direction: 'left' | 'right') => {
-    if (sliderRef.current) {
-      const scrollAmount = 300;
-      sliderRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
 
   const handleBadgeClick = (badge: CourseBadge) => {
     if (badge.link_url) {
@@ -105,62 +94,43 @@ const GleeAcademy = () => {
           </div>
         </div>
 
-        {/* Course Badges Slider */}
-        <div className="w-full bg-[#1a3a5c] relative py-8 sm:py-12">
-          {/* Navigation arrows */}
-          <button 
-            onClick={() => scrollSlider('left')}
-            className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-3 transition-colors"
-          >
-            <ChevronLeft className="h-6 w-6 text-white" />
-          </button>
-          <button 
-            onClick={() => scrollSlider('right')}
-            className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-3 transition-colors"
-          >
-            <ChevronRight className="h-6 w-6 text-white" />
-          </button>
-
-          {/* Badge Slider */}
-          <div 
-            ref={sliderRef} 
-            className="flex gap-6 sm:gap-8 overflow-x-auto py-4 px-6 sm:px-16 snap-x snap-mandatory scroll-smooth items-center justify-start"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
-          >
-            {loadingBadges ? (
-              <div className="flex gap-6 w-full justify-center">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-40 sm:h-56 md:h-64 w-40 sm:w-56 bg-white/10 animate-pulse rounded-xl flex-shrink-0" />
-                ))}
-              </div>
-            ) : badges.length > 0 ? (
-              badges.map(badge => (
+        {/* Course Badges Grid */}
+        <div className="w-full bg-[#1a3a5c] py-8 sm:py-12 px-6 sm:px-12 lg:px-16">
+          {loadingBadges ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="aspect-square bg-white/10 animate-pulse rounded-xl" />
+              ))}
+            </div>
+          ) : badges.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8">
+              {badges.map(badge => (
                 <div 
                   key={badge.id} 
                   onClick={() => handleBadgeClick(badge)}
-                  className="flex-shrink-0 snap-center cursor-pointer transition-all duration-300 hover:scale-105"
+                  className="cursor-pointer transition-all duration-300 hover:scale-105 flex items-center justify-center"
                 >
                   {badge.badge_image_url ? (
                     <img 
                       src={badge.badge_image_url} 
                       alt={`${badge.course_code} - ${badge.course_title}`}
-                      className="h-40 sm:h-56 md:h-64 w-auto object-contain drop-shadow-2xl hover:brightness-110"
+                      className="w-full h-auto max-h-64 object-contain drop-shadow-2xl hover:brightness-110"
                     />
                   ) : (
-                    <div className="h-40 sm:h-56 md:h-64 w-40 sm:w-56 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
+                    <div className="aspect-square w-full bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
                       <span className="text-white font-bold text-xl sm:text-2xl">{badge.course_code}</span>
                       <span className="text-white/80 text-sm text-center mt-2 line-clamp-2">{badge.course_title}</span>
                       <span className="text-amber-400 text-sm mt-3 font-medium">Enter Course →</span>
                     </div>
                   )}
                 </div>
-              ))
-            ) : (
-              <div className="text-white/60 text-center py-8 w-full">
-                No course badges available.
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-white/60 text-center py-8 w-full">
+              No course badges available.
+            </div>
+          )}
         </div>
 
         {/* Sight Singing Studio Ad */}
