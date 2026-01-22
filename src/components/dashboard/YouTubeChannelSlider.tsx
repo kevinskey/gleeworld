@@ -55,7 +55,7 @@ export const YouTubeChannelSlider: React.FC = () => {
         {isLoading ? (
           <div className="flex gap-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex-shrink-0 w-48 sm:w-64 aspect-video bg-white/10 rounded-lg animate-pulse" />
+              <div key={i} className="flex-shrink-0 w-72 sm:w-80 lg:w-96 aspect-video bg-white/10 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : (
@@ -69,7 +69,7 @@ export const YouTubeChannelSlider: React.FC = () => {
                   rel="noopener noreferrer"
                   className="flex-shrink-0 group"
                 >
-                  <div className="relative w-48 sm:w-64 aspect-video rounded-lg overflow-hidden border-2 border-white/10 hover:border-primary transition-all shadow-lg">
+                  <div className="relative w-72 sm:w-80 lg:w-96 aspect-video rounded-lg overflow-hidden border-2 border-white/10 hover:border-primary transition-all shadow-lg">
                     <img
                       src={getThumbnail(video)}
                       alt={video.title}
@@ -87,7 +87,7 @@ export const YouTubeChannelSlider: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <p className="mt-2 text-xs sm:text-sm text-white/80 font-medium truncate max-w-48 sm:max-w-64">
+                  <p className="mt-2 text-sm text-white/80 font-medium truncate max-w-72 sm:max-w-80 lg:max-w-96">
                     {video.title}
                   </p>
                 </a>
@@ -99,7 +99,7 @@ export const YouTubeChannelSlider: React.FC = () => {
             {/* View All Card */}
             <button
               onClick={handleChannelClick}
-              className="flex-shrink-0 w-48 sm:w-64 aspect-video rounded-lg border-2 border-dashed border-white/30 hover:border-primary transition-all flex flex-col items-center justify-center gap-2 bg-white/5 hover:bg-white/10"
+              className="flex-shrink-0 w-72 sm:w-80 lg:w-96 aspect-video rounded-lg border-2 border-dashed border-white/30 hover:border-primary transition-all flex flex-col items-center justify-center gap-2 bg-white/5 hover:bg-white/10"
             >
               <Youtube className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
               <span className="text-white/80 text-sm font-medium">View All Videos</span>
