@@ -114,7 +114,7 @@ const GleeAcademy = () => {
                     <img 
                       src={badge.badge_image_url} 
                       alt={`${badge.course_code} - ${badge.course_title}`}
-                      className="w-full h-auto max-h-64 object-contain drop-shadow-2xl hover:brightness-110"
+                      className="w-full h-auto max-h-64 object-contain drop-shadow-2xl hover:brightness-110 mx-auto"
                     />
                   ) : (
                     <div className="aspect-square w-full bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
