@@ -12,17 +12,8 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-// Course badge images
-import MUS070Badge from '@/assets/academy/MUS_070.png';
-import MUS240Badge from '@/assets/academy/MUS_240.png';
-import LH100Badge from '@/assets/academy/LH100.png';
-
-// Map course codes to badge images
-const COURSE_BADGES: Record<string, string> = {
-  'MUS 070': MUS070Badge,
-  'MUS 240': MUS240Badge,
-  'LH 100': LH100Badge,
-};
+// Map course codes to badge images (add images here when available)
+const COURSE_BADGES: Record<string, string> = {};
 
 // Character limit for description to ensure uniform card height
 const DESCRIPTION_CHAR_LIMIT = 120;
