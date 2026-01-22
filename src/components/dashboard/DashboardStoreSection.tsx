@@ -123,7 +123,7 @@ export const DashboardStoreSection = () => {
   return <div className="w-full bg-background">
 
       {/* Shop Section Header - Edge to Edge */}
-      <div className="h-[12px] bg-background w-full" />
+      <div className="h-[12px] w-full bg-primary-foreground" />
       <h2 style={{
       fontFamily: "'Cinzel', serif",
       color: 'white'
