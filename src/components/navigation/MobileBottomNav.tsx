@@ -50,7 +50,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
 
           {/* Music Library */}
           <button
-            onClick={() => navigate('/music-library')}
+            onClick={() => isActive('/music-library') ? navigate(-1) : navigate('/music-library')}
             className={cn(
               "relative flex items-center justify-center w-12 h-12 rounded-full transition-all",
               isActive('/music-library')
