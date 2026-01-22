@@ -58,10 +58,10 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
   // Get my responses
   const myResponses = myPosts.filter(p => p.post_type === 'peer_response');
   
-  // Track responses for display purposes only (no longer restricting)
+  // Track responses - minimum required for grading, but unlimited allowed
   const myResponseCount = myResponses.length;
-  
-  const suggestedResponses = 2; // Suggested minimum, not enforced
+  const requiredResponses = 2; // Minimum for full credit
+  const requirementMet = myResponseCount >= requiredResponses;
   
   const toggleExpanded = (postId: string) => {
     const newExpanded = new Set(expandedPosts);
@@ -108,20 +108,21 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
             Discussion Forum
           </CardTitle>
           <div className="flex items-center gap-2">
-            {myResponseCount >= suggestedResponses ? (
+            {requirementMet ? (
               <Badge variant="outline" className="text-green-600 border-green-600">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                {myResponseCount} responses
+                {myResponseCount} responses (requirement met)
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-muted-foreground">
-                {myResponseCount}/{suggestedResponses} suggested
+              <Badge variant="outline" className="text-orange-600 border-orange-600">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                {myResponseCount}/{requiredResponses} required for full credit
               </Badge>
             )}
           </div>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Engage with your peers' posts. We suggest responding to at least {suggestedResponses} posts.
+          Respond to at least {requiredResponses} posts for full credit. You may continue responding after meeting the requirement.
         </p>
       </CardHeader>
       
