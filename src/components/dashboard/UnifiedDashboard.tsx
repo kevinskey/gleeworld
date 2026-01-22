@@ -340,12 +340,13 @@ export const UnifiedDashboard = () => {
         </div>
       </div>
 
+      {/* Glee Academy Card - Course badge slider */}
+      <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
+        <GleeAcademyDashboardCard />
+      </Suspense>
+
       {/* Modern Store Section */}
       <DashboardStoreSection />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pl-0 pr-0">
-        
-      </div>
       
       {/* Messages Panel Overlay */}
       {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
