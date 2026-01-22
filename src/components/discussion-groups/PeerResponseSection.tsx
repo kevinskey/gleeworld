@@ -102,7 +102,7 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Peer Responses
+            Discussion Forum
           </CardTitle>
           <div className="flex items-center gap-2">
             {completedResponses >= requiredResponses ? (
@@ -113,14 +113,17 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
             ) : (
               <Badge variant="outline" className="text-orange-600 border-orange-600">
                 <AlertCircle className="h-3 w-3 mr-1" />
-                {completedResponses}/{requiredResponses} required
+                {completedResponses}/{requiredResponses} responses required
               </Badge>
             )}
           </div>
         </div>
+        <p className="text-sm text-muted-foreground mt-1">
+          Read your peers' posts and respond to at least {requiredResponses} different posts.
+        </p>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {!isPhaseActive && (
           <div className="p-4 bg-muted/50 rounded-lg text-center text-muted-foreground">
             Peer response phase is not currently active
@@ -133,173 +136,215 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
           </div>
         )}
         
+        {/* Forum-style threaded posts */}
         {peerPosts.map(post => {
           const responses = getPostResponses(post.id);
           const hasResponded = respondedToPostIds.has(post.id);
           const isExpanded = expandedPosts.has(post.id);
           
           return (
-            <Collapsible 
-              key={post.id} 
-              open={isExpanded} 
-              onOpenChange={() => toggleExpanded(post.id)}
-            >
+            <div key={post.id} className="border rounded-lg overflow-hidden">
+              {/* Original Post */}
               <div className={cn(
-                "border rounded-lg transition-all",
-                hasResponded && "border-green-500/30 bg-green-500/5"
+                "p-4 bg-card",
+                hasResponded && "border-l-4 border-l-green-500"
               )}>
-                {/* Post Header */}
-                <CollapsibleTrigger asChild>
-                  <div className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                    <div className="flex items-start gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback>
-                          {post.author?.full_name?.split(' ').map(n => n[0]).join('') || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{post.author?.full_name || 'Anonymous'}</span>
-                          {hasResponded && (
-                            <Badge variant="outline" className="text-green-600 text-xs">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Responded
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {post.word_count} words • {format(new Date(post.submitted_at || post.created_at), 'MMM d, h:mm a')}
-                        </p>
-                        <p className="mt-2 text-sm line-clamp-2">
-                          {post.content.substring(0, 150)}...
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{responses.length} replies</Badge>
-                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </div>
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-10 w-10 shrink-0">
+                    <AvatarFallback>
+                      {post.author?.full_name?.split(' ').map(n => n[0]).join('') || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold">{post.author?.full_name || 'Anonymous'}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(post.submitted_at || post.created_at), 'MMM d, yyyy • h:mm a')}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        {post.word_count} words
+                      </Badge>
                     </div>
-                  </div>
-                </CollapsibleTrigger>
-                
-                <CollapsibleContent>
-                  <div className="border-t px-4 py-4 space-y-4">
-                    {/* Full Post Content */}
-                    <div className="prose prose-sm max-w-none dark:prose-invert bg-muted/30 p-4 rounded-lg">
-                      {post.content.split('\n').map((p, i) => (
-                        <p key={i}>{p}</p>
+                    
+                    {/* Full post content - always visible */}
+                    <div className="mt-3 prose prose-sm max-w-none dark:prose-invert">
+                      {post.content.split('\n').map((paragraph, i) => (
+                        <p key={i} className="text-sm leading-relaxed">{paragraph}</p>
                       ))}
                     </div>
                     
-                    {/* Existing Responses */}
-                    {responses.length > 0 && (
-                      <div className="space-y-3 pl-6 border-l-2 border-muted">
-                        {responses.map(response => {
-                          const TagIcon = RESPONSE_TAGS.find(t => t.id === response.response_tag)?.icon || MessageSquare;
-                          return (
-                            <div key={response.id} className="p-3 bg-background rounded-lg">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarFallback className="text-xs">
-                                    {response.author?.full_name?.split(' ').map(n => n[0]).join('') || '?'}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="text-sm font-medium">{response.author?.full_name}</span>
-                                {response.response_tag && (
-                                  <Badge variant="outline" className="text-xs flex items-center gap-1">
-                                    <TagIcon className="h-3 w-3" />
-                                    {response.response_tag}
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-sm">{response.content}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    
-                    {/* Reply Form */}
-                    {isPhaseActive && !hasResponded && replyingTo !== post.id && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setReplyingTo(post.id)}
+                    {/* Response count and expand toggle */}
+                    <div className="mt-4 flex items-center gap-3">
+                      <button
+                        onClick={() => toggleExpanded(post.id)}
+                        className="text-sm text-primary hover:underline flex items-center gap-1"
                       >
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Write Response
-                      </Button>
-                    )}
-                    
-                    {replyingTo === post.id && (
-                      <div className="space-y-3 p-4 border rounded-lg bg-background">
-                        {/* Tag Selection */}
-                        <div>
-                          <p className="text-sm font-medium mb-2">Response Type</p>
-                          <div className="grid grid-cols-2 gap-2">
-                            {RESPONSE_TAGS.map(tag => {
-                              const Icon = tag.icon;
-                              return (
-                                <button
-                                  key={tag.id}
-                                  onClick={() => setSelectedTag(tag.id)}
-                                  className={cn(
-                                    "p-3 border rounded-lg text-left transition-all",
-                                    selectedTag === tag.id 
-                                      ? "border-primary bg-primary/5" 
-                                      : "hover:bg-muted"
-                                  )}
-                                >
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Icon className="h-4 w-4" />
-                                    <span className="font-medium text-sm">{tag.label}</span>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground">{tag.description}</p>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        
-                        <Textarea
-                          value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
-                          placeholder="Write your response..."
-                          className="min-h-[100px]"
-                        />
-                        
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-muted-foreground">
-                            {replyContent.trim().split(/\s+/).filter(w => w.length > 0).length} words
-                          </span>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                setReplyingTo(null);
-                                setReplyContent('');
-                                setSelectedTag(null);
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                            <Button 
-                              size="sm"
-                              onClick={() => handleSubmitResponse(post.id, post.group_id)}
-                              disabled={!selectedTag || !replyContent.trim() || postMutation.isPending}
-                            >
-                              <Send className="h-4 w-4 mr-2" />
-                              Submit Response
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                        <MessageSquare className="h-4 w-4" />
+                        {responses.length} {responses.length === 1 ? 'response' : 'responses'}
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </button>
+                      
+                      {hasResponded && (
+                        <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          You responded
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                </CollapsibleContent>
+                </div>
               </div>
-            </Collapsible>
+              
+              {/* Threaded Responses - Indented */}
+              {(isExpanded || responses.length > 0) && (
+                <div className="bg-muted/30 border-t">
+                  {/* All responses visible to everyone */}
+                  {responses.length > 0 && (
+                    <div className="divide-y divide-border/50">
+                      {responses.map(response => {
+                        const TagIcon = RESPONSE_TAGS.find(t => t.id === response.response_tag)?.icon || MessageSquare;
+                        const tagInfo = RESPONSE_TAGS.find(t => t.id === response.response_tag);
+                        const isMyResponse = response.author_id === currentUserId;
+                        
+                        return (
+                          <div 
+                            key={response.id} 
+                            className={cn(
+                              "p-4 pl-8 md:pl-12",
+                              isMyResponse && "bg-primary/5"
+                            )}
+                          >
+                            <div className="flex items-start gap-3">
+                              {/* Thread connector line */}
+                              <div className="hidden md:flex flex-col items-center mr-2">
+                                <div className="w-px h-4 bg-border" />
+                                <div className="w-4 h-px bg-border" />
+                              </div>
+                              
+                              <Avatar className="h-8 w-8 shrink-0">
+                                <AvatarFallback className="text-xs">
+                                  {response.author?.full_name?.split(' ').map(n => n[0]).join('') || '?'}
+                                </AvatarFallback>
+                              </Avatar>
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-medium text-sm">
+                                    {response.author?.full_name || 'Anonymous'}
+                                    {isMyResponse && <span className="text-primary ml-1">(you)</span>}
+                                  </span>
+                                  {response.response_tag && tagInfo && (
+                                    <Badge 
+                                      variant="outline" 
+                                      className="text-xs flex items-center gap-1"
+                                    >
+                                      <TagIcon className="h-3 w-3" />
+                                      {tagInfo.label}
+                                    </Badge>
+                                  )}
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(response.submitted_at || response.created_at), 'MMM d • h:mm a')}
+                                  </span>
+                                </div>
+                                <p className="mt-1 text-sm">{response.content}</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
+                  {/* Reply Form - only show if phase is active and haven't responded to this post */}
+                  {isPhaseActive && !hasResponded && (
+                    <div className="p-4 pl-8 md:pl-12 border-t">
+                      {replyingTo !== post.id ? (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setReplyingTo(post.id)}
+                          className="gap-2"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Add Your Response
+                        </Button>
+                      ) : (
+                        <div className="space-y-3 p-4 border rounded-lg bg-background">
+                          {/* Tag Selection */}
+                          <div>
+                            <p className="text-sm font-medium mb-2">How are you responding?</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {RESPONSE_TAGS.map(tag => {
+                                const Icon = tag.icon;
+                                return (
+                                  <button
+                                    key={tag.id}
+                                    onClick={() => setSelectedTag(tag.id)}
+                                    className={cn(
+                                      "p-3 border rounded-lg text-left transition-all",
+                                      selectedTag === tag.id 
+                                        ? "border-primary bg-primary/10" 
+                                        : "hover:bg-muted"
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Icon className="h-4 w-4" />
+                                      <span className="font-medium text-sm">{tag.label}</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">{tag.description}</p>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          
+                          <Textarea
+                            value={replyContent}
+                            onChange={(e) => setReplyContent(e.target.value)}
+                            placeholder="Write your thoughtful response..."
+                            className="min-h-[100px]"
+                          />
+                          
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-muted-foreground">
+                              {replyContent.trim().split(/\s+/).filter(w => w.length > 0).length} words
+                            </span>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setReplyingTo(null);
+                                  setReplyContent('');
+                                  setSelectedTag(null);
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button 
+                                size="sm"
+                                onClick={() => handleSubmitResponse(post.id, post.group_id)}
+                                disabled={!selectedTag || !replyContent.trim() || postMutation.isPending}
+                              >
+                                <Send className="h-4 w-4 mr-2" />
+                                Post Response
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Show message if already responded */}
+                  {isPhaseActive && hasResponded && responses.length === 0 && (
+                    <div className="p-4 pl-8 md:pl-12 text-sm text-muted-foreground">
+                      You've already responded to this post.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           );
         })}
       </CardContent>
