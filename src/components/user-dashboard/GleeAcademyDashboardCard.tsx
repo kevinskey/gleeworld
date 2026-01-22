@@ -9,20 +9,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
-// Course badge images
-import MUS070Badge from '@/assets/academy/MUS_070.png';
-import MUS240Badge from '@/assets/academy/MUS_240.png';
-import LH100Badge from '@/assets/academy/LH100.png';
-
-// Map course codes to badge images
-const COURSE_BADGES: Record<string, string> = {
-  'MUS 070': MUS070Badge,
-  'MUS 240': MUS240Badge,
-  'LH 100': LH100Badge,
-};
-
-const COURSE_SLIDER_ORDER = ['MUS 070', 'MUS 240', 'LH 100', 'MUS 210', 'MUS 001', 'GLEE 101', 'GLEE 000'];
+interface CourseBadge {
+  id: string;
+  course_code: string;
+  course_title: string;
+  badge_image_url: string;
+  link_url: string | null;
+  display_order: number;
+  is_active: boolean;
+}
 
 export const GleeAcademyDashboardCard = () => {
   const navigate = useNavigate();
@@ -38,19 +35,33 @@ export const GleeAcademyDashboardCard = () => {
 
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(true);
+  const [badges, setBadges] = useState<CourseBadge[]>([]);
+  const [loadingBadges, setLoadingBadges] = useState(true);
 
-  // Get ALL active courses - sorted by order
+  // Fetch badges from database
+  useEffect(() => {
+    const fetchBadges = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('academy_course_badges')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        setBadges(data || []);
+      } catch (error) {
+        console.error('Error fetching academy badges:', error);
+      } finally {
+        setLoadingBadges(false);
+      }
+    };
+    fetchBadges();
+  }, []);
+
+  // Get ALL active courses from config as fallback
   const activeCourses = useMemo(() => {
-    const orderIndex = new Map(COURSE_SLIDER_ORDER.map((code, idx) => [code, idx] as const));
-
-    return ACADEMY_COURSES
-      .filter(course => course.isActive)
-      .slice()
-      .sort((a, b) => {
-        const ai = orderIndex.get(a.courseCode) ?? Number.MAX_SAFE_INTEGER;
-        const bi = orderIndex.get(b.courseCode) ?? Number.MAX_SAFE_INTEGER;
-        return ai - bi;
-      });
+    return ACADEMY_COURSES.filter(course => course.isActive);
   }, []);
 
   // Always start the horizontal slider at the left
@@ -149,49 +160,45 @@ export const GleeAcademyDashboardCard = () => {
                 <ChevronRight className="h-6 w-6 text-white" />
               </button>
 
-              {/* Photo Slider */}
+              {/* Photo Slider - Database badges */}
               <div 
                 ref={sliderRef} 
                 className="flex gap-4 sm:gap-6 overflow-x-auto py-6 px-4 sm:px-12 snap-x snap-mandatory scroll-smooth"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
               >
-                {activeCourses.map(course => {
-                  const isSelected = selectedCourseId === course.id || (isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070');
-                  const badgeImage = COURSE_BADGES[course.courseCode];
-                  
-                  return (
+                {loadingBadges ? (
+                  <div className="flex gap-4">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-28 sm:h-44 md:h-52 w-36 sm:w-48 bg-white/10 animate-pulse rounded-xl" />
+                    ))}
+                  </div>
+                ) : badges.length > 0 ? (
+                  badges.map(badge => (
                     <div 
-                      key={course.id} 
-                      onClick={() => handleCourseClick(course)} 
-                      className={`
-                        flex-shrink-0 snap-center cursor-pointer 
-                        transition-all duration-300 hover:scale-105
-                        ${isSelected ? 'ring-4 ring-amber-400 rounded-2xl scale-105' : ''}
-                      `}
+                      key={badge.id} 
+                      onClick={() => badge.link_url ? navigate(badge.link_url) : null}
+                      className="flex-shrink-0 snap-center cursor-pointer transition-all duration-300 hover:scale-105"
                     >
-                      {badgeImage ? (
+                      {badge.badge_image_url ? (
                         <img 
-                          src={badgeImage} 
-                          alt={`${course.courseCode} - ${course.title}`}
+                          src={badge.badge_image_url} 
+                          alt={`${badge.course_code} - ${badge.course_title}`}
                           className="h-28 sm:h-44 md:h-52 w-auto object-contain drop-shadow-2xl hover:brightness-110"
                         />
                       ) : (
                         <div className="h-28 sm:h-44 md:h-52 w-36 sm:w-48 md:w-56 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
-                          <span className="text-white font-bold text-lg sm:text-xl">{course.courseCode}</span>
-                          <span className="text-white/80 text-xs sm:text-sm text-center mt-2 line-clamp-2">{course.title}</span>
+                          <span className="text-white font-bold text-lg sm:text-xl">{badge.course_code}</span>
+                          <span className="text-white/80 text-xs sm:text-sm text-center mt-2 line-clamp-2">{badge.course_title}</span>
                           <span className="text-amber-400 text-xs mt-3 font-medium">Enter Course →</span>
                         </div>
                       )}
-                      {isSelected && (
-                        <div className="text-center mt-2">
-                          <span className="text-xs text-amber-400 font-semibold bg-black/30 px-3 py-1 rounded-full">
-                            Active
-                          </span>
-                        </div>
-                      )}
                     </div>
-                  );
-                })}
+                  ))
+                ) : (
+                  <div className="text-white/60 text-center py-8 w-full">
+                    No course badges configured. Add them in Hero Manager → Academy Slider.
+                  </div>
+                )}
               </div>
             </CardContent>
           </CollapsibleContent>
