@@ -89,121 +89,61 @@ export const GleeAcademyDashboardCard = () => {
   };
 
   return (
-    <div className="w-full">
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5 overflow-hidden">
-          <CollapsibleTrigger asChild>
-            <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer transition-colors py-[20px] text-gray-50 bg-secondary">
-              <div className="flex items-center justify-between py-[20px] px-[10px] bg-secondary">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <CardTitle className="text-xl font-bold tracking-wide pl-[5px] bg-card text-card-foreground">GLEE ACADEMY</CardTitle>
-                    <p className="text-xs pl-[5px] pt-[7px] text-primary-foreground">Spring 2026 Courses ({activeCourses.length})</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isAdmin && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={e => {
-                        e.stopPropagation();
-                        navigate('/admin/academy-courses');
-                      }} 
-                      className="text-xs text-primary-foreground hover:bg-primary-foreground/10"
-                    >
-                      <Settings className="h-3 w-3 mr-1" />
-                      Edit Courses
-                    </Button>
-                  )}
-                  {!isDefaultCourse && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={e => {
-                        e.stopPropagation();
-                        clearCourseSelection();
-                      }} 
-                      className="text-xs text-primary-foreground"
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      Exit Course View
-                    </Button>
-                  )}
-                  <button 
-                    onClick={e => {
-                      e.stopPropagation();
-                      navigate('/glee-academy');
-                    }} 
-                    className="text-sm flex items-center gap-1 transition-colors text-primary-foreground"
-                  >
-                    View All <ArrowRight className="h-4 w-4" />
-                  </button>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-                </div>
-              </div>
-            </CardHeader>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <CardContent className="p-0 bg-[#1a3a5c] relative">
-              {/* Navigation arrows - hidden on mobile */}
-              <button 
-                onClick={() => scrollSlider('left')}
-                className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-2 transition-colors"
-              >
-                <ChevronLeft className="h-6 w-6 text-white" />
-              </button>
-              <button 
-                onClick={() => scrollSlider('right')}
-                className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-2 transition-colors"
-              >
-                <ChevronRight className="h-6 w-6 text-white" />
-              </button>
+    <div className="w-full bg-[#1a3a5c] relative">
+      {/* Navigation arrows - hidden on mobile */}
+      <button 
+        onClick={() => scrollSlider('left')}
+        className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-2 transition-colors"
+      >
+        <ChevronLeft className="h-6 w-6 text-white" />
+      </button>
+      <button 
+        onClick={() => scrollSlider('right')}
+        className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-2 transition-colors"
+      >
+        <ChevronRight className="h-6 w-6 text-white" />
+      </button>
 
-              {/* Photo Slider - Database badges */}
-              <div 
-                ref={sliderRef} 
-                className="flex gap-4 sm:gap-6 overflow-x-auto py-6 px-4 sm:px-12 snap-x snap-mandatory scroll-smooth"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
-              >
-                {loadingBadges ? (
-                  <div className="flex gap-4">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className="h-28 sm:h-44 md:h-52 w-36 sm:w-48 bg-white/10 animate-pulse rounded-xl" />
-                    ))}
-                  </div>
-                ) : badges.length > 0 ? (
-                  badges.map(badge => (
-                    <div 
-                      key={badge.id} 
-                      onClick={() => badge.link_url ? navigate(badge.link_url) : null}
-                      className="flex-shrink-0 snap-center cursor-pointer transition-all duration-300 hover:scale-105"
-                    >
-                      {badge.badge_image_url ? (
-                        <img 
-                          src={badge.badge_image_url} 
-                          alt={`${badge.course_code} - ${badge.course_title}`}
-                          className="h-28 sm:h-44 md:h-52 w-auto object-contain drop-shadow-2xl hover:brightness-110"
-                        />
-                      ) : (
-                        <div className="h-28 sm:h-44 md:h-52 w-36 sm:w-48 md:w-56 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
-                          <span className="text-white font-bold text-lg sm:text-xl">{badge.course_code}</span>
-                          <span className="text-white/80 text-xs sm:text-sm text-center mt-2 line-clamp-2">{badge.course_title}</span>
-                          <span className="text-amber-400 text-xs mt-3 font-medium">Enter Course →</span>
-                        </div>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-white/60 text-center py-8 w-full">
-                    No course badges configured. Add them in Hero Manager → Academy Slider.
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
+      {/* Photo Slider - Database badges */}
+      <div 
+        ref={sliderRef} 
+        className="flex gap-4 sm:gap-6 overflow-x-auto py-6 px-4 sm:px-12 snap-x snap-mandatory scroll-smooth"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+      >
+        {loadingBadges ? (
+          <div className="flex gap-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-28 sm:h-44 md:h-52 w-36 sm:w-48 bg-white/10 animate-pulse rounded-xl" />
+            ))}
+          </div>
+        ) : badges.length > 0 ? (
+          badges.map(badge => (
+            <div 
+              key={badge.id} 
+              onClick={() => badge.link_url ? navigate(badge.link_url) : null}
+              className="flex-shrink-0 snap-center cursor-pointer transition-all duration-300 hover:scale-105"
+            >
+              {badge.badge_image_url ? (
+                <img 
+                  src={badge.badge_image_url} 
+                  alt={`${badge.course_code} - ${badge.course_title}`}
+                  className="h-28 sm:h-44 md:h-52 w-auto object-contain drop-shadow-2xl hover:brightness-110"
+                />
+              ) : (
+                <div className="h-28 sm:h-44 md:h-52 w-36 sm:w-48 md:w-56 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
+                  <span className="text-white font-bold text-lg sm:text-xl">{badge.course_code}</span>
+                  <span className="text-white/80 text-xs sm:text-sm text-center mt-2 line-clamp-2">{badge.course_title}</span>
+                  <span className="text-amber-400 text-xs mt-3 font-medium">Enter Course →</span>
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <div className="text-white/60 text-center py-8 w-full">
+            No course badges configured. Add them in Hero Manager → Academy Slider.
+          </div>
+        )}
+      </div>
     </div>
   );
 };
