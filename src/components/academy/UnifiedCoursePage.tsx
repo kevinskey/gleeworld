@@ -297,36 +297,38 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           </div>
           
           {/* Primary Navigation - Course Template v1 */}
-          <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
-            {templateConfig.primaryNav.map(item => (
-              <button 
-                key={item.tab} 
-                onClick={() => setActiveTab(item.tab)} 
-                className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-md text-base transition-colors ${
-                  activeTab === item.tab 
-                    ? 'bg-primary text-primary-foreground font-medium' 
-                    : 'text-foreground hover:bg-muted'
-                }`}
-              >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                <span>{item.label}</span>
-              </button>
-            ))}
-            
-            {/* Course Core Section - Course Template v1 */}
-            <div className="pt-4">
-              <h3 className="font-semibold text-foreground text-sm px-2.5 mb-1.5">Course Core</h3>
-              {templateConfig.courseCore.map(item => (
+          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 flex flex-col items-center">
+            <div className="w-full space-y-1">
+              {templateConfig.primaryNav.map(item => (
                 <button 
                   key={item.tab} 
                   onClick={() => setActiveTab(item.tab)} 
-                  className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-md text-base transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-md text-lg transition-colors ${
                     activeTab === item.tab 
                       ? 'bg-primary text-primary-foreground font-medium' 
                       : 'text-foreground hover:bg-muted'
                   }`}
                 >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  <item.icon className="h-6 w-6 flex-shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+            
+            {/* Course Core Section - Course Template v1 */}
+            <div className="pt-6 w-full">
+              <h3 className="font-semibold text-foreground text-base px-3 mb-2">Course Core</h3>
+              {templateConfig.courseCore.map(item => (
+                <button 
+                  key={item.tab} 
+                  onClick={() => setActiveTab(item.tab)} 
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-md text-lg transition-colors ${
+                    activeTab === item.tab 
+                      ? 'bg-primary text-primary-foreground font-medium' 
+                      : 'text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <item.icon className="h-6 w-6 flex-shrink-0" />
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -334,19 +336,19 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             
             {/* Extension Modules - Course-specific features */}
             {templateConfig.extensions && templateConfig.extensions.length > 0 && (
-              <div className="pt-4">
-                <h3 className="font-semibold text-foreground text-sm px-2.5 mb-1.5">Extensions</h3>
+              <div className="pt-6 w-full">
+                <h3 className="font-semibold text-foreground text-base px-3 mb-2">Extensions</h3>
                 {templateConfig.extensions.map(item => (
                   <button 
                     key={item.tab} 
                     onClick={() => setActiveTab(item.tab)} 
-                    className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-md text-base transition-colors ${
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-md text-lg transition-colors ${
                       activeTab === item.tab 
                         ? 'bg-primary text-primary-foreground font-medium' 
                         : 'text-foreground hover:bg-muted'
                     }`}
                   >
-                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    <item.icon className="h-6 w-6 flex-shrink-0" />
                     <span>{item.label}</span>
                   </button>
                 ))}
