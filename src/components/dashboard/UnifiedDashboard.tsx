@@ -2,7 +2,7 @@ import React, { useState, lazy, Suspense, useMemo, useEffect } from 'react';
 import { MessagesPanel } from './MessagesPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, GraduationCap } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
@@ -339,6 +339,17 @@ export const UnifiedDashboard = () => {
           <AdvertisingHero />
         </div>
       </div>
+
+      {/* Glee Academy Header */}
+      <div className="h-[12px] bg-background w-full" />
+      <button 
+        onClick={() => navigate('/glee-academy')} 
+        style={{ fontFamily: "'Cinzel', serif" }} 
+        className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] text-white flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 hover:brightness-110"
+      >
+        <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
+        Glee Academy
+      </button>
 
       {/* Glee Academy Card - Course badge slider */}
       <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
