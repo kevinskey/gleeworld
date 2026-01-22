@@ -57,10 +57,9 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
   
   // Get my responses
   const myResponses = myPosts.filter(p => p.post_type === 'peer_response');
-  const respondedToAuthors = new Set(myResponses.map(r => {
-    const parent = groupPosts.find(p => p.id === r.parent_post_id);
-    return parent?.author_id;
-  }));
+  
+  // Track which specific posts I've already responded to (not just authors)
+  const respondedToPostIds = new Set(myResponses.map(r => r.parent_post_id));
   
   const requiredResponses = 2;
   const completedResponses = myResponses.length;
@@ -136,7 +135,7 @@ export const PeerResponseSection: React.FC<PeerResponseSectionProps> = ({
         
         {peerPosts.map(post => {
           const responses = getPostResponses(post.id);
-          const hasResponded = respondedToAuthors.has(post.author_id);
+          const hasResponded = respondedToPostIds.has(post.id);
           const isExpanded = expandedPosts.has(post.id);
           
           return (
