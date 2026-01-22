@@ -1,7 +1,12 @@
-import React from 'react';
-import { Youtube, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { Youtube, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@spelmancollegegleeclub';
 
@@ -15,6 +20,8 @@ interface YouTubeVideo {
 }
 
 export const YouTubeChannelSlider: React.FC = () => {
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+
   const { data: videos, isLoading } = useQuery({
     queryKey: ['youtube-channel-videos'],
     queryFn: async () => {
@@ -35,6 +42,14 @@ export const YouTubeChannelSlider: React.FC = () => {
 
   const getThumbnail = (video: YouTubeVideo) => {
     return video.thumbnail_url || `https://img.youtube.com/vi/${video.video_id}/maxresdefault.jpg`;
+  };
+
+  const handleVideoClick = (video: YouTubeVideo) => {
+    setSelectedVideo(video);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedVideo(null);
   };
 
   return (
@@ -60,12 +75,10 @@ export const YouTubeChannelSlider: React.FC = () => {
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
             {videos && videos.length > 0 ? (
               videos.map((video) => (
-                <a
+                <button
                   key={video.id}
-                  href={`https://www.youtube.com/watch?v=${video.video_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-shrink-0 group"
+                  onClick={() => handleVideoClick(video)}
+                  className="flex-shrink-0 group text-left"
                 >
                   <div className="relative w-72 sm:w-80 lg:w-96 aspect-video rounded-lg overflow-hidden border-2 border-white/10 hover:border-primary transition-all shadow-lg">
                     <img
@@ -88,7 +101,7 @@ export const YouTubeChannelSlider: React.FC = () => {
                   <p className="mt-2 text-sm text-white/80 font-medium truncate max-w-72 sm:max-w-80 lg:max-w-96">
                     {video.title}
                   </p>
-                </a>
+                </button>
               ))
             ) : (
               <div className="text-white/60 text-sm py-4">No videos added yet</div>
@@ -105,6 +118,47 @@ export const YouTubeChannelSlider: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Video Modal */}
+      <Dialog open={!!selectedVideo} onOpenChange={handleCloseModal}>
+        <DialogContent className="max-w-4xl w-[95vw] p-0 bg-black border-none overflow-hidden">
+          <DialogTitle className="sr-only">
+            {selectedVideo?.title || 'Video Player'}
+          </DialogTitle>
+          <div className="relative">
+            {/* Close button */}
+            <button
+              onClick={handleCloseModal}
+              className="absolute -top-10 right-0 z-50 p-2 text-white/80 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            {/* Video embed */}
+            {selectedVideo && (
+              <div className="aspect-video w-full">
+                <iframe
+                  src={`https://www.youtube.com/embed/${selectedVideo.video_id}?autoplay=1&rel=0`}
+                  title={selectedVideo.title}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            )}
+            
+            {/* Video title */}
+            {selectedVideo && (
+              <div className="p-4 bg-gradient-to-t from-black to-transparent">
+                <h3 className="text-white font-medium text-lg">{selectedVideo.title}</h3>
+                {selectedVideo.description && (
+                  <p className="text-white/70 text-sm mt-1 line-clamp-2">{selectedVideo.description}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
