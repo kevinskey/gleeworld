@@ -15,12 +15,12 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isPhone = useIsPhone();
-  const previousPath = useRef<string>('/dashboard');
+  const previousPath = useRef<string>('/');
   
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
 
-  // Track the previous path before navigating to music library
+  // Track last non-library route (helps when arriving here via deep link)
   useEffect(() => {
     if (location.pathname !== '/music-library') {
       previousPath.current = location.pathname;
@@ -34,8 +34,10 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
 
   const handleLibraryClick = () => {
     if (isActive('/music-library')) {
-      navigate(previousPath.current || '/dashboard');
+      navigate(previousPath.current || '/');
     } else {
+      // Capture where the user is coming from right at click-time
+      previousPath.current = location.pathname;
       navigate('/music-library');
     }
   };
