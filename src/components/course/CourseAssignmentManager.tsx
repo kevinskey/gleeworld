@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,13 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Calendar, GripVertical, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Filter, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 interface Assignment {
   id: string;
@@ -79,7 +78,6 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
-  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set(['Week 1: Jan 14–20']));
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -88,6 +86,12 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     due_at: '',
     rubric_id: ''
   });
+  
+  // Sort & filter state
+  const [sortBy, setSortBy] = useState<'due_date' | 'title' | 'points' | 'type'>('due_date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch available rubrics
   const { data: rubrics = [] } = useQuery({
@@ -246,38 +250,54 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       deleteMutation.mutate(id);
     }
   };
-  const toggleWeek = (week: string) => {
-    setExpandedWeeks(prev => {
-      const next = new Set(prev);
-      if (next.has(week)) {
-        next.delete(week);
-      } else {
-        next.add(week);
+  // Filtered and sorted assignments
+  const filteredAndSortedAssignments = useMemo(() => {
+    let result = [...assignments];
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(a => 
+        a.title.toLowerCase().includes(query) ||
+        (a.description?.toLowerCase().includes(query))
+      );
+    }
+    
+    // Apply type filter
+    if (filterType !== 'all') {
+      result = result.filter(a => a.assignment_type === filterType);
+    }
+    
+    // Apply sorting
+    result.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'due_date':
+          if (!a.due_date && !b.due_date) comparison = 0;
+          else if (!a.due_date) comparison = 1;
+          else if (!b.due_date) comparison = -1;
+          else comparison = new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+          break;
+        case 'title':
+          comparison = a.title.localeCompare(b.title);
+          break;
+        case 'points':
+          comparison = (a.points || 0) - (b.points || 0);
+          break;
+        case 'type':
+          comparison = (a.assignment_type || '').localeCompare(b.assignment_type || '');
+          break;
       }
-      return next;
+      return sortOrder === 'asc' ? comparison : -comparison;
     });
+    
+    return result;
+  }, [assignments, searchQuery, filterType, sortBy, sortOrder]);
+
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
   };
 
-  // Group assignments by due date month
-  const groupedAssignments = assignments.reduce((acc, assignment) => {
-    let group = 'No Due Date';
-    if (assignment.due_date) {
-      const dueDate = new Date(assignment.due_date);
-      group = format(dueDate, 'MMMM yyyy');
-    }
-    if (!acc[group]) {
-      acc[group] = [];
-    }
-    acc[group].push(assignment);
-    return acc;
-  }, {} as Record<string, Assignment[]>);
-
-  // Sort groups by date
-  const sortedGroups = Object.keys(groupedAssignments).sort((a, b) => {
-    if (a === 'No Due Date') return 1;
-    if (b === 'No Due Date') return -1;
-    return new Date(a).getTime() - new Date(b).getTime();
-  });
   const getTypeBadgeColor = (type: string | null) => {
     switch (type) {
       case 'exam':
@@ -299,11 +319,12 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         </CardContent>
       </Card>;
   }
-  return <div className="space-y-1">
+  return <div className="space-y-3">
+      {/* Header with Add button */}
       <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-foreground">Assignments</h2>
-          <span className="text-xs text-muted-foreground">({assignments.length})</span>
+          <h2 className="text-base md:text-lg font-semibold text-foreground">Assignments</h2>
+          <span className="text-sm md:text-base text-muted-foreground">({filteredAndSortedAssignments.length})</span>
         </div>
         <Dialog open={isCreateOpen || !!editingAssignment} onOpenChange={open => {
         if (!open) {
@@ -314,7 +335,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       }}>
           <DialogTrigger asChild>
             <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-              <Plus className="h-3 w-3 mr-1" />
+              <Plus className="h-4 w-4 mr-1" />
               Add
             </Button>
           </DialogTrigger>
@@ -413,65 +434,102 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         </Dialog>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-120px)]">
-        <div className="space-y-1 pr-2">
-          {sortedGroups.map(group => {
-            return (
-            <Collapsible key={group} open={expandedWeeks.has(group)} onOpenChange={() => toggleWeek(group)}>
-              <div className="border rounded-md bg-card">
-                <CollapsibleTrigger asChild>
-                  <div className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      {expandedWeeks.has(group) ? <ChevronDown className="h-3 w-3 text-foreground" /> : <ChevronRight className="h-3 w-3 text-foreground" />}
-                      <span className="text-sm font-medium text-foreground">{group}</span>
-                      <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
-                        {groupedAssignments[group].length}
-                      </Badge>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {groupedAssignments[group].reduce((sum, a) => sum + (a.points || 0), 0)} pts
-                    </span>
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="px-3 pb-2 space-y-1">
-                    {groupedAssignments[group].map(assignment => (
-                      <div key={assignment.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/50 hover:bg-muted transition-colors text-sm">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className="font-medium truncate text-foreground">{assignment.title}</span>
-                          <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-xs px-1.5 py-0 h-4">
-                            {assignment.assignment_type || 'task'}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs text-muted-foreground">{assignment.points} pts</span>
-                          {assignment.due_date && (
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(assignment.due_date), 'M/d')}
-                            </span>
-                          )}
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEdit(assignment)}>
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDelete(assignment.id)}>
-                            <Trash2 className="h-3 w-3 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </div>
-            </Collapsible>
-          )})}
+      {/* Sort & Filter Toolbar */}
+      <div className="flex flex-wrap items-center gap-2 p-2 bg-muted/30 rounded-lg border">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search assignments..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-9 text-sm md:text-base"
+          />
+        </div>
+        
+        {/* Filter by type */}
+        <Select value={filterType} onValueChange={setFilterType}>
+          <SelectTrigger className="w-[130px] h-9">
+            <Filter className="h-4 w-4 mr-1.5" />
+            <SelectValue placeholder="All types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            {ASSIGNMENT_TYPES.map(type => (
+              <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          {sortedGroups.length === 0 && (
-            <div className="border rounded-md p-8 text-center">
-              <p className="text-muted-foreground text-sm mb-3">No assignments yet</p>
-              <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                <Plus className="h-3 w-3 mr-1" />
-                Create First Assignment
-              </Button>
+        {/* Sort by */}
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+          <SelectTrigger className="w-[120px] h-9">
+            <ArrowUpDown className="h-4 w-4 mr-1.5" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="due_date">Due Date</SelectItem>
+            <SelectItem value="title">Title</SelectItem>
+            <SelectItem value="points">Points</SelectItem>
+            <SelectItem value="type">Type</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Sort order toggle */}
+        <Button variant="outline" size="sm" className="h-9 px-2" onClick={toggleSortOrder}>
+          {sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+        </Button>
+      </div>
+
+      {/* Assignment List */}
+      <ScrollArea className="h-[calc(100vh-240px)]">
+        <div className="space-y-2 pr-2">
+          {filteredAndSortedAssignments.map(assignment => (
+            <div 
+              key={assignment.id} 
+              className="flex items-center justify-between p-3 md:p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-base md:text-lg font-medium truncate text-foreground">
+                    {assignment.title}
+                  </span>
+                  <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-xs md:text-sm px-2 py-0.5">
+                    {assignment.assignment_type || 'task'}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 text-sm md:text-base text-muted-foreground">
+                  <span>{assignment.points} pts</span>
+                  {assignment.due_date && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {format(new Date(assignment.due_date), 'MMM d, yyyy')}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button variant="ghost" size="icon" className="h-8 w-8 md:h-9 md:w-9" onClick={() => handleEdit(assignment)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 md:h-9 md:w-9" onClick={() => handleDelete(assignment.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          {filteredAndSortedAssignments.length === 0 && (
+            <div className="border rounded-lg p-8 text-center">
+              <p className="text-muted-foreground text-base mb-3">
+                {assignments.length === 0 ? 'No assignments yet' : 'No assignments match your filters'}
+              </p>
+              {assignments.length === 0 && (
+                <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create First Assignment
+                </Button>
+              )}
             </div>
           )}
         </div>
