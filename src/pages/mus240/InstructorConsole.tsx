@@ -243,7 +243,7 @@ export const InstructorConsole = () => {
   return <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-background">
         {/* Compact Stats Bar */}
-        <div className="border-b bg-card/80">
+        <div className="border-b bg-card">
           <div className="max-w-[1800px] mx-auto px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-hide">
@@ -363,7 +363,7 @@ export const InstructorConsole = () => {
           </Sheet>
 
           {/* Main Content */}
-          <main className="flex-1 p-2 sm:p-2.5 md:p-3 lg:p-4">
+          <main className="flex-1 p-2 sm:p-2.5 md:p-3 lg:p-4 bg-background">
             {/* Compact inline header */}
             <div className="flex items-center justify-between mb-2 sm:mb-3">
               <h1 className="text-base sm:text-lg font-semibold text-foreground">
