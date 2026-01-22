@@ -28541,6 +28541,25 @@ export type Database = {
         }
         Returns: Json
       }
+      create_recurring_gw_events: {
+        Args: {
+          p_calendar_id: string
+          p_created_by?: string
+          p_description?: string
+          p_end_date?: string
+          p_event_type?: string
+          p_is_public?: boolean
+          p_location?: string
+          p_max_occurrences?: number
+          p_recurrence_days?: string[]
+          p_recurrence_end_date?: string
+          p_recurrence_interval?: number
+          p_recurrence_type?: string
+          p_start_date: string
+          p_title: string
+        }
+        Returns: Json
+      }
       create_recurring_rehearsals: {
         Args: { created_by_id?: string; end_date: string; start_date: string }
         Returns: number

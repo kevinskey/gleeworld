@@ -301,22 +301,48 @@ export const CreateEventDialog = ({ onEventCreated, open: controlledOpen, onOpen
     setLoading(true);
     try {
       if (formData.is_recurring) {
-        // Handle recurring events using the new comprehensive function
-        const { data, error } = await supabase.rpc('create_recurring_events', {
+        // Handle recurring events using the gw_events table function
+        // Validate required fields for recurring events
+        if (!formData.title.trim() || !formData.event_date_start || !formData.calendar_id) {
+          toast({
+            title: 'Missing required fields',
+            description: 'Please fill Title, Start Date, and Calendar.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Combine date and time for proper timestamps
+        const startDateTime = formData.start_time 
+          ? `${formData.event_date_start}T${formData.start_time}:00`
+          : `${formData.event_date_start}T09:00:00`;
+        
+        const endDateTime = formData.event_date_end && formData.end_time
+          ? `${formData.event_date_end}T${formData.end_time}:00`
+          : formData.event_date_start && formData.end_time
+          ? `${formData.event_date_start}T${formData.end_time}:00`
+          : null;
+
+        const recurrenceEndDateTime = formData.recurring_end_date
+          ? `${formData.recurring_end_date}T23:59:59`
+          : null;
+
+        const { data, error } = await supabase.rpc('create_recurring_gw_events', {
           p_title: formData.title,
-          p_start_date: formData.event_date_start,
-          p_description: formData.description || formData.brief_description,
-          p_location: formData.location,
-          p_end_date: formData.event_date_end,
-          p_start_time: formData.start_time,
-          p_end_time: formData.end_time,
+          p_start_date: startDateTime,
+          p_calendar_id: formData.calendar_id,
+          p_description: formData.description || formData.brief_description || null,
+          p_location: formData.location || null,
+          p_end_date: endDateTime,
           p_event_type: formData.event_type,
-          p_recurring_frequency: formData.recurring_frequency,
-          p_recurring_interval: 1,
-          p_recurring_days: formData.recurring_days,
-          p_recurring_end_date: formData.recurring_end_date,
+          p_recurrence_type: formData.recurring_frequency,
+          p_recurrence_interval: 1,
+          p_recurrence_days: formData.recurring_days,
+          p_recurrence_end_date: recurrenceEndDateTime,
           p_max_occurrences: 52,
-          p_created_by: user.id
+          p_is_public: true,
+          p_created_by: profile?.id ?? null
         });
 
         if (error) throw error;
