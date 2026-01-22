@@ -169,9 +169,9 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
     };
   }, [replies]);
 
-  // Get top-level posts (no parent)
+  // Get top-level posts (no parent - handles both null and undefined)
   const topLevelPosts = useMemo(() => {
-    return replies?.filter(r => !r.parent_reply_id) || [];
+    return replies?.filter(r => r.parent_reply_id === null || r.parent_reply_id === undefined) || [];
   }, [replies]);
 
   const gradeMutation = useMutation({
