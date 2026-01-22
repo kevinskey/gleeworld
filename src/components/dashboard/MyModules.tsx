@@ -101,21 +101,29 @@ export const MyModules = ({
     return null; // Don't render if no assigned modules
   }
   return <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border border-primary/30 bg-white shadow-sm py-0">
+      <Card className="border border-primary/30 bg-card shadow-sm py-0">
         <CollapsibleTrigger asChild>
-          
+          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-accent/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-semibold text-foreground">My Modules</CardTitle>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </div>
+          </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="px-4 pb-4 py-4 space-y-4 bg-white pt-0">
+          <CardContent className="px-4 pb-4 py-4 space-y-4 bg-card pt-0">
             {/* Search and Sort Controls */}
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 bg-white border border-border text-foreground placeholder:text-muted-foreground shadow-sm pt-[5px] pb-[5px]" />
+                <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 bg-background border border-border text-foreground placeholder:text-muted-foreground shadow-sm" />
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5 bg-white border-border h-10 text-foreground">
+                  <Button variant="outline" size="sm" className="gap-1.5 bg-background border-border h-10 text-foreground">
                     <ArrowUpDown className="h-3.5 w-3.5" />
                     <span className="text-sm font-medium">{getSortLabel()}</span>
                   </Button>
@@ -139,20 +147,20 @@ export const MyModules = ({
             <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
-              return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="h-[130px] md:h-[150px] lg:h-[160px] py-4 px-3 flex flex-col items-center justify-center gap-3 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/40 transition-all">
+              return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="h-24 md:h-28 py-3 px-3 flex flex-col items-center justify-center gap-2 bg-card hover:bg-accent border-border hover:border-primary/40 transition-all shadow-sm">
                     <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
-                      <IconComponent className="h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 text-primary" />
+                      <IconComponent className="h-6 w-6 md:h-7 md:w-7 text-primary" />
                     </div>
-                    <span className="text-sm md:text-base text-center leading-tight line-clamp-2 text-foreground px-1 font-medium break-words w-full">
+                    <span className="text-xs md:text-sm text-center leading-tight line-clamp-2 text-foreground px-1 font-medium break-words w-full">
                       {module.title}
                     </span>
                   </Button>;
             })}
-              {showAdminSettings && <Button variant="outline" className="h-[130px] md:h-[150px] lg:h-[160px] py-4 px-3 flex flex-col items-center justify-center gap-3 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/40 transition-all" onClick={() => navigate('/dashboard?module=admin-settings')}>
+              {showAdminSettings && <Button variant="outline" className="h-24 md:h-28 py-3 px-3 flex flex-col items-center justify-center gap-2 bg-card hover:bg-accent border-border hover:border-primary/40 transition-all shadow-sm" onClick={() => navigate('/dashboard?module=admin-settings')}>
                   <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
-                    <Settings className="h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 text-primary" />
+                    <Settings className="h-6 w-6 md:h-7 md:w-7 text-primary" />
                   </div>
-                  <span className="text-sm md:text-base text-center leading-tight font-medium text-foreground">Admin Settings</span>
+                  <span className="text-xs md:text-sm text-center leading-tight font-medium text-foreground">Admin Settings</span>
                 </Button>}
             </div>
           </CardContent>
