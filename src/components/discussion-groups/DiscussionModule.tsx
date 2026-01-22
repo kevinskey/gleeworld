@@ -108,21 +108,29 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
     if (!isInstructor || !courseId) return;
     
     try {
-      const { data, error } = await supabase
+      type EnrollmentRow = { user_id: string };
+      type ProfileRow = { user_id: string; full_name: string | null; email: string | null };
+      
+      // @ts-ignore - Suppress deep type instantiation error
+      const enrollmentResult = await supabase
         .from('gw_course_enrollments')
         .select('user_id')
         .eq('course_id', courseId)
         .eq('status', 'active');
       
-      if (error) throw error;
+      const data = enrollmentResult.data as EnrollmentRow[] | null;
+      if (enrollmentResult.error) throw enrollmentResult.error;
       
       // Fetch profiles separately
       const userIds = (data || []).map(d => d.user_id);
       if (userIds.length > 0) {
-        const { data: profiles } = await supabase
+        // @ts-ignore - Suppress deep type instantiation error
+        const profileResult = await supabase
           .from('gw_profiles')
           .select('user_id, full_name, email')
           .in('user_id', userIds);
+        
+        const profiles = profileResult.data as ProfileRow[] | null;
         
         setEnrolledStudents((data || []).map(d => ({
           ...d,
