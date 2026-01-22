@@ -339,7 +339,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
               Add
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg md:max-w-2xl lg:max-w-4xl">
             <DialogHeader>
               <DialogTitle>{editingAssignment ? 'Edit Assignment' : 'Create Assignment'}</DialogTitle>
             </DialogHeader>
