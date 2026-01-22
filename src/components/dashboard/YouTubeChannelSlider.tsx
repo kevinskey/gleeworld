@@ -43,7 +43,7 @@ export const YouTubeChannelSlider: React.FC = () => {
       <button
         onClick={handleChannelClick}
         style={{ fontFamily: "'Cinzel', serif" }}
-        className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#CC0000] via-[#990000] to-[#660000] text-white flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 hover:brightness-110 transition-all"
+        className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] text-primary-foreground flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 hover:brightness-110 transition-all"
       >
         <Youtube className="h-4 w-4 sm:h-5 sm:w-5" />
         YouTube Channel
@@ -51,7 +51,7 @@ export const YouTubeChannelSlider: React.FC = () => {
       </button>
 
       {/* Video Slider */}
-      <div className="bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] py-4 px-3 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-b from-[hsl(208,100%,14%)] to-[hsl(208,100%,10%)] py-4 px-3 sm:px-6 lg:px-8">
         {isLoading ? (
           <div className="flex gap-4">
             {[1, 2, 3].map((i) => (
@@ -69,7 +69,7 @@ export const YouTubeChannelSlider: React.FC = () => {
                   rel="noopener noreferrer"
                   className="flex-shrink-0 group"
                 >
-                  <div className="relative w-48 sm:w-64 aspect-video rounded-lg overflow-hidden border-2 border-white/10 hover:border-[#CC0000] transition-all shadow-lg">
+                  <div className="relative w-48 sm:w-64 aspect-video rounded-lg overflow-hidden border-2 border-white/10 hover:border-primary transition-all shadow-lg">
                     <img
                       src={getThumbnail(video)}
                       alt={video.title}
@@ -80,8 +80,8 @@ export const YouTubeChannelSlider: React.FC = () => {
                     />
                     {/* Play overlay */}
                     <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#CC0000] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl">
-                        <svg className="w-5 h-5 sm:w-7 sm:h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl">
+                        <svg className="w-5 h-5 sm:w-7 sm:h-7 text-primary-foreground ml-1" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M8 5v14l11-7z" />
                         </svg>
                       </div>
@@ -99,9 +99,9 @@ export const YouTubeChannelSlider: React.FC = () => {
             {/* View All Card */}
             <button
               onClick={handleChannelClick}
-              className="flex-shrink-0 w-48 sm:w-64 aspect-video rounded-lg border-2 border-dashed border-white/30 hover:border-[#CC0000] transition-all flex flex-col items-center justify-center gap-2 bg-white/5 hover:bg-white/10"
+              className="flex-shrink-0 w-48 sm:w-64 aspect-video rounded-lg border-2 border-dashed border-white/30 hover:border-primary transition-all flex flex-col items-center justify-center gap-2 bg-white/5 hover:bg-white/10"
             >
-              <Youtube className="w-8 h-8 sm:w-10 sm:h-10 text-[#CC0000]" />
+              <Youtube className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
               <span className="text-white/80 text-sm font-medium">View All Videos</span>
             </button>
           </div>
