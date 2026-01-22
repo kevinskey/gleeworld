@@ -56,7 +56,8 @@
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
-    background-color: hsl(0 0% 100%);
+    /* Use design token so themes (and dark mode) can't get color-tinted by a hardcoded base */
+    background-color: hsl(var(--background));
     /* WCAG AA: Base font size 16px minimum */
     font-size: 16px;
     line-height: 1.5;
@@ -1818,10 +1819,11 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
 .glass-theme .glass-card,
 .glass-theme [data-slot="card"],
 .glass-theme .bg-card:not(.hero-carousel-bg) {
-  background: hsla(var(--card), 0.65) !important;
+  /* IMPORTANT: use modern hsl() with slash alpha; hsla(var(--card), a) is invalid when var is space-separated */
+  background: hsl(var(--card) / 0.65) !important;
   backdrop-filter: blur(12px) saturate(150%);
   -webkit-backdrop-filter: blur(12px) saturate(150%);
-  border: 1px solid hsla(var(--border), 0.3);
+  border: 1px solid hsl(var(--border) / 0.3);
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
