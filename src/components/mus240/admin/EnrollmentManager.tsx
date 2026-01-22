@@ -47,8 +47,17 @@ export const EnrollmentManager = () => {
   const { isTA } = useCourseTA('MUS240');
   const { isAdmin } = useUserRole();
   const { currentSemester, availableSemesters } = useMus240SemesterSafe();
+
+  // Defensive filtering: Radix SelectItem value cannot be an empty string
+  const validSemesters = (availableSemesters || []).filter(
+    (s) => typeof s.id === 'string' && s.id.trim() !== '',
+  );
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [availableUsers, setAvailableUsers] = useState<UserProfile[]>([]);
+
+  const validUsers = (availableUsers || []).filter(
+    (u) => typeof u.user_id === 'string' && u.user_id.trim() !== '',
+  );
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
@@ -369,7 +378,7 @@ export const EnrollmentManager = () => {
                     <SelectValue placeholder="Select a student" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableUsers.map((user) => (
+                    {validUsers.map((user) => (
                       <SelectItem key={user.user_id} value={user.user_id}>
                         {user.full_name} ({user.email})
                       </SelectItem>
@@ -408,7 +417,7 @@ export const EnrollmentManager = () => {
               <SelectValue placeholder="Select semester" />
             </SelectTrigger>
             <SelectContent className="bg-background border z-50">
-              {availableSemesters.map((semester) => (
+              {validSemesters.map((semester) => (
                 <SelectItem key={semester.id} value={semester.id}>
                   <div className="flex items-center gap-2">
                     <span>{semester.label}</span>
