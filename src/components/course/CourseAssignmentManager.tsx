@@ -75,6 +75,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
   courseId,
   courseName
 }) => {
+  const NO_RUBRIC_VALUE = '__no_rubric__';
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
@@ -370,15 +371,20 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
               </div>
               <div className="space-y-2">
                 <Label className="text-foreground">Grading Rubric</Label>
-                <Select value={formData.rubric_id} onValueChange={value => setFormData({
-                  ...formData,
-                  rubric_id: value
-                })}>
+                <Select
+                  value={formData.rubric_id || NO_RUBRIC_VALUE}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      rubric_id: value === NO_RUBRIC_VALUE ? '' : value,
+                    })
+                  }
+                >
                   <SelectTrigger className="text-foreground">
-                    <SelectValue placeholder="Select a rubric..." />
+                    <SelectValue placeholder="No rubric" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No rubric</SelectItem>
+                    <SelectItem value={NO_RUBRIC_VALUE}>No rubric</SelectItem>
                     {rubrics.map(rubric => (
                       <SelectItem key={rubric.id} value={rubric.id}>
                         {rubric.name} ({rubric.total_points} pts)
