@@ -142,7 +142,7 @@ export const DashboardStoreSection = () => {
             {products.map(product => <div key={product.id} onClick={() => navigate(`/shop/${product.id}`)} className="group cursor-pointer flex-shrink-0 w-[calc(50vw-24px)] sm:w-72 snap-start">
                 {/* Product Image */}
                 <div className="relative aspect-square bg-muted/50 overflow-hidden">
-                  {product.images?.[0] ? <img src={product.images[0]} alt={product.title} className="w-full h-full group-hover:scale-105 transition-transform duration-500 object-fill" /> : <div className="w-full h-full flex items-center justify-center">
+                  {product.images?.[0] ? <img src={product.images[0]} alt={product.title} className="w-full h-full group-hover:scale-105 transition-transform duration-500 object-fill border border-primary-foreground" /> : <div className="w-full h-full flex items-center justify-center">
                       <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
                     </div>}
                   
@@ -166,13 +166,13 @@ export const DashboardStoreSection = () => {
                     </div>
                     <h3 style={{
                 fontFamily: "'Cinzel', serif"
-              }} className="font-medium text-[#003666] truncate group-hover:text-[#002244] transition-colors text-lg">
+              }} className="font-medium truncate transition-colors text-lg pl-[5px] text-primary-foreground">
                       {product.title}
                     </h3>
                   </div>
                   <span style={{
               fontFamily: "'Cinzel', serif"
-            }} className="text-[#003666] font-medium whitespace-nowrap">
+            }} className="font-medium whitespace-nowrap pt-[5px] text-primary-foreground">
                     $ {product.price.toFixed(0)}
                   </span>
                 </div>
