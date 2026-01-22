@@ -40,15 +40,13 @@ export const YouTubeChannelSlider: React.FC = () => {
   return (
     <div className="w-full">
       {/* Header */}
-      <button
-        onClick={handleChannelClick}
+      <div
         style={{ fontFamily: "'Cinzel', serif" }}
-        className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] text-primary-foreground flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 hover:brightness-110 transition-all"
+        className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] text-primary-foreground flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20"
       >
         <Youtube className="h-4 w-4 sm:h-5 sm:w-5" />
         YouTube Channel
-        <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 ml-auto opacity-70" />
-      </button>
+      </div>
 
       {/* Video Slider */}
       <div className="bg-gradient-to-b from-[hsl(208,100%,14%)] to-[hsl(208,100%,10%)] p-5">
