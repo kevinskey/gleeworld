@@ -3388,6 +3388,309 @@ export type Database = {
         }
         Relationships: []
       }
+      discussion_analytics: {
+        Row: {
+          avg_word_count: number | null
+          created_at: string | null
+          discussion_id: string
+          engagement_score: number | null
+          id: string
+          last_active_at: string | null
+          posts_count: number | null
+          responses_received: number | null
+          time_on_task_seconds: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avg_word_count?: number | null
+          created_at?: string | null
+          discussion_id: string
+          engagement_score?: number | null
+          id?: string
+          last_active_at?: string | null
+          posts_count?: number | null
+          responses_received?: number | null
+          time_on_task_seconds?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avg_word_count?: number | null
+          created_at?: string | null
+          discussion_id?: string
+          engagement_score?: number | null
+          id?: string
+          last_active_at?: string | null
+          posts_count?: number | null
+          responses_received?: number | null
+          time_on_task_seconds?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_analytics_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_grades: {
+        Row: {
+          ai_pre_score: Json | null
+          created_at: string | null
+          discussion_id: string
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          individual_score: number | null
+          instructor_feedback: string | null
+          peer_score: number | null
+          professionalism_score: number | null
+          student_id: string
+          synthesis_score: number | null
+          total_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_pre_score?: Json | null
+          created_at?: string | null
+          discussion_id: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          individual_score?: number | null
+          instructor_feedback?: string | null
+          peer_score?: number | null
+          professionalism_score?: number | null
+          student_id: string
+          synthesis_score?: number | null
+          total_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_pre_score?: Json | null
+          created_at?: string | null
+          discussion_id?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          individual_score?: number | null
+          instructor_feedback?: string | null
+          peer_score?: number | null
+          professionalism_score?: number | null
+          student_id?: string
+          synthesis_score?: number | null
+          total_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_grades_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_group_members: {
+        Row: {
+          discussion_group_id: string
+          id: string
+          joined_at: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          discussion_group_id: string
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          discussion_group_id?: string
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_group_members_discussion_group_id_fkey"
+            columns: ["discussion_group_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_groups: {
+        Row: {
+          capacity: number | null
+          created_at: string | null
+          discussion_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string | null
+          discussion_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string | null
+          discussion_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_groups_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_posts: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string | null
+          discussion_id: string
+          group_id: string | null
+          id: string
+          is_draft: boolean | null
+          locked: boolean | null
+          parent_post_id: string | null
+          post_type: string
+          response_tag: string | null
+          submitted_at: string | null
+          updated_at: string | null
+          word_count: number | null
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string | null
+          discussion_id: string
+          group_id?: string | null
+          id?: string
+          is_draft?: boolean | null
+          locked?: boolean | null
+          parent_post_id?: string | null
+          post_type: string
+          response_tag?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          word_count?: number | null
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string | null
+          discussion_id?: string
+          group_id?: string | null
+          id?: string
+          is_draft?: boolean | null
+          locked?: boolean | null
+          parent_post_id?: string | null
+          post_type?: string
+          response_tag?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_posts_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_prompts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_posts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_posts_parent_post_id_fkey"
+            columns: ["parent_post_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_prompts: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          created_by: string
+          current_phase: string | null
+          id: string
+          individual_due_at: string
+          is_locked: boolean | null
+          peer_due_at: string
+          prompt_text: string
+          stimulus_type: string | null
+          stimulus_url: string | null
+          synthesis_due_at: string
+          title: string
+          updated_at: string | null
+          word_max: number | null
+          word_min: number | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          created_by: string
+          current_phase?: string | null
+          id?: string
+          individual_due_at: string
+          is_locked?: boolean | null
+          peer_due_at: string
+          prompt_text: string
+          stimulus_type?: string | null
+          stimulus_url?: string | null
+          synthesis_due_at: string
+          title: string
+          updated_at?: string | null
+          word_max?: number | null
+          word_min?: number | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          created_by?: string
+          current_phase?: string | null
+          id?: string
+          individual_due_at?: string
+          is_locked?: boolean | null
+          peer_due_at?: string
+          prompt_text?: string
+          stimulus_type?: string | null
+          stimulus_url?: string | null
+          synthesis_due_at?: string
+          title?: string
+          updated_at?: string | null
+          word_max?: number | null
+          word_min?: number | null
+        }
+        Relationships: []
+      }
       discussion_replies: {
         Row: {
           content: string
@@ -3431,6 +3734,44 @@ export type Database = {
             columns: ["discussion_id"]
             isOneToOne: false
             referencedRelation: "course_discussions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_rubric: {
+        Row: {
+          category: string
+          created_at: string | null
+          criteria: string
+          discussion_id: string
+          display_order: number | null
+          id: string
+          max_points: number
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          criteria: string
+          discussion_id: string
+          display_order?: number | null
+          id?: string
+          max_points: number
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          criteria?: string
+          discussion_id?: string
+          display_order?: number | null
+          id?: string
+          max_points?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_rubric_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_prompts"
             referencedColumns: ["id"]
           },
         ]
