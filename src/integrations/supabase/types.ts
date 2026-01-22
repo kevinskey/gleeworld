@@ -3561,6 +3561,36 @@ export type Database = {
           },
         ]
       }
+      discussion_post_analysis: {
+        Row: {
+          course_id: string
+          created_at: string
+          discussion_id: string
+          id: string
+          metrics_json: Json
+          post_id: string
+          student_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          discussion_id: string
+          id?: string
+          metrics_json?: Json
+          post_id: string
+          student_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          discussion_id?: string
+          id?: string
+          metrics_json?: Json
+          post_id?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
       discussion_posts: {
         Row: {
           author_id: string
@@ -3775,6 +3805,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      discussion_student_metrics: {
+        Row: {
+          course_id: string
+          id: string
+          metrics_json: Json
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          id?: string
+          metrics_json?: Json
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          id?: string
+          metrics_json?: Json
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      discussion_student_notes: {
+        Row: {
+          author_id: string
+          course_id: string
+          created_at: string
+          id: string
+          note: string
+          student_id: string
+        }
+        Insert: {
+          author_id: string
+          course_id: string
+          created_at?: string
+          id?: string
+          note: string
+          student_id: string
+        }
+        Update: {
+          author_id?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          student_id?: string
+        }
+        Relationships: []
       }
       dm_conversations: {
         Row: {
@@ -29292,6 +29373,10 @@ export type Database = {
       is_alumnae_liaison: { Args: never; Returns: boolean }
       is_coordinator_for_cohort: {
         Args: { cohort_id_param: string }
+        Returns: boolean
+      }
+      is_course_instructor: {
+        Args: { check_user_id: string }
         Returns: boolean
       }
       is_course_ta: {
