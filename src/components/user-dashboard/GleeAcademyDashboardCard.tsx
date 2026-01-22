@@ -12,10 +12,22 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
+// Course badge images
+import MUS070Badge from '@/assets/academy/MUS_070.png';
+import MUS240Badge from '@/assets/academy/MUS_240.png';
+import LH100Badge from '@/assets/academy/LH100.png';
+
+// Map course codes to badge images
+const COURSE_BADGES: Record<string, string> = {
+  'MUS 070': MUS070Badge,
+  'MUS 240': MUS240Badge,
+  'LH 100': LH100Badge,
+};
+
 // Character limit for description to ensure uniform card height
 const DESCRIPTION_CHAR_LIMIT = 120;
 
-const COURSE_SLIDER_ORDER = ['MUS 070', 'MUS 240', 'MUS 210', 'MUS 001', 'GLEE 101', 'GLEE 000'];
+const COURSE_SLIDER_ORDER = ['MUS 070', 'MUS 240', 'LH 100', 'MUS 210', 'MUS 001', 'GLEE 101', 'GLEE 000'];
 
 export const GleeAcademyDashboardCard = () => {
   const navigate = useNavigate();
@@ -167,12 +179,35 @@ export const GleeAcademyDashboardCard = () => {
           <CollapsibleContent>
             <CardContent className="px-3 sm:px-6 bg-background py-6">
               <div ref={sliderRef} className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
-                {activeCourses.map(course => {
+              {activeCourses.map(course => {
                   const isSelected = selectedCourseId === course.id || (isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070');
+                  const badgeImage = COURSE_BADGES[course.courseCode];
                   const truncatedDescription = course.description.length > DESCRIPTION_CHAR_LIMIT 
                     ? `${course.description.slice(0, DESCRIPTION_CHAR_LIMIT).trim()}...` 
                     : course.description;
                   
+                  // If course has a badge image, render the badge version
+                  if (badgeImage) {
+                    return (
+                      <div 
+                        key={course.id} 
+                        onClick={() => handleCourseClick(course)} 
+                        className={`
+                          flex-shrink-0 snap-start cursor-pointer 
+                          transition-all duration-200 hover:scale-105
+                          ${isSelected ? 'ring-2 ring-primary rounded-xl' : ''}
+                        `}
+                      >
+                        <img 
+                          src={badgeImage} 
+                          alt={`${course.courseCode} - ${course.title}`}
+                          className="h-24 sm:h-40 md:h-48 w-auto object-contain"
+                        />
+                      </div>
+                    );
+                  }
+                  
+                  // Fallback to text-based card for courses without badges
                   return (
                     <div 
                       key={course.id} 
