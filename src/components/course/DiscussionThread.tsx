@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Lock, MessageCircle, Send, Loader2, Award, Calendar, AlertCircle, Check, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, Lock, MessageCircle, Send, Loader2, Award, Calendar, AlertCircle, Check, CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +14,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { format, isPast } from 'date-fns';
 import { toast } from 'sonner';
 import { calculateLetterGrade, getLetterGradeColor } from '@/utils/grading';
-
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 interface Discussion {
   id: string;
   title: string;
@@ -63,9 +63,21 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
   const [gradingReplyId, setGradingReplyId] = useState<string | null>(null);
   const [gradeInput, setGradeInput] = useState<number>(0);
   const [feedbackInput, setFeedbackInput] = useState('');
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
 
   const canGrade = (isInstructor() || isAdmin()) && discussion.is_graded;
   const isPastDue = discussion.due_date ? isPast(new Date(discussion.due_date)) : false;
+
+  // Toggle expanded state for a post's replies
+  const toggleExpanded = (postId: string) => {
+    const newExpanded = new Set(expandedPosts);
+    if (newExpanded.has(postId)) {
+      newExpanded.delete(postId);
+    } else {
+      newExpanded.add(postId);
+    }
+    setExpandedPosts(newExpanded);
+  };
 
   // Fetch author profile
   const { data: authorProfile } = useQuery({
@@ -117,15 +129,17 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
   const hasRespondedToPeer = userPosts.length >= 2;
 
   const replyMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, parentReplyId }: { content: string; parentReplyId?: string | null }) => {
       if (!user) throw new Error('You must be logged in');
 
+      // Build insert payload
       const { error } = await supabase
         .from('discussion_replies')
         .insert({
           discussion_id: discussion.id,
           content: content.trim(),
           created_by: user.id,
+          parent_reply_id: parentReplyId || null,
         });
 
       if (error) throw error;
@@ -140,12 +154,25 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
       queryClient.invalidateQueries({ queryKey: ['discussion-replies', discussion.id] });
       queryClient.invalidateQueries({ queryKey: ['course-discussions', courseId] });
       setReplyContent('');
+      setReplyingToId(null);
       toast.success('Reply posted');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to post reply');
     },
   });
+
+  // Get nested replies for a post
+  const getNestedReplies = useMemo(() => {
+    return (parentId: string) => {
+      return replies?.filter(r => r.parent_reply_id === parentId) || [];
+    };
+  }, [replies]);
+
+  // Get top-level posts (no parent)
+  const topLevelPosts = useMemo(() => {
+    return replies?.filter(r => !r.parent_reply_id) || [];
+  }, [replies]);
 
   const gradeMutation = useMutation({
     mutationFn: async ({ replyId, grade, feedback }: { replyId: string; grade: number; feedback: string }) => {
@@ -178,7 +205,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
   const handleSubmitReply = (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyContent.trim()) return;
-    replyMutation.mutate(replyContent);
+    replyMutation.mutate({ content: replyContent, parentReplyId: null });
   };
 
   const handleSubmitGrade = (replyId: string) => {
@@ -294,18 +321,20 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
         </CardContent>
       </Card>
 
-      {/* Replies */}
+      {/* Replies - Threaded with Collapsible */}
       <div className="space-y-3">
-        <h3 className="font-semibold text-lg">Student Responses</h3>
+        <h3 className="font-semibold text-lg">Student Responses ({replies?.length || 0})</h3>
         
         {repliesLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
-        ) : replies && replies.length > 0 ? (
-          replies.map((reply) => {
+        ) : topLevelPosts.length > 0 ? (
+          topLevelPosts.map((reply) => {
             const isOwnPost = reply.created_by === user?.id;
             const isPeerPost = reply.created_by !== user?.id && reply.created_by !== discussion.created_by;
+            const nestedReplies = getNestedReplies(reply.id);
+            const isExpanded = expandedPosts.has(reply.id);
             
             return (
               <Card key={reply.id} className={`bg-muted/30 ${isOwnPost ? 'border-primary/30' : ''}`}>
@@ -343,31 +372,61 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
                         </div>
                       )}
 
-                      {/* Reply to peer button (for students who have posted their original) */}
-                      {user && !canGrade && isPeerPost && hasPostedOriginal && !replyingToId && !discussion.is_locked && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="mt-2"
-                          onClick={() => setReplyingToId(reply.id)}
-                        >
-                          <MessageCircle className="h-3 w-3 mr-1" />
-                          Respond to {reply.profile?.full_name?.split(' ')[0] || 'this post'}
-                        </Button>
-                      )}
+                      {/* Action buttons row */}
+                      <div className="mt-3 flex items-center gap-2 flex-wrap">
+                        {/* Toggle replies button */}
+                        {nestedReplies.length > 0 && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => toggleExpanded(reply.id)}
+                            className="text-muted-foreground"
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="h-3 w-3 mr-1" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3 mr-1" />
+                            )}
+                            {nestedReplies.length} {nestedReplies.length === 1 ? 'reply' : 'replies'}
+                          </Button>
+                        )}
 
-                      {/* Reply button for instructors */}
-                      {user && canGrade && !isOwnPost && !replyingToId && !discussion.is_locked && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="mt-2"
-                          onClick={() => setReplyingToId(reply.id)}
-                        >
-                          <MessageCircle className="h-3 w-3 mr-1" />
-                          Reply to {reply.profile?.full_name?.split(' ')[0] || 'this post'}
-                        </Button>
-                      )}
+                        {/* Reply to peer button (for students who have posted their original) */}
+                        {user && !canGrade && isPeerPost && hasPostedOriginal && !replyingToId && !discussion.is_locked && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setReplyingToId(reply.id)}
+                          >
+                            <MessageCircle className="h-3 w-3 mr-1" />
+                            Reply
+                          </Button>
+                        )}
+
+                        {/* Reply button for instructors */}
+                        {user && canGrade && !isOwnPost && !replyingToId && !discussion.is_locked && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setReplyingToId(reply.id)}
+                          >
+                            <MessageCircle className="h-3 w-3 mr-1" />
+                            Reply
+                          </Button>
+                        )}
+
+                        {/* Grade button for instructors */}
+                        {canGrade && gradingReplyId !== reply.id && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => startGrading(reply)}
+                          >
+                            <Award className="h-3 w-3 mr-1" />
+                            {reply.grade !== null && reply.grade !== undefined ? 'Edit Grade' : 'Grade'}
+                          </Button>
+                        )}
+                      </div>
 
                       {/* Inline reply form */}
                       {replyingToId === reply.id && (
@@ -390,8 +449,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
                               size="sm"
                               onClick={() => {
                                 if (replyContent.trim()) {
-                                  replyMutation.mutate(replyContent);
-                                  setReplyingToId(null);
+                                  replyMutation.mutate({ content: replyContent, parentReplyId: reply.id });
                                 }
                               }}
                               disabled={replyMutation.isPending || !replyContent.trim()}
@@ -449,18 +507,108 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
                         </div>
                       )}
 
-                      {/* Grade button for instructors */}
-                      {canGrade && gradingReplyId !== reply.id && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="mt-2"
-                          onClick={() => startGrading(reply)}
-                        >
-                          <Award className="h-3 w-3 mr-1" />
-                          {reply.grade !== null && reply.grade !== undefined ? 'Edit Grade' : 'Grade'}
-                        </Button>
-                      )}
+                      {/* Collapsible nested replies */}
+                      <Collapsible open={isExpanded || nestedReplies.length === 0}>
+                        <CollapsibleContent>
+                          {nestedReplies.length > 0 && (
+                            <div className="mt-4 pl-4 md:pl-8 border-l-2 border-border space-y-3">
+                              {nestedReplies.map((nestedReply) => {
+                                const isOwnNestedPost = nestedReply.created_by === user?.id;
+                                
+                                return (
+                                  <div 
+                                    key={nestedReply.id} 
+                                    className={`p-3 rounded-lg bg-background ${isOwnNestedPost ? 'border border-primary/30' : 'border border-border/50'}`}
+                                  >
+                                    <div className="flex items-start gap-2">
+                                      <Avatar className="h-6 w-6">
+                                        <AvatarImage src={nestedReply.profile?.avatar_url || undefined} />
+                                        <AvatarFallback className="text-xs">{getInitials(nestedReply.profile?.full_name)}</AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                          <span className="font-medium text-xs">
+                                            {nestedReply.profile?.full_name || 'Anonymous'}
+                                          </span>
+                                          {isOwnNestedPost && (
+                                            <Badge variant="outline" className="text-xs py-0">You</Badge>
+                                          )}
+                                          <span className="text-xs text-muted-foreground">
+                                            {format(new Date(nestedReply.created_at), 'MMM d h:mm a')}
+                                          </span>
+                                          {nestedReply.grade !== null && nestedReply.grade !== undefined && discussion.max_points && (
+                                            <Badge className={`${getLetterGradeColor(calculateLetterGrade(nestedReply.grade, discussion.max_points))} text-xs py-0`}>
+                                              {nestedReply.grade}/{discussion.max_points}
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <p className="text-sm whitespace-pre-wrap">{nestedReply.content}</p>
+                                        
+                                        {nestedReply.feedback && (
+                                          <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/20">
+                                            <p className="text-xs font-medium text-primary">Instructor Feedback:</p>
+                                            <p className="text-xs text-muted-foreground">{nestedReply.feedback}</p>
+                                          </div>
+                                        )}
+
+                                        {/* Grade button for nested replies */}
+                                        {canGrade && gradingReplyId !== nestedReply.id && (
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="mt-1 h-7 text-xs"
+                                            onClick={() => startGrading(nestedReply)}
+                                          >
+                                            <Award className="h-3 w-3 mr-1" />
+                                            {nestedReply.grade !== null && nestedReply.grade !== undefined ? 'Edit' : 'Grade'}
+                                          </Button>
+                                        )}
+
+                                        {/* Inline grading for nested */}
+                                        {canGrade && gradingReplyId === nestedReply.id && (
+                                          <div className="mt-2 p-2 border rounded bg-muted/50 space-y-2">
+                                            <div className="flex items-center gap-2">
+                                              <Input
+                                                type="number"
+                                                min={0}
+                                                max={discussion.max_points || 10}
+                                                value={gradeInput}
+                                                onChange={(e) => setGradeInput(parseInt(e.target.value) || 0)}
+                                                className="h-7 w-16 text-xs"
+                                              />
+                                              <span className="text-xs text-muted-foreground">/ {discussion.max_points}</span>
+                                            </div>
+                                            <Textarea
+                                              placeholder="Feedback..."
+                                              value={feedbackInput}
+                                              onChange={(e) => setFeedbackInput(e.target.value)}
+                                              rows={1}
+                                              className="text-xs"
+                                            />
+                                            <div className="flex gap-1">
+                                              <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setGradingReplyId(null)}>
+                                                Cancel
+                                              </Button>
+                                              <Button 
+                                                size="sm" 
+                                                className="h-6 text-xs"
+                                                onClick={() => handleSubmitGrade(nestedReply.id)}
+                                                disabled={gradeMutation.isPending}
+                                              >
+                                                Save
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </CollapsibleContent>
+                      </Collapsible>
                     </div>
                   </div>
                 </CardContent>

@@ -50,15 +50,15 @@ export function useStudentDiscussionList(courseId: string) {
     queryKey: ['student-discussion-list', courseId],
     queryFn: async () => {
       // Get enrolled students from mus240_enrollments
-      const { data: enrollments, error: enrollError } = await supabase
+      const enrollmentQuery = await supabase
         .from('mus240_enrollments')
-        .select('user_id')
-        .eq('course_id', courseId)
-        .eq('status', 'active') as { data: { user_id: string }[] | null; error: any };
+        .select('student_id')
+        .eq('enrollment_status', 'active');
+      
+      if (enrollmentQuery.error) throw enrollmentQuery.error;
+      const enrollments = enrollmentQuery.data || [];
 
-      if (enrollError) throw enrollError;
-
-      const studentIds = enrollments?.map((e: any) => e.user_id) || [];
+      const studentIds = enrollments.map((e) => e.student_id) || [];
       if (studentIds.length === 0) return [];
 
       // Get profiles

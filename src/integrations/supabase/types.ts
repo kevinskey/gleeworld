@@ -3732,6 +3732,7 @@ export type Database = {
           graded_at: string | null
           graded_by: string | null
           id: string
+          parent_reply_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -3744,6 +3745,7 @@ export type Database = {
           graded_at?: string | null
           graded_by?: string | null
           id?: string
+          parent_reply_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -3756,6 +3758,7 @@ export type Database = {
           graded_at?: string | null
           graded_by?: string | null
           id?: string
+          parent_reply_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -3764,6 +3767,13 @@ export type Database = {
             columns: ["discussion_id"]
             isOneToOne: false
             referencedRelation: "course_discussions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_replies_parent_reply_id_fkey"
+            columns: ["parent_reply_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_replies"
             referencedColumns: ["id"]
           },
         ]
