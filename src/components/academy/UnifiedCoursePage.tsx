@@ -297,7 +297,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           </div>
           
           {/* Primary Navigation - Course Template v1 */}
-          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 flex flex-col items-center">
+          <nav className="flex-1 overflow-y-auto px-3 pt-8 pb-4 space-y-1 flex flex-col items-center">
             <div className="w-full space-y-1">
               {templateConfig.primaryNav.map(item => (
                 <button 
