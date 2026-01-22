@@ -291,7 +291,7 @@ export const InstructorConsole = () => {
         {/* Main Layout */}
         <div className="flex max-w-[1800px] mx-auto">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-48 xl:w-52 border-r bg-card/50 min-h-[calc(100vh-8rem)] sticky top-[100px]">
+          <aside className="hidden lg:block w-48 xl:w-52 border-r bg-card min-h-[calc(100vh-8rem)] sticky top-[100px]">
             <div className="p-2 xl:p-3">
               <div className="mb-3 pb-2 border-b">
                 <DropdownMenu>
