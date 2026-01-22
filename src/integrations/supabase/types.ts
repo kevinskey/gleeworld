@@ -28074,6 +28074,45 @@ export type Database = {
         }
         Relationships: []
       }
+      youtube_channel_videos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: []
+      }
       youtube_channels: {
         Row: {
           auto_sync: boolean | null
