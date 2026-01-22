@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown, MessagesSquare, UserCheck, Megaphone } from 'lucide-react';
@@ -44,6 +45,7 @@ import { Mus240ModuleEditor } from '@/components/mus240/instructor/Mus240ModuleE
 import { Mus240CalendarManager } from '@/components/mus240/instructor/Mus240CalendarManager';
 import { BulkPasswordReset } from '@/components/mus240/admin/BulkPasswordReset';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
+import { DiscussionSummaryDashboard } from '@/components/course/DiscussionSummaryDashboard';
 import { CourseAnnouncementsManager } from '@/components/course/CourseAnnouncementsManager';
 import { Mus240ResourcesTab } from '@/components/academy/Mus240ResourcesTab';
 
@@ -454,15 +456,17 @@ export const InstructorConsole = () => {
             {activeTab === 'discussions' && (
               <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
-                    <MessagesSquare className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <CardTitle className="flex items-center gap-2 text-lg md:text-xl lg:text-2xl">
+                    <MessagesSquare className="h-5 w-5 md:h-6 md:w-6" />
                     Discussion Forum
                   </CardTitle>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                    Post once, respond once — graded discussions with due dates
+                  <p className="text-sm md:text-base text-muted-foreground mt-1">
+                    Overview, participation tracking, and grading
                   </p>
                 </CardHeader>
-                <CardContent className="p-2 sm:p-4 md:p-6">
+                <CardContent className="p-2 sm:p-4 md:p-6 space-y-6">
+                  <DiscussionSummaryDashboard courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" />
+                  <Separator className="my-6" />
                   <DiscussionsSection courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" />
                 </CardContent>
               </Card>
