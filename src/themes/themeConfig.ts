@@ -110,7 +110,7 @@ const gleeWorldTheme: ThemeConfig = {
 
 /**
  * SPELMAN BLUE THEME
- * Modern, bright, and spacious - inspired by official Spelman College portal
+ * Clean, LIGHT professional theme - blue accents on white background
  */
 const spelmanBlueTheme: ThemeConfig = {
   id: 'spelman-blue',
@@ -118,19 +118,19 @@ const spelmanBlueTheme: ThemeConfig = {
   description: 'Clean, modern, and professional - inspired by Spelman College',
   
   colors: {
-    primary: '203 85% 63%',             // Lighter blue for buttons #55BBEE
+    primary: '219 78% 31%',             // Spelman dark blue #11448B
     primaryForeground: '0 0% 100%',     // White on primary
-    secondary: '208 100% 50%',          // Medium blue
+    secondary: '203 85% 63%',           // Sky blue accent
     secondaryForeground: '0 0% 100%',   // White on secondary
-    accent: '197 80% 70%',              // Light sky blue accent
-    accentForeground: '208 100% 20%',   // Dark blue on accent
-    background: '208 100% 33%',         // Spelman Blue background
-    foreground: '0 0% 100%',            // White text for dark background
-    card: '0 0% 100% / 0.15',           // Glass effect - translucent white
-    cardForeground: '0 0% 100%',        // White text on cards
-    muted: '0 0% 100% / 0.1',           // Translucent muted backgrounds
-    mutedForeground: '0 0% 85%',        // Light muted text
-    border: '0 0% 100% / 0.25',         // Translucent white border
+    accent: '40 10% 96%',               // Warm neutral accent
+    accentForeground: '0 0% 10%',       // Dark text on accent
+    background: '0 0% 100%',            // PURE WHITE background
+    foreground: '0 0% 10%',             // Near-black text
+    card: '0 0% 100%',                  // Pure white cards
+    cardForeground: '0 0% 10%',         // Dark text on cards
+    muted: '40 10% 97%',                // Warm off-white muted
+    mutedForeground: '0 0% 45%',        // Gray muted text
+    border: '40 5% 90%',                // Warm neutral borders
   },
   
   typography: {
@@ -140,8 +140,8 @@ const spelmanBlueTheme: ThemeConfig = {
   },
   
   background: {
-    type: 'gradient',
-    value: 'linear-gradient(180deg, hsl(208 100% 33%) 0%, hsl(203 100% 40%) 40%, hsl(197 80% 63%) 100%)',
+    type: 'solid',
+    value: 'hsl(0 0% 100%)',
     overlay: 'none',
   },
   
@@ -149,7 +149,7 @@ const spelmanBlueTheme: ThemeConfig = {
     animations: false,
   },
   
-  glassEffect: true,
+  glassEffect: false,
 };
 
 /**
