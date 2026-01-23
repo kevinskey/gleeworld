@@ -6,13 +6,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Filter, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Filter, Search, FileCheck, Clock, CheckCircle, BookOpen } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { format, isFuture, isPast } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useUnifiedAssignments } from '@/hooks/useUnifiedAssignments';
 interface Assignment {
   id: string;
   title: string;
@@ -106,6 +107,9 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     }
   });
 
+  // Fetch assignments with submission stats
+  const { data: unifiedAssignments = [] } = useUnifiedAssignments(courseId);
+
   // Fetch assignments
   const {
     data: assignments = [],
@@ -124,6 +128,24 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     },
     enabled: !!courseId
   });
+
+  // Calculate stats from unified assignments
+  const stats = useMemo(() => {
+    const totalSubmissions = unifiedAssignments.reduce((acc, a) => acc + (a.submission_count || 0), 0);
+    const totalGraded = unifiedAssignments.reduce((acc, a) => acc + (a.graded_count || 0), 0);
+    const pendingGrading = totalSubmissions - totalGraded;
+    const activeAssignments = assignments.filter(a => a.due_date && isFuture(new Date(a.due_date))).length;
+    const pastDueAssignments = assignments.filter(a => a.due_date && isPast(new Date(a.due_date))).length;
+    
+    return {
+      totalAssignments: assignments.length,
+      totalSubmissions,
+      pendingGrading,
+      activeAssignments,
+      pastDueAssignments,
+      totalGraded
+    };
+  }, [unifiedAssignments, assignments]);
 
   // Create mutation
   const createMutation = useMutation({
@@ -319,7 +341,66 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         </CardContent>
       </Card>;
   }
-  return <div className="space-y-3">
+  return <div className="space-y-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card className="bg-card border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <BookOpen className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.totalAssignments}</p>
+                <p className="text-xs text-muted-foreground">Total Assignments</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <FileCheck className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.totalSubmissions}</p>
+                <p className="text-xs text-muted-foreground">Submissions</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Clock className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.pendingGrading}</p>
+                <p className="text-xs text-muted-foreground">Pending Grading</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.totalGraded}</p>
+                <p className="text-xs text-muted-foreground">Graded</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Header with Add button */}
       <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-2">
