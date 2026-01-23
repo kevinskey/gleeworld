@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -602,6 +603,7 @@ const getResourceColor = (type: ModuleResource['type']) => {
 
 export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnrolled = true, isAdmin = false }) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   
   // Use editable version for LH100 (check both UUID and slug)
   const LH100_UUID = 'a0000000-0000-0000-0000-000000000100';
@@ -616,7 +618,8 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
   // Get modules for the specific course - return empty array if not found (only non-MUS240 courses)
   const courseModules = !isMUS240 ? (COURSE_MODULES[courseId] || []) : [];
   const [modules, setModules] = useState<WeeklyModule[]>(courseModules);
-  const [expandedWeeks, setExpandedWeeks] = useState<string[]>(['week-1', 'week-2']);
+  // Default to collapsed on mobile, expanded on desktop
+  const [expandedWeeks, setExpandedWeeks] = useState<string[]>(isMobile ? [] : ['week-1', 'week-2']);
   const [loading, setLoading] = useState(isMUS240);
   const [studentProgress, setStudentProgress] = useState<Set<string>>(new Set());
   const [selectedResource, setSelectedResource] = useState<{
