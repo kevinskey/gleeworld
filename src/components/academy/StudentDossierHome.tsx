@@ -702,7 +702,11 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                   onClick={() => {
                     if (event.is_assignment) {
                       const assignmentId = event.id.replace('assignment-', '');
-                      navigate(`/academy/${courseId}/assignments/${assignmentId}`);
+                      if (event.is_discussion) {
+                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
+                      } else {
+                        navigate(`/grading/student/assignment/${assignmentId}`);
+                      }
                     }
                   }}
                 >
