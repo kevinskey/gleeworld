@@ -98,8 +98,44 @@ export const StudentCommunications: React.FC = () => {
 
     setSending(true);
     try {
-      // This would typically insert into a messages table
-      // For now, we'll simulate the action
+      // Get recipient emails
+      const recipientEmails = recipientType === 'all' 
+        ? students.map(s => s.email).filter(Boolean)
+        : [students.find(s => s.user_id === selectedStudent)?.email].filter(Boolean);
+
+      if (recipientEmails.length === 0) {
+        toast.error('No valid recipient email addresses found');
+        setSending(false);
+        return;
+      }
+
+      // Send email via send-branded-email edge function
+      if (deliveryMethod === 'email' || deliveryMethod === 'both') {
+        const { error } = await supabase.functions.invoke('send-branded-email', {
+          body: {
+            to: recipientEmails,
+            subject: subject,
+            html: `
+              <h2>${subject}</h2>
+              <p>${content.replace(/\n/g, '<br>')}</p>
+              <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;" />
+              <p style="color: #666; font-size: 12px;">
+                This message was sent from MUS 240: Survey of African American Music
+              </p>
+            `,
+            senderName: 'MUS 240',
+            senderId: user?.id,
+            replyTo: 'kjohns10@spelman.edu',
+          },
+        });
+
+        if (error) {
+          console.error('Error sending email:', error);
+          toast.error('Failed to send email');
+          setSending(false);
+          return;
+        }
+      }
       
       const newMessage: Message = {
         id: Date.now().toString(),
