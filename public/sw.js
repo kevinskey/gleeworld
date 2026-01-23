@@ -1,7 +1,7 @@
 // Service Worker for GleeWorld PWA
-// Version: 7.3 - January 2026
-// NOTE: v7.3 - Fixed mobile assignment/discussion navigation links
-const CACHE_VERSION = 'v7.3';
+// Version: 7.4 - January 2026
+// NOTE: v7.4 - Fixed audio cleanup when closing PDFs, mobile toolbar sizing
+const CACHE_VERSION = 'v7.4';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
