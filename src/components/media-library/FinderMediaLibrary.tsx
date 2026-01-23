@@ -191,17 +191,20 @@ export const FinderMediaLibrary = () => {
 
         const { data } = supabase.storage.from('media-library').getPublicUrl(filePath);
 
-        await supabase.from('gw_media_library').insert({
-          filename: fileName,
-          original_filename: file.name,
+        const { error: dbError } = await supabase.from('gw_media_library').insert({
           file_path: filePath,
           file_url: data.publicUrl,
-          file_type: file.type,
-          file_size: file.size,
+          file_type: file.type || 'application/octet-stream',
+          file_size: file.size || 0,
           title: file.name.replace(/\.[^/.]+$/, ''),
           bucket_id: 'media-library',
           category: 'uploads'
         });
+
+        if (dbError) {
+          console.error('Database insert error:', dbError);
+          throw dbError;
+        }
 
         successCount++;
       } catch (error) {
@@ -265,18 +268,21 @@ export const FinderMediaLibrary = () => {
         // Add folder info to tags
         const tags = folderPath ? [`folder:${folderPath}`] : null;
 
-        await supabase.from('gw_media_library').insert({
-          filename: fileName,
-          original_filename: file.name,
+        const { error: dbError } = await supabase.from('gw_media_library').insert({
           file_path: storagePath,
           file_url: data.publicUrl,
-          file_type: file.type,
-          file_size: file.size,
+          file_type: file.type || 'audio/wav',
+          file_size: file.size || 0,
           title: file.name.replace(/\.[^/.]+$/, ''),
           bucket_id: 'media-library',
-          category: 'uploads',
+          category: folderPath || 'uploads',
           tags: tags
         });
+
+        if (dbError) {
+          console.error('Database insert error:', dbError);
+          throw dbError;
+        }
 
         successCount++;
       } catch (error) {
