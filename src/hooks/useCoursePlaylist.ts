@@ -81,78 +81,46 @@ export const useCoursePlaylist = (courseId: string) => {
     try {
       setTracksLoading(true);
 
-      // First get the playlist tracks
-      const { data: trackData, error: trackError } = await supabase
-        .from('gw_playlist_tracks')
-        .select('*')
+      // Get playlist media from gw_course_playlist_media with joined media data
+      const { data: playlistMedia, error: mediaError } = await supabase
+        .from('gw_course_playlist_media')
+        .select(`
+          id,
+          playlist_id,
+          media_id,
+          position,
+          created_at,
+          gw_media_library!inner (
+            id,
+            title,
+            file_url,
+            file_type,
+            category
+          )
+        `)
         .eq('playlist_id', playlistId)
         .order('position', { ascending: true });
 
-      if (trackError) throw trackError;
+      if (mediaError) throw mediaError;
 
-      // Now enrich with audio data from multiple possible sources
-      const enrichedTracks = await Promise.all(
-        (trackData || []).map(async (track) => {
-          let audioData = null;
+      // Transform to expected format
+      const enrichedTracks: PlaylistTrack[] = (playlistMedia || []).map((item: any) => ({
+        id: item.id,
+        playlist_id: item.playlist_id,
+        music_file_id: item.media_id,
+        position: item.position,
+        added_by: '',
+        added_at: item.created_at,
+        track_data: item.gw_media_library ? {
+          id: item.gw_media_library.id,
+          title: item.gw_media_library.title,
+          artist: item.gw_media_library.category,
+          audio_url: item.gw_media_library.file_url,
+          duration: undefined,
+        } : undefined,
+      }));
 
-          // Try music_tracks first
-          const { data: musicTrack } = await supabase
-            .from('music_tracks')
-            .select('id, title, artist, audio_url, duration')
-            .eq('id', track.music_file_id)
-            .single();
-
-          if (musicTrack) {
-            audioData = musicTrack;
-          } else {
-            // Try audio_archive
-            const { data: archiveTrack } = await supabase
-              .from('audio_archive')
-              .select('id, title, artist_info, audio_url, duration_seconds')
-              .eq('id', track.music_file_id)
-              .single();
-
-            if (archiveTrack) {
-              audioData = {
-                id: archiveTrack.id,
-                title: archiveTrack.title,
-                artist: archiveTrack.artist_info,
-                audio_url: archiveTrack.audio_url,
-                duration: archiveTrack.duration_seconds,
-              };
-            } else {
-              // Try course_audio_resources
-              const { data: courseAudio } = await supabase
-                .from('course_audio_resources')
-                .select('id, title, description, audio_path, duration_seconds')
-                .eq('id', track.music_file_id)
-                .single();
-
-              if (courseAudio) {
-                // Get public URL for storage path
-                const { data: urlData } = supabase.storage
-                  .from('course-audio')
-                  .getPublicUrl(courseAudio.audio_path);
-
-                audioData = {
-                  id: courseAudio.id,
-                  title: courseAudio.title,
-                  description: courseAudio.description,
-                  audio_url: urlData.publicUrl,
-                  duration: courseAudio.duration_seconds,
-                };
-              }
-            }
-          }
-
-          return {
-            ...track,
-            track_data: audioData,
-          };
-        })
-      );
-
-      setTracks(enrichedTracks.filter(t => t.track_data !== null));
+      setTracks(enrichedTracks.filter(t => t.track_data !== undefined));
     } catch (err) {
       console.error('Error fetching playlist tracks:', err);
     } finally {
