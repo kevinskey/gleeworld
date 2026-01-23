@@ -640,7 +640,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     <div className={`flex flex-col ${embedded ? 'h-full' : 'h-[calc(100dvh-var(--gw-header-h,4rem))]'}`}>
       {/* Persistent Header - hide in embedded mode */}
       {!embedded && (
-        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border backdrop-blur px-3 sm:px-6 lg:px-10 py-3 sm:py-6 bg-slate-300 shadow-lg">
+        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border backdrop-blur px-3 sm:px-6 lg:px-10 py-3 sm:py-6 bg-card shadow-lg">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
               <div className="hidden sm:block">
@@ -719,7 +719,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
 
                       {/* Compose form - hide on mobile when viewing history */}
                       <div className={`flex-1 flex flex-col min-h-0 ${showEmailHistory ? 'hidden lg:flex' : 'flex'}`}>
-                        <div className="flex-1 bg-muted/50 p-4 lg:p-6 space-y-4 overflow-y-auto min-h-0">
+                        <div className="flex-1 bg-card p-4 lg:p-6 space-y-4 overflow-y-auto min-h-0">
                           {/* Recipients */}
                           <div className="space-y-1">
                             <Label className="text-sm font-medium text-foreground">To:</Label>

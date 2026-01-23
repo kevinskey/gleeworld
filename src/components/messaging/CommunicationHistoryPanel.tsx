@@ -107,7 +107,7 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
   return (
     <div className="flex flex-col h-full">
       {/* Header with Stats */}
-      <div className="flex-shrink-0 p-4 bg-muted/50 border-b border-border space-y-4">
+      <div className="flex-shrink-0 p-4 bg-card border-b border-border space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Inbox className="h-5 w-5 text-primary" />
@@ -121,19 +121,19 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-4 gap-2 text-center">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <div className="text-lg font-bold text-primary">{stats.total}</div>
+          <div className="p-2 rounded-lg bg-muted border border-border">
+            <div className="text-lg font-bold text-foreground">{stats.total}</div>
             <div className="text-xs text-muted-foreground">Total</div>
           </div>
-          <div className="p-2 rounded-lg bg-blue-500/10">
-            <div className="text-lg font-bold text-blue-600">{stats.emails}</div>
+          <div className="p-2 rounded-lg bg-muted border border-border">
+            <div className="text-lg font-bold text-primary">{stats.emails}</div>
             <div className="text-xs text-muted-foreground">Emails</div>
           </div>
-          <div className="p-2 rounded-lg bg-green-500/10">
-            <div className="text-lg font-bold text-green-600">{stats.sms}</div>
+          <div className="p-2 rounded-lg bg-muted border border-border">
+            <div className="text-lg font-bold text-accent-foreground">{stats.sms}</div>
             <div className="text-xs text-muted-foreground">SMS</div>
           </div>
-          <div className="p-2 rounded-lg bg-destructive/10">
+          <div className="p-2 rounded-lg bg-muted border border-border">
             <div className="text-lg font-bold text-destructive">{stats.failed}</div>
             <div className="text-xs text-muted-foreground">Failed</div>
           </div>
