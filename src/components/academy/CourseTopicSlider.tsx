@@ -72,6 +72,7 @@ export const CourseTopicSlider: React.FC<CourseTopicSliderProps> = ({
         <UniversalSlider 
           placementKey={placementKey} 
           className="rounded-none"
+          objectFit="contain"
         />
       </CardContent>
     </Card>
