@@ -276,38 +276,38 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           {/* Primary Navigation - Course Template v1 */}
           <nav className="flex-1 overflow-y-auto px-3 space-y-1 flex flex-col items-center pt-[120px] pb-0">
             <div className="w-full space-y-1">
-              {templateConfig.primaryNav.map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-3 rounded-md text-lg transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground hover:bg-muted'}`}>
-                  <item.icon className="h-6 w-6 flex-shrink-0" />
-                  <span className="text-xl">{item.label}</span>
+              {templateConfig.primaryNav.map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-4 px-4 py-4 rounded-md text-2xl transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground hover:bg-muted'}`}>
+                  <item.icon className="h-8 w-8 flex-shrink-0" />
+                  <span>{item.label}</span>
                 </button>)}
             </div>
             
             {/* Course Core Section - Course Template v1 */}
             <div className="pt-6 w-full">
-              <h3 className="font-semibold text-foreground text-base px-3 mb-2">Course Core</h3>
-              {templateConfig.courseCore.map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-3 rounded-md text-lg transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground hover:bg-muted'}`}>
-                  <item.icon className="h-6 w-6 flex-shrink-0" />
+              <h3 className="font-semibold text-foreground text-xl px-4 mb-3">Course Core</h3>
+              {templateConfig.courseCore.map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-4 px-4 py-4 rounded-md text-2xl transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground hover:bg-muted'}`}>
+                  <item.icon className="h-8 w-8 flex-shrink-0" />
                   <span>{item.label}</span>
                 </button>)}
             </div>
             
             {/* Extension Modules - Course-specific features */}
             {templateConfig.extensions && templateConfig.extensions.length > 0 && <div className="pt-6 w-full">
-                <h3 className="font-semibold text-foreground text-base px-3 mb-2">Extensions</h3>
-                {templateConfig.extensions.map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-3 py-3 rounded-md text-lg transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground hover:bg-muted'}`}>
-                    <item.icon className="h-6 w-6 flex-shrink-0" />
+                <h3 className="font-semibold text-foreground text-xl px-4 mb-3">Extensions</h3>
+                {templateConfig.extensions.map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-4 px-4 py-4 rounded-md text-2xl transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground hover:bg-muted'}`}>
+                    <item.icon className="h-8 w-8 flex-shrink-0" />
                     <span>{item.label}</span>
                   </button>)}
               </div>}
           </nav>
           
           {/* User Profile Section at bottom */}
-          <div className="border-t border-border px-2 py-3 space-y-0.5">
-            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-foreground">
-              <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center">
-                <User className="h-4 w-4 text-primary" />
+          <div className="border-t border-border px-3 py-4 space-y-1">
+            <div className="flex items-center gap-3 px-3 py-3 rounded-md text-lg text-foreground">
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <User className="h-6 w-6 text-primary" />
               </div>
-              <span className="truncate text-sm">{user?.email?.split('@')[0] || 'Student'}</span>
+              <span className="truncate text-lg">{user?.email?.split('@')[0] || 'Student'}</span>
             </div>
             
             {[{
@@ -328,8 +328,8 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               } else {
                 setActiveTab(item.tab);
               }
-            }} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-base transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
-                <item.icon className="h-5 w-5 flex-shrink-0" />
+            }} className="w-full flex items-center gap-4 px-3 py-3 rounded-md text-xl transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
+                <item.icon className="h-7 w-7 flex-shrink-0" />
                 <span>{item.label}</span>
               </button>)}
             
