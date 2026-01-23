@@ -261,12 +261,12 @@ export const Mus240ResourcesTab: React.FC<Mus240ResourcesTabProps> = ({ isAdmin 
               return (
                 <Card 
                   key={resource.id} 
-                  className="group border-2 border-primary/40 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:border-primary/60 hover:-translate-y-1 transition-all duration-200 bg-card"
+                  className="group border hover:shadow-md hover:-translate-y-1 transition-all duration-200 bg-card"
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="p-2 bg-primary/10 rounded-md shrink-0 border border-primary/20">
+                        <div className="p-2 bg-muted rounded-md shrink-0">
                           <IconComponent className="h-4 w-4 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -292,7 +292,7 @@ export const Mus240ResourcesTab: React.FC<Mus240ResourcesTabProps> = ({ isAdmin 
                           onClick={() => openViewer(resource)}
                           size="sm"
                           variant="outline"
-                          className="w-full border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+                          className="w-full"
                         >
                           <Eye className="h-3 w-3 mr-1" />
                           Preview
