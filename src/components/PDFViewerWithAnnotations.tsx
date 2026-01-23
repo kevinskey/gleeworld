@@ -77,7 +77,7 @@ export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWit
     fetchAnnotations 
   } = useSheetMusicAnnotations(musicId);
   const { audioData } = useSheetMusicAudio(musicId);
-  const { loadUrl, loadYouTube, audioSource } = useAudioCompanion();
+  const { loadUrl, loadYouTube, audioSource, stop: stopAudio, closeYouTube } = useAudioCompanion();
   
   // Initialize the default layout plugin
 const scrollModePluginInstance = scrollModePlugin();
@@ -401,6 +401,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       if (styleEl) styleEl.remove();
     };
   }, [annotationMode]);
+
+  // Cleanup audio when component unmounts
+  useEffect(() => {
+    return () => {
+      // Stop any audio/YouTube playback when the PDF viewer closes
+      stopAudio();
+      closeYouTube();
+    };
+  }, [stopAudio, closeYouTube]);
 
   // Handle iframe load
   const handleIframeLoad = () => {
