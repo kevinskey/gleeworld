@@ -3,8 +3,10 @@ import { useSliderByPlacement } from '@/hooks/useUniversalSlider';
 import { HEIGHT_PRESETS, GAP_CLASSES } from '@/types/universal-slider';
 import type { SliderWithSlides, UniversalSliderSlide } from '@/types/universal-slider';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 interface UniversalSliderProps {
   placementKey: string;
@@ -13,6 +15,7 @@ interface UniversalSliderProps {
   overrideColumns?: 1 | 2 | 3;
   overrideFullWidth?: boolean;
   objectFit?: 'cover' | 'contain';
+  enableLightbox?: boolean;
 }
 
 export const UniversalSlider: React.FC<UniversalSliderProps> = ({
@@ -21,10 +24,12 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
   overrideColumns,
   overrideFullWidth,
   objectFit = 'cover',
+  enableLightbox = false,
 }) => {
   const { data: slider, isLoading } = useSliderByPlacement(placementKey);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [lightboxSlide, setLightboxSlide] = useState<UniversalSliderSlide | null>(null);
 
   const columnCount = overrideColumns ?? slider?.column_count ?? 1;
   const isFullWidth = overrideFullWidth ?? slider?.is_full_width ?? true;
@@ -113,6 +118,8 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
             heightConfig={heightConfig}
             transition={slider.transition_effect}
             objectFit={objectFit}
+            enableLightbox={enableLightbox}
+            onImageClick={() => enableLightbox && slide.slide_type === 'image' && setLightboxSlide(slide)}
           />
         ))}
       </div>
@@ -157,6 +164,31 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
           ))}
         </div>
       )}
+
+      {/* Lightbox Modal */}
+      <Dialog open={!!lightboxSlide} onOpenChange={(open) => !open && setLightboxSlide(null)}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 bg-black/95 border-none">
+          <VisuallyHidden>
+            <DialogTitle>Image Preview</DialogTitle>
+          </VisuallyHidden>
+          {lightboxSlide?.image_url && (
+            <div className="relative w-full h-full flex items-center justify-center p-4">
+              <img
+                src={lightboxSlide.image_url}
+                alt={lightboxSlide.alt_text || lightboxSlide.title || 'Enlarged image'}
+                className="max-w-full max-h-[85vh] object-contain"
+              />
+              {lightboxSlide.title && (
+                <div className="absolute bottom-4 left-0 right-0 text-center">
+                  <p className="text-white text-lg font-medium bg-black/50 inline-block px-4 py-2 rounded">
+                    {lightboxSlide.title}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -167,7 +199,9 @@ const SlideRenderer: React.FC<{
   heightConfig: { mobile: number; tablet: number; desktop: number };
   transition: string;
   objectFit: 'cover' | 'contain';
-}> = ({ slide, heightConfig, transition, objectFit }) => {
+  enableLightbox?: boolean;
+  onImageClick?: () => void;
+}> = ({ slide, heightConfig, transition, objectFit, enableLightbox = false, onImageClick }) => {
   const getPositionClasses = (h: string, v: string) => {
     const hMap = { left: 'items-start text-left', center: 'items-center text-center', right: 'items-end text-right' };
     const vMap = { top: 'justify-start pt-8', center: 'justify-center', bottom: 'justify-end pb-8' };
@@ -175,6 +209,8 @@ const SlideRenderer: React.FC<{
   };
 
   const hasValidLink = slide.link_url && slide.link_url.trim().length > 0;
+  // If lightbox is enabled and no link, make it clickable for lightbox
+  const isClickableForLightbox = enableLightbox && !hasValidLink && slide.slide_type === 'image';
   const Wrapper = hasValidLink ? 'a' : 'div';
   const wrapperProps = hasValidLink ? { href: slide.link_url, target: slide.link_target, rel: 'noopener noreferrer' } : {};
 
@@ -183,9 +219,10 @@ const SlideRenderer: React.FC<{
       {...wrapperProps}
       className={cn(
         'relative overflow-hidden rounded-lg',
-        slide.link_url && 'cursor-pointer',
+        (hasValidLink || isClickableForLightbox) && 'cursor-pointer',
         transition === 'fade' && 'animate-in fade-in duration-500'
       )}
+      onClick={isClickableForLightbox ? onImageClick : undefined}
       style={{
         height: `clamp(${heightConfig.mobile}px, 50vw, ${heightConfig.desktop}px)`,
       }}
