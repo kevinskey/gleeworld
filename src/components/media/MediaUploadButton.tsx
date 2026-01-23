@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -20,8 +20,14 @@ import {
   Music, 
   X, 
   Plus,
-  CloudUpload
+  CloudUpload,
+  FolderUp
 } from "lucide-react";
+
+// Extended File type to include folder path
+interface FileWithPath extends File {
+  folderPath?: string;
+}
 
 interface MediaUploadButtonProps {
   context?: string;
@@ -37,7 +43,7 @@ export const MediaUploadButton = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<FileWithPath[]>([]);
   const [fileThumbnails, setFileThumbnails] = useState<Record<string, string>>({});
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -46,6 +52,7 @@ export const MediaUploadButton = ({
   const [newTag, setNewTag] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   const predefinedTags = [
     "homepage", "hero", "event", "performance", "concert", "tour", 
@@ -62,6 +69,80 @@ export const MediaUploadButton = ({
     { value: "promotional", label: "Promotional Materials" }
   ];
 
+  // Handle folder selection
+  const handleFolderSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const acceptedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf'];
+    const maxSize = 50 * 1024 * 1024; // 50MB
+
+    const newFiles: FileWithPath[] = [];
+    const rejected: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+      
+      // Check extension and size
+      if (!acceptedExtensions.includes(ext)) {
+        rejected.push(file.name + ' (unsupported format)');
+        continue;
+      }
+      if (file.size > maxSize) {
+        rejected.push(file.name + ' (too large)');
+        continue;
+      }
+
+      // Extract folder path from webkitRelativePath
+      const relativePath = (file as any).webkitRelativePath || file.name;
+      const pathParts = relativePath.split('/');
+      // Remove the root folder and filename to get intermediate folders
+      const folderPath = pathParts.length > 2 
+        ? pathParts.slice(1, -1).join('/') 
+        : (pathParts.length === 2 ? '' : '');
+
+      const fileWithPath = file as FileWithPath;
+      fileWithPath.folderPath = folderPath;
+      newFiles.push(fileWithPath);
+    }
+
+    if (rejected.length > 0) {
+      toast({
+        title: `${rejected.length} files rejected`,
+        description: rejected.slice(0, 3).join(', ') + (rejected.length > 3 ? '...' : ''),
+        variant: "destructive"
+      });
+    }
+
+    if (newFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...newFiles]);
+      
+      // Generate thumbnails
+      for (const file of newFiles) {
+        const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+        try {
+          const thumbnail = await generateThumbnail(file);
+          if (thumbnail) {
+            setFileThumbnails(prev => ({ ...prev, [fileKey]: thumbnail }));
+          }
+        } catch (error) {
+          console.error('Failed to generate thumbnail for', file.name, error);
+        }
+      }
+
+      toast({
+        title: "Folder loaded",
+        description: `Added ${newFiles.length} files from folder`,
+      });
+    }
+
+    // Reset input
+    if (folderInputRef.current) {
+      folderInputRef.current.value = '';
+    }
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp'],
@@ -69,8 +150,8 @@ export const MediaUploadButton = ({
       'audio/*': ['.mp3', '.wav', '.m4a', '.ogg'],
       'application/pdf': ['.pdf']
     },
-    multiple: true, // Enable multiple file selection
-    maxSize: 50 * 1024 * 1024, // 50MB max file size
+    multiple: true,
+    maxSize: 50 * 1024 * 1024,
     onDrop: async (acceptedFiles, rejectedFiles) => {
       if (rejectedFiles.length > 0) {
         toast({
@@ -80,7 +161,14 @@ export const MediaUploadButton = ({
         });
       }
       
-      setSelectedFiles(prev => [...prev, ...acceptedFiles]);
+      // Convert to FileWithPath
+      const filesWithPath = acceptedFiles.map(f => {
+        const fwp = f as FileWithPath;
+        fwp.folderPath = '';
+        return fwp;
+      });
+      
+      setSelectedFiles(prev => [...prev, ...filesWithPath]);
       
       // Generate thumbnails for accepted files
       for (const file of acceptedFiles) {
@@ -172,10 +260,13 @@ export const MediaUploadButton = ({
         const bucket = file.type.startsWith('audio/')
           ? 'media-audio'
           : (file.type === 'application/pdf' ? 'media-docs' : 'media-library');
+        
+        // Include folder path if present
+        const folderPart = file.folderPath ? `${file.folderPath}/` : '';
         const pathPrefix = (bucket === 'media-audio' || bucket === 'media-docs')
-          ? `${user.id}/${category}`
-          : `${category}`;
-        const filePath = `${pathPrefix}/${fileName}`;
+          ? `${user.id}/${category}/${folderPart}`
+          : `${category}/${folderPart}`;
+        const filePath = `${pathPrefix}${fileName}`;
 
         try {
           // Upload file to appropriate bucket
@@ -193,7 +284,12 @@ export const MediaUploadButton = ({
             .from(bucket)
             .getPublicUrl(filePath);
 
-          // Store metadata in database
+          // Store metadata in database with folder info in tags
+          const fileTags = [...(tags.length > 0 ? tags : [])];
+          if (file.folderPath) {
+            fileTags.push(`folder:${file.folderPath}`);
+          }
+          
           const { data: mediaData, error: dbError } = await supabase
             .from('gw_media_library')
             .insert({
@@ -204,7 +300,7 @@ export const MediaUploadButton = ({
               file_type: file.type,
               file_size: file.size,
               category: category,
-              tags: tags.length > 0 ? tags : null,
+              tags: fileTags.length > 0 ? fileTags : null,
               context: context,
               uploaded_by: user.id,
               is_public: bucket === 'media-library' && (category === 'hero' || category === 'promotional'),
@@ -318,7 +414,7 @@ export const MediaUploadButton = ({
         <div className="space-y-4">
           {/* File Upload Area */}
           <div>
-            <Label>Upload Files</Label>
+            <Label>Upload Files or Folders</Label>
             <div
               {...getRootProps()}
               className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
@@ -337,6 +433,30 @@ export const MediaUploadButton = ({
                   </p>
                 </div>
               )}
+            </div>
+            
+            {/* Folder Upload Button */}
+            <div className="mt-3 flex justify-center">
+              <input
+                ref={folderInputRef}
+                type="file"
+                // @ts-ignore - webkitdirectory is a valid attribute
+                webkitdirectory=""
+                directory=""
+                multiple
+                className="hidden"
+                onChange={handleFolderSelect}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => folderInputRef.current?.click()}
+                className="gap-2"
+              >
+                <FolderUp className="h-4 w-4" />
+                Upload Folder
+              </Button>
             </div>
           </div>
 
@@ -367,9 +487,16 @@ export const MediaUploadButton = ({
                         )}
                         <div className="min-w-0 flex-1">
                           <span className="text-sm font-medium truncate block">{file.name}</span>
-                          <Badge variant="outline" className="text-xs mt-1">
-                            {formatFileSize(file.size)}
-                          </Badge>
+                          <div className="flex items-center gap-2 mt-1">
+                            {file.folderPath && (
+                              <Badge variant="secondary" className="text-xs">
+                                📁 {file.folderPath}
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="text-xs">
+                              {formatFileSize(file.size)}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                       <Button
