@@ -48,9 +48,9 @@ export const UniversalLayout = ({
       
       {/* Main Content - padded by header height only when header is shown */}
       <main 
-        className={`w-full min-h-dvh ${showHeader ? 'pt-[calc(var(--gw-header-h,4rem)+var(--gw-radio-bar-height,0px))]' : ''} ${shellBg} text-foreground ${className}`}
+        className={`w-full ${showHeader ? 'pt-[calc(var(--gw-header-h,4rem)+var(--gw-radio-bar-height,0px))]' : ''} ${shellBg} text-foreground ${className}`}
         style={{ 
-          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
           paddingLeft: 'env(safe-area-inset-left)',
           paddingRight: 'env(safe-area-inset-right)'
         }}
