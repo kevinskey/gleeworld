@@ -830,30 +830,30 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     <Card className={cn("w-full h-full flex flex-col border-0 sm:border rounded-none sm:rounded-lg", className)}>
       {/* Annotation Toolbar */}
         {annotationMode && (
-          <div className="flex flex-wrap items-center gap-1 p-1 bg-muted/50 rounded-t-lg border-b">
+          <div className="flex flex-wrap items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 bg-muted/50 rounded-t-lg border-b">
             {/* Save Button */}
             {hasAnnotations && (
               <Button
                 size="sm"
                 onClick={handleSave}
                 disabled={isSaving || !musicId}
-                className="h-7 px-1.5 text-xs sm:h-8 sm:px-2"
+                className="h-6 px-1 text-[10px] sm:h-8 sm:px-2 sm:text-xs"
               >
                 {isSaving ? (
-                  <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
+                  <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
-                  <span className="text-xs">Save</span>
+                  <span>Save</span>
                 )}
               </Button>
             )}
 
             {/* Tool Selection */}
-            <div className="flex gap-0.5 sm:gap-1">
+            <div className="flex gap-0.5">
               <Button
                 variant={activeTool === "select" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("select")}
-                className="h-7 w-7 p-0 sm:h-8 sm:w-8"
+                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
               >
                 <MousePointer className="h-3 w-3" />
               </Button>
@@ -861,7 +861,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant={activeTool === "draw" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("draw")}
-                className="h-7 w-7 p-0 sm:h-8 sm:w-8"
+                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
               >
                 <Pencil className="h-3 w-3" />
               </Button>
@@ -869,7 +869,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant={activeTool === "erase" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("erase")}
-                className="h-7 w-7 p-0 sm:h-8 sm:w-8"
+                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
               >
                 <Eraser className="h-3 w-3" />
               </Button>
@@ -881,7 +881,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 w-7 p-0 sm:h-8 sm:w-8 rounded-full border-2"
+                  className="h-6 w-6 p-0 sm:h-8 sm:w-8 rounded-full border-2"
                   style={{ backgroundColor: brushColor, borderColor: 'hsl(var(--border))' }}
                 >
                   <span className="sr-only">Select color</span>
@@ -894,7 +894,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                       key={color}
                       variant="outline"
                       size="sm"
-                      className="h-8 w-8 p-0 rounded-full"
+                      className="h-7 w-7 p-0 rounded-full"
                       style={{ backgroundColor: color }}
                       onClick={() => setBrushColor(color)}
                     >
@@ -907,8 +907,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Size */}
-            <div className="flex items-center gap-1 min-w-14 sm:min-w-16">
+            {/* Size - hidden on mobile, show on sm+ */}
+            <div className="hidden sm:flex items-center gap-1 min-w-14 sm:min-w-16">
               <Slider
                 value={brushSize}
                 onValueChange={setBrushSize}
@@ -921,22 +921,22 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
 
             {/* Zoom Controls */}
-            <div className="flex items-center gap-0.5 sm:gap-1 border-l pl-1.5 sm:pl-2 ml-1">
+            <div className="flex items-center gap-0.5 border-l pl-1 sm:pl-2 ml-0.5 sm:ml-1">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleZoomOut}
                 disabled={zoomLevel <= 0.5}
-                className="h-7 w-7 p-0 sm:h-8 sm:w-8"
+                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
                 title="Zoom out"
               >
-                <ZoomOut className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <ZoomOut className="h-3 w-3" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleResetZoom}
-                className="h-7 px-1.5 text-xs sm:h-8 sm:px-2"
+                className="h-6 px-1 text-[10px] sm:h-8 sm:px-2 sm:text-xs"
                 title="Reset zoom"
               >
                 {Math.round(zoomLevel * 100)}%
@@ -946,15 +946,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleZoomIn}
                 disabled={zoomLevel >= 3}
-                className="h-7 w-7 p-0 sm:h-8 sm:w-8"
+                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
                 title="Zoom in"
               >
-                <ZoomIn className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <ZoomIn className="h-3 w-3" />
               </Button>
             </div>
 
-            {/* Audio Companion in annotation mode */}
-            <div className="flex items-center border-l pl-1.5 sm:pl-2 ml-1">
+            {/* Audio Companion in annotation mode - hidden on mobile */}
+            <div className="hidden sm:flex items-center border-l pl-1.5 sm:pl-2 ml-1">
               {showAudioCompanion ? (
                 <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
               ) : (
@@ -971,14 +971,14 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               )}
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-0.5 sm:gap-1 ml-auto">
+            {/* Crop and Close buttons */}
+            <div className="flex gap-0.5 ml-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleUndo}
                 disabled={paths.length === 0}
-                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                className="h-6 w-6 p-0 sm:h-9 sm:w-9"
               >
                 <Undo className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
@@ -987,7 +987,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleClear}
                 disabled={paths.length === 0}
-                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                className="h-6 w-6 p-0 sm:h-9 sm:w-9"
               >
                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
@@ -1021,16 +1021,16 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {!annotationMode && (
             <div 
-              className="absolute bottom-14 left-1/2 -translate-x-1/2 z-30"
+              className="absolute bottom-10 sm:bottom-14 left-1/2 -translate-x-1/2 z-30"
               style={{ touchAction: 'none' } as React.CSSProperties}
               onTouchStart={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
               onTouchEnd={(e) => e.stopPropagation()}
             >
-              {/* Mobile-friendly floating toolbar */}
-              <div className="flex items-center gap-2 bg-background/95 backdrop-blur-md border border-border shadow-lg rounded-full px-3 py-2">
+              {/* Mobile-friendly compact floating toolbar */}
+              <div className="flex items-center gap-1 sm:gap-2 bg-background/95 backdrop-blur-md border border-border shadow-lg rounded-full px-2 sm:px-3 py-1 sm:py-2">
                 {/* Zoom Controls */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 sm:gap-1">
                   <Button
                     size="sm"
                     variant="ghost"
@@ -1041,13 +1041,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                       handleScaleZoomOut();
                     }}
                     disabled={scale <= 0.5}
-                    className="h-9 w-9 p-0 touch-manipulation rounded-full"
+                    className="h-7 w-7 sm:h-9 sm:w-9 p-0 touch-manipulation rounded-full"
                     title="Zoom out"
                     aria-label="Zoom out"
                   >
-                    <ZoomOut className="h-4 w-4" />
+                    <ZoomOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
-                  <span className="text-xs font-medium tabular-nums min-w-[36px] text-center">
+                  <span className="text-[10px] sm:text-xs font-medium tabular-nums min-w-[28px] sm:min-w-[36px] text-center">
                     {Math.round(scale * 100)}%
                   </span>
                   <Button
@@ -1060,15 +1060,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                       handleScaleZoomIn();
                     }}
                     disabled={scale >= 3}
-                    className="h-9 w-9 p-0 touch-manipulation rounded-full"
+                    className="h-7 w-7 sm:h-9 sm:w-9 p-0 touch-manipulation rounded-full"
                     title="Zoom in"
                     aria-label="Zoom in"
                   >
-                    <ZoomIn className="h-4 w-4" />
+                    <ZoomIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
 
-                <div className="w-px h-6 bg-border" />
+                <div className="w-px h-4 sm:h-6 bg-border" />
                 
                 {/* Audio Companion */}
                 {showAudioCompanion ? (
@@ -1085,9 +1085,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     }}
                     aria-label="Listen along with audio"
                     title="Play audio while reading sheet music"
-                    className="h-9 w-9 p-0 touch-manipulation rounded-full"
+                    className="h-7 w-7 sm:h-9 sm:w-9 p-0 touch-manipulation rounded-full"
                   >
-                    <Music className="h-4 w-4" />
+                    <Music className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 )}
                 
@@ -1103,9 +1103,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   }}
                   aria-label={showPiano ? "Hide piano" : "Show piano"}
                   title="Practice with virtual piano"
-                  className={`h-9 w-9 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-secondary' : ''}`}
+                  className={`h-7 w-7 sm:h-9 sm:w-9 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-secondary' : ''}`}
                 >
-                  <Piano className="h-4 w-4" />
+                  <Piano className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
                 
                 {/* Annotate Button */}
@@ -1124,9 +1124,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   }}
                   aria-label="Enable annotations"
                   title="Click to enable drawing and annotations"
-                  className="h-9 w-9 p-0 touch-manipulation rounded-full"
+                  className="h-7 w-7 sm:h-9 sm:w-9 p-0 touch-manipulation rounded-full"
                 >
-                  <Palette className="h-4 w-4" />
+                  <Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </div>
@@ -1280,17 +1280,17 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {signedUrl && (
             <div 
-              className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"
+              className="absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 z-30"
               style={{ touchAction: 'none' } as React.CSSProperties}
               onTouchStart={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
               onTouchEnd={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-1.5 rounded-full border bg-background/90 backdrop-blur shadow-md px-1.5 py-0.5">
+              <div className="flex items-center gap-0.5 sm:gap-1.5 rounded-full border bg-background/90 backdrop-blur shadow-md px-1 sm:px-1.5 py-0.5">
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full touch-manipulation" 
+                  className="h-6 w-6 sm:h-8 sm:w-8 rounded-full touch-manipulation" 
                   onClick={prevPage}
                   onTouchEnd={(e) => {
                     e.preventDefault();
@@ -1299,15 +1299,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   }}
                   disabled={isLoading || currentPage <= 1}
                 >
-                  <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
-                <span className="text-[10px] sm:text-xs tabular-nums font-medium min-w-[40px] text-center">
+                <span className="text-[9px] sm:text-xs tabular-nums font-medium min-w-[32px] sm:min-w-[40px] text-center">
                   {currentPage} / {totalPages || (pdf?.numPages ?? 0) || 1}
                 </span>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full touch-manipulation" 
+                  className="h-6 w-6 sm:h-8 sm:w-8 rounded-full touch-manipulation" 
                   onClick={nextPage}
                   onTouchEnd={(e) => {
                     e.preventDefault();
@@ -1316,7 +1316,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   }}
                   disabled={isLoading || currentPage >= (totalPages || (pdf?.numPages ?? 0) || 1)}
                 >
-                  <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </div>
