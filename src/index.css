@@ -68,8 +68,8 @@
   }
   
   /* WCAG AA Typography Standards - Compact but readable */
-  /* Consistent body text sizing */
-  p, span, label, li, td, th, dd, dt {
+  /* Consistent body text sizing - excluding span to allow Tailwind overrides */
+  p, label, li, td, th, dd, dt {
     font-size: 0.875rem; /* 14px base for body text */
     line-height: 1.5;
   }
