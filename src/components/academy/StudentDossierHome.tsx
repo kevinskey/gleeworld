@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   User, Calendar, ClipboardList, CheckCircle, XCircle, Clock, 
-  FileText, AlertCircle, Play, MoreHorizontal, Mail, ChevronDown
+  FileText, AlertCircle, Play, MoreHorizontal, Mail, ChevronDown, Bell
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,6 +66,15 @@ interface Assignment {
   is_discussion?: boolean;
 }
 
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  announcement_type?: string;
+  publish_date?: string;
+  created_at?: string;
+}
+
 interface CurrentModule {
   id: string;
   title: string;
@@ -89,6 +98,8 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [currentModule, setCurrentModule] = useState<CurrentModule | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
@@ -351,6 +362,24 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         if (eventsData) {
           setUpcomingEvents(eventsData.map(e => ({ ...e, is_assignment: false })));
         }
+      }
+
+      // Fetch announcements for this course
+      const { data: announcementsData } = await supabase
+        .from('gw_announcements')
+        .select('id, title, content, announcement_type, publish_date, created_at')
+        .or(`target_audience.is.null,target_audience.eq.all,target_audience.ilike.%${courseId}%`)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (announcementsData) {
+        // Filter out expired announcements if expire_date exists
+        const now = new Date();
+        const validAnnouncements = announcementsData.filter((a: any) => {
+          if (a.expire_date && new Date(a.expire_date) < now) return false;
+          return true;
+        });
+        setAnnouncements(validAnnouncements);
       }
 
       // (Current module is set above from mappedAssignments to avoid stale state.)
@@ -620,22 +649,71 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
             {/* Announcements Section */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-base">Announcements</h4>
-                <Button variant="outline" size="sm" className="text-xs h-7">
-                  <FileText className="h-3 w-3 mr-1" />
-                  Dismiss
-                </Button>
+                <h4 className="font-semibold text-base flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-muted-foreground" />
+                  Announcements
+                </h4>
+                {announcements.length > 0 && announcements.filter(a => !dismissedAnnouncements.has(a.id)).length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-xs h-7"
+                    onClick={() => {
+                      const allIds = new Set(announcements.map(a => a.id));
+                      setDismissedAnnouncements(allIds);
+                    }}
+                  >
+                    Dismiss All
+                  </Button>
+                )}
               </div>
-              <Card className="bg-muted/20">
-                <CardContent className="p-4">
-                  <p className="font-medium text-sm">MLK Day:</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Just a reminder to listen to the assigned tracks for Wednesday's MLK Day special 
-                    and come prepared to discuss in class. Make sure to complete the related listening 
-                    quiz by Wednesday evening!
-                  </p>
-                </CardContent>
-              </Card>
+              {announcements.filter(a => !dismissedAnnouncements.has(a.id)).length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No announcements at this time
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {announcements
+                    .filter(a => !dismissedAnnouncements.has(a.id))
+                    .slice(0, 3)
+                    .map((announcement) => (
+                      <Card key={announcement.id} className="bg-muted/20">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-sm">{announcement.title}</p>
+                                {announcement.announcement_type && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                                    {announcement.announcement_type}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-3">
+                                {announcement.content}
+                              </p>
+                              {announcement.created_at && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  {format(new Date(announcement.created_at), 'MMM d, yyyy')}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0"
+                              onClick={() => {
+                                setDismissedAnnouncements(prev => new Set([...prev, announcement.id]));
+                              }}
+                            >
+                              <XCircle className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
