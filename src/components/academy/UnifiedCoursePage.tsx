@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers, Archive, Images, User } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -61,6 +61,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const {
     user
   } = useAuth();
@@ -78,6 +79,8 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
   // Detect if URL contains /handbook to auto-switch tab
   const getInitialTab = () => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) return tabParam;
     if (location.pathname.includes('/handbook')) return 'handbook';
     return 'home';
   };
@@ -96,6 +99,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       setActiveTab('handbook');
     }
   }, [location.pathname]);
+
+  // Sync tab with query param (?tab=discussions)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -431,6 +442,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                         <TabsTrigger value="journals" className="text-xs px-3 py-2"><PenLine className="h-3 w-3 mr-1" />Journals</TabsTrigger>
                         <TabsTrigger value="tests" className="text-xs px-3 py-2"><FileCheck className="h-3 w-3 mr-1" />Tests</TabsTrigger>
                         <TabsTrigger value="polls" className="text-xs px-3 py-2"><BarChart className="h-3 w-3 mr-1" />Polls</TabsTrigger>
+                        <TabsTrigger value="discussions" className="text-xs px-3 py-2"><MessageSquare className="h-3 w-3 mr-1" />Discuss</TabsTrigger>
                         <TabsTrigger value="resources" className="text-xs px-3 py-2"><Library className="h-3 w-3 mr-1" />Resources</TabsTrigger>
                         <TabsTrigger value="grades" className="text-xs px-3 py-2"><Trophy className="h-3 w-3 mr-1" />Grades</TabsTrigger>
                         <TabsTrigger value="attendance" className="text-xs px-3 py-2"><UserCheck className="h-3 w-3 mr-1" />Attend</TabsTrigger>
@@ -445,6 +457,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                         <TabsTrigger value="home" className="text-xs px-3 py-2">Home</TabsTrigger>
                         <TabsTrigger value="messages" className="text-xs px-3 py-2">Messages</TabsTrigger>
                         <TabsTrigger value="assignments" className="text-xs px-3 py-2">Assignments</TabsTrigger>
+                        <TabsTrigger value="discussions" className="text-xs px-3 py-2">Discussions</TabsTrigger>
                         <TabsTrigger value="tests" className="text-xs px-3 py-2">Tests</TabsTrigger>
                         <TabsTrigger value="lounge" className="text-xs px-3 py-2">Lounge</TabsTrigger>
                         <TabsTrigger value="grades" className="text-xs px-3 py-2">Grades</TabsTrigger>
