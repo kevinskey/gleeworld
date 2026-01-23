@@ -454,7 +454,8 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                           <Settings className="h-3 w-3 mr-1" />Instructor
                         </TabsTrigger>}
                       </> : <>
-                        <TabsTrigger value="home" className="text-xs px-3 py-2">Home</TabsTrigger>
+                      <TabsTrigger value="home" className="text-xs px-3 py-2">Home</TabsTrigger>
+                        <TabsTrigger value="modules" className="text-xs px-3 py-2">Modules</TabsTrigger>
                         <TabsTrigger value="messages" className="text-xs px-3 py-2">Messages</TabsTrigger>
                         <TabsTrigger value="assignments" className="text-xs px-3 py-2">Assignments</TabsTrigger>
                         <TabsTrigger value="discussions" className="text-xs px-3 py-2">Discussions</TabsTrigger>
