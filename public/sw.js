@@ -1,7 +1,7 @@
 // Service Worker for GleeWorld PWA
-// Version: 7.4 - January 2026
-// NOTE: v7.4 - Fixed audio cleanup when closing PDFs, mobile toolbar sizing
-const CACHE_VERSION = 'v7.4';
+// Version: 7.5 - January 2026
+// NOTE: v7.5 - Fixed PWA radio glitching by skipping audio/video stream interception
+const CACHE_VERSION = 'v7.5';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
@@ -75,6 +75,30 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) return;
+
+  // CRITICAL: Skip audio/video streaming requests - NEVER cache or intercept these
+  // This prevents PWA service worker from interfering with radio playback
+  if (request.destination === 'audio' || request.destination === 'video') {
+    console.log('[SW] Skipping audio/video request:', url.href);
+    return;
+  }
+
+  // Skip Radio.co streaming URLs - these must go directly to network
+  if (url.hostname.includes('radio.co') || 
+      url.hostname.includes('streaming.radio.co') ||
+      url.hostname.includes('s2.radio.co') ||
+      url.hostname.includes('s3.radio.co') ||
+      url.hostname.includes('s4.radio.co') ||
+      url.hostname.includes('s5.radio.co')) {
+    console.log('[SW] Skipping radio stream request:', url.href);
+    return;
+  }
+
+  // Skip any URL with /listen path (audio streams)
+  if (url.pathname.includes('/listen')) {
+    console.log('[SW] Skipping stream URL:', url.href);
+    return;
+  }
 
   // Skip Supabase API calls - always fetch from network
   if (url.hostname.includes('supabase')) return;
