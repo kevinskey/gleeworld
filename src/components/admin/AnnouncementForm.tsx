@@ -74,8 +74,11 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
     try {
       setLoading(true);
       
+      // Destructure to exclude 'id' and other read-only fields from the update payload
+      const { id: _excludeId, created_at: _excludeCreatedAt, ...updateableFields } = announcement as any;
+      
       const announcementData: AnnouncementInsert = {
-        ...announcement,
+        ...updateableFields,
         title: announcement.title!,
         content: announcement.content!,
         created_by: user?.id || null,
