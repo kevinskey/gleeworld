@@ -15,6 +15,7 @@ import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
+import { CourseTopicSlider } from './CourseTopicSlider';
 
 interface StudentProfile {
   user_id: string;
@@ -75,9 +76,10 @@ interface CurrentModule {
 
 interface StudentDossierHomeProps {
   courseId: string;
+  isAdmin?: boolean;
 }
 
-export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId }) => {
+export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId, isAdmin = false }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -460,6 +462,9 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
             </CardContent>
           </Card>
         )}
+
+        {/* Topic Photo Slider */}
+        <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
 
         {/* Current Module / Week */}
         <Card>
