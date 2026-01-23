@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,7 +10,8 @@ import {
   Upload, 
   FolderPlus, 
   ArrowUpDown,
-  Loader2
+  Loader2,
+  FolderUp
 } from 'lucide-react';
 import { ViewMode, SortBy, SortOrder } from './types';
 
@@ -23,6 +25,7 @@ interface FinderToolbarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onUpload: () => void;
+  onUploadFolder: (files: File[]) => void;
   onNewFolder: () => void;
   isAdmin: boolean;
   uploading: boolean;
@@ -38,10 +41,25 @@ export const FinderToolbar = ({
   searchQuery,
   onSearchChange,
   onUpload,
+  onUploadFolder,
   onNewFolder,
   isAdmin,
   uploading
 }: FinderToolbarProps) => {
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFolderSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const fileArray = Array.from(files);
+    onUploadFolder(fileArray);
+    
+    // Reset input
+    if (folderInputRef.current) {
+      folderInputRef.current.value = '';
+    }
+  };
   return (
     <div className="flex items-center gap-3 p-3 border-b border-border bg-muted/20">
       {/* View Toggle */}
@@ -107,6 +125,29 @@ export const FinderToolbar = ({
             <FolderPlus className="h-4 w-4 mr-1.5" />
             New Folder
           </Button>
+          
+          {/* Hidden folder input */}
+          <input
+            ref={folderInputRef}
+            type="file"
+            // @ts-ignore - webkitdirectory is valid
+            webkitdirectory=""
+            directory=""
+            multiple
+            className="hidden"
+            onChange={handleFolderSelect}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => folderInputRef.current?.click()}
+            disabled={uploading}
+            className="h-8"
+          >
+            <FolderUp className="h-4 w-4 mr-1.5" />
+            Upload Folder
+          </Button>
+          
           <Button
             size="sm"
             onClick={onUpload}

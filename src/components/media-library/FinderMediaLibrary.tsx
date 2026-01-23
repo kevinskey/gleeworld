@@ -216,6 +216,81 @@ export const FinderMediaLibrary = () => {
     setUploading(false);
   };
 
+  // Folder upload - preserves folder structure
+  const handleFolderUpload = async (files: File[]) => {
+    if (!isAdmin) {
+      toast({ title: "Permission denied", variant: "destructive" });
+      return;
+    }
+
+    // Filter for supported file types
+    const supportedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf'];
+    const validFiles = files.filter(file => {
+      const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+      return supportedExtensions.includes(ext);
+    });
+
+    if (validFiles.length === 0) {
+      toast({ title: "No supported files found in folder", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    let successCount = 0;
+
+    for (const file of validFiles) {
+      try {
+        // Extract folder path from webkitRelativePath
+        const relativePath = (file as any).webkitRelativePath || file.name;
+        const pathParts = relativePath.split('/');
+        // Get folder structure (exclude root folder name and filename)
+        const folderPath = pathParts.length > 2 
+          ? pathParts.slice(1, -1).join('/') 
+          : '';
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const storagePath = folderPath 
+          ? `media/${folderPath}/${fileName}`
+          : `media/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('media-library')
+          .upload(storagePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from('media-library').getPublicUrl(storagePath);
+
+        // Add folder info to tags
+        const tags = folderPath ? [`folder:${folderPath}`] : null;
+
+        await supabase.from('gw_media_library').insert({
+          filename: fileName,
+          original_filename: file.name,
+          file_path: storagePath,
+          file_url: data.publicUrl,
+          file_type: file.type,
+          file_size: file.size,
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          bucket_id: 'media-library',
+          category: 'uploads',
+          tags: tags
+        });
+
+        successCount++;
+      } catch (error) {
+        console.error('Upload error:', error);
+      }
+    }
+
+    if (successCount > 0) {
+      toast({ title: `${successCount} file(s) uploaded from folder` });
+      fetchAllMedia();
+    }
+    setUploading(false);
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: handleUpload,
     disabled: !isAdmin || uploading,
@@ -293,6 +368,7 @@ export const FinderMediaLibrary = () => {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onUpload={() => document.getElementById('file-upload-input')?.click()}
+          onUploadFolder={handleFolderUpload}
           onNewFolder={() => toast({ title: "Folders coming soon" })}
           isAdmin={isAdmin}
           uploading={uploading}
