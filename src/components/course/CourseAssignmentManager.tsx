@@ -420,94 +420,121 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
               Add
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg md:max-w-2xl lg:max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>{editingAssignment ? 'Edit Assignment' : 'Create Assignment'}</DialogTitle>
+          <DialogContent className="w-[95vw] max-w-3xl lg:max-w-4xl bg-white text-slate-900">
+            <DialogHeader className="pb-4 border-b">
+              <DialogTitle className="text-xl lg:text-2xl font-semibold text-slate-900">
+                {editingAssignment ? 'Edit Assignment' : 'Create Assignment'}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-6 py-6 max-h-[70vh] overflow-y-auto">
+              {/* Title */}
               <div className="space-y-2">
-                <Label>Title *</Label>
-                <Input value={formData.title} onChange={e => setFormData({
-                ...formData,
-                title: e.target.value
-              })} placeholder="Assignment title" />
+                <Label className="text-base font-medium text-slate-800">Title *</Label>
+                <Input 
+                  value={formData.title} 
+                  onChange={e => setFormData({ ...formData, title: e.target.value })} 
+                  placeholder="Assignment title" 
+                  className="h-12 text-base bg-white text-slate-900 border-slate-300 placeholder:text-slate-400"
+                />
               </div>
+
+              {/* Description */}
               <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea value={formData.description} onChange={e => setFormData({
-                ...formData,
-                description: e.target.value
-              })} placeholder="Assignment description" rows={3} />
+                <Label className="text-base font-medium text-slate-800">Description</Label>
+                <Textarea 
+                  value={formData.description} 
+                  onChange={e => setFormData({ ...formData, description: e.target.value })} 
+                  placeholder="Assignment description and instructions..." 
+                  rows={5}
+                  className="text-base bg-white text-slate-900 border-slate-300 placeholder:text-slate-400 resize-y min-h-[120px]"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              {/* Type & Points Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={formData.assignment_type} onValueChange={value => setFormData({
-                  ...formData,
-                  assignment_type: value
-                })}>
-                    <SelectTrigger>
+                  <Label className="text-base font-medium text-slate-800">Assignment Type</Label>
+                  <Select 
+                    value={formData.assignment_type} 
+                    onValueChange={value => setFormData({ ...formData, assignment_type: value })}
+                  >
+                    <SelectTrigger className="h-12 text-base bg-white text-slate-900 border-slate-300">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      {ASSIGNMENT_TYPES.map(type => <SelectItem key={type.value} value={type.value}>
+                    <SelectContent className="bg-white">
+                      {ASSIGNMENT_TYPES.map(type => (
+                        <SelectItem key={type.value} value={type.value} className="text-slate-900">
                           {type.label}
-                        </SelectItem>)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Points</Label>
-                  <Input type="number" value={formData.points} onChange={e => setFormData({
-                  ...formData,
-                  points: parseInt(e.target.value) || 0
-                })} />
+                  <Label className="text-base font-medium text-slate-800">Points</Label>
+                  <Input 
+                    type="number" 
+                    value={formData.points} 
+                    onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) || 0 })} 
+                    className="h-12 text-base bg-white text-slate-900 border-slate-300"
+                  />
                 </div>
               </div>
+
+              {/* Due Date */}
               <div className="space-y-2">
-                <Label>Due Date</Label>
-                <Input type="datetime-local" value={formData.due_at} onChange={e => setFormData({
-                ...formData,
-                due_at: e.target.value
-              })} />
+                <Label className="text-base font-medium text-slate-800">Due Date</Label>
+                <Input 
+                  type="datetime-local" 
+                  value={formData.due_at} 
+                  onChange={e => setFormData({ ...formData, due_at: e.target.value })} 
+                  className="h-12 text-base bg-white text-slate-900 border-slate-300"
+                />
               </div>
+
+              {/* Rubric */}
               <div className="space-y-2">
-                <Label>Grading Rubric</Label>
+                <Label className="text-base font-medium text-slate-800">Grading Rubric</Label>
                 <Select
                   value={formData.rubric_id || NO_RUBRIC_VALUE}
                   onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      rubric_id: value === NO_RUBRIC_VALUE ? '' : value,
-                    })
+                    setFormData({ ...formData, rubric_id: value === NO_RUBRIC_VALUE ? '' : value })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 text-base bg-white text-slate-900 border-slate-300">
                     <SelectValue placeholder="No rubric" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NO_RUBRIC_VALUE}>No rubric</SelectItem>
+                  <SelectContent className="bg-white">
+                    <SelectItem value={NO_RUBRIC_VALUE} className="text-slate-900">No rubric</SelectItem>
                     {rubrics.map(rubric => (
-                      <SelectItem key={rubric.id} value={rubric.id}>
+                      <SelectItem key={rubric.id} value={rubric.id} className="text-slate-900">
                         {rubric.name} ({rubric.total_points} pts)
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-slate-500">
+                <p className="text-sm text-slate-500">
                   Rubric will be used for AI-assisted grading
                 </p>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => {
-              setIsCreateOpen(false);
-              setEditingAssignment(null);
-              resetForm();
-            }}>
+            <DialogFooter className="pt-4 border-t gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsCreateOpen(false);
+                  setEditingAssignment(null);
+                  resetForm();
+                }}
+                className="h-11 px-6 text-base"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
+              <Button 
+                onClick={handleSubmit} 
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="h-11 px-6 text-base"
+              >
                 {editingAssignment ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>
