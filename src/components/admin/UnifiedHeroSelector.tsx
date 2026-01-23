@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Image, Layout, Newspaper, Users, Monitor, Church, GraduationCap } from "lucide-react";
+import { Image, Layout, Newspaper, Users, Monitor, Church, GraduationCap, BookOpen } from "lucide-react";
 
 export interface HeroContext {
   id: string;
   label: string;
   description: string;
-  table: 'gw_hero_slides' | 'dashboard_hero_slides' | 'alumnae_newsletter_hero_slides' | 'advertising_hero' | 'lyke_house_hero' | 'academy_course_badges';
+  table: 'gw_hero_slides' | 'dashboard_hero_slides' | 'alumnae_newsletter_hero_slides' | 'advertising_hero' | 'lyke_house_hero' | 'academy_course_badges' | 'gw_universal_sliders';
   usageContext?: string;
   icon: React.ReactNode;
   slideCount?: number;
@@ -57,6 +57,13 @@ const HERO_CONTEXTS: HeroContext[] = [
     description: 'Course badge images for the Glee Academy dashboard slider',
     table: 'academy_course_badges',
     icon: <GraduationCap className="h-4 w-4" />
+  },
+  {
+    id: 'mus240-slider',
+    label: 'MUS 240 Slider',
+    description: 'Topic photos for the MUS 240 course landing page',
+    table: 'gw_universal_sliders',
+    icon: <BookOpen className="h-4 w-4" />
   }
 ];
 
