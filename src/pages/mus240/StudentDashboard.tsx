@@ -208,6 +208,7 @@ export const StudentDashboard = () => {
         body: {
           to: 'kpj64110@gmail.com',
           subject: `${studentName} from MUS240`,
+          from: 'MUS 240 <noreply@gleeworld.org>',
           html: `
             <h2>Email from MUS 240 student</h2>
             <p><strong>From:</strong> ${studentName} (${user?.email})</p>
