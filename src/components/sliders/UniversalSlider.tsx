@@ -170,8 +170,9 @@ const SlideRenderer: React.FC<{
     return `${hMap[h as keyof typeof hMap] || hMap.center} ${vMap[v as keyof typeof vMap] || vMap.center}`;
   };
 
-  const Wrapper = slide.link_url ? 'a' : 'div';
-  const wrapperProps = slide.link_url ? { href: slide.link_url, target: slide.link_target, rel: 'noopener noreferrer' } : {};
+  const hasValidLink = slide.link_url && slide.link_url.trim().length > 0;
+  const Wrapper = hasValidLink ? 'a' : 'div';
+  const wrapperProps = hasValidLink ? { href: slide.link_url, target: slide.link_target, rel: 'noopener noreferrer' } : {};
 
   return (
     <Wrapper
