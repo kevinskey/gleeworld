@@ -73,6 +73,7 @@ export const CourseTopicSlider: React.FC<CourseTopicSliderProps> = ({
           placementKey={placementKey} 
           className="rounded-none"
           objectFit="contain"
+          enableLightbox
         />
       </CardContent>
     </Card>
