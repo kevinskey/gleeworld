@@ -343,58 +343,58 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
   }
   return <div className="space-y-4">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <BookOpen className="h-5 w-5 text-primary" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{stats.totalAssignments}</p>
-                <p className="text-xs text-muted-foreground">Total Assignments</p>
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalAssignments}</p>
+                <p className="text-xs text-muted-foreground truncate">Total</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <FileCheck className="h-5 w-5 text-blue-500" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10 flex-shrink-0">
+                <FileCheck className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{stats.totalSubmissions}</p>
-                <p className="text-xs text-muted-foreground">Submissions</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <Clock className="h-5 w-5 text-amber-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{stats.pendingGrading}</p>
-                <p className="text-xs text-muted-foreground">Pending Grading</p>
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalSubmissions}</p>
+                <p className="text-xs text-muted-foreground truncate">Submissions</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <CheckCircle className="h-5 w-5 text-green-500" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-amber-500/10 flex-shrink-0">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{stats.totalGraded}</p>
-                <p className="text-xs text-muted-foreground">Graded</p>
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.pendingGrading}</p>
+                <p className="text-xs text-muted-foreground truncate">Pending</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card border-border">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/10 flex-shrink-0">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalGraded}</p>
+                <p className="text-xs text-muted-foreground truncate">Graded</p>
               </div>
             </div>
           </CardContent>
@@ -542,55 +542,58 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         </Dialog>
       </div>
 
-      {/* Sort & Filter Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 p-2 bg-muted/30 rounded-lg border">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {/* Sort & Filter Toolbar - Mobile optimized */}
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 p-3 bg-muted/30 rounded-lg border">
+        {/* Search - full width on mobile */}
+        <div className="relative w-full sm:flex-1 sm:min-w-[180px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search assignments..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 h-9 text-sm md:text-base"
+            className="pl-9 h-10 sm:h-9 text-base sm:text-sm"
           />
         </div>
         
-        {/* Filter by type */}
-        <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-[130px] h-9">
-            <Filter className="h-4 w-4 mr-1.5" />
-            <SelectValue placeholder="All types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            {ASSIGNMENT_TYPES.map(type => (
-              <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Filters row - side by side on mobile */}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Filter by type */}
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="flex-1 sm:w-[130px] h-10 sm:h-9 text-sm">
+              <Filter className="h-4 w-4 mr-1.5 flex-shrink-0" />
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {ASSIGNMENT_TYPES.map(type => (
+                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        {/* Sort by */}
-        <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-          <SelectTrigger className="w-[120px] h-9">
-            <ArrowUpDown className="h-4 w-4 mr-1.5" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="due_date">Due Date</SelectItem>
-            <SelectItem value="title">Title</SelectItem>
-            <SelectItem value="points">Points</SelectItem>
-            <SelectItem value="type">Type</SelectItem>
-          </SelectContent>
-        </Select>
+          {/* Sort by */}
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="flex-1 sm:w-[120px] h-10 sm:h-9 text-sm">
+              <ArrowUpDown className="h-4 w-4 mr-1.5 flex-shrink-0" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="due_date">Due Date</SelectItem>
+              <SelectItem value="title">Title</SelectItem>
+              <SelectItem value="points">Points</SelectItem>
+              <SelectItem value="type">Type</SelectItem>
+            </SelectContent>
+          </Select>
 
-        {/* Sort order toggle */}
-        <Button variant="outline" size="sm" className="h-9 px-2" onClick={toggleSortOrder}>
-          {sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
-        </Button>
+          {/* Sort order toggle */}
+          <Button variant="outline" size="sm" className="h-10 sm:h-9 w-10 sm:w-9 p-0 flex-shrink-0" onClick={toggleSortOrder}>
+            {sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
 
-      {/* Assignment List */}
-      <ScrollArea className="h-[calc(100vh-240px)]">
+      {/* Assignment List - responsive height */}
+      <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)] md:h-[calc(100vh-240px)]">
         <div className="space-y-2 pr-2">
           {filteredAndSortedAssignments.map(assignment => (
             <div 
