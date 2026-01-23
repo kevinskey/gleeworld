@@ -782,7 +782,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           {/* Content */}
                           <div className="space-y-1 flex-1 flex flex-col min-h-0">
                             <Label className="text-sm font-medium text-foreground flex-shrink-0">Message:</Label>
-                            <div className="flex-1 min-h-[200px] max-h-[400px] overflow-hidden">
+                            <div className="flex-1 min-h-[200px] max-h-[400px] overflow-y-auto">
                               <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="200px" />
                             </div>
                           </div>
