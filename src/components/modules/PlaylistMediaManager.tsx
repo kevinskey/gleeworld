@@ -91,14 +91,57 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
 
   const fetchAvailableMedia = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch from gw_media_library
+      const { data: mediaLibData, error: mediaLibError } = await supabase
         .from('gw_media_library')
         .select('id, title, file_url, file_type, category')
         .or('file_type.ilike.%audio%,file_type.ilike.%mp3%')
         .order('title');
 
-      if (error) throw error;
-      setAvailableMedia(data || []);
+      if (mediaLibError) throw mediaLibError;
+
+      // Fetch from mus240_audio_resources
+      const { data: mus240Data, error: mus240Error } = await supabase
+        .from('mus240_audio_resources')
+        .select('id, title, file_path, category')
+        .order('title');
+
+      // Fetch from audio_archive
+      const { data: archiveData, error: archiveError } = await supabase
+        .from('audio_archive')
+        .select('id, title, audio_url, category')
+        .order('title');
+
+      // Transform mus240 data to match MediaItem format
+      const mus240Items: MediaItem[] = (mus240Data || []).map(item => {
+        const { data: urlData } = supabase.storage
+          .from('mus240-audio')
+          .getPublicUrl(item.file_path);
+        return {
+          id: item.id,
+          title: item.title,
+          file_url: urlData.publicUrl,
+          file_type: 'audio/mpeg',
+          category: item.category || 'mus240',
+        };
+      });
+
+      // Transform audio_archive data to match MediaItem format
+      const archiveItems: MediaItem[] = (archiveData || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        file_url: item.audio_url,
+        file_type: 'audio/mpeg',
+        category: item.category || 'archive',
+      }));
+
+      // Combine all sources
+      const allMedia = [...(mediaLibData || []), ...mus240Items, ...archiveItems];
+      
+      // Sort by title
+      allMedia.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      
+      setAvailableMedia(allMedia);
     } catch (err) {
       console.error('Error fetching available media:', err);
     }
