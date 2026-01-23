@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown, MessagesSquare, UserCheck, Megaphone } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare, CalendarDays, ChevronDown, MessagesSquare, UserCheck, Megaphone, ListMusic } from 'lucide-react';
 import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 import { CourseAssignmentManager } from '@/components/course/CourseAssignmentManager';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -48,6 +48,7 @@ import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 import { DiscussionSummaryDashboard } from '@/components/course/DiscussionSummaryDashboard';
 import { CourseAnnouncementsManager } from '@/components/course/CourseAnnouncementsManager';
 import { Mus240ResourcesTab } from '@/components/academy/Mus240ResourcesTab';
+import { CoursePlaylistManager } from '@/components/modules/CoursePlaylistManager';
 
 export const InstructorConsole = () => {
   const {
@@ -191,6 +192,7 @@ export const InstructorConsole = () => {
         { value: 'student-resources', label: 'Resources (Student View)', icon: FolderOpen },
         { value: 'videos', label: 'Video Library', icon: Video },
         { value: 'audio', label: 'Audio Examples', icon: Headphones },
+        { value: 'playlists', label: 'Playlists', icon: ListMusic },
       ]
     },
     {
@@ -779,6 +781,21 @@ export const InstructorConsole = () => {
                   </div>
                 </CardContent>
               </Card>}
+
+            {activeTab === 'playlists' && (
+              <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <ListMusic className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Course Playlists
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Create and manage audio playlists for the course</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <CoursePlaylistManager courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" />
+                </CardContent>
+              </Card>
+            )}
 
             {activeTab === 'ai-assistant' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
