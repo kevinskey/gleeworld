@@ -12,6 +12,7 @@ interface UniversalSliderProps {
   // Override slider settings if needed
   overrideColumns?: 1 | 2 | 3;
   overrideFullWidth?: boolean;
+  objectFit?: 'cover' | 'contain';
 }
 
 export const UniversalSlider: React.FC<UniversalSliderProps> = ({
@@ -19,6 +20,7 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
   className,
   overrideColumns,
   overrideFullWidth,
+  objectFit = 'cover',
 }) => {
   const { data: slider, isLoading } = useSliderByPlacement(placementKey);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -110,6 +112,7 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
             slide={slide} 
             heightConfig={heightConfig}
             transition={slider.transition_effect}
+            objectFit={objectFit}
           />
         ))}
       </div>
@@ -163,7 +166,8 @@ const SlideRenderer: React.FC<{
   slide: UniversalSliderSlide;
   heightConfig: { mobile: number; tablet: number; desktop: number };
   transition: string;
-}> = ({ slide, heightConfig, transition }) => {
+  objectFit: 'cover' | 'contain';
+}> = ({ slide, heightConfig, transition, objectFit }) => {
   const getPositionClasses = (h: string, v: string) => {
     const hMap = { left: 'items-start text-left', center: 'items-center text-center', right: 'items-end text-right' };
     const vMap = { top: 'justify-start pt-8', center: 'justify-center', bottom: 'justify-end pb-8' };
@@ -198,10 +202,12 @@ const SlideRenderer: React.FC<{
           <img
             src={slide.image_url}
             alt={slide.alt_text || slide.title || 'Slide image'}
-            className="absolute inset-0 w-full h-full object-cover"
+            className={cn(
+              "absolute inset-0 w-full h-full",
+              objectFit === 'contain' ? 'object-contain' : 'object-cover'
+            )}
             style={{ 
               objectPosition: slide.background_position,
-              objectFit: slide.background_size as any,
             }}
             loading="lazy"
           />
