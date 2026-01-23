@@ -70,8 +70,7 @@ interface Announcement {
   id: string;
   title: string;
   content: string;
-  announcement_type?: string;
-  publish_date?: string;
+  is_pinned?: boolean;
   created_at?: string;
 }
 
@@ -364,22 +363,17 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         }
       }
 
-      // Fetch announcements for this course
+      // Fetch course-specific announcements created by instructor/TA
       const { data: announcementsData } = await supabase
-        .from('gw_announcements')
-        .select('id, title, content, announcement_type, publish_date, created_at')
-        .or(`target_audience.is.null,target_audience.eq.all,target_audience.ilike.%${courseId}%`)
+        .from('course_announcements')
+        .select('id, title, content, is_pinned, created_at')
+        .eq('course_id', courseId)
+        .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(5);
       
       if (announcementsData) {
-        // Filter out expired announcements if expire_date exists
-        const now = new Date();
-        const validAnnouncements = announcementsData.filter((a: any) => {
-          if (a.expire_date && new Date(a.expire_date) < now) return false;
-          return true;
-        });
-        setAnnouncements(validAnnouncements);
+        setAnnouncements(announcementsData);
       }
 
       // (Current module is set above from mappedAssignments to avoid stale state.)
@@ -683,9 +677,9 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
                                 <p className="font-medium text-sm">{announcement.title}</p>
-                                {announcement.announcement_type && (
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
-                                    {announcement.announcement_type}
+                                {announcement.is_pinned && (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                                    Pinned
                                   </Badge>
                                 )}
                               </div>
