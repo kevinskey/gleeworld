@@ -417,25 +417,25 @@ export const InstructorConsole = () => {
           </Sheet>
 
           {/* Main Content */}
-          <main className="flex-1 p-4 md:p-6 lg:p-8 bg-background">
+          <main className="flex-1 min-w-0 overflow-x-hidden p-3 sm:p-4 md:p-6 lg:p-8 bg-background">
             {/* Compact inline header */}
-            <div className="flex items-center justify-between mb-4 md:mb-6">
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-foreground">
+            <div className="flex items-center justify-between mb-3 md:mb-6">
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-foreground truncate">
                 {navItems.find(item => item.value === activeTab)?.label || 'Console'}
               </h1>
             </div>
 
             {/* Content */}
             {activeTab === 'assignments' && (
-              <Card>
-                <CardHeader className="border-b p-4 md:p-6">
-                  <CardTitle className="flex items-center gap-2 text-lg md:text-xl lg:text-2xl">
-                    <BookOpen className="h-5 w-5 md:h-6 md:w-6" />
-                    Assignments
+              <Card className="overflow-hidden">
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl lg:text-2xl">
+                    <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 flex-shrink-0" />
+                    <span className="truncate">Assignments</span>
                   </CardTitle>
-                  <p className="text-sm md:text-base text-muted-foreground mt-1">Create, edit, and manage course assignments</p>
+                  <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1">Create, edit, and manage course assignments</p>
                 </CardHeader>
-                <CardContent className="p-3 md:p-4 lg:p-6">
+                <CardContent className="p-2 sm:p-3 md:p-4 lg:p-6 overflow-x-auto">
                   <CourseAssignmentManager courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" courseName="MUS 240" />
                 </CardContent>
               </Card>

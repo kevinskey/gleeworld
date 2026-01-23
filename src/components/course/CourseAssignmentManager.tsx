@@ -341,60 +341,60 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         </CardContent>
       </Card>;
   }
-  return <div className="space-y-4">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3">
-        <Card className="bg-card border-border">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
-                <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+  return <div className="space-y-3 sm:space-y-4 w-full min-w-0">
+      {/* Stats Cards - 2x2 grid */}
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-2 md:gap-3">
+        <Card className="bg-card border-border overflow-hidden">
+          <CardContent className="p-2 sm:p-3 md:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-primary" />
               </div>
-              <div className="min-w-0">
-                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalAssignments}</p>
-                <p className="text-xs text-muted-foreground truncate">Total</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-card border-border">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10 flex-shrink-0">
-                <FileCheck className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalSubmissions}</p>
-                <p className="text-xs text-muted-foreground truncate">Submissions</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalAssignments}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Total</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-card border-border">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 rounded-lg bg-amber-500/10 flex-shrink-0">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
+        <Card className="bg-card border-border overflow-hidden">
+          <CardContent className="p-2 sm:p-3 md:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-blue-500/10 flex-shrink-0">
+                <FileCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-blue-500" />
               </div>
-              <div className="min-w-0">
-                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.pendingGrading}</p>
-                <p className="text-xs text-muted-foreground truncate">Pending</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalSubmissions}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Submitted</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-card border-border">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/10 flex-shrink-0">
-                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+        <Card className="bg-card border-border overflow-hidden">
+          <CardContent className="p-2 sm:p-3 md:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-amber-500/10 flex-shrink-0">
+                <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-amber-500" />
               </div>
-              <div className="min-w-0">
-                <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalGraded}</p>
-                <p className="text-xs text-muted-foreground truncate">Graded</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.pendingGrading}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Pending</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card border-border overflow-hidden">
+          <CardContent className="p-2 sm:p-3 md:p-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-green-500/10 flex-shrink-0">
+                <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-green-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalGraded}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Graded</p>
               </div>
             </div>
           </CardContent>
@@ -403,9 +403,9 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
 
       {/* Header with Add button */}
       <div className="flex items-center justify-between py-1">
-        <div className="flex items-center gap-2">
-          <h2 className="text-base md:text-lg font-semibold text-foreground">Assignments</h2>
-          <span className="text-sm md:text-base text-muted-foreground">({filteredAndSortedAssignments.length})</span>
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <h2 className="text-sm sm:text-base md:text-lg font-semibold text-foreground truncate">Assignments</h2>
+          <span className="text-xs sm:text-sm md:text-base text-muted-foreground flex-shrink-0">({filteredAndSortedAssignments.length})</span>
         </div>
         <Dialog open={isCreateOpen || !!editingAssignment} onOpenChange={open => {
         if (!open) {
@@ -415,9 +415,9 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         }
       }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Add
+            <Button size="sm" onClick={() => setIsCreateOpen(true)} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 flex-shrink-0">
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
+              <span className="hidden xs:inline">Add</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="w-[95vw] max-w-3xl lg:max-w-4xl bg-white text-slate-900">
@@ -543,25 +543,25 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       </div>
 
       {/* Sort & Filter Toolbar - Mobile optimized */}
-      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 p-3 bg-muted/30 rounded-lg border">
-        {/* Search - full width on mobile */}
-        <div className="relative w-full sm:flex-1 sm:min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col gap-2 p-2 sm:p-3 bg-muted/30 rounded-lg border">
+        {/* Search - full width */}
+        <div className="relative w-full">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
           <Input
-            placeholder="Search assignments..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-10 sm:h-9 text-base sm:text-sm"
+            className="pl-8 sm:pl-9 h-9 sm:h-10 text-sm"
           />
         </div>
         
-        {/* Filters row - side by side on mobile */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        {/* Filters row - compact on mobile */}
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full">
           {/* Filter by type */}
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="flex-1 sm:w-[130px] h-10 sm:h-9 text-sm">
-              <Filter className="h-4 w-4 mr-1.5 flex-shrink-0" />
-              <SelectValue placeholder="All types" />
+            <SelectTrigger className="flex-1 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
+              <Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+              <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All types</SelectItem>
@@ -573,71 +573,71 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
 
           {/* Sort by */}
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-            <SelectTrigger className="flex-1 sm:w-[120px] h-10 sm:h-9 text-sm">
-              <ArrowUpDown className="h-4 w-4 mr-1.5 flex-shrink-0" />
+            <SelectTrigger className="flex-1 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
+              <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="due_date">Due Date</SelectItem>
+              <SelectItem value="due_date">Due</SelectItem>
               <SelectItem value="title">Title</SelectItem>
-              <SelectItem value="points">Points</SelectItem>
+              <SelectItem value="points">Pts</SelectItem>
               <SelectItem value="type">Type</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Sort order toggle */}
-          <Button variant="outline" size="sm" className="h-10 sm:h-9 w-10 sm:w-9 p-0 flex-shrink-0" onClick={toggleSortOrder}>
-            {sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+          <Button variant="outline" size="sm" className="h-8 sm:h-9 w-8 sm:w-9 p-0 flex-shrink-0" onClick={toggleSortOrder}>
+            {sortOrder === 'asc' ? <ArrowUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <ArrowDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
           </Button>
         </div>
       </div>
 
       {/* Assignment List - responsive height */}
-      <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)] md:h-[calc(100vh-240px)]">
-        <div className="space-y-2 pr-2">
+      <ScrollArea className="h-[calc(100vh-380px)] sm:h-[calc(100vh-340px)] md:h-[calc(100vh-280px)]">
+        <div className="space-y-1.5 sm:space-y-2 pr-1 sm:pr-2">
           {filteredAndSortedAssignments.map(assignment => (
             <div 
               key={assignment.id} 
-              className="flex items-center justify-between p-3 md:p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+              className="flex items-start sm:items-center justify-between p-2 sm:p-3 md:p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors gap-2"
             >
-              <div className="flex flex-col gap-1 flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-base md:text-lg font-medium truncate text-foreground">
+              <div className="flex flex-col gap-0.5 sm:gap-1 flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                  <span className="text-sm sm:text-base md:text-lg font-medium text-foreground line-clamp-1">
                     {assignment.title}
                   </span>
-                  <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-xs md:text-sm px-2 py-0.5">
+                  <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 sm:py-0.5 flex-shrink-0">
                     {assignment.assignment_type || 'task'}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-3 text-sm md:text-base text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-base text-muted-foreground">
                   <span>{assignment.points} pts</span>
                   {assignment.due_date && (
                     <span className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
+                      <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       {format(new Date(assignment.due_date), 'MMM d, yyyy')}
                     </span>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-8 w-8 md:h-9 md:w-9" onClick={() => handleEdit(assignment)}>
-                  <Edit className="h-4 w-4" />
+              <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9" onClick={() => handleEdit(assignment)}>
+                  <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 md:h-9 md:w-9" onClick={() => handleDelete(assignment.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
+                <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9" onClick={() => handleDelete(assignment.id)}>
+                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
                 </Button>
               </div>
             </div>
           ))}
 
           {filteredAndSortedAssignments.length === 0 && (
-            <div className="border rounded-lg p-8 text-center">
-              <p className="text-muted-foreground text-base mb-3">
+            <div className="border rounded-lg p-4 sm:p-6 md:p-8 text-center">
+              <p className="text-muted-foreground text-sm sm:text-base mb-2 sm:mb-3">
                 {assignments.length === 0 ? 'No assignments yet' : 'No assignments match your filters'}
               </p>
               {assignments.length === 0 && (
                 <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                  <Plus className="h-4 w-4 mr-1" />
+                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
                   Create First Assignment
                 </Button>
               )}
