@@ -70,11 +70,11 @@ export const YouTubeChannelSlider: React.FC = () => {
 
       {/* Video Slider with Infinite Scroll */}
       <div 
-        className="bg-gradient-to-b from-[hsl(208,100%,14%)] to-[hsl(208,100%,10%)] py-5 overflow-hidden"
+        className={`bg-gradient-to-b from-[hsl(208,100%,14%)] to-[hsl(208,100%,10%)] py-5 ${isPaused ? 'overflow-x-auto' : 'overflow-hidden'} touch-pan-x`}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
+        onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
       >
         {isLoading ? (
           <div className="flex gap-4 px-5">
