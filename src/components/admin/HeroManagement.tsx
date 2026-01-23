@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AdvertisingHeroManager } from "./AdvertisingHeroManager";
 import { LykeHouseHeroManager } from "./LykeHouseHeroManager";
 import { AcademySliderManager } from "./AcademySliderManager";
+import { MUS240SliderManager } from "./MUS240SliderManager";
 import { AmazonProductSuggester } from "./AmazonProductSuggester";
 import { UnifiedHeroSelector, HERO_CONTEXTS, type HeroContext } from "./UnifiedHeroSelector";
 import { SlideEditForm } from "./hero/SlideEditForm";
@@ -676,6 +677,8 @@ export const HeroManagement = () => {
         <LykeHouseHeroManager />
       ) : selectedContext.id === 'academy-slider' ? (
         <AcademySliderManager />
+      ) : selectedContext.id === 'mus240-slider' ? (
+        <MUS240SliderManager />
       ) : (
         <>
           {/* Quick Settings Bar - only for dashboard context */}
