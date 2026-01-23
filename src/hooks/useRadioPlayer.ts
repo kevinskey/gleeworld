@@ -305,21 +305,29 @@ export const useRadioPlayer = () => {
         navigator.mediaSession.playbackState = 'paused';
       }
       
-      // Use a longer delay to ensure userPausedRef is set by pause() function first
-      // This prevents the auto-resume loop when user explicitly pauses
+      // CRITICAL: Check userPausedRef IMMEDIATELY before any timeout
+      // If user explicitly paused, DO NOT schedule any auto-resume
+      if (userPausedRef.current) {
+        console.log('useRadioPlayer: User explicitly paused, no auto-resume');
+        return;
+      }
+      
+      // Only consider auto-resume if this was NOT a user-initiated pause
+      // Use a longer delay to ensure any pending state updates complete
       setTimeout(() => {
-        // Only auto-resume if:
-        // 1. User didn't explicitly pause (userPausedRef is false)
-        // 2. We were supposed to be playing (isPlayingRef is true)
-        // 3. The audio is actually paused (double-check state)
+        // Double-check all conditions after the delay
+        // Must verify userPausedRef again as it could have been set during the delay
         if (!userPausedRef.current && isPlayingRef.current && audioRef.current?.paused) {
           console.log('useRadioPlayer: Browser paused audio unexpectedly, will try to resume...');
           clearReconnectTimeout();
           reconnectTimeoutRef.current = setTimeout(() => {
-            resumePlayback();
+            // Triple-check before actually resuming
+            if (!userPausedRef.current && isPlayingRef.current) {
+              resumePlayback();
+            }
           }, 500);
         }
-      }, 100); // Increased delay to 100ms for more reliable flag checking
+      }, 150); // Slightly longer delay for more reliable flag checking
     };
     
     const handleError = (e: Event) => {
