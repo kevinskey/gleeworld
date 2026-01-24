@@ -4,6 +4,7 @@ import { Image, Video, Music, FileText, File, Presentation, FileSpreadsheet, Fil
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent } from '@/components/ui/context-menu';
 import { format } from 'date-fns';
 import { useAllMediaFolders, useMoveToFolder, MediaFolder } from '@/hooks/useMediaFolders';
+import { DraggableFileItem } from './DraggableFileItem';
 
 interface FinderFileListProps {
   files: MediaFile[];
@@ -101,75 +102,77 @@ export const FinderFileList = ({
           const isSelected = selectedFiles.includes(file.id);
 
           return (
-            <ContextMenu key={file.id}>
-              <ContextMenuTrigger>
-                <div
-                  className={cn(
-                    "grid grid-cols-12 gap-2 px-3 py-2 text-sm cursor-pointer transition-colors",
-                    "hover:bg-muted/50",
-                    isSelected && "bg-primary/10"
-                  )}
-                  onClick={(e) => onSelect(file, e)}
-                  onDoubleClick={() => onOpen(file)}
-                >
-                  <div className="col-span-5 flex items-center gap-2 min-w-0">
-                    <Icon className={cn("h-4 w-4 flex-shrink-0", getIconColor(extendedType))} />
-                    <span className="truncate">{file.title || 'Untitled'}</span>
-                  </div>
-                  <div className="col-span-2 text-muted-foreground capitalize">
-                    {extendedType}
-                  </div>
-                  <div className="col-span-2 text-right text-muted-foreground">
-                    {formatSize(file.file_size)}
-                  </div>
-                  <div className="col-span-3 text-muted-foreground">
-                    {format(new Date(file.created_at), 'MMM d, yyyy')}
-                  </div>
-                </div>
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                <ContextMenuItem onClick={() => onOpen(file)}>
-                  Open
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => window.open(file.file_url, '_blank')}>
-                  Download
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem onClick={() => onRename(file)}>Rename</ContextMenuItem>
-                <ContextMenuSub>
-                  <ContextMenuSubTrigger>
-                    <FolderInput className="h-4 w-4 mr-2" />
-                    Move to Folder
-                  </ContextMenuSubTrigger>
-                  <ContextMenuSubContent>
-                    {file.folder_id && (
-                      <ContextMenuItem onClick={() => handleMoveToFolder(file.id, null)}>
-                        <Folder className="h-4 w-4 mr-2" />
-                        Remove from Folder
-                      </ContextMenuItem>
+            <DraggableFileItem key={file.id} id={file.id}>
+              <ContextMenu>
+                <ContextMenuTrigger>
+                  <div
+                    className={cn(
+                      "grid grid-cols-12 gap-2 px-3 py-2 text-sm cursor-pointer transition-colors",
+                      "hover:bg-muted/50",
+                      isSelected && "bg-primary/10"
                     )}
-                    {file.folder_id && folders.length > 0 && <ContextMenuSeparator />}
-                    {folders.length === 0 ? (
-                      <ContextMenuItem disabled>No folders available</ContextMenuItem>
-                    ) : (
-                      folders.map((folder: MediaFolder) => (
-                        <ContextMenuItem 
-                          key={folder.id} 
-                          onClick={() => handleMoveToFolder(file.id, folder.id)}
-                          disabled={folder.id === file.folder_id}
-                        >
+                    onClick={(e) => onSelect(file, e)}
+                    onDoubleClick={() => onOpen(file)}
+                  >
+                    <div className="col-span-5 flex items-center gap-2 min-w-0">
+                      <Icon className={cn("h-4 w-4 flex-shrink-0", getIconColor(extendedType))} />
+                      <span className="truncate">{file.title || 'Untitled'}</span>
+                    </div>
+                    <div className="col-span-2 text-muted-foreground capitalize">
+                      {extendedType}
+                    </div>
+                    <div className="col-span-2 text-right text-muted-foreground">
+                      {formatSize(file.file_size)}
+                    </div>
+                    <div className="col-span-3 text-muted-foreground">
+                      {format(new Date(file.created_at), 'MMM d, yyyy')}
+                    </div>
+                  </div>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem onClick={() => onOpen(file)}>
+                    Open
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => window.open(file.file_url, '_blank')}>
+                    Download
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem onClick={() => onRename(file)}>Rename</ContextMenuItem>
+                  <ContextMenuSub>
+                    <ContextMenuSubTrigger>
+                      <FolderInput className="h-4 w-4 mr-2" />
+                      Move to Folder
+                    </ContextMenuSubTrigger>
+                    <ContextMenuSubContent>
+                      {file.folder_id && (
+                        <ContextMenuItem onClick={() => handleMoveToFolder(file.id, null)}>
                           <Folder className="h-4 w-4 mr-2" />
-                          {folder.name}
+                          Remove from Folder
                         </ContextMenuItem>
-                      ))
-                    )}
-                  </ContextMenuSubContent>
-                </ContextMenuSub>
-                <ContextMenuItem>Add to Favorites</ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem className="text-destructive">Delete</ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
+                      )}
+                      {file.folder_id && folders.length > 0 && <ContextMenuSeparator />}
+                      {folders.length === 0 ? (
+                        <ContextMenuItem disabled>No folders available</ContextMenuItem>
+                      ) : (
+                        folders.map((folder: MediaFolder) => (
+                          <ContextMenuItem 
+                            key={folder.id} 
+                            onClick={() => handleMoveToFolder(file.id, folder.id)}
+                            disabled={folder.id === file.folder_id}
+                          >
+                            <Folder className="h-4 w-4 mr-2" />
+                            {folder.name}
+                          </ContextMenuItem>
+                        ))
+                      )}
+                    </ContextMenuSubContent>
+                  </ContextMenuSub>
+                  <ContextMenuItem>Add to Favorites</ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem className="text-destructive">Delete</ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            </DraggableFileItem>
           );
         })}
       </div>

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Image, Video, Music, FileText, File, Play, Pause, Presentation, FileSpreadsheet, FileCode, FileArchive, Folder, FolderInput } from 'lucide-react';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent } from '@/components/ui/context-menu';
 import { useAllMediaFolders, useMoveToFolder, MediaFolder } from '@/hooks/useMediaFolders';
+import { DraggableFileItem } from './DraggableFileItem';
 
 interface FinderFileGridProps {
   files: MediaFile[];
@@ -163,124 +164,126 @@ export const FinderFileGrid = ({
         const isPlaying = playingAudio === file.id;
 
         return (
-          <ContextMenu key={file.id}>
-            <ContextMenuTrigger>
-              <div
-                className={cn(
-                  "group relative flex flex-col items-center p-3 rounded-lg cursor-pointer transition-all",
-                  "hover:bg-muted/50",
-                  isSelected && "bg-primary/10 ring-2 ring-primary"
-                )}
-                onClick={(e) => onSelect(file, e)}
-                onDoubleClick={() => onOpen(file)}
-              >
-                {/* Thumbnail */}
-                <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted mb-2">
-                  {extendedType === 'image' ? (
-                    <img
-                      src={file.file_url}
-                      alt={file.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : extendedType === 'video' ? (
-                    <div className="w-full h-full relative">
-                      {file.thumbnail_url ? (
-                        <img
-                          src={file.thumbnail_url}
-                          alt={file.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className={cn("w-full h-full flex items-center justify-center", getIconColor(extendedType))}>
-                          <Icon className="h-12 w-12" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                        <Play className="h-8 w-8 text-white fill-white" />
-                      </div>
-                    </div>
-                  ) : extendedType === 'audio' ? (
-                    <div className={cn("w-full h-full flex items-center justify-center relative", getIconColor(extendedType))}>
-                      <Icon className={cn("h-12 w-12 transition-transform", isPlaying && "animate-pulse")} />
-                      {/* Play/Pause button - always visible for audio */}
-                      <div 
-                        className="absolute inset-0 flex items-center justify-center bg-black/30"
-                        onClick={(e) => handleAudioToggle(e, file)}
-                      >
-                        <div className={cn(
-                          "w-12 h-12 rounded-full bg-white/90 flex items-center justify-center transition-transform",
-                          "hover:scale-110 shadow-lg"
-                        )}>
-                          {isPlaying ? (
-                            <Pause className="h-6 w-6 text-blue-600 fill-blue-600" />
-                          ) : (
-                            <Play className="h-6 w-6 text-blue-600 fill-blue-600 ml-0.5" />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className={cn("w-full h-full flex flex-col items-center justify-center gap-2", getIconColor(extendedType))}>
-                      <Icon className="h-12 w-12" />
-                      {extendedType !== 'other' && (
-                        <span className="text-[10px] font-medium uppercase tracking-wide opacity-70">
-                          {extendedType}
-                        </span>
-                      )}
-                    </div>
+          <DraggableFileItem key={file.id} id={file.id}>
+            <ContextMenu>
+              <ContextMenuTrigger>
+                <div
+                  className={cn(
+                    "group relative flex flex-col items-center p-3 rounded-lg cursor-pointer transition-all",
+                    "hover:bg-muted/50",
+                    isSelected && "bg-primary/10 ring-2 ring-primary"
                   )}
-                </div>
+                  onClick={(e) => onSelect(file, e)}
+                  onDoubleClick={() => onOpen(file)}
+                >
+                  {/* Thumbnail */}
+                  <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted mb-2">
+                    {extendedType === 'image' ? (
+                      <img
+                        src={file.file_url}
+                        alt={file.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : extendedType === 'video' ? (
+                      <div className="w-full h-full relative">
+                        {file.thumbnail_url ? (
+                          <img
+                            src={file.thumbnail_url}
+                            alt={file.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className={cn("w-full h-full flex items-center justify-center", getIconColor(extendedType))}>
+                            <Icon className="h-12 w-12" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <Play className="h-8 w-8 text-white fill-white" />
+                        </div>
+                      </div>
+                    ) : extendedType === 'audio' ? (
+                      <div className={cn("w-full h-full flex items-center justify-center relative", getIconColor(extendedType))}>
+                        <Icon className={cn("h-12 w-12 transition-transform", isPlaying && "animate-pulse")} />
+                        {/* Play/Pause button - always visible for audio */}
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center bg-black/30"
+                          onClick={(e) => handleAudioToggle(e, file)}
+                        >
+                          <div className={cn(
+                            "w-12 h-12 rounded-full bg-white/90 flex items-center justify-center transition-transform",
+                            "hover:scale-110 shadow-lg"
+                          )}>
+                            {isPlaying ? (
+                              <Pause className="h-6 w-6 text-blue-600 fill-blue-600" />
+                            ) : (
+                              <Play className="h-6 w-6 text-blue-600 fill-blue-600 ml-0.5" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={cn("w-full h-full flex flex-col items-center justify-center gap-2", getIconColor(extendedType))}>
+                        <Icon className="h-12 w-12" />
+                        {extendedType !== 'other' && (
+                          <span className="text-[10px] font-medium uppercase tracking-wide opacity-70">
+                            {extendedType}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                {/* File name */}
-                <p className="text-xs text-center font-medium text-foreground truncate w-full px-1">
-                  {file.title || 'Untitled'}
-                </p>
-              </div>
-            </ContextMenuTrigger>
-            <ContextMenuContent>
-              <ContextMenuItem onClick={() => onOpen(file)}>
-                Open
-              </ContextMenuItem>
-              <ContextMenuItem onClick={() => window.open(file.file_url, '_blank')}>
-                Download
-              </ContextMenuItem>
-              <ContextMenuSeparator />
-              <ContextMenuItem onClick={() => onRename(file)}>Rename</ContextMenuItem>
-              <ContextMenuSub>
-                <ContextMenuSubTrigger>
-                  <FolderInput className="h-4 w-4 mr-2" />
-                  Move to Folder
-                </ContextMenuSubTrigger>
-                <ContextMenuSubContent>
-                  {file.folder_id && (
-                    <ContextMenuItem onClick={() => handleMoveToFolder(file.id, null)}>
-                      <Folder className="h-4 w-4 mr-2" />
-                      Remove from Folder
-                    </ContextMenuItem>
-                  )}
-                  {file.folder_id && folders.length > 0 && <ContextMenuSeparator />}
-                  {folders.length === 0 ? (
-                    <ContextMenuItem disabled>No folders available</ContextMenuItem>
-                  ) : (
-                    folders.map((folder: MediaFolder) => (
-                      <ContextMenuItem 
-                        key={folder.id} 
-                        onClick={() => handleMoveToFolder(file.id, folder.id)}
-                        disabled={folder.id === file.folder_id}
-                      >
+                  {/* File name */}
+                  <p className="text-xs text-center font-medium text-foreground truncate w-full px-1">
+                    {file.title || 'Untitled'}
+                  </p>
+                </div>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem onClick={() => onOpen(file)}>
+                  Open
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => window.open(file.file_url, '_blank')}>
+                  Download
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem onClick={() => onRename(file)}>Rename</ContextMenuItem>
+                <ContextMenuSub>
+                  <ContextMenuSubTrigger>
+                    <FolderInput className="h-4 w-4 mr-2" />
+                    Move to Folder
+                  </ContextMenuSubTrigger>
+                  <ContextMenuSubContent>
+                    {file.folder_id && (
+                      <ContextMenuItem onClick={() => handleMoveToFolder(file.id, null)}>
                         <Folder className="h-4 w-4 mr-2" />
-                        {folder.name}
+                        Remove from Folder
                       </ContextMenuItem>
-                    ))
-                  )}
-                </ContextMenuSubContent>
-              </ContextMenuSub>
-              <ContextMenuItem>Add to Favorites</ContextMenuItem>
-              <ContextMenuSeparator />
-              <ContextMenuItem className="text-destructive">Delete</ContextMenuItem>
-            </ContextMenuContent>
-          </ContextMenu>
+                    )}
+                    {file.folder_id && folders.length > 0 && <ContextMenuSeparator />}
+                    {folders.length === 0 ? (
+                      <ContextMenuItem disabled>No folders available</ContextMenuItem>
+                    ) : (
+                      folders.map((folder: MediaFolder) => (
+                        <ContextMenuItem 
+                          key={folder.id} 
+                          onClick={() => handleMoveToFolder(file.id, folder.id)}
+                          disabled={folder.id === file.folder_id}
+                        >
+                          <Folder className="h-4 w-4 mr-2" />
+                          {folder.name}
+                        </ContextMenuItem>
+                      ))
+                    )}
+                  </ContextMenuSubContent>
+                </ContextMenuSub>
+                <ContextMenuItem>Add to Favorites</ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem className="text-destructive">Delete</ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
+          </DraggableFileItem>
         );
       })}
     </div>
