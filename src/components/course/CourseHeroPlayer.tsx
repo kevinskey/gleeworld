@@ -518,7 +518,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-12 w-12 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+                  className="h-12 w-12 text-white/50 hover:text-white hover:bg-white/10 touch-manipulation disabled:opacity-30 disabled:bg-transparent"
                   onClick={skipPrevious}
                   onTouchEnd={(e) => { e.preventDefault(); skipPrevious(); }}
                   disabled={currentTrackIndex === null || currentTrackIndex === 0}
@@ -529,7 +529,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-16 w-16 text-white bg-primary hover:bg-primary/90 rounded-full shadow-xl touch-manipulation"
+                  className="h-16 w-16 text-white bg-primary hover:bg-primary/90 rounded-full shadow-xl touch-manipulation disabled:opacity-50"
                   onClick={currentTrack ? togglePlay : handleFirstPlay}
                   onTouchEnd={(e) => { e.preventDefault(); currentTrack ? togglePlay() : handleFirstPlay(); }}
                   onPointerDown={() => forceUnlockAudio()}
@@ -545,7 +545,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-12 w-12 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+                  className="h-12 w-12 text-white/50 hover:text-white hover:bg-white/10 touch-manipulation disabled:opacity-30 disabled:bg-transparent"
                   onClick={skipNext}
                   onTouchEnd={(e) => { e.preventDefault(); skipNext(); }}
                   disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
