@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookMarked, ExternalLink, Music, BookOpen, FileText, Users, Volume2 } from 'lucide-react';
 
 interface TextbookSection {
@@ -13,60 +12,23 @@ interface TextbookSection {
 }
 
 const TEXTBOOK_SECTIONS: TextbookSection[] = [
-  { 
-    id: 'home', 
-    label: 'Home', 
-    icon: BookMarked, 
-    path: '/',
-    description: 'Main textbook overview and navigation'
-  },
-  { 
-    id: 'fundamentals', 
-    label: 'Fundamentals', 
-    icon: Music, 
-    path: '/fundamentals',
-    description: 'Conducting fundamentals, posture, and basic patterns'
-  },
-  { 
-    id: 'patterns', 
-    label: 'Beat Patterns', 
-    icon: FileText, 
-    path: '/patterns',
-    description: '2-, 3-, 4-beat patterns and subdivisions'
-  },
-  { 
-    id: 'terminology', 
-    label: 'Terminology', 
-    icon: BookOpen, 
-    path: '/terminology',
-    description: 'Italian tempo, dynamics, and expression terms'
-  },
-  { 
-    id: 'choral-lit', 
-    label: 'Choral Literature', 
-    icon: Users, 
-    path: '/literature',
-    description: 'Survey of choral music from Renaissance to Contemporary'
-  },
-  { 
-    id: 'diction', 
-    label: 'Diction', 
-    icon: Volume2, 
-    path: '/diction',
-    description: 'Pronunciation guides for Latin, Italian, German, French'
-  },
+  { id: 'home', label: 'Home', icon: BookMarked, path: '/', description: 'Main textbook overview and navigation' },
+  { id: 'fundamentals', label: 'Fundamentals', icon: Music, path: '/fundamentals', description: 'Conducting fundamentals, posture, and basic patterns' },
+  { id: 'patterns', label: 'Beat Patterns', icon: FileText, path: '/patterns', description: '2-, 3-, 4-beat patterns and subdivisions' },
+  { id: 'terminology', label: 'Terminology', icon: BookOpen, path: '/terminology', description: 'Italian tempo, dynamics, and expression terms' },
+  { id: 'choral-lit', label: 'Choral Literature', icon: Users, path: '/literature', description: 'Survey of choral music from Renaissance to Contemporary' },
+  { id: 'diction', label: 'Diction', icon: Volume2, path: '/diction', description: 'Pronunciation guides for Latin, Italian, German, French' },
 ];
 
-export const ConductingTextbook: React.FC = () => {
-  const [activeSection, setActiveSection] = useState('home');
-  const baseUrl = 'https://conducting.gleeworld.org';
+const baseUrl = 'https://conducting.gleeworld.org';
 
-  const currentSection = TEXTBOOK_SECTIONS.find(s => s.id === activeSection) || TEXTBOOK_SECTIONS[0];
-  const iframeSrc = `${baseUrl}${currentSection.path}`;
+export const ConductingTextbook: React.FC = () => {
+  const openSection = (path: string) => {
+    window.open(`${baseUrl}${path}`, '_blank');
+  };
 
   return (
     <div className="space-y-4">
-      {/* Quick Navigation */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -75,9 +37,9 @@ export const ConductingTextbook: React.FC = () => {
               Conductor's Reference Guide
             </CardTitle>
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
-              onClick={() => window.open(baseUrl, '_blank')}
+              onClick={() => openSection('/')}
               className="gap-2"
             >
               <ExternalLink className="h-4 w-4" />
@@ -89,36 +51,22 @@ export const ConductingTextbook: React.FC = () => {
           </p>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeSection} onValueChange={setActiveSection}>
-            <TabsList className="grid grid-cols-3 lg:grid-cols-6 h-auto gap-1">
-              {TEXTBOOK_SECTIONS.map(section => (
-                <TabsTrigger 
-                  key={section.id} 
-                  value={section.id}
-                  className="flex flex-col items-center gap-1 py-2 px-2 text-xs"
-                >
-                  <section.icon className="h-4 w-4" />
-                  <span className="truncate">{section.label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            
-            <div className="mt-4">
-              <p className="text-sm text-muted-foreground mb-3">
-                {currentSection.description}
-              </p>
-              
-              <div className="rounded-lg border overflow-hidden bg-background">
-                <iframe 
-                  src={iframeSrc}
-                  style={{ width: '100%', height: '70vh', minHeight: '500px' }}
-                  allow="fullscreen"
-                  title={`Textbook - ${currentSection.label}`}
-                  className="bg-white"
-                />
-              </div>
-            </div>
-          </Tabs>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {TEXTBOOK_SECTIONS.map(section => (
+              <Button
+                key={section.id}
+                variant="outline"
+                className="h-auto flex flex-col items-center gap-2 p-4 hover:bg-accent"
+                onClick={() => openSection(section.path)}
+              >
+                <section.icon className="h-6 w-6 text-primary" />
+                <span className="font-medium">{section.label}</span>
+                <span className="text-xs text-muted-foreground text-center line-clamp-2">
+                  {section.description}
+                </span>
+              </Button>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>
