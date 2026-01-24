@@ -489,7 +489,8 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         {/* Topic Photo Slider */}
         <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
 
-        {/* Current Module / Week */}
+        {/* Current Module / Week - Only show for MUS 240 which has DB-driven modules */}
+        {currentModule && course.courseCode === 'MUS 240' && (
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -505,15 +506,17 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
           <CardContent className="space-y-4">
             {/* Module Header */}
             <div>
-              <h3 className="text-xl font-bold">Week 2: African Roots</h3>
+              <h3 className="text-xl font-bold">Week {currentModule.week_number}: {currentModule.title}</h3>
               <div className="flex gap-2 text-sm text-muted-foreground mt-1">
-                <span className="flex items-center gap-1">
-                  <Play className="h-3 w-3" />Video
-                </span>
-                <span>·</span>
-                <span>Reading</span>
-                <span>·</span>
-                <span>Listening</span>
+                {currentModule.content_types.map((type, idx) => (
+                  <React.Fragment key={type}>
+                    {idx > 0 && <span>·</span>}
+                    <span className="flex items-center gap-1">
+                      {type === 'Video' && <Play className="h-3 w-3" />}
+                      {type}
+                    </span>
+                  </React.Fragment>
+                ))}
               </div>
             </div>
 
@@ -711,6 +714,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
             </div>
           </CardContent>
         </Card>
+        )}
       </div>
 
       {/* Right Sidebar - 30% */}
