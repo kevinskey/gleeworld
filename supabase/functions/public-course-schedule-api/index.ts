@@ -12,21 +12,21 @@ const WEBHOOK_SECRET = "sss-gw-sync-2026-xyz123";
 const COURSE_SCHEDULE = [
   {
     class: "MUS 070",
-    name: "Fundamentals of Music",
-    schedule: "MWF 9:00-9:50am",
-    instructor: "Prof. Smith"
+    name: "Glee Club",
+    schedule: "MWF 3:00-4:15pm",
+    instructor: "Dr. Kevin Johnson"
   },
   {
     class: "MUS 210",
-    name: "Sight Singing I",
-    schedule: "TTh 10:00-11:15am",
-    instructor: "Prof. Jones"
+    name: "Choral Conducting and Literature",
+    schedule: "MW 2:00-2:50pm",
+    instructor: "Dr. Kevin Johnson"
   },
   {
     class: "MUS 240",
-    name: "Sight Singing II",
-    schedule: "TTh 1:00-2:15pm",
-    instructor: "Prof. Jones"
+    name: "Survey of African American Music",
+    schedule: "MWF 12:00-12:50pm",
+    instructor: "Dr. Kevin Johnson"
   }
 ];
 
