@@ -46,13 +46,13 @@ export const MonthlyCalendar = ({
       try {
         const { data: userProfile } = await supabase
           .from('gw_profiles')
-          .select('is_admin, is_super_admin, role')
+          .select('is_admin, is_super_admin, is_exec_board, role')
           .eq('user_id', user.id)
           .single();
 
         if (userProfile) {
           setUserPermissions({
-            isAdmin: userProfile.is_admin || userProfile.role === 'admin',
+            isAdmin: userProfile.is_admin || userProfile.role === 'admin' || userProfile.is_exec_board,
             isSuperAdmin: userProfile.is_super_admin || userProfile.role === 'super-admin'
           });
         }
