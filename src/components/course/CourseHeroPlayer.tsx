@@ -2,12 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music, 
-  ChevronDown, ChevronUp, ArrowLeft, Mail, Clock, MapPin, GraduationCap
+  ChevronDown, ChevronUp, ArrowLeft, Mail, Clock, MapPin, GraduationCap, ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCoursePlaylist } from '@/hooks/useCoursePlaylist';
+import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { cn } from '@/lib/utils';
 import { forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 import {
@@ -60,6 +61,9 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
     loading,
     selectPlaylist,
   } = useCoursePlaylist(courseId);
+  
+  // Get grade data for mobile stats
+  const { letterGrade, percentage, loading: gradeLoading } = useCourseGrade(courseId);
   
   // Get user avatar and initials
   const userAvatarUrl = profile?.avatar_url;
@@ -310,6 +314,35 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                 <Clock className="h-3 w-3" />
                 Office Hours: {instructorOfficeHours}
               </p>
+            </div>
+            
+            {/* Mobile Grade Stat */}
+            <div 
+              className="mt-4 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-sm cursor-pointer hover:bg-white/15 transition-colors touch-manipulation"
+              onClick={() => navigate(`/grading/student/course/${courseId}`)}
+              onTouchEnd={() => navigate(`/grading/student/course/${courseId}`)}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/30 flex items-center justify-center">
+                  <GraduationCap className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] text-white/60 font-medium uppercase tracking-wide">
+                    Course Grade
+                  </span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl font-bold text-white leading-none">
+                      {gradeLoading ? '--' : `${percentage}%`}
+                    </span>
+                    <span className="text-base font-semibold text-primary-foreground/90">
+                      {gradeLoading ? '' : letterGrade}
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-white/50 ml-auto" />
+              </div>
             </div>
           </div>
         </div>
