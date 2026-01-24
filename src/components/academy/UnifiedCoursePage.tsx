@@ -33,7 +33,7 @@ import { JournalArchives } from './journals/JournalArchives';
 import { Mus240ResourcesTab } from './Mus240ResourcesTab';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 import { CoursePlaylistPlayer } from '@/components/course/CoursePlaylistPlayer';
-import { CourseMiniPlayer } from '@/components/course/CourseMiniPlayer';
+import { CourseHeroPlayer } from '@/components/course/CourseHeroPlayer';
 import { CourseGradeStat } from '@/components/course/CourseGradeStat';
 import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -341,77 +341,17 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
-          {/* Course Header - Full width dark blue on all screen sizes */}
-          <div className="bg-[#003666] w-full">
-            <div className="px-3 sm:px-4 md:px-6 py-2 md:py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="secondary" className="font-mono text-xs">{course.courseCode}</Badge>
-                    <Badge variant="outline" className="border-white/30 text-white text-xs md:hidden">
-                      {course.level}
-                    </Badge>
-                  </div>
-                  <h1 className="text-base md:text-lg font-bold text-white">{course.title}</h1>
-                  <p className="text-white/80 mt-1 text-xs md:hidden">{course.description}</p>
-                  <div className="hidden md:flex flex-wrap items-center gap-3 mt-1 text-xs text-white/80">
-                    <span className="font-medium text-white">Dr. Kevin Johnson</span>
-                    <span>kjohns10@spelman.edu</span>
-                    <span className="hidden lg:inline">Office: Fine Arts 105</span>
-                    <span className="hidden lg:inline">Office Hours: MWF 3-5 PM</span>
-                    {/* Display staff by role */}
-                    {(() => {
-                      const instructors = teachingAssistants.filter(ta => ta.notes?.toLowerCase().includes('instructor'));
-                      const secretaries = teachingAssistants.filter(ta => ta.notes?.toLowerCase().includes('secretary'));
-                      const tas = teachingAssistants.filter(ta => !ta.notes?.toLowerCase().includes('instructor') && !ta.notes?.toLowerCase().includes('secretary'));
-                      return <>
-                          {instructors.length > 0 && <>
-                              <span className="text-white/50">|</span>
-                              <span className="flex items-center gap-1">
-                                <span className="font-medium text-white/90">Instructor:</span>
-                                {instructors.map((inst, idx) => <span key={inst.id}>
-                                    {inst.profile?.full_name}
-                                    {idx < instructors.length - 1 ? ', ' : ''}
-                                  </span>)}
-                              </span>
-                            </>}
-                          {secretaries.length > 0 && <>
-                              <span className="text-white/50">|</span>
-                              <span className="flex items-center gap-1">
-                                <span className="font-medium text-white/90">Secretary:</span>
-                                {secretaries.map((sec, idx) => <span key={sec.id}>
-                                    {sec.profile?.full_name}
-                                    {idx < secretaries.length - 1 ? ', ' : ''}
-                                  </span>)}
-                              </span>
-                            </>}
-                          {tas.length > 0 && <>
-                              <span className="text-white/50">|</span>
-                              <span className="flex items-center gap-1">
-                                <GraduationCap className="h-3 w-3" />
-                                <span className="font-medium text-white/90">
-                                  TA{tas.length > 1 ? 's' : ''}:
-                                </span>
-                                {tas.map((ta, idx) => <span key={ta.id}>
-                                    {ta.profile?.full_name || 'TA'}
-                                    {idx < tas.length - 1 ? ', ' : ''}
-                                  </span>)}
-                              </span>
-                            </>}
-                        </>;
-                    })()}
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/glee-academy')} className="hidden md:flex text-white hover:bg-white/10 hover:text-white text-xs">
-                  <ArrowLeft className="h-3 w-3 mr-1" />
-                  Back
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mini Media Player - Below Header */}
-          <CourseMiniPlayer courseId={course.id} />
+          {/* Course Hero with Integrated Music Player */}
+          <CourseHeroPlayer
+            courseId={course.id}
+            courseCode={course.courseCode}
+            courseTitle={course.title}
+            instructorName="Dr. Kevin Johnson"
+            instructorEmail="kjohns10@spelman.edu"
+            instructorOffice="Fine Arts 105"
+            instructorOfficeHours="MWF 3-5 PM"
+            teachingAssistants={teachingAssistants}
+          />
 
           <div className="px-3 sm:px-4 md:px-6 space-y-3 md:space-y-4 w-full py-3 md:py-4">
 
