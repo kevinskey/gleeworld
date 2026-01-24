@@ -8,9 +8,20 @@ import {
   eachDayOfInterval, 
   isSameMonth
 } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EventHoverCard } from "./EventHoverCard";
+
+// Helper to check if two dates are the same day in Eastern Time
+const isSameDayET = (date1: Date, date2: Date): boolean => {
+  const tz = 'America/New_York';
+  const d1 = toZonedTime(date1, tz);
+  const d2 = toZonedTime(date2, tz);
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate();
+};
 
 interface PublicMonthlyCalendarProps {
   events: GleeWorldEvent[];
@@ -51,11 +62,7 @@ export const PublicMonthlyCalendar = ({
   const getEventsForDate = (date: Date) => {
     return events.filter(event => {
       const eventDate = new Date(event.start_date);
-      return (
-        eventDate.getDate() === date.getDate() &&
-        eventDate.getMonth() === date.getMonth() &&
-        eventDate.getFullYear() === date.getFullYear()
-      );
+      return isSameDayET(eventDate, date);
     });
   };
 
