@@ -346,10 +346,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             courseId={course.id}
             courseCode={course.courseCode}
             courseTitle={course.title}
-            instructorName="Dr. Kevin Johnson"
-            instructorEmail="kjohns10@spelman.edu"
-            instructorOffice="Fine Arts 105"
-            instructorOfficeHours="MWF 3-5 PM"
+            instructorName={course.instructor.name}
+            instructorEmail={course.instructor.email}
+            instructorOffice={course.instructor.office}
+            instructorOfficeHours={course.instructor.hours}
+            instructorImageUrl={course.instructor.imageUrl}
             teachingAssistants={teachingAssistants}
           />
 
