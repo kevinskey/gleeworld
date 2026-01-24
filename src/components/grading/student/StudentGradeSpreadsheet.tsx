@@ -12,7 +12,8 @@ import { calculateLetterGrade, getLetterGradeColor } from '@/utils/grading';
 
 // MUS240 Grade Weights from Syllabus
 const GRADE_WEIGHTS = {
-  assignments: 35,  // 10 Essays
+  assignments: 35,
+  // 10 Essays
   midterm: 15,
   finalExam: 20,
   groupProject: 15,
@@ -22,11 +23,9 @@ const GRADE_WEIGHTS = {
 // Course structure constants
 const TOTAL_ESSAYS = 10;
 const TOTAL_GROUP_PROJECTS = 1;
-
 interface StudentGradeSpreadsheetProps {
   courseId: string;
 }
-
 interface GradeItem {
   id: string;
   category: 'assignment' | 'midterm' | 'final' | 'group_project' | 'participation';
@@ -38,85 +37,72 @@ interface GradeItem {
   weight: number;
   weightedScore: number;
 }
-
-export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = ({ courseId }) => {
-  const { user } = useAuth();
-
-  const { data, isLoading } = useQuery({
+export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = ({
+  courseId
+}) => {
+  const {
+    user
+  } = useAuth();
+  const {
+    data,
+    isLoading
+  } = useQuery({
     queryKey: ['student-grade-spreadsheet', courseId, user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
 
       // Fetch all assignments for this course
-      const { data: assignments } = await supabase
-        .from('gw_course_assignments')
-        .select('id, title, due_date, points, assignment_type')
-        .eq('course_id', courseId)
-        .eq('is_published', true)
-        .order('due_date', { ascending: true });
+      const {
+        data: assignments
+      } = await supabase.from('gw_course_assignments').select('id, title, due_date, points, assignment_type').eq('course_id', courseId).eq('is_published', true).order('due_date', {
+        ascending: true
+      });
 
       // Fetch student's submissions
       const assignmentIds = assignments?.map(a => a.id) || [];
-      const { data: submissions } = await supabase
-        .from('assignment_submissions')
-        .select('assignment_id, grade, status, submitted_at')
-        .eq('student_id', user.id)
-        .in('assignment_id', assignmentIds.length > 0 ? assignmentIds : ['none']);
+      const {
+        data: submissions
+      } = await supabase.from('assignment_submissions').select('assignment_id, grade, status, submitted_at').eq('student_id', user.id).in('assignment_id', assignmentIds.length > 0 ? assignmentIds : ['none']);
 
       // Fetch journal grades
-      const { data: journalGrades } = await supabase
-        .from('mus240_journal_grades')
-        .select('id, graded_at, overall_score, instructor_score')
-        .eq('student_id', user.id);
+      const {
+        data: journalGrades
+      } = await supabase.from('mus240_journal_grades').select('id, graded_at, overall_score, instructor_score').eq('student_id', user.id);
 
       // Fetch midterm submission
-      const { data: midtermSubmission } = await supabase
-        .from('mus240_midterm_submissions')
-        .select('grade, is_submitted')
-        .eq('user_id', user.id)
-        .eq('is_submitted', true)
-        .maybeSingle();
+      const {
+        data: midtermSubmission
+      } = await supabase.from('mus240_midterm_submissions').select('grade, is_submitted').eq('user_id', user.id).eq('is_submitted', true).maybeSingle();
 
       // Fetch final exam submission
       const FINAL_EXAM_TEST_ID = '5efe7df8-6eb6-4611-b2d6-61ddf0319c7e';
-      const { data: finalSubmission } = await supabase
-        .from('test_submissions')
-        .select('total_score, percentage')
-        .eq('test_id', FINAL_EXAM_TEST_ID)
-        .eq('student_id', user.id)
-        .maybeSingle();
+      const {
+        data: finalSubmission
+      } = await supabase.from('test_submissions').select('total_score, percentage').eq('test_id', FINAL_EXAM_TEST_ID).eq('student_id', user.id).maybeSingle();
 
       // Fetch discussion grades
-      const { data: discussionPrompts } = await supabase
-        .from('discussion_prompts')
-        .select('id, title')
-        .eq('course_id', courseId);
-      
+      const {
+        data: discussionPrompts
+      } = await supabase.from('discussion_prompts').select('id, title').eq('course_id', courseId);
       const discussionIds = discussionPrompts?.map(d => d.id) || [];
-      const { data: discussionGrades } = await supabase
-        .from('discussion_grades')
-        .select('discussion_id, total_score')
-        .eq('student_id', user.id)
-        .in('discussion_id', discussionIds.length > 0 ? discussionIds : ['none']);
+      const {
+        data: discussionGrades
+      } = await supabase.from('discussion_grades').select('discussion_id, total_score').eq('student_id', user.id).in('discussion_id', discussionIds.length > 0 ? discussionIds : ['none']);
 
       // Fetch polls answered
-      const { data: pollsAnswered } = await supabase
-        .from('mus240_poll_responses')
-        .select('poll_id')
-        .eq('student_id', user.id);
+      const {
+        data: pollsAnswered
+      } = await supabase.from('mus240_poll_responses').select('poll_id').eq('student_id', user.id);
 
       // Fetch total polls for course
-      const { data: totalPolls } = await supabase
-        .from('mus240_polls')
-        .select('id')
-        .eq('is_active', true);
+      const {
+        data: totalPolls
+      } = await supabase.from('mus240_polls').select('id').eq('is_active', true);
 
       // Fetch attendance
-      const { data: attendance } = await supabase
-        .from('attendance')
-        .select('status, event_id')
-        .eq('user_id', user.id);
-
+      const {
+        data: attendance
+      } = await supabase.from('attendance').select('status, event_id').eq('user_id', user.id);
       return {
         assignments: assignments || [],
         submissions: submissions || [],
@@ -132,11 +118,9 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     },
     enabled: !!user?.id
   });
-
   if (isLoading) {
     return <LoadingSpinner size="md" text="Loading grades..." />;
   }
-
   if (!data) {
     return <div className="text-center text-muted-foreground py-8">No grade data available</div>;
   }
@@ -146,8 +130,8 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
   const submissionMap = new Map(data.submissions.map(s => [s.assignment_id, s]));
 
   // Add regular assignments - track graded vs total separately
-  let gradedAssignmentPoints = 0;  // Max points for GRADED assignments only
-  let earnedAssignmentPoints = 0;  // Points earned on GRADED assignments
+  let gradedAssignmentPoints = 0; // Max points for GRADED assignments only
+  let earnedAssignmentPoints = 0; // Points earned on GRADED assignments
   data.assignments.forEach(assignment => {
     const submission = submissionMap.get(assignment.id);
     const isGraded = submission?.status === 'graded' && submission.grade !== null;
@@ -162,9 +146,7 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
       dueDate: assignment.due_date,
       maxPoints: assignment.points || 0,
       earnedPoints: isGraded ? submission.grade : null,
-      status: isGraded ? 'graded' : 
-              submission?.status === 'submitted' ? 'submitted' : 
-              submission ? 'pending' : 'not_submitted',
+      status: isGraded ? 'graded' : submission?.status === 'submitted' ? 'submitted' : submission ? 'pending' : 'not_submitted',
       weight: 0,
       weightedScore: 0
     });
@@ -195,22 +177,16 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
   const totalGradedAssignmentMax = gradedAssignmentPoints + gradedJournalPoints;
   const totalGradedAssignmentEarned = earnedAssignmentPoints + earnedJournalPoints;
   const hasGradedAssignments = totalGradedAssignmentMax > 0;
-  
+
   // Deduction = (points lost / max points) * weight
   // If nothing graded, deduction = 0 (assumed 100%)
-  const assignmentLostPercentage = hasGradedAssignments 
-    ? (totalGradedAssignmentMax - totalGradedAssignmentEarned) / totalGradedAssignmentMax 
-    : 0;
-  const assignmentsWeightedScore = hasGradedAssignments
-    ? (totalGradedAssignmentEarned / totalGradedAssignmentMax) * GRADE_WEIGHTS.assignments
-    : GRADE_WEIGHTS.assignments; // Full credit if nothing graded yet
+  const assignmentLostPercentage = hasGradedAssignments ? (totalGradedAssignmentMax - totalGradedAssignmentEarned) / totalGradedAssignmentMax : 0;
+  const assignmentsWeightedScore = hasGradedAssignments ? totalGradedAssignmentEarned / totalGradedAssignmentMax * GRADE_WEIGHTS.assignments : GRADE_WEIGHTS.assignments; // Full credit if nothing graded yet
 
   // Add Midterm
   const midtermMaxPoints = 100;
   const midtermEarned = data.midtermSubmission?.grade || null;
-  const midtermWeightedScore = midtermEarned !== null 
-    ? (midtermEarned / midtermMaxPoints) * GRADE_WEIGHTS.midterm 
-    : 0;
+  const midtermWeightedScore = midtermEarned !== null ? midtermEarned / midtermMaxPoints * GRADE_WEIGHTS.midterm : 0;
   gradeItems.push({
     id: 'midterm',
     category: 'midterm',
@@ -226,9 +202,7 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
   // Add Final Exam
   const finalMaxPoints = 100;
   const finalEarned = data.finalSubmission?.total_score || null;
-  const finalWeightedScore = finalEarned !== null 
-    ? (finalEarned / finalMaxPoints) * GRADE_WEIGHTS.finalExam 
-    : 0;
+  const finalWeightedScore = finalEarned !== null ? finalEarned / finalMaxPoints * GRADE_WEIGHTS.finalExam : 0;
   gradeItems.push({
     id: 'final',
     category: 'final',
@@ -257,18 +231,15 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
   // Calculate Participation (Polls + Discussions + Attendance)
   const uniquePolls = new Set(data.pollsAnswered.map(p => p.poll_id)).size;
   const totalPollCount = data.totalPolls.length;
-  const pollScore = totalPollCount > 0 ? (uniquePolls / totalPollCount) * 5 : 0;
-
+  const pollScore = totalPollCount > 0 ? uniquePolls / totalPollCount * 5 : 0;
   const discussionTotal = data.discussionGrades.reduce((sum, d) => sum + (d.total_score || 0), 0);
   const discussionCount = data.discussionGrades.length;
   const discussionAvg = discussionCount > 0 ? discussionTotal / discussionCount : 0;
-  const discussionScore = (discussionAvg / 100) * 5;
-
+  const discussionScore = discussionAvg / 100 * 5;
   const presentCount = data.attendance.filter(a => a.status === 'present' || a.status === 'excused').length;
   const totalAttendance = data.attendance.length;
   const attendanceRate = totalAttendance > 0 ? presentCount / totalAttendance : 1;
   const attendanceScore = attendanceRate * 5;
-
   const participationWeightedScore = pollScore + discussionScore + attendanceScore;
 
   // Add participation breakdown items
@@ -283,7 +254,6 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     weight: 5,
     weightedScore: pollScore
   });
-
   gradeItems.push({
     id: 'discussions',
     category: 'participation',
@@ -295,7 +265,6 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     weight: 5,
     weightedScore: discussionScore
   });
-
   gradeItems.push({
     id: 'attendance',
     category: 'participation',
@@ -310,101 +279,96 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
 
   // Calculate deductions (starting from 100%)
   // ONLY graded items contribute deductions - ungraded = 0 deduction (assumed 100%)
-  const assignmentDeduction = hasGradedAssignments 
-    ? assignmentLostPercentage * GRADE_WEIGHTS.assignments 
-    : 0;
-  const midtermDeduction = midtermEarned !== null 
-    ? GRADE_WEIGHTS.midterm - midtermWeightedScore 
-    : 0;
-  const finalDeduction = finalEarned !== null 
-    ? GRADE_WEIGHTS.finalExam - finalWeightedScore 
-    : 0;
+  const assignmentDeduction = hasGradedAssignments ? assignmentLostPercentage * GRADE_WEIGHTS.assignments : 0;
+  const midtermDeduction = midtermEarned !== null ? GRADE_WEIGHTS.midterm - midtermWeightedScore : 0;
+  const finalDeduction = finalEarned !== null ? GRADE_WEIGHTS.finalExam - finalWeightedScore : 0;
   // Participation: only count if there's any activity
   const hasParticipation = data.pollsAnswered.length > 0 || data.discussionGrades.length > 0 || data.attendance.length > 0;
-  const participationDeduction = hasParticipation 
-    ? GRADE_WEIGHTS.participation - participationWeightedScore 
-    : 0;
-  
+  const participationDeduction = hasParticipation ? GRADE_WEIGHTS.participation - participationWeightedScore : 0;
+
   // Total deductions
   const totalDeductions = assignmentDeduction + midtermDeduction + finalDeduction + participationDeduction;
-  
+
   // Final grade = 100 - total deductions
   const currentGrade = Math.max(0, 100 - totalDeductions);
   const letterGrade = calculateLetterGrade(currentGrade, 100);
-
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'graded': return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-      case 'submitted': return <Clock className="h-4 w-4 text-blue-600" />;
-      case 'pending': return <Clock className="h-4 w-4 text-yellow-600" />;
-      default: return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
+      case 'graded':
+        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      case 'submitted':
+        return <Clock className="h-4 w-4 text-blue-600" />;
+      case 'pending':
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
     }
   };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'graded': return <Badge variant="default" className="bg-green-600">Graded</Badge>;
-      case 'submitted': return <Badge variant="secondary">Submitted</Badge>;
-      case 'pending': return <Badge variant="outline">Pending</Badge>;
-      default: return <Badge variant="outline" className="text-muted-foreground">Not Submitted</Badge>;
+      case 'graded':
+        return <Badge variant="default" className="bg-green-600">Graded</Badge>;
+      case 'submitted':
+        return <Badge variant="secondary">Submitted</Badge>;
+      case 'pending':
+        return <Badge variant="outline">Pending</Badge>;
+      default:
+        return <Badge variant="outline" className="text-muted-foreground">Not Submitted</Badge>;
     }
   };
-
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'assignment': return <FileText className="h-4 w-4" />;
-      case 'midterm': return <Calculator className="h-4 w-4" />;
-      case 'final': return <Calculator className="h-4 w-4" />;
-      case 'group_project': return <Users className="h-4 w-4" />;
-      case 'participation': return <MessageSquare className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
+      case 'assignment':
+        return <FileText className="h-4 w-4" />;
+      case 'midterm':
+        return <Calculator className="h-4 w-4" />;
+      case 'final':
+        return <Calculator className="h-4 w-4" />;
+      case 'group_project':
+        return <Users className="h-4 w-4" />;
+      case 'participation':
+        return <MessageSquare className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
     }
   };
 
   // Count graded essays
   const gradedEssayCount = gradeItems.filter(item => item.category === 'assignment' && item.status === 'graded').length;
-  
-  // Group items by category for summary - DEDUCTIVE MODEL
-  const categorySummary = [
-    { 
-      name: `Essays (${gradedEssayCount}/${TOTAL_ESSAYS} graded)`, 
-      weight: GRADE_WEIGHTS.assignments, 
-      deduction: hasGradedAssignments ? Math.round(assignmentDeduction * 100) / 100 : null,
-      icon: <FileText className="h-5 w-5" />,
-      status: hasGradedAssignments ? 'active' : 'pending'
-    },
-    { 
-      name: 'Midterm Exam', 
-      weight: GRADE_WEIGHTS.midterm, 
-      deduction: midtermEarned !== null ? Math.round(midtermDeduction * 100) / 100 : null,
-      icon: <Calculator className="h-5 w-5" />,
-      status: midtermEarned !== null ? 'active' : 'pending'
-    },
-    { 
-      name: 'Final Exam', 
-      weight: GRADE_WEIGHTS.finalExam, 
-      deduction: finalEarned !== null ? Math.round(finalDeduction * 100) / 100 : null,
-      icon: <Calculator className="h-5 w-5" />,
-      status: finalEarned !== null ? 'active' : 'pending'
-    },
-    { 
-      name: `Group Project (0/${TOTAL_GROUP_PROJECTS} graded)`, 
-      weight: GRADE_WEIGHTS.groupProject, 
-      deduction: null,
-      icon: <Users className="h-5 w-5" />,
-      status: 'pending'
-    },
-    { 
-      name: 'Participation', 
-      weight: GRADE_WEIGHTS.participation, 
-      deduction: hasParticipation ? Math.round(participationDeduction * 100) / 100 : null,
-      icon: <MessageSquare className="h-5 w-5" />,
-      status: hasParticipation ? 'active' : 'pending'
-    }
-  ];
 
-  return (
-    <div className="space-y-6">
+  // Group items by category for summary - DEDUCTIVE MODEL
+  const categorySummary = [{
+    name: `Essays (${gradedEssayCount}/${TOTAL_ESSAYS} graded)`,
+    weight: GRADE_WEIGHTS.assignments,
+    deduction: hasGradedAssignments ? Math.round(assignmentDeduction * 100) / 100 : null,
+    icon: <FileText className="h-5 w-5" />,
+    status: hasGradedAssignments ? 'active' : 'pending'
+  }, {
+    name: 'Midterm Exam',
+    weight: GRADE_WEIGHTS.midterm,
+    deduction: midtermEarned !== null ? Math.round(midtermDeduction * 100) / 100 : null,
+    icon: <Calculator className="h-5 w-5" />,
+    status: midtermEarned !== null ? 'active' : 'pending'
+  }, {
+    name: 'Final Exam',
+    weight: GRADE_WEIGHTS.finalExam,
+    deduction: finalEarned !== null ? Math.round(finalDeduction * 100) / 100 : null,
+    icon: <Calculator className="h-5 w-5" />,
+    status: finalEarned !== null ? 'active' : 'pending'
+  }, {
+    name: `Group Project (0/${TOTAL_GROUP_PROJECTS} graded)`,
+    weight: GRADE_WEIGHTS.groupProject,
+    deduction: null,
+    icon: <Users className="h-5 w-5" />,
+    status: 'pending'
+  }, {
+    name: 'Participation',
+    weight: GRADE_WEIGHTS.participation,
+    deduction: hasParticipation ? Math.round(participationDeduction * 100) / 100 : null,
+    icon: <MessageSquare className="h-5 w-5" />,
+    status: hasParticipation ? 'active' : 'pending'
+  }];
+  return <div className="space-y-6">
       {/* Grade Summary Card - DEDUCTIVE MODEL */}
       <Card className="border-2 border-primary/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
         <CardHeader className="pb-2">
@@ -437,8 +401,7 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categorySummary.map((cat, index) => (
-                <TableRow key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+              {categorySummary.map((cat, index) => <TableRow key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                   <TableCell className="font-medium text-slate-900 dark:text-slate-100">
                     <div className="flex items-center gap-2">
                       {cat.icon}
@@ -447,25 +410,14 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                   </TableCell>
                   <TableCell className="text-center text-slate-700 dark:text-slate-300">{cat.weight}%</TableCell>
                   <TableCell className="text-center">
-                    {cat.status === 'pending' ? (
-                      <Badge variant="outline" className="text-muted-foreground">Not Graded</Badge>
-                    ) : (
-                      <Badge variant="default" className="bg-green-600">Graded</Badge>
-                    )}
+                    {cat.status === 'pending' ? <Badge variant="outline" className="text-muted-foreground">Not Graded</Badge> : <Badge variant="default" className="bg-green-600">Graded</Badge>}
                   </TableCell>
                   <TableCell className="text-right font-semibold">
-                    {cat.deduction !== null ? (
-                      <span className={cn(
-                        cat.deduction > 0 ? "text-red-600" : "text-green-600"
-                      )}>
+                    {cat.deduction !== null ? <span className={cn(cat.deduction > 0 ? "text-red-600" : "text-green-600")}>
                         {cat.deduction > 0 ? `-${cat.deduction.toFixed(2)}%` : '0.00%'}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
+                      </span> : <span className="text-muted-foreground">—</span>}
                   </TableCell>
-                </TableRow>
-              ))}
+                </TableRow>)}
               {/* Total Deductions Row */}
               <TableRow className="bg-red-50 dark:bg-red-950/30 border-t-2">
                 <TableCell colSpan={3} className="font-bold text-red-700 dark:text-red-300">
@@ -494,7 +446,7 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
       {/* Detailed Breakdown */}
       <Card className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+          <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100 text-lg">
             <FileText className="h-5 w-5" />
             Detailed Grade Breakdown
           </CardTitle>
@@ -522,8 +474,7 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                     </div>
                   </TableCell>
                 </TableRow>
-                {gradeItems.filter(item => item.category === 'assignment').map((item) => (
-                  <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                {gradeItems.filter(item => item.category === 'assignment').map(item => <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                     <TableCell>{getStatusIcon(item.status)}</TableCell>
                     <TableCell className="font-medium text-slate-900 dark:text-slate-100">{item.name}</TableCell>
                     <TableCell className="text-center text-sm text-slate-600 dark:text-slate-400">
@@ -531,28 +482,16 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                     </TableCell>
                     <TableCell className="text-center">{getStatusBadge(item.status)}</TableCell>
                     <TableCell className="text-center">
-                      {item.earnedPoints !== null ? (
-                        <span className={cn(
-                          "font-semibold",
-                          item.earnedPoints / item.maxPoints >= 0.9 ? "text-green-600 dark:text-green-400" :
-                          item.earnedPoints / item.maxPoints >= 0.7 ? "text-blue-600 dark:text-blue-400" :
-                          "text-orange-600 dark:text-orange-400"
-                        )}>
+                      {item.earnedPoints !== null ? <span className={cn("font-semibold", item.earnedPoints / item.maxPoints >= 0.9 ? "text-green-600 dark:text-green-400" : item.earnedPoints / item.maxPoints >= 0.7 ? "text-blue-600 dark:text-blue-400" : "text-orange-600 dark:text-orange-400")}>
                           {item.earnedPoints} / {item.maxPoints}
-                        </span>
-                      ) : (
-                        <span className="text-slate-500 dark:text-slate-400">- / {item.maxPoints}</span>
-                      )}
+                        </span> : <span className="text-slate-500 dark:text-slate-400">- / {item.maxPoints}</span>}
                     </TableCell>
                     <TableCell className="text-center text-slate-700 dark:text-slate-300">
-                      {item.earnedPoints !== null ? (
-                        <span className="font-medium">
-                          {((item.earnedPoints / item.maxPoints) * 100).toFixed(1)}%
-                        </span>
-                      ) : '-'}
+                      {item.earnedPoints !== null ? <span className="font-medium">
+                          {(item.earnedPoints / item.maxPoints * 100).toFixed(1)}%
+                        </span> : '-'}
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
                 <TableRow className="bg-blue-100 dark:bg-blue-900/30 border-t">
                   <TableCell colSpan={4} className="font-semibold text-right text-slate-700 dark:text-slate-300">
                     Essays Subtotal ({gradedEssayCount}/{TOTAL_ESSAYS} graded, {GRADE_WEIGHTS.assignments}% weight):
@@ -574,24 +513,18 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                     </div>
                   </TableCell>
                 </TableRow>
-                {gradeItems.filter(item => item.category === 'midterm' || item.category === 'final').map((item) => (
-                  <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                {gradeItems.filter(item => item.category === 'midterm' || item.category === 'final').map(item => <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                     <TableCell>{getStatusIcon(item.status)}</TableCell>
                     <TableCell className="font-medium text-slate-900 dark:text-slate-100">{item.name}</TableCell>
                     <TableCell className="text-center text-sm text-slate-600 dark:text-slate-400">-</TableCell>
                     <TableCell className="text-center">{getStatusBadge(item.status)}</TableCell>
                     <TableCell className="text-center">
-                      {item.earnedPoints !== null ? (
-                        <span className="font-semibold text-slate-900 dark:text-slate-100">{item.earnedPoints} / {item.maxPoints}</span>
-                      ) : (
-                        <span className="text-slate-500 dark:text-slate-400">- / {item.maxPoints}</span>
-                      )}
+                      {item.earnedPoints !== null ? <span className="font-semibold text-slate-900 dark:text-slate-100">{item.earnedPoints} / {item.maxPoints}</span> : <span className="text-slate-500 dark:text-slate-400">- / {item.maxPoints}</span>}
                     </TableCell>
                     <TableCell className="text-center font-bold text-blue-700 dark:text-blue-300">
                       = {item.weightedScore.toFixed(2)}% (of {item.weight}%)
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
 
                 {/* Group Project Section */}
                 <TableRow className="bg-slate-200 dark:bg-slate-700">
@@ -602,16 +535,14 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                     </div>
                   </TableCell>
                 </TableRow>
-                {gradeItems.filter(item => item.category === 'group_project').map((item) => (
-                  <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                {gradeItems.filter(item => item.category === 'group_project').map(item => <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                     <TableCell>{getStatusIcon(item.status)}</TableCell>
                     <TableCell className="font-medium text-slate-900 dark:text-slate-100">{item.name}</TableCell>
                     <TableCell className="text-center text-sm text-slate-600 dark:text-slate-400">-</TableCell>
                     <TableCell className="text-center">{getStatusBadge(item.status)}</TableCell>
                     <TableCell className="text-center text-slate-500 dark:text-slate-400">- / {item.maxPoints}</TableCell>
                     <TableCell className="text-center text-slate-500 dark:text-slate-400">-</TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
 
                 {/* Participation Section */}
                 <TableRow className="bg-slate-200 dark:bg-slate-700">
@@ -622,8 +553,7 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                     </div>
                   </TableCell>
                 </TableRow>
-                {gradeItems.filter(item => item.category === 'participation').map((item) => (
-                  <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                {gradeItems.filter(item => item.category === 'participation').map(item => <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                     <TableCell>{getStatusIcon(item.status)}</TableCell>
                     <TableCell className="font-medium text-slate-900 dark:text-slate-100">{item.name}</TableCell>
                     <TableCell className="text-center text-sm text-slate-600 dark:text-slate-400">-</TableCell>
@@ -634,8 +564,7 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                     <TableCell className="text-center font-bold text-blue-700 dark:text-blue-300">
                       = {item.weightedScore.toFixed(2)}%
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
                 <TableRow className="bg-purple-100 dark:bg-purple-900/30 border-t">
                   <TableCell colSpan={4} className="font-semibold text-right text-slate-700 dark:text-slate-300">
                     Participation Subtotal ({GRADE_WEIGHTS.participation}% weight):
@@ -673,33 +602,45 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-5 sm:grid-cols-11 gap-1 text-center text-xs sm:text-sm">
-            {[
-              { grade: 'A', range: '95-100' },
-              { grade: 'A-', range: '90-94' },
-              { grade: 'B+', range: '87-89' },
-              { grade: 'B', range: '83-86' },
-              { grade: 'B-', range: '80-82' },
-              { grade: 'C+', range: '77-79' },
-              { grade: 'C', range: '73-76' },
-              { grade: 'C-', range: '70-72' },
-              { grade: 'D+', range: '65-69' },
-              { grade: 'D', range: '60-64' },
-              { grade: 'F', range: '0-59' }
-            ].map((item) => (
-              <div 
-                key={item.grade} 
-                className={cn(
-                  "p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700",
-                  letterGrade === item.grade && "ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/50"
-                )}
-              >
+            {[{
+            grade: 'A',
+            range: '95-100'
+          }, {
+            grade: 'A-',
+            range: '90-94'
+          }, {
+            grade: 'B+',
+            range: '87-89'
+          }, {
+            grade: 'B',
+            range: '83-86'
+          }, {
+            grade: 'B-',
+            range: '80-82'
+          }, {
+            grade: 'C+',
+            range: '77-79'
+          }, {
+            grade: 'C',
+            range: '73-76'
+          }, {
+            grade: 'C-',
+            range: '70-72'
+          }, {
+            grade: 'D+',
+            range: '65-69'
+          }, {
+            grade: 'D',
+            range: '60-64'
+          }, {
+            grade: 'F',
+            range: '0-59'
+          }].map(item => <div key={item.grade} className={cn("p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700", letterGrade === item.grade && "ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/50")}>
                 <div className="font-bold text-slate-900 dark:text-slate-100">{item.grade}</div>
                 <div className="text-xs text-slate-600 dark:text-slate-400">{item.range}</div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
