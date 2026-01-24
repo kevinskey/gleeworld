@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, BarChart3, BookOpen, TrendingDown, Calendar, CheckCircle2, AlertCircle, GraduationCap, Target, Minus } from 'lucide-react';
+import { FileText, ArrowLeft, BarChart3, BookOpen, TrendingDown, Calendar, CheckCircle2, AlertCircle, GraduationCap, Target, Minus, Table2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { StudentPollInterface } from '@/components/course/StudentPollInterface';
@@ -14,6 +14,7 @@ import { ACADEMY_COURSES } from '@/config/academyCourses';
 import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { StudentGradeSpreadsheet } from './StudentGradeSpreadsheet';
 
 interface StudentCourseViewProps {
   courseId: string;
@@ -22,7 +23,7 @@ interface StudentCourseViewProps {
 export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('spreadsheet');
 
   // Use the deductive grade model hook
   const { 
@@ -244,20 +245,29 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="spreadsheet" className="flex items-center gap-2">
+            <Table2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Grades</span>
+          </TabsTrigger>
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Target className="h-4 w-4" />
-            <span className="hidden sm:inline">Breakdown</span>
+            <span className="hidden sm:inline">Summary</span>
           </TabsTrigger>
           <TabsTrigger value="assignments" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Assignments</span>
+            <span className="hidden sm:inline">Work</span>
           </TabsTrigger>
           <TabsTrigger value="polls" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Polls</span>
           </TabsTrigger>
         </TabsList>
+
+        {/* Spreadsheet Tab - New default */}
+        <TabsContent value="spreadsheet" className="mt-6">
+          <StudentGradeSpreadsheet courseId={courseId} />
+        </TabsContent>
 
         {/* Overview/Breakdown Tab */}
         <TabsContent value="overview" className="mt-6 space-y-4">
