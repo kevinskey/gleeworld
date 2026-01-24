@@ -12,12 +12,15 @@ import { calculateLetterGrade, getLetterGradeColor } from '@/utils/grading';
 
 // MUS240 Grade Weights from Syllabus
 const GRADE_WEIGHTS = {
-  assignments: 35,
+  assignments: 35,  // 10 Essays
   midterm: 15,
   finalExam: 20,
   groupProject: 15,
   participation: 15
 };
+
+// Course structure constants
+const TOTAL_ESSAYS = 10;
 
 interface StudentGradeSpreadsheetProps {
   courseId: string;
@@ -357,10 +360,13 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     }
   };
 
+  // Count graded essays
+  const gradedEssayCount = gradeItems.filter(item => item.category === 'assignment' && item.status === 'graded').length;
+  
   // Group items by category for summary - DEDUCTIVE MODEL
   const categorySummary = [
     { 
-      name: 'Assignments & Journals', 
+      name: `Essays (${gradedEssayCount}/${TOTAL_ESSAYS} graded)`, 
       weight: GRADE_WEIGHTS.assignments, 
       deduction: hasGradedAssignments ? Math.round(assignmentDeduction * 100) / 100 : null,
       icon: <FileText className="h-5 w-5" />,
@@ -506,12 +512,12 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {/* Assignments Section */}
+                {/* Essays Section */}
                 <TableRow className="bg-muted/30">
                   <TableCell colSpan={6} className="font-bold text-primary">
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      ASSIGNMENTS & JOURNALS ({GRADE_WEIGHTS.assignments}% of grade)
+                      ESSAYS — {gradedEssayCount}/{TOTAL_ESSAYS} graded ({GRADE_WEIGHTS.assignments}% of grade)
                     </div>
                   </TableCell>
                 </TableRow>
@@ -548,10 +554,10 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                 ))}
                 <TableRow className="bg-blue-500/10 border-t">
                   <TableCell colSpan={4} className="font-semibold text-right">
-                    Assignments Subtotal ({GRADE_WEIGHTS.assignments}% weight):
+                    Essays Subtotal ({gradedEssayCount}/{TOTAL_ESSAYS} graded, {GRADE_WEIGHTS.assignments}% weight):
                   </TableCell>
                   <TableCell className="text-center font-bold">
-                    {hasGradedAssignments ? `${totalGradedAssignmentEarned} / ${totalGradedAssignmentMax}` : 'Not graded yet'}
+                    {hasGradedAssignments ? `${totalGradedAssignmentEarned} / ${totalGradedAssignmentMax} pts` : 'Not graded yet'}
                   </TableCell>
                   <TableCell className="text-center font-bold text-primary">
                     {hasGradedAssignments ? `−${assignmentDeduction.toFixed(2)}% deduction` : '0% deduction'}
