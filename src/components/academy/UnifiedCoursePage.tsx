@@ -33,6 +33,7 @@ import { JournalArchives } from './journals/JournalArchives';
 import { Mus240ResourcesTab } from './Mus240ResourcesTab';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 import { CoursePlaylistPlayer } from '@/components/course/CoursePlaylistPlayer';
+import { CourseMiniPlayer } from '@/components/course/CourseMiniPlayer';
 import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants';
 import { useUserRole } from '@/hooks/useUserRole';
 const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager').then(m => ({
@@ -417,6 +418,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Mini Media Player - Below Header */}
+          <CourseMiniPlayer courseId={course.id} />
 
           <div className="px-3 sm:px-4 md:px-6 space-y-3 md:space-y-4 w-full py-3 md:py-4">
 
