@@ -99,10 +99,21 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
         data: totalPolls
       } = await supabase.from('mus240_polls').select('id').eq('is_active', true);
 
-      // Fetch attendance
+      // Fetch attendance records for this student
       const {
         data: attendance
       } = await supabase.from('attendance').select('status, event_id').eq('user_id', user.id);
+
+      // Fetch total class sessions for this course from events table
+      // MUS-240 class sessions are titled "Survey of African American Music Class"
+      const {
+        data: classSessions
+      } = await supabase
+        .from('events')
+        .select('id')
+        .or(`course_id.eq.${courseId},title.ilike.%Survey of African American Music%`)
+        .lte('start_date', new Date().toISOString()); // Only count past sessions
+
       return {
         assignments: assignments || [],
         submissions: submissions || [],
@@ -113,7 +124,8 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
         discussionGrades: discussionGrades || [],
         pollsAnswered: pollsAnswered || [],
         totalPolls: totalPolls || [],
-        attendance: attendance || []
+        attendance: attendance || [],
+        totalClassSessions: classSessions?.length || 0
       };
     },
     enabled: !!user?.id
@@ -241,10 +253,13 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
   const discussionScore = discussionAvg / 100 * 5;
   
   const presentCount = data.attendance.filter(a => a.status === 'present' || a.status === 'excused').length;
-  const totalAttendance = data.attendance.length;
-  // Attendance: only calculate if there are sessions recorded
-  const hasAttendanceActivity = totalAttendance > 0;
-  const attendanceRate = hasAttendanceActivity ? presentCount / totalAttendance : 0;
+  const absentCount = data.attendance.filter(a => a.status === 'absent').length;
+  // Use total class sessions from events table instead of just recorded attendance
+  const totalSessions = data.totalClassSessions || 0;
+  // Attendance: only calculate if there are sessions that have occurred
+  const hasAttendanceActivity = totalSessions > 0;
+  // Calculate attendance rate based on present/excused vs total sessions
+  const attendanceRate = hasAttendanceActivity ? presentCount / totalSessions : 0;
   const attendanceScore = hasAttendanceActivity ? attendanceRate * 5 : 0;
   
   // Only count participation components that have activity
@@ -279,7 +294,7 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
   gradeItems.push({
     id: 'attendance',
     category: 'participation',
-    name: `Attendance (${presentCount}/${totalAttendance} sessions)`,
+    name: `Attendance (${presentCount}/${totalSessions} sessions)`,
     dueDate: null,
     maxPoints: 5,
     earnedPoints: hasAttendanceActivity ? Math.round(attendanceScore * 10) / 10 : 0,
