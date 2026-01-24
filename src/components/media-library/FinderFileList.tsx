@@ -1,6 +1,6 @@
 import { MediaFile } from './types';
 import { cn } from '@/lib/utils';
-import { Image, Video, Music, FileText, File } from 'lucide-react';
+import { Image, Video, Music, FileText, File, Presentation, FileSpreadsheet, FileCode, FileArchive } from 'lucide-react';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
 import { format } from 'date-fns';
 
@@ -12,6 +12,24 @@ interface FinderFileListProps {
   onRename: (file: MediaFile) => void;
   getFileType: (file: MediaFile) => string;
 }
+
+// Extended file type detection
+const getExtendedFileType = (file: MediaFile): string => {
+  const url = file.file_url?.toLowerCase() || '';
+  const type = file.file_type?.toLowerCase() || '';
+  const title = file.title?.toLowerCase() || '';
+  
+  if (type.includes('image') || url.match(/\.(jpg|jpeg|png|gif|webp|svg|heic|bmp|ico|tiff?)$/)) return 'image';
+  if (type.includes('video') || url.match(/\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv)$/)) return 'video';
+  if (type.includes('audio') || url.match(/\.(mp3|wav|m4a|aac|ogg|flac|wma)$/)) return 'audio';
+  if (type.includes('pdf') || url.match(/\.pdf$/)) return 'pdf';
+  if (type.includes('presentation') || type.includes('powerpoint') || url.match(/\.(ppt|pptx)$/) || title.match(/\.(ppt|pptx)$/)) return 'powerpoint';
+  if (type.includes('word') || (type.includes('document') && type.includes('office')) || url.match(/\.(doc|docx)$/) || title.match(/\.(doc|docx)$/)) return 'word';
+  if (type.includes('spreadsheet') || type.includes('excel') || url.match(/\.(xls|xlsx|csv)$/) || title.match(/\.(xls|xlsx)$/)) return 'excel';
+  if (url.match(/\.(js|jsx|ts|tsx|json|html|css|scss|md|txt|yaml|yml|xml)$/)) return 'code';
+  if (url.match(/\.(zip|rar|7z|tar|gz)$/)) return 'archive';
+  return 'other';
+};
 
 export const FinderFileList = ({
   files,
@@ -26,7 +44,12 @@ export const FinderFileList = ({
       case 'image': return Image;
       case 'video': return Video;
       case 'audio': return Music;
-      case 'document': return FileText;
+      case 'pdf': return FileText;
+      case 'powerpoint': return Presentation;
+      case 'word': return FileText;
+      case 'excel': return FileSpreadsheet;
+      case 'code': return FileCode;
+      case 'archive': return FileArchive;
       default: return File;
     }
   };
@@ -36,7 +59,12 @@ export const FinderFileList = ({
       case 'image': return 'text-green-500';
       case 'video': return 'text-purple-500';
       case 'audio': return 'text-blue-500';
-      case 'document': return 'text-red-500';
+      case 'pdf': return 'text-red-500';
+      case 'powerpoint': return 'text-orange-500';
+      case 'word': return 'text-blue-600';
+      case 'excel': return 'text-emerald-500';
+      case 'code': return 'text-cyan-500';
+      case 'archive': return 'text-yellow-500';
       default: return 'text-gray-500';
     }
   };
@@ -61,8 +89,8 @@ export const FinderFileList = ({
       {/* Files */}
       <div className="divide-y divide-border/50">
         {files.map((file) => {
-          const fileType = getFileType(file);
-          const Icon = getIcon(fileType);
+          const extendedType = getExtendedFileType(file);
+          const Icon = getIcon(extendedType);
           const isSelected = selectedFiles.includes(file.id);
 
           return (
@@ -78,11 +106,11 @@ export const FinderFileList = ({
                   onDoubleClick={() => onOpen(file)}
                 >
                   <div className="col-span-5 flex items-center gap-2 min-w-0">
-                    <Icon className={cn("h-4 w-4 flex-shrink-0", getIconColor(fileType))} />
+                    <Icon className={cn("h-4 w-4 flex-shrink-0", getIconColor(extendedType))} />
                     <span className="truncate">{file.title || 'Untitled'}</span>
                   </div>
                   <div className="col-span-2 text-muted-foreground capitalize">
-                    {fileType}
+                    {extendedType}
                   </div>
                   <div className="col-span-2 text-right text-muted-foreground">
                     {formatSize(file.file_size)}
