@@ -14,7 +14,9 @@ serve(async (req) => {
   try {
     const baseUrl = 'https://conducting.gleeworld.org';
     const requestUrl = new URL(req.url);
-    const functionBaseUrl = `${requestUrl.origin}${requestUrl.pathname}`;
+    // Force HTTPS for production (edge runtime may report http internally)
+    const origin = requestUrl.origin.replace('http://', 'https://');
+    const functionBaseUrl = `${origin}${requestUrl.pathname}`;
 
     // Support both:
     // - GET ?path=/patterns  -> returns rewritten HTML
