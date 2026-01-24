@@ -16,6 +16,7 @@ export interface AcademyCourse {
     email: string;
     office: string;
     hours: string;
+    imageUrl?: string;
   };
   isActive: boolean;
 }
@@ -35,7 +36,8 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
       office: 'Fine Arts 105',
-      hours: 'MWF 3-5 PM'
+      hours: 'MWF 3-5 PM',
+      imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
     },
     isActive: true
   },
@@ -53,7 +55,8 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
       office: 'Fine Arts 105',
-      hours: 'MWF 3-5 PM'
+      hours: 'MWF 3-5 PM',
+      imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
     },
     isActive: true
   },
@@ -71,7 +74,8 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
       office: 'Fine Arts 105',
-      hours: 'MWF 3-5 PM'
+      hours: 'MWF 3-5 PM',
+      imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
     },
     isActive: true
   },
@@ -89,7 +93,8 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
       office: 'Fine Arts 105',
-      hours: 'By Appointment'
+      hours: 'By Appointment',
+      imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
     },
     isActive: true
   },
@@ -107,7 +112,8 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
       office: 'Fine Arts 105',
-      hours: 'MWF 3-5 PM'
+      hours: 'MWF 3-5 PM',
+      imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
     },
     isActive: true
   },
@@ -125,7 +131,8 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
       office: 'Fine Arts 105',
-      hours: 'MWF 3-5 PM'
+      hours: 'MWF 3-5 PM',
+      imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
     },
     isActive: true
   },
@@ -143,7 +150,8 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
       office: 'Fine Arts 105',
-      hours: 'MWF 3-5 PM'
+      hours: 'MWF 3-5 PM',
+      imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
     },
     isActive: false
   },
@@ -161,7 +169,8 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
       office: 'Fine Arts 105',
-      hours: 'By Appointment'
+      hours: 'By Appointment',
+      imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
     },
     isActive: true
   }
