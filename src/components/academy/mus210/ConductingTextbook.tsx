@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookMarked, ExternalLink, Music, BookOpen, FileText, Users, History, Scroll, Library, NotebookPen, Loader2, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface TextbookSection {
   id: string;
@@ -25,48 +24,25 @@ const TEXTBOOK_SECTIONS: TextbookSection[] = [
 ];
 
 const baseUrl = 'https://conducting.gleeworld.org';
+const proxyUrlBase = 'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/conducting-proxy';
 
 export const ConductingTextbook: React.FC = () => {
   const [activeSection, setActiveSection] = useState('patterns');
-  const [htmlContent, setHtmlContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const currentSection = TEXTBOOK_SECTIONS.find(s => s.id === activeSection) || TEXTBOOK_SECTIONS[0];
 
-  useEffect(() => {
-    const fetchContent = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const response = await fetch(
-          `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/conducting-proxy`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ path: currentSection.path })
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.status}`);
-        }
-
-        const html = await response.text();
-        setHtmlContent(html);
-      } catch (err) {
-        console.error('Failed to load textbook content:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load content');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchContent();
+  const iframeSrc = useMemo(() => {
+    const path = encodeURIComponent(currentSection.path);
+    return `${proxyUrlBase}?path=${path}`;
   }, [currentSection.path]);
+
+  // When switching tabs, show a loader until the iframe reports it loaded.
+  React.useEffect(() => {
+    setIsLoading(true);
+    setError(null);
+  }, [iframeSrc]);
 
   const openInNewTab = () => {
     window.open(`${baseUrl}${currentSection.path}`, '_blank');
@@ -127,11 +103,18 @@ export const ConductingTextbook: React.FC = () => {
               </div>
             ) : (
               <iframe
-                srcDoc={htmlContent}
+                src={iframeSrc}
                 style={{ width: '100%', height: '70vh', minHeight: '500px' }}
                 title={`Textbook - ${currentSection.label}`}
                 className="bg-white"
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts allow-forms allow-popups"
+                onLoad={() => {
+                  setIsLoading(false);
+                }}
+                onError={() => {
+                  setIsLoading(false);
+                  setError('Failed to load content');
+                }}
               />
             )}
           </div>
