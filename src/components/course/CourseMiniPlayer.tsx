@@ -28,13 +28,13 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
   } = useCoursePlaylist(courseId);
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const currentTrack = tracks[currentTrackIndex];
+  const currentTrack = currentTrackIndex !== null ? tracks[currentTrackIndex] : null;
 
   // Handle play/pause
   const togglePlay = () => {
@@ -56,14 +56,22 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
     }
   };
 
+  // Start playing first track when user clicks play with no track selected
+  const handleFirstPlay = () => {
+    if (tracks.length > 0) {
+      setCurrentTrackIndex(0);
+      setIsPlaying(true);
+    }
+  };
+
   const skipPrevious = () => {
-    if (currentTrackIndex > 0) {
+    if (currentTrackIndex !== null && currentTrackIndex > 0) {
       playTrack(currentTrackIndex - 1);
     }
   };
 
   const skipNext = () => {
-    if (currentTrackIndex < tracks.length - 1) {
+    if (currentTrackIndex !== null && currentTrackIndex < tracks.length - 1) {
       playTrack(currentTrackIndex + 1);
     }
   };
@@ -119,24 +127,26 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
 
   return (
     <div className={cn(
-      "bg-[#002244] border-t border-white/10 transition-all duration-300",
+      "bg-gradient-to-b from-[#003366] via-[#002244] to-[#001a33] border-t border-white/20 transition-all duration-300",
+      "shadow-[inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-2px_4px_rgba(0,0,0,0.3),0_4px_12px_rgba(0,0,0,0.4)]",
+      "rounded-b-xl",
       className
     )}>
       <audio ref={audioRef} preload="metadata" />
       
       {/* Main Mini Player Bar */}
-      <div className="flex items-center gap-2 px-3 py-2">
+      <div className="flex items-center gap-2 px-3 py-2.5">
         {/* Music Icon & Track Info */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="h-8 w-8 rounded bg-white/10 flex items-center justify-center flex-shrink-0">
-            <Music className="h-4 w-4 text-white/70" />
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-white/15 to-white/5 flex items-center justify-center flex-shrink-0 shadow-inner">
+            <Music className="h-4 w-4 text-white/80" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-white font-medium truncate">
-              {currentTrack?.track_data?.title || 'Select a track'}
+            <p className="text-xs text-white font-semibold tracking-wide truncate">
+              {currentTrack?.track_data?.title || 'MUSIC PLAYER'}
             </p>
             <p className="text-[10px] text-white/60 truncate">
-              {selectedPlaylist?.title || 'No playlist selected'}
+              {currentTrack ? (selectedPlaylist?.title || 'Playlist') : 'Select a track to play'}
             </p>
           </div>
         </div>
@@ -148,7 +158,7 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
             size="icon"
             className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10"
             onClick={skipPrevious}
-            disabled={currentTrackIndex === 0}
+            disabled={currentTrackIndex === null || currentTrackIndex === 0}
           >
             <SkipBack className="h-3.5 w-3.5" />
           </Button>
@@ -156,8 +166,8 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-white hover:bg-white/10 rounded-full"
-            onClick={togglePlay}
-            disabled={!currentTrack}
+            onClick={currentTrack ? togglePlay : handleFirstPlay}
+            disabled={tracks.length === 0}
           >
             {isPlaying ? (
               <Pause className="h-4 w-4" />
@@ -170,7 +180,7 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
             size="icon"
             className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10"
             onClick={skipNext}
-            disabled={currentTrackIndex >= tracks.length - 1}
+            disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
           >
             <SkipForward className="h-3.5 w-3.5" />
           </Button>
