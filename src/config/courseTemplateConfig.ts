@@ -115,7 +115,7 @@ export const COURSE_TEMPLATE_CONFIGS: Record<string, CourseTemplateConfig> = {
       hasJournals: true,
       hasPolls: true,
       hasPeerReview: true,
-      hasGroups: true,
+      hasGroups: false,
       hasListeningHub: true,
     },
   },

@@ -470,21 +470,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {/* Discussions Tab */}
             {activeTab === 'discussions' && <DiscussionsSection courseId={course.id} />}
 
-            {/* AI Groups Tab - Available for all courses */}
-            {activeTab === 'ai-groups' && <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-primary" />
-                    AI Project Groups
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4">
-                    Collaborate with your group on AI-powered projects. Work together on research, presentations, and creative endeavors.
-                  </p>
-                  <p className="text-muted-foreground">No AI project groups assigned yet.</p>
-                </CardContent>
-              </Card>}
 
 
             {/* Resources Tab - Available for all courses */}
