@@ -54,10 +54,17 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
     }
   };
 
+  // Check edit permissions considering exec board
+  const canEditEvent = (event: GleeWorldEvent): boolean => {
+    if (!user) return false;
+    return user.id === event.created_by || 
+           user.role === 'admin' || 
+           user.role === 'super-admin' ||
+           user.role === 'executive';
+  };
+
   const handleEventClick = (event: GleeWorldEvent) => {
-    const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
-    
-    if (canEdit) {
+    if (canEditEvent(event)) {
       setEditingEvent(event);
     } else {
       setSelectedEvent(event);
@@ -86,7 +93,7 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
       </div>
       
       {events.map(event => {
-        const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+        const canEdit = canEditEvent(event);
         const eventDate = new Date(event.start_date);
         
         return (
