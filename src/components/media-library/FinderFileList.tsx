@@ -9,6 +9,7 @@ interface FinderFileListProps {
   selectedFiles: string[];
   onSelect: (file: MediaFile, event: React.MouseEvent) => void;
   onOpen: (file: MediaFile) => void;
+  onRename: (file: MediaFile) => void;
   getFileType: (file: MediaFile) => string;
 }
 
@@ -17,6 +18,7 @@ export const FinderFileList = ({
   selectedFiles,
   onSelect,
   onOpen,
+  onRename,
   getFileType
 }: FinderFileListProps) => {
   const getIcon = (type: string) => {
@@ -98,7 +100,7 @@ export const FinderFileList = ({
                   Download
                 </ContextMenuItem>
                 <ContextMenuSeparator />
-                <ContextMenuItem>Rename</ContextMenuItem>
+                <ContextMenuItem onClick={() => onRename(file)}>Rename</ContextMenuItem>
                 <ContextMenuItem>Move to...</ContextMenuItem>
                 <ContextMenuItem>Add to Favorites</ContextMenuItem>
                 <ContextMenuSeparator />
