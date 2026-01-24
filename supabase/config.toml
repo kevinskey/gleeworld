@@ -402,3 +402,6 @@ verify_jwt = true
 
 [functions.approve-ai-grade]
 verify_jwt = true
+
+[functions.conducting-proxy]
+verify_jwt = false
