@@ -14,7 +14,7 @@ export const CourseGradeStat: React.FC<CourseGradeStatProps> = ({ courseId, clas
 
   return (
     <TooltipProvider>
-      <div className={cn("px-4 py-4 border-b border-border bg-gradient-to-b from-primary/10 to-transparent", className)}>
+      <div className={cn("px-5 py-6 border-b border-border bg-gradient-to-b from-primary/10 to-transparent", className)}>
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center gap-3 cursor-help">
