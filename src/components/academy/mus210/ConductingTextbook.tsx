@@ -24,7 +24,6 @@ const TEXTBOOK_SECTIONS: TextbookSection[] = [
 ];
 
 const baseUrl = 'https://conducting.gleeworld.org';
-const proxyUrlBase = 'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/conducting-proxy';
 
 export const ConductingTextbook: React.FC = () => {
   const [activeSection, setActiveSection] = useState('patterns');
@@ -33,9 +32,9 @@ export const ConductingTextbook: React.FC = () => {
 
   const currentSection = TEXTBOOK_SECTIONS.find(s => s.id === activeSection) || TEXTBOOK_SECTIONS[0];
 
+  // Direct iframe embedding - no proxy needed for Lovable-to-Lovable
   const iframeSrc = useMemo(() => {
-    const path = encodeURIComponent(currentSection.path);
-    return `${proxyUrlBase}?path=${path}`;
+    return `${baseUrl}${currentSection.path}`;
   }, [currentSection.path]);
 
   // When switching tabs, show a loader until the iframe reports it loaded.
