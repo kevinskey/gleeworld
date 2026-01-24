@@ -55,6 +55,12 @@ const LiturgicalPlanner = React.lazy(() => import('./planner/LiturgicalPlanner')
 const PhotoGallery = React.lazy(() => import('@/components/gallery/PhotoGallery').then(m => ({
   default: m.PhotoGallery
 })));
+const ConductingTextbook = React.lazy(() => import('./mus210/ConductingTextbook').then(m => ({
+  default: m.ConductingTextbook
+})));
+const ReadMusicTrainer = React.lazy(() => import('./mus210/ReadMusicTrainer').then(m => ({
+  default: m.ReadMusicTrainer
+})));
 interface UnifiedCoursePageProps {
   course: AcademyCourse;
 }
@@ -563,6 +569,20 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {/* Elections Tab - Only for MUS 070 */}
             {activeTab === 'elections' && course.courseCode === 'MUS 070' && <ElectionsModule courseId={course.id} />}
+
+            {/* Textbook Tab - MUS 210 Conducting Reference */}
+            {activeTab === 'textbook' && course.courseCode === 'MUS 210' && (
+              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading textbook...</CardContent></Card>}>
+                <ConductingTextbook />
+              </React.Suspense>
+            )}
+
+            {/* ReadMusic Tab - MUS 210 Sight Reading Trainer */}
+            {activeTab === 'readmusic' && course.courseCode === 'MUS 210' && (
+              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading ReadMusic...</CardContent></Card>}>
+                <ReadMusicTrainer />
+              </React.Suspense>
+            )}
 
             {/* Playlist Tab - Course curated playlists */}
             {activeTab === 'playlist' && <CoursePlaylistPlayer courseId={course.id} />}
