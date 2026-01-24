@@ -71,6 +71,7 @@ export const ReadMusicTrainer: React.FC = () => {
               allow="fullscreen; microphone"
               title="ReadMusic Sight-Reading Trainer"
               className="bg-white"
+              sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
             />
           </div>
         </CardContent>
