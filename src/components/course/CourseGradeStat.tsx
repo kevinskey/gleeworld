@@ -10,7 +10,7 @@ interface CourseGradeStatProps {
 }
 
 export const CourseGradeStat: React.FC<CourseGradeStatProps> = ({ courseId, className }) => {
-  const { letterGrade, percentage, gradedCount, assignmentCount, loading } = useCourseGrade(courseId);
+  const { letterGrade, percentage, stats, deductions, loading } = useCourseGrade(courseId);
 
   return (
     <TooltipProvider>
@@ -37,7 +37,9 @@ export const CourseGradeStat: React.FC<CourseGradeStatProps> = ({ courseId, clas
             </div>
           </TooltipTrigger>
           <TooltipContent side="right" className="text-xs">
-            <p>{gradedCount} of {assignmentCount} assignments graded</p>
+            <p className="font-medium">Starts at 100%, deductions apply:</p>
+            <p>Assignments: -{deductions.assignments}%</p>
+            <p>Absences ({stats.absenceCount}): -{deductions.attendance}%</p>
           </TooltipContent>
         </Tooltip>
       </div>
