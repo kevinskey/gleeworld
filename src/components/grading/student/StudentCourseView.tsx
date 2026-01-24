@@ -245,20 +245,20 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="spreadsheet" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-4 bg-slate-200 dark:bg-slate-800">
+          <TabsTrigger value="spreadsheet" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 data-[state=active]:bg-white data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-white">
             <Table2 className="h-4 w-4" />
             <span className="hidden sm:inline">Grades</span>
           </TabsTrigger>
-          <TabsTrigger value="overview" className="flex items-center gap-2">
+          <TabsTrigger value="overview" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 data-[state=active]:bg-white data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-white">
             <Target className="h-4 w-4" />
             <span className="hidden sm:inline">Summary</span>
           </TabsTrigger>
-          <TabsTrigger value="assignments" className="flex items-center gap-2">
+          <TabsTrigger value="assignments" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 data-[state=active]:bg-white data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-white">
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Work</span>
           </TabsTrigger>
-          <TabsTrigger value="polls" className="flex items-center gap-2">
+          <TabsTrigger value="polls" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 data-[state=active]:bg-white data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-white">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Polls</span>
           </TabsTrigger>
