@@ -107,7 +107,9 @@ export const ConductingTextbook: React.FC = () => {
                 style={{ width: '100%', height: '70vh', minHeight: '500px' }}
                 title={`Textbook - ${currentSection.label}`}
                 className="bg-white"
-                sandbox="allow-scripts allow-forms allow-popups"
+                // Allow the embedded Lovable SPA to boot properly (storage, same-origin APIs, etc.).
+                // Keep navigation restricted unless the user explicitly interacts.
+                sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
                 onLoad={() => {
                   setIsLoading(false);
                 }}
