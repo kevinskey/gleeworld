@@ -40,21 +40,23 @@ export const ConductingTextbook: React.FC = () => {
       setError(null);
       
       try {
-        const { data, error: fnError } = await supabase.functions.invoke('conducting-proxy', {
-          body: { path: currentSection.path }
-        });
+        const response = await fetch(
+          `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/conducting-proxy`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ path: currentSection.path })
+          }
+        );
 
-        if (fnError) {
-          throw new Error(fnError.message);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status}`);
         }
 
-        if (typeof data === 'string') {
-          setHtmlContent(data);
-        } else if (data?.error) {
-          throw new Error(data.error);
-        } else {
-          setHtmlContent('');
-        }
+        const html = await response.text();
+        setHtmlContent(html);
       } catch (err) {
         console.error('Failed to load textbook content:', err);
         setError(err instanceof Error ? err.message : 'Failed to load content');
