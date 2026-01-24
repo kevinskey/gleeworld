@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import equalizerBg from '@/assets/audio-equalizer-bg.png';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMergedProfile } from '@/hooks/useMergedProfile';
 
 interface CourseHeroPlayerProps {
   courseId: string;
@@ -48,6 +50,9 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
   className,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { profile, displayName } = useMergedProfile(user);
+  
   const {
     playlists,
     selectedPlaylist,
@@ -55,6 +60,10 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
     loading,
     selectPlaylist,
   } = useCoursePlaylist(courseId);
+  
+  // Get user avatar and initials
+  const userAvatarUrl = profile?.avatar_url;
+  const userInitials = displayName ? displayName.split(' ').map(n => n[0]).join('').slice(0, 2) : 'U';
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState<number | null>(null);
@@ -252,16 +261,16 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
               </div>
             </div>
             
-            {/* Right: Instructor Photo */}
+            {/* Right: Student Photo */}
             <div className="flex-shrink-0">
               <Avatar className="h-24 w-24 lg:h-32 lg:w-32 ring-4 ring-white/20 shadow-2xl">
                 <AvatarImage 
-                  src={instructorImageUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop'} 
-                  alt={instructorName} 
+                  src={userAvatarUrl} 
+                  alt={displayName} 
                   className="object-cover"
                 />
                 <AvatarFallback className="bg-primary/30 text-white text-2xl lg:text-3xl">
-                  {instructorName.split(' ').map(n => n[0]).join('')}
+                  {userInitials}
                 </AvatarFallback>
               </Avatar>
             </div>
@@ -281,12 +290,12 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
             
             <Avatar className="h-20 w-20 ring-3 ring-white/20 shadow-xl mb-4">
               <AvatarImage 
-                src={instructorImageUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop'} 
-                alt={instructorName} 
+                src={userAvatarUrl} 
+                alt={displayName} 
                 className="object-cover"
               />
               <AvatarFallback className="bg-primary/30 text-white text-lg">
-                {instructorName.split(' ').map(n => n[0]).join('')}
+                {userInitials}
               </AvatarFallback>
             </Avatar>
             
