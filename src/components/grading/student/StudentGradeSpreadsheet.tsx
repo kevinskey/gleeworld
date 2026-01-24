@@ -406,9 +406,9 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
   return (
     <div className="space-y-6">
       {/* Grade Summary Card - DEDUCTIVE MODEL */}
-      <Card className="border-2 border-primary/20 bg-primary/5">
+      <Card className="border-2 border-primary/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between text-slate-900 dark:text-slate-100">
             <span className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
               Grade Calculation (Starting at 100%)
@@ -429,23 +429,23 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
 
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="font-bold">Category</TableHead>
-                <TableHead className="text-center font-bold">Weight</TableHead>
-                <TableHead className="text-center font-bold">Status</TableHead>
-                <TableHead className="text-right font-bold text-red-600">Deduction</TableHead>
+              <TableRow className="bg-slate-100 dark:bg-slate-800">
+                <TableHead className="font-bold text-slate-900 dark:text-slate-100">Category</TableHead>
+                <TableHead className="text-center font-bold text-slate-900 dark:text-slate-100">Weight</TableHead>
+                <TableHead className="text-center font-bold text-slate-900 dark:text-slate-100">Status</TableHead>
+                <TableHead className="text-right font-bold text-red-600 dark:text-red-400">Deduction</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {categorySummary.map((cat, index) => (
-                <TableRow key={index} className="hover:bg-muted/30">
-                  <TableCell className="font-medium">
+                <TableRow key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <TableCell className="font-medium text-slate-900 dark:text-slate-100">
                     <div className="flex items-center gap-2">
                       {cat.icon}
                       {cat.name}
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">{cat.weight}%</TableCell>
+                  <TableCell className="text-center text-slate-700 dark:text-slate-300">{cat.weight}%</TableCell>
                   <TableCell className="text-center">
                     {cat.status === 'pending' ? (
                       <Badge variant="outline" className="text-muted-foreground">Not Graded</Badge>
@@ -492,9 +492,9 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
       </Card>
 
       {/* Detailed Breakdown */}
-      <Card>
+      <Card className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
             <FileText className="h-5 w-5" />
             Detailed Grade Breakdown
           </CardTitle>
@@ -503,19 +503,19 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
+                <TableRow className="bg-slate-100 dark:bg-slate-800">
                   <TableHead className="min-w-[40px]"></TableHead>
-                  <TableHead className="font-bold min-w-[200px]">Assignment</TableHead>
-                  <TableHead className="text-center font-bold min-w-[100px]">Due Date</TableHead>
-                  <TableHead className="text-center font-bold min-w-[80px]">Status</TableHead>
-                  <TableHead className="text-center font-bold min-w-[100px]">Points</TableHead>
-                  <TableHead className="text-center font-bold min-w-[80px]">Score %</TableHead>
+                  <TableHead className="font-bold min-w-[200px] text-slate-900 dark:text-slate-100">Assignment</TableHead>
+                  <TableHead className="text-center font-bold min-w-[100px] text-slate-900 dark:text-slate-100">Due Date</TableHead>
+                  <TableHead className="text-center font-bold min-w-[80px] text-slate-900 dark:text-slate-100">Status</TableHead>
+                  <TableHead className="text-center font-bold min-w-[100px] text-slate-900 dark:text-slate-100">Points</TableHead>
+                  <TableHead className="text-center font-bold min-w-[80px] text-slate-900 dark:text-slate-100">Score %</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {/* Essays Section */}
-                <TableRow className="bg-muted/30">
-                  <TableCell colSpan={6} className="font-bold text-primary">
+                <TableRow className="bg-slate-200 dark:bg-slate-700">
+                  <TableCell colSpan={6} className="font-bold text-blue-700 dark:text-blue-300">
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       ESSAYS — {gradedEssayCount}/{TOTAL_ESSAYS} graded ({GRADE_WEIGHTS.assignments}% of grade)
@@ -523,10 +523,10 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                   </TableCell>
                 </TableRow>
                 {gradeItems.filter(item => item.category === 'assignment').map((item) => (
-                  <TableRow key={item.id} className="hover:bg-muted/20">
+                  <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                     <TableCell>{getStatusIcon(item.status)}</TableCell>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">
+                    <TableCell className="font-medium text-slate-900 dark:text-slate-100">{item.name}</TableCell>
+                    <TableCell className="text-center text-sm text-slate-600 dark:text-slate-400">
                       {item.dueDate ? new Date(item.dueDate).toLocaleDateString() : '-'}
                     </TableCell>
                     <TableCell className="text-center">{getStatusBadge(item.status)}</TableCell>
@@ -534,17 +534,17 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                       {item.earnedPoints !== null ? (
                         <span className={cn(
                           "font-semibold",
-                          item.earnedPoints / item.maxPoints >= 0.9 ? "text-green-600" :
-                          item.earnedPoints / item.maxPoints >= 0.7 ? "text-blue-600" :
-                          "text-orange-600"
+                          item.earnedPoints / item.maxPoints >= 0.9 ? "text-green-600 dark:text-green-400" :
+                          item.earnedPoints / item.maxPoints >= 0.7 ? "text-blue-600 dark:text-blue-400" :
+                          "text-orange-600 dark:text-orange-400"
                         )}>
                           {item.earnedPoints} / {item.maxPoints}
                         </span>
                       ) : (
-                        <span className="text-muted-foreground">- / {item.maxPoints}</span>
+                        <span className="text-slate-500 dark:text-slate-400">- / {item.maxPoints}</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center text-slate-700 dark:text-slate-300">
                       {item.earnedPoints !== null ? (
                         <span className="font-medium">
                           {((item.earnedPoints / item.maxPoints) * 100).toFixed(1)}%
@@ -553,21 +553,21 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                     </TableCell>
                   </TableRow>
                 ))}
-                <TableRow className="bg-blue-500/10 border-t">
-                  <TableCell colSpan={4} className="font-semibold text-right">
+                <TableRow className="bg-blue-100 dark:bg-blue-900/30 border-t">
+                  <TableCell colSpan={4} className="font-semibold text-right text-slate-700 dark:text-slate-300">
                     Essays Subtotal ({gradedEssayCount}/{TOTAL_ESSAYS} graded, {GRADE_WEIGHTS.assignments}% weight):
                   </TableCell>
-                  <TableCell className="text-center font-bold">
+                  <TableCell className="text-center font-bold text-slate-900 dark:text-slate-100">
                     {hasGradedAssignments ? `${totalGradedAssignmentEarned} / ${totalGradedAssignmentMax} pts` : 'Not graded yet'}
                   </TableCell>
-                  <TableCell className="text-center font-bold text-primary">
+                  <TableCell className="text-center font-bold text-blue-700 dark:text-blue-300">
                     {hasGradedAssignments ? `−${assignmentDeduction.toFixed(2)}% deduction` : '0% deduction'}
                   </TableCell>
                 </TableRow>
 
                 {/* Exams Section */}
-                <TableRow className="bg-muted/30">
-                  <TableCell colSpan={6} className="font-bold text-primary">
+                <TableRow className="bg-slate-200 dark:bg-slate-700">
+                  <TableCell colSpan={6} className="font-bold text-blue-700 dark:text-blue-300">
                     <div className="flex items-center gap-2">
                       <Calculator className="h-4 w-4" />
                       EXAMS ({GRADE_WEIGHTS.midterm + GRADE_WEIGHTS.finalExam}% of grade)
@@ -575,27 +575,27 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                   </TableCell>
                 </TableRow>
                 {gradeItems.filter(item => item.category === 'midterm' || item.category === 'final').map((item) => (
-                  <TableRow key={item.id} className="hover:bg-muted/20">
+                  <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                     <TableCell>{getStatusIcon(item.status)}</TableCell>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">-</TableCell>
+                    <TableCell className="font-medium text-slate-900 dark:text-slate-100">{item.name}</TableCell>
+                    <TableCell className="text-center text-sm text-slate-600 dark:text-slate-400">-</TableCell>
                     <TableCell className="text-center">{getStatusBadge(item.status)}</TableCell>
                     <TableCell className="text-center">
                       {item.earnedPoints !== null ? (
-                        <span className="font-semibold">{item.earnedPoints} / {item.maxPoints}</span>
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">{item.earnedPoints} / {item.maxPoints}</span>
                       ) : (
-                        <span className="text-muted-foreground">- / {item.maxPoints}</span>
+                        <span className="text-slate-500 dark:text-slate-400">- / {item.maxPoints}</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center font-bold text-primary">
+                    <TableCell className="text-center font-bold text-blue-700 dark:text-blue-300">
                       = {item.weightedScore.toFixed(2)}% (of {item.weight}%)
                     </TableCell>
                   </TableRow>
                 ))}
 
                 {/* Group Project Section */}
-                <TableRow className="bg-muted/30">
-                  <TableCell colSpan={6} className="font-bold text-primary">
+                <TableRow className="bg-slate-200 dark:bg-slate-700">
+                  <TableCell colSpan={6} className="font-bold text-blue-700 dark:text-blue-300">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       GROUP PROJECT ({GRADE_WEIGHTS.groupProject}% of grade)
@@ -603,19 +603,19 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                   </TableCell>
                 </TableRow>
                 {gradeItems.filter(item => item.category === 'group_project').map((item) => (
-                  <TableRow key={item.id} className="hover:bg-muted/20">
+                  <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                     <TableCell>{getStatusIcon(item.status)}</TableCell>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">-</TableCell>
+                    <TableCell className="font-medium text-slate-900 dark:text-slate-100">{item.name}</TableCell>
+                    <TableCell className="text-center text-sm text-slate-600 dark:text-slate-400">-</TableCell>
                     <TableCell className="text-center">{getStatusBadge(item.status)}</TableCell>
-                    <TableCell className="text-center text-muted-foreground">- / {item.maxPoints}</TableCell>
-                    <TableCell className="text-center text-muted-foreground">-</TableCell>
+                    <TableCell className="text-center text-slate-500 dark:text-slate-400">- / {item.maxPoints}</TableCell>
+                    <TableCell className="text-center text-slate-500 dark:text-slate-400">-</TableCell>
                   </TableRow>
                 ))}
 
                 {/* Participation Section */}
-                <TableRow className="bg-muted/30">
-                  <TableCell colSpan={6} className="font-bold text-primary">
+                <TableRow className="bg-slate-200 dark:bg-slate-700">
+                  <TableCell colSpan={6} className="font-bold text-blue-700 dark:text-blue-300">
                     <div className="flex items-center gap-2">
                       <MessageSquare className="h-4 w-4" />
                       PARTICIPATION ({GRADE_WEIGHTS.participation}% of grade)
@@ -623,37 +623,37 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                   </TableCell>
                 </TableRow>
                 {gradeItems.filter(item => item.category === 'participation').map((item) => (
-                  <TableRow key={item.id} className="hover:bg-muted/20">
+                  <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                     <TableCell>{getStatusIcon(item.status)}</TableCell>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">-</TableCell>
+                    <TableCell className="font-medium text-slate-900 dark:text-slate-100">{item.name}</TableCell>
+                    <TableCell className="text-center text-sm text-slate-600 dark:text-slate-400">-</TableCell>
                     <TableCell className="text-center">{getStatusBadge(item.status)}</TableCell>
                     <TableCell className="text-center">
-                      <span className="font-semibold">{item.earnedPoints?.toFixed(1)} / {item.maxPoints}</span>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">{item.earnedPoints?.toFixed(1)} / {item.maxPoints}</span>
                     </TableCell>
-                    <TableCell className="text-center font-bold text-primary">
+                    <TableCell className="text-center font-bold text-blue-700 dark:text-blue-300">
                       = {item.weightedScore.toFixed(2)}%
                     </TableCell>
                   </TableRow>
                 ))}
-                <TableRow className="bg-purple-500/10 border-t">
-                  <TableCell colSpan={4} className="font-semibold text-right">
+                <TableRow className="bg-purple-100 dark:bg-purple-900/30 border-t">
+                  <TableCell colSpan={4} className="font-semibold text-right text-slate-700 dark:text-slate-300">
                     Participation Subtotal ({GRADE_WEIGHTS.participation}% weight):
                   </TableCell>
-                  <TableCell className="text-center font-bold">
+                  <TableCell className="text-center font-bold text-slate-900 dark:text-slate-100">
                     {participationWeightedScore.toFixed(1)} / 15
                   </TableCell>
-                  <TableCell className="text-center font-bold text-primary">
+                  <TableCell className="text-center font-bold text-purple-700 dark:text-purple-300">
                     = {participationWeightedScore.toFixed(2)}%
                   </TableCell>
                 </TableRow>
 
                 {/* Final Total Row */}
-                <TableRow className="bg-primary/20 border-t-4 border-primary">
-                  <TableCell colSpan={4} className="font-bold text-lg">
+                <TableRow className="bg-green-100 dark:bg-green-900/30 border-t-4 border-green-500">
+                  <TableCell colSpan={4} className="font-bold text-lg text-slate-900 dark:text-slate-100">
                     FINAL COURSE GRADE (100% − {totalDeductions.toFixed(1)}% deductions)
                   </TableCell>
-                  <TableCell className="text-center font-bold text-lg">
+                  <TableCell className="text-center font-bold text-lg text-slate-900 dark:text-slate-100">
                     {currentGrade.toFixed(1)} / 100
                   </TableCell>
                   <TableCell className={cn("text-center font-bold text-xl", getLetterGradeColor(letterGrade))}>
@@ -667,9 +667,9 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
       </Card>
 
       {/* Grade Scale Reference */}
-      <Card>
+      <Card className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Grade Scale Reference</CardTitle>
+          <CardTitle className="text-lg text-slate-900 dark:text-slate-100">Grade Scale Reference</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-5 sm:grid-cols-11 gap-1 text-center text-xs sm:text-sm">
@@ -689,12 +689,12 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
               <div 
                 key={item.grade} 
                 className={cn(
-                  "p-2 rounded-lg bg-muted/50 border",
-                  letterGrade === item.grade && "ring-2 ring-primary bg-primary/20"
+                  "p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700",
+                  letterGrade === item.grade && "ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/50"
                 )}
               >
-                <div className="font-bold">{item.grade}</div>
-                <div className="text-xs text-muted-foreground">{item.range}</div>
+                <div className="font-bold text-slate-900 dark:text-slate-100">{item.grade}</div>
+                <div className="text-xs text-slate-600 dark:text-slate-400">{item.range}</div>
               </div>
             ))}
           </div>
