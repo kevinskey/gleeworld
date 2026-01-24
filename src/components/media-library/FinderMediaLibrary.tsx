@@ -36,6 +36,7 @@ export const FinderMediaLibrary = () => {
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [draggingFileId, setDraggingFileId] = useState<string | null>(null);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const { toast } = useToast();
   const moveToFolder = useMoveToFolder();
 
@@ -151,9 +152,14 @@ export const FinderMediaLibrary = () => {
     return 'other';
   };
 
-  // Filter files based on active section, folder, and search
+  // Filter files based on active section, folder, filters, and search
   const getFilteredFiles = useCallback(() => {
     let filtered = [...allFiles];
+
+    // Exclude deleted files by default (unless viewing trash)
+    if (activeSection !== 'trash') {
+      filtered = filtered.filter(f => !f.is_deleted);
+    }
 
     // Apply folder filter first if a folder is selected
     if (selectedFolderId) {
@@ -161,30 +167,31 @@ export const FinderMediaLibrary = () => {
     } else {
       // Apply section filter only when not viewing a folder
       switch (activeSection) {
-        case 'images':
-          filtered = filtered.filter(f => getFileType(f) === 'image');
-          break;
-        case 'videos':
-          filtered = filtered.filter(f => getFileType(f) === 'video');
-          break;
-        case 'audio':
-          filtered = filtered.filter(f => getFileType(f) === 'audio');
-          break;
-        case 'documents':
-          filtered = filtered.filter(f => getFileType(f) === 'document');
-          break;
-        case 'quick-capture':
-          filtered = filtered.filter(f => (f as any).source === 'quick_capture');
+        case 'recents':
+          // Show files from last 7 days
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          filtered = filtered.filter(f => new Date(f.created_at) >= weekAgo);
           break;
         case 'favorites':
           filtered = filtered.filter(f => f.is_favorite);
           break;
-        case 'trash':
-          filtered = filtered.filter(f => f.is_deleted);
+        case 'downloads':
+          filtered = filtered.filter(f => f.category === 'downloads');
           break;
+        case 'trash':
+          filtered = allFiles.filter(f => f.is_deleted);
+          break;
+        case 'all':
         default:
-          filtered = filtered.filter(f => !f.is_deleted);
+          // All files already filtered for non-deleted
+          break;
       }
+    }
+
+    // Apply type filters from toolbar chips (OR logic - show files matching ANY selected filter)
+    if (activeFilters.length > 0) {
+      filtered = filtered.filter(f => activeFilters.includes(getFileType(f)));
     }
 
     // Apply search
@@ -218,7 +225,20 @@ export const FinderMediaLibrary = () => {
     });
 
     return filtered;
-  }, [allFiles, activeSection, selectedFolderId, searchQuery, sortBy, sortOrder]);
+  }, [allFiles, activeSection, selectedFolderId, activeFilters, searchQuery, sortBy, sortOrder]);
+
+  // Filter handlers
+  const handleFilterToggle = (filter: string) => {
+    setActiveFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
+    );
+  };
+
+  const handleClearFilters = () => {
+    setActiveFilters([]);
+  };
 
   // File upload
   const handleUpload = async (files: File[]) => {
@@ -458,6 +478,9 @@ export const FinderMediaLibrary = () => {
             onNewFolder={() => setNewFolderDialogOpen(true)}
             isAdmin={isAdmin}
             uploading={uploading}
+            activeFilters={activeFilters}
+            onFilterToggle={handleFilterToggle}
+            onClearFilters={handleClearFilters}
           />
 
           {/* Breadcrumb */}
