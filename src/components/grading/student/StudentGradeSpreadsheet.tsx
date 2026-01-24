@@ -141,13 +141,14 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
   const gradeItems: GradeItem[] = [];
   const submissionMap = new Map(data.submissions.map(s => [s.assignment_id, s]));
 
-  // Add regular assignments
-  let totalAssignmentPoints = 0;
-  let earnedAssignmentPoints = 0;
+  // Add regular assignments - track graded vs total separately
+  let gradedAssignmentPoints = 0;  // Max points for GRADED assignments only
+  let earnedAssignmentPoints = 0;  // Points earned on GRADED assignments
   data.assignments.forEach(assignment => {
     const submission = submissionMap.get(assignment.id);
-    totalAssignmentPoints += assignment.points || 0;
-    if (submission?.status === 'graded' && submission.grade !== null) {
+    const isGraded = submission?.status === 'graded' && submission.grade !== null;
+    if (isGraded) {
+      gradedAssignmentPoints += assignment.points || 0;
       earnedAssignmentPoints += submission.grade;
     }
     gradeItems.push({
@@ -156,8 +157,8 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
       name: assignment.title,
       dueDate: assignment.due_date,
       maxPoints: assignment.points || 0,
-      earnedPoints: submission?.status === 'graded' ? submission.grade : null,
-      status: submission?.status === 'graded' ? 'graded' : 
+      earnedPoints: isGraded ? submission.grade : null,
+      status: isGraded ? 'graded' : 
               submission?.status === 'submitted' ? 'submitted' : 
               submission ? 'pending' : 'not_submitted',
       weight: 0,
@@ -165,12 +166,12 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     });
   });
 
-  // Add journal entries
-  let totalJournalPoints = 0;
+  // Add journal entries (journals are always graded when they appear here)
+  let gradedJournalPoints = 0;
   let earnedJournalPoints = 0;
   data.journalGrades.forEach((journal: any, index: number) => {
     const score = journal.instructor_score ?? journal.overall_score ?? 0;
-    totalJournalPoints += 20; // Assuming 20 points per journal
+    gradedJournalPoints += 20; // Assuming 20 points per journal
     earnedJournalPoints += score;
     gradeItems.push({
       id: journal.id,
@@ -185,12 +186,20 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     });
   });
 
-  // Calculate assignment weighted score
-  const totalAssignmentMax = totalAssignmentPoints + totalJournalPoints;
-  const totalAssignmentEarned = earnedAssignmentPoints + earnedJournalPoints;
-  const assignmentsWeightedScore = totalAssignmentMax > 0 
-    ? (totalAssignmentEarned / totalAssignmentMax) * GRADE_WEIGHTS.assignments 
+  // Calculate assignment weighted score - ONLY from graded items
+  // If nothing is graded yet, no deduction (student keeps full weight)
+  const totalGradedAssignmentMax = gradedAssignmentPoints + gradedJournalPoints;
+  const totalGradedAssignmentEarned = earnedAssignmentPoints + earnedJournalPoints;
+  const hasGradedAssignments = totalGradedAssignmentMax > 0;
+  
+  // Deduction = (points lost / max points) * weight
+  // If nothing graded, deduction = 0 (assumed 100%)
+  const assignmentLostPercentage = hasGradedAssignments 
+    ? (totalGradedAssignmentMax - totalGradedAssignmentEarned) / totalGradedAssignmentMax 
     : 0;
+  const assignmentsWeightedScore = hasGradedAssignments
+    ? (totalGradedAssignmentEarned / totalGradedAssignmentMax) * GRADE_WEIGHTS.assignments
+    : GRADE_WEIGHTS.assignments; // Full credit if nothing graded yet
 
   // Add Midterm
   const midtermMaxPoints = 100;
@@ -296,11 +305,21 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
   });
 
   // Calculate deductions (starting from 100%)
-  // Deduction = weight - earned weighted score
-  const assignmentDeduction = GRADE_WEIGHTS.assignments - assignmentsWeightedScore;
-  const midtermDeduction = midtermEarned !== null ? GRADE_WEIGHTS.midterm - midtermWeightedScore : 0;
-  const finalDeduction = finalEarned !== null ? GRADE_WEIGHTS.finalExam - finalWeightedScore : 0;
-  const participationDeduction = GRADE_WEIGHTS.participation - participationWeightedScore;
+  // ONLY graded items contribute deductions - ungraded = 0 deduction (assumed 100%)
+  const assignmentDeduction = hasGradedAssignments 
+    ? assignmentLostPercentage * GRADE_WEIGHTS.assignments 
+    : 0;
+  const midtermDeduction = midtermEarned !== null 
+    ? GRADE_WEIGHTS.midterm - midtermWeightedScore 
+    : 0;
+  const finalDeduction = finalEarned !== null 
+    ? GRADE_WEIGHTS.finalExam - finalWeightedScore 
+    : 0;
+  // Participation: only count if there's any activity
+  const hasParticipation = data.pollsAnswered.length > 0 || data.discussionGrades.length > 0 || data.attendance.length > 0;
+  const participationDeduction = hasParticipation 
+    ? GRADE_WEIGHTS.participation - participationWeightedScore 
+    : 0;
   
   // Total deductions
   const totalDeductions = assignmentDeduction + midtermDeduction + finalDeduction + participationDeduction;
@@ -343,9 +362,9 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     { 
       name: 'Assignments & Journals', 
       weight: GRADE_WEIGHTS.assignments, 
-      deduction: Math.round(assignmentDeduction * 100) / 100,
+      deduction: hasGradedAssignments ? Math.round(assignmentDeduction * 100) / 100 : null,
       icon: <FileText className="h-5 w-5" />,
-      status: totalAssignmentMax > 0 ? 'active' : 'pending'
+      status: hasGradedAssignments ? 'active' : 'pending'
     },
     { 
       name: 'Midterm Exam', 
@@ -371,9 +390,9 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     { 
       name: 'Participation', 
       weight: GRADE_WEIGHTS.participation, 
-      deduction: Math.round(participationDeduction * 100) / 100,
+      deduction: hasParticipation ? Math.round(participationDeduction * 100) / 100 : null,
       icon: <MessageSquare className="h-5 w-5" />,
-      status: 'active'
+      status: hasParticipation ? 'active' : 'pending'
     }
   ];
 
@@ -532,10 +551,10 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                     Assignments Subtotal ({GRADE_WEIGHTS.assignments}% weight):
                   </TableCell>
                   <TableCell className="text-center font-bold">
-                    {totalAssignmentEarned} / {totalAssignmentMax}
+                    {hasGradedAssignments ? `${totalGradedAssignmentEarned} / ${totalGradedAssignmentMax}` : 'Not graded yet'}
                   </TableCell>
                   <TableCell className="text-center font-bold text-primary">
-                    = {assignmentsWeightedScore.toFixed(2)}%
+                    {hasGradedAssignments ? `−${assignmentDeduction.toFixed(2)}% deduction` : '0% deduction'}
                   </TableCell>
                 </TableRow>
 
