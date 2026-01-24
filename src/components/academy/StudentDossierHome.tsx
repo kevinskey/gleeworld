@@ -719,45 +719,6 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
       {/* Right Sidebar - 30% */}
       <div className="w-80 flex-shrink-0 space-y-6 hidden lg:block">
-        
-        {/* Course Snapshot - Student Profile */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              Course Snapshot
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-start gap-4">
-              <Avatar className="h-16 w-16 border-2 border-primary/20">
-                <AvatarImage src={avatarUrl || undefined} alt={profile?.full_name || 'Student'} />
-                <AvatarFallback className="text-lg bg-primary text-primary-foreground">
-                  {initials || <User className="h-8 w-8" />}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base truncate">
-                  {profile?.full_name || 'Student Name'}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {course.courseCode} · {profile?.voice_part || 'B2'}
-                </p>
-                {profile?.email && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                    <Mail className="h-3 w-3" />
-                    <span className="truncate">{profile.email}</span>
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                  <Clock className="h-3 w-3" />
-                  Thu 1-3 PM, Fri 12 AM, 9-10 AM
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Upcoming Events & Assignments */}
         <Card>
           <CardHeader className="pb-3">
