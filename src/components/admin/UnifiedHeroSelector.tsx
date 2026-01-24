@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Image, Layout, Newspaper, Users, Monitor, Church, GraduationCap, BookOpen } from "lucide-react";
+import { Image, Layout, Newspaper, Users, Monitor, Church, GraduationCap, BookOpen, Mic, Music, Award, Eye } from "lucide-react";
 
 export interface HeroContext {
   id: string;
@@ -11,6 +11,10 @@ export interface HeroContext {
   usageContext?: string;
   icon: React.ReactNode;
   slideCount?: number;
+  // For course sliders
+  courseCode?: string;
+  courseTitle?: string;
+  coursePath?: string;
 }
 
 const HERO_CONTEXTS: HeroContext[] = [
@@ -58,12 +62,86 @@ const HERO_CONTEXTS: HeroContext[] = [
     table: 'academy_course_badges',
     icon: <GraduationCap className="h-4 w-4" />
   },
+  // Course-specific sliders
+  {
+    id: 'mus070-slider',
+    label: 'MUS 070 Slider',
+    description: 'Topic photos for Glee Club course',
+    table: 'gw_universal_sliders',
+    icon: <Users className="h-4 w-4" />,
+    courseCode: 'MUS 070',
+    courseTitle: 'Glee Club',
+    coursePath: '/academy/mus-070'
+  },
   {
     id: 'mus240-slider',
     label: 'MUS 240 Slider',
-    description: 'Topic photos for the MUS 240 course landing page',
+    description: 'Topic photos for Survey of African American Music',
     table: 'gw_universal_sliders',
-    icon: <BookOpen className="h-4 w-4" />
+    icon: <BookOpen className="h-4 w-4" />,
+    courseCode: 'MUS 240',
+    courseTitle: 'Survey of African American Music',
+    coursePath: '/academy/mus-240'
+  },
+  {
+    id: 'mus210-slider',
+    label: 'MUS 210 Slider',
+    description: 'Topic photos for Choral Conducting and Literature',
+    table: 'gw_universal_sliders',
+    icon: <Music className="h-4 w-4" />,
+    courseCode: 'MUS 210',
+    courseTitle: 'Choral Conducting and Literature',
+    coursePath: '/academy/mus-210'
+  },
+  {
+    id: 'mus001-slider',
+    label: 'MUS 001 Slider',
+    description: 'Topic photos for Private Applied Lessons',
+    table: 'gw_universal_sliders',
+    icon: <Mic className="h-4 w-4" />,
+    courseCode: 'MUS 001',
+    courseTitle: 'Private Applied Lessons',
+    coursePath: '/academy/mus-001'
+  },
+  {
+    id: 'glee101-slider',
+    label: 'GLEE 101 Slider',
+    description: 'Topic photos for Leadership Development',
+    table: 'gw_universal_sliders',
+    icon: <Award className="h-4 w-4" />,
+    courseCode: 'GLEE 101',
+    courseTitle: 'Leadership Development',
+    coursePath: '/academy/glee-101'
+  },
+  {
+    id: 'glee000-slider',
+    label: 'GLEE 000 Slider',
+    description: 'Topic photos for Sight Singing Institute',
+    table: 'gw_universal_sliders',
+    icon: <Eye className="h-4 w-4" />,
+    courseCode: 'GLEE 000',
+    courseTitle: 'Sight Singing Institute',
+    coursePath: '/academy/glee-000'
+  },
+  {
+    id: 'mus101-slider',
+    label: 'MUS 101 Slider',
+    description: 'Topic photos for Music Fundamentals Theory',
+    table: 'gw_universal_sliders',
+    icon: <BookOpen className="h-4 w-4" />,
+    courseCode: 'MUS 101',
+    courseTitle: 'Music Fundamentals Theory',
+    coursePath: '/academy/mus-101'
+  },
+  {
+    id: 'lh100-slider',
+    label: 'LH 100 Slider',
+    description: 'Topic photos for Bowman Scholars',
+    table: 'gw_universal_sliders',
+    icon: <Church className="h-4 w-4" />,
+    courseCode: 'LH 100',
+    courseTitle: 'Bowman Scholars',
+    coursePath: '/academy/lh-100'
   }
 ];
 
