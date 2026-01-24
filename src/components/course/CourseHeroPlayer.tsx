@@ -357,7 +357,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
+                    className="h-8 w-8 text-white/50 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:bg-transparent"
                     onClick={skipPrevious}
                     disabled={currentTrackIndex === null || currentTrackIndex === 0}
                   >
@@ -367,7 +367,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-full shadow-lg"
+                    className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-full shadow-lg disabled:opacity-50"
                     onClick={currentTrack ? togglePlay : handleFirstPlay}
                     disabled={tracks.length === 0}
                   >
@@ -381,7 +381,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
+                    className="h-8 w-8 text-white/50 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:bg-transparent"
                     onClick={skipNext}
                     disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
                   >
