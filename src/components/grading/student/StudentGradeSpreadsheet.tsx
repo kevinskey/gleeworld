@@ -21,6 +21,7 @@ const GRADE_WEIGHTS = {
 
 // Course structure constants
 const TOTAL_ESSAYS = 10;
+const TOTAL_GROUP_PROJECTS = 1;
 
 interface StudentGradeSpreadsheetProps {
   courseId: string;
@@ -387,7 +388,7 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
       status: finalEarned !== null ? 'active' : 'pending'
     },
     { 
-      name: 'Group Project', 
+      name: `Group Project (0/${TOTAL_GROUP_PROJECTS} graded)`, 
       weight: GRADE_WEIGHTS.groupProject, 
       deduction: null,
       icon: <Users className="h-5 w-5" />,
