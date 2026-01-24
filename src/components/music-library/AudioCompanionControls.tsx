@@ -13,15 +13,23 @@ import {
   Upload,
   StopCircle,
   Square,
-  Loader2
+  Loader2,
+  MoreVertical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
+import { forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface AudioCompanionControlsProps {
   onClose?: () => void;
@@ -56,6 +64,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
 
   const handleYouTubeSubmit = () => {
     if (youtubeUrl) {
+      forceUnlockAudio();
       loadYouTube(youtubeUrl);
       setShowSourcePicker(false);
     }
@@ -64,9 +73,16 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      forceUnlockAudio();
       loadFile(file);
       setShowSourcePicker(false);
     }
+  };
+
+  // Handle play with iOS audio unlock
+  const handlePlay = () => {
+    forceUnlockAudio();
+    togglePlayPause();
   };
 
   const handleClose = () => {
@@ -88,8 +104,14 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Mobile-optimized layout with essential controls visible, extras in menu
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+
   return (
-    <div className={cn("flex items-center gap-1 bg-card/95 backdrop-blur border border-border px-1 py-0.5 shadow-lg rounded z-50", className)}>
+    <div className={cn(
+      "flex items-center gap-1.5 sm:gap-2 bg-card/95 backdrop-blur border border-border px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg rounded-lg z-50",
+      className
+    )}>
       <input
         ref={fileInputRef}
         type="file"
@@ -104,15 +126,16 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
           <Button
             size="sm"
             variant="ghost"
-            className="h-8 w-8 p-0"
+            className="h-10 w-10 sm:h-9 sm:w-9 p-0 touch-manipulation"
             title="Select audio source"
+            onTouchEnd={(e) => { e.preventDefault(); setShowSourcePicker(true); }}
           >
           {audioSource === 'youtube' ? (
-              <Youtube className="h-4 w-4 text-red-500" />
+              <Youtube className="h-5 w-5 sm:h-4 sm:w-4 text-red-500" />
             ) : audioSource === 'file' ? (
-              <Music className="h-4 w-4 text-foreground" />
+              <Music className="h-5 w-5 sm:h-4 sm:w-4 text-foreground" />
             ) : (
-              <Music className="h-4 w-4 text-foreground" />
+              <Music className="h-5 w-5 sm:h-4 sm:w-4 text-foreground" />
             )}
           </Button>
         </PopoverTrigger>
@@ -152,27 +175,29 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         </PopoverContent>
       </Popover>
 
-      {/* Play/Pause */}
+      {/* Play/Pause - Larger touch target for mobile */}
       <Button
         size="sm"
         variant="ghost"
-        onClick={togglePlayPause}
+        onClick={handlePlay}
+        onTouchEnd={(e) => { e.preventDefault(); handlePlay(); }}
+        onPointerDown={() => forceUnlockAudio()}
         disabled={!audioSource || (audioSource === 'youtube' && !playerReady)}
-        className="h-8 w-8 p-0"
+        className="h-12 w-12 sm:h-10 sm:w-10 p-0 touch-manipulation rounded-full bg-primary/10 hover:bg-primary/20"
         title={isLoading ? "Loading..." : isPlaying ? "Pause" : "Play"}
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin text-foreground" />
+          <Loader2 className="h-6 w-6 sm:h-5 sm:w-5 animate-spin text-foreground" />
         ) : isPlaying ? (
-          <Pause className="h-4 w-4 text-foreground" />
+          <Pause className="h-6 w-6 sm:h-5 sm:w-5 text-foreground" />
         ) : (
-          <Play className="h-4 w-4 text-foreground" />
+          <Play className="h-6 w-6 sm:h-5 sm:w-5 text-foreground ml-0.5" />
         )}
       </Button>
 
-      {/* Progress */}
+      {/* Progress - Hidden on very small mobile, shown on larger */}
       {audioSource && (
-        <>
+        <div className="hidden xs:flex items-center gap-1.5 flex-1 min-w-0">
           <span className="text-xs text-muted-foreground w-10 text-right tabular-nums">
             {formatTime(currentTime)}
           </span>
@@ -181,73 +206,112 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
             max={duration || 100}
             step={1}
             onValueChange={(value) => seek(value[0])}
-            className="w-24"
+            className="w-20 sm:w-32 touch-manipulation"
           />
-          <span className="text-xs text-muted-foreground w-10 tabular-nums">
+          <span className="text-xs text-muted-foreground w-10 tabular-nums hidden sm:inline">
             {formatTime(duration)}
           </span>
-        </>
+        </div>
       )}
 
-      {/* Volume */}
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={toggleMute}
-        className="h-8 w-8 p-0"
-        title={isMuted ? "Unmute" : "Mute"}
-      >
-        {isMuted || volume === 0 ? (
-          <VolumeX className="h-4 w-4 text-foreground" />
-        ) : (
-          <Volume2 className="h-4 w-4 text-foreground" />
+      {/* Volume - Hidden on mobile, shown on desktop */}
+      <div className="hidden sm:flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={toggleMute}
+          onTouchEnd={(e) => { e.preventDefault(); toggleMute(); }}
+          className="h-9 w-9 p-0 touch-manipulation"
+          title={isMuted ? "Unmute" : "Mute"}
+        >
+          {isMuted || volume === 0 ? (
+            <VolumeX className="h-4 w-4 text-foreground" />
+          ) : (
+            <Volume2 className="h-4 w-4 text-foreground" />
+          )}
+        </Button>
+        
+        <Slider
+          value={[isMuted ? 0 : volume]}
+          max={1}
+          step={0.01}
+          onValueChange={(value) => setVolume(value[0])}
+          className="w-16 touch-manipulation"
+        />
+      </div>
+
+      {/* Mobile: More menu with Stop/Clear options */}
+      <div className="sm:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-10 w-10 p-0 touch-manipulation"
+            >
+              <MoreVertical className="h-5 w-5 text-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem onClick={toggleMute} className="touch-manipulation">
+              {isMuted ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
+              {isMuted ? 'Unmute' : 'Mute'}
+            </DropdownMenuItem>
+            {audioSource && (
+              <>
+                <DropdownMenuItem 
+                  onClick={() => { if (isPlaying) { togglePlayPause(); seek(0); } }}
+                  className="touch-manipulation"
+                >
+                  <Square className="h-4 w-4 mr-2" />
+                  Stop
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={stopAndClear} className="touch-manipulation">
+                  <StopCircle className="h-4 w-4 mr-2" />
+                  Stop & Clear
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Desktop: Stop buttons */}
+      <div className="hidden sm:flex items-center gap-1">
+        {audioSource && (
+          <>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                if (!isPlaying) return;
+                togglePlayPause();
+                seek(0);
+              }}
+              className="h-9 w-9 p-0 touch-manipulation"
+              title="Stop"
+            >
+              <Square className="h-4 w-4 text-foreground fill-foreground" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={stopAndClear}
+              className="h-9 w-9 p-0 touch-manipulation"
+              title="Stop and clear"
+            >
+              <StopCircle className="h-4 w-4 text-foreground" />
+            </Button>
+          </>
         )}
-      </Button>
-      
-      <Slider
-        value={[isMuted ? 0 : volume]}
-        max={1}
-        step={0.01}
-        onValueChange={(value) => setVolume(value[0])}
-        className="w-16"
-      />
+      </div>
 
-      {/* Stop (pause and reset to beginning) */}
-      {audioSource && (
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => {
-            if (!isPlaying) return;
-            togglePlayPause(); // Pause
-            seek(0); // Reset to beginning
-          }}
-          className="h-8 w-8 p-0"
-          title="Stop"
-        >
-          <Square className="h-4 w-4 text-foreground fill-foreground" />
-        </Button>
-      )}
-
-      {/* Stop and Clear */}
-      {audioSource && (
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={stopAndClear}
-          className="h-8 w-8 p-0"
-          title="Stop and clear"
-        >
-          <StopCircle className="h-4 w-4 text-foreground" />
-        </Button>
-      )}
-
-      {/* Source label */}
+      {/* Source label - Desktop only */}
       {audioSource === 'youtube' && (
-        <span className="text-xs text-red-500 font-medium hidden sm:inline">YouTube</span>
+        <span className="text-xs text-red-500 font-medium hidden lg:inline">YouTube</span>
       )}
       {audioSource === 'file' && audioFileName && (
-        <span className="text-xs text-muted-foreground truncate max-w-[80px] hidden sm:inline" title={audioFileName}>
+        <span className="text-xs text-muted-foreground truncate max-w-[80px] hidden lg:inline" title={audioFileName}>
           {audioFileName}
         </span>
       )}
@@ -257,10 +321,11 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         size="sm"
         variant="ghost"
         onClick={handleClose}
-        className="h-8 w-8 p-0"
+        onTouchEnd={(e) => { e.preventDefault(); handleClose(); }}
+        className="h-10 w-10 sm:h-9 sm:w-9 p-0 touch-manipulation"
         title="Close audio companion"
       >
-        <X className="h-4 w-4 text-foreground" />
+        <X className="h-5 w-5 sm:h-4 sm:w-4 text-foreground" />
       </Button>
     </div>
   );
