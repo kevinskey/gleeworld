@@ -278,7 +278,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
         </div>
 
         {/* Mobile Layout */}
-        <div className="md:hidden px-4 pt-12 pb-4">
+        <div className="md:hidden px-4 pt-16 pb-4">
           <div className="flex flex-col items-center text-center">
             <Badge className="bg-primary hover:bg-primary text-primary-foreground font-mono text-xs px-2 py-0.5 mb-3">
               {courseCode}
