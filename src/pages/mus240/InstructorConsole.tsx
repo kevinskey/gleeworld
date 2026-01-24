@@ -31,7 +31,7 @@ import { useQuery } from '@tanstack/react-query';
 import { RubricEditor } from '@/components/mus240/rubrics/RubricEditor';
 import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
 import { StudentCommunications } from '@/components/mus240/instructor/StudentCommunications';
-import { AIGroupProjectManager } from '@/components/mus240/instructor/AIGroupProjectManager';
+
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -199,7 +199,6 @@ export const InstructorConsole = () => {
       label: 'Tools',
       items: [
         { value: 'semesters', label: 'Semesters', icon: CalendarDays },
-        { value: 'ai-groups', label: 'AI Group Project', icon: Brain },
         { value: 'ai-assistant', label: 'AI Assistant', icon: Brain },
         { value: 'settings', label: 'Settings', icon: Settings },
       ]
@@ -558,18 +557,6 @@ export const InstructorConsole = () => {
               </Card>
             )}
 
-            {activeTab === 'ai-groups' && <Card>
-                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
-                    <Brain className="h-4 w-4 sm:h-5 sm:w-5" />
-                    AI Group Project
-                  </CardTitle>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Monitor group projects and role assignments</p>
-                </CardHeader>
-                <CardContent className="p-2 sm:p-4 md:p-6">
-                  <AIGroupProjectManager />
-                </CardContent>
-              </Card>}
 
             {activeTab === 'grades' && <Card>
                 <CardHeader className="border-b p-3 sm:p-4 md:p-6">
