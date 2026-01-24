@@ -44,7 +44,7 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
   
   if (!event) return null;
 
-  const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+  const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin' || user.role === 'executive');
 
   const getEventTypeColor = (type: string | null) => {
     switch (type) {
