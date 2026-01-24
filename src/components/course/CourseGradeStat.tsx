@@ -25,12 +25,12 @@ export const CourseGradeStat: React.FC<CourseGradeStatProps> = ({ courseId, clas
                 <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
                   Course Grade
                 </span>
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl lg:text-3xl font-bold text-foreground leading-none">
-                    {loading ? '--' : letterGrade}
+                    {loading ? '--' : `${percentage}%`}
                   </span>
-                  <span className="text-sm text-muted-foreground">
-                    {loading ? '' : `${percentage}%`}
+                  <span className="text-lg lg:text-xl font-semibold text-primary">
+                    {loading ? '' : letterGrade}
                   </span>
                 </div>
               </div>
