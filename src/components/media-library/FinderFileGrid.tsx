@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { MediaFile } from './types';
 import { cn } from '@/lib/utils';
-import { Image, Video, Music, FileText, File, Play, Pause } from 'lucide-react';
+import { Image, Video, Music, FileText, File, Play, Pause, Presentation, FileSpreadsheet, FileCode, FileArchive } from 'lucide-react';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
 
 interface FinderFileGridProps {
@@ -12,6 +12,24 @@ interface FinderFileGridProps {
   onRename: (file: MediaFile) => void;
   getFileType: (file: MediaFile) => string;
 }
+
+// Extended file type detection
+const getExtendedFileType = (file: MediaFile): string => {
+  const url = file.file_url?.toLowerCase() || '';
+  const type = file.file_type?.toLowerCase() || '';
+  const title = file.title?.toLowerCase() || '';
+  
+  if (type.includes('image') || url.match(/\.(jpg|jpeg|png|gif|webp|svg|heic|bmp|ico|tiff?)$/)) return 'image';
+  if (type.includes('video') || url.match(/\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv)$/)) return 'video';
+  if (type.includes('audio') || url.match(/\.(mp3|wav|m4a|aac|ogg|flac|wma)$/)) return 'audio';
+  if (type.includes('pdf') || url.match(/\.pdf$/)) return 'pdf';
+  if (type.includes('presentation') || type.includes('powerpoint') || url.match(/\.(ppt|pptx)$/) || title.match(/\.(ppt|pptx)$/)) return 'powerpoint';
+  if (type.includes('word') || (type.includes('document') && type.includes('office')) || url.match(/\.(doc|docx)$/) || title.match(/\.(doc|docx)$/)) return 'word';
+  if (type.includes('spreadsheet') || type.includes('excel') || url.match(/\.(xls|xlsx|csv)$/) || title.match(/\.(xls|xlsx)$/)) return 'excel';
+  if (url.match(/\.(js|jsx|ts|tsx|json|html|css|scss|md|txt|yaml|yml|xml)$/)) return 'code';
+  if (url.match(/\.(zip|rar|7z|tar|gz)$/)) return 'archive';
+  return 'other';
+};
 
 export const FinderFileGrid = ({
   files,
@@ -29,7 +47,12 @@ export const FinderFileGrid = ({
       case 'image': return Image;
       case 'video': return Video;
       case 'audio': return Music;
-      case 'document': return FileText;
+      case 'pdf': return FileText;
+      case 'powerpoint': return Presentation;
+      case 'word': return FileText;
+      case 'excel': return FileSpreadsheet;
+      case 'code': return FileCode;
+      case 'archive': return FileArchive;
       default: return File;
     }
   };
@@ -39,7 +62,12 @@ export const FinderFileGrid = ({
       case 'image': return 'text-green-500 bg-green-500/10';
       case 'video': return 'text-purple-500 bg-purple-500/10';
       case 'audio': return 'text-blue-500 bg-blue-500/10';
-      case 'document': return 'text-red-500 bg-red-500/10';
+      case 'pdf': return 'text-red-500 bg-red-500/10';
+      case 'powerpoint': return 'text-orange-500 bg-orange-500/10';
+      case 'word': return 'text-blue-600 bg-blue-600/10';
+      case 'excel': return 'text-emerald-500 bg-emerald-500/10';
+      case 'code': return 'text-cyan-500 bg-cyan-500/10';
+      case 'archive': return 'text-yellow-500 bg-yellow-500/10';
       default: return 'text-gray-500 bg-gray-500/10';
     }
   };
@@ -122,8 +150,8 @@ export const FinderFileGrid = ({
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
       {files.map((file) => {
-        const fileType = getFileType(file);
-        const Icon = getIcon(fileType);
+        const extendedType = getExtendedFileType(file);
+        const Icon = getIcon(extendedType);
         const isSelected = selectedFiles.includes(file.id);
         const isPlaying = playingAudio === file.id;
 
@@ -141,14 +169,14 @@ export const FinderFileGrid = ({
               >
                 {/* Thumbnail */}
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted mb-2">
-                  {fileType === 'image' ? (
+                  {extendedType === 'image' ? (
                     <img
                       src={file.file_url}
                       alt={file.title}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
-                  ) : fileType === 'video' ? (
+                  ) : extendedType === 'video' ? (
                     <div className="w-full h-full relative">
                       {file.thumbnail_url ? (
                         <img
@@ -157,7 +185,7 @@ export const FinderFileGrid = ({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className={cn("w-full h-full flex items-center justify-center", getIconColor(fileType))}>
+                        <div className={cn("w-full h-full flex items-center justify-center", getIconColor(extendedType))}>
                           <Icon className="h-12 w-12" />
                         </div>
                       )}
@@ -165,8 +193,8 @@ export const FinderFileGrid = ({
                         <Play className="h-8 w-8 text-white fill-white" />
                       </div>
                     </div>
-                  ) : fileType === 'audio' ? (
-                    <div className={cn("w-full h-full flex items-center justify-center relative", getIconColor(fileType))}>
+                  ) : extendedType === 'audio' ? (
+                    <div className={cn("w-full h-full flex items-center justify-center relative", getIconColor(extendedType))}>
                       <Icon className={cn("h-12 w-12 transition-transform", isPlaying && "animate-pulse")} />
                       {/* Play/Pause button - always visible for audio */}
                       <div 
@@ -186,8 +214,13 @@ export const FinderFileGrid = ({
                       </div>
                     </div>
                   ) : (
-                    <div className={cn("w-full h-full flex items-center justify-center", getIconColor(fileType))}>
+                    <div className={cn("w-full h-full flex flex-col items-center justify-center gap-2", getIconColor(extendedType))}>
                       <Icon className="h-12 w-12" />
+                      {extendedType !== 'other' && (
+                        <span className="text-[10px] font-medium uppercase tracking-wide opacity-70">
+                          {extendedType}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
