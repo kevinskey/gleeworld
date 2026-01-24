@@ -295,9 +295,19 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     weightedScore: attendanceScore
   });
 
-  // Calculate totals
-  const totalWeightedScore = assignmentsWeightedScore + midtermWeightedScore + finalWeightedScore + participationWeightedScore;
-  const letterGrade = calculateLetterGrade(totalWeightedScore, 100);
+  // Calculate deductions (starting from 100%)
+  // Deduction = weight - earned weighted score
+  const assignmentDeduction = GRADE_WEIGHTS.assignments - assignmentsWeightedScore;
+  const midtermDeduction = midtermEarned !== null ? GRADE_WEIGHTS.midterm - midtermWeightedScore : 0;
+  const finalDeduction = finalEarned !== null ? GRADE_WEIGHTS.finalExam - finalWeightedScore : 0;
+  const participationDeduction = GRADE_WEIGHTS.participation - participationWeightedScore;
+  
+  // Total deductions
+  const totalDeductions = assignmentDeduction + midtermDeduction + finalDeduction + participationDeduction;
+  
+  // Final grade = 100 - total deductions
+  const currentGrade = Math.max(0, 100 - totalDeductions);
+  const letterGrade = calculateLetterGrade(currentGrade, 100);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -328,63 +338,76 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     }
   };
 
-  // Group items by category for summary
+  // Group items by category for summary - DEDUCTIVE MODEL
   const categorySummary = [
     { 
       name: 'Assignments & Journals', 
       weight: GRADE_WEIGHTS.assignments, 
-      earned: Math.round(assignmentsWeightedScore * 100) / 100,
-      icon: <FileText className="h-5 w-5" />
+      deduction: Math.round(assignmentDeduction * 100) / 100,
+      icon: <FileText className="h-5 w-5" />,
+      status: totalAssignmentMax > 0 ? 'active' : 'pending'
     },
     { 
       name: 'Midterm Exam', 
       weight: GRADE_WEIGHTS.midterm, 
-      earned: Math.round(midtermWeightedScore * 100) / 100,
-      icon: <Calculator className="h-5 w-5" />
+      deduction: midtermEarned !== null ? Math.round(midtermDeduction * 100) / 100 : null,
+      icon: <Calculator className="h-5 w-5" />,
+      status: midtermEarned !== null ? 'active' : 'pending'
     },
     { 
       name: 'Final Exam', 
       weight: GRADE_WEIGHTS.finalExam, 
-      earned: Math.round(finalWeightedScore * 100) / 100,
-      icon: <Calculator className="h-5 w-5" />
+      deduction: finalEarned !== null ? Math.round(finalDeduction * 100) / 100 : null,
+      icon: <Calculator className="h-5 w-5" />,
+      status: finalEarned !== null ? 'active' : 'pending'
     },
     { 
       name: 'Group Project', 
       weight: GRADE_WEIGHTS.groupProject, 
-      earned: 0,
-      icon: <Users className="h-5 w-5" />
+      deduction: null,
+      icon: <Users className="h-5 w-5" />,
+      status: 'pending'
     },
     { 
       name: 'Participation', 
       weight: GRADE_WEIGHTS.participation, 
-      earned: Math.round(participationWeightedScore * 100) / 100,
-      icon: <MessageSquare className="h-5 w-5" />
+      deduction: Math.round(participationDeduction * 100) / 100,
+      icon: <MessageSquare className="h-5 w-5" />,
+      status: 'active'
     }
   ];
 
   return (
     <div className="space-y-6">
-      {/* Grade Summary Card */}
+      {/* Grade Summary Card - DEDUCTIVE MODEL */}
       <Card className="border-2 border-primary/20 bg-primary/5">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
-              Grade Calculation Summary
+              Grade Calculation (Starting at 100%)
             </span>
             <div className={cn("text-3xl font-bold px-4 py-2 rounded-lg", getLetterGradeColor(letterGrade))}>
-              {Math.round(totalWeightedScore * 10) / 10}% ({letterGrade})
+              {Math.round(currentGrade * 10) / 10}% ({letterGrade})
             </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Starting Point */}
+          <div className="mb-4 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-green-800 dark:text-green-200">Starting Grade</span>
+              <span className="text-2xl font-bold text-green-700 dark:text-green-300">100%</span>
+            </div>
+          </div>
+
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="font-bold">Category</TableHead>
                 <TableHead className="text-center font-bold">Weight</TableHead>
-                <TableHead className="text-center font-bold">Points Earned</TableHead>
-                <TableHead className="text-right font-bold">Weighted Score</TableHead>
+                <TableHead className="text-center font-bold">Status</TableHead>
+                <TableHead className="text-right font-bold text-red-600">Deduction</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -398,20 +421,43 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                   </TableCell>
                   <TableCell className="text-center">{cat.weight}%</TableCell>
                   <TableCell className="text-center">
-                    {cat.earned.toFixed(1)} / {cat.weight}
+                    {cat.status === 'pending' ? (
+                      <Badge variant="outline" className="text-muted-foreground">Not Graded</Badge>
+                    ) : (
+                      <Badge variant="default" className="bg-green-600">Graded</Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-right font-semibold">
-                    {cat.earned.toFixed(2)}%
+                    {cat.deduction !== null ? (
+                      <span className={cn(
+                        cat.deduction > 0 ? "text-red-600" : "text-green-600"
+                      )}>
+                        {cat.deduction > 0 ? `-${cat.deduction.toFixed(2)}%` : '0.00%'}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
-              <TableRow className="bg-primary/10 font-bold border-t-2">
-                <TableCell colSpan={2}>TOTAL GRADE</TableCell>
-                <TableCell className="text-center">
-                  {(Math.round(totalWeightedScore * 10) / 10).toFixed(1)} / 100
+              {/* Total Deductions Row */}
+              <TableRow className="bg-red-50 dark:bg-red-950/30 border-t-2">
+                <TableCell colSpan={3} className="font-bold text-red-700 dark:text-red-300">
+                  TOTAL DEDUCTIONS
                 </TableCell>
-                <TableCell className="text-right text-lg">
-                  {(Math.round(totalWeightedScore * 10) / 10).toFixed(1)}%
+                <TableCell className="text-right text-lg font-bold text-red-600">
+                  -{Math.round(totalDeductions * 100) / 100}%
+                </TableCell>
+              </TableRow>
+              {/* Final Grade Row */}
+              <TableRow className="bg-primary/10 font-bold border-t-2">
+                <TableCell colSpan={3} className="text-lg">
+                  CURRENT GRADE (100% − Deductions)
+                </TableCell>
+                <TableCell className="text-right text-xl">
+                  <span className={cn("px-3 py-1 rounded", getLetterGradeColor(letterGrade))}>
+                    {Math.round(currentGrade * 10) / 10}%
+                  </span>
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -579,13 +625,13 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                 {/* Final Total Row */}
                 <TableRow className="bg-primary/20 border-t-4 border-primary">
                   <TableCell colSpan={4} className="font-bold text-lg">
-                    FINAL COURSE GRADE
+                    FINAL COURSE GRADE (100% − {totalDeductions.toFixed(1)}% deductions)
                   </TableCell>
                   <TableCell className="text-center font-bold text-lg">
-                    {totalWeightedScore.toFixed(1)} / 100
+                    {currentGrade.toFixed(1)} / 100
                   </TableCell>
                   <TableCell className={cn("text-center font-bold text-xl", getLetterGradeColor(letterGrade))}>
-                    {totalWeightedScore.toFixed(1)}% ({letterGrade})
+                    {currentGrade.toFixed(1)}% ({letterGrade})
                   </TableCell>
                 </TableRow>
               </TableBody>
