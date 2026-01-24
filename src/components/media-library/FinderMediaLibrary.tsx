@@ -32,6 +32,7 @@ export const FinderMediaLibrary = () => {
   const [uploading, setUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Fetch data
@@ -105,35 +106,40 @@ export const FinderMediaLibrary = () => {
     return 'other';
   };
 
-  // Filter files based on active section and search
+  // Filter files based on active section, folder, and search
   const getFilteredFiles = useCallback(() => {
     let filtered = [...allFiles];
 
-    // Apply section filter
-    switch (activeSection) {
-      case 'images':
-        filtered = filtered.filter(f => getFileType(f) === 'image');
-        break;
-      case 'videos':
-        filtered = filtered.filter(f => getFileType(f) === 'video');
-        break;
-      case 'audio':
-        filtered = filtered.filter(f => getFileType(f) === 'audio');
-        break;
-      case 'documents':
-        filtered = filtered.filter(f => getFileType(f) === 'document');
-        break;
-      case 'quick-capture':
-        filtered = filtered.filter(f => (f as any).source === 'quick_capture');
-        break;
-      case 'favorites':
-        filtered = filtered.filter(f => f.is_favorite);
-        break;
-      case 'trash':
-        filtered = filtered.filter(f => f.is_deleted);
-        break;
-      default:
-        filtered = filtered.filter(f => !f.is_deleted);
+    // Apply folder filter first if a folder is selected
+    if (selectedFolderId) {
+      filtered = filtered.filter(f => f.folder_id === selectedFolderId);
+    } else {
+      // Apply section filter only when not viewing a folder
+      switch (activeSection) {
+        case 'images':
+          filtered = filtered.filter(f => getFileType(f) === 'image');
+          break;
+        case 'videos':
+          filtered = filtered.filter(f => getFileType(f) === 'video');
+          break;
+        case 'audio':
+          filtered = filtered.filter(f => getFileType(f) === 'audio');
+          break;
+        case 'documents':
+          filtered = filtered.filter(f => getFileType(f) === 'document');
+          break;
+        case 'quick-capture':
+          filtered = filtered.filter(f => (f as any).source === 'quick_capture');
+          break;
+        case 'favorites':
+          filtered = filtered.filter(f => f.is_favorite);
+          break;
+        case 'trash':
+          filtered = filtered.filter(f => f.is_deleted);
+          break;
+        default:
+          filtered = filtered.filter(f => !f.is_deleted);
+      }
     }
 
     // Apply search
@@ -167,7 +173,7 @@ export const FinderMediaLibrary = () => {
     });
 
     return filtered;
-  }, [allFiles, activeSection, searchQuery, sortBy, sortOrder]);
+  }, [allFiles, activeSection, selectedFolderId, searchQuery, sortBy, sortOrder]);
 
   // File upload
   const handleUpload = async (files: File[]) => {
@@ -378,6 +384,13 @@ export const FinderMediaLibrary = () => {
           trash: allFiles.filter(f => f.is_deleted).length
         }}
         usedStorage={usedGB}
+        selectedFolderId={selectedFolderId}
+        onFolderSelect={(folderId) => {
+          setSelectedFolderId(folderId);
+          setSelectedFiles([]);
+        }}
+        onNewFolder={() => setNewFolderDialogOpen(true)}
+        isAdmin={isAdmin}
       />
 
       {/* Main Content */}
