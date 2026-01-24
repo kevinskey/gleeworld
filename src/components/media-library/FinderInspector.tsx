@@ -29,6 +29,7 @@ interface FinderInspectorProps {
   onRefresh: () => void;
   isAdmin: boolean;
   getFileType: (file: MediaFile) => string;
+  startEditing?: boolean;
 }
 
 export const FinderInspector = ({
@@ -37,17 +38,18 @@ export const FinderInspector = ({
   onPreview,
   onRefresh,
   isAdmin,
-  getFileType
+  getFileType,
+  startEditing = false
 }: FinderInspectorProps) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(startEditing);
   const [title, setTitle] = useState(file.title || '');
   const { toast } = useToast();
 
   // Update title when file changes
   useEffect(() => {
     setTitle(file.title || '');
-    setIsEditing(false);
-  }, [file.id, file.title]);
+    setIsEditing(startEditing);
+  }, [file.id, file.title, startEditing]);
 
   // Encode URL to handle special characters
   const encodeFileUrl = (url: string) => {

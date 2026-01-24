@@ -333,6 +333,23 @@ export const FinderMediaLibrary = () => {
     setPreviewFile(file);
   };
 
+  // State to track if we should start editing in inspector
+  const [startEditing, setStartEditing] = useState(false);
+
+  const handleFileRename = (file: MediaFile) => {
+    setSelectedFiles([file.id]);
+    setInspectorFile(file);
+    setStartEditing(true);
+    setShowInspector(true);
+  };
+
+  // Reset startEditing when inspector closes
+  useEffect(() => {
+    if (!showInspector) {
+      setStartEditing(false);
+    }
+  }, [showInspector]);
+
   // Calculate storage
   const totalSize = allFiles.reduce((acc, f) => acc + (f.file_size || 0), 0);
   const usedGB = (totalSize / (1024 * 1024 * 1024)).toFixed(2);
@@ -415,6 +432,7 @@ export const FinderMediaLibrary = () => {
                   selectedFiles={selectedFiles}
                   onSelect={handleFileSelect}
                   onOpen={handleFileOpen}
+                  onRename={handleFileRename}
                   getFileType={getFileType}
                 />
               ) : (
@@ -423,6 +441,7 @@ export const FinderMediaLibrary = () => {
                   selectedFiles={selectedFiles}
                   onSelect={handleFileSelect}
                   onOpen={handleFileOpen}
+                  onRename={handleFileRename}
                   getFileType={getFileType}
                 />
               )}
@@ -449,13 +468,14 @@ export const FinderMediaLibrary = () => {
       {/* Inspector Panel */}
       {showInspector && inspectorFile && (
         <FinderInspector
-          key={inspectorFile.id}
+          key={`${inspectorFile.id}-${startEditing}`}
           file={inspectorFile}
           onClose={() => setShowInspector(false)}
           onPreview={() => setPreviewFile(inspectorFile)}
           onRefresh={fetchAllMedia}
           isAdmin={isAdmin}
           getFileType={getFileType}
+          startEditing={startEditing}
         />
       )}
 

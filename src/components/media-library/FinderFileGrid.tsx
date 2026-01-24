@@ -9,6 +9,7 @@ interface FinderFileGridProps {
   selectedFiles: string[];
   onSelect: (file: MediaFile, event: React.MouseEvent) => void;
   onOpen: (file: MediaFile) => void;
+  onRename: (file: MediaFile) => void;
   getFileType: (file: MediaFile) => string;
 }
 
@@ -17,6 +18,7 @@ export const FinderFileGrid = ({
   selectedFiles,
   onSelect,
   onOpen,
+  onRename,
   getFileType
 }: FinderFileGridProps) => {
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
@@ -204,7 +206,7 @@ export const FinderFileGrid = ({
                 Download
               </ContextMenuItem>
               <ContextMenuSeparator />
-              <ContextMenuItem>Rename</ContextMenuItem>
+              <ContextMenuItem onClick={() => onRename(file)}>Rename</ContextMenuItem>
               <ContextMenuItem>Move to...</ContextMenuItem>
               <ContextMenuItem>Add to Favorites</ContextMenuItem>
               <ContextMenuSeparator />
