@@ -19,6 +19,7 @@ import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAllMediaFolders, MediaFolder } from '@/hooks/useMediaFolders';
 import { Button } from '@/components/ui/button';
+import { DroppableFolder } from './DroppableFolder';
 
 interface FinderSidebarProps {
   activeSection: string;
@@ -94,22 +95,23 @@ export const FinderSidebar = ({
     const FolderIcon = isActive ? FolderOpen : Folder;
     
     return (
-      <button
-        key={folder.id}
-        onClick={() => {
-          onFolderSelect?.(folder.id);
-          onSectionChange('folder');
-        }}
-        className={cn(
-          "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left",
-          isActive
-            ? "bg-primary/10 text-primary font-medium"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-        )}
-      >
-        <FolderIcon className="h-4 w-4 flex-shrink-0 text-amber-500" />
-        <span className="truncate flex-1">{folder.name}</span>
-      </button>
+      <DroppableFolder key={folder.id} id={folder.id}>
+        <button
+          onClick={() => {
+            onFolderSelect?.(folder.id);
+            onSectionChange('folder');
+          }}
+          className={cn(
+            "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left",
+            isActive
+              ? "bg-primary/10 text-primary font-medium"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          <FolderIcon className="h-4 w-4 flex-shrink-0 text-amber-500" />
+          <span className="truncate flex-1">{folder.name}</span>
+        </button>
+      </DroppableFolder>
     );
   };
 

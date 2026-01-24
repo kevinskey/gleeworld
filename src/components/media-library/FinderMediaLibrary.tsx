@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { MediaFile, ViewMode, SortBy, SortOrder } from './types';
@@ -12,8 +13,9 @@ import { FinderBreadcrumb } from './FinderBreadcrumb';
 import { MediaPreviewModal } from './MediaPreviewModal';
 import { NewFolderDialog } from './NewFolderDialog';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
-import { FolderPlus, Upload, Clipboard } from 'lucide-react';
+import { FolderPlus, Upload, Clipboard, File } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMoveToFolder } from '@/hooks/useMediaFolders';
 
 export const FinderMediaLibrary = () => {
   // State
@@ -33,7 +35,50 @@ export const FinderMediaLibrary = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [draggingFileId, setDraggingFileId] = useState<string | null>(null);
   const { toast } = useToast();
+  const moveToFolder = useMoveToFolder();
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
+  // Handle drag end - move file to folder
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setDraggingFileId(null);
+    
+    if (over && active.id !== over.id) {
+      const fileId = active.id as string;
+      const folderId = over.id as string;
+      
+      // Find the file being dragged
+      const file = allFiles.find(f => f.id === fileId);
+      if (file) {
+        moveToFolder.mutate(
+          { fileIds: [fileId], folderId },
+          {
+            onSuccess: () => {
+              toast({
+                title: "File moved",
+                description: `Moved "${file.title}" to folder`
+              });
+              fetchAllMedia();
+            }
+          }
+        );
+      }
+    }
+  };
+
+  const handleDragStart = (event: any) => {
+    setDraggingFileId(event.active.id);
+  };
 
   // Fetch data
   useEffect(() => {
@@ -364,151 +409,167 @@ export const FinderMediaLibrary = () => {
 
   const filteredFiles = getFilteredFiles();
 
-  return (
-    <div className="flex h-[calc(100vh-200px)] min-h-[600px] bg-background border border-border rounded-lg overflow-hidden shadow-xl">
-      {/* Sidebar */}
-      <FinderSidebar 
-        activeSection={activeSection}
-        onSectionChange={(section) => {
-          setActiveSection(section);
-          setSelectedFiles([]);
-        }}
-        fileCounts={{
-          all: allFiles.filter(f => !f.is_deleted).length,
-          images: allFiles.filter(f => getFileType(f) === 'image').length,
-          videos: allFiles.filter(f => getFileType(f) === 'video').length,
-          audio: allFiles.filter(f => getFileType(f) === 'audio').length,
-          documents: allFiles.filter(f => getFileType(f) === 'document').length,
-          'quick-capture': allFiles.filter(f => (f as any).source === 'quick_capture').length,
-          favorites: allFiles.filter(f => f.is_favorite).length,
-          trash: allFiles.filter(f => f.is_deleted).length
-        }}
-        usedStorage={usedGB}
-        selectedFolderId={selectedFolderId}
-        onFolderSelect={(folderId) => {
-          setSelectedFolderId(folderId);
-          setSelectedFiles([]);
-        }}
-        onNewFolder={() => setNewFolderDialogOpen(true)}
-        isAdmin={isAdmin}
-      />
+  const draggingFile = draggingFileId ? allFiles.find(f => f.id === draggingFileId) : null;
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Toolbar */}
-        <FinderToolbar
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          sortBy={sortBy}
-          onSortByChange={setSortBy}
-          sortOrder={sortOrder}
-          onSortOrderChange={setSortOrder}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onUpload={() => document.getElementById('file-upload-input')?.click()}
-          onUploadFolder={handleFolderUpload}
+  return (
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div className="flex h-[calc(100vh-200px)] min-h-[600px] bg-background border border-border rounded-lg overflow-hidden shadow-xl">
+        {/* Sidebar */}
+        <FinderSidebar 
+          activeSection={activeSection}
+          onSectionChange={(section) => {
+            setActiveSection(section);
+            setSelectedFiles([]);
+          }}
+          fileCounts={{
+            all: allFiles.filter(f => !f.is_deleted).length,
+            images: allFiles.filter(f => getFileType(f) === 'image').length,
+            videos: allFiles.filter(f => getFileType(f) === 'video').length,
+            audio: allFiles.filter(f => getFileType(f) === 'audio').length,
+            documents: allFiles.filter(f => getFileType(f) === 'document').length,
+            'quick-capture': allFiles.filter(f => (f as any).source === 'quick_capture').length,
+            favorites: allFiles.filter(f => f.is_favorite).length,
+            trash: allFiles.filter(f => f.is_deleted).length
+          }}
+          usedStorage={usedGB}
+          selectedFolderId={selectedFolderId}
+          onFolderSelect={(folderId) => {
+            setSelectedFolderId(folderId);
+            setSelectedFiles([]);
+          }}
           onNewFolder={() => setNewFolderDialogOpen(true)}
           isAdmin={isAdmin}
-          uploading={uploading}
         />
 
-        {/* Breadcrumb */}
-        <FinderBreadcrumb 
-          path={currentPath}
-          onNavigate={(index) => setCurrentPath(prev => prev.slice(0, index + 1))}
-          activeSection={activeSection}
-        />
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Toolbar */}
+          <FinderToolbar
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onUpload={() => document.getElementById('file-upload-input')?.click()}
+            onUploadFolder={handleFolderUpload}
+            onNewFolder={() => setNewFolderDialogOpen(true)}
+            isAdmin={isAdmin}
+            uploading={uploading}
+          />
 
-        {/* File Area */}
-        <ContextMenu>
-          <ContextMenuTrigger asChild>
-            <div 
-              {...getRootProps()}
-              className={cn(
-                "flex-1 overflow-auto p-4 transition-colors",
-                isDragActive && "bg-primary/5 border-2 border-dashed border-primary"
-              )}
-            >
-              <input {...getInputProps()} id="file-upload-input" />
-              
-              {loading ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-                </div>
-              ) : filteredFiles.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                  <Upload className="h-16 w-16 mb-4 opacity-50" />
-                  <p className="text-lg font-medium">No files found</p>
-                  <p className="text-sm">Drag and drop files here to upload</p>
-                </div>
-              ) : viewMode === 'grid' ? (
-                <FinderFileGrid
-                  files={filteredFiles}
-                  selectedFiles={selectedFiles}
-                  onSelect={handleFileSelect}
-                  onOpen={handleFileOpen}
-                  onRename={handleFileRename}
-                  getFileType={getFileType}
-                />
-              ) : (
-                <FinderFileList
-                  files={filteredFiles}
-                  selectedFiles={selectedFiles}
-                  onSelect={handleFileSelect}
-                  onOpen={handleFileOpen}
-                  onRename={handleFileRename}
-                  getFileType={getFileType}
-                />
-              )}
-            </div>
-          </ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem onClick={() => document.getElementById('file-upload-input')?.click()}>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Files
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => setNewFolderDialogOpen(true)}>
-              <FolderPlus className="h-4 w-4 mr-2" />
-              New Folder
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-            <ContextMenuItem onClick={() => toast({ title: "Paste coming soon" })}>
-              <Clipboard className="h-4 w-4 mr-2" />
-              Paste
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
+          {/* Breadcrumb */}
+          <FinderBreadcrumb 
+            path={currentPath}
+            onNavigate={(index) => setCurrentPath(prev => prev.slice(0, index + 1))}
+            activeSection={activeSection}
+          />
+
+          {/* File Area */}
+          <ContextMenu>
+            <ContextMenuTrigger asChild>
+              <div 
+                {...getRootProps()}
+                className={cn(
+                  "flex-1 overflow-auto p-4 transition-colors",
+                  isDragActive && "bg-primary/5 border-2 border-dashed border-primary"
+                )}
+              >
+                <input {...getInputProps()} id="file-upload-input" />
+                
+                {loading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                  </div>
+                ) : filteredFiles.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                    <Upload className="h-16 w-16 mb-4 opacity-50" />
+                    <p className="text-lg font-medium">No files found</p>
+                    <p className="text-sm">Drag and drop files here to upload</p>
+                  </div>
+                ) : viewMode === 'grid' ? (
+                  <FinderFileGrid
+                    files={filteredFiles}
+                    selectedFiles={selectedFiles}
+                    onSelect={handleFileSelect}
+                    onOpen={handleFileOpen}
+                    onRename={handleFileRename}
+                    getFileType={getFileType}
+                  />
+                ) : (
+                  <FinderFileList
+                    files={filteredFiles}
+                    selectedFiles={selectedFiles}
+                    onSelect={handleFileSelect}
+                    onOpen={handleFileOpen}
+                    onRename={handleFileRename}
+                    getFileType={getFileType}
+                  />
+                )}
+              </div>
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+              <ContextMenuItem onClick={() => document.getElementById('file-upload-input')?.click()}>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Files
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => setNewFolderDialogOpen(true)}>
+                <FolderPlus className="h-4 w-4 mr-2" />
+                New Folder
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+              <ContextMenuItem onClick={() => toast({ title: "Paste coming soon" })}>
+                <Clipboard className="h-4 w-4 mr-2" />
+                Paste
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        </div>
+
+        {/* Inspector Panel */}
+        {showInspector && inspectorFile && (
+          <FinderInspector
+            key={`${inspectorFile.id}-${startEditing}`}
+            file={inspectorFile}
+            onClose={() => setShowInspector(false)}
+            onPreview={() => setPreviewFile(inspectorFile)}
+            onRefresh={fetchAllMedia}
+            isAdmin={isAdmin}
+            getFileType={getFileType}
+            startEditing={startEditing}
+          />
+        )}
+
+        {/* Preview Modal */}
+        {previewFile && (
+          <MediaPreviewModal
+            file={previewFile}
+            onClose={() => setPreviewFile(null)}
+            getFileType={getFileType}
+          />
+        )}
+
+        {/* New Folder Dialog */}
+        <NewFolderDialog 
+          open={newFolderDialogOpen} 
+          onOpenChange={setNewFolderDialogOpen}
+          parentId={null}
+        />
       </div>
 
-      {/* Inspector Panel */}
-      {showInspector && inspectorFile && (
-        <FinderInspector
-          key={`${inspectorFile.id}-${startEditing}`}
-          file={inspectorFile}
-          onClose={() => setShowInspector(false)}
-          onPreview={() => setPreviewFile(inspectorFile)}
-          onRefresh={fetchAllMedia}
-          isAdmin={isAdmin}
-          getFileType={getFileType}
-          startEditing={startEditing}
-        />
-      )}
-
-      {/* Preview Modal */}
-      {previewFile && (
-        <MediaPreviewModal
-          file={previewFile}
-          onClose={() => setPreviewFile(null)}
-          getFileType={getFileType}
-        />
-      )}
-
-      {/* New Folder Dialog */}
-      <NewFolderDialog 
-        open={newFolderDialogOpen} 
-        onOpenChange={setNewFolderDialogOpen}
-        parentId={null}
-      />
-    </div>
+      {/* Drag Overlay */}
+      <DragOverlay>
+        {draggingFile && (
+          <div className="bg-background border border-primary rounded-lg p-3 shadow-lg flex items-center gap-2 opacity-90">
+            <File className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium truncate max-w-32">
+              {draggingFile.title || 'Untitled'}
+            </span>
+          </div>
+        )}
+      </DragOverlay>
+    </DndContext>
   );
 };
