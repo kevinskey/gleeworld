@@ -12116,6 +12116,44 @@ export type Database = {
           },
         ]
       }
+      gw_media_folders: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          icon: string | null
+          id: string
+          name: string
+          parent_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_media_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "gw_media_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_media_library: {
         Row: {
           azura_playlist_id: number | null
@@ -12130,6 +12168,7 @@ export type Database = {
           file_size: number
           file_type: string
           file_url: string
+          folder_id: string | null
           glee_cam_category_id: string | null
           id: string
           is_featured: boolean
@@ -12153,6 +12192,7 @@ export type Database = {
           file_size: number
           file_type: string
           file_url: string
+          folder_id?: string | null
           glee_cam_category_id?: string | null
           id?: string
           is_featured?: boolean
@@ -12176,6 +12216,7 @@ export type Database = {
           file_size?: number
           file_type?: string
           file_url?: string
+          folder_id?: string | null
           glee_cam_category_id?: string | null
           id?: string
           is_featured?: boolean
@@ -12187,6 +12228,13 @@ export type Database = {
           view_count?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "gw_media_library_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "gw_media_folders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gw_media_library_glee_cam_category_id_fkey"
             columns: ["glee_cam_category_id"]

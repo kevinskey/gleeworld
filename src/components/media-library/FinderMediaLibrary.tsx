@@ -10,6 +10,7 @@ import { FinderFileList } from './FinderFileList';
 import { FinderInspector } from './FinderInspector';
 import { FinderBreadcrumb } from './FinderBreadcrumb';
 import { MediaPreviewModal } from './MediaPreviewModal';
+import { NewFolderDialog } from './NewFolderDialog';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
 import { FolderPlus, Upload, Clipboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ export const FinderMediaLibrary = () => {
   const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
   const [uploading, setUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const { toast } = useToast();
 
   // Fetch data
@@ -392,7 +394,7 @@ export const FinderMediaLibrary = () => {
           onSearchChange={setSearchQuery}
           onUpload={() => document.getElementById('file-upload-input')?.click()}
           onUploadFolder={handleFolderUpload}
-          onNewFolder={() => toast({ title: "Folders coming soon" })}
+          onNewFolder={() => setNewFolderDialogOpen(true)}
           isAdmin={isAdmin}
           uploading={uploading}
         />
@@ -452,7 +454,7 @@ export const FinderMediaLibrary = () => {
               <Upload className="h-4 w-4 mr-2" />
               Upload Files
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => toast({ title: "Folders coming soon" })}>
+            <ContextMenuItem onClick={() => setNewFolderDialogOpen(true)}>
               <FolderPlus className="h-4 w-4 mr-2" />
               New Folder
             </ContextMenuItem>
@@ -487,6 +489,13 @@ export const FinderMediaLibrary = () => {
           getFileType={getFileType}
         />
       )}
+
+      {/* New Folder Dialog */}
+      <NewFolderDialog 
+        open={newFolderDialogOpen} 
+        onOpenChange={setNewFolderDialogOpen}
+        parentId={null}
+      />
     </div>
   );
 };
