@@ -87,12 +87,13 @@ export const ConductingTextbook: React.FC = () => {
             </TabsList>
           </Tabs>
 
-          <div className="rounded-lg border overflow-hidden bg-background min-h-[500px]">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-[500px]">
+          <div className="rounded-lg border overflow-hidden bg-background min-h-[500px] relative">
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : error ? (
+            )}
+            {error ? (
               <div className="flex flex-col items-center justify-center h-[500px] gap-4 text-muted-foreground">
                 <AlertCircle className="h-12 w-12" />
                 <p>Failed to load content</p>
