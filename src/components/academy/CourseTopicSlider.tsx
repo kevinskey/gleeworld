@@ -74,6 +74,8 @@ export const CourseTopicSlider: React.FC<CourseTopicSliderProps> = ({
           className="rounded-none"
           objectFit="contain"
           enableLightbox
+          autoPlay={false}
+          showNavigation={true}
         />
       </CardContent>
     </Card>

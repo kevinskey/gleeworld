@@ -16,6 +16,8 @@ interface UniversalSliderProps {
   overrideFullWidth?: boolean;
   objectFit?: 'cover' | 'contain';
   enableLightbox?: boolean;
+  autoPlay?: boolean;
+  showNavigation?: boolean;
 }
 
 export const UniversalSlider: React.FC<UniversalSliderProps> = ({
@@ -25,6 +27,8 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
   overrideFullWidth,
   objectFit = 'cover',
   enableLightbox = false,
+  autoPlay,
+  showNavigation,
 }) => {
   const { data: slider, isLoading } = useSliderByPlacement(placementKey);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -33,10 +37,12 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
 
   const columnCount = overrideColumns ?? slider?.column_count ?? 1;
   const isFullWidth = overrideFullWidth ?? slider?.is_full_width ?? true;
+  const shouldAutoPlay = autoPlay ?? slider?.auto_play ?? true;
+  const shouldShowNavigation = showNavigation ?? slider?.show_navigation ?? true;
 
   // Auto-advance slides
   useEffect(() => {
-    if (!slider?.auto_play || isPaused || !slider.slides.length) return;
+    if (!shouldAutoPlay || isPaused || !slider.slides.length) return;
 
     const currentSlide = slider.slides[currentIndex];
     if (currentSlide?.pause_on_this_slide) return;
@@ -50,7 +56,7 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [slider, currentIndex, isPaused]);
+  }, [slider, currentIndex, isPaused, shouldAutoPlay]);
 
   const goToSlide = useCallback((index: number) => {
     if (!slider) return;
@@ -125,12 +131,12 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
       </div>
 
       {/* Navigation Arrows */}
-      {slider.show_navigation && slider.slides.length > columnCount && (
+      {shouldShowNavigation && slider.slides.length > columnCount && (
         <>
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 hover:bg-black/50 text-white rounded-full h-10 w-10"
+            className="absolute left-2 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10"
             onClick={goPrev}
           >
             <ChevronLeft className="h-6 w-6" />
@@ -138,7 +144,7 @@ export const UniversalSlider: React.FC<UniversalSliderProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 hover:bg-black/50 text-white rounded-full h-10 w-10"
+            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10"
             onClick={goNext}
           >
             <ChevronRight className="h-6 w-6" />
