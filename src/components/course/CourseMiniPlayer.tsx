@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music, ChevronDown, ChevronUp, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { useCoursePlaylist, PlaylistTrack } from '@/hooks/useCoursePlaylist';
+import { useCoursePlaylist } from '@/hooks/useCoursePlaylist';
+import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CourseMiniPlayerProps {
   courseId: string;
@@ -27,6 +28,8 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
     loading,
     selectPlaylist,
   } = useCoursePlaylist(courseId);
+
+  const { letterGrade, percentage, gradedCount, assignmentCount, loading: gradeLoading } = useCourseGrade(courseId);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -115,32 +118,56 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
     }
   }, [isMuted]);
 
-  // Don't render if no playlists
-  if (loading || playlists.length === 0) return null;
+  // Show player bar even with no playlists (grade will still show)
+  const hasPlaylists = playlists.length > 0;
 
   return (
-    <div className={cn(
-      "bg-[#002244] border-t border-white/10 transition-all duration-300",
-      className
-    )}>
-      <audio ref={audioRef} preload="metadata" />
-      
-      {/* Main Mini Player Bar */}
-      <div className="flex items-center gap-2 px-3 py-2">
-        {/* Music Icon & Track Info */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="h-8 w-8 rounded bg-white/10 flex items-center justify-center flex-shrink-0">
-            <Music className="h-4 w-4 text-white/70" />
+    <TooltipProvider>
+      <div className={cn(
+        "bg-[#002244] border-t border-white/10 transition-all duration-300",
+        className
+      )}>
+        <audio ref={audioRef} preload="metadata" />
+        
+        {/* Main Mini Player Bar */}
+        <div className="flex items-center gap-2 px-3 py-2">
+          {/* Course Grade Stat - Left Side */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10 cursor-help">
+                <GraduationCap className="h-4 w-4 text-amber-400" />
+                <div className="flex flex-col">
+                  <span className="text-lg font-bold text-white leading-none">
+                    {gradeLoading ? '--' : letterGrade}
+                  </span>
+                  <span className="text-[10px] text-white/60">
+                    {gradeLoading ? '...' : `${percentage}%`}
+                  </span>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              <p>Course Grade: {gradedCount} of {assignmentCount} assignments graded</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Divider */}
+          <div className="h-6 w-px bg-white/20 mx-1" />
+
+          {/* Music Icon & Track Info */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="h-8 w-8 rounded bg-white/10 flex items-center justify-center flex-shrink-0">
+              <Music className="h-4 w-4 text-white/70" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-white font-medium truncate">
+                {currentTrack?.track_data?.title || (hasPlaylists ? 'Select a track' : 'No audio available')}
+              </p>
+              <p className="text-[10px] text-white/60 truncate">
+                {selectedPlaylist?.title || (hasPlaylists ? 'Select a playlist' : '')}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs text-white font-medium truncate">
-              {currentTrack?.track_data?.title || 'Select a track'}
-            </p>
-            <p className="text-[10px] text-white/60 truncate">
-              {selectedPlaylist?.title || 'No playlist selected'}
-            </p>
-          </div>
-        </div>
 
         {/* Playback Controls */}
         <div className="flex items-center gap-1">
@@ -280,6 +307,7 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };
