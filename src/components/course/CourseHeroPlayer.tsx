@@ -317,7 +317,8 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
         {/* Music Player Section */}
         {showPlayer && (
           <div className="relative border-t border-white/10 bg-gradient-to-r from-[#001a33]/80 via-[#002244]/80 to-[#001a33]/80 backdrop-blur-sm">
-            <div className="px-4 md:px-6 lg:px-8 py-3">
+            {/* Desktop/Tablet Layout */}
+            <div className="hidden sm:block px-6 lg:px-8 py-3">
               <div className="flex items-center gap-3">
                 {/* Music Icon & Track Info */}
                 <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -334,15 +335,15 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   </div>
                 </div>
 
-                {/* Time Display - Hidden on mobile */}
-                <div className="hidden sm:flex items-center gap-2 text-xs text-white/60">
+                {/* Time Display */}
+                <div className="flex items-center gap-2 text-xs text-white/60">
                   <span>{formatTime(currentTime)}</span>
                   <span>/</span>
                   <span>{formatTime(duration)}</span>
                 </div>
 
-                {/* Progress Bar - Tablet/Desktop */}
-                <div className="hidden sm:block flex-1 max-w-[200px] lg:max-w-[300px]">
+                {/* Progress Bar */}
+                <div className="flex-1 max-w-[200px] lg:max-w-[300px]">
                   <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-gradient-to-r from-primary to-blue-400 transition-all duration-100 rounded-full"
@@ -352,13 +353,12 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                 </div>
 
                 {/* Playback Controls */}
-                <div className="flex items-center gap-0.5 sm:gap-1">
+                <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 sm:h-8 sm:w-8 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+                    className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
                     onClick={skipPrevious}
-                    onTouchEnd={(e) => { e.preventDefault(); skipPrevious(); }}
                     disabled={currentTrackIndex === null || currentTrackIndex === 0}
                   >
                     <SkipBack className="h-4 w-4" />
@@ -367,10 +367,8 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-11 w-11 sm:h-10 sm:w-10 text-white bg-primary hover:bg-primary/90 rounded-full shadow-lg touch-manipulation"
+                    className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-full shadow-lg"
                     onClick={currentTrack ? togglePlay : handleFirstPlay}
-                    onTouchEnd={(e) => { e.preventDefault(); currentTrack ? togglePlay() : handleFirstPlay(); }}
-                    onPointerDown={() => forceUnlockAudio()}
                     disabled={tracks.length === 0}
                   >
                     {isPlaying ? (
@@ -383,16 +381,15 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 sm:h-8 sm:w-8 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+                    className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
                     onClick={skipNext}
-                    onTouchEnd={(e) => { e.preventDefault(); skipNext(); }}
                     disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
                   >
                     <SkipForward className="h-4 w-4" />
                   </Button>
                 </div>
 
-                {/* Volume - Hidden on mobile */}
+                {/* Volume */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -408,10 +405,9 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-9 sm:h-8 text-xs text-white/70 hover:text-white hover:bg-white/10 gap-1 px-2"
+                      className="h-8 text-xs text-white/70 hover:text-white hover:bg-white/10 gap-1 px-2"
                     >
-                      <Volume2 className="h-3.5 w-3.5 sm:hidden" />
-                      <span className="hidden sm:inline">{playlists.length} playlists</span>
+                      <span>{playlists.length} playlists</span>
                       <ChevronDown className="h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -421,7 +417,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                         key={playlist.id}
                         onClick={() => selectPlaylist(playlist)}
                         className={cn(
-                          "cursor-pointer touch-manipulation min-h-[44px]",
+                          "cursor-pointer",
                           selectedPlaylist?.id === playlist.id && "bg-accent"
                         )}
                       >
@@ -436,29 +432,127 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 sm:h-8 sm:w-8 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+                    className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
                     onClick={() => setIsExpanded(!isExpanded)}
                   >
                     {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
                 )}
               </div>
+            </div>
 
-              {/* Mobile Progress Bar */}
-              {currentTrack && (
-                <div className="sm:hidden mt-2">
-                  <div className="flex items-center gap-2 text-[10px] text-white/50">
-                    <span>{formatTime(currentTime)}</span>
-                    <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-primary to-blue-400 transition-all duration-100 rounded-full"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                    <span>{formatTime(duration)}</span>
-                  </div>
+            {/* Mobile Layout - Stacked */}
+            <div className="sm:hidden px-4 py-4 space-y-4">
+              {/* Track Info Row */}
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/40 to-primary/20 flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <Music className="h-6 w-6 text-white" />
                 </div>
-              )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-base font-semibold text-white truncate">
+                    {currentTrack?.track_data?.title || 'MUSIC PLAYER'}
+                  </p>
+                  <p className="text-sm text-white/60 truncate">
+                    {currentTrack ? (selectedPlaylist?.title || 'Playlist') : 'Select a track'}
+                  </p>
+                </div>
+                
+                {/* Playlist & Expand buttons */}
+                <div className="flex items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+                      >
+                        <Music className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-52">
+                      {playlists.map((playlist) => (
+                        <DropdownMenuItem
+                          key={playlist.id}
+                          onClick={() => selectPlaylist(playlist)}
+                          className={cn(
+                            "cursor-pointer touch-manipulation min-h-[48px]",
+                            selectedPlaylist?.id === playlist.id && "bg-accent"
+                          )}
+                        >
+                          {playlist.title}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  {tracks.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      onTouchEnd={(e) => { e.preventDefault(); setIsExpanded(!isExpanded); }}
+                    >
+                      {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-1">
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-primary to-blue-400 transition-all duration-100 rounded-full"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-white/50">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+              </div>
+
+              {/* Playback Controls - Centered */}
+              <div className="flex items-center justify-center gap-6">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-12 w-12 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+                  onClick={skipPrevious}
+                  onTouchEnd={(e) => { e.preventDefault(); skipPrevious(); }}
+                  disabled={currentTrackIndex === null || currentTrackIndex === 0}
+                >
+                  <SkipBack className="h-6 w-6" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-16 w-16 text-white bg-primary hover:bg-primary/90 rounded-full shadow-xl touch-manipulation"
+                  onClick={currentTrack ? togglePlay : handleFirstPlay}
+                  onTouchEnd={(e) => { e.preventDefault(); currentTrack ? togglePlay() : handleFirstPlay(); }}
+                  onPointerDown={() => forceUnlockAudio()}
+                  disabled={tracks.length === 0}
+                >
+                  {isPlaying ? (
+                    <Pause className="h-7 w-7" />
+                  ) : (
+                    <Play className="h-7 w-7 ml-1" />
+                  )}
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-12 w-12 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+                  onClick={skipNext}
+                  onTouchEnd={(e) => { e.preventDefault(); skipNext(); }}
+                  disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
+                >
+                  <SkipForward className="h-6 w-6" />
+                </Button>
+              </div>
             </div>
 
             {/* Expanded Track List */}
