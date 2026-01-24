@@ -13,6 +13,7 @@ interface FinderFileListProps {
   onOpen: (file: MediaFile) => void;
   onRename: (file: MediaFile) => void;
   getFileType: (file: MediaFile) => string;
+  onRefresh?: () => void;
 }
 
 // Extended file type detection
@@ -39,13 +40,22 @@ export const FinderFileList = ({
   onSelect,
   onOpen,
   onRename,
-  getFileType
+  getFileType,
+  onRefresh
 }: FinderFileListProps) => {
   const { data: folders = [] } = useAllMediaFolders();
   const moveToFolder = useMoveToFolder();
 
+  // Handle bulk move - moves all selected files if file is in selection, otherwise just the single file
   const handleMoveToFolder = (fileId: string, folderId: string | null) => {
-    moveToFolder.mutate({ fileIds: [fileId], folderId });
+    const filesToMove = selectedFiles.includes(fileId) && selectedFiles.length > 1
+      ? selectedFiles
+      : [fileId];
+    
+    moveToFolder.mutate(
+      { fileIds: filesToMove, folderId },
+      { onSuccess: () => onRefresh?.() }
+    );
   };
   const getIcon = (type: string) => {
     switch (type) {
@@ -141,7 +151,9 @@ export const FinderFileList = ({
                   <ContextMenuSub>
                     <ContextMenuSubTrigger>
                       <FolderInput className="h-4 w-4 mr-2" />
-                      Move to Folder
+                      {selectedFiles.includes(file.id) && selectedFiles.length > 1 
+                        ? `Move ${selectedFiles.length} Files` 
+                        : 'Move to Folder'}
                     </ContextMenuSubTrigger>
                     <ContextMenuSubContent>
                       {file.folder_id && (

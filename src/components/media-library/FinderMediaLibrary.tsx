@@ -49,31 +49,37 @@ export const FinderMediaLibrary = () => {
     })
   );
 
-  // Handle drag end - move file to folder
+  // Handle drag end - move file(s) to folder
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setDraggingFileId(null);
     
     if (over && active.id !== over.id) {
-      const fileId = active.id as string;
+      const draggedFileId = active.id as string;
       const folderId = over.id as string;
       
-      // Find the file being dragged
-      const file = allFiles.find(f => f.id === fileId);
-      if (file) {
-        moveToFolder.mutate(
-          { fileIds: [fileId], folderId },
-          {
-            onSuccess: () => {
-              toast({
-                title: "File moved",
-                description: `Moved "${file.title}" to folder`
-              });
-              fetchAllMedia();
-            }
+      // Check if the dragged file is part of a multi-selection
+      const filesToMove = selectedFiles.includes(draggedFileId) 
+        ? selectedFiles 
+        : [draggedFileId];
+      
+      const fileCount = filesToMove.length;
+      
+      moveToFolder.mutate(
+        { fileIds: filesToMove, folderId },
+        {
+          onSuccess: () => {
+            toast({
+              title: fileCount === 1 ? "File moved" : "Files moved",
+              description: fileCount === 1 
+                ? `Moved file to folder`
+                : `Moved ${fileCount} files to folder`
+            });
+            setSelectedFiles([]);
+            fetchAllMedia();
           }
-        );
-      }
+        }
+      );
     }
   };
 
@@ -520,6 +526,7 @@ export const FinderMediaLibrary = () => {
                     onOpen={handleFileOpen}
                     onRename={handleFileRename}
                     getFileType={getFileType}
+                    onRefresh={fetchAllMedia}
                   />
                 ) : (
                   <FinderFileList
@@ -529,6 +536,7 @@ export const FinderMediaLibrary = () => {
                     onOpen={handleFileOpen}
                     onRename={handleFileRename}
                     getFileType={getFileType}
+                    onRefresh={fetchAllMedia}
                   />
                 )}
               </div>
@@ -588,8 +596,15 @@ export const FinderMediaLibrary = () => {
           <div className="bg-background border border-primary rounded-lg p-3 shadow-lg flex items-center gap-2 opacity-90">
             <File className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium truncate max-w-32">
-              {draggingFile.title || 'Untitled'}
+              {selectedFiles.includes(draggingFile.id) && selectedFiles.length > 1
+                ? `${selectedFiles.length} files selected`
+                : draggingFile.title || 'Untitled'}
             </span>
+            {selectedFiles.includes(draggingFile.id) && selectedFiles.length > 1 && (
+              <span className="ml-1 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full font-medium">
+                {selectedFiles.length}
+              </span>
+            )}
           </div>
         )}
       </DragOverlay>
