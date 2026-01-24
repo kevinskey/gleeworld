@@ -5,6 +5,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const htmlCsp = [
+  // Allow the proxied SPA to execute scripts/styles we serve from this same origin,
+  // and allow the conducting site for any third-party assets it includes.
+  "default-src 'self' https://conducting.gleeworld.org",
+  "script-src 'self' 'unsafe-inline' https://conducting.gleeworld.org",
+  "style-src 'self' 'unsafe-inline' https://conducting.gleeworld.org",
+  "img-src 'self' data: blob: https://conducting.gleeworld.org",
+  "font-src 'self' data: https://conducting.gleeworld.org",
+  "connect-src 'self' https://conducting.gleeworld.org",
+  // Allow embedding inside GleeWorld
+  "frame-ancestors *",
+].join('; ');
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -118,6 +131,9 @@ serve(async (req) => {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/html; charset=utf-8',
+        // Override the platform-injected restrictive CSP that causes the iframe to show
+        // "This content is blocked" and prevents the SPA from booting.
+        'Content-Security-Policy': htmlCsp,
       },
     });
   } catch (error) {
