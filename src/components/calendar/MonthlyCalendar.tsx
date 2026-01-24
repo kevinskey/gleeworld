@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
@@ -8,6 +9,16 @@ import { EventContextMenu } from "./EventContextMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+
+// Helper to check if two dates are the same day in Eastern Time
+const isSameDayET = (date1: Date, date2: Date): boolean => {
+  const tz = 'America/New_York';
+  const d1 = toZonedTime(date1, tz);
+  const d2 = toZonedTime(date2, tz);
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate();
+};
 
 interface MonthlyCalendarProps {
   events: GleeWorldEvent[];
@@ -73,7 +84,7 @@ export const MonthlyCalendar = ({
   const getEventsForDate = (date: Date) => {
     return events.filter(event => {
       const eventDate = new Date(event.start_date);
-      return isSameDay(eventDate, date);
+      return isSameDayET(eventDate, date);
     });
   };
 
@@ -137,8 +148,8 @@ export const MonthlyCalendar = ({
         {days.map((day, idx) => {
           const dayEvents = getEventsForDate(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
-          const isToday = isSameDay(day, new Date());
-          const isSelected = isSameDay(day, selectedDate);
+          const isToday = isSameDayET(day, new Date());
+          const isSelected = isSameDayET(day, selectedDate);
           const hasEvents = dayEvents.length > 0;
 
           return (

@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addWeeks, subWeeks } from "date-fns";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
@@ -10,6 +11,16 @@ import { EventContextMenu } from "./EventContextMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventHoverCard } from "./EventHoverCard";
 import { supabase } from "@/integrations/supabase/client";
+
+// Helper to check if two dates are the same day in Eastern Time
+const isSameDayET = (date1: Date, date2: Date): boolean => {
+  const tz = 'America/New_York';
+  const d1 = toZonedTime(date1, tz);
+  const d2 = toZonedTime(date2, tz);
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate();
+};
 
 interface WeeklyCalendarProps {
   events: GleeWorldEvent[];
@@ -71,7 +82,7 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
 
   const getEventsForDate = (date: Date) => {
     return events.filter(event => 
-      isSameDay(new Date(event.start_date), date)
+      isSameDayET(new Date(event.start_date), date)
     );
   };
 
@@ -155,7 +166,7 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
       <div className="grid grid-cols-1 sm:grid-cols-7 gap-2 sm:gap-1">
         {days.map(day => {
           const dayEvents = getEventsForDate(day);
-          const isToday = isSameDay(day, new Date());
+          const isToday = isSameDayET(day, new Date());
           
           return (
             <div
