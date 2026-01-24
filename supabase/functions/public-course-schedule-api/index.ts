@@ -25,7 +25,7 @@ const COURSE_SCHEDULE = [
   {
     class: "MUS 240",
     name: "Survey of African American Music",
-    schedule: "MWF 12:00-12:50pm",
+    schedule: "MWF 1:00-1:50pm",
     instructor: "Dr. Kevin Johnson"
   }
 ];
