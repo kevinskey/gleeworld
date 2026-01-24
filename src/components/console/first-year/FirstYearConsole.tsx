@@ -144,7 +144,7 @@ export const FirstYearConsole = () => {
                   <TabsTrigger
                     key={tab.id}
                     value={tab.id}
-                    className="flex flex-col items-center gap-2 h-auto py-3 px-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    className="flex flex-col items-center gap-2 h-auto py-3 px-2 text-slate-600 dark:text-slate-400 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   >
                     <div className="flex items-center gap-2">
                       <IconComponent className="h-4 w-4" />
