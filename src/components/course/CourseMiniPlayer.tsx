@@ -3,6 +3,7 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music, ChevronDow
 import { Button } from '@/components/ui/button';
 import { useCoursePlaylist } from '@/hooks/useCoursePlaylist';
 import { cn } from '@/lib/utils';
+import { forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,9 +37,12 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
 
   const currentTrack = currentTrackIndex !== null ? tracks[currentTrackIndex] : null;
 
-  // Handle play/pause
+  // Handle play/pause with iOS audio unlock
   const togglePlay = () => {
     if (!audioRef.current || !currentTrack?.track_data?.audio_url) return;
+    
+    // CRITICAL: Unlock audio context for iOS/Safari
+    forceUnlockAudio();
 
     if (isPlaying) {
       audioRef.current.pause();
@@ -58,6 +62,9 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
 
   // Start playing first track when user clicks play with no track selected
   const handleFirstPlay = () => {
+    // CRITICAL: Unlock audio context for iOS/Safari
+    forceUnlockAudio();
+    
     if (tracks.length > 0) {
       setCurrentTrackIndex(0);
       setIsPlaying(true);
@@ -151,52 +158,57 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
           </div>
         </div>
 
-        {/* Playback Controls */}
-        <div className="flex items-center gap-1">
+        {/* Playback Controls - Larger touch targets for mobile */}
+        <div className="flex items-center gap-0.5 sm:gap-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10"
+            className="h-10 w-10 sm:h-8 sm:w-8 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
             onClick={skipPrevious}
+            onTouchEnd={(e) => { e.preventDefault(); skipPrevious(); }}
             disabled={currentTrackIndex === null || currentTrackIndex === 0}
           >
-            <SkipBack className="h-3.5 w-3.5" />
+            <SkipBack className="h-5 w-5 sm:h-4 sm:w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-white hover:bg-white/10 rounded-full"
+            className="h-12 w-12 sm:h-10 sm:w-10 text-white hover:bg-white/10 rounded-full bg-white/10 touch-manipulation"
             onClick={currentTrack ? togglePlay : handleFirstPlay}
+            onTouchEnd={(e) => { e.preventDefault(); currentTrack ? togglePlay() : handleFirstPlay(); }}
+            onPointerDown={() => forceUnlockAudio()}
             disabled={tracks.length === 0}
           >
             {isPlaying ? (
-              <Pause className="h-4 w-4" />
+              <Pause className="h-6 w-6 sm:h-5 sm:w-5" />
             ) : (
-              <Play className="h-4 w-4 ml-0.5" />
+              <Play className="h-6 w-6 sm:h-5 sm:w-5 ml-0.5" />
             )}
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10"
+            className="h-10 w-10 sm:h-8 sm:w-8 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
             onClick={skipNext}
+            onTouchEnd={(e) => { e.preventDefault(); skipNext(); }}
             disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
           >
-            <SkipForward className="h-3.5 w-3.5" />
+            <SkipForward className="h-5 w-5 sm:h-4 sm:w-4" />
           </Button>
         </div>
 
-        {/* Volume */}
+        {/* Volume - Hidden on mobile */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10"
+          className="hidden sm:flex h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
           onClick={() => setIsMuted(!isMuted)}
+          onTouchEnd={(e) => { e.preventDefault(); setIsMuted(!isMuted); }}
         >
           {isMuted ? (
-            <VolumeX className="h-3.5 w-3.5" />
+            <VolumeX className="h-4 w-4" />
           ) : (
-            <Volume2 className="h-3.5 w-3.5" />
+            <Volume2 className="h-4 w-4" />
           )}
         </Button>
 
@@ -206,10 +218,10 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs text-white/70 hover:text-white hover:bg-white/10 gap-1"
+              className="h-10 sm:h-8 text-xs text-white/70 hover:text-white hover:bg-white/10 gap-1 touch-manipulation px-2"
             >
-              <span className="hidden sm:inline">{playlists.length} playlists</span>
-              <ChevronDown className="h-3 w-3" />
+              <span className="hidden xs:inline">{playlists.length} playlists</span>
+              <ChevronDown className="h-4 w-4 sm:h-3 sm:w-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
@@ -218,7 +230,7 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
                 key={playlist.id}
                 onClick={() => selectPlaylist(playlist)}
                 className={cn(
-                  "cursor-pointer",
+                  "cursor-pointer touch-manipulation min-h-[44px]",
                   selectedPlaylist?.id === playlist.id && "bg-accent"
                 )}
               >
@@ -233,13 +245,14 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10"
+            className="h-10 w-10 sm:h-8 sm:w-8 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
             onClick={() => setIsExpanded(!isExpanded)}
+            onTouchEnd={(e) => { e.preventDefault(); setIsExpanded(!isExpanded); }}
           >
             {isExpanded ? (
-              <ChevronUp className="h-3.5 w-3.5" />
+              <ChevronUp className="h-5 w-5 sm:h-4 sm:w-4" />
             ) : (
-              <ChevronDown className="h-3.5 w-3.5" />
+              <ChevronDown className="h-5 w-5 sm:h-4 sm:w-4" />
             )}
           </Button>
         )}
@@ -255,34 +268,35 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
         </div>
       )}
 
-      {/* Expanded Track List */}
+      {/* Expanded Track List - Touch optimized */}
       {isExpanded && tracks.length > 0 && (
-        <div className="border-t border-white/10 max-h-48 overflow-y-auto">
+        <div className="border-t border-white/10 max-h-48 overflow-y-auto overscroll-contain">
           {tracks.map((track, index) => (
             <button
               key={track.id}
               onClick={() => playTrack(index)}
+              onTouchEnd={(e) => { e.preventDefault(); playTrack(index); }}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/5 transition-colors",
+                "w-full flex items-center gap-3 px-3 py-3 sm:py-2 text-left hover:bg-white/5 transition-colors touch-manipulation min-h-[48px]",
                 currentTrackIndex === index && "bg-white/10"
               )}
             >
-              <span className="text-xs text-white/40 w-4">{index + 1}</span>
+              <span className="text-sm sm:text-xs text-white/40 w-5 sm:w-4">{index + 1}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-white truncate">
+                <p className="text-sm sm:text-xs text-white truncate">
                   {track.track_data?.title || 'Unknown'}
                 </p>
                 {track.track_data?.artist && (
-                  <p className="text-[10px] text-white/50 truncate">
+                  <p className="text-xs sm:text-[10px] text-white/50 truncate">
                     {track.track_data.artist}
                   </p>
                 )}
               </div>
               {currentTrackIndex === index && isPlaying && (
                 <div className="flex gap-0.5">
-                  <span className="w-0.5 h-3 bg-amber-400 animate-pulse" />
-                  <span className="w-0.5 h-3 bg-amber-400 animate-pulse delay-75" />
-                  <span className="w-0.5 h-3 bg-amber-400 animate-pulse delay-150" />
+                  <span className="w-0.5 h-4 sm:h-3 bg-amber-400 animate-pulse" />
+                  <span className="w-0.5 h-4 sm:h-3 bg-amber-400 animate-pulse delay-75" />
+                  <span className="w-0.5 h-4 sm:h-3 bg-amber-400 animate-pulse delay-150" />
                 </div>
               )}
             </button>
