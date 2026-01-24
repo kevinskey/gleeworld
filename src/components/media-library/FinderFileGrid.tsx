@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
 import { MediaFile } from './types';
 import { cn } from '@/lib/utils';
-import { Image, Video, Music, FileText, File, Play, Pause, Presentation, FileSpreadsheet, FileCode, FileArchive } from 'lucide-react';
-import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
+import { Image, Video, Music, FileText, File, Play, Pause, Presentation, FileSpreadsheet, FileCode, FileArchive, Folder, FolderInput } from 'lucide-react';
+import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent } from '@/components/ui/context-menu';
+import { useAllMediaFolders, useMoveToFolder, MediaFolder } from '@/hooks/useMediaFolders';
 
 interface FinderFileGridProps {
   files: MediaFile[];
@@ -41,6 +42,12 @@ export const FinderFileGrid = ({
 }: FinderFileGridProps) => {
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { data: folders = [] } = useAllMediaFolders();
+  const moveToFolder = useMoveToFolder();
+
+  const handleMoveToFolder = (fileId: string, folderId: string | null) => {
+    moveToFolder.mutate({ fileIds: [fileId], folderId });
+  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -240,7 +247,35 @@ export const FinderFileGrid = ({
               </ContextMenuItem>
               <ContextMenuSeparator />
               <ContextMenuItem onClick={() => onRename(file)}>Rename</ContextMenuItem>
-              <ContextMenuItem>Move to...</ContextMenuItem>
+              <ContextMenuSub>
+                <ContextMenuSubTrigger>
+                  <FolderInput className="h-4 w-4 mr-2" />
+                  Move to Folder
+                </ContextMenuSubTrigger>
+                <ContextMenuSubContent>
+                  {file.folder_id && (
+                    <ContextMenuItem onClick={() => handleMoveToFolder(file.id, null)}>
+                      <Folder className="h-4 w-4 mr-2" />
+                      Remove from Folder
+                    </ContextMenuItem>
+                  )}
+                  {file.folder_id && folders.length > 0 && <ContextMenuSeparator />}
+                  {folders.length === 0 ? (
+                    <ContextMenuItem disabled>No folders available</ContextMenuItem>
+                  ) : (
+                    folders.map((folder: MediaFolder) => (
+                      <ContextMenuItem 
+                        key={folder.id} 
+                        onClick={() => handleMoveToFolder(file.id, folder.id)}
+                        disabled={folder.id === file.folder_id}
+                      >
+                        <Folder className="h-4 w-4 mr-2" />
+                        {folder.name}
+                      </ContextMenuItem>
+                    ))
+                  )}
+                </ContextMenuSubContent>
+              </ContextMenuSub>
               <ContextMenuItem>Add to Favorites</ContextMenuItem>
               <ContextMenuSeparator />
               <ContextMenuItem className="text-destructive">Delete</ContextMenuItem>

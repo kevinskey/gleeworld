@@ -140,6 +140,7 @@ export const useMoveToFolder = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['media-folders'] });
+      queryClient.invalidateQueries({ queryKey: ['media-library'] });
       toast.success('Files moved successfully');
     },
     onError: (error) => {
