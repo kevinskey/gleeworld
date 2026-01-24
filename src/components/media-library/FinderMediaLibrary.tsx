@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { MediaFile, ViewMode, SortBy, SortOrder } from './types';
@@ -18,9 +19,45 @@ import { cn } from '@/lib/utils';
 import { useMoveToFolder } from '@/hooks/useMediaFolders';
 
 export const FinderMediaLibrary = () => {
+  const queryClient = useQueryClient();
+  
+  // React Query for media files
+  const { data: allFiles = [], isLoading: loading, refetch: refetchMedia } = useQuery({
+    queryKey: ['media-library'],
+    queryFn: async () => {
+      // Fetch from gw_media_library
+      const { data: mediaData, error: mediaError } = await supabase
+        .from('gw_media_library')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (mediaError) throw mediaError;
+
+      // Fetch from quick_capture_media
+      const { data: captureData, error: captureError } = await supabase
+        .from('quick_capture_media')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (captureError) throw captureError;
+
+      // Combine and normalize data
+      const normalizedMedia = (mediaData || []).map(file => ({
+        ...file,
+        source: 'media_library'
+      }));
+
+      const normalizedCapture = (captureData || []).map(file => ({
+        ...file,
+        source: 'quick_capture',
+        title: file.title || 'Untitled'
+      }));
+
+      return [...normalizedMedia, ...normalizedCapture] as MediaFile[];
+    },
+  });
+
   // State
-  const [allFiles, setAllFiles] = useState<MediaFile[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('all');
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -76,7 +113,7 @@ export const FinderMediaLibrary = () => {
                 : `Moved ${fileCount} files to folder`
             });
             setSelectedFiles([]);
-            fetchAllMedia();
+            refreshMedia();
           }
         }
       );
@@ -87,9 +124,8 @@ export const FinderMediaLibrary = () => {
     setDraggingFileId(event.active.id);
   };
 
-  // Fetch data
+  // Check admin status on mount
   useEffect(() => {
-    fetchAllMedia();
     checkAdminStatus();
   }, []);
 
@@ -102,48 +138,9 @@ export const FinderMediaLibrary = () => {
     }
   };
 
-  const fetchAllMedia = async () => {
-    setLoading(true);
-    try {
-      // Fetch from gw_media_library
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('gw_media_library')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (mediaError) throw mediaError;
-
-      // Fetch from quick_capture_media
-      const { data: captureData, error: captureError } = await supabase
-        .from('quick_capture_media')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (captureError) throw captureError;
-
-      // Combine and normalize data
-      const normalizedMedia = (mediaData || []).map(file => ({
-        ...file,
-        source: 'media_library'
-      }));
-
-      const normalizedCapture = (captureData || []).map(file => ({
-        ...file,
-        source: 'quick_capture',
-        title: file.title || 'Untitled'
-      }));
-
-      setAllFiles([...normalizedMedia, ...normalizedCapture]);
-    } catch (error) {
-      console.error('Error fetching media:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load media library",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+  // Invalidate and refetch media
+  const refreshMedia = () => {
+    queryClient.invalidateQueries({ queryKey: ['media-library'] });
   };
 
   // File type detection
@@ -293,7 +290,7 @@ export const FinderMediaLibrary = () => {
 
     if (successCount > 0) {
       toast({ title: `${successCount} file(s) uploaded` });
-      fetchAllMedia();
+      refreshMedia();
     }
     setUploading(false);
   };
@@ -371,7 +368,7 @@ export const FinderMediaLibrary = () => {
 
     if (successCount > 0) {
       toast({ title: `${successCount} file(s) uploaded from folder` });
-      fetchAllMedia();
+      refreshMedia();
     }
     setUploading(false);
   };
@@ -526,7 +523,7 @@ export const FinderMediaLibrary = () => {
                     onOpen={handleFileOpen}
                     onRename={handleFileRename}
                     getFileType={getFileType}
-                    onRefresh={fetchAllMedia}
+                    onRefresh={refreshMedia}
                   />
                 ) : (
                   <FinderFileList
@@ -536,7 +533,7 @@ export const FinderMediaLibrary = () => {
                     onOpen={handleFileOpen}
                     onRename={handleFileRename}
                     getFileType={getFileType}
-                    onRefresh={fetchAllMedia}
+                    onRefresh={refreshMedia}
                   />
                 )}
               </div>
@@ -566,7 +563,7 @@ export const FinderMediaLibrary = () => {
             file={inspectorFile}
             onClose={() => setShowInspector(false)}
             onPreview={() => setPreviewFile(inspectorFile)}
-            onRefresh={fetchAllMedia}
+            onRefresh={refreshMedia}
             isAdmin={isAdmin}
             getFileType={getFileType}
             startEditing={startEditing}
