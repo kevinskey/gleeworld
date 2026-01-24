@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { 
   Folder, 
+  FolderOpen,
   Image, 
   Video, 
   Music, 
@@ -11,26 +12,40 @@ import {
   Camera,
   ChevronDown,
   ChevronRight,
-  HardDrive
+  HardDrive,
+  FolderPlus
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useAllMediaFolders, MediaFolder } from '@/hooks/useMediaFolders';
+import { Button } from '@/components/ui/button';
 
 interface FinderSidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
   fileCounts: Record<string, number>;
   usedStorage: string;
+  selectedFolderId?: string | null;
+  onFolderSelect?: (folderId: string | null) => void;
+  onNewFolder?: () => void;
+  isAdmin?: boolean;
 }
 
 export const FinderSidebar = ({
   activeSection,
   onSectionChange,
   fileCounts,
-  usedStorage
+  usedStorage,
+  selectedFolderId,
+  onFolderSelect,
+  onNewFolder,
+  isAdmin
 }: FinderSidebarProps) => {
   const [libraryOpen, setLibraryOpen] = useState(true);
   const [captureOpen, setCaptureOpen] = useState(true);
+  const [foldersOpen, setFoldersOpen] = useState(true);
+
+  const { data: folders = [] } = useAllMediaFolders();
 
   const sidebarItems = [
     { id: 'all', label: 'All Media', icon: Folder, count: fileCounts.all },
@@ -55,10 +70,13 @@ export const FinderSidebar = ({
   const renderItem = (item: typeof sidebarItems[0]) => (
     <button
       key={item.id}
-      onClick={() => onSectionChange(item.id)}
+      onClick={() => {
+        onSectionChange(item.id);
+        onFolderSelect?.(null);
+      }}
       className={cn(
         "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left",
-        activeSection === item.id
+        activeSection === item.id && !selectedFolderId
           ? "bg-primary/10 text-primary font-medium"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"
       )}
@@ -71,12 +89,69 @@ export const FinderSidebar = ({
     </button>
   );
 
+  const renderFolder = (folder: MediaFolder) => {
+    const isActive = selectedFolderId === folder.id;
+    const FolderIcon = isActive ? FolderOpen : Folder;
+    
+    return (
+      <button
+        key={folder.id}
+        onClick={() => {
+          onFolderSelect?.(folder.id);
+          onSectionChange('folder');
+        }}
+        className={cn(
+          "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors text-left",
+          isActive
+            ? "bg-primary/10 text-primary font-medium"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        )}
+      >
+        <FolderIcon className="h-4 w-4 flex-shrink-0 text-amber-500" />
+        <span className="truncate flex-1">{folder.name}</span>
+      </button>
+    );
+  };
+
+  // Group folders by parent
+  const rootFolders = folders.filter(f => !f.parent_id);
+
   return (
     <div className="w-52 border-r border-border bg-muted/30 flex flex-col">
       {/* Main items */}
       <div className="p-2 space-y-1">
         {sidebarItems.map(renderItem)}
       </div>
+
+      {/* Folders section */}
+      {(folders.length > 0 || isAdmin) && (
+        <Collapsible open={foldersOpen} onOpenChange={setFoldersOpen} className="border-t border-border">
+          <CollapsibleTrigger className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground">
+            {foldersOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            <span className="flex-1 text-left">Folders</span>
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 hover:bg-muted"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNewFolder?.();
+                }}
+              >
+                <FolderPlus className="h-3 w-3" />
+              </Button>
+            )}
+          </CollapsibleTrigger>
+          <CollapsibleContent className="px-2 pb-2 space-y-1">
+            {rootFolders.length === 0 ? (
+              <p className="text-xs text-muted-foreground px-3 py-2">No folders yet</p>
+            ) : (
+              rootFolders.map(renderFolder)
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {/* Library section */}
       <Collapsible open={libraryOpen} onOpenChange={setLibraryOpen} className="border-t border-border">
