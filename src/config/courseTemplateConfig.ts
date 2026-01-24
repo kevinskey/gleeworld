@@ -10,7 +10,7 @@
  * - course-specific extension modules
  */
 
-import { LucideIcon, Home, FileText, Layers, ClipboardList, MessageSquare, PenLine, BarChart, FileCheck, Trophy, Users, Video, Headphones, Music, Library, Settings, ArrowLeft, Vote, Images, Calendar, BookOpen, Archive } from 'lucide-react';
+import { LucideIcon, Home, FileText, Layers, ClipboardList, MessageSquare, PenLine, BarChart, FileCheck, Trophy, Users, Video, Headphones, Music, Library, Settings, ArrowLeft, Vote, Images, Calendar, BookOpen, Archive, BookMarked, Mic } from 'lucide-react';
 
 export interface CourseNavItem {
   icon: LucideIcon;
@@ -126,6 +126,10 @@ export const COURSE_TEMPLATE_CONFIGS: Record<string, CourseTemplateConfig> = {
     courseCode: 'MUS 210',
     primaryNav: DEFAULT_PRIMARY_NAV,
     courseCore: DEFAULT_COURSE_CORE,
+    extensions: [
+      { icon: BookMarked, label: 'Textbook', tab: 'textbook', isExtension: true },
+      { icon: Mic, label: 'ReadMusic', tab: 'readmusic', isExtension: true },
+    ],
     features: {
       ...DEFAULT_FEATURES,
       hasJournals: true,
