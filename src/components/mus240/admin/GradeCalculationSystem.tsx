@@ -62,17 +62,20 @@ interface StudentGradeData {
 }
 
 interface GradeWeights {
-  midterm: number;
   assignments: number;
-  journals: number;
+  midterm: number;
+  finalExam: number;
+  groupProject: number;
   participation: number;
 }
 
+// MUS240 Syllabus Grading Weights
 const DEFAULT_WEIGHTS: GradeWeights = {
-  midterm: 25,
-  assignments: 40,
-  journals: 25,
-  participation: 10
+  assignments: 35,
+  midterm: 15,
+  finalExam: 20,
+  groupProject: 15,
+  participation: 15
 };
 
 export const GradeCalculationSystem: React.FC = () => {

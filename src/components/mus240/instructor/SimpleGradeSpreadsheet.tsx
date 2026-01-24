@@ -8,13 +8,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
-// Grade weights as percentages of 100%
+// Grade weights as percentages of 100% - MUS240 Syllabus
 const GRADE_WEIGHTS = {
-  assignments: 15, // Increased from 10%
-  midterm: 20,
-  finalExam: 30,
-  discussions: 15, // Increased from 10%
-  polls: 20 // Increased from 15%
+  assignments: 35,      // Journals and other assignments
+  midterm: 15,
+  finalExam: 20,
+  groupProject: 15,
+  participation: 15     // Polls + Discussions + Attendance combined
 };
 const FINAL_EXAM_TEST_ID = '5efe7df8-6eb6-4611-b2d6-61ddf0319c7e';
 const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
@@ -25,11 +25,11 @@ interface StudentGradeRow {
   assignments_pct: number;
   midterm_pct: number;
   final_exam_pct: number;
-  discussions_pct: number;
-  polls_pct: number;
+  group_project_pct: number;
+  participation_pct: number;
   final_grade_pct: number;
 }
-type GradeField = 'assignments_pct' | 'midterm_pct' | 'final_exam_pct' | 'discussions_pct' | 'polls_pct';
+type GradeField = 'assignments_pct' | 'midterm_pct' | 'final_exam_pct' | 'group_project_pct' | 'participation_pct';
 type SortField = 'student_name' | GradeField | 'final_grade';
 type SortDirection = 'asc' | 'desc';
 
@@ -47,8 +47,8 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       assignments_pct: GRADE_WEIGHTS.assignments,
       midterm_pct: GRADE_WEIGHTS.midterm,
       final_exam_pct: GRADE_WEIGHTS.finalExam,
-      discussions_pct: GRADE_WEIGHTS.discussions,
-      polls_pct: GRADE_WEIGHTS.polls
+      group_project_pct: GRADE_WEIGHTS.groupProject,
+      participation_pct: GRADE_WEIGHTS.participation
     };
     const clampedValue = Math.min(Math.max(0, value), maxValues[field]);
     setOverrides(prev => ({
@@ -68,8 +68,8 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
     return getEffectiveValue(student, 'assignments_pct') + 
            getEffectiveValue(student, 'midterm_pct') + 
            getEffectiveValue(student, 'final_exam_pct') + 
-           getEffectiveValue(student, 'discussions_pct') + 
-           getEffectiveValue(student, 'polls_pct');
+           getEffectiveValue(student, 'group_project_pct') + 
+           getEffectiveValue(student, 'participation_pct');
   };
 
   const calculateTotal = (student: StudentGradeRow): number => {
@@ -121,14 +121,18 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       
       const discussionIds = (discussionPrompts || []).map((d: any) => d.id);
 
-      const [journalData, midtermData, finalExamData, pollsData, discussionData] = await Promise.all([
+      const [journalData, midtermData, finalExamData, pollsData, discussionData, attendanceData, groupProjectData] = await Promise.all([
         supabase.from('mus240_journal_grades').select('student_id, overall_score, instructor_score').in('student_id', studentIds),
         supabase.from('mus240_midterm_submissions').select('user_id, grade').in('user_id', studentIds).eq('is_submitted', true),
         supabase.from('test_submissions').select('student_id, total_score').eq('test_id', FINAL_EXAM_TEST_ID).in('student_id', studentIds),
         supabase.from('mus240_poll_responses').select('student_id, poll_id').in('student_id', studentIds),
         discussionIds.length > 0 
           ? supabase.from('discussion_grades').select('student_id, total_score').in('discussion_id', discussionIds).in('student_id', studentIds)
-          : Promise.resolve({ data: [] })
+          : Promise.resolve({ data: [] }),
+        supabase.from('attendance').select('user_id, status').in('user_id', studentIds),
+        supabase.from('assignment_submissions').select('student_id, grade, assignment_id, status')
+          .in('student_id', studentIds)
+          .eq('status', 'graded')
       ]);
 
       const journals = journalData.data || [];
@@ -136,6 +140,8 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       const finals = finalExamData.data || [];
       const polls = pollsData.data || [];
       const discussions = (discussionData as any)?.data || [];
+      const attendance = attendanceData.data || [];
+      const groupProjects = groupProjectData.data || [];
 
       const discussionsByStudent = new Map<string, { total: number; count: number }>();
       discussions.forEach((d: any) => {
@@ -144,6 +150,23 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
           total: existing.total + (d.total_score || 0),
           count: existing.count + 1
         });
+      });
+
+      // Attendance tracking by student
+      const attendanceByStudent = new Map<string, { present: number; total: number }>();
+      attendance.forEach((a: any) => {
+        const existing = attendanceByStudent.get(a.user_id) || { present: 0, total: 0 };
+        attendanceByStudent.set(a.user_id, {
+          present: existing.present + (a.status === 'present' || a.status === 'excused' ? 1 : 0),
+          total: existing.total + 1
+        });
+      });
+
+      // Group project scores by student
+      const groupProjectByStudent = new Map<string, number>();
+      groupProjects.forEach((gp: any) => {
+        const current = groupProjectByStudent.get(gp.student_id) || 0;
+        groupProjectByStudent.set(gp.student_id, Math.max(current, gp.grade || 0));
       });
 
       const journalsByStudent = new Map<string, number>();
@@ -194,47 +217,63 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         }
       });
 
+      // Calculate max group project score
+      let maxGroupProjectScore = 0;
+      groupProjectByStudent.forEach(score => {
+        if (score > maxGroupProjectScore) maxGroupProjectScore = score;
+      });
+
       const studentGrades: StudentGradeRow[] = uniqueEnrollments.map((enrollment: any) => {
         const studentId = enrollment.user_id;
         const studentName = profileMap.get(studentId)?.full_name || 'Unknown';
 
+        // Assignments (35%) - based on journals
         const journalPoints = Math.min(journalsByStudent.get(studentId) || 0, 200);
         const assignmentsPct = maxJournalScore > 0 ? journalPoints / maxJournalScore * GRADE_WEIGHTS.assignments : 0;
 
+        // Midterm (15%)
         const midtermScore = midtermByStudent.get(studentId) || 0;
         const midtermPct = maxMidtermScore > 0 ? midtermScore / maxMidtermScore * GRADE_WEIGHTS.midterm : 0;
 
+        // Final Exam (20%)
         const finalScore = finalByStudent.get(studentId) || 0;
         const finalExamPct = maxFinalScore > 0 ? finalScore / maxFinalScore * GRADE_WEIGHTS.finalExam : 0;
+
+        // Group Project (15%)
+        const groupProjectScore = groupProjectByStudent.get(studentId) || 0;
+        const groupProjectPct = maxGroupProjectScore > 0 ? groupProjectScore / maxGroupProjectScore * GRADE_WEIGHTS.groupProject : 0;
+
+        // Participation (15%) = Polls + Discussions + Attendance combined
+        // Split evenly: 5% polls, 5% discussions, 5% attendance
+        const pollsAnswered = pollCountByStudent.get(studentId)?.size || 0;
+        const pollsContrib = maxPollsAnswered > 0 ? (pollsAnswered / maxPollsAnswered) * 5 : 0;
 
         const discussionInfo = discussionsByStudent.get(studentId);
         const discussionAvg = discussionInfo && discussionInfo.count > 0 
           ? discussionInfo.total / discussionInfo.count 
           : 0;
-        const discussionsPct = (discussionAvg / 100) * GRADE_WEIGHTS.discussions;
+        const discussionContrib = (discussionAvg / 100) * 5;
 
-        const pollsAnswered = pollCountByStudent.get(studentId)?.size || 0;
-        const pollsPct = maxPollsAnswered > 0 ? pollsAnswered / maxPollsAnswered * GRADE_WEIGHTS.polls : 0;
+        const attendanceInfo = attendanceByStudent.get(studentId);
+        const attendanceRate = attendanceInfo && attendanceInfo.total > 0
+          ? attendanceInfo.present / attendanceInfo.total
+          : 1; // Assume 100% if no attendance records
+        const attendanceContrib = attendanceRate * 5;
 
-        const finalGradePct = assignmentsPct + midtermPct + finalExamPct + discussionsPct + pollsPct;
+        const participationPct = pollsContrib + discussionContrib + attendanceContrib;
+
+        const finalGradePct = assignmentsPct + midtermPct + finalExamPct + groupProjectPct + participationPct;
         return {
           student_id: studentId,
           student_name: studentName,
           assignments_pct: Math.round(assignmentsPct * 100) / 100,
           midterm_pct: Math.round(midtermPct * 100) / 100,
           final_exam_pct: Math.round(finalExamPct * 100) / 100,
-          discussions_pct: Math.round(discussionsPct * 100) / 100,
-          polls_pct: Math.round(pollsPct * 100) / 100,
+          group_project_pct: Math.round(groupProjectPct * 100) / 100,
+          participation_pct: Math.round(participationPct * 100) / 100,
           final_grade_pct: Math.round(finalGradePct * 100) / 100
         };
       });
-
-      const maxFinalGrade = Math.max(...studentGrades.map(s => s.final_grade_pct));
-      if (maxFinalGrade > 0) {
-        studentGrades.forEach(s => {
-          s.final_grade_pct = Math.round(s.final_grade_pct / maxFinalGrade * 100 * 100) / 100;
-        });
-      }
 
       const uniqueGrades = studentGrades.filter((student, index, self) => index === self.findIndex(s => s.student_id === student.student_id));
       uniqueGrades.sort((a, b) => b.final_grade_pct - a.final_grade_pct);
@@ -248,14 +287,14 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Student Name', 'Assignments (%)', 'Midterm (%)', 'Final Exam (%)', 'Discussions (%)', 'Polls (%)', 'Final Grade (%)'];
+    const headers = ['Student Name', 'Assignments (35%)', 'Midterm (15%)', 'Final Exam (20%)', 'Group Project (15%)', 'Participation (15%)', 'Final Grade (%)'];
     const rows = filteredStudents.map(s => [
       s.student_name, 
       getEffectiveValue(s, 'assignments_pct').toFixed(1), 
       getEffectiveValue(s, 'midterm_pct').toFixed(1), 
       getEffectiveValue(s, 'final_exam_pct').toFixed(1), 
-      getEffectiveValue(s, 'discussions_pct').toFixed(1), 
-      getEffectiveValue(s, 'polls_pct').toFixed(1), 
+      getEffectiveValue(s, 'group_project_pct').toFixed(1), 
+      getEffectiveValue(s, 'participation_pct').toFixed(1), 
       calculateTotal(s).toFixed(1)
     ]);
     const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
@@ -333,8 +372,8 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         </div>
         <div className="text-sm text-muted-foreground mt-2">
           Weights: Assignments {GRADE_WEIGHTS.assignments}% | Midterm {GRADE_WEIGHTS.midterm}% | 
-          Final Exam {GRADE_WEIGHTS.finalExam}% | 
-          Discussions {GRADE_WEIGHTS.discussions}% | Polls {GRADE_WEIGHTS.polls}%
+          Final Exam {GRADE_WEIGHTS.finalExam}% | Group Project {GRADE_WEIGHTS.groupProject}% | 
+          Participation {GRADE_WEIGHTS.participation}%
         </div>
       </CardHeader>
       <CardContent className="text-primary-foreground">
@@ -372,17 +411,18 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
                       <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.finalExam}%)</span>
                     </div>
                   </TableHead>
-                  <TableHead className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[80px]" onClick={() => handleSort('discussions_pct')}>
+                  <TableHead className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[80px]" onClick={() => handleSort('group_project_pct')}>
                     <div className="flex flex-col items-center justify-center">
-                      <span className="hidden sm:inline text-primary-foreground">Discussions</span>
-                      <span className="sm:hidden">Disc</span>
-                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.discussions}%)</span>
+                      <span className="hidden sm:inline text-primary-foreground">Group Project</span>
+                      <span className="sm:hidden">Project</span>
+                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.groupProject}%)</span>
                     </div>
                   </TableHead>
-                  <TableHead className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[60px]" onClick={() => handleSort('polls_pct')}>
+                  <TableHead className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[80px]" onClick={() => handleSort('participation_pct')}>
                     <div className="flex flex-col items-center justify-center">
-                      <span className="text-primary-foreground">Polls</span>
-                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.polls}%)</span>
+                      <span className="hidden sm:inline text-primary-foreground">Participation</span>
+                      <span className="sm:hidden">Part.</span>
+                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.participation}%)</span>
                     </div>
                   </TableHead>
                   <TableHead className="text-center text-foreground font-bold cursor-pointer hover:bg-muted/50 min-w-[70px]" onClick={() => handleSort('final_grade')}>
@@ -408,10 +448,10 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
                       <Input type="number" step="0.1" min="0" max={GRADE_WEIGHTS.finalExam} value={getEffectiveValue(student, 'final_exam_pct').toFixed(1)} onChange={e => handleOverride(student.student_id, 'final_exam_pct', parseFloat(e.target.value) || 0)} className="w-16 h-8 text-center text-sm mx-auto" />
                     </TableCell>
                     <TableCell className="text-center p-1">
-                      <Input type="number" step="0.1" min="0" max={GRADE_WEIGHTS.discussions} value={getEffectiveValue(student, 'discussions_pct').toFixed(1)} onChange={e => handleOverride(student.student_id, 'discussions_pct', parseFloat(e.target.value) || 0)} className="w-16 h-8 text-center text-sm mx-auto" />
+                      <Input type="number" step="0.1" min="0" max={GRADE_WEIGHTS.groupProject} value={getEffectiveValue(student, 'group_project_pct').toFixed(1)} onChange={e => handleOverride(student.student_id, 'group_project_pct', parseFloat(e.target.value) || 0)} className="w-16 h-8 text-center text-sm mx-auto" />
                     </TableCell>
                     <TableCell className="text-center p-1">
-                      <Input type="number" step="0.1" min="0" max={GRADE_WEIGHTS.polls} value={getEffectiveValue(student, 'polls_pct').toFixed(1)} onChange={e => handleOverride(student.student_id, 'polls_pct', parseFloat(e.target.value) || 0)} className="w-16 h-8 text-center text-sm mx-auto" />
+                      <Input type="number" step="0.1" min="0" max={GRADE_WEIGHTS.participation} value={getEffectiveValue(student, 'participation_pct').toFixed(1)} onChange={e => handleOverride(student.student_id, 'participation_pct', parseFloat(e.target.value) || 0)} className="w-16 h-8 text-center text-sm mx-auto" />
                     </TableCell>
                     <TableCell className="text-center font-bold text-foreground">{calculateTotal(student).toFixed(1)}%</TableCell>
                   </TableRow>
