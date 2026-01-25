@@ -69,14 +69,16 @@ export const CourseTopicSlider: React.FC<CourseTopicSliderProps> = ({
         )}
       </CardHeader>
       <CardContent className="p-0">
-        <UniversalSlider 
-          placementKey={placementKey} 
-          className="rounded-none"
-          objectFit="contain"
-          enableLightbox
-          autoPlay={false}
-          showNavigation={true}
-        />
+        <div className="h-[200px] sm:h-[280px] md:h-[320px] lg:h-[380px]">
+          <UniversalSlider 
+            placementKey={placementKey} 
+            className="rounded-none h-full"
+            objectFit="contain"
+            enableLightbox
+            autoPlay={false}
+            showNavigation={true}
+          />
+        </div>
       </CardContent>
     </Card>
   );
