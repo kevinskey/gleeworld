@@ -227,8 +227,8 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid grid-cols-4 mb-4">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <TabsList className="grid grid-cols-4 mb-4 flex-shrink-0">
             <TabsTrigger value="course" className="text-xs">
               <Library className="h-3.5 w-3.5 mr-1" />
               Course
@@ -249,7 +249,7 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
 
           {/* Search bar for list tabs */}
           {activeTab !== 'manual' && (
-            <div className="relative mb-4">
+            <div className="relative mb-4 flex-shrink-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={searchTerm}
@@ -261,8 +261,8 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
           )}
 
           {/* Course Videos Tab */}
-          <TabsContent value="course" className="mt-0 flex-1 min-h-0">
-            <ScrollArea className="h-[350px] pr-3">
+          <TabsContent value="course" className="mt-0 flex-1 min-h-0 overflow-hidden">
+            <div className="h-full max-h-[350px] overflow-y-auto pr-3">
               {filteredCourseResources.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <Video className="h-10 w-10 mb-2 opacity-50" />
@@ -306,12 +306,12 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
                   })}
                 </div>
               )}
-            </ScrollArea>
+            </div>
           </TabsContent>
 
           {/* Media Library Tab */}
-          <TabsContent value="media" className="mt-0 flex-1 min-h-0">
-            <ScrollArea className="h-[350px] pr-3">
+          <TabsContent value="media" className="mt-0 flex-1 min-h-0 overflow-hidden">
+            <div className="h-full max-h-[350px] overflow-y-auto pr-3">
               {filteredMediaItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <Library className="h-10 w-10 mb-2 opacity-50" />
@@ -340,12 +340,12 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
                   ))}
                 </div>
               )}
-            </ScrollArea>
+            </div>
           </TabsContent>
 
           {/* YouTube Channel Tab */}
-          <TabsContent value="youtube" className="mt-0 flex-1 min-h-0 flex flex-col">
-            <div className="flex gap-2 mb-3">
+          <TabsContent value="youtube" className="mt-0 flex-1 min-h-0 flex flex-col overflow-hidden">
+            <div className="flex gap-2 mb-3 flex-shrink-0">
               <select
                 value={ytChannel}
                 onChange={(e) => setYtChannel(e.target.value)}
@@ -373,7 +373,7 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
               </Button>
             </div>
 
-            <ScrollArea className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto">
               {ytVideos.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <Youtube className="h-10 w-10 mb-2 opacity-50" />
@@ -404,7 +404,7 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
                   ))}
                 </div>
               )}
-            </ScrollArea>
+            </div>
           </TabsContent>
 
           {/* Manual URL Entry Tab */}
