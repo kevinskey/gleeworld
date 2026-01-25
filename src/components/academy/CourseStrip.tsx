@@ -222,11 +222,11 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
                   <div className="h-8 w-8 rounded-md bg-primary/30 flex items-center justify-center flex-shrink-0">
                     <Music className="h-4 w-4 text-white" />
                   </div>
-                  <div className="min-w-0 hidden sm:block text-left">
-                    <p className="text-xs font-medium text-white truncate max-w-[120px] lg:max-w-[200px]">
+                  <div className="min-w-0 text-left">
+                    <p className="text-xs font-medium text-white truncate max-w-[80px] sm:max-w-[120px] lg:max-w-[200px]">
                       {currentTrack?.track_data?.title || 'Music Player'}
                     </p>
-                    <p className="text-[10px] text-white/50">
+                    <p className="text-[10px] text-white/50 hidden sm:block">
                       {tracks.length} tracks
                     </p>
                   </div>
