@@ -23,7 +23,7 @@ const isSameDayET = (date1: Date, date2: Date): boolean => {
 };
 
 export type ViewMode = 'month' | 'week' | 'agenda';
-export type CategoryFilter = 'glee' | 'courses' | 'liturgy' | 'performances' | 'leadership' | 'tour' | 'personal';
+export type CategoryFilter = 'glee' | 'courses' | 'liturgy' | 'performances' | 'leadership' | 'tour' | 'personal' | 'academic';
 
 export interface CategoryConfig {
   id: CategoryFilter;
@@ -35,6 +35,7 @@ export interface CategoryConfig {
 export const CATEGORY_CONFIGS: CategoryConfig[] = [
   { id: 'glee', label: 'Glee Club', color: '#003366', icon: 'music' },
   { id: 'courses', label: 'Courses', color: '#B8860B', icon: 'book-open' },
+  { id: 'academic', label: 'Assignments & Tests', color: '#F59E0B', icon: 'clipboard' },
   { id: 'liturgy', label: 'Liturgy', color: '#6B4C9A', icon: 'church' },
   { id: 'performances', label: 'Performances', color: '#8B0000', icon: 'mic' },
   { id: 'leadership', label: 'Leadership', color: '#2F4F4F', icon: 'users' },
@@ -44,9 +45,19 @@ export const CATEGORY_CONFIGS: CategoryConfig[] = [
 
 // Map event types and calendar names to categories
 const getCategoryForEvent = (event: GleeWorldEvent): CategoryFilter => {
+  // Check source first for academic items
+  if (event.source === 'assignment' || event.source === 'test') {
+    return 'academic';
+  }
+  
   const title = event.title?.toLowerCase() || '';
   const calendarName = event.gw_calendars?.name?.toLowerCase() || '';
   const eventType = event.event_type?.toLowerCase() || '';
+  
+  // Check for academic event types
+  if (['assignment', 'test', 'exam', 'quiz', 'project', 'paper'].includes(eventType)) {
+    return 'academic';
+  }
   
   // Check for specific keywords
   if (calendarName.includes('glee') || calendarName.includes('scgc') || title.includes('glee')) {
@@ -76,7 +87,7 @@ export const CommandCenterCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeFilters, setActiveFilters] = useState<CategoryFilter[]>([
-    'glee', 'courses', 'liturgy', 'performances', 'leadership', 'tour', 'personal'
+    'glee', 'courses', 'academic', 'liturgy', 'performances', 'leadership', 'tour', 'personal'
   ]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateEvent, setShowCreateEvent] = useState(false);

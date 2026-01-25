@@ -61,8 +61,19 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
       const start = startOfMonth(currentMonth);
       const end = endOfMonth(currentMonth);
 
-      // Fetch course calendar events - filter to only class meetings, assignments, and tests
-      const { data: courseData, error: courseError } = await supabase
+      // Fetch course events from gw_events (unified source)
+      const { data: gwEventsData, error: gwEventsError } = await supabase
+        .from('gw_events')
+        .select('id, title, description, event_type, start_date, end_date, location')
+        .eq('course_id', courseId)
+        .gte('start_date', start.toISOString())
+        .lte('start_date', end.toISOString())
+        .order('start_date', { ascending: true });
+
+      if (gwEventsError) throw gwEventsError;
+
+      // Also fetch from gw_course_calendar for assignments/tests that may not be in gw_events
+      const { data: courseCalendarData, error: courseCalendarError } = await supabase
         .from('gw_course_calendar')
         .select('*')
         .eq('course_id', courseId)
@@ -71,51 +82,49 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
         .lte('start_time', end.toISOString())
         .order('start_time', { ascending: true });
 
-      if (courseError) throw courseError;
+      if (courseCalendarError) throw courseCalendarError;
 
       // Fetch Spelman academic dates (semester events)
       const { data: semesterData, error: semesterError } = await supabase
         .from('gw_semesters')
         .select('academic_events')
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (!semesterError && semesterData?.academic_events) {
         const events = semesterData.academic_events as unknown as AcademicEvent[];
         setAcademicEvents(Array.isArray(events) ? events : []);
       }
 
-      // For MUS 070 (Glee Club) ONLY, also include class/rehearsal events from gw_events
-      const MUS_070_COURSE_ID = 'a0000000-0000-0000-0000-000000000070';
-      let gleeEvents: CalendarEvent[] = [];
-      
-      // Only fetch Glee Club events if this is specifically MUS 070
-      if (courseId === MUS_070_COURSE_ID) {
-        const scgcCalendarId = 'b1e077a0-85f3-4665-b006-4767b310a521';
-        
-        const { data: eventsData, error: eventsError } = await supabase
-          .from('gw_events')
-          .select('id, title, description, event_type, start_date, location')
-          .or(`calendar_id.eq.${scgcCalendarId},title.ilike.%glee%,title.ilike.%scgc%`)
-          .in('event_type', ['class', 'rehearsal', 'meeting'])
-          .gte('start_date', start.toISOString())
-          .lte('start_date', end.toISOString())
-          .order('start_date', { ascending: true });
+      // Transform gw_events data to match the CalendarEvent interface
+      const gwEvents: CalendarEvent[] = (gwEventsData || []).map(event => ({
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        event_type: event.event_type || 'class',
+        start_time: event.start_date,
+        end_time: event.end_date,
+        location: event.location
+      }));
 
-        if (eventsError) throw eventsError;
-        
-        gleeEvents = (eventsData || []).map(event => ({
-          id: event.id,
-          title: event.title,
-          description: event.description,
-          event_type: event.event_type || 'class',
-          start_time: event.start_date,
-          end_time: null,
-          location: event.location
-        }));
-      }
+      // Combine gw_events and gw_course_calendar, deduplicating by title + date
+      const courseCalendarEvents: CalendarEvent[] = (courseCalendarData || []).map(event => ({
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        event_type: event.event_type,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        location: event.location
+      }));
 
-      const allEvents = [...(courseData || []), ...gleeEvents];
+      // Deduplicate - prefer gw_events entries
+      const gwEventKeys = new Set(gwEvents.map(e => `${e.title}-${e.start_time.split('T')[0]}`));
+      const uniqueCourseCalendarEvents = courseCalendarEvents.filter(e => 
+        !gwEventKeys.has(`${e.title}-${e.start_time.split('T')[0]}`)
+      );
+
+      const allEvents = [...gwEvents, ...uniqueCourseCalendarEvents];
       setEvents(allEvents);
     } catch (error) {
       console.error('Error fetching calendar events:', error);
