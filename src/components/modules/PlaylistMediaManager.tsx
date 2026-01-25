@@ -272,7 +272,7 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
             file_type: file.type || 'audio/mpeg',
             file_size: file.size,
             category: 'audio',
-            original_filename: file.name
+            bucket_id: 'media-library'
           })
           .select()
           .single();
