@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock, Trash2 } from "lucide-react";
+import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock, Trash2, ClipboardList } from "lucide-react";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
 import { EventHoverCard } from "../EventHoverCard";
@@ -31,6 +31,7 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   users: Users,
   plane: Plane,
   user: User,
+  clipboard: ClipboardList,
 };
 
 interface CommandCenterEventCardProps {

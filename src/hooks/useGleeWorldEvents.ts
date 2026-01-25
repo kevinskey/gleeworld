@@ -34,8 +34,10 @@ export interface GleeWorldEvent {
   is_recurring?: boolean | null;
   parent_event_id?: string | null;
   recurrence_type?: string | null;
-  // Add source to differentiate between events and appointments
-  source?: 'event' | 'appointment';
+  // Add source to differentiate between events, appointments, and academic items
+  source?: 'event' | 'appointment' | 'assignment' | 'test';
+  // Due date for assignments
+  due_date?: string | null;
   // Calendar information from join
   gw_calendars?: {
     name: string;
@@ -117,13 +119,28 @@ export const useGleeWorldEvents = () => {
         .neq('status', 'cancelled')
         .order('appointment_date', { ascending: true });
 
-      const [eventsResult, appointmentsResult] = await Promise.all([
+      // Fetch assignments and tests from gw_course_calendar table
+      const academicQuery = supabase
+        .from('gw_course_calendar')
+        .select(`
+          *,
+          gw_courses (
+            title,
+            course_code
+          )
+        `)
+        .in('event_type', ['assignment', 'test', 'exam', 'quiz', 'project', 'paper'])
+        .order('start_time', { ascending: true });
+
+      const [eventsResult, appointmentsResult, academicResult] = await Promise.all([
         eventsQuery,
-        appointmentsQuery
+        appointmentsQuery,
+        academicQuery
       ]);
 
       if (eventsResult.error) throw eventsResult.error;
       if (appointmentsResult.error) throw appointmentsResult.error;
+      if (academicResult.error) throw academicResult.error;
 
       // Transform events to match the interface
       // For course events without calendar info, provide a default purple color
@@ -195,8 +212,42 @@ export const useGleeWorldEvents = () => {
         source: 'appointment' as const,
       }));
 
+      // Transform academic items (assignments, tests) to match the interface
+      const transformedAcademic: GleeWorldEvent[] = (academicResult.data || []).map((item) => {
+        const isTest = ['test', 'exam', 'quiz'].includes(item.event_type?.toLowerCase() || '');
+        return {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          event_type: item.event_type,
+          start_date: item.start_time,
+          end_date: item.end_time,
+          due_date: null, // gw_course_calendar doesn't have due_date column
+          location: item.location,
+          venue_name: null,
+          address: null,
+          max_attendees: null,
+          registration_required: null,
+          is_public: false,
+          status: 'confirmed',
+          image_url: null,
+          calendar_id: '',
+          course_id: item.course_id,
+          created_by: item.created_by,
+          created_at: item.created_at,
+          updated_at: item.created_at, // Use created_at as fallback
+          source: isTest ? 'test' as const : 'assignment' as const,
+          gw_calendars: {
+            name: item.gw_courses?.course_code || 'Course',
+            color: isTest ? '#DC2626' : '#F59E0B', // Red for tests, amber for assignments
+            is_visible: true
+          },
+          gw_courses: item.gw_courses
+        };
+      });
+
       // Combine and sort by start_date
-      const allEvents = [...transformedEvents, ...transformedAppointments]
+      const allEvents = [...transformedEvents, ...transformedAppointments, ...transformedAcademic]
         .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
 
       setEvents(allEvents);
@@ -272,6 +323,18 @@ export const useGleeWorldEvents = () => {
           },
           (payload) => {
             console.log('Real-time calendar change:', payload);
+            fetchEvents();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'gw_course_calendar'
+          },
+          (payload) => {
+            console.log('Real-time course calendar change:', payload);
             fetchEvents();
           }
         );
