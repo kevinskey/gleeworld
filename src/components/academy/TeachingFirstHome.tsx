@@ -44,7 +44,7 @@ interface CurrentModule {
   id: string;
   title: string;
   week_number: number;
-  content_types: string[];
+  content_types: { type: string; assignment?: Assignment; isCompleted: boolean }[];
   assignments: Assignment[];
 }
 
@@ -193,14 +193,72 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
         const allAssignments = [...mappedAssignments, ...discussionAssignments];
         setAssignments(allAssignments);
 
-        // Mock current module - in production this would come from the database
-        setCurrentModule({
-          id: '1',
-          title: 'African Roots',
-          week_number: 2,
-          content_types: ['Video', 'Reading', 'Listening', 'Discussion', 'Journal'],
-          assignments: allAssignments.filter(a => a.status === 'pending' || a.status === 'overdue').slice(0, 3),
-        });
+        // Fetch current active module from database
+        const { data: moduleData } = await supabase
+          .from('gw_course_modules')
+          .select('*')
+          .eq('course_id', courseId)
+          .eq('is_active', true)
+          .order('week_number', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        // Standard content types for each module
+        const standardContentTypes = ['Video', 'Reading', 'Listening', 'Discussion', 'Journal'];
+        
+        // Map assignments to content types based on assignment_type
+        const getAssignmentForType = (type: string): Assignment | undefined => {
+          const typeMapping: Record<string, string[]> = {
+            'Video': ['video', 'video_response'],
+            'Reading': ['reading', 'reading_response', 'essay'],
+            'Listening': ['listening', 'listening_response'],
+            'Discussion': ['discussion'],
+            'Journal': ['journal', 'reflection']
+          };
+          
+          const matchingTypes = typeMapping[type] || [];
+          
+          // First check regular assignments
+          const assignment = allAssignments.find(a => {
+            if (a.is_discussion && type === 'Discussion') return true;
+            // Check if assignment title or type matches
+            const lowerTitle = a.title.toLowerCase();
+            return matchingTypes.some(t => lowerTitle.includes(t));
+          });
+          
+          return assignment;
+        };
+
+        // Check if assignment is completed
+        const isTypeCompleted = (type: string): boolean => {
+          const assignment = getAssignmentForType(type);
+          return assignment?.status === 'submitted' || assignment?.status === 'graded';
+        };
+
+        const contentTypesWithData = standardContentTypes.map(type => ({
+          type,
+          assignment: getAssignmentForType(type),
+          isCompleted: isTypeCompleted(type)
+        }));
+
+        if (moduleData) {
+          setCurrentModule({
+            id: moduleData.id,
+            title: moduleData.title.replace(/^Week \d+:\s*/, ''),
+            week_number: moduleData.week_number || 1,
+            content_types: contentTypesWithData,
+            assignments: allAssignments.filter(a => a.status === 'pending' || a.status === 'overdue').slice(0, 3),
+          });
+        } else {
+          // Fallback if no active module in database
+          setCurrentModule({
+            id: '1',
+            title: 'Current Week',
+            week_number: 1,
+            content_types: contentTypesWithData,
+            assignments: allAssignments.filter(a => a.status === 'pending' || a.status === 'overdue').slice(0, 3),
+          });
+        }
 
         // Fetch upcoming events
         const { data: eventsData } = await supabase
@@ -356,29 +414,48 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             <CardContent className="space-y-3">
               {/* Activity checklist */}
               <div className="grid gap-2">
-                {currentModule.content_types.map((type) => {
-                  // Check if there's an assignment of this type that's completed
-                  const isCompleted = false; // In production, derive from actual data
+                {currentModule.content_types.map((contentType) => {
+                  const handleStart = () => {
+                    if (contentType.assignment) {
+                      if (contentType.assignment.is_discussion) {
+                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
+                      } else {
+                        navigate(`/grading/student/assignment/${contentType.assignment.id}`);
+                      }
+                    } else {
+                      // Navigate to relevant tab based on content type
+                      const tabMapping: Record<string, string> = {
+                        'Video': 'resources',
+                        'Reading': 'resources',
+                        'Listening': 'audio',
+                        'Discussion': 'discussions',
+                        'Journal': 'journal'
+                      };
+                      const tab = tabMapping[contentType.type] || 'resources';
+                      navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=${tab}`);
+                    }
+                  };
                   
                   return (
                     <div 
-                      key={type}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                        isCompleted 
+                      key={contentType.type}
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                        contentType.isCompleted 
                           ? 'bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800' 
                           : 'bg-muted/30 hover:bg-muted/50'
                       }`}
+                      onClick={handleStart}
                     >
                       <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                        isCompleted ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'
+                        contentType.isCompleted ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'
                       }`}>
-                        {getActivityIcon(type)}
+                        {getActivityIcon(contentType.type)}
                       </div>
-                      <span className="flex-1 font-medium text-sm">{type}</span>
-                      {isCompleted ? (
+                      <span className="flex-1 font-medium text-sm">{contentType.type}</span>
+                      {contentType.isCompleted ? (
                         <CheckCircle className="h-5 w-5 text-green-600" />
                       ) : (
-                        <Button variant="ghost" size="sm" className="text-xs h-7">
+                        <Button variant="ghost" size="sm" className="text-xs h-7" onClick={(e) => { e.stopPropagation(); handleStart(); }}>
                           Start
                         </Button>
                       )}
