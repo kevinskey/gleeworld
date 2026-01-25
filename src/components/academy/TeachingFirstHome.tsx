@@ -288,21 +288,21 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-lg truncate">{urgentAssignment.title}</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-lg">{urgentAssignment.title}</h3>
                     {getStatusBadge(urgentAssignment.status)}
                   </div>
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <Calendar className="h-3.5 w-3.5" />
-                    Due: {format(new Date(urgentAssignment.due_date), 'MMM d, h:mm a')} · {urgentAssignment.points} pts
+                    <Calendar className="h-3.5 w-3.5 shrink-0" />
+                    <span>Due: {format(new Date(urgentAssignment.due_date), 'MMM d, h:mm a')} · {urgentAssignment.points} pts</span>
                     {urgentAssignment.status === 'overdue' && <span className="text-destructive font-medium">· OVERDUE</span>}
                   </p>
                 </div>
                 <Button 
                   size="lg"
-                  className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
+                  className="bg-amber-600 hover:bg-amber-700 text-white w-full sm:w-auto"
                   onClick={() => {
                     if (urgentAssignment.is_discussion) {
                       navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
