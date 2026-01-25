@@ -418,7 +418,8 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                   const handleStart = () => {
                     if (contentType.assignment) {
                       if (contentType.assignment.is_discussion) {
-                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
+                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
+                        window.location.reload(); // Force tab switch
                       } else {
                         navigate(`/grading/student/assignment/${contentType.assignment.id}`);
                       }
@@ -432,7 +433,8 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                         'Journal': 'journal'
                       };
                       const tab = tabMapping[contentType.type] || 'resources';
-                      navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=${tab}`);
+                      navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=${tab}`, { replace: true });
+                      window.location.reload(); // Force tab switch
                     }
                   };
                   
@@ -478,7 +480,8 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                         className="flex items-center justify-between p-2 rounded-md bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors"
                         onClick={() => {
                           if (assignment.is_discussion) {
-                            navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
+                            navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
+                            window.location.reload();
                           } else {
                             navigate(`/grading/student/assignment/${assignment.id}`);
                           }
