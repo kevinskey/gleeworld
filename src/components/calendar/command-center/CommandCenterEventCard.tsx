@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock } from "lucide-react";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
+import { EventHoverCard } from "../EventHoverCard";
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   music: Music,
@@ -31,26 +32,22 @@ export const CommandCenterEventCard = ({
   const Icon = CATEGORY_ICONS[categoryIcon] || Music;
   const startTime = format(new Date(event.start_date), 'h:mm a');
 
-  if (compact) {
+  const cardContent = compact ? (
     // Compact view for monthly grid
-    return (
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick?.();
-        }}
-        className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:opacity-90 transition-all text-white shadow-sm"
-        style={{ backgroundColor: categoryColor }}
-      >
-        <Icon className="h-3 w-3 flex-shrink-0" />
-        <span className="text-xs font-medium truncate flex-1">{event.title}</span>
-        <span className="text-[10px] opacity-80 flex-shrink-0">{startTime}</span>
-      </div>
-    );
-  }
-
-  // Full view for agenda/run sheet
-  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
+      className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:opacity-90 transition-all text-white shadow-sm"
+      style={{ backgroundColor: categoryColor }}
+    >
+      <Icon className="h-3 w-3 flex-shrink-0" />
+      <span className="text-xs font-medium truncate flex-1">{event.title}</span>
+      <span className="text-[10px] opacity-80 flex-shrink-0">{startTime}</span>
+    </div>
+  ) : (
+    // Full view for agenda/run sheet
     <div
       onClick={onClick}
       className="group flex flex-col rounded-lg border-l-4 bg-white shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
@@ -96,5 +93,11 @@ export const CommandCenterEventCard = ({
         )}
       </div>
     </div>
+  );
+
+  return (
+    <EventHoverCard event={event}>
+      {cardContent}
+    </EventHoverCard>
   );
 };
