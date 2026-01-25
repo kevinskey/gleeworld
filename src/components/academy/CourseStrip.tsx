@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music, 
-  ChevronDown, Mail, Clock, MapPin, User, ListMusic
+  ChevronDown, Mail, Clock, MapPin, User, ListMusic, LayoutGrid
 } from 'lucide-react';
 import { useCoursePlaylist } from '@/hooks/useCoursePlaylist';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { CourseModulesSheet } from './CourseModulesSheet';
 
 interface CourseStripProps {
   courseId: string;
@@ -212,6 +213,9 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
       {showPlayer && (
         <div className="border-t border-white/10 bg-[#001a33]/60 px-4 md:px-6 py-2">
           <div className="flex items-center gap-3">
+            {/* Modules Button */}
+            <CourseModulesSheet courseId={courseId} courseCode={courseCode} />
+
             {/* Music Icon & Track Info with Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -360,6 +364,15 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+        </div>
+      )}
+      
+      {/* Modules Row - shown when no music player */}
+      {!showPlayer && (
+        <div className="border-t border-white/10 bg-[#001a33]/60 px-4 md:px-6 py-2">
+          <div className="flex items-center gap-3">
+            <CourseModulesSheet courseId={courseId} courseCode={courseCode} />
           </div>
         </div>
       )}
