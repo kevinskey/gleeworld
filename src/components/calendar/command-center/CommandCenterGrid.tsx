@@ -88,26 +88,27 @@ export const CommandCenterGrid = ({
               key={day.toString()}
               onClick={() => onDateSelect(day)}
               className={cn(
-                "min-h-[100px] p-2 cursor-pointer transition-all border-b border-r border-slate-200 flex flex-col",
-                isCurrentMonth ? "bg-white" : "bg-slate-50",
-                isToday && "bg-[#B8860B]/10",
-                isSelected && "ring-2 ring-inset ring-[#003366] bg-[#003366]/5",
+                "min-h-[100px] p-2 cursor-pointer transition-all border-b border-r border-slate-300 flex flex-col",
+                isCurrentMonth ? "bg-white" : "bg-slate-100",
+                isToday && "bg-amber-50 border-amber-300",
+                isSelected && "ring-2 ring-inset ring-[#003366] bg-blue-50",
                 "hover:bg-slate-50"
               )}
             >
               {/* Date Number */}
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1.5">
                 <span className={cn(
-                  "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold",
+                  "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold",
                   !isCurrentMonth && "text-slate-400",
+                  isCurrentMonth && !isToday && !isSelected && "text-slate-800",
                   isToday && "bg-[#003366] text-white",
                   isSelected && !isToday && "bg-[#B8860B] text-white"
                 )}>
                   {format(day, 'd')}
                 </span>
                 {hasEvents && (
-                  <span className="text-xs text-slate-500 font-medium">
-                    {dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''}
+                  <span className="text-xs text-slate-600 font-semibold bg-slate-100 px-1.5 py-0.5 rounded">
+                    {dayEvents.length}
                   </span>
                 )}
               </div>
