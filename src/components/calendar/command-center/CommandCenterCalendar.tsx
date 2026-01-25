@@ -3,6 +3,7 @@ import { format, isSameDay, addMonths, subMonths, addDays, subDays } from "date-
 import { toZonedTime } from "date-fns-tz";
 import { useGleeWorldEvents, GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { useCalendars, CalendarInfo } from "@/hooks/useCalendars";
+import { useUserCalendarAccess, isEventVisibleToUser } from "@/hooks/useUserCalendarAccess";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -97,6 +98,7 @@ export const CommandCenterCalendar = () => {
 
   const { events, loading, fetchEvents } = useGleeWorldEvents();
   const { data: calendars, isLoading: calendarsLoading } = useCalendars();
+  const calendarAccess = useUserCalendarAccess();
   const { user } = useAuth();
   const { isAdmin, isExecutiveBoard, loading: roleLoading } = useUserRole();
   const canManageEvents = !roleLoading && (isAdmin() || isExecutiveBoard());
@@ -115,9 +117,17 @@ export const CommandCenterCalendar = () => {
     }
   }, [isMobile]);
 
-  // Filter events by category AND calendar
+  // Filter events by role-based access, category AND calendar
   const filteredEvents = useMemo(() => {
+    // If still loading access, show nothing
+    if (calendarAccess.loading) return [];
+
     return events.filter(event => {
+      // First check role-based visibility
+      if (!isEventVisibleToUser(event, calendarAccess)) {
+        return false;
+      }
+
       const category = getCategoryForEvent(event);
       const matchesCategoryFilter = activeCategoryFilters.includes(category);
       
@@ -133,7 +143,7 @@ export const CommandCenterCalendar = () => {
       
       return matchesCategoryFilter && matchesCalendarFilter && matchesSearch;
     });
-  }, [events, activeCategoryFilters, activeCalendarFilters, searchQuery]);
+  }, [events, activeCategoryFilters, activeCalendarFilters, searchQuery, calendarAccess]);
 
   // Events for selected date
   const selectedDateEvents = useMemo(() => {
