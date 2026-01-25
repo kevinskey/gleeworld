@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music, 
-  ChevronDown, Mail, Clock, MapPin, User
+  ChevronDown, Mail, Clock, MapPin, User, ListMusic
 } from 'lucide-react';
 import { useCoursePlaylist } from '@/hooks/useCoursePlaylist';
 import { cn } from '@/lib/utils';
@@ -13,7 +13,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CourseStripProps {
   courseId: string;
@@ -209,17 +212,64 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
       {showPlayer && (
         <div className="border-t border-white/10 bg-[#001a33]/60 px-4 md:px-6 py-2">
           <div className="flex items-center gap-3">
-            {/* Music Icon & Track Info */}
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="h-8 w-8 rounded-md bg-primary/30 flex items-center justify-center flex-shrink-0">
-                <Music className="h-4 w-4 text-white" />
-              </div>
-              <div className="min-w-0 hidden sm:block">
-                <p className="text-xs font-medium text-white truncate max-w-[120px] lg:max-w-[200px]">
-                  {currentTrack?.track_data?.title || 'Music Player'}
-                </p>
-              </div>
-            </div>
+            {/* Music Icon & Track Info with Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 min-w-0 h-auto py-1 px-2 hover:bg-white/10"
+                >
+                  <div className="h-8 w-8 rounded-md bg-primary/30 flex items-center justify-center flex-shrink-0">
+                    <Music className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="min-w-0 hidden sm:block text-left">
+                    <p className="text-xs font-medium text-white truncate max-w-[120px] lg:max-w-[200px]">
+                      {currentTrack?.track_data?.title || 'Music Player'}
+                    </p>
+                    <p className="text-[10px] text-white/50">
+                      {tracks.length} tracks
+                    </p>
+                  </div>
+                  <ListMusic className="h-3.5 w-3.5 text-white/50 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64 bg-background border shadow-lg z-50">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  Now Playing
+                </DropdownMenuLabel>
+                <ScrollArea className="max-h-64">
+                  {tracks.length === 0 ? (
+                    <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+                      No tracks available
+                    </div>
+                  ) : (
+                    tracks.map((track, idx) => (
+                      <DropdownMenuItem
+                        key={track.id || idx}
+                        onClick={() => playTrack(idx)}
+                        className={cn(
+                          "cursor-pointer flex items-center gap-2 py-2",
+                          idx === currentTrackIndex && "bg-accent"
+                        )}
+                      >
+                        <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                          {idx === currentTrackIndex && isPlaying ? (
+                            <Pause className="h-3.5 w-3.5 text-primary" />
+                          ) : idx === currentTrackIndex ? (
+                            <Play className="h-3.5 w-3.5 text-primary" />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">{idx + 1}</span>
+                          )}
+                        </div>
+                        <span className="truncate text-sm">
+                          {track.track_data?.title || `Track ${idx + 1}`}
+                        </span>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </ScrollArea>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Playback Controls */}
             <div className="flex items-center gap-0.5">
