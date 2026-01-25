@@ -288,7 +288,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
               
               <Button
                 variant="ghost"
-                className="h-9 w-9 min-h-0 min-w-0 p-0 bg-white text-primary hover:bg-white/90 rounded-full shadow-md"
+                className="h-8 w-10 min-h-0 min-w-0 p-0 bg-white text-primary hover:bg-white/90 rounded-lg shadow-md"
                 onClick={currentTrack ? togglePlay : handleFirstPlay}
                 disabled={tracks.length === 0}
               >
