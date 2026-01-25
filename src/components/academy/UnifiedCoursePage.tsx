@@ -27,7 +27,7 @@ import { StudentSyllabusView } from './syllabus/StudentSyllabusView';
 import { CourseHandbook } from './handbook/CourseHandbook';
 import { StudentDossierHome } from './StudentDossierHome';
 import { TeachingFirstHome } from './TeachingFirstHome';
-import { CourseStrip } from './CourseStrip';
+import { CoursePracticeBar } from './CoursePracticeBar';
 import { ElectionsModule } from './elections/ElectionsModule';
 import { CourseModules } from './CourseModules';
 import { ClassSessionJournals } from './journals/ClassSessionJournals';
@@ -352,16 +352,12 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
-          {/* Compact Course Strip Header */}
-          <CourseStrip
+          {/* Course Practice Bar - Integrated Listening & Practice Engine */}
+          <CoursePracticeBar
             courseId={course.id}
             courseCode={course.courseCode}
             courseTitle={course.title}
             instructorName={course.instructor.name}
-            instructorEmail={course.instructor.email}
-            instructorOffice={course.instructor.office}
-            instructorOfficeHours={course.instructor.hours}
-            teachingAssistants={teachingAssistants}
           />
 
           <div className="px-3 sm:px-4 md:px-6 space-y-3 md:space-y-4 w-full py-3 md:py-4">
