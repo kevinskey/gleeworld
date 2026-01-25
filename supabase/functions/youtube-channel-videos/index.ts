@@ -40,22 +40,36 @@ serve(async (req) => {
     // Extract channel ID from various URL formats
     let channelId = channelInput;
     
-    // Handle @username format (requires search)
+    // Handle @username format (use forHandle parameter)
     const handleMatch = channelInput.match(/@([a-zA-Z0-9_-]+)/);
     if (handleMatch) {
-      console.log('Resolving handle:', handleMatch[1]);
-      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(handleMatch[1])}&key=${apiKey}`;
-      const searchRes = await fetch(searchUrl);
-      const searchData = await searchRes.json();
+      const handle = handleMatch[1];
+      console.log('Resolving handle:', handle);
       
-      if (searchData.items && searchData.items.length > 0) {
-        channelId = searchData.items[0].snippet.channelId;
-        console.log('Resolved to channel ID:', channelId);
+      // Use the channels endpoint with forHandle parameter
+      const handleUrl = `https://www.googleapis.com/youtube/v3/channels?part=id,snippet&forHandle=${encodeURIComponent(handle)}&key=${apiKey}`;
+      const handleRes = await fetch(handleUrl);
+      const handleData = await handleRes.json();
+      
+      if (handleData.items && handleData.items.length > 0) {
+        channelId = handleData.items[0].id;
+        console.log('Resolved handle to channel ID:', channelId);
       } else {
-        return new Response(
-          JSON.stringify({ error: 'Channel not found for handle: ' + handleMatch[1] }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        // Fallback to search if forHandle doesn't work
+        console.log('forHandle failed, trying search...');
+        const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(handle)}&key=${apiKey}`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+        
+        if (searchData.items && searchData.items.length > 0) {
+          channelId = searchData.items[0].snippet.channelId;
+          console.log('Search resolved to channel ID:', channelId);
+        } else {
+          return new Response(
+            JSON.stringify({ error: 'Channel not found for handle: ' + handle }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
       }
     }
     
@@ -95,34 +109,50 @@ serve(async (req) => {
     const channelTitle = channelData.items[0].snippet?.title;
     const channelThumbnail = channelData.items[0].snippet?.thumbnails?.default?.url;
 
-    if (!uploadsPlaylistId) {
-      return new Response(
-        JSON.stringify({ error: 'Could not find uploads playlist for channel' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    let videos: YouTubeVideo[] = [];
+
+    // Try playlist approach first
+    if (uploadsPlaylistId) {
+      console.log('Uploads playlist ID:', uploadsPlaylistId);
+      
+      const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}&key=${apiKey}`;
+      const playlistRes = await fetch(playlistUrl);
+      const playlistData = await playlistRes.json();
+
+      if (!playlistData.error && playlistData.items) {
+        videos = (playlistData.items || []).map((item: any) => ({
+          video_id: item.snippet.resourceId.videoId,
+          title: item.snippet.title,
+          thumbnail_url: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
+          published_at: item.snippet.publishedAt,
+        }));
+      } else {
+        console.log('Playlist fetch failed, trying search fallback...');
+      }
     }
 
-    console.log('Uploads playlist ID:', uploadsPlaylistId);
+    // Fallback to search API if playlist didn't work
+    if (videos.length === 0) {
+      console.log('Using search API fallback for channel:', channelId);
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=date&maxResults=${maxResults}&key=${apiKey}`;
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
 
-    // Fetch videos from the uploads playlist
-    const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}&key=${apiKey}`;
-    const playlistRes = await fetch(playlistUrl);
-    const playlistData = await playlistRes.json();
+      if (searchData.error) {
+        console.error('YouTube search API error:', searchData.error);
+        return new Response(
+          JSON.stringify({ error: searchData.error.message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    if (playlistData.error) {
-      console.error('YouTube API error:', playlistData.error);
-      return new Response(
-        JSON.stringify({ error: playlistData.error.message }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      videos = (searchData.items || []).map((item: any) => ({
+        video_id: item.id.videoId,
+        title: item.snippet.title,
+        thumbnail_url: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
+        published_at: item.snippet.publishedAt,
+      }));
     }
-
-    const videos: YouTubeVideo[] = (playlistData.items || []).map((item: any) => ({
-      video_id: item.snippet.resourceId.videoId,
-      title: item.snippet.title,
-      thumbnail_url: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
-      published_at: item.snippet.publishedAt,
-    }));
 
     console.log(`Found ${videos.length} videos for channel ${channelTitle}`);
 
