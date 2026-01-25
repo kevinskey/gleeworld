@@ -48,6 +48,9 @@ const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/Ac
 const GradesAdmin = React.lazy(() => import('@/components/mus240/instructor/GradesAdmin').then(m => ({
   default: m.GradesAdmin
 })));
+const EmbeddedStudentGradeView = React.lazy(() => import('@/components/grading/student/EmbeddedStudentGradeView').then(m => ({
+  default: m.EmbeddedStudentGradeView
+})));
 const AllVideosGrid = React.lazy(() => import('@/components/youtube/AllVideosGrid').then(m => ({
   default: m.AllVideosGrid
 })));
@@ -271,7 +274,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
         {/* Left Sidebar - Navigation - Visible on tablet (md) and up */}
         <div className="w-[216px] md:w-[240px] lg:w-[264px] min-w-[216px] md:min-w-[240px] lg:min-w-[264px] bg-card border-r border-border flex-shrink-0 hidden md:flex md:flex-col h-[calc(100vh-var(--gw-header-h,4rem))]">
           {/* Course Grade Stat - Above Navigation */}
-          <CourseGradeStat courseId={course.id} />
+          <CourseGradeStat courseId={course.id} onNavigateToGrades={() => setActiveTab('grades')} />
           
           {/* Primary Navigation - Course Template v1 */}
           <nav className="flex-1 overflow-y-auto px-3 space-y-1 flex flex-col items-center pt-4 pb-0">
@@ -524,14 +527,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {activeTab === 'grades' && (isAdmin ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
                   <GradesAdmin />
-                </React.Suspense> : (() => {
-                  // For MUS-240 students, redirect to the dedicated grade view page
-                  if (course.courseCode === 'MUS 240' || course.courseCode === 'MUS240') {
-                    navigate(`/grading/student/course/${course.id}`);
-                    return null;
-                  }
-                  return <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />;
-                })())}
+                </React.Suspense> : (course.courseCode === 'MUS 240' || course.courseCode === 'MUS240') ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
+                  <EmbeddedStudentGradeView courseId={course.id} />
+                </React.Suspense> : <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />)}
 
             {activeTab === 'attendance' && <CourseAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} />}
 
