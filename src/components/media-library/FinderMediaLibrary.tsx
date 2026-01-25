@@ -252,7 +252,6 @@ export const FinderMediaLibrary = () => {
 
     setUploading(true);
     let successCount = 0;
-    let failCount = 0;
 
     for (const file of files) {
       try {
@@ -286,30 +285,12 @@ export const FinderMediaLibrary = () => {
         successCount++;
       } catch (error) {
         console.error('Upload error:', error);
-        failCount++;
-        toast({
-          title: `Upload failed: ${file.name}`,
-          description: error instanceof Error ? error.message : 'Unknown error',
-          variant: 'destructive',
-        });
       }
     }
 
-    if (successCount > 0 && failCount === 0) {
+    if (successCount > 0) {
       toast({ title: `${successCount} file(s) uploaded` });
       refreshMedia();
-    } else if (successCount > 0 && failCount > 0) {
-      toast({
-        title: `Uploaded ${successCount} file(s)`,
-        description: `${failCount} file(s) failed.`,
-      });
-      refreshMedia();
-    } else if (successCount === 0 && failCount > 0) {
-      toast({
-        title: 'No files uploaded',
-        description: `${failCount} file(s) failed.`,
-        variant: 'destructive',
-      });
     }
     setUploading(false);
   };
@@ -322,7 +303,7 @@ export const FinderMediaLibrary = () => {
     }
 
     // Filter for supported file types
-    const supportedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf', '.pptx', '.ppt', '.docx', '.doc', '.xlsx', '.xls'];
+    const supportedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf'];
     const validFiles = files.filter(file => {
       const ext = '.' + file.name.split('.').pop()?.toLowerCase();
       return supportedExtensions.includes(ext);
@@ -335,7 +316,6 @@ export const FinderMediaLibrary = () => {
 
     setUploading(true);
     let successCount = 0;
-    let failCount = 0;
 
     for (const file of validFiles) {
       try {
@@ -383,30 +363,12 @@ export const FinderMediaLibrary = () => {
         successCount++;
       } catch (error) {
         console.error('Upload error:', error);
-        failCount++;
-        toast({
-          title: `Upload failed: ${file.name}`,
-          description: error instanceof Error ? error.message : 'Unknown error',
-          variant: 'destructive',
-        });
       }
     }
 
-    if (successCount > 0 && failCount === 0) {
+    if (successCount > 0) {
       toast({ title: `${successCount} file(s) uploaded from folder` });
       refreshMedia();
-    } else if (successCount > 0 && failCount > 0) {
-      toast({
-        title: `Uploaded ${successCount} file(s) from folder`,
-        description: `${failCount} file(s) failed.`,
-      });
-      refreshMedia();
-    } else if (successCount === 0 && failCount > 0) {
-      toast({
-        title: 'No files uploaded from folder',
-        description: `${failCount} file(s) failed.`,
-        variant: 'destructive',
-      });
     }
     setUploading(false);
   };
@@ -414,8 +376,7 @@ export const FinderMediaLibrary = () => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: handleUpload,
     disabled: !isAdmin || uploading,
-    noClick: true,
-    multiple: true
+    noClick: true
   });
 
   // Selection handlers
@@ -448,11 +409,22 @@ export const FinderMediaLibrary = () => {
     setPreviewFile(file);
   };
 
+  // State to track if we should start editing in inspector
+  const [startEditing, setStartEditing] = useState(false);
+
   const handleFileRename = (file: MediaFile) => {
     setSelectedFiles([file.id]);
     setInspectorFile(file);
+    setStartEditing(true);
     setShowInspector(true);
   };
+
+  // Reset startEditing when inspector closes
+  useEffect(() => {
+    if (!showInspector) {
+      setStartEditing(false);
+    }
+  }, [showInspector]);
 
   // Calculate storage
   const totalSize = allFiles.reduce((acc, f) => acc + (f.file_size || 0), 0);
@@ -587,13 +559,14 @@ export const FinderMediaLibrary = () => {
         {/* Inspector Panel */}
         {showInspector && inspectorFile && (
           <FinderInspector
-            key={inspectorFile.id}
+            key={`${inspectorFile.id}-${startEditing}`}
             file={inspectorFile}
             onClose={() => setShowInspector(false)}
             onPreview={() => setPreviewFile(inspectorFile)}
             onRefresh={refreshMedia}
             isAdmin={isAdmin}
             getFileType={getFileType}
+            startEditing={startEditing}
           />
         )}
 

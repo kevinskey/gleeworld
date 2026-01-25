@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { MediaFile } from './types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
   X, 
@@ -28,6 +29,7 @@ interface FinderInspectorProps {
   onRefresh: () => void;
   isAdmin: boolean;
   getFileType: (file: MediaFile) => string;
+  startEditing?: boolean;
 }
 
 export const FinderInspector = ({
@@ -36,17 +38,18 @@ export const FinderInspector = ({
   onPreview,
   onRefresh,
   isAdmin,
-  getFileType
+  getFileType,
+  startEditing = false
 }: FinderInspectorProps) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(startEditing);
   const [title, setTitle] = useState(file.title || '');
   const { toast } = useToast();
 
-  // Update state when file changes
+  // Update title when file changes
   useEffect(() => {
     setTitle(file.title || '');
-    setIsEditing(false);
-  }, [file.id, file.title]);
+    setIsEditing(startEditing);
+  }, [file.id, file.title, startEditing]);
 
   // Encode URL to handle special characters
   const encodeFileUrl = (url: string) => {
@@ -101,7 +104,7 @@ export const FinderInspector = ({
 
       if (error) throw error;
 
-      toast({ title: "File updated" });
+      toast({ title: "File renamed" });
       setIsEditing(false);
       onRefresh();
     } catch (error) {
@@ -177,14 +180,10 @@ export const FinderInspector = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="text-sm"
-              placeholder="File title"
             />
             <div className="flex gap-2">
               <Button size="sm" onClick={handleSave} className="flex-1">Save</Button>
-              <Button size="sm" variant="outline" onClick={() => {
-                setIsEditing(false);
-                setTitle(file.title || '');
-              }} className="flex-1">Cancel</Button>
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(false)} className="flex-1">Cancel</Button>
             </div>
           </div>
         ) : (
@@ -196,6 +195,12 @@ export const FinderInspector = ({
               </Button>
             )}
           </div>
+        )}
+
+        {file.category && (
+          <Badge variant="secondary" className="mt-2 text-xs">
+            {file.category}
+          </Badge>
         )}
       </div>
 
