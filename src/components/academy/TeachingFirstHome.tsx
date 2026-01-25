@@ -91,12 +91,15 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
       }
 
       // Fetch assignments for this course
-      const { data: assignmentsData } = await supabase
+      const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('gw_course_assignments')
         .select('*')
         .eq('course_id', courseId)
+        .eq('is_published', true)
         .order('due_date', { ascending: true })
         .limit(10);
+
+      console.log('TeachingFirstHome assignments fetch:', { courseId, assignmentsData, assignmentsError });
 
       if (assignmentsData) {
         const now = new Date();
@@ -134,7 +137,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             id: a.id,
             title: a.title,
             due_date: a.due_date,
-            points: a.max_points || 100,
+            points: a.points || a.max_points || 100,
             course_id: a.course_id,
             status,
             description: a.description || '',
