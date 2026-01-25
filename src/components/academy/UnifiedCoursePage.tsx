@@ -26,6 +26,8 @@ import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240Semester
 import { StudentSyllabusView } from './syllabus/StudentSyllabusView';
 import { CourseHandbook } from './handbook/CourseHandbook';
 import { StudentDossierHome } from './StudentDossierHome';
+import { TeachingFirstHome } from './TeachingFirstHome';
+import { CourseStrip } from './CourseStrip';
 import { ElectionsModule } from './elections/ElectionsModule';
 import { CourseModules } from './CourseModules';
 import { ClassSessionJournals } from './journals/ClassSessionJournals';
@@ -347,8 +349,8 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
-          {/* Course Hero with Integrated Music Player */}
-          <CourseHeroPlayer
+          {/* Compact Course Strip Header */}
+          <CourseStrip
             courseId={course.id}
             courseCode={course.courseCode}
             courseTitle={course.title}
@@ -356,7 +358,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             instructorEmail={course.instructor.email}
             instructorOffice={course.instructor.office}
             instructorOfficeHours={course.instructor.hours}
-            instructorImageUrl={course.instructor.imageUrl}
             teachingAssistants={teachingAssistants}
           />
 
@@ -420,7 +421,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
 
             {/* Content Sections */}
-            {activeTab === 'home' && (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'MUS 240' || course.courseCode === 'LH 100' ? <StudentDossierHome courseId={course.id} isAdmin={isAdmin} /> : <div className="space-y-4">
+            {activeTab === 'home' && (course.courseCode === 'MUS 240' ? <TeachingFirstHome courseId={course.id} isAdmin={isAdmin} /> : course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'LH 100' ? <StudentDossierHome courseId={course.id} isAdmin={isAdmin} /> : <div className="space-y-4">
                   {/* Enrollment Card */}
                   {!isEnrolled && !enrollmentLoading && <Card className="border-primary/50 bg-primary/5">
                       
