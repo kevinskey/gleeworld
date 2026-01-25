@@ -252,6 +252,7 @@ export const FinderMediaLibrary = () => {
 
     setUploading(true);
     let successCount = 0;
+    let failCount = 0;
 
     for (const file of files) {
       try {
@@ -285,12 +286,30 @@ export const FinderMediaLibrary = () => {
         successCount++;
       } catch (error) {
         console.error('Upload error:', error);
+        failCount++;
+        toast({
+          title: `Upload failed: ${file.name}`,
+          description: error instanceof Error ? error.message : 'Unknown error',
+          variant: 'destructive',
+        });
       }
     }
 
-    if (successCount > 0) {
+    if (successCount > 0 && failCount === 0) {
       toast({ title: `${successCount} file(s) uploaded` });
       refreshMedia();
+    } else if (successCount > 0 && failCount > 0) {
+      toast({
+        title: `Uploaded ${successCount} file(s)`,
+        description: `${failCount} file(s) failed.`,
+      });
+      refreshMedia();
+    } else if (successCount === 0 && failCount > 0) {
+      toast({
+        title: 'No files uploaded',
+        description: `${failCount} file(s) failed.`,
+        variant: 'destructive',
+      });
     }
     setUploading(false);
   };
@@ -316,6 +335,7 @@ export const FinderMediaLibrary = () => {
 
     setUploading(true);
     let successCount = 0;
+    let failCount = 0;
 
     for (const file of validFiles) {
       try {
@@ -363,12 +383,30 @@ export const FinderMediaLibrary = () => {
         successCount++;
       } catch (error) {
         console.error('Upload error:', error);
+        failCount++;
+        toast({
+          title: `Upload failed: ${file.name}`,
+          description: error instanceof Error ? error.message : 'Unknown error',
+          variant: 'destructive',
+        });
       }
     }
 
-    if (successCount > 0) {
+    if (successCount > 0 && failCount === 0) {
       toast({ title: `${successCount} file(s) uploaded from folder` });
       refreshMedia();
+    } else if (successCount > 0 && failCount > 0) {
+      toast({
+        title: `Uploaded ${successCount} file(s) from folder`,
+        description: `${failCount} file(s) failed.`,
+      });
+      refreshMedia();
+    } else if (successCount === 0 && failCount > 0) {
+      toast({
+        title: 'No files uploaded from folder',
+        description: `${failCount} file(s) failed.`,
+        variant: 'destructive',
+      });
     }
     setUploading(false);
   };
