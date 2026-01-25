@@ -448,22 +448,11 @@ export const FinderMediaLibrary = () => {
     setPreviewFile(file);
   };
 
-  // State to track if we should start editing in inspector
-  const [startEditing, setStartEditing] = useState(false);
-
   const handleFileRename = (file: MediaFile) => {
     setSelectedFiles([file.id]);
     setInspectorFile(file);
-    setStartEditing(true);
     setShowInspector(true);
   };
-
-  // Reset startEditing when inspector closes
-  useEffect(() => {
-    if (!showInspector) {
-      setStartEditing(false);
-    }
-  }, [showInspector]);
 
   // Calculate storage
   const totalSize = allFiles.reduce((acc, f) => acc + (f.file_size || 0), 0);
@@ -598,14 +587,13 @@ export const FinderMediaLibrary = () => {
         {/* Inspector Panel */}
         {showInspector && inspectorFile && (
           <FinderInspector
-            key={`${inspectorFile.id}-${startEditing}`}
+            key={inspectorFile.id}
             file={inspectorFile}
             onClose={() => setShowInspector(false)}
             onPreview={() => setPreviewFile(inspectorFile)}
             onRefresh={refreshMedia}
             isAdmin={isAdmin}
             getFileType={getFileType}
-            startEditing={startEditing}
           />
         )}
 
