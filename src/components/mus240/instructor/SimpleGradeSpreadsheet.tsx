@@ -257,8 +257,8 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         const attendanceInfo = attendanceByStudent.get(studentId);
         const attendanceRate = attendanceInfo && attendanceInfo.total > 0
           ? attendanceInfo.present / attendanceInfo.total
-          : 1; // Assume 100% if no attendance records
-        const attendanceContrib = attendanceRate * 5;
+          : 0; // Show 0 if no attendance records (data was reset)
+        const attendanceContrib = attendanceInfo && attendanceInfo.total > 0 ? attendanceRate * 5 : 0;
 
         const participationPct = pollsContrib + discussionContrib + attendanceContrib;
 
