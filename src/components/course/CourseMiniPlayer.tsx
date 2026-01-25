@@ -158,42 +158,42 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
           </div>
         </div>
 
-        {/* Playback Controls - Compact sizing */}
-        <div className="flex items-center gap-0.5 sm:gap-1">
+        {/* Playback Controls - Minimal sizing */}
+        <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 sm:h-5 sm:w-5 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+            className="h-4 w-4 text-white/70 hover:text-white touch-manipulation p-0"
             onClick={skipPrevious}
             onTouchEnd={(e) => { e.preventDefault(); skipPrevious(); }}
             disabled={currentTrackIndex === null || currentTrackIndex === 0}
           >
-            <SkipBack className="h-3 w-3 sm:h-2.5 sm:w-2.5" />
+            <SkipBack className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 sm:h-6 sm:w-6 text-white hover:bg-white/10 rounded-full bg-white/10 touch-manipulation"
+            className="h-6 w-6 text-white hover:bg-white/10 rounded-full bg-white/10 touch-manipulation p-0"
             onClick={currentTrack ? togglePlay : handleFirstPlay}
             onTouchEnd={(e) => { e.preventDefault(); currentTrack ? togglePlay() : handleFirstPlay(); }}
             onPointerDown={() => forceUnlockAudio()}
             disabled={tracks.length === 0}
           >
             {isPlaying ? (
-              <Pause className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
+              <Pause className="h-3 w-3" />
             ) : (
-              <Play className="h-3.5 w-3.5 sm:h-3 sm:w-3 ml-0.5" />
+              <Play className="h-3 w-3 ml-0.5" />
             )}
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 sm:h-5 sm:w-5 text-white/70 hover:text-white hover:bg-white/10 touch-manipulation"
+            className="h-4 w-4 text-white/70 hover:text-white touch-manipulation p-0"
             onClick={skipNext}
             onTouchEnd={(e) => { e.preventDefault(); skipNext(); }}
             disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
           >
-            <SkipForward className="h-3 w-3 sm:h-2.5 sm:w-2.5" />
+            <SkipForward className="h-3.5 w-3.5" />
           </Button>
         </div>
 
