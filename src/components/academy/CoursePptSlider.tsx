@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Presentation, Play } from 'lucide-react';
+import { 
+  Images, ChevronLeft, ChevronRight, Maximize2, Play, Pause, 
+  Volume2, VolumeX, Grid3X3, Loader2 
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { NativePowerPointViewer } from '@/components/mus240/NativePowerPointViewer';
+import { parsePowerPoint, type PPTXParseResult, type ParsedSlide } from '@/lib/pptx-parser';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 
 interface CoursePptSliderProps {
   presentationUrl: string;
@@ -16,49 +22,408 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
   presentationTitle = 'Presentation',
   className
 }) => {
-  const [showViewer, setShowViewer] = useState(false);
+  const [presentation, setPresentation] = useState<PPTXParseResult | null>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showFullscreen, setShowFullscreen] = useState(false);
+  const [showThumbnails, setShowThumbnails] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
-  // Extract filename from URL for display
-  const fileName = presentationUrl.split('/').pop() || 'presentation.pptx';
+  // Load PowerPoint on mount
+  useEffect(() => {
+    const loadPresentation = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // parsePowerPoint takes a URL string and handles fetching internally
+        const result = await parsePowerPoint(presentationUrl);
+        setPresentation(result);
+      } catch (err) {
+        console.error('Failed to load PowerPoint:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load presentation');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (presentationUrl) {
+      loadPresentation();
+    }
+
+    return () => {
+      // Cleanup audio on unmount
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [presentationUrl]);
+
+  const goToSlide = useCallback((index: number) => {
+    if (!presentation) return;
+    // Stop current audio when changing slides
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsAudioPlaying(false);
+    }
+    setCurrentSlide(Math.max(0, Math.min(index, presentation.slides.length - 1)));
+  }, [presentation]);
+
+  const goNext = useCallback(() => {
+    if (!presentation) return;
+    goToSlide(currentSlide + 1);
+  }, [presentation, currentSlide, goToSlide]);
+
+  const goPrev = useCallback(() => {
+    if (!presentation) return;
+    goToSlide(currentSlide - 1);
+  }, [presentation, currentSlide, goToSlide]);
+
+  const toggleAudio = useCallback(() => {
+    forceUnlockAudio();
+    const slide = presentation?.slides[currentSlide];
+    if (!slide?.audio?.length) return;
+
+    if (audioRef.current) {
+      if (isAudioPlaying) {
+        audioRef.current.pause();
+        setIsAudioPlaying(false);
+      } else {
+        audioRef.current.play();
+        setIsAudioPlaying(true);
+      }
+    } else {
+      // SlideAudio uses 'src' property, not 'url'
+      const audio = new Audio(slide.audio[0].src);
+      audio.volume = isMuted ? 0 : 1;
+      audioRef.current = audio;
+      audio.play();
+      setIsAudioPlaying(true);
+      audio.onended = () => setIsAudioPlaying(false);
+    }
+  }, [presentation, currentSlide, isAudioPlaying, isMuted]);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => {
+      if (audioRef.current) {
+        audioRef.current.volume = prev ? 1 : 0;
+      }
+      return !prev;
+    });
+  }, []);
+
+  // Render a single slide content
+  const renderSlideContent = (slide: ParsedSlide, compact: boolean = false) => {
+    return (
+      <div 
+        className={cn(
+          "relative w-full h-full flex flex-col items-center justify-center overflow-hidden",
+          compact ? "p-3" : "p-6"
+        )}
+        style={{ backgroundColor: slide.backgroundColor || '#ffffff' }}
+      >
+        {/* Render shapes/text */}
+        <div className={cn("w-full space-y-2", compact ? "max-w-full" : "max-w-4xl space-y-4")}>
+          {slide.shapes.map((shape, idx) => {
+            let className = 'text-foreground';
+            
+            if (shape.type === 'title') {
+              className = compact 
+                ? 'text-sm md:text-base font-bold text-center' 
+                : 'text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-2';
+            } else if (shape.type === 'subtitle') {
+              className = compact 
+                ? 'text-xs text-muted-foreground text-center' 
+                : 'text-lg md:text-xl text-muted-foreground text-center';
+            } else if (shape.type === 'body') {
+              className = compact 
+                ? 'text-xs leading-tight' 
+                : 'text-base md:text-lg leading-relaxed';
+            }
+            
+            if (shape.bold) className += ' font-bold';
+            if (shape.italic) className += ' italic';
+            if (shape.align === 'center') className += ' text-center';
+            else if (shape.align === 'right') className += ' text-right';
+            
+            return (
+              <div 
+                key={idx} 
+                className={className}
+                style={{ 
+                  fontSize: compact ? undefined : (shape.fontSize ? `${Math.min(shape.fontSize, 32)}pt` : undefined),
+                  color: shape.fontColor
+                }}
+              >
+                {shape.text.split('\n').slice(0, compact ? 3 : undefined).map((line, lineIdx) => (
+                  <p key={lineIdx} className={lineIdx > 0 ? 'mt-1' : ''}>
+                    {compact && line.length > 80 ? line.slice(0, 80) + '...' : line}
+                  </p>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Render images */}
+        {slide.images.length > 0 && (
+          <div className="relative w-full flex-1 min-h-0 flex items-center justify-center mt-2">
+            {slide.images.slice(0, compact ? 1 : undefined).map((img, idx) => (
+              img.src && (
+                <img
+                  key={idx}
+                  src={img.src}
+                  alt=""
+                  className="object-contain max-w-full max-h-full"
+                  style={{
+                    maxHeight: compact ? '120px' : '300px'
+                  }}
+                />
+              )
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <Card className={cn("overflow-hidden", className)}>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Images className="h-4 w-4 text-primary" />
+            {presentationTitle}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="h-48 flex items-center justify-center">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Loading slides...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !presentation) {
+    return (
+      <Card className={cn("overflow-hidden", className)}>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Images className="h-4 w-4 text-primary" />
+            {presentationTitle}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="h-48 flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">{error || 'No slides available'}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const slide = presentation.slides[currentSlide];
+  const hasAudio = slide?.audio && slide.audio.length > 0;
 
   return (
     <>
       <Card className={cn("overflow-hidden", className)}>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Presentation className="h-4 w-4 text-primary" />
+            <Images className="h-4 w-4 text-primary" />
             {presentationTitle}
           </CardTitle>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0"
+              onClick={() => setShowThumbnails(true)}
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0"
+              onClick={() => setShowFullscreen(true)}
+            >
+              <Maximize2 className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="p-4">
-          <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
-            <div className="p-4 rounded-full bg-primary/10">
-              <Presentation className="h-10 w-10 text-primary" />
+        <CardContent className="p-0 relative">
+          {/* Slide Display */}
+          <div 
+            className="relative h-56 md:h-64 bg-muted cursor-pointer"
+            onClick={() => setShowFullscreen(true)}
+          >
+            {slide && renderSlideContent(slide, true)}
+            
+            {/* Audio indicator */}
+            {hasAudio && (
+              <div className="absolute bottom-2 right-2 z-10">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 px-2 gap-1 bg-background/80 backdrop-blur-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleAudio();
+                  }}
+                >
+                  {isAudioPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                  <span className="text-xs">Audio</span>
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex items-center justify-between px-3 py-2 bg-muted/50 border-t">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={goPrev}
+              disabled={currentSlide === 0}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex items-center gap-1.5">
+              {presentation.slides.map((_, idx) => (
+                <button
+                  key={idx}
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-colors",
+                    idx === currentSlide 
+                      ? "bg-primary" 
+                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  )}
+                  onClick={() => goToSlide(idx)}
+                />
+              ))}
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Click below to open the slideshow viewer
-              </p>
-              <Button 
-                onClick={() => setShowViewer(true)} 
-                size="lg"
-                className="gap-2"
-              >
-                <Play className="h-4 w-4" />
-                Open Slideshow
-              </Button>
-            </div>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={goNext}
+              disabled={currentSlide === presentation.slides.length - 1}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      <NativePowerPointViewer
-        isOpen={showViewer}
-        onClose={() => setShowViewer(false)}
-        fileUrl={presentationUrl}
-        fileName={fileName}
-        title={presentationTitle}
-      />
+      {/* Fullscreen Modal */}
+      <Dialog open={showFullscreen} onOpenChange={setShowFullscreen}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[85vh] p-0 flex flex-col">
+          <VisuallyHidden>
+            <DialogTitle>{presentationTitle}</DialogTitle>
+          </VisuallyHidden>
+          
+          <div className="flex-1 relative overflow-hidden">
+            {slide && renderSlideContent(slide, false)}
+            
+            {/* Audio controls in fullscreen */}
+            {hasAudio && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-3 shadow-lg border">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={toggleAudio}
+                >
+                  {isAudioPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {slide.audio?.[0]?.name || 'Audio'}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={toggleMute}
+                >
+                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </Button>
+              </div>
+            )}
+            
+            {/* Fullscreen navigation */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
+              onClick={goPrev}
+              disabled={currentSlide === 0}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
+              onClick={goNext}
+              disabled={currentSlide === presentation.slides.length - 1}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          {/* Slide indicator */}
+          <div className="p-3 bg-muted/50 border-t flex items-center justify-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Slide {currentSlide + 1} of {presentation.slides.length}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 gap-1"
+              onClick={() => setShowThumbnails(true)}
+            >
+              <Grid3X3 className="h-3.5 w-3.5" />
+              <span className="text-xs">All Slides</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Thumbnail Grid Modal */}
+      <Dialog open={showThumbnails} onOpenChange={setShowThumbnails}>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] overflow-y-auto">
+          <DialogTitle>All Slides</DialogTitle>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+            {presentation.slides.map((s, idx) => (
+              <button
+                key={idx}
+                className={cn(
+                  "aspect-video rounded-lg overflow-hidden border-2 transition-colors",
+                  idx === currentSlide 
+                    ? "border-primary ring-2 ring-primary/20" 
+                    : "border-transparent hover:border-muted-foreground/30"
+                )}
+                onClick={() => {
+                  goToSlide(idx);
+                  setShowThumbnails(false);
+                }}
+              >
+                <div className="w-full h-full bg-white scale-[0.25] origin-top-left" style={{ width: '400%', height: '400%' }}>
+                  {renderSlideContent(s, true)}
+                </div>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

@@ -14,7 +14,6 @@ import { FinderBreadcrumb } from './FinderBreadcrumb';
 import { MediaPreviewModal } from './MediaPreviewModal';
 import { NewFolderDialog } from './NewFolderDialog';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
-import { Button } from '@/components/ui/button';
 import { FolderPlus, Upload, Clipboard, File } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMoveToFolder } from '@/hooks/useMediaFolders';
@@ -553,63 +552,7 @@ export const FinderMediaLibrary = () => {
                   <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                     <Upload className="h-16 w-16 mb-4 opacity-50" />
                     <p className="text-lg font-medium">No files found</p>
-                    {searchQuery || activeFilters.length > 0 || selectedFolderId ? (
-                      <div className="mt-2 flex flex-col items-center gap-3">
-                        <p className="text-sm text-center max-w-md">
-                          This usually means you have a folder selected, a filter chip enabled, or a search query applied.
-                        </p>
-                        <div className="flex flex-wrap items-center justify-center gap-2">
-                          {selectedFolderId && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedFolderId(null)}
-                            >
-                              Clear folder
-                            </Button>
-                          )}
-                          {activeFilters.length > 0 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleClearFilters}
-                            >
-                              Clear filters
-                            </Button>
-                          )}
-                          {searchQuery && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSearchQuery('')}
-                            >
-                              Clear search
-                            </Button>
-                          )}
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedFolderId(null);
-                              setActiveSection('all');
-                              setSearchQuery('');
-                              setActiveFilters([]);
-                            }}
-                          >
-                            Show everything
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Total files: {allFiles.length}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-sm">Drag and drop files here to upload</p>
-                    )}
+                    <p className="text-sm">Drag and drop files here to upload</p>
                   </div>
                 ) : viewMode === 'grid' ? (
                   <FinderFileGrid

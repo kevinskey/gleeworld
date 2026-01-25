@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { X, Download, ZoomIn, ZoomOut, ExternalLink, FileText, FileSpreadsheet, Presentation, FileArchive, FileCode } from 'lucide-react';
 import { useState } from 'react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { NativePowerPointViewer } from '@/components/mus240/NativePowerPointViewer';
 
 interface MediaPreviewModalProps {
   file: MediaFile;
@@ -66,19 +65,6 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
   // Use raw URL - Supabase handles encoding
   const fileUrl = file.file_url;
 
-  // For PowerPoint files, use the native viewer directly
-  if (fileType === 'powerpoint') {
-    return (
-      <NativePowerPointViewer
-        isOpen={true}
-        onClose={onClose}
-        fileUrl={fileUrl}
-        fileName={file.title}
-        title={file.title}
-      />
-    );
-  }
-
   const renderContent = () => {
     switch (fileType) {
       case 'image':
@@ -137,7 +123,22 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
           />
         );
 
-      // PowerPoint is handled at the top of the component with NativePowerPointViewer
+      case 'powerpoint':
+        return (
+          <div className="w-full h-full flex flex-col">
+            <iframe
+              src={getOfficeViewerUrl(fileUrl)}
+              className="w-full flex-1 bg-white"
+              title={file.title}
+            />
+            <div className="bg-muted/50 p-2 text-center">
+              <Button variant="outline" size="sm" onClick={() => window.open(fileUrl, '_blank')}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open in PowerPoint Online
+              </Button>
+            </div>
+          </div>
+        );
 
       case 'word':
         return (
