@@ -191,6 +191,7 @@ export const CommandCenterCalendar = () => {
                 onNavigateDay={navigateDay}
                 getCategoryForEvent={getCategoryForEvent}
                 categoryConfigs={CATEGORY_CONFIGS}
+                onEventDeleted={fetchEvents}
               />
             ) : (
               <CommandCenterGrid
@@ -201,6 +202,7 @@ export const CommandCenterCalendar = () => {
                 viewMode={viewMode}
                 getCategoryForEvent={getCategoryForEvent}
                 categoryConfigs={CATEGORY_CONFIGS}
+                onEventDeleted={fetchEvents}
               />
             )}
           </div>
@@ -213,6 +215,7 @@ export const CommandCenterCalendar = () => {
                 events={selectedDateEvents}
                 getCategoryForEvent={getCategoryForEvent}
                 categoryConfigs={CATEGORY_CONFIGS}
+                onEventDeleted={fetchEvents}
               />
             </div>
           )}

@@ -22,7 +22,6 @@ import {
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   music: Music,
@@ -40,6 +39,7 @@ interface CommandCenterEventCardProps {
   categoryIcon: string;
   compact?: boolean;
   onClick?: () => void;
+  onEventDeleted?: () => void;
 }
 
 export const CommandCenterEventCard = ({
@@ -48,10 +48,10 @@ export const CommandCenterEventCard = ({
   categoryIcon,
   compact = false,
   onClick,
+  onEventDeleted,
 }: CommandCenterEventCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const queryClient = useQueryClient();
   
   const Icon = CATEGORY_ICONS[categoryIcon] || Music;
   const startTime = format(new Date(event.start_date), 'h:mm a');
@@ -67,7 +67,7 @@ export const CommandCenterEventCard = ({
       if (error) throw error;
 
       toast.success('Event deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['gleeworld-events'] });
+      onEventDeleted?.();
     } catch (error) {
       console.error('Error deleting event:', error);
       toast.error('Failed to delete event');

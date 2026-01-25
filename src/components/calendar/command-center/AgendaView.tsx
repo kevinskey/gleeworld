@@ -24,6 +24,7 @@ interface AgendaViewProps {
   onNavigateDay: (direction: 'prev' | 'next') => void;
   getCategoryForEvent: (event: GleeWorldEvent) => CategoryFilter;
   categoryConfigs: CategoryConfig[];
+  onEventDeleted?: () => void;
 }
 
 export const AgendaView = ({
@@ -33,6 +34,7 @@ export const AgendaView = ({
   onNavigateDay,
   getCategoryForEvent,
   categoryConfigs,
+  onEventDeleted,
 }: AgendaViewProps) => {
   // Get 7 days for the date selector
   const dateSelectorDays = useMemo(() => {
@@ -171,6 +173,7 @@ export const AgendaView = ({
                       categoryColor={config?.color || '#708090'}
                       categoryIcon={config?.icon || 'calendar'}
                       compact={false}
+                      onEventDeleted={onEventDeleted}
                     />
                   );
                 })}
