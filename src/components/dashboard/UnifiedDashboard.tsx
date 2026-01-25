@@ -361,6 +361,19 @@ export const UnifiedDashboard = () => {
       {/* YouTube Channel Slider */}
       <YouTubeChannelSlider />
 
+      {/* My Modules - Bottom of Dashboard */}
+      {user && (
+        <div className="px-4 py-6 bg-background">
+          <MyModules userProfile={{
+            user_id: user.id,
+            role: profile?.role,
+            exec_board_role: profile?.exec_board_role,
+            is_exec_board: profile?.is_exec_board,
+            is_admin: profile?.is_admin,
+            is_super_admin: profile?.is_super_admin
+          }} />
+        </div>
+      )}
       
       {/* Messages Panel Overlay */}
       {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
