@@ -340,6 +340,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                         onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                         placeholder="e.g., Warmup Tracks, Concert Prep"
                         required
+                        className="text-white"
                       />
                     </div>
 
