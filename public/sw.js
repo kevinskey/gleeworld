@@ -1,7 +1,7 @@
 // Service Worker for GleeWorld PWA
-// Version: 7.5 - January 2026
-// NOTE: v7.5 - Fixed PWA radio glitching by skipping audio/video stream interception
-const CACHE_VERSION = 'v7.5';
+// Version: 7.6 - January 2026
+// NOTE: v7.6 - Fixed notification sounds and all audio playback in PWA
+const CACHE_VERSION = 'v7.6';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
@@ -77,7 +77,7 @@ self.addEventListener('fetch', (event) => {
   if (!url.protocol.startsWith('http')) return;
 
   // CRITICAL: Skip audio/video streaming requests - NEVER cache or intercept these
-  // This prevents PWA service worker from interfering with radio playback
+  // This prevents PWA service worker from interfering with radio and notification playback
   if (request.destination === 'audio' || request.destination === 'video') {
     console.log('[SW] Skipping audio/video request:', url.href);
     return;
@@ -97,6 +97,19 @@ self.addEventListener('fetch', (event) => {
   // Skip any URL with /listen path (audio streams)
   if (url.pathname.includes('/listen')) {
     console.log('[SW] Skipping stream URL:', url.href);
+    return;
+  }
+
+  // Skip notification-sounds bucket URLs (Supabase storage audio files)
+  if (url.pathname.includes('notification-sounds') || 
+      url.pathname.includes('/storage/') && (url.pathname.endsWith('.mp3') || url.pathname.endsWith('.wav') || url.pathname.endsWith('.ogg'))) {
+    console.log('[SW] Skipping notification sound request:', url.href);
+    return;
+  }
+
+  // Skip any audio file extensions
+  if (url.pathname.match(/\.(mp3|wav|ogg|m4a|aac|flac|webm)$/i)) {
+    console.log('[SW] Skipping audio file request:', url.href);
     return;
   }
 
