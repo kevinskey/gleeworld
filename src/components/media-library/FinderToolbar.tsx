@@ -42,10 +42,10 @@ interface FinderToolbarProps {
 }
 
 const filterOptions = [
-  { id: 'image', label: 'Images', icon: Image, color: 'bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/30' },
-  { id: 'video', label: 'Videos', icon: Video, color: 'bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 border-purple-500/30' },
-  { id: 'audio', label: 'Audio', icon: Music, color: 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-blue-500/30' },
-  { id: 'document', label: 'Docs', icon: FileText, color: 'bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 border-orange-500/30' },
+  { id: 'image', label: 'Images', icon: Image, color: 'bg-green-500/10 text-slate-900 hover:bg-green-500/20 border-green-500/30' },
+  { id: 'video', label: 'Videos', icon: Video, color: 'bg-purple-500/10 text-slate-900 hover:bg-purple-500/20 border-purple-500/30' },
+  { id: 'audio', label: 'Audio', icon: Music, color: 'bg-blue-500/10 text-slate-900 hover:bg-blue-500/20 border-blue-500/30' },
+  { id: 'document', label: 'Docs', icon: FileText, color: 'bg-orange-500/10 text-slate-900 hover:bg-orange-500/20 border-orange-500/30' },
 ];
 
 export const FinderToolbar = ({
