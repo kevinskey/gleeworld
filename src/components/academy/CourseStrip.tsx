@@ -166,7 +166,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
       <audio ref={audioRef} preload="metadata" />
       
       {/* Course Info Row */}
-      <div className="px-4 md:px-6 py-3">
+      <div className="px-4 md:px-6 py-1.5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {/* Course Code Badge */}
           <Badge className="bg-primary hover:bg-primary text-primary-foreground font-mono text-xs px-2 py-0.5">
@@ -211,7 +211,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
 
       {/* Music Player Row */}
       {showPlayer && (
-          <div className="border-t border-white/10 bg-primary/80 px-4 md:px-6 py-2">
+          <div className="border-t border-white/10 bg-primary/80 px-4 md:px-6 py-1">
           <div className="flex items-center gap-3">
             {/* Modules Button */}
             <CourseModulesSheet courseId={courseId} courseCode={courseCode} />
