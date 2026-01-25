@@ -240,17 +240,18 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     weightedScore: 0
   });
 
-  // Calculate Participation (Polls + Discussions + Attendance)
+  // Calculate Participation (Polls 25%, Discussions 25%, Attendance 50%)
+  // Weighted within 15%: Polls 3.75%, Discussions 3.75%, Attendance 7.5%
   const uniquePolls = new Set(data.pollsAnswered.map(p => p.poll_id)).size;
   const totalPollCount = data.totalPolls.length;
   // Polls: only count if there are polls to answer
   const hasPollActivity = totalPollCount > 0;
-  const pollScore = hasPollActivity ? uniquePolls / totalPollCount * 5 : 0;
+  const pollScore = hasPollActivity ? uniquePolls / totalPollCount * 3.75 : 0;
   
   const discussionTotal = data.discussionGrades.reduce((sum, d) => sum + (d.total_score || 0), 0);
   const discussionCount = data.discussionGrades.length;
   const discussionAvg = discussionCount > 0 ? discussionTotal / discussionCount : 0;
-  const discussionScore = discussionAvg / 100 * 5;
+  const discussionScore = discussionAvg / 100 * 3.75;
   
   const presentCount = data.attendance.filter(a => a.status === 'present' || a.status === 'excused').length;
   const absentCount = data.attendance.filter(a => a.status === 'absent').length;
@@ -260,13 +261,13 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
   const hasAttendanceActivity = totalSessions > 0;
   // Calculate attendance rate based on present/excused vs total sessions
   const attendanceRate = hasAttendanceActivity ? presentCount / totalSessions : 0;
-  const attendanceScore = hasAttendanceActivity ? attendanceRate * 5 : 0;
+  const attendanceScore = hasAttendanceActivity ? attendanceRate * 7.5 : 0;
   
   // Only count participation components that have activity
   const participationWeightedScore = 
-    (hasPollActivity ? pollScore : 5) + // Assume 100% if no polls yet
-    (discussionCount > 0 ? discussionScore : 5) + // Assume 100% if no discussions yet
-    (hasAttendanceActivity ? attendanceScore : 5); // Assume 100% if no attendance yet
+    (hasPollActivity ? pollScore : 3.75) + // Assume 100% if no polls yet
+    (discussionCount > 0 ? discussionScore : 3.75) + // Assume 100% if no discussions yet
+    (hasAttendanceActivity ? attendanceScore : 7.5); // Assume 100% if no attendance yet
 
   // Add participation breakdown items
   gradeItems.push({
@@ -274,10 +275,10 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     category: 'participation',
     name: `Polls (${uniquePolls}/${totalPollCount} completed)`,
     dueDate: null,
-    maxPoints: 5,
+    maxPoints: 3.75,
     earnedPoints: hasPollActivity ? Math.round(pollScore * 10) / 10 : 0,
     status: hasPollActivity ? 'graded' : 'pending',
-    weight: 5,
+    weight: 3.75,
     weightedScore: hasPollActivity ? pollScore : 0
   });
   gradeItems.push({
@@ -285,10 +286,10 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     category: 'participation',
     name: `Discussion Participation (${discussionCount} graded)`,
     dueDate: null,
-    maxPoints: 5,
+    maxPoints: 3.75,
     earnedPoints: Math.round(discussionScore * 10) / 10,
     status: discussionCount > 0 ? 'graded' : 'pending',
-    weight: 5,
+    weight: 3.75,
     weightedScore: discussionScore
   });
   gradeItems.push({
@@ -296,10 +297,10 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
     category: 'participation',
     name: `Attendance (${presentCount}/${totalSessions} sessions)`,
     dueDate: null,
-    maxPoints: 5,
+    maxPoints: 7.5,
     earnedPoints: hasAttendanceActivity ? Math.round(attendanceScore * 10) / 10 : 0,
     status: hasAttendanceActivity ? 'graded' : 'pending',
-    weight: 5,
+    weight: 7.5,
     weightedScore: hasAttendanceActivity ? attendanceScore : 0
   });
 
