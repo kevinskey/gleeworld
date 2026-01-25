@@ -276,36 +276,36 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
             </DropdownMenu>
 
             {/* Playback Controls - Minimal */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
-                className="h-4 w-4 min-h-0 min-w-0 p-0 text-white/50 hover:text-white disabled:opacity-30"
+                className="h-6 w-6 min-h-0 min-w-0 p-0 text-white hover:text-white/80 disabled:opacity-30 rounded-full"
                 onClick={skipPrevious}
                 disabled={currentTrackIndex === null || currentTrackIndex === 0}
               >
-                <SkipBack className="h-3 w-3" />
+                <SkipBack className="h-3.5 w-3.5" />
               </Button>
               
               <Button
                 variant="ghost"
-                className="h-6 w-6 min-h-0 min-w-0 p-0 text-white bg-primary hover:bg-primary/90 rounded-full"
+                className="h-8 w-8 min-h-0 min-w-0 p-0 bg-white text-primary hover:bg-white/90 rounded-full"
                 onClick={currentTrack ? togglePlay : handleFirstPlay}
                 disabled={tracks.length === 0}
               >
                 {isPlaying ? (
-                  <Pause className="h-3 w-3" />
+                  <Pause className="h-4 w-4" />
                 ) : (
-                  <Play className="h-3 w-3 ml-0.5" />
+                  <Play className="h-4 w-4 ml-0.5" />
                 )}
               </Button>
               
               <Button
                 variant="ghost"
-                className="h-4 w-4 min-h-0 min-w-0 p-0 text-white/50 hover:text-white disabled:opacity-30"
+                className="h-6 w-6 min-h-0 min-w-0 p-0 text-white hover:text-white/80 disabled:opacity-30 rounded-full"
                 onClick={skipNext}
                 disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
               >
-                <SkipForward className="h-3 w-3" />
+                <SkipForward className="h-3.5 w-3.5" />
               </Button>
             </div>
 
@@ -327,8 +327,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
             {/* Volume */}
             <Button
               variant="ghost"
-              size="icon"
-              className="hidden md:flex h-7 w-7 text-white/50 hover:text-white hover:bg-white/10"
+              className="hidden md:flex h-6 w-6 min-h-0 min-w-0 p-0 text-white hover:text-white/80 rounded-full"
               onClick={() => setIsMuted(!isMuted)}
             >
               {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
@@ -337,11 +336,10 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
             {/* Playlist Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
+              <Button
                   variant="ghost"
-                  size="sm"
-                  className="h-7 text-[10px] text-white/50 hover:text-white hover:bg-white/10 gap-0.5 px-2"
-                >
+                  className="h-6 min-h-0 text-[10px] text-white hover:text-white/80 gap-0.5 px-2"
+              >
                   <span className="hidden sm:inline">{playlists.length} playlists</span>
                   <ChevronDown className="h-3 w-3" />
                 </Button>
