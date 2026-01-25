@@ -12,13 +12,14 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { 
   Lock, Eye, EyeOff, Plus, Trash2, Edit, Save, 
   Video, FileText, Music, BookOpen, Link, Calendar,
-  X, ChevronRight
+  X, ChevronRight, Library
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { ModuleResourcePicker } from './ModuleResourcePicker';
 
 interface ModuleSetting {
   id: string;
@@ -64,6 +65,7 @@ export const Mus240ModuleEditor: React.FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addResourceDialogOpen, setAddResourceDialogOpen] = useState(false);
   const [editResourceDialogOpen, setEditResourceDialogOpen] = useState(false);
+  const [resourcePickerOpen, setResourcePickerOpen] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [editingResource, setEditingResource] = useState<ModuleResource | null>(null);
   const [newObjective, setNewObjective] = useState('');
@@ -694,11 +696,30 @@ export const Mus240ModuleEditor: React.FC = () => {
             </div>
             <div>
               <Label>URL</Label>
-              <Input
-                value={newResource.url}
-                onChange={(e) => setNewResource({ ...newResource, url: e.target.value })}
-                placeholder="https://..."
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={newResource.url}
+                  onChange={(e) => setNewResource({ ...newResource, url: e.target.value })}
+                  placeholder="https://..."
+                  className="flex-1"
+                />
+                {newResource.resource_type === 'video' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setResourcePickerOpen(true)}
+                  >
+                    <Library className="h-4 w-4 mr-1" />
+                    Browse
+                  </Button>
+                )}
+              </div>
+              {newResource.resource_type === 'video' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Click "Browse" to pick from Course Resources, Media Library, or YouTube
+                </p>
+              )}
             </div>
             <div>
               <Label>Description</Label>
@@ -738,6 +759,23 @@ export const Mus240ModuleEditor: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Video Resource Picker */}
+      <ModuleResourcePicker
+        open={resourcePickerOpen}
+        onOpenChange={setResourcePickerOpen}
+        courseId="mus-240"
+        onSelect={(resource) => {
+          setNewResource({
+            ...newResource,
+            title: resource.title || newResource.title,
+            url: resource.url,
+            description: resource.description || newResource.description,
+            duration: resource.duration || newResource.duration
+          });
+          setResourcePickerOpen(false);
+        }}
+      />
 
       {/* Edit Resource Dialog */}
       <Dialog open={editResourceDialogOpen} onOpenChange={setEditResourceDialogOpen}>
