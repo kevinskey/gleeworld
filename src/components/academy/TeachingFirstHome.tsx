@@ -283,9 +283,9 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
         
         {/* 1. DO THIS NOW - Most urgent assignment */}
         {urgentAssignment && (
-          <Card className="border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20">
+          <Card className="border-l-4 border-l-slate-700 bg-slate-50 dark:bg-slate-900/50">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base font-bold text-amber-700 dark:text-amber-400">
+              <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-200">
                 <Target className="h-5 w-5" />
                 Do This Now
               </CardTitle>
@@ -305,7 +305,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                 </div>
                 <Button 
                   size="lg"
-                  className="bg-amber-600 hover:bg-amber-700 text-white w-full sm:w-auto"
+                  className="bg-slate-800 hover:bg-slate-900 text-white w-full sm:w-auto"
                   onClick={() => {
                     if (urgentAssignment.is_discussion) {
                       navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
