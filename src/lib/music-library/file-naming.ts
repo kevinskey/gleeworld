@@ -68,6 +68,43 @@ const cleanFilename = (input: string): string => {
 };
 
 /**
+ * Clean display title by removing timestamps, hashes, and random numbers
+ * Common patterns: 1737123456789-abc123.mp3, file_1234567890.mp3, etc.
+ */
+export const cleanDisplayTitle = (filename: string): string => {
+  // Remove file extension first
+  let title = filename.replace(/\.[^/.]+$/, '');
+  
+  // Remove leading timestamps (13-digit epoch or similar)
+  title = title.replace(/^\d{10,13}[-_]/, '');
+  
+  // Remove trailing timestamps
+  title = title.replace(/[-_]\d{10,13}$/, '');
+  
+  // Remove random hash patterns (e.g., -abc123def or _abc123def at start/end)
+  title = title.replace(/^[a-z0-9]{6,12}[-_]/i, '');
+  title = title.replace(/[-_][a-z0-9]{6,12}$/i, '');
+  
+  // Remove patterns like (1), (2), _1, _2, -1, -2 at the end
+  title = title.replace(/[-_\s]?\(\d+\)$/, '');
+  title = title.replace(/[-_]\d{1,2}$/, '');
+  
+  // Clean up multiple underscores/dashes
+  title = title.replace(/[-_]{2,}/g, ' ');
+  title = title.replace(/[-_]/g, ' ');
+  
+  // Trim and capitalize first letter of each word
+  title = title.trim();
+  
+  // If title is empty after cleaning, return original without extension
+  if (!title) {
+    return filename.replace(/\.[^/.]+$/, '');
+  }
+  
+  return title;
+};
+
+/**
  * Get file extension from filename
  */
 export const getFileExtension = (filename: string): string => {

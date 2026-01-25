@@ -14,6 +14,7 @@ import { Loader2, Search, Plus, Trash2, ChevronUp, ChevronDown, FileAudio, Music
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { cleanDisplayTitle } from '@/lib/music-library/file-naming';
 interface PlaylistMediaManagerProps {
   playlistId: string;
   playlistTitle: string;
@@ -266,7 +267,7 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
         const { data: mediaData, error: mediaError } = await supabase
           .from('gw_media_library')
           .insert({
-            title: file.name.replace(/\.[^/.]+$/, ''),
+            title: cleanDisplayTitle(file.name),
             file_url: urlData.publicUrl,
             file_path: filePath,
             file_type: file.type || 'audio/mpeg',

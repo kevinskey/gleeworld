@@ -17,6 +17,7 @@ import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, C
 import { FolderPlus, Upload, Clipboard, File } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMoveToFolder } from '@/hooks/useMediaFolders';
+import { cleanDisplayTitle } from '@/lib/music-library/file-naming';
 
 export const FinderMediaLibrary = () => {
   const queryClient = useQueryClient();
@@ -272,7 +273,7 @@ export const FinderMediaLibrary = () => {
           file_url: data.publicUrl,
           file_type: file.type || 'application/octet-stream',
           file_size: file.size || 0,
-          title: file.name.replace(/\.[^/.]+$/, ''),
+          title: cleanDisplayTitle(file.name),
           bucket_id: 'media-library',
           category: 'uploads'
         });
