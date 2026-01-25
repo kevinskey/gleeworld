@@ -34,19 +34,27 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
 
   // Load PowerPoint on mount
   useEffect(() => {
+    let isMounted = true;
+    
     const loadPresentation = async () => {
       try {
         setIsLoading(true);
         setError(null);
         
-        // parsePowerPoint takes a URL string and handles fetching internally
+        console.log('[CoursePptSlider] Starting to parse presentation...');
         const result = await parsePowerPoint(presentationUrl);
-        setPresentation(result);
+        console.log('[CoursePptSlider] Parse complete, slides:', result?.slides?.length);
+        
+        if (isMounted) {
+          setPresentation(result);
+          setIsLoading(false);
+        }
       } catch (err) {
-        console.error('Failed to load PowerPoint:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load presentation');
-      } finally {
-        setIsLoading(false);
+        console.error('[CoursePptSlider] Failed to load PowerPoint:', err);
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load presentation');
+          setIsLoading(false);
+        }
       }
     };
 
@@ -55,6 +63,7 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
     }
 
     return () => {
+      isMounted = false;
       // Cleanup audio on unmount
       if (audioRef.current) {
         audioRef.current.pause();
