@@ -279,8 +279,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-4 w-4 p-0 text-white/50 hover:text-white disabled:opacity-30"
+                className="h-4 w-4 min-h-0 min-w-0 p-0 text-white/50 hover:text-white disabled:opacity-30"
                 onClick={skipPrevious}
                 disabled={currentTrackIndex === null || currentTrackIndex === 0}
               >
@@ -289,8 +288,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
               
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-6 w-6 p-0 text-white bg-primary hover:bg-primary/90 rounded-full"
+                className="h-6 w-6 min-h-0 min-w-0 p-0 text-white bg-primary hover:bg-primary/90 rounded-full"
                 onClick={currentTrack ? togglePlay : handleFirstPlay}
                 disabled={tracks.length === 0}
               >
@@ -303,8 +301,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
               
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-4 w-4 p-0 text-white/50 hover:text-white disabled:opacity-30"
+                className="h-4 w-4 min-h-0 min-w-0 p-0 text-white/50 hover:text-white disabled:opacity-30"
                 onClick={skipNext}
                 disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
               >
