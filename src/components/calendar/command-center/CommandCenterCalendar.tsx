@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { format, isSameDay, addMonths, subMonths, addDays, subDays } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { useGleeWorldEvents, GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
+import { useCalendars, CalendarInfo } from "@/hooks/useCalendars";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -86,17 +87,26 @@ export const CommandCenterCalendar = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(isMobile ? 'agenda' : 'month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [activeFilters, setActiveFilters] = useState<CategoryFilter[]>([
+  const [activeCategoryFilters, setActiveCategoryFilters] = useState<CategoryFilter[]>([
     'glee', 'courses', 'academic', 'liturgy', 'performances', 'leadership', 'tour', 'personal'
   ]);
+  const [activeCalendarFilters, setActiveCalendarFilters] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [isFilterRailCollapsed, setIsFilterRailCollapsed] = useState(isMobile);
 
   const { events, loading, fetchEvents } = useGleeWorldEvents();
+  const { data: calendars, isLoading: calendarsLoading } = useCalendars();
   const { user } = useAuth();
   const { isAdmin, isExecutiveBoard, loading: roleLoading } = useUserRole();
   const canManageEvents = !roleLoading && (isAdmin() || isExecutiveBoard());
+
+  // Initialize calendar filters when calendars load
+  useEffect(() => {
+    if (calendars && calendars.length > 0 && activeCalendarFilters.length === 0) {
+      setActiveCalendarFilters(calendars.map(c => c.id));
+    }
+  }, [calendars]);
 
   // Update view mode when mobile status changes
   useEffect(() => {
@@ -105,17 +115,25 @@ export const CommandCenterCalendar = () => {
     }
   }, [isMobile]);
 
-  // Filter events by category and search
+  // Filter events by category AND calendar
   const filteredEvents = useMemo(() => {
     return events.filter(event => {
       const category = getCategoryForEvent(event);
-      const matchesFilter = activeFilters.includes(category);
+      const matchesCategoryFilter = activeCategoryFilters.includes(category);
+      
+      // For calendar filter, check if event's calendar_id is in active filters
+      // If event has no calendar_id (like assignments), check if any calendar filter is active
+      const matchesCalendarFilter = !event.calendar_id || 
+        activeCalendarFilters.includes(event.calendar_id) ||
+        activeCalendarFilters.length === 0;
+      
       const matchesSearch = !searchQuery || 
         event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         event.location?.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesFilter && matchesSearch;
+      
+      return matchesCategoryFilter && matchesCalendarFilter && matchesSearch;
     });
-  }, [events, activeFilters, searchQuery]);
+  }, [events, activeCategoryFilters, activeCalendarFilters, searchQuery]);
 
   // Events for selected date
   const selectedDateEvents = useMemo(() => {
@@ -141,11 +159,19 @@ export const CommandCenterCalendar = () => {
     setSelectedDate(today);
   };
 
-  const toggleFilter = (filter: CategoryFilter) => {
-    setActiveFilters(prev => 
+  const toggleCategoryFilter = (filter: CategoryFilter) => {
+    setActiveCategoryFilters(prev => 
       prev.includes(filter) 
         ? prev.filter(f => f !== filter)
         : [...prev, filter]
+    );
+  };
+
+  const toggleCalendarFilter = (calendarId: string) => {
+    setActiveCalendarFilters(prev => 
+      prev.includes(calendarId) 
+        ? prev.filter(f => f !== calendarId)
+        : [...prev, calendarId]
     );
   };
 
@@ -183,8 +209,11 @@ export const CommandCenterCalendar = () => {
         {!isMobile && (
           <CommandCenterFilterRail
             categories={CATEGORY_CONFIGS}
-            activeFilters={activeFilters}
-            onToggleFilter={toggleFilter}
+            calendars={calendars || []}
+            activeCategoryFilters={activeCategoryFilters}
+            activeCalendarFilters={activeCalendarFilters}
+            onToggleCategoryFilter={toggleCategoryFilter}
+            onToggleCalendarFilter={toggleCalendarFilter}
             isCollapsed={isFilterRailCollapsed}
             onToggleCollapse={() => setIsFilterRailCollapsed(!isFilterRailCollapsed)}
           />
