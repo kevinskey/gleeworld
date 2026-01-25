@@ -49,11 +49,19 @@ export function SlideRenderer({ slide, slideSize, className }: SlideRendererProp
     };
   }, [size.width, size.height, baseSize.width, baseSize.height, scale]);
 
+  // Separate shapes with positions vs those without (need auto-layout)
+  const positionedShapes = slide.shapes.filter(s => s.x != null && s.y != null);
+  const unpositionedShapes = slide.shapes.filter(s => s.x == null || s.y == null);
+
   return (
     <div
       ref={ref}
       className={className}
-      style={{ backgroundColor: slide.backgroundColor || 'hsl(var(--background))' }}
+      style={{ 
+        backgroundColor: slide.backgroundColor || 'hsl(var(--background))',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
     >
       {/* scaled slide canvas */}
       <div
@@ -67,30 +75,61 @@ export function SlideRenderer({ slide, slideSize, className }: SlideRendererProp
           transformOrigin: 'top left',
         }}
       >
-        {/* Shapes */}
-        {slide.shapes.map((shape, idx) => (
+        {/* Positioned Shapes (absolute positioning from PPTX) */}
+        {positionedShapes.map((shape, idx) => (
           <div
-            key={idx}
+            key={`pos-${idx}`}
             className="absolute"
             style={{
               left: shape.x ?? 0,
               top: shape.y ?? 0,
               width: shape.width ?? 'auto',
               height: shape.height ?? 'auto',
-              fontSize: shape.fontSize ? `${shape.fontSize}pt` : undefined,
-              color: shape.fontColor,
-              fontFamily: shape.fontFamily,
-              fontWeight: shape.bold ? 700 : undefined,
-              fontStyle: shape.italic ? 'italic' : undefined,
-              textAlign: shape.align,
+              fontSize: shape.fontSize ? `${Math.max(shape.fontSize, 12)}pt` : '18pt',
+              color: shape.fontColor || 'hsl(var(--foreground))',
+              fontFamily: shape.fontFamily || 'inherit',
+              fontWeight: shape.bold ? 700 : 400,
+              fontStyle: shape.italic ? 'italic' : 'normal',
+              textAlign: shape.align || 'left',
               whiteSpace: 'pre-wrap',
-              lineHeight: 1.15,
-              overflow: 'hidden',
+              lineHeight: 1.3,
+              overflow: 'visible',
+              display: 'flex',
+              alignItems: shape.type === 'title' ? 'center' : 'flex-start',
+              justifyContent: shape.align === 'center' ? 'center' : shape.align === 'right' ? 'flex-end' : 'flex-start',
+              padding: '4px',
             }}
           >
             {shape.text}
           </div>
         ))}
+
+        {/* Unpositioned Shapes (fallback auto-layout) */}
+        {unpositionedShapes.length > 0 && (
+          <div 
+            className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8"
+            style={{ pointerEvents: 'none' }}
+          >
+            {unpositionedShapes.map((shape, idx) => (
+              <div
+                key={`auto-${idx}`}
+                style={{
+                  fontSize: shape.fontSize ? `${Math.max(shape.fontSize, 14)}pt` : shape.type === 'title' ? '36pt' : '18pt',
+                  color: shape.fontColor || 'hsl(var(--foreground))',
+                  fontFamily: shape.fontFamily || 'inherit',
+                  fontWeight: shape.bold || shape.type === 'title' ? 700 : 400,
+                  fontStyle: shape.italic ? 'italic' : 'normal',
+                  textAlign: shape.align || 'center',
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.4,
+                  maxWidth: '90%',
+                }}
+              >
+                {shape.text}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Images */}
         {slide.images.map((img, idx) =>
@@ -103,9 +142,11 @@ export function SlideRenderer({ slide, slideSize, className }: SlideRendererProp
               style={{
                 left: img.x ?? 0,
                 top: img.y ?? 0,
-                width: img.width ?? undefined,
-                height: img.height ?? undefined,
+                width: img.width ?? 'auto',
+                height: img.height ?? 'auto',
                 objectFit: 'contain',
+                maxWidth: img.width ? undefined : '100%',
+                maxHeight: img.height ? undefined : '100%',
               }}
               draggable={false}
             />
