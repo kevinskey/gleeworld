@@ -385,40 +385,40 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   </div>
                 </div>
 
-                {/* Playback Controls */}
+                {/* Playback Controls - Minimal */}
                 <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-white/50 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:bg-transparent"
+                    className="h-5 w-5 p-0 text-white/50 hover:text-white disabled:opacity-30"
                     onClick={skipPrevious}
                     disabled={currentTrackIndex === null || currentTrackIndex === 0}
                   >
-                    <SkipBack className="h-4 w-4" />
+                    <SkipBack className="h-3.5 w-3.5" />
                   </Button>
                   
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-full shadow-lg disabled:opacity-50"
+                    className="h-7 w-7 p-0 text-white bg-primary hover:bg-primary/90 rounded-full shadow-lg disabled:opacity-50"
                     onClick={currentTrack ? togglePlay : handleFirstPlay}
                     disabled={tracks.length === 0}
                   >
                     {isPlaying ? (
-                      <Pause className="h-5 w-5" />
+                      <Pause className="h-3.5 w-3.5" />
                     ) : (
-                      <Play className="h-5 w-5 ml-0.5" />
+                      <Play className="h-3.5 w-3.5 ml-0.5" />
                     )}
                   </Button>
                   
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-white/50 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:bg-transparent"
+                    className="h-5 w-5 p-0 text-white/50 hover:text-white disabled:opacity-30"
                     onClick={skipNext}
                     disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
                   >
-                    <SkipForward className="h-4 w-4" />
+                    <SkipForward className="h-3.5 w-3.5" />
                   </Button>
                 </div>
 
@@ -546,44 +546,44 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                 </div>
               </div>
 
-              {/* Playback Controls - Centered */}
-              <div className="flex items-center justify-center gap-6">
+              {/* Playback Controls - Centered, Minimal */}
+              <div className="flex items-center justify-center gap-4">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-12 w-12 text-white/50 hover:text-white hover:bg-white/10 touch-manipulation disabled:opacity-30 disabled:bg-transparent"
+                  className="h-8 w-8 p-0 text-white/50 hover:text-white touch-manipulation disabled:opacity-30"
                   onClick={skipPrevious}
                   onTouchEnd={(e) => { e.preventDefault(); skipPrevious(); }}
                   disabled={currentTrackIndex === null || currentTrackIndex === 0}
                 >
-                  <SkipBack className="h-6 w-6" />
+                  <SkipBack className="h-5 w-5" />
                 </Button>
                 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-16 w-16 text-white bg-primary hover:bg-primary/90 rounded-full shadow-xl touch-manipulation disabled:opacity-50"
+                  className="h-10 w-10 p-0 text-white bg-primary hover:bg-primary/90 rounded-full shadow-xl touch-manipulation disabled:opacity-50"
                   onClick={currentTrack ? togglePlay : handleFirstPlay}
                   onTouchEnd={(e) => { e.preventDefault(); currentTrack ? togglePlay() : handleFirstPlay(); }}
                   onPointerDown={() => forceUnlockAudio()}
                   disabled={tracks.length === 0}
                 >
                   {isPlaying ? (
-                    <Pause className="h-7 w-7" />
+                    <Pause className="h-5 w-5" />
                   ) : (
-                    <Play className="h-7 w-7 ml-1" />
+                    <Play className="h-5 w-5 ml-0.5" />
                   )}
                 </Button>
                 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-12 w-12 text-white/50 hover:text-white hover:bg-white/10 touch-manipulation disabled:opacity-30 disabled:bg-transparent"
+                  className="h-8 w-8 p-0 text-white/50 hover:text-white touch-manipulation disabled:opacity-30"
                   onClick={skipNext}
                   onTouchEnd={(e) => { e.preventDefault(); skipNext(); }}
                   disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
                 >
-                  <SkipForward className="h-6 w-6" />
+                  <SkipForward className="h-5 w-5" />
                 </Button>
               </div>
             </div>
