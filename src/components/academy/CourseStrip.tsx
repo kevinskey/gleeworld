@@ -275,40 +275,40 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Playback Controls */}
-            <div className="flex items-center gap-0.5">
+            {/* Playback Controls - Minimal */}
+            <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-white/50 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                className="h-4 w-4 p-0 text-white/50 hover:text-white disabled:opacity-30"
                 onClick={skipPrevious}
                 disabled={currentTrackIndex === null || currentTrackIndex === 0}
               >
-                <SkipBack className="h-3.5 w-3.5" />
+                <SkipBack className="h-3 w-3" />
               </Button>
               
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-white bg-primary hover:bg-primary/90 rounded-full"
+                className="h-6 w-6 p-0 text-white bg-primary hover:bg-primary/90 rounded-full"
                 onClick={currentTrack ? togglePlay : handleFirstPlay}
                 disabled={tracks.length === 0}
               >
                 {isPlaying ? (
-                  <Pause className="h-4 w-4" />
+                  <Pause className="h-3 w-3" />
                 ) : (
-                  <Play className="h-4 w-4 ml-0.5" />
+                  <Play className="h-3 w-3 ml-0.5" />
                 )}
               </Button>
               
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-white/50 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                className="h-4 w-4 p-0 text-white/50 hover:text-white disabled:opacity-30"
                 onClick={skipNext}
                 disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
               >
-                <SkipForward className="h-3.5 w-3.5" />
+                <SkipForward className="h-3 w-3" />
               </Button>
             </div>
 
