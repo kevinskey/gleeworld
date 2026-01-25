@@ -126,16 +126,16 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
           <Button
             size="sm"
             variant="ghost"
-            className="h-10 w-10 sm:h-9 sm:w-9 p-0 touch-manipulation"
+            className="h-6 w-6 sm:h-5 sm:w-5 p-0 touch-manipulation"
             title="Select audio source"
             onTouchEnd={(e) => { e.preventDefault(); setShowSourcePicker(true); }}
           >
           {audioSource === 'youtube' ? (
-              <Youtube className="h-5 w-5 sm:h-4 sm:w-4 text-red-500" />
+              <Youtube className="h-3 w-3 sm:h-2.5 sm:w-2.5 text-red-500" />
             ) : audioSource === 'file' ? (
-              <Music className="h-5 w-5 sm:h-4 sm:w-4 text-foreground" />
+              <Music className="h-3 w-3 sm:h-2.5 sm:w-2.5 text-foreground" />
             ) : (
-              <Music className="h-5 w-5 sm:h-4 sm:w-4 text-foreground" />
+              <Music className="h-3 w-3 sm:h-2.5 sm:w-2.5 text-foreground" />
             )}
           </Button>
         </PopoverTrigger>
@@ -175,7 +175,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         </PopoverContent>
       </Popover>
 
-      {/* Play/Pause - Larger touch target for mobile */}
+      {/* Play/Pause - Compact sizing */}
       <Button
         size="sm"
         variant="ghost"
@@ -183,15 +183,15 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         onTouchEnd={(e) => { e.preventDefault(); handlePlay(); }}
         onPointerDown={() => forceUnlockAudio()}
         disabled={!audioSource || (audioSource === 'youtube' && !playerReady)}
-        className="h-12 w-12 sm:h-10 sm:w-10 p-0 touch-manipulation rounded-full bg-primary/10 hover:bg-primary/20"
+        className="h-7 w-7 sm:h-6 sm:w-6 p-0 touch-manipulation rounded-full bg-primary/10 hover:bg-primary/20"
         title={isLoading ? "Loading..." : isPlaying ? "Pause" : "Play"}
       >
         {isLoading ? (
-          <Loader2 className="h-6 w-6 sm:h-5 sm:w-5 animate-spin text-foreground" />
+          <Loader2 className="h-3.5 w-3.5 sm:h-3 sm:w-3 animate-spin text-foreground" />
         ) : isPlaying ? (
-          <Pause className="h-6 w-6 sm:h-5 sm:w-5 text-foreground" />
+          <Pause className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-foreground" />
         ) : (
-          <Play className="h-6 w-6 sm:h-5 sm:w-5 text-foreground ml-0.5" />
+          <Play className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-foreground ml-0.5" />
         )}
       </Button>
 
