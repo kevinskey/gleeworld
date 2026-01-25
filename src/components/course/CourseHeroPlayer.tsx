@@ -76,7 +76,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const currentTrack = currentTrackIndex !== null ? tracks[currentTrackIndex] : null;
 
