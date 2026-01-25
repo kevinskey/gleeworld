@@ -4,7 +4,7 @@
   "description": "Official digital platform of the Spelman College Glee Club - To Amaze and Inspire. Celebrating 100+ years of musical excellence.",
   "theme_color": "#BA1E1E",
   "background_color": "#0a0a0a",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "display": "standalone",
   "orientation": "any",
   "scope": "/",
