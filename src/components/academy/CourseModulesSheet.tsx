@@ -56,14 +56,31 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
     try {
       setLoading(true);
       
-      // Fetch all modules for the course
-      const { data: modulesData, error: modulesError } = await supabase
-        .from('gw_course_modules')
-        .select('*')
-        .eq('course_id', courseId)
-        .order('week_number', { ascending: true });
-
-      if (modulesError) throw modulesError;
+      // Check if this is MUS-240 - use specialized table
+      const isMus240 = courseCode.toUpperCase().includes('MUS') && courseCode.includes('240');
+      
+      let modulesData: any[] = [];
+      
+      if (isMus240) {
+        // Use mus240_module_settings for MUS-240
+        const { data, error } = await supabase
+          .from('mus240_module_settings')
+          .select('id, week_number, title, description, is_active, is_locked')
+          .order('week_number', { ascending: true });
+        
+        if (error) throw error;
+        modulesData = data || [];
+      } else {
+        // Use gw_course_modules for other courses
+        const { data, error } = await supabase
+          .from('gw_course_modules')
+          .select('*')
+          .eq('course_id', courseId)
+          .order('week_number', { ascending: true });
+        
+        if (error) throw error;
+        modulesData = data || [];
+      }
 
       // Fetch all assignments for the course
       const { data: assignmentsData } = await supabase
