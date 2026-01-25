@@ -11,11 +11,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { ModuleVideosModal } from './ModuleVideosModal';
 
 interface CourseModulesSheetProps {
   courseId: string;
   courseCode: string;
   trigger?: React.ReactNode;
+}
+
+interface ModuleResource {
+  id: string;
+  title: string;
+  resource_type: string;
+  url: string | null;
+  description: string | null;
+  duration: string | null;
+  is_required: boolean;
 }
 
 interface ModuleActivity {
@@ -26,11 +37,13 @@ interface ModuleActivity {
 
 interface WeekModule {
   id: string;
+  module_id?: string;
   week_number: number;
   title: string;
   description?: string;
   is_active: boolean;
   activities: ModuleActivity[];
+  resources?: ModuleResource[];
 }
 
 export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
@@ -43,6 +56,8 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
   const [modules, setModules] = useState<WeekModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [selectedModule, setSelectedModule] = useState<WeekModule | null>(null);
 
   useEffect(() => {
     if (open && user) {
@@ -61,15 +76,29 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
       
       let modulesData: any[] = [];
       
+      let resourcesMap: Record<string, ModuleResource[]> = {};
+      
       if (isMus240) {
         // Use mus240_module_settings for MUS-240
         const { data, error } = await supabase
           .from('mus240_module_settings')
-          .select('id, week_number, title, description, is_active, is_locked')
+          .select('id, module_id, week_number, title, description, is_active, is_locked')
           .order('week_number', { ascending: true });
         
         if (error) throw error;
         modulesData = data || [];
+        
+        // Fetch module resources for MUS-240
+        const { data: resourcesData } = await supabase
+          .from('mus240_module_resources')
+          .select('id, module_id, title, resource_type, url, description, duration, is_required, display_order')
+          .order('display_order', { ascending: true });
+        
+        // Group resources by module_id
+        (resourcesData || []).forEach((r: any) => {
+          if (!resourcesMap[r.module_id]) resourcesMap[r.module_id] = [];
+          resourcesMap[r.module_id].push(r);
+        });
       } else {
         // Use gw_course_modules for other courses
         const { data, error } = await supabase
@@ -133,13 +162,18 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
           };
         });
 
+        // Get resources for this module (MUS-240)
+        const moduleResources = resourcesMap[mod.module_id] || [];
+
         return {
           id: mod.id,
+          module_id: mod.module_id,
           week_number: mod.week_number || 0,
           title: mod.title?.replace(/^Week \d+:\s*/, '') || `Week ${mod.week_number}`,
           description: mod.description,
           is_active: mod.is_active,
-          activities
+          activities,
+          resources: moduleResources
         };
       });
 
@@ -169,8 +203,19 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
     }
   };
 
-  const handleActivityClick = (activity: ModuleActivity) => {
+  const handleActivityClick = (activity: ModuleActivity, module: WeekModule) => {
     const coursePath = courseCode.toLowerCase().replace(' ', '-');
+    const isMus240 = courseCode.toUpperCase().includes('MUS') && courseCode.includes('240');
+    
+    // For Video activity in MUS-240, show the module videos modal
+    if (activity.type === 'Video' && isMus240 && module.resources) {
+      const videos = module.resources.filter(r => r.resource_type === 'video');
+      if (videos.length > 0) {
+        setSelectedModule(module);
+        setVideoModalOpen(true);
+        return;
+      }
+    }
     
     if (activity.assignmentId) {
       if (activity.type === 'Discussion') {
@@ -270,7 +315,7 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
                     {module.activities.map((activity) => (
                       <div
                         key={activity.type}
-                        onClick={() => handleActivityClick(activity)}
+                        onClick={() => handleActivityClick(activity, module)}
                         className={cn(
                           "flex items-center gap-3 p-2.5 rounded-md cursor-pointer transition-colors",
                           activity.isCompleted 
@@ -301,6 +346,17 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
           )}
         </ScrollArea>
       </SheetContent>
+
+      {/* Video Modal for module-specific videos */}
+      {selectedModule && (
+        <ModuleVideosModal
+          open={videoModalOpen}
+          onOpenChange={setVideoModalOpen}
+          videos={(selectedModule.resources || []).filter(r => r.resource_type === 'video')}
+          weekNumber={selectedModule.week_number}
+          moduleTitle={selectedModule.title}
+        />
+      )}
     </Sheet>
   );
 };
