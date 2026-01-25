@@ -62,7 +62,7 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
   onOpenChange,
   onSelect,
   resourceType = 'video',
-  courseId = 'mus-240'
+  courseId = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37' // MUS-240 UUID
 }) => {
   const [activeTab, setActiveTab] = useState<'course' | 'media' | 'youtube' | 'manual'>('course');
   const [searchTerm, setSearchTerm] = useState('');
