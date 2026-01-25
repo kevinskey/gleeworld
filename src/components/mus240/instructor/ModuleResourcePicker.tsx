@@ -33,13 +33,13 @@ interface ModuleResourcePickerProps {
   courseId?: string;
 }
 
-interface CourseVideo {
+interface CourseResource {
   id: string;
   title: string;
   description: string | null;
-  youtube_url: string | null;
-  video_path: string | null;
-  video_type: string;
+  url: string;
+  category: string;
+  file_path?: string | null;
 }
 
 interface MediaItem {
@@ -68,8 +68,8 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // Course videos
-  const [courseVideos, setCourseVideos] = useState<CourseVideo[]>([]);
+  // Course resources (videos from mus240_resources)
+  const [courseResources, setCourseResources] = useState<CourseResource[]>([]);
   
   // Media library
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
@@ -87,24 +87,25 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
 
   useEffect(() => {
     if (open) {
-      fetchCourseVideos();
+      fetchCourseResources();
       fetchMediaItems();
     }
-  }, [open, courseId]);
+  }, [open]);
 
-  const fetchCourseVideos = async () => {
+  const fetchCourseResources = async () => {
     try {
+      // Fetch from mus240_resources table where category is 'video'
       const { data, error } = await supabase
-        .from('course_video_resources')
-        .select('id, title, description, youtube_url, video_path, video_type')
-        .eq('course_id', courseId)
-        .eq('is_published', true)
+        .from('mus240_resources')
+        .select('id, title, description, url, category, file_path')
+        .eq('category', 'video')
+        .eq('is_active', true)
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      setCourseVideos(data || []);
+      setCourseResources(data || []);
     } catch (err) {
-      console.error('Error fetching course videos:', err);
+      console.error('Error fetching course resources:', err);
     }
   };
 
@@ -141,12 +142,11 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
     }
   };
 
-  const handleSelectCourseVideo = (video: CourseVideo) => {
-    const url = video.youtube_url || video.video_path || '';
+  const handleSelectCourseResource = (resource: CourseResource) => {
     onSelect({
-      title: video.title,
-      url,
-      description: video.description || undefined,
+      title: resource.title,
+      url: resource.url || resource.file_path || '',
+      description: resource.description || undefined,
       source: 'course'
     });
     onOpenChange(false);
@@ -205,8 +205,8 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
     onOpenChange(false);
   };
 
-  const filteredCourseVideos = courseVideos.filter(v =>
-    v.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCourseResources = courseResources.filter(r =>
+    r.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredMediaItems = mediaItems.filter(m =>
@@ -263,7 +263,7 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
           {/* Course Videos Tab */}
           <TabsContent value="course" className="mt-0">
             <ScrollArea className="h-[400px]">
-              {filteredCourseVideos.length === 0 ? (
+              {filteredCourseResources.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                   <Video className="h-10 w-10 mb-2 opacity-50" />
                   <p className="text-sm">No course videos found</p>
@@ -271,14 +271,14 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {filteredCourseVideos.map((video) => {
-                    const videoId = video.youtube_url ? extractYouTubeVideoId(video.youtube_url) : null;
+                  {filteredCourseResources.map((resource) => {
+                    const videoId = resource.url ? extractYouTubeVideoId(resource.url) : null;
                     const thumbnail = videoId ? getYouTubeThumbnail(videoId, 'medium') : null;
 
                     return (
                       <div
-                        key={video.id}
-                        onClick={() => handleSelectCourseVideo(video)}
+                        key={resource.id}
+                        onClick={() => handleSelectCourseResource(resource)}
                         className="flex gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
                       >
                         <div className="w-24 h-16 flex-shrink-0 rounded overflow-hidden bg-muted">
@@ -291,14 +291,14 @@ export const ModuleResourcePicker: React.FC<ModuleResourcePickerProps> = ({
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm line-clamp-1">{video.title}</h4>
-                          {video.description && (
+                          <h4 className="font-medium text-sm line-clamp-1">{resource.title}</h4>
+                          {resource.description && (
                             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                              {video.description}
+                              {resource.description}
                             </p>
                           )}
                           <Badge variant="outline" className="text-xs mt-1">
-                            {video.video_type === 'youtube' ? 'YouTube' : 'Upload'}
+                            Video
                           </Badge>
                         </div>
                       </div>
