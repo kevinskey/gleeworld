@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music, 
-  ChevronDown, Mail, Clock, MapPin, User, Presentation
+  ChevronDown, Mail, Clock, MapPin, User
 } from 'lucide-react';
 import { useCoursePlaylist } from '@/hooks/useCoursePlaylist';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { NativePowerPointViewer } from '@/components/mus240/NativePowerPointViewer';
 
 interface CourseStripProps {
   courseId: string;
@@ -29,8 +28,6 @@ interface CourseStripProps {
     profile?: { full_name?: string };
     notes?: string;
   }>;
-  presentationUrl?: string;
-  presentationTitle?: string;
   className?: string;
 }
 
@@ -43,8 +40,6 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
   instructorOffice = 'Fine Arts 105',
   instructorOfficeHours = 'MWF 3-5 PM',
   teachingAssistants = [],
-  presentationUrl,
-  presentationTitle,
   className,
 }) => {
   const {
@@ -62,7 +57,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [showPptViewer, setShowPptViewer] = useState(false);
+  
 
   const currentTrack = currentTrackIndex !== null ? tracks[currentTrackIndex] : null;
 
@@ -207,18 +202,6 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
             </span>
           )}
           
-          {/* Presentation Button */}
-          {presentationUrl && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-auto h-7 px-3 text-white/80 hover:text-white hover:bg-white/10 gap-1.5"
-              onClick={() => setShowPptViewer(true)}
-            >
-              <Presentation className="h-4 w-4" />
-              <span className="hidden sm:inline">Slides</span>
-            </Button>
-          )}
         </div>
       </div>
 
@@ -331,16 +314,6 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
         </div>
       )}
       
-      {/* PowerPoint Viewer */}
-      {presentationUrl && (
-        <NativePowerPointViewer
-          isOpen={showPptViewer}
-          onClose={() => setShowPptViewer(false)}
-          fileUrl={presentationUrl}
-          fileName={presentationTitle || 'Presentation'}
-          title={presentationTitle || 'Course Presentation'}
-        />
-      )}
     </div>
   );
 };
