@@ -16,6 +16,17 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
 import { CourseTopicSlider } from './CourseTopicSlider';
+import { ModuleVideosModal } from './ModuleVideosModal';
+import { toast } from 'sonner';
+
+interface ModuleVideo {
+  id: string;
+  title: string;
+  url: string | null;
+  description: string | null;
+  duration: string | null;
+  is_required: boolean;
+}
 
 interface Assignment {
   id: string;
@@ -63,8 +74,11 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [currentModule, setCurrentModule] = useState<CurrentModule | null>(null);
   const [loading, setLoading] = useState(true);
+  const [moduleVideos, setModuleVideos] = useState<ModuleVideo[]>([]);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
 
   const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
+  const isMus240 = courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
 
   useEffect(() => {
     if (user) {
@@ -241,7 +255,10 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           isCompleted: isTypeCompleted(type)
         }));
 
+        // Fetch module videos for MUS-240
+        let currentModuleId: string | null = null;
         if (moduleData) {
+          currentModuleId = moduleData.id;
           setCurrentModule({
             id: moduleData.id,
             title: moduleData.title.replace(/^Week \d+:\s*/, ''),
@@ -258,6 +275,29 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             content_types: contentTypesWithData,
             assignments: allAssignments.filter(a => a.status === 'pending' || a.status === 'overdue').slice(0, 3),
           });
+        }
+
+        // Fetch module videos if MUS-240 and we have a module
+        if (isMus240 && currentModuleId) {
+          const { data: resourcesData } = await supabase
+            .from('mus240_module_resources')
+            .select('id, module_id, title, resource_type, url, description, duration, is_required, display_order')
+            .eq('module_id', currentModuleId)
+            .eq('resource_type', 'video')
+            .order('display_order', { ascending: true });
+          
+          if (resourcesData && resourcesData.length > 0) {
+            setModuleVideos(resourcesData.map((r: any) => ({
+              id: r.id,
+              title: r.title,
+              url: r.url,
+              description: r.description,
+              duration: r.duration,
+              is_required: r.is_required || false
+            })));
+          } else {
+            setModuleVideos([]);
+          }
         }
 
         // Fetch upcoming events
@@ -416,6 +456,17 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               <div className="grid gap-2">
                 {currentModule.content_types.map((contentType) => {
                   const handleStart = () => {
+                    // For Video activity in MUS-240, show the module videos modal if videos exist
+                    if (contentType.type === 'Video' && isMus240) {
+                      if (moduleVideos.length > 0) {
+                        setVideoModalOpen(true);
+                        return;
+                      } else {
+                        toast.info('No videos assigned for this week yet');
+                        return;
+                      }
+                    }
+                    
                     if (contentType.assignment) {
                       if (contentType.assignment.is_discussion) {
                         navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
@@ -619,6 +670,17 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           </CardContent>
         </Card>
       </div>
+
+      {/* Module Videos Modal for MUS-240 */}
+      {isMus240 && currentModule && (
+        <ModuleVideosModal
+          open={videoModalOpen}
+          onOpenChange={setVideoModalOpen}
+          videos={moduleVideos}
+          weekNumber={currentModule.week_number}
+          moduleTitle={currentModule.title}
+        />
+      )}
     </div>
   );
 };
