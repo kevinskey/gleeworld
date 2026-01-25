@@ -303,7 +303,7 @@ export const FinderMediaLibrary = () => {
     }
 
     // Filter for supported file types
-    const supportedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf'];
+    const supportedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf', '.pptx', '.ppt', '.docx', '.doc', '.xlsx', '.xls'];
     const validFiles = files.filter(file => {
       const ext = '.' + file.name.split('.').pop()?.toLowerCase();
       return supportedExtensions.includes(ext);
@@ -376,7 +376,8 @@ export const FinderMediaLibrary = () => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: handleUpload,
     disabled: !isAdmin || uploading,
-    noClick: true
+    noClick: true,
+    multiple: true
   });
 
   // Selection handlers
