@@ -162,7 +162,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
   const showPlayer = !loading && playlists.length > 0;
 
   return (
-    <div className={cn("bg-[#0a1628] border-b border-border", className)}>
+    <div className={cn("bg-primary border-b border-border", className)}>
       <audio ref={audioRef} preload="metadata" />
       
       {/* Course Info Row */}
@@ -211,7 +211,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
 
       {/* Music Player Row */}
       {showPlayer && (
-        <div className="border-t border-white/10 bg-[#001a33]/60 px-4 md:px-6 py-2">
+          <div className="border-t border-white/10 bg-primary/80 px-4 md:px-6 py-2">
           <div className="flex items-center gap-3">
             {/* Modules Button */}
             <CourseModulesSheet courseId={courseId} courseCode={courseCode} />
@@ -370,7 +370,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
       
       {/* Modules Row - shown when no music player */}
       {!showPlayer && (
-        <div className="border-t border-white/10 bg-[#001a33]/60 px-4 md:px-6 py-2">
+        <div className="border-t border-white/10 bg-primary/80 px-4 md:px-6 py-2">
           <div className="flex items-center gap-3">
             <CourseModulesSheet courseId={courseId} courseCode={courseCode} />
           </div>
