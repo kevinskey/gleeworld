@@ -207,14 +207,20 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
     const coursePath = courseCode.toLowerCase().replace(' ', '-');
     const isMus240 = courseCode.toUpperCase().includes('MUS') && courseCode.includes('240');
     
-    // For Video activity in MUS-240, show the module videos modal
-    if (activity.type === 'Video' && isMus240 && module.resources) {
-      const videos = module.resources.filter(r => r.resource_type === 'video');
+    // For Video activity in MUS-240, show the module videos modal if videos exist
+    if (activity.type === 'Video' && isMus240) {
+      const videos = (module.resources || []).filter(r => r.resource_type === 'video');
+      console.log('[CourseModulesSheet] Video click - module:', module.module_id, 'videos found:', videos.length, videos);
       if (videos.length > 0) {
         setSelectedModule(module);
         setVideoModalOpen(true);
+        setOpen(false);
         return;
       }
+      // No videos assigned to this module - show a helpful message instead of going to all resources
+      console.log('[CourseModulesSheet] No videos for module, showing toast');
+      setOpen(false);
+      return;
     }
     
     if (activity.assignmentId) {
@@ -225,9 +231,8 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
         navigate(`/grading/student/assignment/${activity.assignmentId}`);
       }
     } else {
-      // Navigate to relevant tab
+      // Navigate to relevant tab for non-video activities
       const tabMapping: Record<string, string> = {
-        'Video': 'resources',
         'Reading': 'resources',
         'Listening': 'audio',
         'Discussion': 'discussions',
