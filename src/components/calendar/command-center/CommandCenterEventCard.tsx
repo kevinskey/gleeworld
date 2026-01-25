@@ -1,8 +1,28 @@
 import { format } from "date-fns";
-import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock } from "lucide-react";
+import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock, Trash2 } from "lucide-react";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
 import { EventHoverCard } from "../EventHoverCard";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   music: Music,
@@ -29,8 +49,33 @@ export const CommandCenterEventCard = ({
   compact = false,
   onClick,
 }: CommandCenterEventCardProps) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
+  
   const Icon = CATEGORY_ICONS[categoryIcon] || Music;
   const startTime = format(new Date(event.start_date), 'h:mm a');
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('gw_events')
+        .delete()
+        .eq('id', event.id);
+
+      if (error) throw error;
+
+      toast.success('Event deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['gleeworld-events'] });
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast.error('Failed to delete event');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
 
   const cardContent = compact ? (
     // Compact view for monthly grid
@@ -96,8 +141,46 @@ export const CommandCenterEventCard = ({
   );
 
   return (
-    <EventHoverCard event={event}>
-      {cardContent}
-    </EventHoverCard>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div>
+            <EventHoverCard event={event}>
+              {cardContent}
+            </EventHoverCard>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-48">
+          <ContextMenuItem
+            onClick={() => setShowDeleteDialog(true)}
+            className="text-red-600 focus:text-red-600 focus:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Event
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Event</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{event.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
