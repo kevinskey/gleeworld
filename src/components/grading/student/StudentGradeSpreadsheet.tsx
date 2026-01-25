@@ -577,21 +577,36 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
                     <div className="flex items-center gap-2">
                       <MessageSquare className="h-4 w-4" />
                       PARTICIPATION ({GRADE_WEIGHTS.participation}% of grade)
+                      <span className="text-xs font-normal text-slate-600 dark:text-slate-400 ml-2">
+                        Polls 25% • Discussions 25% • Attendance 50%
+                      </span>
                     </div>
                   </TableCell>
                 </TableRow>
-                {gradeItems.filter(item => item.category === 'participation').map(item => <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
-                    <TableCell>{getStatusIcon(item.status)}</TableCell>
-                    <TableCell className="font-medium text-slate-900 dark:text-slate-100">{item.name}</TableCell>
-                    <TableCell className="text-center text-sm text-slate-600 dark:text-slate-400">-</TableCell>
-                    <TableCell className="text-center">{getStatusBadge(item.status)}</TableCell>
-                    <TableCell className="text-center">
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">{item.earnedPoints?.toFixed(1)} / {item.maxPoints}</span>
-                    </TableCell>
-                    <TableCell className="text-center font-bold text-blue-700 dark:text-blue-300">
-                      = {item.weightedScore.toFixed(2)}%
-                    </TableCell>
-                  </TableRow>)}
+                {gradeItems.filter(item => item.category === 'participation').map(item => {
+                  const componentWeight = item.id === 'attendance' ? '50%' : '25%';
+                  return (
+                    <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                      <TableCell>{getStatusIcon(item.status)}</TableCell>
+                      <TableCell className="font-medium text-slate-900 dark:text-slate-100">
+                        <div className="flex items-center gap-2">
+                          {item.name}
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+                            {componentWeight}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center text-sm text-slate-600 dark:text-slate-400">-</TableCell>
+                      <TableCell className="text-center">{getStatusBadge(item.status)}</TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">{item.earnedPoints?.toFixed(1)} / {item.maxPoints}</span>
+                      </TableCell>
+                      <TableCell className="text-center font-bold text-blue-700 dark:text-blue-300">
+                        = {item.weightedScore.toFixed(2)}%
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 <TableRow className="bg-purple-100 dark:bg-purple-900/30 border-t">
                   <TableCell colSpan={4} className="font-semibold text-right text-slate-700 dark:text-slate-300">
                     Participation Subtotal ({GRADE_WEIGHTS.participation}% weight):
