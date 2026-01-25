@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { GraduationCap, ChevronRight } from 'lucide-react';
 import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -8,14 +7,14 @@ import { cn } from '@/lib/utils';
 interface CourseGradeStatProps {
   courseId: string;
   className?: string;
+  onNavigateToGrades?: () => void;
 }
 
-export const CourseGradeStat: React.FC<CourseGradeStatProps> = ({ courseId, className }) => {
+export const CourseGradeStat: React.FC<CourseGradeStatProps> = ({ courseId, className, onNavigateToGrades }) => {
   const { letterGrade, percentage, stats, deductions, loading } = useCourseGrade(courseId);
-  const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/grading/student/course/${courseId}`);
+    onNavigateToGrades?.();
   };
 
   return (
