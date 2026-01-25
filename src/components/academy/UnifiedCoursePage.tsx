@@ -48,6 +48,9 @@ const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/Ac
 const GradesAdmin = React.lazy(() => import('@/components/mus240/instructor/GradesAdmin').then(m => ({
   default: m.GradesAdmin
 })));
+const StudentGradeSpreadsheet = React.lazy(() => import('@/components/grading/student/StudentGradeSpreadsheet').then(m => ({
+  default: m.StudentGradeSpreadsheet
+})));
 const AllVideosGrid = React.lazy(() => import('@/components/youtube/AllVideosGrid').then(m => ({
   default: m.AllVideosGrid
 })));
@@ -524,6 +527,8 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {activeTab === 'grades' && (isAdmin ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
                   <GradesAdmin />
+                </React.Suspense> : (course.courseCode === 'MUS 240' || course.courseCode === 'MUS240') ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
+                  <StudentGradeSpreadsheet courseId={course.id} />
                 </React.Suspense> : <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />)}
 
             {activeTab === 'attendance' && <CourseAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} />}
