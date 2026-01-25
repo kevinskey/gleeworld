@@ -362,8 +362,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             instructorOffice={course.instructor.office}
             instructorOfficeHours={course.instructor.hours}
             teachingAssistants={teachingAssistants}
-            presentationUrl={course.courseCode === 'MUS 240' ? 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/mus240-resources/1769009517626-w8r3dn-1769005674388-78rofq-Negro_Spiritual__1_.pptx' : undefined}
-            presentationTitle={course.courseCode === 'MUS 240' ? 'Negro Spiritual' : undefined}
           />
 
           <div className="px-3 sm:px-4 md:px-6 space-y-3 md:space-y-4 w-full py-3 md:py-4">

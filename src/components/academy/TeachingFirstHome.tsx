@@ -16,6 +16,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
 import { CourseTopicSlider } from './CourseTopicSlider';
+import { CoursePptSlider } from './CoursePptSlider';
 
 interface Assignment {
   id: string;
@@ -322,7 +323,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           </Card>
         )}
 
-        {/* 2. CURRENT LEARNING FOCUS - Topic with image */}
+        {/* 2. CURRENT LEARNING FOCUS - Topic with PowerPoint or images */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base font-bold">
@@ -331,8 +332,15 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Topic Photo Slider */}
-            <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
+            {/* PowerPoint Slider for MUS-240, Topic Photo Slider for others */}
+            {course.courseCode === 'MUS 240' ? (
+              <CoursePptSlider 
+                presentationUrl="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/mus240-resources/1769009517626-w8r3dn-1769005674388-78rofq-Negro_Spiritual__1_.pptx"
+                presentationTitle="Negro Spiritual"
+              />
+            ) : (
+              <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
+            )}
             
             {/* Optional description */}
             <p className="text-sm text-muted-foreground">
