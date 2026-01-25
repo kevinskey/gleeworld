@@ -49,10 +49,19 @@ export interface PPTXParseResult {
   slideCount: number;
   images: Map<string, string>;
   audioFiles: Map<string, string>;
+  slideSize?: {
+    width: number;
+    height: number;
+  };
 }
 
 // EMU (English Metric Units) to pixels conversion
 const EMU_TO_PX = 1 / 914400 * 96;
+
+function getDefaultSlideSizePx() {
+  // Default PPT widescreen (13.333" x 7.5") at 96DPI => 1280 x 720
+  return { width: 1280, height: 720 };
+}
 
 // Parse color from XML (handles both RGB and theme colors)
 function parseColor(colorNode: Element | null): string | undefined {
@@ -337,6 +346,27 @@ export async function parsePowerPoint(fileUrl: string): Promise<PPTXParseResult>
   const slides: ParsedSlide[] = [];
   const allImages = new Map<string, string>();
   const allAudio = new Map<string, string>();
+
+  // Try to detect slide size from presentation.xml
+  let slideSize = getDefaultSlideSizePx();
+  const presentationXml = await zip.file('ppt/presentation.xml')?.async('string');
+  if (presentationXml) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(presentationXml, 'application/xml');
+      const sldSz = doc.getElementsByTagName('p:sldSz')?.[0];
+      const cx = sldSz?.getAttribute('cx');
+      const cy = sldSz?.getAttribute('cy');
+      if (cx && cy) {
+        slideSize = {
+          width: Math.round(parseInt(cx, 10) * EMU_TO_PX),
+          height: Math.round(parseInt(cy, 10) * EMU_TO_PX),
+        };
+      }
+    } catch {
+      // ignore and fall back to default
+    }
+  }
   
   // First, extract all audio files from the media folder
   const audioExtensions = ['mp3', 'wav', 'wma', 'm4a', 'ogg', 'aac'];
@@ -460,6 +490,7 @@ export async function parsePowerPoint(fileUrl: string): Promise<PPTXParseResult>
     author,
     slideCount: slides.length,
     images: allImages,
-    audioFiles: allAudio
+    audioFiles: allAudio,
+    slideSize
   };
 }

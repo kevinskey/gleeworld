@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { parsePowerPoint, type PPTXParseResult, type ParsedSlide } from '@/lib/pptx-parser';
 import { cn } from '@/lib/utils';
+import { SlideRenderer } from '@/components/powerpoint/SlideRenderer';
 
 interface NativePowerPointViewerProps {
   isOpen: boolean;
@@ -145,69 +146,12 @@ export function NativePowerPointViewer({
 
   const renderSlide = (slide: ParsedSlide) => {
     return (
-      <div 
-        className="relative w-full h-full flex flex-col items-center justify-center p-8"
-        style={{ backgroundColor: slide.backgroundColor || '#ffffff' }}
-      >
-        {/* Render shapes/text */}
-        <div className="w-full max-w-4xl space-y-6">
-          {slide.shapes.map((shape, idx) => {
-            let className = 'text-foreground';
-            
-            if (shape.type === 'title') {
-              className = 'text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-4';
-            } else if (shape.type === 'subtitle') {
-              className = 'text-xl md:text-2xl text-muted-foreground text-center';
-            } else if (shape.type === 'body') {
-              className = 'text-lg md:text-xl leading-relaxed';
-            }
-            
-            if (shape.bold) className += ' font-bold';
-            if (shape.italic) className += ' italic';
-            if (shape.align === 'center') className += ' text-center';
-            else if (shape.align === 'right') className += ' text-right';
-            
-            return (
-              <div 
-                key={idx} 
-                className={className}
-                style={{ 
-                  fontSize: shape.fontSize ? `${shape.fontSize}pt` : undefined,
-                  color: shape.fontColor
-                }}
-              >
-                {shape.text.split('\n').map((line, lineIdx) => (
-                  <p key={lineIdx} className={lineIdx > 0 ? 'mt-2' : ''}>
-                    {line}
-                  </p>
-                ))}
-              </div>
-            );
-          })}
-        </div>
-        
-        {/* Render images */}
-        <div className="absolute inset-0 pointer-events-none">
-          {slide.images.map((img, idx) => (
-            img.src && (
-              <img
-                key={idx}
-                src={img.src}
-                alt=""
-                className="absolute object-contain"
-                style={{
-                  left: img.x ? `${img.x}px` : '50%',
-                  top: img.y ? `${img.y}px` : '50%',
-                  width: img.width ? `${img.width}px` : 'auto',
-                  height: img.height ? `${img.height}px` : 'auto',
-                  transform: (!img.x && !img.y) ? 'translate(-50%, -50%)' : undefined,
-                  maxWidth: '80%',
-                  maxHeight: '60%'
-                }}
-              />
-            )
-          ))}
-        </div>
+      <div className="relative w-full h-full overflow-hidden">
+        <SlideRenderer
+          slide={slide}
+          slideSize={presentation?.slideSize}
+          className="absolute inset-0"
+        />
 
         {/* Audio player for slide */}
         {slide.audio && slide.audio.length > 0 && (
@@ -251,9 +195,11 @@ export function NativePowerPointViewer({
         
         {/* Empty slide message */}
         {slide.shapes.length === 0 && slide.images.length === 0 && (!slide.audio || slide.audio.length === 0) && (
-          <div className="text-muted-foreground text-center">
-            <Presentation className="h-16 w-16 mx-auto mb-4 opacity-50" />
-            <p>This slide has no displayable content</p>
+          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-center">
+            <div>
+              <Presentation className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <p>This slide has no displayable content</p>
+            </div>
           </div>
         )}
       </div>

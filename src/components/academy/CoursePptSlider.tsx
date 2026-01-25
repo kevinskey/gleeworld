@@ -10,6 +10,7 @@ import { parsePowerPoint, type PPTXParseResult, type ParsedSlide } from '@/lib/p
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { forceUnlockAudio } from '@/utils/mobileAudioUnlock';
+import { SlideRenderer } from '@/components/powerpoint/SlideRenderer';
 
 interface CoursePptSliderProps {
   presentationUrl: string;
@@ -119,75 +120,14 @@ export const CoursePptSlider: React.FC<CoursePptSliderProps> = ({
   // Render a single slide content
   const renderSlideContent = (slide: ParsedSlide, compact: boolean = false) => {
     return (
-      <div 
+      <SlideRenderer
+        slide={slide}
+        slideSize={presentation?.slideSize}
         className={cn(
-          "relative w-full h-full flex flex-col items-center justify-center overflow-hidden",
-          compact ? "p-3" : "p-6"
+          "relative w-full h-full overflow-hidden",
+          compact ? "p-0" : "p-0"
         )}
-        style={{ backgroundColor: slide.backgroundColor || '#ffffff' }}
-      >
-        {/* Render shapes/text */}
-        <div className={cn("w-full space-y-2", compact ? "max-w-full" : "max-w-4xl space-y-4")}>
-          {slide.shapes.map((shape, idx) => {
-            let className = 'text-foreground';
-            
-            if (shape.type === 'title') {
-              className = compact 
-                ? 'text-sm md:text-base font-bold text-center' 
-                : 'text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-2';
-            } else if (shape.type === 'subtitle') {
-              className = compact 
-                ? 'text-xs text-muted-foreground text-center' 
-                : 'text-lg md:text-xl text-muted-foreground text-center';
-            } else if (shape.type === 'body') {
-              className = compact 
-                ? 'text-xs leading-tight' 
-                : 'text-base md:text-lg leading-relaxed';
-            }
-            
-            if (shape.bold) className += ' font-bold';
-            if (shape.italic) className += ' italic';
-            if (shape.align === 'center') className += ' text-center';
-            else if (shape.align === 'right') className += ' text-right';
-            
-            return (
-              <div 
-                key={idx} 
-                className={className}
-                style={{ 
-                  fontSize: compact ? undefined : (shape.fontSize ? `${Math.min(shape.fontSize, 32)}pt` : undefined),
-                  color: shape.fontColor
-                }}
-              >
-                {shape.text.split('\n').slice(0, compact ? 3 : undefined).map((line, lineIdx) => (
-                  <p key={lineIdx} className={lineIdx > 0 ? 'mt-1' : ''}>
-                    {compact && line.length > 80 ? line.slice(0, 80) + '...' : line}
-                  </p>
-                ))}
-              </div>
-            );
-          })}
-        </div>
-        
-        {/* Render images */}
-        {slide.images.length > 0 && (
-          <div className="relative w-full flex-1 min-h-0 flex items-center justify-center mt-2">
-            {slide.images.slice(0, compact ? 1 : undefined).map((img, idx) => (
-              img.src && (
-                <img
-                  key={idx}
-                  src={img.src}
-                  alt=""
-                  className="object-contain max-w-full max-h-full"
-                  style={{
-                    maxHeight: compact ? '120px' : '300px'
-                  }}
-                />
-              )
-            ))}
-          </div>
-        )}
-      </div>
+      />
     );
   };
 
