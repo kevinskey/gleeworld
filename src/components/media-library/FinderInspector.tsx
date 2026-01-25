@@ -16,7 +16,9 @@ import {
   Music,
   FileText,
   File,
-  Play
+  Play,
+  Tag,
+  Plus
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,13 +45,18 @@ export const FinderInspector = ({
 }: FinderInspectorProps) => {
   const [isEditing, setIsEditing] = useState(startEditing);
   const [title, setTitle] = useState(file.title || '');
+  const [tags, setTags] = useState<string[]>(file.tags || []);
+  const [newTag, setNewTag] = useState('');
+  const [category, setCategory] = useState(file.category || '');
   const { toast } = useToast();
 
-  // Update title when file changes
+  // Update state when file changes
   useEffect(() => {
     setTitle(file.title || '');
+    setTags(file.tags || []);
+    setCategory(file.category || '');
     setIsEditing(startEditing);
-  }, [file.id, file.title, startEditing]);
+  }, [file.id, file.title, file.tags, file.category, startEditing]);
 
   // Encode URL to handle special characters
   const encodeFileUrl = (url: string) => {
@@ -99,17 +106,29 @@ export const FinderInspector = ({
       const table = (file as any).source === 'quick_capture' ? 'quick_capture_media' : 'gw_media_library';
       const { error } = await supabase
         .from(table)
-        .update({ title })
+        .update({ title, tags, category: category || null })
         .eq('id', file.id);
 
       if (error) throw error;
 
-      toast({ title: "File renamed" });
+      toast({ title: "File updated" });
       setIsEditing(false);
       onRefresh();
     } catch (error) {
       toast({ title: "Error saving", variant: "destructive" });
     }
+  };
+
+  const handleAddTag = () => {
+    const trimmedTag = newTag.trim().toLowerCase();
+    if (trimmedTag && !tags.includes(trimmedTag)) {
+      setTags([...tags, trimmedTag]);
+      setNewTag('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(t => t !== tagToRemove));
   };
 
   const handleDelete = async () => {
@@ -175,15 +194,67 @@ export const FinderInspector = ({
 
         {/* Title */}
         {isEditing ? (
-          <div className="space-y-2">
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="text-sm"
-            />
-            <div className="flex gap-2">
+          <div className="space-y-3">
+            {/* Title */}
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Title</label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="text-sm"
+                placeholder="File title"
+              />
+            </div>
+            
+            {/* Category */}
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Category</label>
+              <Input
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="text-sm"
+                placeholder="e.g., mus240"
+              />
+            </div>
+            
+            {/* Tags */}
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Tags</label>
+              <div className="flex gap-1 flex-wrap mb-2">
+                {tags.map((tag) => (
+                  <Badge 
+                    key={tag} 
+                    variant="secondary" 
+                    className="text-xs cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                    onClick={() => handleRemoveTag(tag)}
+                    title="Click to remove"
+                  >
+                    {tag} ×
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                <Input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  className="text-sm flex-1"
+                  placeholder="Add tag (e.g., mus240)"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                />
+                <Button size="sm" variant="outline" onClick={handleAddTag} className="px-2">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-2">
               <Button size="sm" onClick={handleSave} className="flex-1">Save</Button>
-              <Button size="sm" variant="outline" onClick={() => setIsEditing(false)} className="flex-1">Cancel</Button>
+              <Button size="sm" variant="outline" onClick={() => {
+                setIsEditing(false);
+                setTitle(file.title || '');
+                setTags(file.tags || []);
+                setCategory(file.category || '');
+              }} className="flex-1">Cancel</Button>
             </div>
           </div>
         ) : (
@@ -197,7 +268,19 @@ export const FinderInspector = ({
           </div>
         )}
 
-        {file.category && (
+        {/* Display tags when not editing */}
+        {!isEditing && tags.length > 0 && (
+          <div className="flex gap-1 flex-wrap mt-2">
+            {tags.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                <Tag className="h-3 w-3 mr-1" />
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {!isEditing && file.category && (
           <Badge variant="secondary" className="mt-2 text-xs">
             {file.category}
           </Badge>
