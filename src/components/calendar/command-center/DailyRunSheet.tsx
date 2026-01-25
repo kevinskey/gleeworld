@@ -38,6 +38,7 @@ interface DailyRunSheetProps {
   events: GleeWorldEvent[];
   getCategoryForEvent: (event: GleeWorldEvent) => CategoryFilter;
   categoryConfigs: CategoryConfig[];
+  onEventDeleted?: () => void;
 }
 
 export const DailyRunSheet = ({
@@ -45,6 +46,7 @@ export const DailyRunSheet = ({
   events,
   getCategoryForEvent,
   categoryConfigs,
+  onEventDeleted,
 }: DailyRunSheetProps) => {
   const navigate = useNavigate();
 
@@ -103,6 +105,7 @@ export const DailyRunSheet = ({
                     categoryColor={config?.color || '#708090'}
                     categoryIcon={config?.icon || 'calendar'}
                     compact={false}
+                    onEventDeleted={onEventDeleted}
                     onClick={() => {
                       // Deep link based on event type
                       if (event.course_id) {

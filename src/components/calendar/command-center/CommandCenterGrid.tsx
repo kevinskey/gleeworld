@@ -23,6 +23,7 @@ interface CommandCenterGridProps {
   viewMode: ViewMode;
   getCategoryForEvent: (event: GleeWorldEvent) => CategoryFilter;
   categoryConfigs: CategoryConfig[];
+  onEventDeleted?: () => void;
 }
 
 export const CommandCenterGrid = ({
@@ -33,6 +34,7 @@ export const CommandCenterGrid = ({
   viewMode,
   getCategoryForEvent,
   categoryConfigs,
+  onEventDeleted,
 }: CommandCenterGridProps) => {
   const days = useMemo(() => {
     if (viewMode === 'week') {
@@ -123,6 +125,7 @@ export const CommandCenterGrid = ({
                         categoryColor={config?.color || '#708090'}
                         categoryIcon={config?.icon || 'calendar'}
                         compact={viewMode === 'month'}
+                        onEventDeleted={onEventDeleted}
                       />
                     );
                   })}
