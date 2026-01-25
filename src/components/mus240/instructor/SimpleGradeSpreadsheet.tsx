@@ -243,22 +243,22 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         const groupProjectScore = groupProjectByStudent.get(studentId) || 0;
         const groupProjectPct = maxGroupProjectScore > 0 ? groupProjectScore / maxGroupProjectScore * GRADE_WEIGHTS.groupProject : 0;
 
-        // Participation (15%) = Polls + Discussions + Attendance combined
-        // Split evenly: 5% polls, 5% discussions, 5% attendance
+        // Participation (15%) = Polls (25%) + Discussions (25%) + Attendance (50%)
+        // Weighted: Polls 3.75%, Discussions 3.75%, Attendance 7.5%
         const pollsAnswered = pollCountByStudent.get(studentId)?.size || 0;
-        const pollsContrib = maxPollsAnswered > 0 ? (pollsAnswered / maxPollsAnswered) * 5 : 0;
+        const pollsContrib = maxPollsAnswered > 0 ? (pollsAnswered / maxPollsAnswered) * 3.75 : 0;
 
         const discussionInfo = discussionsByStudent.get(studentId);
         const discussionAvg = discussionInfo && discussionInfo.count > 0 
           ? discussionInfo.total / discussionInfo.count 
           : 0;
-        const discussionContrib = (discussionAvg / 100) * 5;
+        const discussionContrib = (discussionAvg / 100) * 3.75;
 
         const attendanceInfo = attendanceByStudent.get(studentId);
         const attendanceRate = attendanceInfo && attendanceInfo.total > 0
           ? attendanceInfo.present / attendanceInfo.total
           : 0; // Show 0 if no attendance records (data was reset)
-        const attendanceContrib = attendanceInfo && attendanceInfo.total > 0 ? attendanceRate * 5 : 0;
+        const attendanceContrib = attendanceInfo && attendanceInfo.total > 0 ? attendanceRate * 7.5 : 0;
 
         const participationPct = pollsContrib + discussionContrib + attendanceContrib;
 
