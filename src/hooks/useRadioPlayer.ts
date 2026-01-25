@@ -35,6 +35,7 @@ let sharedAudio: HTMLAudioElement | null = null;
  * still has userPaused=false/isPlaying=true and will auto-resume on the shared audio
  * element's `pause` event, creating a "can't stop" loop (especially noticeable in prod).
  */
+// Reset timestamp: 2026-01-25T08:40:00Z - All shared state reset to defaults
 const sharedIsPlayingRef: { current: boolean } = { current: false };
 const sharedUserPausedRef: { current: boolean } = { current: false };
 const sharedWasPlayingBeforeHiddenRef: { current: boolean } = { current: false };
