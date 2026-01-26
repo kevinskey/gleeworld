@@ -66,6 +66,7 @@ interface CurrentModule {
   week_number: number;
   content_types: { type: string; assignment?: Assignment; isCompleted: boolean }[];
   assignments: Assignment[];
+  discussionId?: string;
 }
 
 interface TeachingFirstHomeProps {
@@ -316,6 +317,21 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           isCompleted: isTypeCompleted(type)
         }));
 
+        // Fetch the module's linked discussion
+        let moduleDiscussionId: string | undefined;
+        if (moduleData) {
+          const { data: moduleDiscussion } = await supabase
+            .from('course_discussions')
+            .select('id')
+            .eq('course_id', courseId)
+            .eq('module_id', moduleData.id)
+            .maybeSingle();
+          
+          if (moduleDiscussion) {
+            moduleDiscussionId = moduleDiscussion.id;
+          }
+        }
+
         if (moduleData) {
           setCurrentModule({
             id: moduleData.id,
@@ -323,6 +339,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             week_number: moduleData.week_number || 1,
             content_types: contentTypesWithData,
             assignments: allAssignments.filter(a => a.status === 'pending' || a.status === 'overdue').slice(0, 3),
+            discussionId: moduleDiscussionId,
           });
         } else {
           // Fallback if no active module in database
@@ -562,7 +579,12 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                     
                     if (contentType.assignment) {
                       if (contentType.assignment.is_discussion) {
-                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
+                        // Navigate to specific discussion if we have moduleDiscussionId
+                        if (currentModule?.discussionId) {
+                          navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions&discussionId=${currentModule.discussionId}`, { replace: true });
+                        } else {
+                          navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
+                        }
                       } else {
                         navigate(`/grading/student/assignment/${contentType.assignment.id}`);
                       }
@@ -576,7 +598,12 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                         'Journal': 'journal'
                       };
                       const tab = tabMapping[contentType.type] || 'resources';
-                      navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=${tab}`, { replace: true });
+                      // For Discussion type, include the module's discussionId if available
+                      if (contentType.type === 'Discussion' && currentModule?.discussionId) {
+                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions&discussionId=${currentModule.discussionId}`, { replace: true });
+                      } else {
+                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=${tab}`, { replace: true });
+                      }
                     }
                   };
                   

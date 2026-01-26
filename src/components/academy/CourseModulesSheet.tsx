@@ -225,6 +225,7 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
     
     if (activity.assignmentId) {
       if (activity.type === 'Discussion') {
+        // Navigate to discussions tab - the module's discussion will be auto-selected
         navigate(`/academy/${coursePath}?tab=discussions`, { replace: true });
       } else {
         navigate(`/grading/student/assignment/${activity.assignmentId}`);
