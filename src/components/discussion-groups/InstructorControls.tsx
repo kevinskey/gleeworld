@@ -51,6 +51,8 @@ export const InstructorControls: React.FC<InstructorControlsProps> = ({
     phase: 'individual',
     newDate: ''
   });
+  const [editingPhase, setEditingPhase] = useState<string | null>(null);
+  const [phaseDate, setPhaseDate] = useState('');
 
   // Get unassigned students
   const assignedStudentIds = groups.flatMap(g => 
@@ -149,11 +151,37 @@ export const InstructorControls: React.FC<InstructorControlsProps> = ({
     }
   };
 
+  const handleUpdatePhaseDeadline = async (phase: string, newDate: string) => {
+    if (!newDate) return;
+    
+    try {
+      const fieldMap: Record<string, string> = {
+        'individual': 'individual_due_at',
+        'peer': 'peer_due_at',
+        'synthesis': 'synthesis_due_at'
+      };
+      
+      const { error } = await supabase
+        .from('discussion_prompts')
+        .update({ [fieldMap[phase]]: new Date(newDate).toISOString() })
+        .eq('id', discussionId);
+
+      if (error) throw error;
+      
+      toast({ title: 'Deadline Updated', description: `${phase} deadline has been updated` });
+      setEditingPhase(null);
+      setPhaseDate('');
+      onRefresh();
+    } catch (error) {
+      console.error('Update deadline error:', error);
+      toast({ title: 'Error', description: 'Failed to update deadline', variant: 'destructive' });
+    }
+  };
+
   const handleExtendDeadline = async () => {
     if (!extendDeadline.studentId || !extendDeadline.newDate) return;
     
     try {
-      // Store extension - just log for now, can be extended later
       console.log('Deadline extension:', {
         discussion_id: discussionId,
         student_id: extendDeadline.studentId,
@@ -300,11 +328,43 @@ export const InstructorControls: React.FC<InstructorControlsProps> = ({
                 { id: 'synthesis', label: 'Group Synthesis', deadline: prompt?.synthesis_due_at }
               ].map(phase => (
                 <div key={phase.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
+                  <div className="flex-1">
                     <p className="font-medium">{phase.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Due: {phase.deadline ? format(new Date(phase.deadline), 'MMM d, h:mm a') : 'Not set'}
-                    </p>
+                    {editingPhase === phase.id ? (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Input 
+                          type="datetime-local"
+                          value={phaseDate}
+                          onChange={(e) => setPhaseDate(e.target.value)}
+                          className="text-sm"
+                        />
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleUpdatePhaseDeadline(phase.id, phaseDate)}
+                        >
+                          Save
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => { setEditingPhase(null); setPhaseDate(''); }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <p 
+                        className="text-xs text-muted-foreground cursor-pointer hover:text-primary"
+                        onClick={() => {
+                          setEditingPhase(phase.id);
+                          if (phase.deadline) {
+                            setPhaseDate(format(new Date(phase.deadline), "yyyy-MM-dd'T'HH:mm"));
+                          }
+                        }}
+                      >
+                        Due: {phase.deadline ? format(new Date(phase.deadline), 'MMM d, h:mm a') : 'Not set'} (click to edit)
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
