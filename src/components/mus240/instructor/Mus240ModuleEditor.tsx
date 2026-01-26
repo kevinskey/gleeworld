@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { 
   Lock, Eye, EyeOff, Plus, Trash2, Edit, Save, 
   Video, FileText, Music, BookOpen, Link, Calendar,
-  X, ChevronRight, Library
+  X, ChevronRight, Library, Upload, Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -69,6 +69,8 @@ export const Mus240ModuleEditor: React.FC = () => {
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [editingResource, setEditingResource] = useState<ModuleResource | null>(null);
   const [newObjective, setNewObjective] = useState('');
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const [newResource, setNewResource] = useState({
     title: '',
     resource_type: 'video',
@@ -77,6 +79,49 @@ export const Mus240ModuleEditor: React.FC = () => {
     duration: '',
     is_required: false
   });
+
+  // Handle PDF file upload
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.includes('pdf')) {
+      toast.error('Please select a PDF file');
+      return;
+    }
+
+    setUploadingPdf(true);
+    try {
+      const timestamp = Date.now();
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = `mus240-readings/${timestamp}_${sanitizedName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('course-materials')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('course-materials')
+        .getPublicUrl(filePath);
+
+      // Set the URL and auto-fill title if empty
+      setNewResource(prev => ({
+        ...prev,
+        url: publicUrl,
+        title: prev.title || file.name.replace('.pdf', '')
+      }));
+
+      toast.success('PDF uploaded successfully');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload PDF');
+    } finally {
+      setUploadingPdf(false);
+      if (pdfInputRef.current) pdfInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     fetchModules();
@@ -695,12 +740,12 @@ export const Mus240ModuleEditor: React.FC = () => {
               </Select>
             </div>
             <div>
-              <Label>URL</Label>
+              <Label>URL {newResource.resource_type === 'reading' && '(or upload PDF)'}</Label>
               <div className="flex gap-2">
                 <Input
                   value={newResource.url}
                   onChange={(e) => setNewResource({ ...newResource, url: e.target.value })}
-                  placeholder="https://..."
+                  placeholder={newResource.resource_type === 'reading' ? 'https://... or upload a PDF' : 'https://...'}
                   className="flex-1"
                 />
                 {newResource.resource_type === 'video' && (
@@ -714,10 +759,40 @@ export const Mus240ModuleEditor: React.FC = () => {
                     Browse
                   </Button>
                 )}
+                {newResource.resource_type === 'reading' && (
+                  <>
+                    <input
+                      ref={pdfInputRef}
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={handlePdfUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => pdfInputRef.current?.click()}
+                      disabled={uploadingPdf}
+                    >
+                      {uploadingPdf ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-1" />
+                      )}
+                      {uploadingPdf ? 'Uploading...' : 'Upload PDF'}
+                    </Button>
+                  </>
+                )}
               </div>
               {newResource.resource_type === 'video' && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Click "Browse" to pick from Course Resources, Media Library, or YouTube
+                </p>
+              )}
+              {newResource.resource_type === 'reading' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upload a PDF or paste a link to a PDF/Google Doc
                 </p>
               )}
             </div>
