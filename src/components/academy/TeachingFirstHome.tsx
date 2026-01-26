@@ -493,10 +493,8 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              {/* Topic Photo Slider - directly under header */}
-              <div className="p-4 pb-2">
-                <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
-              </div>
+              {/* Cover Image - full width */}
+              <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
 
               {/* Activity Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y divide-border border-t">
