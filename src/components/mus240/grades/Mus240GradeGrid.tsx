@@ -31,9 +31,10 @@ const GRADE_WEIGHTS = {
 
 interface Mus240GradeGridProps {
   studentId?: string; // If provided, show only this student (for student view)
+  isInstructor?: boolean; // If true, show all students in instructor view
 }
 
-export const Mus240GradeGrid: React.FC<Mus240GradeGridProps> = ({ studentId }) => {
+export const Mus240GradeGrid: React.FC<Mus240GradeGridProps> = ({ studentId, isInstructor = false }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const targetStudentId = studentId || user?.id;
