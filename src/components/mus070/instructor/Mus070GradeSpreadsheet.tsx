@@ -4,10 +4,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Download, Search, RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Lock } from 'lucide-react';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Download, Search, RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Lock, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useCourseStudents, COURSE_IDS } from '@/hooks/useCourseStudents';
 
 // MUS 070 Grade weights per Glee Club Handbook
 const GRADE_WEIGHTS = {
@@ -44,102 +46,7 @@ const calculateAbsencePenalty = (absences: number): number => {
   return excessAbsences * 7;
 };
 
-// Official Fall 2025 Grades from Secretary's spreadsheet
-const OFFICIAL_GRADES: Record<string, { grade: string; ea_rehearsal: number; ua_rehearsal: number; tardies: number; ea_performance: number; ua_performance: number; dropped?: boolean }> = {
-  "Aaliyah Deere": { grade: "A", ea_rehearsal: 10, ua_rehearsal: 3, tardies: 0, ea_performance: 4, ua_performance: 0 },
-  "Adrianna Highgate": { grade: "A", ea_rehearsal: 7, ua_rehearsal: 0, tardies: 0, ea_performance: 0, ua_performance: 1 },
-  "Afia Amoako-Boateng": { grade: "A", ea_rehearsal: 5, ua_rehearsal: 1, tardies: 1, ea_performance: 1, ua_performance: 0 },
-  "Ahbri Graves": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 0, tardies: 2, ea_performance: 1, ua_performance: 1 },
-  "Ainka-Amara Williams": { grade: "A", ea_rehearsal: 3, ua_rehearsal: 2, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Akua Peprah": { grade: "D", ea_rehearsal: 1, ua_rehearsal: 3, tardies: 9, ea_performance: 1, ua_performance: 0 },
-  "Alejandra Adelman": { grade: "A", ea_rehearsal: 1, ua_rehearsal: 0, tardies: 1, ea_performance: 0, ua_performance: 1 },
-  "Alexandra Williams": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 2, tardies: 0, ea_performance: 1, ua_performance: 0 },
-  "Allana Walker": { grade: "A", ea_rehearsal: 2, ua_rehearsal: 0, tardies: 0, ea_performance: 3, ua_performance: 0 },
-  "Ariana Singleton": { grade: "A", ea_rehearsal: 5, ua_rehearsal: 1, tardies: 2, ea_performance: 1, ua_performance: 0 },
-  "Ariana Swindell": { grade: "A", ea_rehearsal: 6, ua_rehearsal: 0, tardies: 1, ea_performance: 1, ua_performance: 0 },
-  "Ashlyn White": { grade: "F", ea_rehearsal: 1, ua_rehearsal: 8, tardies: 3, ea_performance: 0, ua_performance: 3 },
-  "Autumn Brooks": { grade: "A", ea_rehearsal: 7, ua_rehearsal: 2, tardies: 6, ea_performance: 4, ua_performance: 0 },
-  "Ava Challenger": { grade: "A", ea_rehearsal: 7, ua_rehearsal: 1, tardies: 2, ea_performance: 1, ua_performance: 0 },
-  "Ava Russell": { grade: "B", ea_rehearsal: 5, ua_rehearsal: 4, tardies: 1, ea_performance: 0, ua_performance: 0 },
-  "Caitlyn Oppong": { grade: "A", ea_rehearsal: 5, ua_rehearsal: 0, tardies: 1, ea_performance: 2, ua_performance: 0 },
-  "Cameron Tolliver": { grade: "A", ea_rehearsal: 0, ua_rehearsal: 2, tardies: 1, ea_performance: 0, ua_performance: 0 },
-  "Camryn Williams": { grade: "F", ea_rehearsal: 8, ua_rehearsal: 3, tardies: 8, ea_performance: 2, ua_performance: 1 },
-  "Carrington Wash": { grade: "A", ea_rehearsal: 10, ua_rehearsal: 0, tardies: 6, ea_performance: 2, ua_performance: 0 },
-  "Carson Smedley": { grade: "A", ea_rehearsal: 7, ua_rehearsal: 0, tardies: 0, ea_performance: 1, ua_performance: 1 },
-  "Charity Dent": { grade: "A", ea_rehearsal: 11, ua_rehearsal: 1, tardies: 2, ea_performance: 2, ua_performance: 0 },
-  "Chloe Bennett": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 2, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Dana Thompson": { grade: "A", ea_rehearsal: 2, ua_rehearsal: 1, tardies: 5, ea_performance: 0, ua_performance: 0 },
-  "Drew Roberts": { grade: "A", ea_rehearsal: 1, ua_rehearsal: 0, tardies: 2, ea_performance: 0, ua_performance: 0 },
-  "Elissa Jefferson": { grade: "A", ea_rehearsal: 6, ua_rehearsal: 1, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Gabrielle Magee": { grade: "A", ea_rehearsal: 3, ua_rehearsal: 1, tardies: 0, ea_performance: 1, ua_performance: 0 },
-  "Hannah Hunter": { grade: "A", ea_rehearsal: 0, ua_rehearsal: 1, tardies: 1, ea_performance: 0, ua_performance: 0 },
-  "Hayley Ponds": { grade: "A", ea_rehearsal: 2, ua_rehearsal: 1, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Imani Obuhoro": { grade: "A", ea_rehearsal: 3, ua_rehearsal: 0, tardies: 0, ea_performance: 0, ua_performance: 1 },
-  "Isabella Vesprini": { grade: "C", ea_rehearsal: 13, ua_rehearsal: 1, tardies: 2, ea_performance: 1, ua_performance: 1 },
-  "Jada Jones": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 3, tardies: 1, ea_performance: 0, ua_performance: 0 },
-  "Jade Washington": { grade: "B", ea_rehearsal: 17, ua_rehearsal: 4, tardies: 3, ea_performance: 3, ua_performance: 0 },
-  "Jailah Shepherd": { grade: "A", ea_rehearsal: 6, ua_rehearsal: 0, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Jamaya Grant": { grade: "C", ea_rehearsal: 2, ua_rehearsal: 2, tardies: 5, ea_performance: 1, ua_performance: 1 },
-  "Janiah Collier": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 1, tardies: 0, ea_performance: 2, ua_performance: 0 },
-  "Jaylin Harvey": { grade: "A", ea_rehearsal: 1, ua_rehearsal: 1, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Jeneva Preval": { grade: "A", ea_rehearsal: 8, ua_rehearsal: 0, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Jessica Obi": { grade: "A", ea_rehearsal: 9, ua_rehearsal: 0, tardies: 1, ea_performance: 2, ua_performance: 0 },
-  "Jewel Walker": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 3, tardies: 1, ea_performance: 1, ua_performance: 0 },
-  "Jillian Collier": { grade: "F", ea_rehearsal: 11, ua_rehearsal: 4, tardies: 5, ea_performance: 0, ua_performance: 2 },
-  "Jordan Lawrence": { grade: "A", ea_rehearsal: 16, ua_rehearsal: 0, tardies: 2, ea_performance: 1, ua_performance: 0, dropped: true },
-  "Jordan Marshall": { grade: "F", ea_rehearsal: 6, ua_rehearsal: 6, tardies: 7, ea_performance: 2, ua_performance: 0 },
-  "Jordyn O'Neal": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 1, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Judy McClure-Anim": { grade: "D", ea_rehearsal: 9, ua_rehearsal: 3, tardies: 9, ea_performance: 1, ua_performance: 0 },
-  "Julienne Angu": { grade: "C", ea_rehearsal: 11, ua_rehearsal: 4, tardies: 5, ea_performance: 3, ua_performance: 0, dropped: true },
-  "Kathryn Tucker": { grade: "B", ea_rehearsal: 1, ua_rehearsal: 2, tardies: 5, ea_performance: 2, ua_performance: 0 },
-  "Kayla Dock": { grade: "A", ea_rehearsal: 3, ua_rehearsal: 0, tardies: 1, ea_performance: 1, ua_performance: 0 },
-  "Kaylana Barnes": { grade: "A", ea_rehearsal: 5, ua_rehearsal: 1, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Kaylen Coleman": { grade: "A", ea_rehearsal: 5, ua_rehearsal: 1, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Kelsey Korondo": { grade: "C", ea_rehearsal: 7, ua_rehearsal: 1, tardies: 1, ea_performance: 1, ua_performance: 2 },
-  "Kendall Felton": { grade: "C", ea_rehearsal: 5, ua_rehearsal: 4, tardies: 5, ea_performance: 1, ua_performance: 0 },
-  "Kennedi Henderson": { grade: "F", ea_rehearsal: 5, ua_rehearsal: 6, tardies: 3, ea_performance: 0, ua_performance: 1 },
-  "Kennedy Benion": { grade: "A", ea_rehearsal: 8, ua_rehearsal: 1, tardies: 3, ea_performance: 0, ua_performance: 1 },
-  "Kennedy Rogers": { grade: "A", ea_rehearsal: 6, ua_rehearsal: 1, tardies: 7, ea_performance: 2, ua_performance: 0 },
-  "Kennidy Troupe": { grade: "A", ea_rehearsal: 2, ua_rehearsal: 3, tardies: 1, ea_performance: 1, ua_performance: 0 },
-  "Kiss Turner": { grade: "B", ea_rehearsal: 1, ua_rehearsal: 4, tardies: 1, ea_performance: 0, ua_performance: 0, dropped: true },
-  "Kyerra Shields": { grade: "A", ea_rehearsal: 3, ua_rehearsal: 0, tardies: 0, ea_performance: 2, ua_performance: 0 },
-  "Lake Hawkins": { grade: "A", ea_rehearsal: 3, ua_rehearsal: 0, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Lauryn White": { grade: "A", ea_rehearsal: 3, ua_rehearsal: 0, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Madison Morgan": { grade: "F", ea_rehearsal: 17, ua_rehearsal: 8, tardies: 0, ea_performance: 2, ua_performance: 1, dropped: true },
-  "Madisyn Washington": { grade: "A", ea_rehearsal: 2, ua_rehearsal: 1, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Malia Walker": { grade: "D", ea_rehearsal: 8, ua_rehearsal: 3, tardies: 0, ea_performance: 1, ua_performance: 0 },
-  "Mia Awai-Gibbs": { grade: "F", ea_rehearsal: 3, ua_rehearsal: 5, tardies: 2, ea_performance: 1, ua_performance: 1 },
-  "Michelle Johnson": { grade: "A", ea_rehearsal: 5, ua_rehearsal: 3, tardies: 3, ea_performance: 0, ua_performance: 0 },
-  "Mikala Calhoun": { grade: "A", ea_rehearsal: 6, ua_rehearsal: 1, tardies: 7, ea_performance: 0, ua_performance: 0 },
-  "Morgan Miller": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 1, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Mya Jones": { grade: "A", ea_rehearsal: 0, ua_rehearsal: 0, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Myah Crawford": { grade: "A", ea_rehearsal: 3, ua_rehearsal: 0, tardies: 1, ea_performance: 2, ua_performance: 0 },
-  "Nia Ragin": { grade: "A", ea_rehearsal: 2, ua_rehearsal: 1, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Nzinga Jean": { grade: "F", ea_rehearsal: 6, ua_rehearsal: 7, tardies: 4, ea_performance: 2, ua_performance: 1 },
-  "Olivia James": { grade: "A", ea_rehearsal: 8, ua_rehearsal: 1, tardies: 0, ea_performance: 1, ua_performance: 0 },
-  "Onnesty Peele": { grade: "A", ea_rehearsal: 2, ua_rehearsal: 0, tardies: 2, ea_performance: 0, ua_performance: 0 },
-  "Phoenix King": { grade: "A", ea_rehearsal: 2, ua_rehearsal: 0, tardies: 0, ea_performance: 1, ua_performance: 1 },
-  "Rayne Stewart": { grade: "A", ea_rehearsal: 7, ua_rehearsal: 2, tardies: 3, ea_performance: 3, ua_performance: 0 },
-  "Reagan McMichael": { grade: "D", ea_rehearsal: 1, ua_rehearsal: 4, tardies: 0, ea_performance: 0, ua_performance: 1 },
-  "Reed Smith": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 0, tardies: 1, ea_performance: 1, ua_performance: 0 },
-  "Ryan Bates": { grade: "A", ea_rehearsal: 7, ua_rehearsal: 0, tardies: 3, ea_performance: 0, ua_performance: 1 },
-  "Ryan Ellis": { grade: "A", ea_rehearsal: 3, ua_rehearsal: 0, tardies: 2, ea_performance: 0, ua_performance: 0 },
-  "Samarah Currie": { grade: "A", ea_rehearsal: 5, ua_rehearsal: 0, tardies: 5, ea_performance: 1, ua_performance: 0 },
-  "Samia Kirton": { grade: "A", ea_rehearsal: 1, ua_rehearsal: 0, tardies: 0, ea_performance: 2, ua_performance: 0 },
-  "Samirah Mungin": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 0, tardies: 8, ea_performance: 2, ua_performance: 1 },
-  "Sanaia Harrison": { grade: "A", ea_rehearsal: 2, ua_rehearsal: 0, tardies: 1, ea_performance: 0, ua_performance: 0 },
-  "Sara Scherlinder": { grade: "B", ea_rehearsal: 8, ua_rehearsal: 2, tardies: 6, ea_performance: 3, ua_performance: 1 },
-  "Shelby Nashe": { grade: "F", ea_rehearsal: 4, ua_rehearsal: 2, tardies: 13, ea_performance: 2, ua_performance: 0 },
-  "Soleil Vailes": { grade: "A", ea_rehearsal: 1, ua_rehearsal: 2, tardies: 2, ea_performance: 0, ua_performance: 0 },
-  "Tyara Petty": { grade: "A", ea_rehearsal: 4, ua_rehearsal: 3, tardies: 2, ea_performance: 1, ua_performance: 0 },
-  "Taylor Wells": { grade: "B", ea_rehearsal: 3, ua_rehearsal: 3, tardies: 0, ea_performance: 0, ua_performance: 0 },
-  "Tiyanna Dudley": { grade: "F", ea_rehearsal: 13, ua_rehearsal: 4, tardies: 0, ea_performance: 1, ua_performance: 0 },
-  "Trennedy Wade": { grade: "A", ea_rehearsal: 16, ua_rehearsal: 2, tardies: 2, ea_performance: 3, ua_performance: 0 },
-  "Wambui Kennedy": { grade: "C", ea_rehearsal: 1, ua_rehearsal: 1, tardies: 0, ea_performance: 0, ua_performance: 2 },
-  "Yaa Opong": { grade: "A", ea_rehearsal: 5, ua_rehearsal: 1, tardies: 2, ea_performance: 1, ua_performance: 0 },
-  "Yazmere Bose": { grade: "B", ea_rehearsal: 6, ua_rehearsal: 4, tardies: 1, ea_performance: 0, ua_performance: 0 },
-  "Zoe Champion": { grade: "B", ea_rehearsal: 13, ua_rehearsal: 2, tardies: 0, ea_performance: 2, ua_performance: 1 },
-};
+// Note: Spring 2026 starts fresh - grades calculated from attendance records
 
 interface StudentGradeRow {
   student_name: string;
@@ -169,6 +76,12 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('student_name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [canEditGrades, setCanEditGrades] = useState(false);
+
+  // Fetch enrolled students from Spring 2026
+  const { students: enrolledStudents, loading: enrollmentLoading } = useCourseStudents({
+    courseId: COURSE_IDS.MUS_070,
+    semester: 'Spring 2026',
+  });
 
   // Check if user has permission to edit grades (admin, super_admin, or secretary)
   useEffect(() => {
@@ -228,45 +141,29 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
     return Math.max(0, rawTotal - penalty);
   };
 
-  // Build student data from official grades
+  // Build student data from enrolled students (Spring 2026 - fresh semester)
   const students: StudentGradeRow[] = useMemo(() => {
-    return Object.entries(OFFICIAL_GRADES).map(([name, data]) => {
-      // Calculate effective absences for reference
-      const excessTardies = Math.max(0, data.tardies - MAX_TARDIES_NO_PENALTY);
-      const tardyAbsences = Math.floor(excessTardies / TARDIES_PER_ABSENCE);
-      const performanceAbsences = data.ua_performance * 2;
-      const effectiveAbsences = data.ua_rehearsal + tardyAbsences + performanceAbsences;
-
-      const isDropped = data.dropped || false;
-
-      // Use official letter grade from secretary
-      const letterGrade = data.grade;
-      
-      // Derive approximate percentage from letter grade for display
-      const gradeToPercent: Record<string, number> = {
-        'A': 95, 'A-': 90, 'B+': 87, 'B': 83, 'B-': 80,
-        'C+': 77, 'C': 73, 'C-': 70, 'D+': 65, 'D': 60, 'F': 50
-      };
-      const finalGrade = isDropped ? 0 : (gradeToPercent[letterGrade] || 0);
-
+    return enrolledStudents.map((student) => {
+      // For Spring 2026, all students start with perfect grades (no attendance data yet)
+      // TODO: Integrate with actual attendance records when available
       return {
-        student_name: name,
+        student_name: student.full_name,
         sectionals_pct: GRADE_WEIGHTS.sectionals,
         sight_singing_pct: GRADE_WEIGHTS.sightSinging,
-        performances_pct: isDropped ? 0 : GRADE_WEIGHTS.performances,
-        ea_rehearsal: data.ea_rehearsal,
-        ua_rehearsal: data.ua_rehearsal,
-        tardies: data.tardies,
-        ea_performance: data.ea_performance,
-        ua_performance: data.ua_performance,
-        effective_absences: effectiveAbsences,
+        performances_pct: GRADE_WEIGHTS.performances,
+        ea_rehearsal: 0,
+        ua_rehearsal: 0,
+        tardies: 0,
+        ea_performance: 0,
+        ua_performance: 0,
+        effective_absences: 0,
         raw_grade_pct: 100,
-        final_grade_pct: finalGrade,
-        letter_grade: isDropped ? 'DROPPED' : letterGrade,
-        is_dropped: isDropped,
+        final_grade_pct: 100,
+        letter_grade: 'A',
+        is_dropped: false,
       };
     });
-  }, []);
+  }, [enrolledStudents]);
 
   const exportToCSV = () => {
     const headers = ['Student Name', 'Sectionals (25%)', 'Sight Singing (25%)', 'Performances (50%)', 'UA Rehearsal', 'UA Performance', 'Tardies', 'Effective Absences', 'Final Grade (%)', 'Letter Grade', 'Status'];
@@ -289,7 +186,7 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'mus070_glee_club_grades_fall2025.csv';
+    a.download = 'mus070_glee_club_grades_spring2026.csv';
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Grades exported');
@@ -363,6 +260,19 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
     return 'text-foreground';
   };
 
+  if (enrollmentLoading) {
+    return (
+      <Card>
+        <CardContent className="py-12">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Loading students...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -377,7 +287,7 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
               )}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Fall 2025 • Per Glee Club Handbook grading policy
+              Spring 2026 • Per Glee Club Handbook grading policy • {students.length} students enrolled
               {!canEditGrades && <span className="ml-2">(Only admins and secretary can edit grades)</span>}
             </p>
           </div>
@@ -410,7 +320,7 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
+        <ScrollArea className="h-[60vh]">
           <Table>
             <TableHeader>
               <TableRow>
@@ -569,7 +479,9 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
               })}
             </TableBody>
           </Table>
-        </div>
+          <ScrollBar orientation="horizontal" />
+          <ScrollBar orientation="vertical" />
+        </ScrollArea>
         
         {/* Summary Stats */}
         <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
