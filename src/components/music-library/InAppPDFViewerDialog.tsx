@@ -29,7 +29,7 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
       modal={false}
     >
       <DialogContent
-        className="w-[90vw] max-w-[90vw] h-[90vh] p-0 z-[9999]"
+        className="w-[90vw] max-w-[90vw] max-h-[90vh] p-0 z-[9999] flex flex-col"
         style={{ zIndex: 9999 }}
         onInteractOutside={(e) => {
           // Prevent closing when interacting with floating YouTube player
@@ -62,12 +62,12 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
             </Button>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <PDFViewerWithAnnotations
               pdfUrl={pdfUrl}
               musicId={musicId}
               musicTitle={title}
-              className="h-full"
+              className="min-h-full"
             />
           </div>
         </div>
