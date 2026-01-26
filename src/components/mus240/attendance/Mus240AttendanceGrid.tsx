@@ -94,11 +94,12 @@ export const Mus240AttendanceGrid: React.FC<Mus240AttendanceGridProps> = ({
       }));
       setSessions(sessionList);
 
-      // Fetch enrolled students from gw_enrollments (which has the attendance records)
+      // Fetch enrolled students from mus240_enrollments (semester-based source of truth)
       let studentQuery = supabase
-        .from('gw_enrollments')
+        .from('mus240_enrollments')
         .select('student_id')
-        .eq('course_id', MUS240_COURSE_ID);
+        .eq('semester', currentSemester)
+        .eq('enrollment_status', 'enrolled');
 
       // If not instructor, only fetch current user
       if (!isInstructor && targetStudentId) {
