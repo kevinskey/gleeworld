@@ -124,11 +124,10 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       const token = data as string;
       setQrToken(token);
 
-      // Create the scan URL - use production domain for GleeWorld
-      const baseUrl = window.location.hostname.includes('lovable') 
-        ? 'https://gleeworld.org' 
-        : window.location.origin;
-      const scanUrl = `${baseUrl}/attendance-scan?token=${token}`;
+      // Create the scan URL for the *current* environment (preview vs published)
+      // and URL-encode the token to avoid '+' being interpreted as space.
+      const baseUrl = window.location.origin;
+      const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(token)}`;
       
       // Generate QR code
       const qrDataUrl = await QRCode.toDataURL(scanUrl, {
@@ -233,10 +232,8 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       
       // Fallback: Share just the URL if file sharing isn't supported
       if (navigator.share) {
-        const baseUrl = window.location.hostname.includes('lovable') 
-          ? 'https://gleeworld.org' 
-          : window.location.origin;
-        const scanUrl = `${baseUrl}/attendance-scan?token=${qrToken}`;
+        const baseUrl = window.location.origin;
+        const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(qrToken)}`;
         await navigator.share({
           title,
           text,
@@ -244,10 +241,8 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
         });
       } else {
         // Final fallback: Copy to clipboard
-        const baseUrl = window.location.hostname.includes('lovable') 
-          ? 'https://gleeworld.org' 
-          : window.location.origin;
-        const scanUrl = `${baseUrl}/attendance-scan?token=${qrToken}`;
+        const baseUrl = window.location.origin;
+        const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(qrToken)}`;
         await navigator.clipboard.writeText(`${title}\n${text}\n${scanUrl}`);
         toast({
           title: "Copied to Clipboard",
