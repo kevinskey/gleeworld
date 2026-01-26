@@ -21,20 +21,20 @@ interface SecretaryEventAttendanceGridProps {
 }
 
 interface EnrolledStudent {
-  student_profile_id: string;
+  user_id: string;
   full_name: string;
   email: string;
 }
 
-interface GleeEvent {
+interface AttendanceSession {
   id: string;
   title: string;
-  start_date: string;
+  opens_at: string;
   event_type: string; // 'rehearsal' or 'performance'
 }
 
 interface AttendanceCell {
-  event_id: string;
+  session_id: string;
   student_id: string;
   status: 'present' | 'absent' | 'excused' | 'late' | 'left_early' | null;
   isDirty?: boolean;
@@ -64,7 +64,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
   courseName = 'Glee Club' 
 }) => {
   const [students, setStudents] = useState<EnrolledStudent[]>([]);
-  const [events, setEvents] = useState<GleeEvent[]>([]);
+  const [sessions, setSessions] = useState<AttendanceSession[]>([]);
   const [attendance, setAttendance] = useState<Map<string, AttendanceCell>>(new Map());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -89,73 +89,80 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch enrolled students
+      // Fetch enrolled students using user_id and gw_profiles
       const { data: enrollments, error: enrollError } = await supabase
         .from('gw_course_enrollments')
-        .select(`
-          student_profile_id,
-          gw_student_profiles!inner(full_name, email)
-        `)
+        .select('user_id')
         .eq('course_id', courseId)
         .eq('semester', semester)
         .eq('enrollment_status', 'enrolled');
 
       if (enrollError) throw enrollError;
 
-      const studentList: EnrolledStudent[] = (enrollments || [])
-        .filter(e => e.student_profile_id && e.gw_student_profiles)
-        .map(e => ({
-          student_profile_id: e.student_profile_id!,
-          full_name: (e.gw_student_profiles as any)?.full_name || 'Unknown',
-          email: (e.gw_student_profiles as any)?.email || ''
-        }))
-        .sort((a, b) => a.full_name.localeCompare(b.full_name));
+      const userIds = (enrollments || []).map(e => e.user_id).filter(Boolean);
+
+      // Fetch profiles for enrolled users
+      let studentList: EnrolledStudent[] = [];
+      if (userIds.length > 0) {
+        const { data: profiles, error: profileError } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', userIds)
+          .order('full_name');
+
+        if (profileError) throw profileError;
+
+        studentList = (profiles || []).map(p => ({
+          user_id: p.user_id,
+          full_name: p.full_name || 'Unknown',
+          email: p.email || ''
+        }));
+      }
 
       setStudents(studentList);
 
-      // Fetch Glee Club events for the semester
+      // Fetch attendance sessions for the course
       const { start, end } = getSemesterDateRange(semester);
-      const { data: eventData, error: eventError } = await supabase
-        .from('gw_events')
-        .select('id, title, start_date, event_type')
-        .or('title.ilike.%glee%,title.ilike.%rehearsal%')
-        .gte('start_date', start)
-        .lte('start_date', end)
-        .order('start_date', { ascending: true });
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('gw_attendance_sessions')
+        .select('id, title, opens_at')
+        .eq('course_id', courseId)
+        .gte('opens_at', start)
+        .lte('opens_at', end)
+        .order('opens_at', { ascending: true });
 
-      if (eventError) throw eventError;
+      if (sessionError) throw sessionError;
 
-      // Categorize events
-      const eventList: GleeEvent[] = (eventData || []).map(e => ({
-        id: e.id,
-        title: e.title,
-        start_date: e.start_date,
-        event_type: e.title.toLowerCase().includes('performance') || 
-                   e.title.toLowerCase().includes('concert') ||
-                   e.title.toLowerCase().includes('convocation')
+      // Map sessions
+      const sessionList: AttendanceSession[] = (sessionData || []).map(s => ({
+        id: s.id,
+        title: s.title || 'Rehearsal',
+        opens_at: s.opens_at,
+        event_type: (s.title?.toLowerCase().includes('performance') || 
+                    s.title?.toLowerCase().includes('concert'))
                    ? 'performance' : 'rehearsal'
       }));
 
-      setEvents(eventList);
+      setSessions(sessionList);
 
-      // Fetch all attendance records for these events
-      if (eventList.length > 0) {
-        const eventIds = eventList.map(e => e.id);
+      // Fetch all attendance records for these sessions
+      if (sessionList.length > 0) {
+        const sessionIds = sessionList.map(s => s.id);
         const { data: attendanceData, error: attError } = await supabase
-          .from('gw_event_attendance')
-          .select('event_id, user_id, attendance_status')
-          .in('event_id', eventIds);
+          .from('gw_attendance_records')
+          .select('attendance_session_id, student_profile_id, status')
+          .in('attendance_session_id', sessionIds);
 
         if (attError) throw attError;
 
-        // Build attendance map
+        // Build attendance map (student_profile_id = user_id)
         const attMap = new Map<string, AttendanceCell>();
         (attendanceData || []).forEach(a => {
-          const key = `${a.event_id}:${a.user_id}`;
+          const key = `${a.attendance_session_id}:${a.student_profile_id}`;
           attMap.set(key, {
-            event_id: a.event_id,
-            student_id: a.user_id,
-            status: a.attendance_status as any,
+            session_id: a.attendance_session_id,
+            student_id: a.student_profile_id,
+            status: a.status as any,
             isDirty: false
           });
         });
@@ -174,19 +181,19 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
     fetchData();
   }, [fetchData]);
 
-  const getAttendanceKey = (eventId: string, studentId: string) => `${eventId}:${studentId}`;
+  const getAttendanceKey = (sessionId: string, studentId: string) => `${sessionId}:${studentId}`;
 
-  const getAttendanceStatus = (eventId: string, studentId: string): AttendanceCell['status'] => {
-    const key = getAttendanceKey(eventId, studentId);
+  const getAttendanceStatus = (sessionId: string, studentId: string): AttendanceCell['status'] => {
+    const key = getAttendanceKey(sessionId, studentId);
     return attendance.get(key)?.status ?? null;
   };
 
-  const updateAttendance = (eventId: string, studentId: string, status: AttendanceCell['status']) => {
-    const key = getAttendanceKey(eventId, studentId);
+  const updateAttendance = (sessionId: string, studentId: string, status: AttendanceCell['status']) => {
+    const key = getAttendanceKey(sessionId, studentId);
     setAttendance(prev => {
       const newMap = new Map(prev);
       newMap.set(key, {
-        event_id: eventId,
+        session_id: sessionId,
         student_id: studentId,
         status,
         isDirty: true
@@ -195,27 +202,27 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
     });
   };
 
-  const cycleStatus = (eventId: string, studentId: string) => {
-    const current = getAttendanceStatus(eventId, studentId);
+  const cycleStatus = (sessionId: string, studentId: string) => {
+    const current = getAttendanceStatus(sessionId, studentId);
     const statusCycle: AttendanceCell['status'][] = ['present', 'absent', 'excused', 'late', null];
     const currentIndex = statusCycle.indexOf(current);
     const nextIndex = (currentIndex + 1) % statusCycle.length;
-    updateAttendance(eventId, studentId, statusCycle[nextIndex]);
+    updateAttendance(sessionId, studentId, statusCycle[nextIndex]);
   };
 
   const calculateStudentTotals = (studentId: string): StudentTotals => {
-    const filteredEvents = getFilteredEvents();
+    const filtered = getFilteredSessions();
     let present = 0, absent = 0, excused = 0, late = 0;
     
-    filteredEvents.forEach(event => {
-      const status = getAttendanceStatus(event.id, studentId);
+    filtered.forEach(session => {
+      const status = getAttendanceStatus(session.id, studentId);
       if (status === 'present') present++;
       else if (status === 'absent') absent++;
       else if (status === 'excused') excused++;
       else if (status === 'late') late++;
     });
 
-    const total_events = filteredEvents.length;
+    const total_events = filtered.length;
     const attended = present + late;
     const attendance_rate = total_events > 0 ? Math.round((attended / total_events) * 100) : 0;
 
@@ -235,20 +242,20 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
         if (record.status === null) {
           // Delete the record
           await supabase
-            .from('gw_event_attendance')
+            .from('gw_attendance_records')
             .delete()
-            .eq('event_id', record.event_id)
-            .eq('user_id', record.student_id);
+            .eq('attendance_session_id', record.session_id)
+            .eq('student_profile_id', record.student_id);
         } else {
           // Upsert the record
           await supabase
-            .from('gw_event_attendance')
+            .from('gw_attendance_records')
             .upsert({
-              event_id: record.event_id,
-              user_id: record.student_id,
-              attendance_status: record.status,
-              check_in_time: record.status === 'present' ? new Date().toISOString() : null
-            }, { onConflict: 'event_id,user_id' });
+              attendance_session_id: record.session_id,
+              student_profile_id: record.student_id,
+              status: record.status,
+              marked_at: new Date().toISOString()
+            }, { onConflict: 'attendance_session_id,student_profile_id' });
         }
       }
 
@@ -273,18 +280,18 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
   };
 
   const exportToCSV = () => {
-    const filteredEvents = getFilteredEvents();
-    const headers = ['Student Name', ...filteredEvents.map(e => format(parseISO(e.start_date), 'M/d')), 'Present', 'Absent', 'Excused', 'Late', 'Rate'];
+    const filtered = getFilteredSessions();
+    const headers = ['Student Name', ...filtered.map(s => format(parseISO(s.opens_at), 'M/d')), 'Present', 'Absent', 'Excused', 'Late', 'Rate'];
     
     const rows = filteredStudents.map(student => {
-      const totals = calculateStudentTotals(student.student_profile_id);
-      const eventStatuses = filteredEvents.map(event => {
-        const status = getAttendanceStatus(event.id, student.student_profile_id);
+      const totals = calculateStudentTotals(student.user_id);
+      const sessionStatuses = filtered.map(session => {
+        const status = getAttendanceStatus(session.id, student.user_id);
         return status?.charAt(0).toUpperCase() || '-';
       });
       return [
         student.full_name,
-        ...eventStatuses,
+        ...sessionStatuses,
         totals.present,
         totals.absent,
         totals.excused,
@@ -304,16 +311,16 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
     toast.success('Exported to CSV');
   };
 
-  const getFilteredEvents = () => {
-    if (eventFilter === 'all') return events;
-    return events.filter(e => e.event_type === eventFilter);
+  const getFilteredSessions = () => {
+    if (eventFilter === 'all') return sessions;
+    return sessions.filter(s => s.event_type === eventFilter);
   };
 
   const filteredStudents = students.filter(s =>
     s.full_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredEvents = getFilteredEvents();
+  const filteredSessions = getFilteredSessions();
   const hasUnsavedChanges = Array.from(attendance.values()).some(a => a.isDirty);
 
   const StatusCell = ({ eventId, studentId }: { eventId: string; studentId: string }) => {
@@ -350,6 +357,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="Spring 2026">Spring 2026</SelectItem>
               <SelectItem value="FALL 2025">Fall 2025</SelectItem>
               <SelectItem value="SPRING 2025">Spring 2025</SelectItem>
               <SelectItem value="FALL 2024">Fall 2024</SelectItem>
@@ -411,8 +419,8 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-blue-500 flex-shrink-0" />
             <div className="min-w-0">
-              <div className="text-lg font-bold">{filteredEvents.length}</div>
-              <p className="text-[10px] text-muted-foreground truncate">Events</p>
+              <div className="text-lg font-bold">{filteredSessions.length}</div>
+              <p className="text-[10px] text-muted-foreground truncate">Sessions</p>
             </div>
           </div>
         </Card>
@@ -421,7 +429,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
             <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
             <div className="min-w-0">
               <div className="text-lg font-bold">
-                {events.filter(e => e.event_type === 'rehearsal').length}
+                {sessions.filter(s => s.event_type === 'rehearsal').length}
               </div>
               <p className="text-[10px] text-muted-foreground truncate">Rehearsals</p>
             </div>
@@ -432,7 +440,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
             <AlertCircle className="h-4 w-4 text-purple-500 flex-shrink-0" />
             <div className="min-w-0">
               <div className="text-lg font-bold">
-                {events.filter(e => e.event_type === 'performance').length}
+                {sessions.filter(s => s.event_type === 'performance').length}
               </div>
               <p className="text-[10px] text-muted-foreground truncate">Performances</p>
             </div>
@@ -444,12 +452,12 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
         <CardContent className="p-0">
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">Loading...</div>
-          ) : filteredStudents.length === 0 || filteredEvents.length === 0 ? (
+          ) : filteredStudents.length === 0 || filteredSessions.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               {students.length === 0 
                 ? 'No students enrolled in this course yet.' 
-                : filteredEvents.length === 0
-                  ? 'No events found for this semester.'
+                : filteredSessions.length === 0
+                  ? 'No sessions found for this semester.'
                   : 'No matching students found.'}
             </div>
           ) : (
@@ -459,34 +467,34 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
                   {/* Header Row */}
                   <div 
                     className="flex gap-0 bg-muted/50 border-b font-medium text-xs sticky top-0 z-20"
-                    style={{ minWidth: `${140 + filteredEvents.length * 36 + 180}px` }}
+                    style={{ minWidth: `${140 + filteredSessions.length * 36 + 180}px` }}
                   >
                     {/* Sticky Student Name Column - narrower on mobile */}
                     <div className="w-[120px] sm:w-[160px] min-w-[120px] sm:min-w-[160px] p-2 border-r bg-muted/50 sticky left-0 z-30 text-[11px] sm:text-xs">
                       Student
                     </div>
                     
-                    {/* Event Date Columns */}
-                    {filteredEvents.map((event, idx) => (
-                      <Tooltip key={event.id}>
+                    {/* Session Date Columns */}
+                    {filteredSessions.map((session, idx) => (
+                      <Tooltip key={session.id}>
                         <TooltipTrigger asChild>
                           <div 
                             className={`w-9 min-w-9 p-1 text-center border-r text-[10px] cursor-help
-                              ${event.event_type === 'performance' ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
+                              ${session.event_type === 'performance' ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
                             `}
                           >
                             <div className="font-bold">
-                              {format(parseISO(event.start_date), 'M/d')}
+                              {format(parseISO(session.opens_at), 'M/d')}
                             </div>
                             <div className="text-[8px] text-muted-foreground truncate">
-                              {event.event_type === 'performance' ? 'P' : 'R'}
+                              {session.event_type === 'performance' ? 'P' : 'R'}
                             </div>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="bottom">
-                          <p className="font-medium">{event.title}</p>
+                          <p className="font-medium">{session.title}</p>
                           <p className="text-xs text-muted-foreground">
-                            {format(parseISO(event.start_date), 'EEEE, MMMM d, yyyy')}
+                            {format(parseISO(session.opens_at), 'EEEE, MMMM d, yyyy')}
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -504,14 +512,14 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
 
                   {/* Data Rows */}
                   {filteredStudents.map((student, idx) => {
-                    const totals = calculateStudentTotals(student.student_profile_id);
+                    const totals = calculateStudentTotals(student.user_id);
                     return (
                       <div 
-                        key={student.student_profile_id}
+                        key={student.user_id}
                         className={`flex gap-0 border-b items-center text-xs
                           ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}
                         `}
-                        style={{ minWidth: `${140 + filteredEvents.length * 36 + 180}px` }}
+                        style={{ minWidth: `${140 + filteredSessions.length * 36 + 180}px` }}
                       >
                         {/* Sticky Student Name - narrower on mobile */}
                         <div className={`w-[120px] sm:w-[160px] min-w-[120px] sm:min-w-[160px] p-1.5 sm:p-2 border-r font-medium truncate sticky left-0 z-10 text-[11px] sm:text-xs
@@ -521,16 +529,16 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
                         </div>
 
                         {/* Attendance Cells */}
-                        {filteredEvents.map(event => (
+                        {filteredSessions.map(session => (
                           <div 
-                            key={event.id} 
+                            key={session.id} 
                             className={`w-9 min-w-9 p-0.5 flex justify-center border-r
-                              ${event.event_type === 'performance' ? 'bg-purple-50/50 dark:bg-purple-900/10' : ''}
+                              ${session.event_type === 'performance' ? 'bg-purple-50/50 dark:bg-purple-900/10' : ''}
                             `}
                           >
                             <StatusCell 
-                              eventId={event.id} 
-                              studentId={student.student_profile_id} 
+                              eventId={session.id} 
+                              studentId={student.user_id} 
                             />
                           </div>
                         ))}
