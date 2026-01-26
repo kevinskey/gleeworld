@@ -7,9 +7,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Calendar, ClipboardList, CheckCircle, XCircle, Clock, 
-  FileText, AlertCircle, Play, ChevronDown, BookOpen, Headphones,
+  FileText, AlertCircle, Play, ChevronDown, ChevronRight, BookOpen, Headphones,
   MessageSquare, PenLine, BookMarked, ExternalLink, ArrowRight,
-  Lightbulb, Target, ListChecks, Pause, Music
+  Lightbulb, Target, ListChecks, Pause, Music, History
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,6 +86,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [currentModule, setCurrentModule] = useState<CurrentModule | null>(null);
+  const [priorModules, setPriorModules] = useState<{ id: string; title: string; week_number: number; start_date?: string; end_date?: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [moduleVideos, setModuleVideos] = useState<ModuleVideo[]>([]);
   const [moduleReadings, setModuleReadings] = useState<ModuleReading[]>([]);
@@ -375,6 +376,24 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               };
             }
           }
+          
+          // Fetch prior modules (weeks before current, sorted reverse chronologically)
+          const { data: priorModulesData } = await supabase
+            .from('mus240_module_settings')
+            .select('id, module_id, title, start_date, end_date')
+            .lt('end_date', today)
+            .eq('is_active', true)
+            .order('start_date', { ascending: false });
+          
+          if (priorModulesData) {
+            setPriorModules(priorModulesData.map((m: any) => ({
+              id: m.id,
+              title: m.title,
+              week_number: parseInt(m.module_id.replace('week-', '')) || 0,
+              start_date: m.start_date,
+              end_date: m.end_date
+            })));
+          }
         } else {
           // For other courses, use gw_course_modules
           const { data: genericModule } = await supabase
@@ -386,6 +405,21 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             .limit(1)
             .maybeSingle();
           moduleData = genericModule;
+          
+          // Fetch prior modules for generic courses
+          if (genericModule) {
+            const { data: priorGenericModules } = await supabase
+              .from('gw_course_modules')
+              .select('id, title, week_number, start_date, end_date')
+              .eq('course_id', courseId)
+              .eq('is_active', true)
+              .lt('week_number', genericModule.week_number)
+              .order('week_number', { ascending: false });
+            
+            if (priorGenericModules) {
+              setPriorModules(priorGenericModules);
+            }
+          }
         }
 
         // Standard content types for each module
@@ -862,6 +896,52 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Prior Modules - Collapsed state */}
+              {priorModules.length > 0 && (
+                <div className="p-4 border-t bg-muted/10">
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between hover:bg-muted/30 -mx-2 px-2 py-1 rounded-md transition-colors">
+                        <h4 className="text-sm font-semibold flex items-center gap-2">
+                          <History className="h-4 w-4 text-muted-foreground" />
+                          Prior Modules
+                          <Badge variant="secondary" className="text-xs ml-1">{priorModules.length}</Badge>
+                        </h4>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3 space-y-2">
+                      {priorModules.map((module) => (
+                        <div 
+                          key={module.id}
+                          className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => {
+                            // Navigate to module details or expand inline
+                            navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=modules&week=${module.week_number}`);
+                          }}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              Week {module.week_number}: {module.title}
+                            </p>
+                            {module.end_date && (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <Calendar className="h-3 w-3" />
+                                Completed {format(new Date(module.end_date), 'MMM d')}
+                              </p>
+                            )}
+                          </div>
+                          <Badge variant="outline" className="text-xs shrink-0 ml-2">
+                            <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
+                            Completed
+                          </Badge>
+                        </div>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
               )}
             </CardContent>
