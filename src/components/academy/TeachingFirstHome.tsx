@@ -563,7 +563,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                     if (contentType.assignment) {
                       if (contentType.assignment.is_discussion) {
                         navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
-                        window.location.reload(); // Force tab switch
                       } else {
                         navigate(`/grading/student/assignment/${contentType.assignment.id}`);
                       }
@@ -578,7 +577,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                       };
                       const tab = tabMapping[contentType.type] || 'resources';
                       navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=${tab}`, { replace: true });
-                      window.location.reload(); // Force tab switch
                     }
                   };
                   
