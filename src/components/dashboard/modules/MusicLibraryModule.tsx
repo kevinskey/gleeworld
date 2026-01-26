@@ -578,19 +578,21 @@ export const MusicLibraryModule = () => {
         </TabsContent>
 
         <TabsContent value="current" className="flex-1 mt-0">
-          <ScrollArea className="flex-1 py-2 md:py-4">
-            <SetlistBuilder onPdfSelect={(url, title, id) => {
-            if (id) {
-              setSelectedPdf({
-                url,
-                title,
-                id
-              });
-            }
-          }} onOpenPlayer={setlistId => {
-            console.log('Opening setlist player:', setlistId);
-          }} />
-          </ScrollArea>
+          <div className="py-2 md:py-4 max-h-[60vh] overflow-y-auto">
+            <div className="bg-card/50 rounded-lg p-4 border">
+              <SetlistBuilder onPdfSelect={(url, title, id) => {
+                if (id) {
+                  setSelectedPdf({
+                    url,
+                    title,
+                    id
+                  });
+                }
+              }} onOpenPlayer={setlistId => {
+                console.log('Opening setlist player:', setlistId);
+              }} />
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
