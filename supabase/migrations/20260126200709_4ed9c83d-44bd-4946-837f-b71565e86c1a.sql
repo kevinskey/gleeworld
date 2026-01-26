@@ -1,0 +1,1 @@
+ALTER TABLE gw_notifications ADD COLUMN related_id UUID;
