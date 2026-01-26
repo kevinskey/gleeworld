@@ -290,7 +290,7 @@ export const StudentIntakeProcessor = () => {
                       <div className="space-y-2">
                         <Select 
                           value={intake.assigned_dress_id || ""} 
-                          onValueChange={(value) => assignWardrobe(intake.id, value || null, intake.assigned_shoes_id)}
+                          onValueChange={(value) => assignWardrobe(intake.id, value === "none" ? null : (value || null), intake.assigned_shoes_id)}
                         >
                           <SelectTrigger className="w-32 h-8">
                             <SelectValue placeholder="Dress" />
@@ -308,7 +308,7 @@ export const StudentIntakeProcessor = () => {
                         </Select>
                         <Select 
                           value={intake.assigned_shoes_id || ""} 
-                          onValueChange={(value) => assignWardrobe(intake.id, intake.assigned_dress_id, value || null)}
+                          onValueChange={(value) => assignWardrobe(intake.id, intake.assigned_dress_id, value === "none" ? null : (value || null))}
                         >
                           <SelectTrigger className="w-32 h-8">
                             <SelectValue placeholder="Shoes" />
