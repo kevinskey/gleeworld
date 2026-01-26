@@ -102,45 +102,51 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
   // Playlist hook for listening dropdown
   const { tracks, tracksLoading, playlists, selectedPlaylist, selectPlaylist } = useCoursePlaylist(courseId);
   
-  // Auto-select playlist matching current module topic when module loads
+  // Track previous week to detect changes
+  const prevWeekRef = useRef<number | null>(null);
+  
+  // Auto-select playlist matching current module topic when module loads or week changes
   useEffect(() => {
-    if (currentModule && playlists.length > 0 && !selectedPlaylist) {
-      // Try to find a playlist that matches the current module's title/theme
-      const moduleTitle = currentModule.title.toLowerCase();
+    if (currentModule && playlists.length > 0) {
+      // Only update if week changed or no playlist selected yet
+      const weekChanged = prevWeekRef.current !== currentModule.week_number;
       
-      // Week-to-topic mapping for MUS-240
-      const weekTopicMap: Record<number, string[]> = {
-        1: ['introduction', 'african american'],
-        2: ['spiritual', 'enslaved'],
-        3: ['blues', 'delta', 'urban'],
-        4: ['ragtime', 'jazz'],
-        5: ['jubilee', 'quartet', 'swing'],
-        6: ['jazz', 'gospel'],
-        7: ['civil rights', 'funk'],
-        8: ['gospel'],
-        9: ['gospel'],
-        10: ['disco', 'techno'],
-        11: ['r&b', 'soul'],
-        12: ['hip-hop', 'hip hop'],
-        13: ['hip-hop', 'hip hop'],
-        14: ['fourth turning'],
-        15: ['review'],
-        16: ['final'],
-      };
-      
-      const weekKeywords = weekTopicMap[currentModule.week_number] || [];
-      
-      // Find matching playlist
-      const matchingPlaylist = playlists.find(p => {
-        const playlistTitle = p.title.toLowerCase();
-        return weekKeywords.some(keyword => playlistTitle.includes(keyword) || moduleTitle.includes(keyword));
-      });
-      
-      if (matchingPlaylist) {
-        selectPlaylist(matchingPlaylist);
+      if (weekChanged || !selectedPlaylist) {
+        // Week-to-topic mapping for MUS-240
+        const weekTopicMap: Record<number, string[]> = {
+          1: ['introduction', 'african american', 'black folk'],
+          2: ['spiritual', 'enslaved', 'negro spiritual'],
+          3: ['blues', 'delta', 'urban'],
+          4: ['ragtime', 'jazz'],
+          5: ['jubilee', 'quartet', 'swing'],
+          6: ['jazz', 'gospel'],
+          7: ['civil rights', 'funk'],
+          8: ['gospel'],
+          9: ['gospel'],
+          10: ['disco', 'techno'],
+          11: ['r&b', 'soul'],
+          12: ['hip-hop', 'hip hop'],
+          13: ['hip-hop', 'hip hop'],
+          14: ['fourth turning'],
+          15: ['review'],
+          16: ['final'],
+        };
+        
+        const weekKeywords = weekTopicMap[currentModule.week_number] || [];
+        
+        // Find matching playlist by keywords
+        const matchingPlaylist = playlists.find(p => {
+          const playlistTitle = p.title.toLowerCase();
+          return weekKeywords.some(keyword => playlistTitle.includes(keyword));
+        });
+        
+        if (matchingPlaylist) {
+          selectPlaylist(matchingPlaylist);
+          prevWeekRef.current = currentModule.week_number;
+        }
       }
     }
-  }, [currentModule, playlists, selectedPlaylist, selectPlaylist]);
+  }, [currentModule, playlists, selectPlaylist]);
 
   // Audio playback functions
   const cleanDisplayTitle = (title: string) => {
