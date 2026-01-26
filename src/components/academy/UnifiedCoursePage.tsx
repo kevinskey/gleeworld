@@ -275,7 +275,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   };
   // Mobile-first landing page (new simplified layout)
   if (isMobile && activeTab === 'home') {
-    return <MobileCourseLanding course={course} />;
+    return (
+      <UniversalLayout showHeader={true} showFooter={false} containerized={false}>
+        <MobileCourseLanding course={course} />
+      </UniversalLayout>
+    );
   }
 
   return <div className="academy-neutral">
