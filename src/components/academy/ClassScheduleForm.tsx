@@ -30,7 +30,7 @@ export const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({
   className 
 }) => {
   const navigate = useNavigate();
-  const { isAdmin, isExecutiveBoard } = useUserRole();
+  const { isAdmin, isSecretary } = useUserRole();
   const { schedules, loading, saving, addSchedule, deleteSchedule, hasConflicts, conflictCount } = useStudentClassSchedule(semester);
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState<ClassScheduleInput>({
@@ -122,7 +122,7 @@ export const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({
         </div>
         
         {/* Admin Link to View All Schedules */}
-        {(isAdmin() || isExecutiveBoard()) && (
+        {(isAdmin() || isSecretary()) && (
           <Button 
             variant="outline" 
             size="sm"
