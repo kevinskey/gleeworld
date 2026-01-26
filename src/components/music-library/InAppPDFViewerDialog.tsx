@@ -46,8 +46,8 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
           }
         }}
       >
-        <div className="flex flex-col h-full">
-          <div className="px-2 py-1 border-b flex items-center gap-2">
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="px-2 py-1 border-b flex items-center gap-2 flex-shrink-0">
             <h2 className="text-xs font-semibold text-foreground truncate flex-1">
               {title ?? 'PDF'}
             </h2>
@@ -62,7 +62,7 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
             </Button>
           </div>
 
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-auto">
             <PDFViewerWithAnnotations
               pdfUrl={pdfUrl}
               musicId={musicId}
