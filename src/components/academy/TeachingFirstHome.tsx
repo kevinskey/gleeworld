@@ -623,7 +623,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                         onClick={() => {
                           if (assignment.is_discussion) {
                             navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
-                            window.location.reload();
                           } else {
                             navigate(`/grading/student/assignment/${assignment.id}`);
                           }
