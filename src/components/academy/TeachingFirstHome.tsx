@@ -208,14 +208,64 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
         setAssignments(allAssignments);
 
         // Fetch current active module from database
-        const { data: moduleData } = await supabase
-          .from('gw_course_modules')
-          .select('*')
-          .eq('course_id', courseId)
-          .eq('is_active', true)
-          .order('week_number', { ascending: true })
-          .limit(1)
-          .maybeSingle();
+        // For MUS-240, use mus240_module_settings with date-based detection
+        let moduleData: any = null;
+        let mus240ModuleId: string | null = null;
+        
+        if (isMus240) {
+          const today = new Date().toISOString().split('T')[0];
+          const { data: mus240Module } = await supabase
+            .from('mus240_module_settings')
+            .select('*')
+            .lte('start_date', today)
+            .gte('end_date', today)
+            .eq('is_active', true)
+            .order('start_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          if (mus240Module) {
+            mus240ModuleId = mus240Module.id;
+            const weekNum = parseInt(mus240Module.module_id.replace('week-', '')) || 1;
+            moduleData = {
+              id: mus240Module.id,
+              title: `Week ${weekNum}: ${mus240Module.title}`,
+              week_number: weekNum,
+              is_active: mus240Module.is_active
+            };
+          } else {
+            // Fallback: get first active module
+            const { data: fallbackModule } = await supabase
+              .from('mus240_module_settings')
+              .select('*')
+              .eq('is_active', true)
+              .order('module_id', { ascending: true })
+              .limit(1)
+              .maybeSingle();
+            
+            if (fallbackModule) {
+              mus240ModuleId = fallbackModule.id;
+              const weekNum = parseInt(fallbackModule.module_id.replace('week-', '')) || 1;
+              moduleData = {
+                id: fallbackModule.id,
+                title: `Week ${weekNum}: ${fallbackModule.title}`,
+                week_number: weekNum,
+                is_active: fallbackModule.is_active
+              };
+            }
+          }
+        } else {
+          // For other courses, use gw_course_modules
+          const { data: genericModule } = await supabase
+            .from('gw_course_modules')
+            .select('*')
+            .eq('course_id', courseId)
+            .eq('is_active', true)
+            .order('week_number', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          moduleData = genericModule;
+        }
 
         // Standard content types for each module
         const standardContentTypes = ['Video', 'Reading', 'Listening', 'Discussion', 'Journal'];
@@ -255,10 +305,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           isCompleted: isTypeCompleted(type)
         }));
 
-        // Fetch module videos for MUS-240
-        let currentModuleId: string | null = null;
         if (moduleData) {
-          currentModuleId = moduleData.id;
           setCurrentModule({
             id: moduleData.id,
             title: moduleData.title.replace(/^Week \d+:\s*/, ''),
@@ -278,11 +325,12 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
         }
 
         // Fetch module videos if MUS-240 and we have a module
-        if (isMus240 && currentModuleId) {
+        const videoModuleId = isMus240 ? mus240ModuleId : moduleData?.id;
+        if (isMus240 && videoModuleId) {
           const { data: resourcesData } = await supabase
             .from('mus240_module_resources')
             .select('id, module_id, title, resource_type, url, description, duration, is_required, display_order')
-            .eq('module_id', currentModuleId)
+            .eq('module_id', videoModuleId)
             .eq('resource_type', 'video')
             .order('display_order', { ascending: true });
           

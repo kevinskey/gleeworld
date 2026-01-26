@@ -9039,12 +9039,14 @@ export type Database = {
           created_at: string
           description: string | null
           display_order: number | null
+          end_date: string | null
           id: string
           is_active: boolean | null
           is_locked: boolean | null
           learning_objectives: Json | null
           module_id: string
           semester: string | null
+          start_date: string | null
           title: string
           unlock_date: string | null
           updated_at: string
@@ -9055,12 +9057,14 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number | null
+          end_date?: string | null
           id?: string
           is_active?: boolean | null
           is_locked?: boolean | null
           learning_objectives?: Json | null
           module_id: string
           semester?: string | null
+          start_date?: string | null
           title: string
           unlock_date?: string | null
           updated_at?: string
@@ -9071,12 +9075,14 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number | null
+          end_date?: string | null
           id?: string
           is_active?: boolean | null
           is_locked?: boolean | null
           learning_objectives?: Json | null
           module_id?: string
           semester?: string | null
+          start_date?: string | null
           title?: string
           unlock_date?: string | null
           updated_at?: string
