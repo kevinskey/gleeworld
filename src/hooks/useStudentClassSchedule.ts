@@ -40,14 +40,19 @@ export const useStudentClassSchedule = (semester: string = 'Spring 2026') => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const fetchSchedules = async () => {
+  const fetchSchedules = async (showLoadingState = true) => {
     if (!user) {
       setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
+      // Only show loading state on initial load, not on refetches
+      // This prevents the UI from flashing empty during navigation
+      if (showLoadingState && schedules.length === 0) {
+        setLoading(true);
+      }
+      
       const { data, error } = await supabase
         .from('student_class_schedules')
         .select('*')
@@ -219,9 +224,13 @@ export const useStudentClassSchedule = (semester: string = 'Spring 2026') => {
   const hasConflicts = schedules.some(s => s.has_conflict);
   const conflictCount = schedules.filter(s => s.has_conflict).length;
 
+  // Use user.id as dependency instead of user object to prevent unnecessary refetches
+  // when the user object reference changes but the actual user hasn't changed
   useEffect(() => {
-    fetchSchedules();
-  }, [user, semester]);
+    if (user?.id) {
+      fetchSchedules();
+    }
+  }, [user?.id, semester]);
 
   return {
     schedules,
