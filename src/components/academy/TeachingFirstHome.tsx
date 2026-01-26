@@ -325,12 +325,13 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
         }
 
         // Fetch module videos if MUS-240 and we have a module
-        const videoModuleId = isMus240 ? mus240ModuleId : moduleData?.id;
-        if (isMus240 && videoModuleId) {
+        // Use the module_id string (e.g., 'week-2') for mus240_module_resources, not the UUID
+        if (isMus240 && moduleData) {
+          const weekModuleId = `week-${moduleData.week_number}`;
           const { data: resourcesData } = await supabase
             .from('mus240_module_resources')
             .select('id, module_id, title, resource_type, url, description, duration, is_required, display_order')
-            .eq('module_id', videoModuleId)
+            .eq('module_id', weekModuleId)
             .eq('resource_type', 'video')
             .order('display_order', { ascending: true });
           
