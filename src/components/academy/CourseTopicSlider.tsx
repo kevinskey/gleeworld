@@ -38,15 +38,17 @@ export const CourseTopicSlider: React.FC<CourseTopicSliderProps> = ({
   }
 
   return (
-    <div className="h-[180px] sm:h-[220px] md:h-[260px] lg:h-[300px]">
-      <UniversalSlider 
-        placementKey={placementKey} 
-        className="rounded-none h-full"
-        objectFit="cover"
-        enableLightbox
-        autoPlay={false}
-        showNavigation={slider && slider.slides.length > 1}
-      />
+    <div className="relative w-full overflow-hidden" style={{ height: 'auto', minHeight: '180px' }}>
+      <div className="aspect-[16/9] w-full">
+        <UniversalSlider 
+          placementKey={placementKey} 
+          className="rounded-none w-full h-full"
+          objectFit="cover"
+          enableLightbox
+          autoPlay={false}
+          showNavigation={slider && slider.slides.length > 1}
+        />
+      </div>
     </div>
   );
 };
