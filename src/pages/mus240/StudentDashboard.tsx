@@ -27,7 +27,8 @@ import {
   FileCheck,
   Play,
   RotateCcw,
-  BarChart3
+  BarChart3,
+  ClipboardCheck
 } from 'lucide-react';
 import { StudentPollInterface } from '@/components/mus240/StudentPollInterface';
 import { AIGroupRoleSubmission } from '@/components/mus240/student/AIGroupRoleSubmission';
@@ -42,6 +43,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
+import { Mus240AttendanceGrid } from '@/components/mus240/attendance/Mus240AttendanceGrid';
 
 export const StudentDashboard = () => {
   const { user } = useAuth();
@@ -381,11 +383,15 @@ export const StudentDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="assignments" className="space-y-4">
-          <TabsList className="flex flex-wrap h-auto gap-1 p-1 sm:grid sm:grid-cols-6">
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 sm:grid sm:grid-cols-7">
             <TabsTrigger value="assignments" className="flex-1 min-w-[80px] text-xs sm:text-sm">Assignments</TabsTrigger>
             <TabsTrigger value="tests" className="flex-1 min-w-[60px] text-xs sm:text-sm">
               <FileCheck className="h-3 w-3 mr-1" />
               Tests
+            </TabsTrigger>
+            <TabsTrigger value="attendance" className="flex-1 min-w-[70px] text-xs sm:text-sm">
+              <ClipboardCheck className="h-3 w-3 mr-1" />
+              Attendance
             </TabsTrigger>
             <TabsTrigger value="polls" className="flex-1 min-w-[50px] text-xs sm:text-sm">
               <BarChart3 className="h-3 w-3 mr-1" />
@@ -528,6 +534,11 @@ export const StudentDashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Attendance Tab */}
+          <TabsContent value="attendance" className="space-y-4">
+            <Mus240AttendanceGrid isInstructor={false} />
           </TabsContent>
 
           <TabsContent value="assignments" className="space-y-4">
