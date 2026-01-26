@@ -276,8 +276,8 @@ import ManageStudents from "./pages/grading/instructor/ManageStudents";
 import GradingStudentDashboard from "./pages/grading/student/StudentDashboard";
 import StudentCoursePage from "./pages/grading/student/StudentCoursePage";
 import StudentAssignmentPage from "./pages/grading/student/StudentAssignmentPage";
-
-// Preview triggers disabled to prevent accidental email sends during development
+import CourseAudioPage from "./pages/courses/CourseAudioPage";
+import { GlobalMiniPlayer } from "./components/audio/GlobalMiniPlayer";
 
 // Legacy MUS240 redirect component
 const LegacyMus240Redirect = () => {
@@ -359,6 +359,7 @@ const App = () => {
                   <GleeAssistant />
                   <MessengerModal />
                   <DesignSystemEnforcer />
+                  <GlobalMiniPlayer />
                   <UsageTracker>
                   <Suspense
                     fallback={
@@ -519,6 +520,16 @@ const App = () => {
               <Route path="/mus-210" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/choral-conducting-literature" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/classes/mus210" element={<Navigate to="/academy/mus-210" replace />} />
+              
+              {/* Course Audio Page - must be before wildcard route */}
+              <Route 
+                path="/academy/:courseCode/audio" 
+                element={
+                  <ProtectedRoute>
+                    <CourseAudioPage />
+                  </ProtectedRoute>
+                }
+              />
               
               {/* Course Onboarding Page - for non-enrolled users (must be before wildcard route) */}
               <Route 

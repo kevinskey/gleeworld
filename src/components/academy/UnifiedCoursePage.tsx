@@ -39,6 +39,8 @@ import { CourseHeroPlayer } from '@/components/course/CourseHeroPlayer';
 import { CourseGradeStat } from '@/components/course/CourseGradeStat';
 import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants';
 import { useUserRole } from '@/hooks/useUserRole';
+import { MobileCourseLanding } from '@/components/course/MobileCourseLanding';
+import { useIsMobile } from '@/hooks/use-mobile';
 const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager').then(m => ({
   default: m.SecretaryAttendanceManager
 })));
@@ -102,6 +104,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   const [enrollmentLoading, setEnrollmentLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isExecutiveBoard, setIsExecutiveBoard] = useState(false);
+  
+  // Mobile detection for new mobile-first landing
+  const isMobile = useIsMobile();
 
   // Get course template configuration (Course Template v1)
   const templateConfig = useMemo(() => getCourseTemplateConfig(course.id), [course.id]);
@@ -268,6 +273,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       }
     }
   };
+  // Mobile-first landing page (new simplified layout)
+  if (isMobile && activeTab === 'home') {
+    return <MobileCourseLanding course={course} />;
+  }
+
   return <div className="academy-neutral">
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="flex min-h-screen bg-background">
