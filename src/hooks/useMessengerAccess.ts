@@ -46,8 +46,8 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
     // Super admin has full access
     if (userProfile.is_super_admin) return 'super-admin';
     
-    // Admin access
-    if (userProfile.is_admin) return 'admin';
+    // Admin access (includes exec board members)
+    if (userProfile.is_admin || userProfile.is_exec_board) return 'admin';
     
     // Check for alumna role
     const role = userProfile.role?.toLowerCase();

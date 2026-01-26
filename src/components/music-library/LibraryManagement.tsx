@@ -166,9 +166,10 @@ export const LibraryManagement = () => {
   });
 
 
-  // Check if user can access import tools (admins and librarians only)
+  // Check if user can access import tools (admins, exec board, and librarians)
   const canAccessImportTools = profile?.is_super_admin || 
     profile?.is_admin || 
+    profile?.is_exec_board ||
     (profile?.role && ['admin', 'super-admin', 'librarian'].includes(profile.role));
 
   return (
