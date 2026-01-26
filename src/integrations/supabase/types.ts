@@ -6907,6 +6907,7 @@ export type Database = {
       gw_attendance_qr_codes: {
         Row: {
           assignment_id: string | null
+          attendance_session_id: string | null
           auto_rotate_enabled: boolean | null
           context_type: string | null
           course_code: string | null
@@ -6938,6 +6939,7 @@ export type Database = {
         }
         Insert: {
           assignment_id?: string | null
+          attendance_session_id?: string | null
           auto_rotate_enabled?: boolean | null
           context_type?: string | null
           course_code?: string | null
@@ -6969,6 +6971,7 @@ export type Database = {
         }
         Update: {
           assignment_id?: string | null
+          attendance_session_id?: string | null
           auto_rotate_enabled?: boolean | null
           context_type?: string | null
           course_code?: string | null
@@ -6999,6 +7002,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "gw_attendance_qr_codes_attendance_session_id_fkey"
+            columns: ["attendance_session_id"]
+            isOneToOne: false
+            referencedRelation: "gw_attendance_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gw_attendance_qr_codes_course_id_fkey"
             columns: ["course_id"]
@@ -29269,6 +29279,14 @@ export type Database = {
       generate_secure_qr_token: {
         Args: { event_id_param: string }
         Returns: string
+      }
+      generate_session_qr_code: {
+        Args: {
+          p_expires_in_minutes?: number
+          p_generated_by: string
+          p_session_id: string
+        }
+        Returns: Json
       }
       generate_sheet_music_filename: {
         Args: {
