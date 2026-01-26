@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Calendar, ClipboardList, CheckCircle, XCircle, Clock, 
   FileText, AlertCircle, Play, ChevronDown, BookOpen, Headphones,
   MessageSquare, PenLine, BookMarked, ExternalLink, ArrowRight,
-  Lightbulb, Target, ListChecks
+  Lightbulb, Target, ListChecks, Pause, Music
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +20,7 @@ import { getCourseByCode } from '@/config/academyCourses';
 import { CourseTopicSlider } from './CourseTopicSlider';
 import { ModuleVideosModal } from './ModuleVideosModal';
 import { ModuleReadingsModal } from './ModuleReadingsModal';
+import { useCoursePlaylist } from '@/hooks/useCoursePlaylist';
 import { toast } from 'sonner';
 
 interface ModuleVideo {
@@ -88,9 +91,67 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
   const [moduleReadings, setModuleReadings] = useState<ModuleReading[]>([]);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [readingsModalOpen, setReadingsModalOpen] = useState(false);
+  const [listeningOpen, setListeningOpen] = useState(false);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
   const isMus240 = courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
+  
+  // Playlist hook for listening dropdown
+  const { tracks, tracksLoading, playlists, selectedPlaylist, selectPlaylist } = useCoursePlaylist(courseId);
+
+  // Audio playback functions
+  const cleanDisplayTitle = (title: string) => {
+    return title
+      .replace(/^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_/, '')
+      .replace(/_[a-f0-9]{8}$/, '')
+      .replace(/_/g, ' ')
+      .replace(/\.[^/.]+$/, '');
+  };
+
+  const playTrack = (index: number) => {
+    const track = tracks[index];
+    if (!track?.track_data?.audio_url) return;
+    
+    if (currentTrackIndex === index && isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+      return;
+    }
+    
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    
+    const audio = new Audio(track.track_data.audio_url);
+    audioRef.current = audio;
+    setCurrentTrackIndex(index);
+    
+    audio.play().then(() => {
+      setIsPlaying(true);
+    }).catch((err) => {
+      console.error('Audio playback error:', err);
+      toast.error('Could not play audio');
+    });
+    
+    audio.onended = () => {
+      // Auto-advance to next track
+      if (index < tracks.length - 1) {
+        playTrack(index + 1);
+      } else {
+        setIsPlaying(false);
+        setCurrentTrackIndex(null);
+      }
+    };
+    
+    audio.onpause = () => {
+      if (audioRef.current === audio) {
+        setIsPlaying(false);
+      }
+    };
+  };
 
   useEffect(() => {
     if (user) {
@@ -520,6 +581,11 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                       }
                     }
                     
+                    // Listening is now handled by Popover, skip navigation
+                    if (contentType.type === 'Listening') {
+                      return;
+                    }
+                    
                     if (contentType.assignment) {
                       if (contentType.assignment.is_discussion) {
                         if (currentModule?.discussionId) {
@@ -546,6 +612,124 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                       }
                     }
                   };
+                  
+                  // Special handling for Listening - use Popover dropdown
+                  if (contentType.type === 'Listening') {
+                    return (
+                      <Popover key={contentType.type} open={listeningOpen} onOpenChange={setListeningOpen}>
+                        <PopoverTrigger asChild>
+                          <button 
+                            className={`flex flex-col items-center justify-center p-4 gap-2 transition-all hover:bg-muted/50 ${
+                              contentType.isCompleted ? 'bg-green-50 dark:bg-green-950/20' : ''
+                            } ${listeningOpen ? 'bg-primary/5' : ''}`}
+                          >
+                            <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                              contentType.isCompleted 
+                                ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' 
+                                : 'bg-primary/10 text-primary'
+                            }`}>
+                              {contentType.isCompleted ? (
+                                <CheckCircle className="h-5 w-5" />
+                              ) : (
+                                <Headphones className="h-4 w-4" />
+                              )}
+                            </div>
+                            <span className="text-xs font-medium">{contentType.type}</span>
+                            {!contentType.isCompleted && (
+                              <span className="text-[10px] text-primary font-semibold uppercase tracking-wide flex items-center gap-0.5">
+                                Start <ChevronDown className="h-2.5 w-2.5" />
+                              </span>
+                            )}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent 
+                          className="w-80 p-0 bg-background border shadow-lg z-50" 
+                          align="center"
+                          sideOffset={4}
+                        >
+                          <div className="p-3 border-b bg-muted/30">
+                            <div className="flex items-center gap-2">
+                              <Music className="h-4 w-4 text-primary" />
+                              <span className="font-semibold text-sm">Week {currentModule.week_number} Playlist</span>
+                            </div>
+                            {selectedPlaylist && (
+                              <p className="text-xs text-muted-foreground mt-1">{selectedPlaylist.title}</p>
+                            )}
+                          </div>
+                          
+                          <ScrollArea className="max-h-[280px]">
+                            {tracksLoading ? (
+                              <div className="flex items-center justify-center py-8">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                              </div>
+                            ) : tracks.length === 0 ? (
+                              <div className="text-center py-8 text-muted-foreground">
+                                <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                <p className="text-sm">No tracks assigned yet</p>
+                              </div>
+                            ) : (
+                              <div className="p-1">
+                                {tracks.map((track, idx) => (
+                                  <button
+                                    key={track.id || idx}
+                                    onClick={() => playTrack(idx)}
+                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left transition-colors ${
+                                      idx === currentTrackIndex
+                                        ? 'bg-primary/10 border border-primary/30'
+                                        : 'hover:bg-muted/50'
+                                    }`}
+                                  >
+                                    {/* Track Number / Play State */}
+                                    <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+                                      {idx === currentTrackIndex && isPlaying ? (
+                                        <Pause className="h-4 w-4 text-primary" />
+                                      ) : idx === currentTrackIndex ? (
+                                        <Play className="h-4 w-4 text-primary" />
+                                      ) : (
+                                        <span className="text-xs text-muted-foreground font-medium">
+                                          {idx + 1}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Track Info */}
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`text-sm font-medium truncate ${
+                                        idx === currentTrackIndex ? 'text-primary' : ''
+                                      }`}>
+                                        {cleanDisplayTitle(track.track_data?.title || `Track ${idx + 1}`)}
+                                      </p>
+                                      {track.track_data?.artist && (
+                                        <p className="text-xs text-muted-foreground truncate">
+                                          {track.track_data.artist}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </ScrollArea>
+                          
+                          {tracks.length > 0 && (
+                            <div className="p-2 border-t bg-muted/20">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="w-full text-xs"
+                                onClick={() => {
+                                  setListeningOpen(false);
+                                  navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=audio`, { replace: true });
+                                }}
+                              >
+                                View Full Library
+                              </Button>
+                            </div>
+                          )}
+                        </PopoverContent>
+                      </Popover>
+                    );
+                  }
                   
                   return (
                     <button 
