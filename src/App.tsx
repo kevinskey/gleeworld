@@ -263,6 +263,7 @@ import ExecBoardTrainingVideosPage from "./pages/ExecBoardTrainingVideosPage";
 import MeetingAgendasPage from "./pages/exec-board/MeetingAgendasPage";
 import TransitionDocumentsPage from "./pages/exec-board/TransitionDocumentsPage";
 import PolicyManualPage from "./pages/exec-board/PolicyManualPage";
+import StudentSchedulesPage from "./pages/StudentSchedulesPage";
 
 // Grading System
 import InstructorDashboard from "./pages/grading/instructor/InstructorDashboard";
@@ -1510,6 +1511,14 @@ const App = () => {
                                  element={
                                    <ProtectedRoute>
                                      <AuditionsManagement />
+                                   </ProtectedRoute>
+                                 } 
+                               />
+                               <Route 
+                                 path="/admin/student-schedules" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <StudentSchedulesPage />
                                    </ProtectedRoute>
                                  } 
                                />

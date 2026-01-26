@@ -199,7 +199,31 @@ export const AutoNotificationService = {
     });
   },
 
-  // Generic notification sender
+  // Class schedule conflict notifications
+  async notifyScheduleConflict(userId: string, studentName: string, conflictDetails: string) {
+    // Notify admins and exec board about schedule conflicts
+    const { data: admins } = await supabase
+      .from('gw_profiles')
+      .select('user_id, full_name')
+      .or('is_admin.eq.true,is_super_admin.eq.true,is_exec_board.eq.true');
+
+    if (admins) {
+      for (const admin of admins) {
+        if (admin.user_id) {
+          await this.sendNotification({
+            userId: admin.user_id,
+            title: '⚠️ Schedule Conflict Detected',
+            message: `${studentName} has a class schedule that conflicts with Glee Club rehearsal: ${conflictDetails}`,
+            type: 'warning',
+            category: 'schedule',
+            actionUrl: '/admin/student-schedules',
+            actionLabel: 'View Schedules',
+            metadata: { studentUserId: userId, studentName, conflictDetails }
+          });
+        }
+      }
+    }
+  },
   async sendNotification(options: AutoNotificationOptions) {
     try {
       const { data, error } = await supabase.rpc('create_notification_with_delivery', {

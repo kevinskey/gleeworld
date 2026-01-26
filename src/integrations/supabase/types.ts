@@ -26760,6 +26760,60 @@ export type Database = {
           },
         ]
       }
+      student_class_schedules: {
+        Row: {
+          conflict_details: string | null
+          course_code: string | null
+          course_name: string
+          created_at: string
+          days: string[]
+          end_time: string
+          has_conflict: boolean | null
+          id: string
+          instructor_name: string | null
+          location: string | null
+          notes: string | null
+          semester: string
+          start_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conflict_details?: string | null
+          course_code?: string | null
+          course_name: string
+          created_at?: string
+          days: string[]
+          end_time: string
+          has_conflict?: boolean | null
+          id?: string
+          instructor_name?: string | null
+          location?: string | null
+          notes?: string | null
+          semester?: string
+          start_time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conflict_details?: string | null
+          course_code?: string | null
+          course_name?: string
+          created_at?: string
+          days?: string[]
+          end_time?: string
+          has_conflict?: boolean | null
+          id?: string
+          instructor_name?: string | null
+          location?: string | null
+          notes?: string | null
+          semester?: string
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_registrations: {
         Row: {
           african_american_music_interests: string | null
@@ -28847,6 +28901,33 @@ export type Database = {
           last_sender_id: string | null
           user1_id: string | null
           user2_id: string | null
+        }
+        Relationships: []
+      }
+      student_schedules_with_profiles: {
+        Row: {
+          avatar_url: string | null
+          class_year: number | null
+          conflict_details: string | null
+          course_code: string | null
+          course_name: string | null
+          created_at: string | null
+          days: string[] | null
+          email: string | null
+          end_time: string | null
+          first_name: string | null
+          full_name: string | null
+          has_conflict: boolean | null
+          id: string | null
+          instructor_name: string | null
+          last_name: string | null
+          location: string | null
+          notes: string | null
+          semester: string | null
+          start_time: string | null
+          updated_at: string | null
+          user_id: string | null
+          voice_part: string | null
         }
         Relationships: []
       }

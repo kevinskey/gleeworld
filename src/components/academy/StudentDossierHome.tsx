@@ -16,6 +16,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
 import { CourseTopicSlider } from './CourseTopicSlider';
+import { ClassScheduleForm } from './ClassScheduleForm';
 
 interface StudentProfile {
   user_id: string;
@@ -493,6 +494,11 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
         {/* Topic Photo Slider */}
         <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
+
+        {/* Class Schedule Form - For MUS 070 (Glee Club) */}
+        {course.courseCode === 'MUS 070' && (
+          <ClassScheduleForm semester="Spring 2026" />
+        )}
 
         {/* Current Module / Week - Only show for MUS 240 which has DB-driven modules */}
         {currentModule && course.courseCode === 'MUS 240' && (
