@@ -197,17 +197,19 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
           />
         </div>
 
-        {/* Class Schedule Form - Only for MUS 070 (Glee Club) */}
-        {course.courseCode === 'MUS 070' && (
-          <ClassScheduleForm semester="Spring 2026" />
-        )}
-
         {/* 6. Announcements / Media Slider */}
         <Card className="border-0 shadow-sm overflow-hidden">
           <CourseTopicSlider 
             courseCode={course.courseCode}
           />
         </Card>
+
+        {/* 7. Class Schedule Form - Only for MUS 070 (Glee Club) */}
+        {course.courseCode === 'MUS 070' && (
+          <div className="border-2 border-red-500 rounded-lg p-1">
+            <ClassScheduleForm semester="Spring 2026" />
+          </div>
+        )}
       </main>
     </div>
   );
