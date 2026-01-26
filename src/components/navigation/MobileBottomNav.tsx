@@ -52,31 +52,31 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="flex items-center justify-evenly w-full h-16 px-4 bg-background">
+        <div className="flex items-center justify-evenly w-full h-12 px-4 bg-background">
           {/* Musical Toolkit */}
-          <div className="flex items-center justify-center w-12 h-12 text-foreground">
+          <div className="flex items-center justify-center w-10 h-10 text-foreground">
             <MusicalToolkit className="!p-0" />
           </div>
 
           {/* Glee Cam - Highlighted Center */}
           <button
             onClick={() => setShowCategorySelector(true)}
-            className="flex items-center justify-center w-16 h-16 -mt-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all border-4 border-background"
+            className="flex items-center justify-center w-12 h-12 -mt-4 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all border-2 border-background"
           >
-            <Camera className="h-7 w-7" />
+            <Camera className="h-5 w-5" />
           </button>
 
           {/* Music Library */}
           <button
             onClick={handleLibraryClick}
             className={cn(
-              "relative flex items-center justify-center w-12 h-12 rounded-full transition-all",
+              "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
               isActive('/music-library')
                 ? "text-primary bg-primary/10" 
                 : "text-foreground hover:bg-muted"
             )}
           >
-            <Library className="h-7 w-7" />
+            <Library className="h-5 w-5" />
           </button>
         </div>
       </nav>
