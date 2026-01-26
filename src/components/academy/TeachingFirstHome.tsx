@@ -101,6 +101,46 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
   
   // Playlist hook for listening dropdown
   const { tracks, tracksLoading, playlists, selectedPlaylist, selectPlaylist } = useCoursePlaylist(courseId);
+  
+  // Auto-select playlist matching current module topic when module loads
+  useEffect(() => {
+    if (currentModule && playlists.length > 0 && !selectedPlaylist) {
+      // Try to find a playlist that matches the current module's title/theme
+      const moduleTitle = currentModule.title.toLowerCase();
+      
+      // Week-to-topic mapping for MUS-240
+      const weekTopicMap: Record<number, string[]> = {
+        1: ['introduction', 'african american'],
+        2: ['spiritual', 'enslaved'],
+        3: ['blues', 'delta', 'urban'],
+        4: ['ragtime', 'jazz'],
+        5: ['jubilee', 'quartet', 'swing'],
+        6: ['jazz', 'gospel'],
+        7: ['civil rights', 'funk'],
+        8: ['gospel'],
+        9: ['gospel'],
+        10: ['disco', 'techno'],
+        11: ['r&b', 'soul'],
+        12: ['hip-hop', 'hip hop'],
+        13: ['hip-hop', 'hip hop'],
+        14: ['fourth turning'],
+        15: ['review'],
+        16: ['final'],
+      };
+      
+      const weekKeywords = weekTopicMap[currentModule.week_number] || [];
+      
+      // Find matching playlist
+      const matchingPlaylist = playlists.find(p => {
+        const playlistTitle = p.title.toLowerCase();
+        return weekKeywords.some(keyword => playlistTitle.includes(keyword) || moduleTitle.includes(keyword));
+      });
+      
+      if (matchingPlaylist) {
+        selectPlaylist(matchingPlaylist);
+      }
+    }
+  }, [currentModule, playlists, selectedPlaylist, selectPlaylist]);
 
   // Audio playback functions
   const cleanDisplayTitle = (title: string) => {
@@ -650,11 +690,13 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                           <div className="p-3 border-b bg-muted/30">
                             <div className="flex items-center gap-2">
                               <Music className="h-4 w-4 text-primary" />
-                              <span className="font-semibold text-sm">Week {currentModule.week_number} Playlist</span>
+                              <span className="font-semibold text-sm">
+                                {selectedPlaylist?.title || `Week ${currentModule.week_number} Audio`}
+                              </span>
                             </div>
-                            {selectedPlaylist && (
-                              <p className="text-xs text-muted-foreground mt-1">{selectedPlaylist.title}</p>
-                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {currentModule.title} • {tracks.length} tracks
+                            </p>
                           </div>
                           
                           <ScrollArea className="max-h-[280px]">
