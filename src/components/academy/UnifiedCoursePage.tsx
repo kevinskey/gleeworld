@@ -304,47 +304,17 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </div>}
           </nav>
           
-          {/* User Profile Section at bottom */}
-          <div className="border-t border-border px-3 py-4 space-y-1">
-            <div className="flex items-center gap-3 px-3 py-3 rounded-md text-lg text-foreground">
-              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <User className="h-6 w-6 text-primary" />
-              </div>
-              <span className="truncate text-lg">{user?.email?.split('@')[0] || 'Student'}</span>
-            </div>
-            
-            {[{
-              icon: Users,
-              label: 'Access & DC',
-              tab: 'access'
-            }, {
-              icon: Settings,
-              label: 'Settings',
-              tab: 'settings'
-            }, {
-              icon: ArrowLeft,
-              label: 'Navigate',
-              tab: 'navigate'
-            }].map(item => <button key={item.tab} onClick={() => {
-              if (item.tab === 'navigate') {
-                navigate('/glee-academy');
-              } else {
-                setActiveTab(item.tab);
-              }
-            }} className="w-full flex items-center gap-4 px-3 py-3 rounded-md text-xl transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
-                <item.icon className="h-7 w-7 flex-shrink-0" />
-                <span>{item.label}</span>
-              </button>)}
-            
+          {/* Admin Controls at bottom */}
+          <div className="border-t border-border px-3 py-4 space-y-2">
             {/* Secretary Attendance Button */}
-            {isSecretary() && <Button onClick={() => setActiveTab('secretary')} variant={activeTab === 'secretary' ? 'default' : 'outline'} className="w-full text-xs h-8 mt-2" size="sm">
-                <UserCheck className="h-3.5 w-3.5 mr-1.5" />
+            {isSecretary() && <Button onClick={() => setActiveTab('secretary')} variant={activeTab === 'secretary' ? 'default' : 'outline'} className="w-full text-sm h-10" size="sm">
+                <UserCheck className="h-4 w-4 mr-2" />
                 Secretary
               </Button>}
             
             {/* Instructor Control Center Button */}
-            {isAdmin && <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="w-full text-xs h-8 mt-2" size="sm">
-                <Settings className="h-3.5 w-3.5 mr-1.5" />
+            {isAdmin && <Button onClick={() => navigate(`/${course.courseCode.toLowerCase().replace(' ', '-')}/instructor/console`)} variant="default" className="w-full text-sm h-10" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
                 Instructor
               </Button>}
           </div>
