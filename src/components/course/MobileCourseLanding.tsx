@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { CourseTopicSlider } from '@/components/academy/CourseTopicSlider';
+import { ClassScheduleForm } from '@/components/academy/ClassScheduleForm';
 
 interface MobileCourseLandingProps {
   course: AcademyCourse;
@@ -195,6 +196,11 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
             onClick={() => navigate(`/academy/${courseSlug}?tab=resources`)} 
           />
         </div>
+
+        {/* Class Schedule Form - Only for MUS 070 (Glee Club) */}
+        {course.courseCode === 'MUS 070' && (
+          <ClassScheduleForm semester="Spring 2026" />
+        )}
 
         {/* 6. Announcements / Media Slider */}
         <Card className="border-0 shadow-sm overflow-hidden">
