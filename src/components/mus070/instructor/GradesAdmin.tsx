@@ -13,13 +13,13 @@ export const Mus070GradesAdmin = () => {
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="roster">Detailed Roster</TabsTrigger>
         </TabsList>
-        <TabsContent value="spreadsheet">
+        <TabsContent value="spreadsheet" className="mt-4">
           <Mus070GradeSpreadsheet />
         </TabsContent>
-        <TabsContent value="attendance">
+        <TabsContent value="attendance" className="mt-4 overflow-visible">
           <Mus070AttendanceGrid isInstructor={true} />
         </TabsContent>
-        <TabsContent value="roster">
+        <TabsContent value="roster" className="mt-4 overflow-visible">
           <Mus070StudentRoster />
         </TabsContent>
       </Tabs>
