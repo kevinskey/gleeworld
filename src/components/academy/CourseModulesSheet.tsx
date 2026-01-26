@@ -141,6 +141,10 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
         'Journal': ['journal', 'reflection']
       };
 
+      // Get current date for date-based active detection
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       // Process modules
       const processedModules: WeekModule[] = (modulesData || []).map(mod => {
         // Map activities with completion status
@@ -165,23 +169,34 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
         // Get resources for this module (MUS-240)
         const moduleResources = resourcesMap[mod.module_id] || [];
 
+        // Calculate is_active: use flag if set, otherwise check date range
+        let isActive = mod.is_active;
+        if (!isActive && mod.start_date && mod.end_date) {
+          const startDate = new Date(mod.start_date);
+          const endDate = new Date(mod.end_date);
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
+          isActive = today >= startDate && today <= endDate;
+        }
+
         return {
           id: mod.id,
           module_id: mod.module_id,
           week_number: mod.week_number || 0,
           title: mod.title?.replace(/^Week \d+:\s*/, '') || `Week ${mod.week_number}`,
           description: mod.description,
-          is_active: mod.is_active,
+          is_active: isActive,
           activities,
           resources: moduleResources
         };
       });
 
-      // Sort with current/active week at top
+      // Sort with current/active week at top, then remaining weeks in descending order (most recent first)
       const sortedModules = [...processedModules].sort((a, b) => {
         if (a.is_active && !b.is_active) return -1;
         if (!a.is_active && b.is_active) return 1;
-        return a.week_number - b.week_number;
+        // Both active or both inactive - sort descending so higher week numbers come first
+        return b.week_number - a.week_number;
       });
 
       setModules(sortedModules);
