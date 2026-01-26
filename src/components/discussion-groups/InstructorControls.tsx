@@ -152,9 +152,22 @@ export const InstructorControls: React.FC<InstructorControlsProps> = ({
   };
 
   const handleUpdatePhaseDeadline = async (phase: string, newDate: string) => {
-    if (!newDate) return;
+   if (!newDate || newDate.trim() === '') {
+     toast({ 
+       title: 'Invalid Date', 
+       description: 'Please select a valid date and time', 
+       variant: 'destructive' 
+     });
+     return;
+   }
     
     try {
+     // Validate that the date string can be parsed
+     const dateObj = new Date(newDate);
+     if (isNaN(dateObj.getTime())) {
+       throw new Error('Invalid date format');
+     }
+     
       const fieldMap: Record<string, string> = {
         'individual': 'individual_due_at',
         'peer': 'peer_due_at',
@@ -163,7 +176,7 @@ export const InstructorControls: React.FC<InstructorControlsProps> = ({
       
       const { error } = await supabase
         .from('discussion_prompts')
-        .update({ [fieldMap[phase]]: new Date(newDate).toISOString() })
+       .update({ [fieldMap[phase]]: dateObj.toISOString() })
         .eq('id', discussionId);
 
       if (error) throw error;
@@ -359,6 +372,12 @@ export const InstructorControls: React.FC<InstructorControlsProps> = ({
                           setEditingPhase(phase.id);
                           if (phase.deadline) {
                             setPhaseDate(format(new Date(phase.deadline), "yyyy-MM-dd'T'HH:mm"));
+                         } else {
+                           // Set default to tomorrow at noon if no deadline exists
+                           const tomorrow = new Date();
+                           tomorrow.setDate(tomorrow.getDate() + 1);
+                           tomorrow.setHours(12, 0, 0, 0);
+                           setPhaseDate(format(tomorrow, "yyyy-MM-dd'T'HH:mm"));
                           }
                         }}
                       >
