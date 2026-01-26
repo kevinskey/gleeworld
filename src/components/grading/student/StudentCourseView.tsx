@@ -15,6 +15,7 @@ import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { StudentGradeSpreadsheet } from './StudentGradeSpreadsheet';
+import { Mus240GradeGrid } from '@/components/mus240/grades/Mus240GradeGrid';
 
 interface StudentCourseViewProps {
   courseId: string;
@@ -266,7 +267,11 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
         {/* Spreadsheet Tab - New default */}
         <TabsContent value="spreadsheet" className="mt-6">
-          <StudentGradeSpreadsheet courseId={courseId} />
+          {courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37' ? (
+            <Mus240GradeGrid />
+          ) : (
+            <StudentGradeSpreadsheet courseId={courseId} />
+          )}
         </TabsContent>
 
         {/* Overview/Breakdown Tab */}
