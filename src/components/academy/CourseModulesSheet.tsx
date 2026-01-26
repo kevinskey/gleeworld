@@ -226,7 +226,6 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
     if (activity.assignmentId) {
       if (activity.type === 'Discussion') {
         navigate(`/academy/${coursePath}?tab=discussions`, { replace: true });
-        window.location.reload();
       } else {
         navigate(`/grading/student/assignment/${activity.assignmentId}`);
       }
@@ -240,7 +239,6 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
       };
       const tab = tabMapping[activity.type] || 'resources';
       navigate(`/academy/${coursePath}?tab=${tab}`, { replace: true });
-      window.location.reload();
     }
     setOpen(false);
   };
