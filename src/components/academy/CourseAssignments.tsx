@@ -100,16 +100,30 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
       }
 
       // Transform sight-reading assignments to match Assignment interface
-      const readMusicAssignments: Assignment[] = (sightReadingData || []).map(sr => ({
-        id: sr.id,
-        title: sr.title,
-        description: sr.description || 'ReadMusic Sight-Reading Assignment',
-        points: sr.points_possible || 100,
-        due_date: sr.due_date,
-        assignment_type: 'sight_reading',
-        source: 'readmusic' as const,
-        external_url: 'https://readmusic.gleeworld.org'
-      }));
+      const readMusicAssignments: Assignment[] = (sightReadingData || []).map(sr => {
+        // Extract external_id from notes field (format: "external_id:uuid | exercises:N")
+        let externalId: string | null = null;
+        if (sr.notes) {
+          const match = sr.notes.match(/external_id:([a-f0-9-]+)/i);
+          if (match) {
+            externalId = match[1];
+          }
+        }
+        
+        return {
+          id: sr.id,
+          title: sr.title,
+          description: sr.description || 'ReadMusic Sight-Reading Assignment',
+          points: sr.points_possible || 100,
+          due_date: sr.due_date,
+          assignment_type: 'sight_reading',
+          source: 'readmusic' as const,
+          // Link directly to the assignment if we have an external_id
+          external_url: externalId 
+            ? `https://readmusic.gleeworld.org/assignment/${externalId}`
+            : 'https://readmusic.gleeworld.org'
+        };
+      });
 
       // Combine both sources
       const allAssignments = [
