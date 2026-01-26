@@ -323,7 +323,9 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             };
           });
 
-        const allAssignments = [...mappedAssignments, ...discussionAssignments];
+        // Merge and sort chronologically by due date
+        const allAssignments = [...mappedAssignments, ...discussionAssignments]
+          .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
         setAssignments(allAssignments);
 
         // Fetch current active module from database
