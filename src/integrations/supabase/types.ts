@@ -6914,7 +6914,7 @@ export type Database = {
           course_id: string | null
           created_at: string
           custom_data: Json | null
-          event_id: string
+          event_id: string | null
           expires_at: string
           generated_at: string
           generated_by: string
@@ -6946,7 +6946,7 @@ export type Database = {
           course_id?: string | null
           created_at?: string
           custom_data?: Json | null
-          event_id: string
+          event_id?: string | null
           expires_at: string
           generated_at?: string
           generated_by: string
@@ -6978,7 +6978,7 @@ export type Database = {
           course_id?: string | null
           created_at?: string
           custom_data?: Json | null
-          event_id?: string
+          event_id?: string | null
           expires_at?: string
           generated_at?: string
           generated_by?: string
