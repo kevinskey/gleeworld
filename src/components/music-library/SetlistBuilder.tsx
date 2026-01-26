@@ -681,35 +681,36 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
   console.log('SetlistBuilder render: isCreating =', isCreating, 'createLoading =', createLoading);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {/* Compact Header */}
       <div className="flex items-center justify-between gap-2 px-1">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">My Setlists</span>
+        <span className="text-sm font-semibold text-foreground">My Setlists</span>
         <Button 
           onClick={() => {
             console.log('SetlistBuilder: New Setlist button clicked');
             setIsCreating(!isCreating);
           }} 
-          className="h-6 w-6 p-0"
+          className="h-7 px-2 gap-1"
           disabled={createLoading}
-          variant={isCreating ? "secondary" : "ghost"}
+          variant={isCreating ? "secondary" : "outline"}
           size="sm"
         >
           <Plus className="h-3.5 w-3.5" />
+          <span className="text-xs">New</span>
         </Button>
       </div>
 
       {/* Mac-style Setlist List */}
-      <div className="space-y-0.5 max-h-[40vh] overflow-y-auto">
+      <div className="space-y-1 max-h-[50vh] overflow-y-auto">
         {setlists.map((setlist) => (
           <div key={setlist.id}>
             {/* Setlist Row */}
             <div
               className={cn(
-                "flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors group",
+                "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors group border",
                 selectedSetlist?.id === setlist.id 
-                  ? "bg-primary/10 text-primary" 
-                  : "hover:bg-muted/50"
+                  ? "bg-primary text-primary-foreground border-primary" 
+                  : "bg-card hover:bg-accent border-border text-foreground"
               )}
               onClick={() => {
                 if (selectedSetlist?.id === setlist.id) {
@@ -720,10 +721,10 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                 }
               }}
             >
-              <Music className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
+              <Music className="h-4 w-4 flex-shrink-0" />
               <span className="flex-1 min-w-0 text-sm font-medium truncate">{setlist.title}</span>
               {setlist.is_public && (
-                <Users className="h-3 w-3 text-green-600 flex-shrink-0" />
+                <Badge variant="secondary" className="text-xs">Public</Badge>
               )}
               <Button
                 size="sm"
@@ -732,23 +733,23 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                   e.stopPropagation();
                   handleEditSetlist(setlist);
                 }}
-                className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                <Edit className="h-3 w-3" />
+                <Edit className="h-3.5 w-3.5" />
               </Button>
             </div>
             
             {/* Expanded Setlist Items */}
             {selectedSetlist?.id === setlist.id && (
-              <div className="ml-5 pl-2 border-l border-muted space-y-0.5 py-1">
+              <div className="ml-6 pl-3 border-l-2 border-primary/30 space-y-1 py-2 mt-1">
                 {selectedSetlist.items?.map((item, index) => (
                   <div 
                     key={item.id} 
-                    className="flex items-center gap-2 px-2 py-1 rounded hover:bg-muted/30 group/item"
+                    className="flex items-center gap-2 px-2 py-1.5 rounded bg-muted/50 hover:bg-muted group/item"
                   >
-                    <span className="text-xs text-muted-foreground w-4 text-right">{index + 1}</span>
+                    <span className="text-xs text-muted-foreground w-5 text-right font-mono">{index + 1}.</span>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm truncate block">{item.sheet_music?.title}</span>
+                      <span className="text-sm text-foreground truncate block">{item.sheet_music?.title}</span>
                       {item.sheet_music?.composer && (
                         <span className="text-xs text-muted-foreground truncate block">{item.sheet_music.composer}</span>
                       )}
@@ -784,31 +785,40 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                 ))}
                 
                 {(!selectedSetlist.items || selectedSetlist.items.length === 0) && (
-                  <div className="text-center py-2 text-xs text-muted-foreground">
-                    No songs yet
+                  <div className="text-center py-3 text-sm text-muted-foreground bg-muted/30 rounded">
+                    No songs added yet. Search below to add music.
                   </div>
                 )}
                 
                 {/* Add Sheet Music - Compact */}
-                <div className="pt-1 mt-1 border-t border-dashed">
+                <div className="pt-2 mt-2 border-t border-dashed">
+                  <Label className="text-xs text-muted-foreground mb-1 block">Add sheet music:</Label>
                   <Input
-                    placeholder="Add sheet music..."
+                    placeholder="Search music to add..."
                     value={sheetMusicSearch}
                     onChange={(e) => setSheetMusicSearch(e.target.value)}
-                    className="h-7 text-xs"
+                    className="h-8 text-sm"
                   />
                   {sheetMusicSearch && (
-                    <div className="max-h-24 overflow-y-auto mt-1 space-y-0.5">
+                    <div className="max-h-32 overflow-y-auto mt-2 space-y-1 bg-card rounded border p-1">
                       {filteredSheetMusic.slice(0, 5).map((music) => (
                         <div 
                           key={music.id} 
-                          className="flex items-center gap-2 px-2 py-1 text-xs rounded cursor-pointer hover:bg-accent/50"
+                          className="flex items-center gap-2 px-2 py-1.5 text-sm rounded cursor-pointer hover:bg-accent text-foreground"
                           onClick={() => addToSetlist(music.id)}
                         >
-                          <Plus className="h-3 w-3 text-muted-foreground" />
-                          <span className="truncate">{music.title}</span>
+                          <Plus className="h-4 w-4 text-primary" />
+                          <span className="truncate flex-1">{music.title}</span>
+                          {music.composer && (
+                            <span className="text-xs text-muted-foreground truncate max-w-[100px]">{music.composer}</span>
+                          )}
                         </div>
                       ))}
+                      {filteredSheetMusic.length === 0 && (
+                        <div className="text-center py-2 text-sm text-muted-foreground">
+                          No music found
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -817,10 +827,11 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
           </div>
         ))}
         
-        {setlists.length === 0 && (
-          <div className="text-center py-4 text-muted-foreground">
-            <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-xs">No setlists yet</p>
+        {setlists.length === 0 && !loading && (
+          <div className="text-center py-6 text-muted-foreground bg-muted/30 rounded-lg border border-dashed">
+            <Music className="h-10 w-10 mx-auto mb-3 opacity-50" />
+            <p className="text-sm font-medium">No setlists yet</p>
+            <p className="text-xs mt-1">Click "New" above to create your first setlist</p>
           </div>
         )}
       </div>
