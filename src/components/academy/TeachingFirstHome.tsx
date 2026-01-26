@@ -17,6 +17,7 @@ import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
 import { CourseTopicSlider } from './CourseTopicSlider';
 import { ModuleVideosModal } from './ModuleVideosModal';
+import { ModuleReadingsModal } from './ModuleReadingsModal';
 import { toast } from 'sonner';
 
 interface ModuleVideo {
@@ -25,6 +26,14 @@ interface ModuleVideo {
   url: string | null;
   description: string | null;
   duration: string | null;
+  is_required: boolean;
+}
+
+interface ModuleReading {
+  id: string;
+  title: string;
+  url: string | null;
+  description: string | null;
   is_required: boolean;
 }
 
@@ -75,7 +84,9 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
   const [currentModule, setCurrentModule] = useState<CurrentModule | null>(null);
   const [loading, setLoading] = useState(true);
   const [moduleVideos, setModuleVideos] = useState<ModuleVideo[]>([]);
+  const [moduleReadings, setModuleReadings] = useState<ModuleReading[]>([]);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [readingsModalOpen, setReadingsModalOpen] = useState(false);
 
   const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
   const isMus240 = courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
@@ -324,19 +335,29 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           });
         }
 
-        // Fetch module videos if MUS-240 and we have a module
+        // Fetch module videos and readings if MUS-240 and we have a module
         // Use the module_id string (e.g., 'week-2') for mus240_module_resources, not the UUID
         if (isMus240 && moduleData) {
           const weekModuleId = `week-${moduleData.week_number}`;
-          const { data: resourcesData } = await supabase
-            .from('mus240_module_resources')
-            .select('id, module_id, title, resource_type, url, description, duration, is_required, display_order')
-            .eq('module_id', weekModuleId)
-            .eq('resource_type', 'video')
-            .order('display_order', { ascending: true });
           
-          if (resourcesData && resourcesData.length > 0) {
-            setModuleVideos(resourcesData.map((r: any) => ({
+          // Fetch videos and readings in parallel
+          const [{ data: videosData }, { data: readingsData }] = await Promise.all([
+            supabase
+              .from('mus240_module_resources')
+              .select('id, module_id, title, resource_type, url, description, duration, is_required, display_order')
+              .eq('module_id', weekModuleId)
+              .eq('resource_type', 'video')
+              .order('display_order', { ascending: true }),
+            supabase
+              .from('mus240_module_resources')
+              .select('id, module_id, title, resource_type, url, description, is_required, display_order')
+              .eq('module_id', weekModuleId)
+              .eq('resource_type', 'reading')
+              .order('display_order', { ascending: true })
+          ]);
+          
+          if (videosData && videosData.length > 0) {
+            setModuleVideos(videosData.map((r: any) => ({
               id: r.id,
               title: r.title,
               url: r.url,
@@ -346,6 +367,18 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             })));
           } else {
             setModuleVideos([]);
+          }
+          
+          if (readingsData && readingsData.length > 0) {
+            setModuleReadings(readingsData.map((r: any) => ({
+              id: r.id,
+              title: r.title,
+              url: r.url,
+              description: r.description,
+              is_required: r.is_required || false
+            })));
+          } else {
+            setModuleReadings([]);
           }
         }
 
@@ -512,6 +545,17 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                         return;
                       } else {
                         toast.info('No videos assigned for this week yet');
+                        return;
+                      }
+                    }
+                    
+                    // For Reading activity in MUS-240, show the module readings modal if readings exist
+                    if (contentType.type === 'Reading' && isMus240) {
+                      if (moduleReadings.length > 0) {
+                        setReadingsModalOpen(true);
+                        return;
+                      } else {
+                        toast.info('No readings assigned for this week yet');
                         return;
                       }
                     }
@@ -726,6 +770,17 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           open={videoModalOpen}
           onOpenChange={setVideoModalOpen}
           videos={moduleVideos}
+          weekNumber={currentModule.week_number}
+          moduleTitle={currentModule.title}
+        />
+      )}
+
+      {/* Module Readings Modal for MUS-240 */}
+      {isMus240 && currentModule && (
+        <ModuleReadingsModal
+          open={readingsModalOpen}
+          onOpenChange={setReadingsModalOpen}
+          readings={moduleReadings}
           weekNumber={currentModule.week_number}
           moduleTitle={currentModule.title}
         />
