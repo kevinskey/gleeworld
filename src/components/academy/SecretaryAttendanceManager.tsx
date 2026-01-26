@@ -46,7 +46,7 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [semester, setSemester] = useState('FALL 2025');
+  const [semester, setSemester] = useState('Spring 2026');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -59,6 +59,7 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
           gw_student_profiles!inner(full_name, email)
         `)
         .eq('course_id', courseId)
+        .eq('semester', semester)
         .eq('enrollment_status', 'enrolled');
 
       if (enrollError) throw enrollError;
