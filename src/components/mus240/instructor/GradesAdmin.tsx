@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudentGradesRoster } from './StudentGradesRoster';
-import { Mus240GradeGrid } from '../grades/Mus240GradeGrid';
+import { Mus240InstructorGradeGrid } from './Mus240InstructorGradeGrid';
 import { Mus240AttendanceGrid } from '../attendance/Mus240AttendanceGrid';
 
 export const GradesAdmin = () => {
@@ -14,7 +14,7 @@ export const GradesAdmin = () => {
           <TabsTrigger value="roster">Detailed Roster</TabsTrigger>
         </TabsList>
         <TabsContent value="spreadsheet">
-          <Mus240GradeGrid isInstructor={true} />
+          <Mus240InstructorGradeGrid />
         </TabsContent>
         <TabsContent value="attendance">
           <Mus240AttendanceGrid isInstructor={true} />
