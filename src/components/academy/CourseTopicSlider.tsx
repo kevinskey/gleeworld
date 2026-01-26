@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Images, Settings } from 'lucide-react';
 import { UniversalSlider } from '@/components/sliders/UniversalSlider';
 import { useSliderByPlacement } from '@/hooks/useUniversalSlider';
@@ -26,61 +25,29 @@ export const CourseTopicSlider: React.FC<CourseTopicSliderProps> = ({
     return null;
   }
 
-  // Show empty state with setup button for admins
+  // Show empty state with setup hint for admins (minimal)
   if (!isLoading && (!slider || slider.slides.length === 0) && isAdmin) {
     return (
-      <Card className="border-dashed border-2 border-muted-foreground/30">
-        <CardContent className="py-8 text-center">
-          <Images className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-          <h3 className="font-medium text-muted-foreground mb-2">Topic Photo Slider</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Add photos for the current topic. Create a slider with placement key: <code className="bg-muted px-1 py-0.5 rounded text-xs">{placementKey}</code>
-          </p>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate('/admin/sliders')}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Manage Sliders
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="bg-muted/30 border border-dashed border-muted-foreground/30 rounded-lg py-8 text-center">
+        <Images className="h-10 w-10 mx-auto text-muted-foreground/50 mb-2" />
+        <p className="text-sm text-muted-foreground">
+          Set cover image in Instructor Console
+        </p>
+      </div>
     );
   }
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <Images className="h-4 w-4 text-primary" />
-          Current Topic
-        </CardTitle>
-        {isAdmin && (
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => navigate('/admin/sliders')}
-            className="h-7 px-2 text-xs"
-          >
-            <Settings className="h-3.5 w-3.5 mr-1" />
-            Edit
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="h-[200px] sm:h-[280px] md:h-[320px] lg:h-[380px]">
-          <UniversalSlider 
-            placementKey={placementKey} 
-            className="rounded-none h-full"
-            objectFit="contain"
-            enableLightbox
-            autoPlay={false}
-            showNavigation={true}
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="h-[180px] sm:h-[220px] md:h-[260px] lg:h-[300px]">
+      <UniversalSlider 
+        placementKey={placementKey} 
+        className="rounded-none h-full"
+        objectFit="cover"
+        enableLightbox
+        autoPlay={false}
+        showNavigation={slider && slider.slides.length > 1}
+      />
+    </div>
   );
 };
 
