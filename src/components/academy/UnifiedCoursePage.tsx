@@ -41,9 +41,7 @@ import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants
 import { useUserRole } from '@/hooks/useUserRole';
 import { MobileCourseLanding } from '@/components/course/MobileCourseLanding';
 import { useIsMobile } from '@/hooks/use-mobile';
-const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager').then(m => ({
-  default: m.SecretaryAttendanceManager
-})));
+const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager'));
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
   default: m.AcademyPollSystem
 })));

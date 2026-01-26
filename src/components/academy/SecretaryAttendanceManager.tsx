@@ -535,8 +535,10 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
           <Plus className="h-3 w-3 text-green-500" />
           New record
         </span>
-        <span>Ex.R = Excused Rehearsal • Un.R = Unexcused Rehearsal • Tard = Tardies • Ex.P/Un.P = Performance</span>
+      <span>Ex.R = Excused Rehearsal • Un.R = Unexcused Rehearsal • Tard = Tardies • Ex.P/Un.P = Performance</span>
       </div>
     </div>
   );
 };
+
+export default SecretaryAttendanceManager;
