@@ -66,9 +66,10 @@ export const Mus070AttendanceGrid: React.FC<Mus070AttendanceGridProps> = ({
 
   const targetStudentId = studentId || user?.id;
 
-  // Use unified hook for enrollment data (MUS-070 doesn't filter by semester)
+  // Use unified hook for enrollment data - filter by Spring 2026 semester
   const { students: enrolledStudents, studentIds: enrolledStudentIds } = useCourseStudents({
     courseId: COURSE_IDS.MUS_070,
+    semester: 'Spring 2026',
   });
 
   const getWeekNumber = (dateStr: string): number => {
@@ -384,7 +385,7 @@ export const Mus070AttendanceGrid: React.FC<Mus070AttendanceGridProps> = ({
               <p className="font-medium">No students found</p>
             </div>
           ) : (
-            <ScrollArea className="w-full">
+            <ScrollArea className="w-full h-[60vh]">
               <div className="min-w-max">
                 {/* Header Row */}
                 <div className="flex border-b bg-muted/50 sticky top-0 z-10">
@@ -477,6 +478,7 @@ export const Mus070AttendanceGrid: React.FC<Mus070AttendanceGridProps> = ({
                 ))}
               </div>
               <ScrollBar orientation="horizontal" />
+              <ScrollBar orientation="vertical" />
             </ScrollArea>
           )}
         </CardContent>
