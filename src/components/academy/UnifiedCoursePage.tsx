@@ -474,7 +474,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </React.Suspense>}
 
             {/* Discussions Tab */}
-            {activeTab === 'discussions' && <DiscussionsSection courseId={course.id} />}
+            {activeTab === 'discussions' && <DiscussionsSection courseId={course.id} discussionId={searchParams.get('discussionId')} />}
 
 
 

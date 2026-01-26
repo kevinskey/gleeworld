@@ -2946,6 +2946,7 @@ export type Database = {
           is_graded: boolean | null
           is_locked: boolean | null
           max_points: number | null
+          module_id: string | null
           reply_count: number | null
           title: string
           updated_at: string | null
@@ -2960,6 +2961,7 @@ export type Database = {
           is_graded?: boolean | null
           is_locked?: boolean | null
           max_points?: number | null
+          module_id?: string | null
           reply_count?: number | null
           title: string
           updated_at?: string | null
@@ -2974,6 +2976,7 @@ export type Database = {
           is_graded?: boolean | null
           is_locked?: boolean | null
           max_points?: number | null
+          module_id?: string | null
           reply_count?: number | null
           title?: string
           updated_at?: string | null

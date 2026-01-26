@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,13 +23,15 @@ interface Discussion {
   due_date: string | null;
   max_points: number | null;
   is_graded: boolean | null;
+  module_id?: string | null;
 }
 
 interface DiscussionsSectionProps {
   courseId: string;
+  discussionId?: string | null;
 }
 
-export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId }) => {
+export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId, discussionId }) => {
   const { user } = useAuth();
   const { isInstructor, isAdmin } = useUserRole();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -46,12 +48,22 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
         .from('course_discussions')
         .select('*')
         .eq('course_id', courseId)
-        .order('created_at', { ascending: false });
+        .order('due_date', { ascending: true, nullsFirst: false });
       
       if (error) throw error;
       return data as Discussion[];
     }
   });
+
+  // Auto-select discussion when discussionId is provided
+  useEffect(() => {
+    if (discussionId && discussions && discussions.length > 0) {
+      const targetDiscussion = discussions.find(d => d.id === discussionId);
+      if (targetDiscussion) {
+        setSelectedDiscussion(targetDiscussion);
+      }
+    }
+  }, [discussionId, discussions]);
 
   const getDueDateBadge = (dueDate: string | null) => {
     if (!dueDate) return null;
