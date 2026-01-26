@@ -29019,6 +29019,15 @@ export type Database = {
         }
         Returns: Json
       }
+      backfill_session_attendance: {
+        Args: {
+          p_course_id: string
+          p_note?: string
+          p_semester?: string
+          p_session_id: string
+        }
+        Returns: number
+      }
       block_date: {
         Args: { block_reason?: string; date_to_block: string }
         Returns: undefined

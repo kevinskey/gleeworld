@@ -5,10 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { QrCode, RefreshCw, Clock, AlertCircle } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AttendanceQRDisplayProps {
   sessionId: string;
-  generateToken: (sessionId: string, expiresInMinutes?: number) => Promise<{ qr_token: string; expires_at: string } | undefined>;
+  generateToken?: (sessionId: string, expiresInMinutes?: number) => Promise<{ qr_token: string; expires_at: string } | undefined>;
   isSessionOpen: boolean;
 }
 
@@ -23,25 +25,51 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const refreshQR = useCallback(async () => {
-    if (!isSessionOpen) return;
+    if (!isSessionOpen || !user) return;
     
     setLoading(true);
     try {
-      const result = await generateToken(sessionId, 2); // 2 minute expiry for rotating QR
-      if (result) {
+      // Use the new unified generate_session_qr_code function
+      const { data, error } = await supabase.rpc('generate_session_qr_code', {
+        p_session_id: sessionId,
+        p_generated_by: user.id,
+        p_expires_in_minutes: 2, // 2 minute expiry for rotating QR
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; qr_token?: string; expires_at?: string; error?: string };
+      
+      if (result?.success && result.qr_token) {
         setToken(result.qr_token);
-        setExpiresAt(new Date(result.expires_at));
+        setExpiresAt(new Date(result.expires_at!));
         
-        // Generate QR code with check-in URL
-        const checkInUrl = `${window.location.origin}/attendance/check-in?token=${result.qr_token}&session=${sessionId}`;
+        // Generate QR code with the token directly (scanner will parse it)
+        const checkInUrl = `${window.location.origin}/qr-scanner?token=${encodeURIComponent(result.qr_token)}`;
         const dataUrl = await QRCode.toDataURL(checkInUrl, {
           width: 300,
           margin: 2,
           color: { dark: '#000000', light: '#ffffff' },
         });
         setQrDataUrl(dataUrl);
+      } else if (generateToken) {
+        // Fallback to legacy generateToken if provided
+        const legacyResult = await generateToken(sessionId, 2);
+        if (legacyResult) {
+          setToken(legacyResult.qr_token);
+          setExpiresAt(new Date(legacyResult.expires_at));
+          
+          const checkInUrl = `${window.location.origin}/attendance/check-in?token=${legacyResult.qr_token}&session=${sessionId}`;
+          const dataUrl = await QRCode.toDataURL(checkInUrl, {
+            width: 300,
+            margin: 2,
+            color: { dark: '#000000', light: '#ffffff' },
+          });
+          setQrDataUrl(dataUrl);
+        }
       }
     } catch (error) {
       console.error('Error generating QR:', error);
@@ -49,7 +77,7 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [sessionId, generateToken, isSessionOpen, toast]);
+  }, [sessionId, generateToken, isSessionOpen, toast, user]);
 
   // Auto-refresh QR before expiry
   useEffect(() => {
