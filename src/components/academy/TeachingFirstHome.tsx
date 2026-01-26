@@ -493,8 +493,13 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               </div>
             </CardHeader>
             <CardContent className="p-0">
+              {/* Topic Photo Slider - directly under header */}
+              <div className="p-4 pb-2">
+                <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
+              </div>
+
               {/* Activity Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y divide-border">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y divide-border border-t">
                 {currentModule.content_types.map((contentType) => {
                   const handleStart = () => {
                     if (contentType.type === 'Video' && isMus240) {
@@ -630,25 +635,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             </CardContent>
           </Card>
         )}
-
-        {/* 2. CURRENT LEARNING FOCUS - Topic with PowerPoint or images */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base font-bold">
-              <Lightbulb className="h-5 w-5 text-primary" />
-              Current Learning Focus
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Topic Photo Slider */}
-            <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
-            
-            {/* Optional description */}
-            <p className="text-sm text-muted-foreground">
-              Explore the origins and evolution of African American musical traditions through listening, reading, and critical analysis.
-            </p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Right Context Panel */}
