@@ -83,20 +83,21 @@ export const Mus240InstructorGradeGrid: React.FC = () => {
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [discussionGrades, setDiscussionGrades] = useState<DiscussionGrade[]>([]);
 
-  // Get current semester (Spring 2026)
+  // Use unified semester constant
   const currentSemester = 'Spring 2026';
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch students from mus240_enrollments (semester-based) - this is the source of truth
-      const enrollmentsResult = await query('mus240_enrollments')
-        .select('student_id')
+      // Fetch students from gw_course_enrollments (unified source of truth)
+      const enrollmentsResult = await query('gw_course_enrollments')
+        .select('user_id')
+        .eq('course_id', MUS240_COURSE_ID)
         .eq('semester', currentSemester)
         .eq('enrollment_status', 'enrolled');
-      const enrollments = (enrollmentsResult.data || []) as unknown as { student_id: string }[];
+      const enrollments = (enrollmentsResult.data || []) as unknown as { user_id: string }[];
       
-      const studentIds = enrollments.map(e => e.student_id);
+      const studentIds = enrollments.map(e => e.user_id);
       
       const profilesResult = await query('gw_profiles')
         .select('user_id, full_name, email')
