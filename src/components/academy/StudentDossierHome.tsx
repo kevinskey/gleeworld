@@ -125,19 +125,24 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         setProfile(profileData);
       }
 
-      // Fetch attendance records
+      // Fetch attendance records - filter by course through events table
       const { data: attendanceData } = await supabase
         .from('attendance')
         .select(`
           id, event_id, status, recorded_at,
-          events!attendance_event_id_fkey(title, start_date)
+          events!attendance_event_id_fkey(id, title, start_date, course_id)
         `)
         .eq('user_id', user.id)
         .order('recorded_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (attendanceData) {
-        setAttendance(attendanceData.map((a: any) => ({
+        // Filter to only include attendance for events belonging to this course
+        const filteredAttendance = attendanceData
+          .filter((a: any) => a.events?.course_id === courseId)
+          .slice(0, 20);
+        
+        setAttendance(filteredAttendance.map((a: any) => ({
           id: a.id,
           event_id: a.event_id,
           status: a.status,
