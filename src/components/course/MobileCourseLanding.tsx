@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
@@ -80,25 +80,17 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   };
 
   const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
-  const initials = profile?.full_name?.split(' ').map(n => n[0]).join('') || user?.email?.[0]?.toUpperCase() || 'U';
+  
 
   return (
     <div className="min-h-screen bg-background">
-      {/* 1. Compact Course Header - Fixed 56px */}
-      <header className="h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <Badge className="bg-primary text-primary-foreground font-semibold px-2.5 py-1">
-            {course.courseCode}
-          </Badge>
-          <span className="font-semibold text-foreground text-lg">{course.title}</span>
-        </div>
-        <Avatar className="h-9 w-9">
-          <AvatarImage src={profile?.avatar_url || ''} />
-          <AvatarFallback className="bg-muted text-muted-foreground text-sm">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-      </header>
+      {/* Course Title Bar - Below Global Header */}
+      <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3">
+        <Badge className="bg-primary text-primary-foreground font-semibold px-2.5 py-1">
+          {course.courseCode}
+        </Badge>
+        <span className="font-semibold text-foreground text-lg">{course.title}</span>
+      </div>
 
       {/* Main Content - Vertical Stack */}
       <main className="p-4 space-y-4 pb-24">
