@@ -481,13 +481,13 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
         {/* 1. THIS WEEK'S MODULE - Hero section with activities */}
         {currentModule && (
           <Card className="overflow-hidden">
-            <CardHeader className="pb-2 bg-gradient-to-r from-slate-800 to-slate-700 text-white">
+            <CardHeader className="pb-2 bg-primary text-primary-foreground">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-300 uppercase tracking-wide font-medium">Week {currentModule.week_number}</p>
-                  <CardTitle className="text-xl font-bold mt-1">{currentModule.title}</CardTitle>
+                  <p className="text-xs text-primary-foreground/80 uppercase tracking-wide font-medium">Week {currentModule.week_number}</p>
+                  <CardTitle className="text-xl font-bold mt-1 text-primary-foreground">{currentModule.title}</CardTitle>
                 </div>
-                <Badge variant="outline" className="bg-white/10 text-white border-white/30 text-xs">
+                <Badge variant="outline" className="bg-primary-foreground/10 text-primary-foreground border-primary-foreground/30 text-xs">
                   {currentModule.content_types.filter(c => c.isCompleted).length}/{currentModule.content_types.length} Complete
                 </Badge>
               </div>
