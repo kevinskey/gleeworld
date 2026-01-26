@@ -309,12 +309,12 @@ export const ClassScheduleForm: React.FC<ClassScheduleFormProps> = ({
           </form>
         ) : (
           <Button 
-            variant="outline" 
-            className="w-full border-dashed"
+            variant="default" 
+            className="w-full"
             onClick={() => setIsAdding(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add a Class
+            {schedules.length > 0 ? 'Add Another Class' : 'Add a Class'}
           </Button>
         )}
 
