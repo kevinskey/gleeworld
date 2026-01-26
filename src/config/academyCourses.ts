@@ -61,7 +61,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'a0000000-0000-0000-0000-000000000210',
+    id: '2026c613-bda7-487a-a5d9-91e57c26a741',
     courseCode: 'MUS 210',
     title: 'Choral Conducting and Literature',
     description: 'Master the art of choral conducting with technique, score analysis, and repertoire selection.',
