@@ -53,50 +53,67 @@ const handler = async (req: Request): Promise<Response> => {
     const recipients = Array.isArray(emailData.to) ? emailData.to : [emailData.to];
     const senderName = emailData.senderName || "GleeWorld";
 
-    const emailPayload: any = {
-      from: `${senderName} <noreply@gleeworld.org>`,
-      to: recipients,
-      subject: emailData.subject,
-      html: emailData.html,
-    };
-
-    // Add reply-to if provided
-    if (emailData.replyTo) {
-      emailPayload.reply_to = emailData.replyTo;
+    // Resend has a 50 recipient limit per API call - batch if needed
+    const BATCH_SIZE = 50;
+    const batches: string[][] = [];
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      batches.push(recipients.slice(i, i + BATCH_SIZE));
     }
 
-    console.log("Sending email via Resend...");
-    const emailResponse = await resend.emails.send(emailPayload);
+    console.log(`Sending to ${recipients.length} recipients in ${batches.length} batch(es)`);
 
-    if (emailResponse.error) {
-      console.error("Resend API error:", emailResponse.error);
+    const results: { batchIndex: number; success: boolean; id?: string; error?: string }[] = [];
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
       
-      // Log failed message if senderId provided
-      if (emailData.senderId) {
-        try {
-          await supabase.from('gw_user_message_history').insert({
-            user_id: emailData.senderId,
-            direction: 'sent',
-            channel: 'email',
-            subject: emailData.subject,
-            content: stripHtml(emailData.html).slice(0, 5000),
-            recipient_emails: recipients,
-            status: 'failed',
-            error_message: emailResponse.error.message || 'Email delivery failed',
-            sent_at: new Date().toISOString()
-          });
-          console.log("Failed email logged to history");
-        } catch (logError) {
-          console.error("Error logging failed email:", logError);
-        }
+      const emailPayload: any = {
+        from: `${senderName} <noreply@gleeworld.org>`,
+        to: batch,
+        subject: emailData.subject,
+        html: emailData.html,
+      };
+
+      // Add reply-to if provided
+      if (emailData.replyTo) {
+        emailPayload.reply_to = emailData.replyTo;
       }
+
+      console.log(`Sending batch ${batchIndex + 1}/${batches.length} (${batch.length} recipients)...`);
       
-      throw new Error(emailResponse.error.message || "Failed to send email");
+      try {
+        const emailResponse = await resend.emails.send(emailPayload);
+
+        if (emailResponse.error) {
+          console.error(`Batch ${batchIndex + 1} failed:`, emailResponse.error);
+          results.push({ 
+            batchIndex, 
+            success: false, 
+            error: emailResponse.error.message 
+          });
+        } else {
+          console.log(`Batch ${batchIndex + 1} sent successfully:`, emailResponse.data?.id);
+          results.push({ 
+            batchIndex, 
+            success: true, 
+            id: emailResponse.data?.id 
+          });
+        }
+      } catch (batchError: any) {
+        console.error(`Batch ${batchIndex + 1} error:`, batchError);
+        results.push({ 
+          batchIndex, 
+          success: false, 
+          error: batchError.message 
+        });
+      }
     }
 
-    console.log("Email sent successfully:", emailResponse.data?.id);
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+    const allSuccess = failCount === 0;
 
-    // Log successful message if senderId provided
+    // Log to history if senderId provided
     if (emailData.senderId) {
       try {
         await supabase.from('gw_user_message_history').insert({
@@ -106,8 +123,9 @@ const handler = async (req: Request): Promise<Response> => {
           subject: emailData.subject,
           content: stripHtml(emailData.html).slice(0, 5000),
           recipient_emails: recipients,
-          status: 'sent',
-          external_id: emailResponse.data?.id,
+          status: allSuccess ? 'sent' : (successCount > 0 ? 'partial' : 'failed'),
+          external_id: results.find(r => r.id)?.id,
+          error_message: failCount > 0 ? `${failCount} of ${batches.length} batches failed` : null,
           sent_at: new Date().toISOString()
         });
         console.log("Email logged to history");
@@ -116,10 +134,16 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    if (!allSuccess && successCount === 0) {
+      throw new Error(`All ${batches.length} batches failed to send`);
+    }
+
     return new Response(JSON.stringify({
       success: true,
-      id: emailResponse.data?.id,
-      message: `Email sent to ${recipients.length} recipient(s)`
+      batches: batches.length,
+      successfulBatches: successCount,
+      failedBatches: failCount,
+      message: `Email sent to ${recipients.length} recipient(s) in ${batches.length} batch(es)`
     }), {
       status: 200,
       headers: {
