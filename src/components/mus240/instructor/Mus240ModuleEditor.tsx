@@ -540,10 +540,18 @@ export const Mus240ModuleEditor: React.FC = () => {
                         return (
                           <div 
                             key={resource.id}
-                            className="flex items-center justify-between p-3 bg-background border rounded-lg"
+                            className={`flex items-center justify-between p-3 border rounded-lg ${
+                              resource.resource_type === 'reading' 
+                                ? 'bg-emerald-50 border-emerald-200' 
+                                : 'bg-background'
+                            }`}
                           >
                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <ResourceIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <ResourceIcon className={`h-4 w-4 flex-shrink-0 ${
+                                resource.resource_type === 'reading' 
+                                  ? 'text-emerald-600' 
+                                  : 'text-muted-foreground'
+                              }`} />
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate">{resource.title}</p>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
