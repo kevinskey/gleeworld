@@ -69,19 +69,21 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [semester, setSemester] = useState('FALL 2025');
+  const [semester, setSemester] = useState('Spring 2026');
   const [eventFilter, setEventFilter] = useState<'all' | 'rehearsal' | 'performance'>('all');
 
   // Calculate date range for semester
   const getSemesterDateRange = (sem: string) => {
-    if (sem === 'FALL 2025') {
+    if (sem === 'Spring 2026') {
+      return { start: '2026-01-01', end: '2026-05-31' };
+    } else if (sem === 'FALL 2025') {
       return { start: '2025-08-01', end: '2025-12-31' };
     } else if (sem === 'SPRING 2025') {
       return { start: '2025-01-01', end: '2025-05-31' };
     } else if (sem === 'FALL 2024') {
       return { start: '2024-08-01', end: '2024-12-31' };
     }
-    return { start: '2025-08-01', end: '2025-12-31' };
+    return { start: '2026-01-01', end: '2026-05-31' };
   };
 
   const fetchData = useCallback(async () => {
@@ -95,6 +97,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
           gw_student_profiles!inner(full_name, email)
         `)
         .eq('course_id', courseId)
+        .eq('semester', semester)
         .eq('enrollment_status', 'enrolled');
 
       if (enrollError) throw enrollError;
