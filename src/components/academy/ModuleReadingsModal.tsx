@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, ExternalLink, FileText, X } from 'lucide-react';
+import { BookOpen, ExternalLink, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { InAppPDFViewerDialog } from '@/components/music-library/InAppPDFViewerDialog';
 
 interface ModuleReading {
   id: string;
@@ -29,67 +29,64 @@ export const ModuleReadingsModal: React.FC<ModuleReadingsModalProps> = ({
   weekNumber,
   moduleTitle
 }) => {
-  const [viewingUrl, setViewingUrl] = useState<string | null>(null);
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [selectedReading, setSelectedReading] = useState<ModuleReading | null>(null);
 
   const handleOpenReading = (reading: ModuleReading) => {
     if (!reading.url) return;
     
-    // Check if it's a PDF or embeddable document
-    const isPdf = reading.url.toLowerCase().includes('.pdf');
-    const isGoogleDoc = reading.url.includes('docs.google.com') || reading.url.includes('drive.google.com');
+    // Check if it's a PDF
+    const isPdf = reading.url.toLowerCase().includes('.pdf') || 
+                  reading.url.toLowerCase().includes('/pdf/') ||
+                  reading.url.includes('supabase.co/storage');
     
-    if (isPdf || isGoogleDoc) {
-      // Embed PDFs and Google Docs
-      setViewingUrl(reading.url);
+    if (isPdf) {
+      // Open in the in-app PDF viewer with annotation support
+      setSelectedReading(reading);
+      setPdfViewerOpen(true);
     } else {
-      // Open external URLs in new tab
+      // Open external URLs (Google Docs, websites, etc.) in new tab
       window.open(reading.url, '_blank');
     }
   };
 
-  const closeViewer = () => {
-    setViewingUrl(null);
+  const handleClosePdfViewer = () => {
+    setPdfViewerOpen(false);
+    setSelectedReading(null);
   };
 
   // Get icon based on URL type
   const getReadingIcon = (url: string | null) => {
     if (!url) return <FileText className="h-5 w-5" />;
-    if (url.toLowerCase().includes('.pdf')) return <FileText className="h-5 w-5 text-red-500" />;
+    if (url.toLowerCase().includes('.pdf') || url.includes('supabase.co/storage')) {
+      return <FileText className="h-5 w-5 text-red-500" />;
+    }
     if (url.includes('docs.google.com')) return <FileText className="h-5 w-5 text-blue-500" />;
     return <BookOpen className="h-5 w-5" />;
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0">
-        <DialogHeader className="p-4 border-b bg-primary text-primary-foreground">
-          <DialogTitle className="flex items-center gap-2 text-primary-foreground">
-            <BookOpen className="h-5 w-5" />
-            Week {weekNumber} Readings
-          </DialogTitle>
-          <p className="text-sm text-primary-foreground/80 mt-1">{moduleTitle}</p>
-        </DialogHeader>
+  // Get file type label
+  const getFileTypeLabel = (url: string | null) => {
+    if (!url) return 'Document';
+    if (url.toLowerCase().includes('.pdf') || url.includes('supabase.co/storage')) {
+      return 'PDF Document';
+    }
+    if (url.includes('docs.google.com')) return 'Google Doc';
+    return 'External Link';
+  };
 
-        {viewingUrl ? (
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white"
-              onClick={closeViewer}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-            <div className="aspect-[4/3] w-full">
-              <iframe
-                src={viewingUrl.includes('docs.google.com') ? viewingUrl : 
-                     `https://docs.google.com/viewer?url=${encodeURIComponent(viewingUrl)}&embedded=true`}
-                className="w-full h-full border-0"
-                title="Reading viewer"
-              />
-            </div>
-          </div>
-        ) : (
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0">
+          <DialogHeader className="p-4 border-b bg-primary text-primary-foreground">
+            <DialogTitle className="flex items-center gap-2 text-primary-foreground">
+              <BookOpen className="h-5 w-5" />
+              Week {weekNumber} Readings
+            </DialogTitle>
+            <p className="text-sm text-primary-foreground/80 mt-1">{moduleTitle}</p>
+          </DialogHeader>
+
           <ScrollArea className="max-h-[60vh]">
             {readings.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
@@ -133,8 +130,7 @@ export const ModuleReadingsModal: React.FC<ModuleReadingsModalProps> = ({
                         <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
                           <ExternalLink className="h-3 w-3" />
                           <span className="truncate max-w-[200px]">
-                            {reading.url.includes('.pdf') ? 'PDF Document' : 
-                             reading.url.includes('docs.google.com') ? 'Google Doc' : 'External Link'}
+                            {getFileTypeLabel(reading.url)}
                           </span>
                         </div>
                       )}
@@ -144,8 +140,19 @@ export const ModuleReadingsModal: React.FC<ModuleReadingsModalProps> = ({
               </div>
             )}
           </ScrollArea>
-        )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* In-App PDF Viewer with Annotation Support */}
+      {selectedReading && (
+        <InAppPDFViewerDialog
+          open={pdfViewerOpen}
+          onOpenChange={handleClosePdfViewer}
+          pdfUrl={selectedReading.url || ''}
+          title={selectedReading.title}
+          musicId={selectedReading.id}
+        />
+      )}
+    </>
   );
 };
