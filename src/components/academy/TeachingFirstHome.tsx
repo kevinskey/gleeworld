@@ -478,43 +478,155 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
       {/* Main Content Column */}
       <div className="flex-1 space-y-4 min-w-0">
         
-        {/* 1. DO THIS NOW - Most urgent assignment */}
-        {urgentAssignment && (
-          <Card className="border-l-4 border-l-slate-700 bg-slate-50 dark:bg-slate-900/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-200">
-                <Target className="h-5 w-5" />
-                Do This Now
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-lg">{urgentAssignment.title}</h3>
-                    {getStatusBadge(urgentAssignment.status)}
-                  </div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <Calendar className="h-3.5 w-3.5 shrink-0" />
-                    <span>Due: {format(new Date(urgentAssignment.due_date), 'MMM d, h:mm a')} · {urgentAssignment.points} pts</span>
-                    {urgentAssignment.status === 'overdue' && <span className="text-destructive font-medium">· OVERDUE</span>}
-                  </p>
+        {/* 1. THIS WEEK'S MODULE - Hero section with activities */}
+        {currentModule && (
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2 bg-gradient-to-r from-slate-800 to-slate-700 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-300 uppercase tracking-wide font-medium">Week {currentModule.week_number}</p>
+                  <CardTitle className="text-xl font-bold mt-1">{currentModule.title}</CardTitle>
                 </div>
-                <Button 
-                  size="lg"
-                  className="bg-slate-800 hover:bg-slate-900 text-white w-full sm:w-auto"
-                  onClick={() => {
-                    if (urgentAssignment.is_discussion) {
-                      navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
-                    } else {
-                      navigate(`/grading/student/assignment/${urgentAssignment.id}`);
-                    }
-                  }}
-                >
-                  {urgentAssignment.is_discussion ? 'Join Discussion' : 'Start Now'}
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+                <Badge variant="outline" className="bg-white/10 text-white border-white/30 text-xs">
+                  {currentModule.content_types.filter(c => c.isCompleted).length}/{currentModule.content_types.length} Complete
+                </Badge>
               </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {/* Activity Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y divide-border">
+                {currentModule.content_types.map((contentType) => {
+                  const handleStart = () => {
+                    if (contentType.type === 'Video' && isMus240) {
+                      if (moduleVideos.length > 0) {
+                        setVideoModalOpen(true);
+                        return;
+                      } else {
+                        toast.info('No videos assigned for this week yet');
+                        return;
+                      }
+                    }
+                    
+                    if (contentType.type === 'Reading' && isMus240) {
+                      if (moduleReadings.length > 0) {
+                        setReadingsModalOpen(true);
+                        return;
+                      } else {
+                        toast.info('No readings assigned for this week yet');
+                        return;
+                      }
+                    }
+                    
+                    if (contentType.assignment) {
+                      if (contentType.assignment.is_discussion) {
+                        if (currentModule?.discussionId) {
+                          navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions&discussionId=${currentModule.discussionId}`, { replace: true });
+                        } else {
+                          navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
+                        }
+                      } else {
+                        navigate(`/grading/student/assignment/${contentType.assignment.id}`);
+                      }
+                    } else {
+                      const tabMapping: Record<string, string> = {
+                        'Video': 'resources',
+                        'Reading': 'resources',
+                        'Listening': 'audio',
+                        'Discussion': 'discussions',
+                        'Journal': 'journal'
+                      };
+                      const tab = tabMapping[contentType.type] || 'resources';
+                      if (contentType.type === 'Discussion' && currentModule?.discussionId) {
+                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions&discussionId=${currentModule.discussionId}`, { replace: true });
+                      } else {
+                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=${tab}`, { replace: true });
+                      }
+                    }
+                  };
+                  
+                  return (
+                    <button 
+                      key={contentType.type}
+                      onClick={handleStart}
+                      className={`flex flex-col items-center justify-center p-4 gap-2 transition-all hover:bg-muted/50 ${
+                        contentType.isCompleted ? 'bg-green-50 dark:bg-green-950/20' : ''
+                      }`}
+                    >
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                        contentType.isCompleted 
+                          ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' 
+                          : 'bg-primary/10 text-primary'
+                      }`}>
+                        {contentType.isCompleted ? (
+                          <CheckCircle className="h-5 w-5" />
+                        ) : (
+                          getActivityIcon(contentType.type)
+                        )}
+                      </div>
+                      <span className="text-xs font-medium">{contentType.type}</span>
+                      {!contentType.isCompleted && (
+                        <span className="text-[10px] text-primary font-semibold uppercase tracking-wide">Start</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Due This Week - Assignments */}
+              {currentModule.assignments.length > 0 && (
+                <div className="p-4 border-t bg-muted/20">
+                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                    Due This Week
+                  </h4>
+                  <div className="grid gap-2">
+                    {currentModule.assignments.map((assignment) => (
+                      <div 
+                        key={assignment.id}
+                        className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
+                          assignment.status === 'overdue' 
+                            ? 'bg-destructive/5 border-destructive/30 hover:bg-destructive/10' 
+                            : 'bg-card hover:bg-muted/50'
+                        }`}
+                        onClick={() => {
+                          if (assignment.is_discussion) {
+                            navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
+                          } else {
+                            navigate(`/grading/student/assignment/${assignment.id}`);
+                          }
+                        }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{assignment.title}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Due {format(new Date(assignment.due_date), 'MMM d, h:mm a')} · {assignment.points} pts
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(assignment.status)}
+                          <Button 
+                            size="sm" 
+                            variant={assignment.status === 'overdue' ? 'destructive' : 'default'}
+                            className="text-xs h-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (assignment.is_discussion) {
+                                navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
+                              } else {
+                                navigate(`/grading/student/assignment/${assignment.id}`);
+                              }
+                            }}
+                          >
+                            {assignment.is_discussion ? 'Discuss' : 'Start'}
+                            <ArrowRight className="h-3 w-3 ml-1" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -537,139 +649,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             </p>
           </CardContent>
         </Card>
-
-        {/* 3. THIS WEEK'S MODULE - Weekly activities */}
-        {currentModule && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base font-bold">
-                <ListChecks className="h-5 w-5 text-primary" />
-                This Week's Module
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Week {currentModule.week_number}: {currentModule.title}
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Activity checklist */}
-              <div className="grid gap-2">
-                {currentModule.content_types.map((contentType) => {
-                  const handleStart = () => {
-                    // For Video activity in MUS-240, show the module videos modal if videos exist
-                    if (contentType.type === 'Video' && isMus240) {
-                      if (moduleVideos.length > 0) {
-                        setVideoModalOpen(true);
-                        return;
-                      } else {
-                        toast.info('No videos assigned for this week yet');
-                        return;
-                      }
-                    }
-                    
-                    // For Reading activity in MUS-240, show the module readings modal if readings exist
-                    if (contentType.type === 'Reading' && isMus240) {
-                      if (moduleReadings.length > 0) {
-                        setReadingsModalOpen(true);
-                        return;
-                      } else {
-                        toast.info('No readings assigned for this week yet');
-                        return;
-                      }
-                    }
-                    
-                    if (contentType.assignment) {
-                      if (contentType.assignment.is_discussion) {
-                        // Navigate to specific discussion if we have moduleDiscussionId
-                        if (currentModule?.discussionId) {
-                          navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions&discussionId=${currentModule.discussionId}`, { replace: true });
-                        } else {
-                          navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
-                        }
-                      } else {
-                        navigate(`/grading/student/assignment/${contentType.assignment.id}`);
-                      }
-                    } else {
-                      // Navigate to relevant tab based on content type
-                      const tabMapping: Record<string, string> = {
-                        'Video': 'resources',
-                        'Reading': 'resources',
-                        'Listening': 'audio',
-                        'Discussion': 'discussions',
-                        'Journal': 'journal'
-                      };
-                      const tab = tabMapping[contentType.type] || 'resources';
-                      // For Discussion type, include the module's discussionId if available
-                      if (contentType.type === 'Discussion' && currentModule?.discussionId) {
-                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions&discussionId=${currentModule.discussionId}`, { replace: true });
-                      } else {
-                        navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=${tab}`, { replace: true });
-                      }
-                    }
-                  };
-                  
-                  return (
-                    <div 
-                      key={contentType.type}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
-                        contentType.isCompleted 
-                          ? 'bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800' 
-                          : 'bg-muted/30 hover:bg-muted/50'
-                      }`}
-                      onClick={handleStart}
-                    >
-                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                        contentType.isCompleted ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'
-                      }`}>
-                        {getActivityIcon(contentType.type)}
-                      </div>
-                      <span className="flex-1 font-medium text-sm">{contentType.type}</span>
-                      {contentType.isCompleted ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <Button variant="ghost" size="sm" className="text-xs h-7" onClick={(e) => { e.stopPropagation(); handleStart(); }}>
-                          Start
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Pending assignments for this module */}
-              {currentModule.assignments.length > 0 && (
-                <div className="pt-3 border-t">
-                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                    Due This Week
-                  </h4>
-                  <div className="space-y-2">
-                    {currentModule.assignments.map((assignment) => (
-                      <div 
-                        key={assignment.id}
-                        className="flex items-center justify-between p-2 rounded-md bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors"
-                        onClick={() => {
-                          if (assignment.is_discussion) {
-                            navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
-                          } else {
-                            navigate(`/grading/student/assignment/${assignment.id}`);
-                          }
-                        }}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{assignment.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Due {format(new Date(assignment.due_date), 'MMM d')} · {assignment.points} pts
-                          </p>
-                        </div>
-                        {getStatusBadge(assignment.status)}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* Right Context Panel */}
