@@ -124,9 +124,10 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       const token = data as string;
       setQrToken(token);
 
-      // Create the scan URL for the *current* environment (preview vs published)
-      // and URL-encode the token to avoid '+' being interpreted as space.
-      const baseUrl = window.location.origin;
+      // Use production domain for QR codes so students scan to the published site
+      const baseUrl = window.location.hostname.includes('lovable') 
+        ? 'https://gleeworld.lovable.app' 
+        : window.location.origin;
       const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(token)}`;
       
       // Generate QR code
@@ -232,7 +233,9 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       
       // Fallback: Share just the URL if file sharing isn't supported
       if (navigator.share) {
-        const baseUrl = window.location.origin;
+        const baseUrl = window.location.hostname.includes('lovable') 
+          ? 'https://gleeworld.lovable.app' 
+          : window.location.origin;
         const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(qrToken)}`;
         await navigator.share({
           title,
@@ -241,7 +244,9 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
         });
       } else {
         // Final fallback: Copy to clipboard
-        const baseUrl = window.location.origin;
+        const baseUrl = window.location.hostname.includes('lovable') 
+          ? 'https://gleeworld.lovable.app' 
+          : window.location.origin;
         const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(qrToken)}`;
         await navigator.clipboard.writeText(`${title}\n${text}\n${scanUrl}`);
         toast({
