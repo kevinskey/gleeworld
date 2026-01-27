@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, LogIn, ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { UserPlus, LogIn, ArrowLeft, Eye, EyeOff, KeyRound } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import gleeWorldLogoCircle from '@/assets/glee-world-logo-circle.png';
 const authBackground = '/lovable-uploads/1e93a440-6349-4948-a145-7b55dedea9fc.png';
 export default function AuthPage() {
@@ -19,12 +19,15 @@ export default function AuthPage() {
     toast
   } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(searchParams.get('forgot') === 'true');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const getRedirectTarget = () => {
     // Check sessionStorage first for stored redirect path
     const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
@@ -115,6 +118,32 @@ export default function AuthPage() {
       setIsSubmitting(false);
     }
   };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+      if (error) throw error;
+      setResetEmailSent(true);
+      toast({
+        title: "Check your email",
+        description: "We sent you a password reset link."
+      });
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset email. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative auth-page" style={{
       backgroundImage: `url(${authBackground})`
@@ -160,10 +189,14 @@ export default function AuthPage() {
             Glee World! 
           </h1>
           <h2 className="text-base sm:text-lg md:text-xl mb-2 sm:mb-3 md:mb-4 drop-shadow-lg font-serif text-white font-semibold">
-            Sign in or Create an account
+            {isForgotPassword ? 'Reset Your Password' : 'Sign in or Create an account'}
           </h2>
           <p className="text-white/80 text-sm sm:text-base md:text-lg drop-shadow-md">
-            {isLogin ? 'Sign in to access your account' : 'Join our musical family'}
+            {isForgotPassword 
+              ? 'Enter your email to receive a reset link' 
+              : isLogin 
+                ? 'Sign in to access your account' 
+                : 'Join our musical family'}
           </p>
         </div>
 
@@ -173,7 +206,10 @@ export default function AuthPage() {
           
           <CardHeader className="relative py-3 sm:py-4 md:py-6">
             <CardTitle className="flex items-center justify-center text-base sm:text-lg md:text-3xl text-primary">
-              {isLogin ? <>
+              {isForgotPassword ? <>
+                  <KeyRound className="h-5 w-5 mr-2" />
+                  Reset Password
+                </> : isLogin ? <>
                   <LogIn className="h-5 w-5 mr-2" />
                   Welcome Back
                 </> : <>
@@ -184,49 +220,128 @@ export default function AuthPage() {
           </CardHeader>
           
           <CardContent className="relative bg-[#003666]">
-            <form onSubmit={handleAuth} className="space-y-5">
-              {!isLogin && <div>
-                  <label className="text-sm font-medium text-white/90 mb-2 block">
-                    Full Name *
-                  </label>
-                  <Input type="text" placeholder="Your full name" value={name} onChange={e => setName(e.target.value)} required={!isLogin} className="auth-input" />
-                </div>}
-
-              <div>
-                <label className="text-sm font-medium mb-2 block text-primary-foreground">
-                  Email Address *
-                </label>
-                <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required className="auth-input" />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block text-primary-foreground">
-                  Password *
-                </label>
-                <div className="relative">
-                  <Input type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required className="auth-input pr-10" />
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-white/60 hover:text-white/80 hover:bg-white/10">
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {isForgotPassword ? (
+              // Forgot Password Form
+              resetEmailSent ? (
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <KeyRound className="h-8 w-8 text-green-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Check Your Email</h3>
+                  <p className="text-white/80 text-sm mb-6">
+                    We sent a password reset link to <strong className="text-white">{email}</strong>
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setIsForgotPassword(false);
+                      setResetEmailSent(false);
+                      navigate('/auth');
+                    }}
+                    className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30"
+                  >
+                    Back to Sign In
                   </Button>
                 </div>
-              </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-5">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block text-primary-foreground">
+                      Email Address *
+                    </label>
+                    <Input 
+                      type="email" 
+                      placeholder="you@example.com" 
+                      value={email} 
+                      onChange={e => setEmail(e.target.value)} 
+                      required 
+                      className="auth-input" 
+                    />
+                  </div>
 
-              <Button type="submit" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 py-4 sm:py-5 md:py-6 text-sm sm:text-base md:text-lg font-semibold" disabled={isSubmitting}>
-                {isSubmitting ? isLogin ? 'Signing in...' : 'Creating account...' : isLogin ? 'Sign In' : 'Create Account & Apply'}
-              </Button>
-            </form>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 py-4 sm:py-5 md:py-6 text-sm sm:text-base md:text-lg font-semibold" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send Reset Link'}
+                  </Button>
 
-            <div className="mt-6 text-center">
-              <Button variant="link" onClick={() => setIsLogin(!isLogin)} className="text-white/80 hover:text-white text-sm transition-colors duration-300 no-underline">
-                {isLogin ? "Don't have an account? Create one here" : "Already have an account? Sign in here"}
-              </Button>
-            </div>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsForgotPassword(false);
+                        navigate('/auth');
+                      }}
+                      className="text-sm text-white/80 hover:text-white underline underline-offset-2 transition-colors"
+                    >
+                      Back to Sign In
+                    </button>
+                  </div>
+                </form>
+              )
+            ) : (
+              // Login/Signup Form
+              <>
+                <form onSubmit={handleAuth} className="space-y-5">
+                  {!isLogin && <div>
+                      <label className="text-sm font-medium text-white/90 mb-2 block">
+                        Full Name *
+                      </label>
+                      <Input type="text" placeholder="Your full name" value={name} onChange={e => setName(e.target.value)} required={!isLogin} className="auth-input" />
+                    </div>}
 
-            {!isLogin && <div className="mt-6 p-4 bg-white/10 rounded-lg border border-white/20 backdrop-blur-sm">
-                <p className="text-sm text-white/80">
-                  <strong className="text-white">New users:</strong> After creating your account, you'll be redirected to fill out your audition application with your selected time slot automatically saved.
-                </p>
-              </div>}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block text-primary-foreground">
+                      Email Address *
+                    </label>
+                    <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required className="auth-input" />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block text-primary-foreground">
+                      Password *
+                    </label>
+                    <div className="relative">
+                      <Input type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required className="auth-input pr-10" />
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-white/60 hover:text-white/80 hover:bg-white/10">
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    {isLogin && (
+                      <div className="text-right mt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsForgotPassword(true);
+                            navigate('/auth?forgot=true');
+                          }}
+                          className="text-sm text-white/80 hover:text-white underline underline-offset-2 transition-colors"
+                        >
+                          Forgot your password?
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <Button type="submit" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 py-4 sm:py-5 md:py-6 text-sm sm:text-base md:text-lg font-semibold" disabled={isSubmitting}>
+                    {isSubmitting ? isLogin ? 'Signing in...' : 'Creating account...' : isLogin ? 'Sign In' : 'Create Account & Apply'}
+                  </Button>
+                </form>
+
+                <div className="mt-6 text-center">
+                  <Button variant="link" onClick={() => setIsLogin(!isLogin)} className="text-white/80 hover:text-white text-sm transition-colors duration-300 no-underline">
+                    {isLogin ? "Don't have an account? Create one here" : "Already have an account? Sign in here"}
+                  </Button>
+                </div>
+
+                {!isLogin && <div className="mt-6 p-4 bg-white/10 rounded-lg border border-white/20 backdrop-blur-sm">
+                    <p className="text-sm text-white/80">
+                      <strong className="text-white">New users:</strong> After creating your account, you'll be redirected to fill out your audition application with your selected time slot automatically saved.
+                    </p>
+                  </div>}
+              </>
+            )}
           </CardContent>
         </Card>
 
