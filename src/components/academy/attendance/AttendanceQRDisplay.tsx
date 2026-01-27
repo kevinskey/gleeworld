@@ -47,8 +47,11 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
         setToken(result.qr_token);
         setExpiresAt(new Date(result.expires_at!));
         
-        // Generate QR code with the token directly (scanner will parse it)
-        const checkInUrl = `${window.location.origin}/qr-scanner?token=${encodeURIComponent(result.qr_token)}`;
+        // Use production domain for QR codes
+        const baseUrl = window.location.hostname.includes('lovable') 
+          ? 'https://gleeworld.lovable.app' 
+          : window.location.origin;
+        const checkInUrl = `${baseUrl}/qr-scanner?token=${encodeURIComponent(result.qr_token)}`;
         const dataUrl = await QRCode.toDataURL(checkInUrl, {
           width: 300,
           margin: 2,
@@ -62,7 +65,10 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
           setToken(legacyResult.qr_token);
           setExpiresAt(new Date(legacyResult.expires_at));
           
-          const checkInUrl = `${window.location.origin}/attendance/check-in?token=${legacyResult.qr_token}&session=${sessionId}`;
+          const baseUrl = window.location.hostname.includes('lovable') 
+            ? 'https://gleeworld.lovable.app' 
+            : window.location.origin;
+          const checkInUrl = `${baseUrl}/attendance/check-in?token=${legacyResult.qr_token}&session=${sessionId}`;
           const dataUrl = await QRCode.toDataURL(checkInUrl, {
             width: 300,
             margin: 2,
