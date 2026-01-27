@@ -41,7 +41,7 @@ export const useUserCalendarAccess = () => {
       try {
         // Fetch enrollments
         const enrollmentResponse = await fetch(
-          `https://oopmlreysjzuxzylyheb.supabase.co/rest/v1/gw_course_enrollments?student_id=eq.${user.id}&enrollment_status=eq.enrolled&select=course_id`,
+          `https://oopmlreysjzuxzylyheb.supabase.co/rest/v1/gw_course_enrollments?user_id=eq.${user.id}&enrollment_status=eq.enrolled&select=course_id`,
           {
             headers: {
               'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg',
