@@ -39,13 +39,18 @@ const AttendanceScanPage = () => {
   const [scanResult, setScanResult] = useState<any>(null);
   const [error, setError] = useState<string>('');
   
-  const token = searchParams.get('token');
+  // searchParams.get() automatically URL-decodes the token
+  const rawToken = searchParams.get('token');
+  // The token should be used as-is since it's URL-safe base64
+  const token = rawToken?.trim() || null;
 
   // Debug logging
   console.log('AttendanceScanPage mounted:', { 
-    token: token ? token.substring(0, 10) + '...' : 'none',
+    rawToken: rawToken ? rawToken.substring(0, 20) + '...' : 'none',
+    token: token ? token.substring(0, 20) + '...' : 'none',
     user: !!user,
-    userEmail: user?.email 
+    userEmail: user?.email,
+    fullUrl: window.location.href
   });
 
   useEffect(() => {
