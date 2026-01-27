@@ -16,7 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 // Import shared components that can work with any course
 import { CourseAssignmentManager } from '@/components/course/CourseAssignmentManager';
-import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
+import { CourseGradesAdmin } from '@/components/course/CourseGradesAdmin';
 import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
 import { CourseEnrollmentManager } from '@/components/academy/CourseEnrollmentManager';
 import { StudentAnalyticsDashboard } from '@/components/mus240/admin/StudentAnalyticsDashboard';
@@ -361,7 +361,14 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'tests' && dbCourse && <TestBuilder courseId={dbCourse.id} courseName={course.title} />}
             {activeTab === 'polls' && dbCourse && <CoursePollManager courseId={dbCourse.id} courseName={course.title} />}
             {activeTab === 'rubrics' && <RubricManager />}
-            {activeTab === 'grades' && <GradesAdmin />}
+            {activeTab === 'grades' && dbCourse && (
+              <CourseGradesAdmin 
+                courseId={dbCourse.id} 
+                courseCode={course.courseCode}
+                courseTitle={course.title}
+                semester={dbCourse.term || 'Spring 2026'}
+              />
+            )}
             {activeTab === 'students' && dbCourse && <CourseEnrollmentManager courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} term={dbCourse.term || undefined} />}
             
             {activeTab === 'quick-attendance' && dbCourse && (
