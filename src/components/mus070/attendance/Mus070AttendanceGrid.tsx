@@ -12,12 +12,17 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, parseISO, differenceInWeeks } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { useCourseStudents, COURSE_IDS } from '@/hooks/useCourseStudents';
 
 // Spring 2026 semester start (first day of classes)
 const SEMESTER_START = new Date('2026-01-12');
+const ET_TIMEZONE = 'America/New_York';
+
+// Helper to convert UTC date to ET for display
+const toET = (dateStr: string) => toZonedTime(parseISO(dateStr), ET_TIMEZONE);
 
 interface StudentAttendance {
   student_id: string;
@@ -73,7 +78,7 @@ export const Mus070AttendanceGrid: React.FC<Mus070AttendanceGridProps> = ({
   });
 
   const getWeekNumber = (dateStr: string): number => {
-    const date = parseISO(dateStr);
+    const date = toET(dateStr);
     return differenceInWeeks(date, SEMESTER_START) + 1;
   };
 
@@ -398,14 +403,14 @@ export const Mus070AttendanceGrid: React.FC<Mus070AttendanceGridProps> = ({
                     <Tooltip key={session.id}>
                       <TooltipTrigger asChild>
                         <div className="w-9 min-w-9 p-1 text-center border-r text-[10px] cursor-help">
-                          <div className="font-bold">{format(parseISO(session.date), 'M/d')}</div>
+                          <div className="font-bold">{format(toET(session.date), 'M/d')}</div>
                           <div className="text-muted-foreground">W{session.week_number}</div>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
                         <p className="font-medium">{session.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {format(parseISO(session.date), 'EEEE, MMMM d, yyyy')}
+                          {format(toET(session.date), 'EEEE, MMMM d, yyyy')}
                         </p>
                       </TooltipContent>
                     </Tooltip>
