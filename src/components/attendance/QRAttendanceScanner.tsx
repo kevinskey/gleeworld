@@ -114,11 +114,22 @@ export const QRAttendanceScanner = () => {
     try {
       const url = new URL(input);
       const tokenParam = url.searchParams.get('token');
-      if (tokenParam) return tokenParam.trim();
+      if (tokenParam) {
+        // URL.searchParams automatically decodes, but we need to handle
+        // edge cases where + might have been converted to space
+        // For URL-safe base64: - replaces +, _ replaces /
+        // The token should already be URL-safe, so just trim
+        console.log('Extracted token from URL param:', tokenParam.substring(0, 15) + '...');
+        return tokenParam.trim();
+      }
 
       // Common pattern: last path segment is the token
       const lastSegment = url.pathname.split('/').filter(Boolean).pop();
-      if (lastSegment) return decodeURIComponent(lastSegment).trim();
+      if (lastSegment) {
+        const decoded = decodeURIComponent(lastSegment).trim();
+        console.log('Extracted token from URL path:', decoded.substring(0, 15) + '...');
+        return decoded;
+      }
     } catch {
       // Not a valid URL; fall through to string parsing
     }
@@ -126,7 +137,11 @@ export const QRAttendanceScanner = () => {
     // Common non-URL patterns
     // e.g. "token=XYZ", "token: XYZ", "token XYZ"
     const tokenEquals = input.match(/token=([^&\s]+)/i);
-    if (tokenEquals?.[1]) return decodeURIComponent(tokenEquals[1]).trim();
+    if (tokenEquals?.[1]) {
+      const decoded = decodeURIComponent(tokenEquals[1]).trim();
+      console.log('Extracted token from token= pattern:', decoded.substring(0, 15) + '...');
+      return decoded;
+    }
 
     const tokenColon = input.match(/\btoken\s*[:\-]\s*([^\s]+)/i);
     if (tokenColon?.[1]) return tokenColon[1].trim();
@@ -135,6 +150,7 @@ export const QRAttendanceScanner = () => {
     if (tokenSpace?.[1]) return tokenSpace[1].trim();
 
     // Otherwise assume the QR encodes the token directly
+    console.log('Using raw input as token:', input.substring(0, 15) + '...');
     return input;
   };
 
