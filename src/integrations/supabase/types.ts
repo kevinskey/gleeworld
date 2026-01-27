@@ -9647,6 +9647,12 @@ export type Database = {
           price_cents: number | null
           semester: string | null
           semester_id: string | null
+          show_assignments: boolean | null
+          show_discussions: boolean | null
+          show_grades: boolean | null
+          show_journals: boolean | null
+          show_polls: boolean | null
+          show_tests: boolean | null
           start_date: string | null
           syllabus_url: string | null
           term: string | null
@@ -9677,6 +9683,12 @@ export type Database = {
           price_cents?: number | null
           semester?: string | null
           semester_id?: string | null
+          show_assignments?: boolean | null
+          show_discussions?: boolean | null
+          show_grades?: boolean | null
+          show_journals?: boolean | null
+          show_polls?: boolean | null
+          show_tests?: boolean | null
           start_date?: string | null
           syllabus_url?: string | null
           term?: string | null
@@ -9707,6 +9719,12 @@ export type Database = {
           price_cents?: number | null
           semester?: string | null
           semester_id?: string | null
+          show_assignments?: boolean | null
+          show_discussions?: boolean | null
+          show_grades?: boolean | null
+          show_journals?: boolean | null
+          show_polls?: boolean | null
+          show_tests?: boolean | null
           start_date?: string | null
           syllabus_url?: string | null
           term?: string | null
