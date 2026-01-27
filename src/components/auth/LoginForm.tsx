@@ -78,15 +78,14 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
           Sign In
         </Button>
         
-        <div className="text-center">
-          <Button 
+        <div className="text-center pt-2">
+          <button 
             type="button" 
-            variant="link" 
             onClick={onSwitchToForgot}
-            className="text-sm text-white/80 hover:text-white"
+            className="text-sm text-white/90 hover:text-white underline underline-offset-2 hover:no-underline transition-all"
           >
             Forgot your password?
-          </Button>
+          </button>
         </div>
       </form>
     </div>
