@@ -41,6 +41,8 @@ import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants
 import { useUserRole } from '@/hooks/useUserRole';
 import { MobileCourseLanding } from '@/components/course/MobileCourseLanding';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCourseVisibilitySettings, getHiddenTabs } from '@/hooks/useCourseVisibilitySettings';
+
 const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager'));
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
   default: m.AcademyPollSystem
@@ -66,6 +68,7 @@ const ConductingTextbook = React.lazy(() => import('./mus210/ConductingTextbook'
 const ReadMusicTrainer = React.lazy(() => import('./mus210/ReadMusicTrainer').then(m => ({
   default: m.ReadMusicTrainer
 })));
+
 interface UnifiedCoursePageProps {
   course: AcademyCourse;
 }
@@ -106,8 +109,24 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   // Mobile detection for new mobile-first landing
   const isMobile = useIsMobile();
 
-  // Get course template configuration (Course Template v1)
-  const templateConfig = useMemo(() => getCourseTemplateConfig(course.id), [course.id]);
+  // Fetch visibility settings from database
+  const { settings: visibilitySettings, isLoading: visibilityLoading } = useCourseVisibilitySettings(course.id);
+  const hiddenTabs = useMemo(() => getHiddenTabs(visibilitySettings), [visibilitySettings]);
+
+  // Get course template configuration (Course Template v1) and filter by visibility
+  const templateConfig = useMemo(() => {
+    const config = getCourseTemplateConfig(course.id);
+    
+    // If user is admin, show all tabs regardless of visibility settings
+    // For students, filter out hidden tabs
+    return config;
+  }, [course.id]);
+
+  // Filter navigation items based on visibility settings (for students only)
+  const filteredPrimaryNav = useMemo(() => {
+    if (isAdmin) return templateConfig.primaryNav; // Admins see everything
+    return templateConfig.primaryNav.filter(item => !hiddenTabs.includes(item.tab));
+  }, [templateConfig.primaryNav, hiddenTabs, isAdmin]);
 
   // Sync tab with URL changes
   useEffect(() => {
@@ -288,10 +307,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           {/* Course Grade Stat - Above Navigation */}
           <CourseGradeStat courseId={course.id} onNavigateToGrades={() => setActiveTab('grades')} />
           
-          {/* Primary Navigation - Course Template v1 */}
+          {/* Primary Navigation - Course Template v1 (filtered by visibility) */}
           <nav className="flex-1 overflow-y-auto px-3 space-y-1 flex flex-col items-center pt-4 pb-0">
             <div className="w-full space-y-1">
-              {templateConfig.primaryNav.map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-base lg:text-lg transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground hover:bg-muted'}`}>
+              {filteredPrimaryNav.map(item => <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-base lg:text-lg transition-colors ${activeTab === item.tab ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground hover:bg-muted'}`}>
                   <item.icon className="h-5 w-5 lg:h-6 lg:w-6 flex-shrink-0" />
                   <span>{item.label}</span>
                 </button>)}
@@ -362,13 +381,25 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                         <TabsTrigger value="playlist" className="text-xs px-3 py-2"><Headphones className="h-3 w-3 mr-1" />Playlist</TabsTrigger>
                         <TabsTrigger value="announcements" className="text-xs px-3 py-2"><Bell className="h-3 w-3 mr-1" />Announce</TabsTrigger>
                         <TabsTrigger value="messages" className="text-xs px-3 py-2"><MessagesSquare className="h-3 w-3 mr-1" />Messages</TabsTrigger>
-                        <TabsTrigger value="assignments" className="text-xs px-3 py-2"><ClipboardList className="h-3 w-3 mr-1" />Assign</TabsTrigger>
-                        <TabsTrigger value="journals" className="text-xs px-3 py-2"><PenLine className="h-3 w-3 mr-1" />Journals</TabsTrigger>
-                        <TabsTrigger value="tests" className="text-xs px-3 py-2"><FileCheck className="h-3 w-3 mr-1" />Tests</TabsTrigger>
-                        <TabsTrigger value="polls" className="text-xs px-3 py-2"><BarChart className="h-3 w-3 mr-1" />Polls</TabsTrigger>
-                        <TabsTrigger value="discussions" className="text-xs px-3 py-2"><MessageSquare className="h-3 w-3 mr-1" />Discuss</TabsTrigger>
+                        {(isAdmin || !hiddenTabs.includes('assignments')) && (
+                          <TabsTrigger value="assignments" className="text-xs px-3 py-2"><ClipboardList className="h-3 w-3 mr-1" />Assign</TabsTrigger>
+                        )}
+                        {(isAdmin || !hiddenTabs.includes('journals')) && (
+                          <TabsTrigger value="journals" className="text-xs px-3 py-2"><PenLine className="h-3 w-3 mr-1" />Journals</TabsTrigger>
+                        )}
+                        {(isAdmin || !hiddenTabs.includes('tests')) && (
+                          <TabsTrigger value="tests" className="text-xs px-3 py-2"><FileCheck className="h-3 w-3 mr-1" />Tests</TabsTrigger>
+                        )}
+                        {(isAdmin || !hiddenTabs.includes('polls')) && (
+                          <TabsTrigger value="polls" className="text-xs px-3 py-2"><BarChart className="h-3 w-3 mr-1" />Polls</TabsTrigger>
+                        )}
+                        {(isAdmin || !hiddenTabs.includes('discussions')) && (
+                          <TabsTrigger value="discussions" className="text-xs px-3 py-2"><MessageSquare className="h-3 w-3 mr-1" />Discuss</TabsTrigger>
+                        )}
                         <TabsTrigger value="resources" className="text-xs px-3 py-2"><Library className="h-3 w-3 mr-1" />Resources</TabsTrigger>
-                        <TabsTrigger value="grades" className="text-xs px-3 py-2"><Trophy className="h-3 w-3 mr-1" />Grades</TabsTrigger>
+                        {(isAdmin || !hiddenTabs.includes('grades')) && (
+                          <TabsTrigger value="grades" className="text-xs px-3 py-2"><Trophy className="h-3 w-3 mr-1" />Grades</TabsTrigger>
+                        )}
                         <TabsTrigger value="attendance" className="text-xs px-3 py-2"><UserCheck className="h-3 w-3 mr-1" />Attend</TabsTrigger>
                         <TabsTrigger value="archives" className="text-xs px-3 py-2"><Archive className="h-3 w-3 mr-1" />Archives</TabsTrigger>
                         {isAdmin && <TabsTrigger value="instructor" className="text-xs px-3 py-2" onClick={e => {
@@ -381,11 +412,19 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                       <TabsTrigger value="home" className="text-xs px-3 py-2">Home</TabsTrigger>
                         <TabsTrigger value="modules" className="text-xs px-3 py-2">Modules</TabsTrigger>
                         <TabsTrigger value="messages" className="text-xs px-3 py-2">Messages</TabsTrigger>
-                        <TabsTrigger value="assignments" className="text-xs px-3 py-2">Assignments</TabsTrigger>
-                        <TabsTrigger value="discussions" className="text-xs px-3 py-2">Discussions</TabsTrigger>
-                        <TabsTrigger value="tests" className="text-xs px-3 py-2">Tests</TabsTrigger>
+                        {(isAdmin || !hiddenTabs.includes('assignments')) && (
+                          <TabsTrigger value="assignments" className="text-xs px-3 py-2">Assignments</TabsTrigger>
+                        )}
+                        {(isAdmin || !hiddenTabs.includes('discussions')) && (
+                          <TabsTrigger value="discussions" className="text-xs px-3 py-2">Discussions</TabsTrigger>
+                        )}
+                        {(isAdmin || !hiddenTabs.includes('tests')) && (
+                          <TabsTrigger value="tests" className="text-xs px-3 py-2">Tests</TabsTrigger>
+                        )}
                         <TabsTrigger value="lounge" className="text-xs px-3 py-2">Lounge</TabsTrigger>
-                        <TabsTrigger value="grades" className="text-xs px-3 py-2">Grades</TabsTrigger>
+                        {(isAdmin || !hiddenTabs.includes('grades')) && (
+                          <TabsTrigger value="grades" className="text-xs px-3 py-2">Grades</TabsTrigger>
+                        )}
                         <TabsTrigger value="syllabus" className="text-xs px-3 py-2">Syllabus</TabsTrigger>
                         <TabsTrigger value="resources" className="text-xs px-3 py-2">Resources</TabsTrigger>
                         {isAdmin && <TabsTrigger value="instructor" className="text-xs px-3 py-2" onClick={e => {

@@ -36,6 +36,7 @@ import { SightReadingAssignmentManager } from '@/components/sight-singing/SightR
 import { AttendanceSecurityControls } from '@/components/attendance/AttendanceSecurityControls';
 import { CoursePlaylistManager } from '@/components/modules/CoursePlaylistManager';
 import { QuickAttendanceQR } from '@/components/course/QuickAttendanceQR';
+import { CourseVisibilitySettings } from '@/components/course/CourseVisibilitySettings';
 
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
@@ -399,14 +400,14 @@ export const CourseInstructorConsole = () => {
             )}
             {activeTab === 'semesters' && <SemesterManager />}
             {activeTab === 'ai-assistant' && <AIAssistant />}
-            {activeTab === 'settings' && <Card>
-                <CardHeader>
-                  <CardTitle>Course Settings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Course settings coming soon.</p>
-                </CardContent>
-              </Card>}
+            {activeTab === 'settings' && dbCourse && (
+              <div className="space-y-6">
+                <CourseVisibilitySettings 
+                  courseId={dbCourse.id} 
+                  courseCode={course.courseCode}
+                />
+              </div>
+            )}
           </main>
           
         </div>
