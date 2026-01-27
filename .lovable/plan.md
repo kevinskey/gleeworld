@@ -1,136 +1,154 @@
 
-# Plan: Link 55 MUS-070 Enrollments to User Accounts
 
-## Summary
-Update 55 `gw_course_enrollments` records that are missing `user_id` by matching them to existing user accounts in `gw_profiles` via name comparison through the intermediate `gw_student_profiles` table.
+## Automatic QR Codes for Each Course Session
 
-## Current State
-| Metric | Count |
-|--------|-------|
-| Total MUS-070 enrollments missing `user_id` | 55 |
-| Can match automatically by name pattern | 48 |
-| Require special handling (name variations) | 7 |
+### Summary
 
-## Data Flow
-```text
-gw_course_enrollments.student_profile_id 
-    → gw_student_profiles.id (name: "Last, First M.")
-    → Match to gw_profiles.full_name ("First Last")
-    → Get gw_profiles.user_id
-    → Update gw_course_enrollments.user_id
-```
-
-## Implementation Steps
-
-### Step 1: Automatic Name Matching (48 students)
-Create a SQL migration that:
-1. Parses `gw_student_profiles.full_name` from "Last, First M." format
-2. Matches to `gw_profiles.full_name` using pattern: `first_name%last_name`
-3. Updates `gw_course_enrollments.user_id` with the matched `gw_profiles.user_id`
-
-### Step 2: Manual Edge Case Handling (7 students)
-Handle students with name format variations:
-
-| Student Profile Name | gw_profiles Name | Issue |
-|---------------------|------------------|-------|
-| Coleman, Kaylen A. | Coleman | Incomplete profile name |
-| Dent, Charity J. | Charity Dent | Trailing space |
-| Henderson, Kennedi J. | Kennedi | First name only |
-| Johnson, Michelle A. | Michelle Abigail Johnson | Extra middle name |
-| Nashe, Shelby A. | Shelbynashe@gmail.com | Email as name |
-| Petty, T'yara I. | Tyara Petty | Apostrophe removed |
-| Williams, Ainka-Amara M. | AinkaAmara Williams | Hyphen removed |
-
-### Step 3: Backfill Attendance Records
-After linking, insert attendance records for the newly-linked students for sessions before January 28th (matching existing behavior).
-
-### Step 4: Update `gw_student_profiles.user_id`
-Also update the `gw_student_profiles` table with the matched `user_id` to maintain data consistency.
+Every course will have QR codes **automatically generated** when class sessions are created. Instructors and TAs will be able to display the session's QR code directly from the instructor console with a **single click** — no manual QR generation required.
 
 ---
 
-## Technical Details
+### Current State
 
-### Migration SQL Structure
+The system already has much of the infrastructure in place:
 
-```sql
--- Part 1: Automatic matching for 48 students
-WITH matched_enrollments AS (
-  SELECT DISTINCT ON (e.id)
-    e.id as enrollment_id,
-    p.user_id
-  FROM gw_course_enrollments e
-  JOIN gw_student_profiles sp ON e.student_profile_id = sp.id
-  JOIN gw_profiles p ON p.full_name ILIKE 
-    TRIM(REGEXP_REPLACE(SPLIT_PART(sp.full_name, ',', 2), '\s+[A-Z]\.?$', '')) 
-    || '%' 
-    || TRIM(SPLIT_PART(sp.full_name, ',', 1))
-  WHERE e.course_id = 'a0000000-0000-0000-0000-000000000070'
-    AND e.user_id IS NULL
-    AND p.user_id IS NOT NULL
-)
-UPDATE gw_course_enrollments e
-SET user_id = m.user_id
-FROM matched_enrollments m
-WHERE e.id = m.enrollment_id;
+1. **QR codes are auto-generated** when class sessions are created (via `CourseClassCalendar.tsx`) and stored in `gw_attendance_qr_codes` with `context_type: 'course_session'`
 
--- Part 2: Manual matching for 7 edge cases
-UPDATE gw_course_enrollments e
-SET user_id = CASE
-  WHEN sp.full_name = 'Coleman, Kaylen A.' THEN '20335166-9e72-4d98-a7a8-265d9d5e8887'
-  WHEN sp.full_name = 'Dent, Charity J.' THEN '6d44a9d0-70df-4a74-9623-002f4365253c'
-  WHEN sp.full_name = 'Henderson, Kennedi J.' THEN '763aee24-4e37-49a3-9e8b-6539ce6360a9'
-  WHEN sp.full_name = 'Johnson, Michelle A.' THEN 'c5b54bf0-30cf-4f72-9ad6-e11005565426'
-  WHEN sp.full_name = 'Nashe, Shelby A.' THEN '5e6e5171-dc0b-418c-9b5f-236b05990dd0'
-  WHEN sp.full_name = 'Petty, T''yara I.' THEN '799ae001-0cd5-438d-87f2-1cbf5434ddf0'
-  WHEN sp.full_name = 'Williams, Ainka-Amara M.' THEN '04f14d47-25ba-4632-9d4e-2407d2c3797b'
-END
-FROM gw_student_profiles sp
-WHERE e.student_profile_id = sp.id
-  AND e.course_id = 'a0000000-0000-0000-0000-000000000070'
-  AND e.user_id IS NULL;
+2. **Each session is linked** to its QR code via the `qr_code_id` column in `gw_course_class_sessions`
 
--- Part 3: Update gw_student_profiles with user_id for consistency
-UPDATE gw_student_profiles sp
-SET user_id = e.user_id
-FROM gw_course_enrollments e
-WHERE e.student_profile_id = sp.id
-  AND e.course_id = 'a0000000-0000-0000-0000-000000000070'
-  AND e.user_id IS NOT NULL
-  AND sp.user_id IS NULL;
+3. The `CourseClassCalendar` component already has a `generateQRCode()` function that either retrieves an existing QR code or creates a new one if needed
 
--- Part 4: Backfill attendance for newly-linked students
-INSERT INTO gw_attendance_records (attendance_session_id, student_profile_id, status, check_in_method, note)
-SELECT s.id, e.user_id, 'present', 'manual', 'Retroactive attendance - backfilled after enrollment link'
-FROM gw_attendance_sessions s
-CROSS JOIN gw_course_enrollments e
-WHERE s.course_id = 'a0000000-0000-0000-0000-000000000070'
-  AND e.course_id = 'a0000000-0000-0000-0000-000000000070'
-  AND e.user_id IS NOT NULL
-  AND s.opens_at::date < '2026-01-28'
-ON CONFLICT (attendance_session_id, student_profile_id) DO NOTHING;
+**What's missing**: A streamlined way to display the QR code from the instructor console's main attendance workflow — currently instructors must:
+- Navigate to Calendar
+- Find the session  
+- Click on it
+- Generate/view the QR code
+
+---
+
+### Implementation Plan
+
+#### 1. Add "Today's Session QR" Panel to Instructor Console
+
+A new prominent panel in the instructor console that automatically:
+- Detects the current or next class session based on course schedule
+- Displays the session's pre-generated QR code with one click
+- Shows attendance status and count in real-time
+
+**Location**: Add to the "Attendance Security" tab or create a new "Quick Attendance" tab
+
+```text
+┌─────────────────────────────────────────────────────┐
+│  📅 Today's Class                                   │
+│  ─────────────────────────────────────────────────  │
+│  MUS 210 - Class 12                                 │
+│  10:00 AM - 11:30 AM • Fine Arts 105                │
+│                                                     │
+│  ┌───────────────────┐   Status: Ready              │
+│  │                   │   Enrolled: 24               │
+│  │    [QR CODE]      │   Checked In: 0              │
+│  │                   │                              │
+│  │                   │   [Show Full Screen]         │
+│  └───────────────────┘   [Download QR]              │
+│                                                     │
+│  ⚡ QR auto-generated • Refresh available           │
+└─────────────────────────────────────────────────────┘
 ```
 
-## Expected Outcome
-After implementation:
-- All 79 MUS-070 enrolled students will have `user_id` values
-- The attendance grid will display all 79 students instead of 24
-- Attendance records will be backfilled for all newly-linked students
+#### 2. Create `QuickAttendanceQR` Component
 
-## Files to Create/Modify
-| File | Action |
-|------|--------|
-| `supabase/migrations/[timestamp]_link_mus070_enrollments.sql` | Create new migration |
+A new reusable component (`src/components/course/QuickAttendanceQR.tsx`) that:
 
-## Verification Query
-After running, verify with:
-```sql
-SELECT COUNT(*) as linked, 
-       (SELECT COUNT(*) FROM gw_course_enrollments 
-        WHERE course_id = 'a0000000-0000-0000-0000-000000000070' 
-        AND user_id IS NULL) as still_unlinked
-FROM gw_course_enrollments 
-WHERE course_id = 'a0000000-0000-0000-0000-000000000070' 
-  AND user_id IS NOT NULL;
+- Accepts `courseId` as prop
+- Queries `gw_course_class_sessions` for today's session (or the next upcoming one)
+- Fetches the linked QR code from `gw_attendance_qr_codes`
+- Renders the QR image automatically (no manual generation needed)
+- Provides full-screen display mode for projecting in class
+- Shows live attendance count via realtime subscription
+
+#### 3. Update Instructor Console Navigation
+
+Add a dedicated "Attendance" or "Quick Attendance" tab to the instructor console sidebar that loads the new `QuickAttendanceQR` component:
+
+```typescript
+// In navCategories - add to Students section
+{
+  value: 'quick-attendance',
+  label: 'Attendance',
+  icon: QrCode
+}
 ```
-Expected: linked = 79, still_unlinked = 0
+
+#### 4. Database Query Logic
+
+Find today's or upcoming session:
+
+```sql
+SELECT s.*, qr.qr_token, qr.id as qr_id
+FROM gw_course_class_sessions s
+LEFT JOIN gw_attendance_qr_codes qr ON qr.id = s.qr_code_id
+WHERE s.course_id = :courseId
+  AND s.session_date >= CURRENT_DATE
+ORDER BY s.session_date ASC, s.start_time ASC
+LIMIT 1
+```
+
+#### 5. Full-Screen Presentation Mode
+
+Add a "Present" button that opens the QR code in a maximized view suitable for:
+- Projection on classroom screens
+- Large display during class
+- Mobile-friendly instructor display
+
+---
+
+### Technical Details
+
+**New files to create:**
+- `src/components/course/QuickAttendanceQR.tsx` — Main QR display component
+- `src/components/course/AttendanceFullScreenModal.tsx` — Full-screen presentation mode
+
+**Files to modify:**
+- `src/pages/courses/CourseInstructorConsole.tsx` — Add new nav item and render component
+
+**Existing infrastructure to leverage:**
+- `gw_attendance_qr_codes` table with `context_type = 'course_session'`
+- `qrcode` library already installed
+- Real-time subscriptions for attendance updates
+- `gw_course_class_sessions.qr_code_id` foreign key relationship
+
+**QR Code URL Format:**
+```
+https://gleeworld.lovable.app/attendance/scan?token={qr_token}
+```
+
+---
+
+### User Experience
+
+**For instructors:**
+1. Open instructor console
+2. Click "Attendance" in sidebar
+3. See today's session with QR already displayed
+4. Click "Present" to show full-screen for class
+
+**For TAs:**
+- Same workflow (TAs already have instructor console access)
+
+**No more:**
+- Going to separate QR generator page
+- Selecting events from dropdown
+- Manually generating codes
+- Waiting for token creation
+
+---
+
+### Benefits
+
+- **Zero setup**: QR codes exist from the moment sessions are created
+- **Instant display**: One click to show attendance QR
+- **Full-screen mode**: Easy projection for in-class use  
+- **Real-time tracking**: See check-ins as they happen
+- **Consistent tokens**: Same QR works for entire session (no rotation needed for normal use)
+- **Fallback available**: Security controls tab still available for rotating QR if needed
+
