@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Filter, Search, FileCheck, Clock, CheckCircle, BookOpen } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Filter, Search, FileCheck, Clock, CheckCircle, BookOpen, Eye, EyeOff } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -230,6 +231,25 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     onError: error => {
       console.error('Error deleting assignment:', error);
       toast.error('Failed to delete assignment');
+    }
+  });
+
+  // Toggle visibility mutation
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: async ({ id, isPublished }: { id: string; isPublished: boolean }) => {
+      const { error } = await supabase
+        .from('gw_course_assignments')
+        .update({ is_published: isPublished })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { isPublished }) => {
+      queryClient.invalidateQueries({ queryKey: ['course-assignments', courseId] });
+      toast.success(isPublished ? 'Assignment visible to students' : 'Assignment hidden from students');
+    },
+    onError: (error) => {
+      console.error('Error toggling visibility:', error);
+      toast.error('Failed to update visibility');
     }
   });
   const resetForm = () => {
@@ -598,16 +618,27 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
           {filteredAndSortedAssignments.map(assignment => (
             <div 
               key={assignment.id} 
-              className="flex items-start sm:items-center justify-between p-2 sm:p-3 md:p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors gap-2"
+              className={`flex items-start sm:items-center justify-between p-2 sm:p-3 md:p-4 rounded-lg border transition-colors gap-2 ${
+                assignment.is_published 
+                  ? 'bg-card hover:bg-muted/50' 
+                  : 'bg-muted/30 border-dashed opacity-75'
+              }`}
             >
               <div className="flex flex-col gap-0.5 sm:gap-1 flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                  <span className="text-sm sm:text-base md:text-lg font-medium text-foreground line-clamp-1">
+                  <span className={`text-sm sm:text-base md:text-lg font-medium line-clamp-1 ${
+                    assignment.is_published ? 'text-foreground' : 'text-muted-foreground'
+                  }`}>
                     {assignment.title}
                   </span>
                   <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 sm:py-0.5 flex-shrink-0">
                     {assignment.assignment_type || 'task'}
                   </Badge>
+                  {!assignment.is_published && (
+                    <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 sm:py-0.5 flex-shrink-0 border-amber-500/50 text-amber-600">
+                      Hidden
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-base text-muted-foreground">
                   <span>{assignment.points} pts</span>
@@ -620,6 +651,31 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 </div>
               </div>
               <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9" 
+                        onClick={() => toggleVisibilityMutation.mutate({ 
+                          id: assignment.id, 
+                          isPublished: !assignment.is_published 
+                        })}
+                        disabled={toggleVisibilityMutation.isPending}
+                      >
+                        {assignment.is_published ? (
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
+                        ) : (
+                          <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {assignment.is_published ? 'Hide from students' : 'Show to students'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9" onClick={() => handleEdit(assignment)}>
                   <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
