@@ -244,12 +244,12 @@ export const useUserRole = () => {
   };
 
   /**
-   * Can manage other users (Admin+ or Chief of Staff)
+   * Can manage other users (Admin+ or any Executive Board member)
    */
   const canManageUsers = (): boolean => {
     if (!profile) return false;
-    if (isAdmin()) return true;
-    return profile.exec_board_role === 'chief_of_staff';
+    // All executive board members can manage users (includes admins)
+    return isExecutiveBoard();
   };
 
   /**

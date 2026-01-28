@@ -24,14 +24,17 @@ const UserManagement = () => {
     usersCount: users?.length
   });
 
-  // Check if user is admin or super admin with more robust logic
-  const isAdmin = !!(userProfile?.is_admin || 
-                     userProfile?.is_super_admin || 
-                     userProfile?.role === 'admin' || 
-                     userProfile?.role === 'super-admin');
+  // Check if user can access user management (admin, super admin, OR executive board)
+  const canAccessUserManagement = !!(
+    userProfile?.is_admin || 
+    userProfile?.is_super_admin || 
+    userProfile?.is_exec_board ||
+    userProfile?.role === 'admin' || 
+    userProfile?.role === 'super-admin'
+  );
   
-  console.log('UserManagement page loaded - user:', user?.id, 'isAdmin:', isAdmin, 'userProfile:', userProfile, 'profileLoading:', profileLoading, 'authLoading:', authLoading, 'usersLoading:', usersLoading, 'usersError:', usersError);
-  console.log('UserManagement: Admin check details - userProfile?.role:', userProfile?.role, 'userProfile?.is_admin:', userProfile?.is_admin, 'userProfile?.is_super_admin:', userProfile?.is_super_admin, 'isAdmin calculation:', isAdmin, 'authLoading:', authLoading, 'profileLoading:', profileLoading);
+  console.log('UserManagement page loaded - user:', user?.id, 'canAccessUserManagement:', canAccessUserManagement, 'userProfile:', userProfile);
+  console.log('UserManagement: Access check details - is_admin:', userProfile?.is_admin, 'is_super_admin:', userProfile?.is_super_admin, 'is_exec_board:', userProfile?.is_exec_board);
   
   // Show loading while auth or profile is loading, OR while we have a user but no profile yet
   if (authLoading || profileLoading || (user && !userProfile)) {
@@ -45,9 +48,9 @@ const UserManagement = () => {
     );
   }
   
-  // Redirect if not admin (only after loading is complete)
-  if (!authLoading && !profileLoading && !isAdmin) {
-    console.log('UserManagement: Redirecting non-admin user');
+  // Redirect if user cannot access (only after loading is complete)
+  if (!authLoading && !profileLoading && !canAccessUserManagement) {
+    console.log('UserManagement: Redirecting user without access');
     return <Navigate to="/" replace />;
   }
 
