@@ -501,17 +501,47 @@ const tools = [
   {
     type: "function",
     function: {
-      name: "get_student_grades",
-      description: "Retrieve grade information for students in a course. Can get individual student grades or class-wide grade reports.",
+      name: "get_student_record",
+      description: "Retrieve comprehensive student grade information including journals, midterm, assignments, attendance, and participation. Provides transcript-like reports. Use for queries like 'What grade is Kevin getting?' or 'List Maya's transcripts'.",
       parameters: {
         type: "object",
         properties: {
-          course_code: { type: "string", description: "Course code (e.g., 'MUS-240')." },
-          student_email: { type: "string", description: "Optional: specific student's email to get individual grades." },
-          student_name: { type: "string", description: "Optional: student name to search for." },
+          student_name: { type: "string", description: "Student name to search for (fuzzy matching supported). Required for individual lookups." },
+          student_email: { type: "string", description: "Specific student's email (alternative to name)." },
+          course_code: { type: "string", description: "Course code (e.g., 'MUS-240'). Defaults to MUS-240." },
+          format: { 
+            type: "string", 
+            enum: ["summary", "detailed", "transcript"],
+            description: "Output format. 'summary' for quick grade overview, 'detailed' for breakdown, 'transcript' for full record with all assignments."
+          },
+          include_journals: { type: "boolean", description: "Include journal grades with feedback (default true for detailed/transcript)." },
+          include_midterm: { type: "boolean", description: "Include midterm exam scores (default true for detailed/transcript)." },
+          include_attendance: { type: "boolean", description: "Include attendance records (default true)." },
+          include_participation: { type: "boolean", description: "Include participation grades (default true for detailed/transcript)." },
           semester: { type: "string", description: "Semester (defaults to current)." },
         },
         required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "send_student_email",
+      description: "Send an email to one or more students. Can email individual students by name, groups (like 'all students', 'students missing journals'), or filter by grade status. Optionally include current grade summary.",
+      parameters: {
+        type: "object",
+        properties: {
+          student_name: { 
+            type: "string", 
+            description: "Student name OR group: 'Kevin Johnson', 'all', 'class', 'students below C', 'students missing journals', 'students who haven't submitted'." 
+          },
+          subject: { type: "string", description: "Email subject line." },
+          message: { type: "string", description: "Email body message. Can include grade placeholders like {grade}, {percentage}, {name}." },
+          include_grade: { type: "boolean", description: "Auto-include current grade summary in the email (default false)." },
+          course_code: { type: "string", description: "Course code for context (defaults to MUS-240)." },
+        },
+        required: ["subject", "message"],
       },
     },
   },
@@ -1040,131 +1070,645 @@ Format as JSON array:
       }
     }
 
-    case "get_student_grades": {
-      // Verify permissions
+    case "get_student_record": {
+      // Verify instructor/admin permissions
       const { data: profile } = await supabase
         .from("gw_profiles")
-        .select("is_admin, is_super_admin")
+        .select("is_admin, is_super_admin, full_name")
         .eq("user_id", userId)
         .single();
 
       if (!profile?.is_admin && !profile?.is_super_admin) {
-        return { success: false, message: "Access denied. Only admins can view student grades." };
+        return { success: false, message: "Access denied. Only instructors and admins can view student records." };
       }
 
       const courseCode = args.course_code || "MUS-240";
       const semester = args.semester || currentSemester;
+      const format = args.format || "summary";
+      const includeJournals = args.include_journals ?? (format !== "summary");
+      const includeMidterm = args.include_midterm ?? (format !== "summary");
+      const includeAttendance = args.include_attendance ?? true;
+      const includeParticipation = args.include_participation ?? (format !== "summary");
 
       // Get course
       const { data: course } = await supabase
         .from("gw_courses")
-        .select("id, title")
-        .eq("course_code", courseCode)
+        .select("id, title, course_code")
+        .ilike("course_code", `%${courseCode.replace("-", " ")}%`)
         .single();
 
       if (!course) {
         return { success: false, message: `Course ${courseCode} not found.` };
       }
 
-      // If specific student requested
+      // If specific student requested, do fuzzy name matching
       if (args.student_email || args.student_name) {
-        let studentQuery = supabase.from("gw_profiles").select("user_id, full_name, email");
+        let studentQuery = supabase.from("gw_profiles").select("user_id, full_name, email, voice_part");
         
         if (args.student_email) {
           studentQuery = studentQuery.eq("email", args.student_email);
         } else if (args.student_name) {
-          studentQuery = studentQuery.ilike("full_name", `%${args.student_name}%`);
+          // Fuzzy name matching - split the name and match any part
+          const nameParts = args.student_name.trim().split(/\s+/);
+          const orConditions = nameParts.map((part: string) => `full_name.ilike.%${part}%`).join(",");
+          studentQuery = studentQuery.or(orConditions);
         }
 
-        const { data: student } = await studentQuery.single();
+        const { data: students } = await studentQuery.limit(5);
 
-        if (!student) {
-          return { success: false, message: `Student not found.` };
+        if (!students?.length) {
+          return { success: false, message: `No students found matching "${args.student_name || args.student_email}".` };
         }
 
-        // Get grades for this student
+        // If multiple matches, return them for clarification
+        if (students.length > 1 && !args.student_email) {
+          return {
+            success: true,
+            multiple_matches: true,
+            students: students.map(s => ({ name: s.full_name, email: s.email, voice_part: s.voice_part })),
+            message: `Found ${students.length} students matching "${args.student_name}". Please specify which one: ${students.map(s => s.full_name).join(", ")}`,
+          };
+        }
+
+        const student = students[0];
+
+        // Get comprehensive record for this student
+        const record: any = {
+          student_name: student.full_name,
+          student_email: student.email,
+          voice_part: student.voice_part,
+          course: course.course_code,
+          semester: semester,
+        };
+
+        // 1. Get Journal Grades
+        if (includeJournals) {
+          const { data: journals } = await supabase
+            .from("mus240_journal_grades")
+            .select("journal_number, grade, feedback, graded_at, assignment_id")
+            .eq("student_id", student.user_id)
+            .order("journal_number", { ascending: true });
+
+          const journalGrades = journals || [];
+          const journalTotal = journalGrades.reduce((sum, j) => sum + (j.grade || 0), 0);
+          const journalMax = journalGrades.length * 20; // Assuming 20 pts per journal
+          
+          record.journals = {
+            grades: journalGrades.map(j => ({
+              number: j.journal_number,
+              grade: j.grade,
+              max: 20,
+              percentage: j.grade ? Math.round((j.grade / 20) * 100) : 0,
+              feedback: j.feedback,
+              graded_at: j.graded_at,
+            })),
+            total_earned: journalTotal,
+            total_possible: journalMax,
+            percentage: journalMax > 0 ? Math.round((journalTotal / journalMax) * 100) : 0,
+            count_graded: journalGrades.filter(j => j.grade !== null).length,
+          };
+        }
+
+        // 2. Get Midterm Score
+        if (includeMidterm) {
+          const { data: midterm } = await supabase
+            .from("mus240_midterm_submissions")
+            .select("grade, feedback, graded_at, comprehensive_feedback, selected_essay_question")
+            .eq("user_id", student.user_id)
+            .single();
+
+          if (midterm) {
+            record.midterm = {
+              grade: midterm.grade,
+              max: 90, // Standard midterm max
+              percentage: midterm.grade ? Math.round((midterm.grade / 90) * 100) : 0,
+              feedback: midterm.feedback || midterm.comprehensive_feedback,
+              graded_at: midterm.graded_at,
+              essay_question: midterm.selected_essay_question,
+            };
+          } else {
+            record.midterm = { grade: null, submitted: false, message: "Not yet submitted" };
+          }
+        }
+
+        // 3. Get Participation
+        if (includeParticipation) {
+          const { data: participation } = await supabase
+            .from("mus240_participation_grades")
+            .select("grade, feedback, graded_at")
+            .eq("student_id", student.user_id)
+            .single();
+
+          if (participation) {
+            record.participation = {
+              grade: participation.grade,
+              max: 50, // Standard participation max
+              percentage: participation.grade ? Math.round((participation.grade / 50) * 100) : 0,
+              feedback: participation.feedback,
+            };
+          } else {
+            record.participation = { grade: null, not_graded: true };
+          }
+        }
+
+        // 4. Get Attendance
+        if (includeAttendance) {
+          const { data: attendance } = await supabase
+            .from("gw_attendance_records")
+            .select("status, check_in_time, attendance_session_id")
+            .eq("student_id", student.user_id);
+
+          const records = attendance || [];
+          const present = records.filter(a => a.status === "present").length;
+          const late = records.filter(a => a.status === "late").length;
+          const absent = records.filter(a => a.status === "absent").length;
+          const excused = records.filter(a => a.status === "excused").length;
+          const total = records.length;
+
+          record.attendance = {
+            present: present,
+            late: late,
+            absent_unexcused: absent,
+            excused: excused,
+            total_sessions: total,
+            attendance_rate: total > 0 ? Math.round(((present + late + excused) / total) * 100) : 100,
+          };
+        }
+
+        // 5. Get other assignment submissions (non-journal)
         const { data: submissions } = await supabase
           .from("assignment_submissions")
           .select(`
-            id, grade, status, submitted_at,
-            gw_course_assignments!inner(id, title, points_possible, due_date)
+            id, grade, status, submitted_at, feedback,
+            gw_course_assignments!inner(id, title, points, due_date)
           `)
           .eq("student_id", student.user_id)
           .eq("gw_course_assignments.course_id", course.id);
 
-        const grades = submissions?.map(s => ({
-          assignment: s.gw_course_assignments?.title,
-          grade: s.grade,
-          points_possible: s.gw_course_assignments?.points_possible,
-          status: s.status,
-          due_date: s.gw_course_assignments?.due_date,
-        })) || [];
+        // Filter out journals (they have their own table)
+        const { data: journalAssignmentIds } = await supabase
+          .from("mus240_journal_grades")
+          .select("assignment_id")
+          .eq("student_id", student.user_id);
 
-        const totalPoints = grades.reduce((sum, g) => sum + (g.grade || 0), 0);
-        const maxPoints = grades.reduce((sum, g) => sum + (g.points_possible || 0), 0);
-        const percentage = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 0;
+        const journalIds = new Set((journalAssignmentIds || []).map(j => j.assignment_id));
+        const otherSubmissions = (submissions || []).filter(s => !journalIds.has(s.gw_course_assignments?.id));
+
+        if (otherSubmissions.length > 0) {
+          record.other_assignments = otherSubmissions.map(s => ({
+            title: s.gw_course_assignments?.title,
+            grade: s.grade,
+            max: s.gw_course_assignments?.points,
+            percentage: s.grade && s.gw_course_assignments?.points ? Math.round((s.grade / s.gw_course_assignments.points) * 100) : 0,
+            status: s.status,
+            due_date: s.gw_course_assignments?.due_date,
+            feedback: s.feedback,
+          }));
+        }
+
+        // 6. Calculate Overall Grade
+        let totalEarned = 0;
+        let totalPossible = 0;
+
+        // Journals (if graded)
+        if (record.journals) {
+          totalEarned += record.journals.total_earned;
+          totalPossible += record.journals.total_possible;
+        }
+
+        // Midterm
+        if (record.midterm?.grade) {
+          totalEarned += record.midterm.grade;
+          totalPossible += 90;
+        }
+
+        // Participation
+        if (record.participation?.grade) {
+          totalEarned += record.participation.grade;
+          totalPossible += 50;
+        }
+
+        // Other assignments
+        if (record.other_assignments) {
+          record.other_assignments.forEach((a: any) => {
+            if (a.grade !== null) {
+              totalEarned += a.grade;
+              totalPossible += a.max || 0;
+            }
+          });
+        }
+
+        // Apply attendance deduction (2 pts per unexcused absence)
+        const attendanceDeduction = (record.attendance?.absent_unexcused || 0) * 2;
+        
+        const rawPercentage = totalPossible > 0 ? (totalEarned / totalPossible) * 100 : 100;
+        const finalPercentage = Math.max(0, Math.round(rawPercentage - attendanceDeduction));
+        
+        // Letter grade
+        const getLetterGrade = (pct: number) => {
+          if (pct >= 95) return "A";
+          if (pct >= 90) return "A-";
+          if (pct >= 87) return "B+";
+          if (pct >= 83) return "B";
+          if (pct >= 80) return "B-";
+          if (pct >= 77) return "C+";
+          if (pct >= 73) return "C";
+          if (pct >= 70) return "C-";
+          if (pct >= 65) return "D+";
+          if (pct >= 60) return "D";
+          return "F";
+        };
+
+        record.overall_grade = {
+          percentage: finalPercentage,
+          letter_grade: getLetterGrade(finalPercentage),
+          total_earned: totalEarned,
+          total_possible: totalPossible,
+          attendance_deduction: attendanceDeduction,
+        };
+
+        // Generate human-readable message
+        let message = `**${student.full_name}** - ${course.course_code}: **${finalPercentage}% (${getLetterGrade(finalPercentage)})**\n`;
+        
+        if (format !== "summary") {
+          if (record.journals) {
+            message += `\n📚 **Journals:** ${record.journals.total_earned}/${record.journals.total_possible} pts (${record.journals.count_graded} graded)`;
+          }
+          if (record.midterm?.grade) {
+            message += `\n📝 **Midterm:** ${record.midterm.grade}/${record.midterm.max} pts (${record.midterm.percentage}%)`;
+          }
+          if (record.participation?.grade) {
+            message += `\n💬 **Participation:** ${record.participation.grade}/${record.participation.max} pts`;
+          }
+          if (record.attendance) {
+            message += `\n📅 **Attendance:** ${record.attendance.present + record.attendance.late}/${record.attendance.total_sessions} (${record.attendance.attendance_rate}%)`;
+            if (record.attendance.absent_unexcused > 0) {
+              message += ` - ${record.attendance.absent_unexcused} unexcused absence(s), -${attendanceDeduction} pts`;
+            }
+          }
+        }
 
         return {
           success: true,
-          student_name: student.full_name,
-          student_email: student.email,
-          course: courseCode,
-          grades: grades,
-          total_points: totalPoints,
-          max_points: maxPoints,
-          percentage: percentage,
-          message: `${student.full_name} - ${courseCode}: ${percentage}% (${totalPoints}/${maxPoints} points)`,
+          record: record,
+          message: message,
+          action: "show_student_record",
         };
       }
 
-      // Class-wide grades summary
+      // No specific student - return class-wide summary
       const { data: enrollments } = await supabase
         .from("gw_course_enrollments")
         .select(`
           user_id,
-          gw_profiles!inner(full_name, email)
+          gw_profiles!inner(full_name, email, voice_part)
         `)
         .eq("course_id", course.id)
         .eq("semester", semester)
         .eq("enrollment_status", "active");
 
-      const gradeSummary: any[] = [];
-      
-      for (const enrollment of enrollments || []) {
-        const { data: submissions } = await supabase
-          .from("assignment_submissions")
-          .select("grade, gw_course_assignments!inner(points_possible)")
+      if (!enrollments?.length) {
+        return { success: false, message: `No students enrolled in ${courseCode} for ${semester}.` };
+      }
+
+      // Get grade summaries for all students (simplified for class view)
+      const classSummary: any[] = [];
+
+      for (const enrollment of enrollments) {
+        // Quick grade calculation for each student
+        const { data: journals } = await supabase
+          .from("mus240_journal_grades")
+          .select("grade")
+          .eq("student_id", enrollment.user_id);
+        
+        const { data: midterm } = await supabase
+          .from("mus240_midterm_submissions")
+          .select("grade")
+          .eq("user_id", enrollment.user_id)
+          .single();
+
+        const { data: participation } = await supabase
+          .from("mus240_participation_grades")
+          .select("grade")
           .eq("student_id", enrollment.user_id)
-          .eq("gw_course_assignments.course_id", course.id);
+          .single();
 
-        const totalPoints = submissions?.reduce((sum, s) => sum + (s.grade || 0), 0) || 0;
-        const maxPoints = submissions?.reduce((sum, s) => sum + (s.gw_course_assignments?.points_possible || 0), 0) || 0;
-        const percentage = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 0;
+        const journalTotal = (journals || []).reduce((sum, j) => sum + (j.grade || 0), 0);
+        const journalMax = (journals || []).length * 20;
+        const midtermGrade = midterm?.grade || 0;
+        const participationGrade = participation?.grade || 0;
 
-        gradeSummary.push({
+        const totalEarned = journalTotal + midtermGrade + participationGrade;
+        const totalPossible = journalMax + 90 + 50; // journals + midterm + participation
+        const percentage = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+
+        const getLetterGrade = (pct: number) => {
+          if (pct >= 95) return "A";
+          if (pct >= 90) return "A-";
+          if (pct >= 87) return "B+";
+          if (pct >= 83) return "B";
+          if (pct >= 80) return "B-";
+          if (pct >= 77) return "C+";
+          if (pct >= 73) return "C";
+          if (pct >= 70) return "C-";
+          if (pct >= 65) return "D+";
+          if (pct >= 60) return "D";
+          return "F";
+        };
+
+        classSummary.push({
           name: enrollment.gw_profiles?.full_name,
           email: enrollment.gw_profiles?.email,
+          voice_part: enrollment.gw_profiles?.voice_part,
           percentage: percentage,
-          total: totalPoints,
-          max: maxPoints,
+          letter_grade: getLetterGrade(percentage),
+          journals_graded: (journals || []).filter(j => j.grade !== null).length,
+          has_midterm: !!midterm?.grade,
         });
       }
 
-      // Sort by percentage
-      gradeSummary.sort((a, b) => b.percentage - a.percentage);
+      // Sort by percentage descending
+      classSummary.sort((a, b) => b.percentage - a.percentage);
 
-      const avgGrade = gradeSummary.length > 0 
-        ? Math.round(gradeSummary.reduce((sum, s) => sum + s.percentage, 0) / gradeSummary.length)
+      const avgGrade = classSummary.length > 0
+        ? Math.round(classSummary.reduce((sum, s) => sum + s.percentage, 0) / classSummary.length)
         : 0;
+
+      // Grade distribution
+      const distribution = {
+        A: classSummary.filter(s => s.percentage >= 90).length,
+        B: classSummary.filter(s => s.percentage >= 80 && s.percentage < 90).length,
+        C: classSummary.filter(s => s.percentage >= 70 && s.percentage < 80).length,
+        D: classSummary.filter(s => s.percentage >= 60 && s.percentage < 70).length,
+        F: classSummary.filter(s => s.percentage < 60).length,
+      };
 
       return {
         success: true,
-        course: courseCode,
+        course: course.course_code,
         semester: semester,
-        student_count: gradeSummary.length,
+        student_count: classSummary.length,
         class_average: avgGrade,
-        grades: gradeSummary,
-        message: `${courseCode} Class Grades (${semester}): ${gradeSummary.length} students, ${avgGrade}% average.`,
+        distribution: distribution,
+        students: classSummary,
+        message: `**${course.course_code} Class Grades** (${semester})\n${classSummary.length} students, ${avgGrade}% average\n\nGrade Distribution: A=${distribution.A}, B=${distribution.B}, C=${distribution.C}, D=${distribution.D}, F=${distribution.F}`,
+        action: "show_class_grades",
+      };
+    }
+
+    case "send_student_email": {
+      // Verify instructor/admin permissions
+      const { data: senderProfile } = await supabase
+        .from("gw_profiles")
+        .select("is_admin, is_super_admin, full_name, email")
+        .eq("user_id", userId)
+        .single();
+
+      if (!senderProfile?.is_admin && !senderProfile?.is_super_admin) {
+        return { success: false, message: "Access denied. Only instructors and admins can send emails to students." };
+      }
+
+      const courseCode = args.course_code || "MUS-240";
+      const studentNameOrGroup = (args.student_name || "").toLowerCase().trim();
+      const includeGrade = args.include_grade ?? false;
+
+      // Get course
+      const { data: course } = await supabase
+        .from("gw_courses")
+        .select("id, title, course_code")
+        .ilike("course_code", `%${courseCode.replace("-", " ")}%`)
+        .single();
+
+      if (!course) {
+        return { success: false, message: `Course ${courseCode} not found.` };
+      }
+
+      // Determine recipients
+      let recipients: { user_id: string; email: string; full_name: string; percentage?: number; letter_grade?: string }[] = [];
+
+      // Group selections
+      if (studentNameOrGroup === "all" || studentNameOrGroup === "class" || studentNameOrGroup === "everyone") {
+        // All enrolled students
+        const { data: enrollments } = await supabase
+          .from("gw_course_enrollments")
+          .select(`
+            user_id,
+            gw_profiles!inner(user_id, full_name, email)
+          `)
+          .eq("course_id", course.id)
+          .eq("enrollment_status", "active");
+
+        recipients = (enrollments || []).map(e => ({
+          user_id: e.user_id,
+          email: e.gw_profiles?.email || "",
+          full_name: e.gw_profiles?.full_name || "",
+        }));
+
+      } else if (studentNameOrGroup.includes("below") || studentNameOrGroup.includes("failing") || studentNameOrGroup.includes("under")) {
+        // Students below a certain grade (default C = 70%)
+        let threshold = 70;
+        const gradeMatch = studentNameOrGroup.match(/below\s*([a-d])/i);
+        if (gradeMatch) {
+          const letterToThreshold: Record<string, number> = { a: 90, b: 80, c: 70, d: 60 };
+          threshold = letterToThreshold[gradeMatch[1].toLowerCase()] || 70;
+        }
+
+        // Get all enrolled students with grades
+        const { data: enrollments } = await supabase
+          .from("gw_course_enrollments")
+          .select(`user_id, gw_profiles!inner(user_id, full_name, email)`)
+          .eq("course_id", course.id)
+          .eq("enrollment_status", "active");
+
+        for (const e of enrollments || []) {
+          // Calculate quick grade
+          const { data: journals } = await supabase.from("mus240_journal_grades").select("grade").eq("student_id", e.user_id);
+          const { data: midterm } = await supabase.from("mus240_midterm_submissions").select("grade").eq("user_id", e.user_id).single();
+          const { data: participation } = await supabase.from("mus240_participation_grades").select("grade").eq("student_id", e.user_id).single();
+
+          const journalTotal = (journals || []).reduce((sum, j) => sum + (j.grade || 0), 0);
+          const journalMax = (journals || []).length * 20;
+          const totalEarned = journalTotal + (midterm?.grade || 0) + (participation?.grade || 0);
+          const totalPossible = journalMax + 90 + 50;
+          const percentage = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+
+          if (percentage < threshold) {
+            recipients.push({
+              user_id: e.user_id,
+              email: e.gw_profiles?.email || "",
+              full_name: e.gw_profiles?.full_name || "",
+              percentage: percentage,
+              letter_grade: percentage >= 90 ? "A" : percentage >= 80 ? "B" : percentage >= 70 ? "C" : percentage >= 60 ? "D" : "F",
+            });
+          }
+        }
+
+      } else if (studentNameOrGroup.includes("missing") || studentNameOrGroup.includes("haven't submitted") || studentNameOrGroup.includes("no journal")) {
+        // Students missing journals or assignments
+        const { data: enrollments } = await supabase
+          .from("gw_course_enrollments")
+          .select(`user_id, gw_profiles!inner(user_id, full_name, email)`)
+          .eq("course_id", course.id)
+          .eq("enrollment_status", "active");
+
+        // Get count of published journal assignments
+        const { data: journalAssignments } = await supabase
+          .from("gw_course_assignments")
+          .select("id")
+          .eq("course_id", course.id)
+          .eq("is_published", true)
+          .ilike("title", "%journal%");
+
+        const expectedJournals = journalAssignments?.length || 4;
+
+        for (const e of enrollments || []) {
+          const { data: journals } = await supabase
+            .from("mus240_journal_grades")
+            .select("journal_number")
+            .eq("student_id", e.user_id);
+
+          if ((journals?.length || 0) < expectedJournals) {
+            recipients.push({
+              user_id: e.user_id,
+              email: e.gw_profiles?.email || "",
+              full_name: e.gw_profiles?.full_name || "",
+            });
+          }
+        }
+
+      } else {
+        // Individual student lookup (fuzzy matching)
+        const nameParts = studentNameOrGroup.split(/\s+/);
+        const orConditions = nameParts.map((part: string) => `full_name.ilike.%${part}%`).join(",");
+        
+        const { data: students } = await supabase
+          .from("gw_profiles")
+          .select("user_id, full_name, email")
+          .or(orConditions)
+          .limit(5);
+
+        if (!students?.length) {
+          return { success: false, message: `No students found matching "${args.student_name}".` };
+        }
+
+        if (students.length > 1) {
+          return {
+            success: false,
+            multiple_matches: true,
+            students: students.map(s => ({ name: s.full_name, email: s.email })),
+            message: `Found ${students.length} students matching "${args.student_name}". Please be more specific: ${students.map(s => s.full_name).join(", ")}`,
+          };
+        }
+
+        recipients = [{ user_id: students[0].user_id, email: students[0].email, full_name: students[0].full_name }];
+      }
+
+      if (recipients.length === 0) {
+        return { success: false, message: "No recipients found for this email." };
+      }
+
+      // Build email content
+      let emailSubject = args.subject;
+      const senderName = senderProfile.full_name || "Glee Club Instructor";
+
+      // For each recipient, personalize the message
+      const emailsSent: string[] = [];
+      const emailsFailed: string[] = [];
+
+      for (const recipient of recipients) {
+        let personalizedMessage = args.message
+          .replace(/\{name\}/gi, recipient.full_name || "Student")
+          .replace(/\{grade\}/gi, recipient.letter_grade || "N/A")
+          .replace(/\{percentage\}/gi, recipient.percentage?.toString() || "N/A");
+
+        // Add grade summary if requested
+        let gradeSummary = "";
+        if (includeGrade) {
+          // Quick grade calc
+          const { data: journals } = await supabase.from("mus240_journal_grades").select("grade").eq("student_id", recipient.user_id);
+          const { data: midterm } = await supabase.from("mus240_midterm_submissions").select("grade").eq("user_id", recipient.user_id).single();
+          const { data: participation } = await supabase.from("mus240_participation_grades").select("grade").eq("student_id", recipient.user_id).single();
+
+          const journalTotal = (journals || []).reduce((sum, j) => sum + (j.grade || 0), 0);
+          const journalMax = (journals || []).length * 20;
+          const totalEarned = journalTotal + (midterm?.grade || 0) + (participation?.grade || 0);
+          const totalPossible = journalMax + 90 + 50;
+          const percentage = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+
+          gradeSummary = `
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+              <h3 style="margin: 0 0 10px 0; color: #1a1a2e;">Your Current Grade Summary</h3>
+              <p><strong>Overall:</strong> ${percentage}%</p>
+              <p><strong>Journals:</strong> ${journalTotal}/${journalMax} pts</p>
+              <p><strong>Midterm:</strong> ${midterm?.grade || 'Not submitted'}${midterm?.grade ? '/90 pts' : ''}</p>
+              <p><strong>Participation:</strong> ${participation?.grade || 'Not graded'}${participation?.grade ? '/50 pts' : ''}</p>
+            </div>
+          `;
+        }
+
+        const htmlContent = `
+          <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: #d4af37; margin: 0; font-size: 24px;">Spelman College Glee Club</h1>
+              <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0; font-style: italic;">${course.course_code} - ${course.title}</p>
+            </div>
+            <div style="background: #fff; padding: 30px; border: 1px solid #e0e0e0;">
+              <p style="color: #333;">Dear ${recipient.full_name || 'Student'},</p>
+              <div style="line-height: 1.8; color: #333; white-space: pre-wrap;">${personalizedMessage}</div>
+              ${gradeSummary}
+            </div>
+            <div style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="color: #666; font-size: 12px; margin: 0;">
+                Sent by ${senderName} via GleeWorld<br>
+                <a href="https://gleeworld.org" style="color: #1a1a2e;">gleeworld.org</a>
+              </p>
+            </div>
+          </div>
+        `;
+
+        // Send email
+        try {
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/send-branded-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+            body: JSON.stringify({
+              to: recipient.email,
+              subject: emailSubject,
+              html: htmlContent,
+              senderName: senderName,
+              replyTo: senderProfile.email,
+              senderId: userId,
+            }),
+          });
+
+          const result = await response.json();
+          if (response.ok && result.success) {
+            emailsSent.push(recipient.full_name || recipient.email);
+          } else {
+            emailsFailed.push(recipient.full_name || recipient.email);
+          }
+        } catch (error) {
+          console.error("Email send error:", error);
+          emailsFailed.push(recipient.full_name || recipient.email);
+        }
+      }
+
+      // Return result
+      if (emailsSent.length === 0) {
+        return { success: false, message: "Failed to send emails to any recipients." };
+      }
+
+      return {
+        success: true,
+        action: "emails_sent",
+        sent_count: emailsSent.length,
+        failed_count: emailsFailed.length,
+        recipients_sent: emailsSent,
+        recipients_failed: emailsFailed.length > 0 ? emailsFailed : undefined,
+        message: `✅ Email sent to ${emailsSent.length} student(s)${emailsFailed.length > 0 ? `. ${emailsFailed.length} failed.` : '.'}\n\nRecipients: ${emailsSent.slice(0, 5).join(", ")}${emailsSent.length > 5 ? ` and ${emailsSent.length - 5} more...` : ''}`,
       };
     }
 
@@ -2134,10 +2678,37 @@ ${GLEEWORLD_KNOWLEDGE}
   - "Add a weekly exec board meeting every Monday at 4pm"
   - "Create a private tour planning meeting for next Tuesday"
 
+### INSTRUCTOR GRADE & COMMUNICATION TOOLS (Admin/Instructor Only):
+- **get_student_record**: Get comprehensive student grade information with transcript-like reports
+  - Query by student name (fuzzy matching): "What grade is Kevin Johnson getting?" or "List Maya's transcripts"
+  - Shows journals, midterm, participation, attendance, and overall grade
+  - Formats: "summary" (quick), "detailed" (breakdown), "transcript" (full record)
+  - Also returns class-wide grade reports if no student specified
+  
+  Examples:
+  - "What grade is Kevin Johnson getting in MUS-240?"
+  - "List Kevin's transcripts"
+  - "Show me Maya Brown's grade breakdown"
+  - "Who has an A in my class?"
+  - "Which students are failing?"
+  - "Get the class grades for MUS-240"
+
+- **send_student_email**: Email students directly from the assistant
+  - Individual: "Email Kevin Johnson about his missing journal"
+  - Groups: "Email all students", "Email students below C", "Email students missing journals"
+  - Optional grade summary included: "Email Maya her current grade"
+  - Personalizes messages with {name}, {grade}, {percentage} placeholders
+  
+  Examples:
+  - "Email Kevin Johnson that his journal 4 grade is ready"
+  - "Send an email to all students about the upcoming midterm"
+  - "Tell Maya Brown her grade is ready and include her grade summary"
+  - "Email students below C that office hours are available"
+  - "Send a reminder to students who haven't submitted journals"
+
 ### ENROLLMENT MANAGEMENT (Admin/Exec Only):
 - **check_schedule_submissions**: Get list of students who have/haven't submitted class schedules, with conflict detection
 - **get_enrollment_stats**: Get enrollment statistics and voice part breakdown for any course
-- **get_student_grades**: Retrieve individual or class-wide grade reports
 - **send_report_email**: Send formatted email reports to any member
 
 ### CONTENT CREATION (Admin/Exec Only):
@@ -2157,11 +2728,12 @@ ${GLEEWORLD_KNOWLEDGE}
 - When users ask to do something, use the appropriate tool
 - For admin/exec actions, verify permissions before executing
 - If asked about something not in your tools, explain what the user can do manually
-- Today's date is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-- Current semester: ${new Date().getMonth() >= 0 && new Date().getMonth() <= 4 ? 'Spring' : 'Fall'} ${new Date().getFullYear()}
+- Today's date is \${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+- Current semester: \${new Date().getMonth() >= 0 && new Date().getMonth() <= 4 ? 'Spring' : 'Fall'} \${new Date().getFullYear()}
 - Keep responses concise but helpful
 - When creating events with images, the AI will generate a professional event poster automatically
-- When sending reports, format them clearly with relevant data`;
+- When sending student emails, be professional but warm, and always sign with the instructor's name
+- When reporting grades, use clear formatting and offer to email the student their grade summary`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
