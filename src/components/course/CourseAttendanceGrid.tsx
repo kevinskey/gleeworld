@@ -78,7 +78,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
   const targetStudentId = studentId || user?.id;
 
   // Use unified hook for enrollment data
-  const { students: enrolledStudents, studentIds: enrolledStudentIds } = useCourseStudents({
+  const { students: enrolledStudents, studentIds: enrolledStudentIds, loading: enrollmentLoading } = useCourseStudents({
     courseId,
     semester,
   });
@@ -88,8 +88,11 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
     return differenceInWeeks(date, SEMESTER_START) + 1;
   };
 
+  // Stabilize references for useCallback dependencies
+  const enrolledStudentIdsKey = enrolledStudentIds.join(',');
+
   const fetchData = useCallback(async () => {
-    if (!courseId) return;
+    if (!courseId || enrollmentLoading) return;
     
     setLoading(true);
     try {
@@ -111,12 +114,13 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
       setSessions(sessionList);
 
       // Get student IDs (filter to single student if not instructor)
-      let studentIds = enrolledStudentIds;
+      const studentIdsList = enrolledStudentIdsKey.split(',').filter(Boolean);
+      let filteredStudentIds = studentIdsList;
       if (!isInstructor && targetStudentId) {
-        studentIds = studentIds.filter(id => id === targetStudentId);
+        filteredStudentIds = studentIdsList.filter(id => id === targetStudentId);
       }
 
-      if (studentIds.length === 0) {
+      if (filteredStudentIds.length === 0) {
         setStudents([]);
         setLoading(false);
         return;
@@ -133,12 +137,12 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
           .from('gw_attendance_records')
           .select('student_profile_id, attendance_session_id, status')
           .in('attendance_session_id', sessionIds)
-          .in('student_profile_id', studentIds);
+          .in('student_profile_id', filteredStudentIds);
         gwAttendanceData = gwRecords || [];
       }
 
       // Build student attendance data
-      const studentAttendance: StudentAttendance[] = studentIds.map(sid => {
+      const studentAttendance: StudentAttendance[] = filteredStudentIds.map(sid => {
         const records = new Map<string, 'present' | 'absent' | 'excused' | 'late' | null>();
         
         gwAttendanceData.forEach(r => {
@@ -181,13 +185,13 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [courseId, enrolledStudents, enrolledStudentIds, isInstructor, targetStudentId]);
+  }, [courseId, enrolledStudentIdsKey, enrolledStudents, enrollmentLoading, isInstructor, targetStudentId]);
 
   useEffect(() => {
-    if (enrolledStudentIds.length > 0 || !isInstructor) {
+    if (!enrollmentLoading && (enrolledStudentIds.length > 0 || !isInstructor)) {
       fetchData();
     }
-  }, [fetchData, enrolledStudentIds.length, isInstructor]);
+  }, [fetchData, enrollmentLoading, enrolledStudentIds.length, isInstructor]);
 
   const handleStatusChange = (studentId: string, sessionId: string, newStatus: string | null) => {
     if (!isInstructor) return;
