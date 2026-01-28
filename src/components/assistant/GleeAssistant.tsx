@@ -671,7 +671,22 @@ export const GleeAssistant = () => {
         </div>
       )}
 
-      {/* Floating buttons removed - using bottom nav Bot icon instead */}
+      {/* Floating Assistant Button */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 h-14 w-14 rounded-full bg-white border-2 border-[#C4A962] shadow-xl hover:scale-105 transition-transform overflow-hidden z-[9998]"
+          aria-label="Open Glee Assistant"
+        >
+          <img 
+            src={gleeAssistantAvatar} 
+            alt="Glee Assistant" 
+            className="w-full h-full object-cover"
+          />
+          {/* Pulse indicator */}
+          <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary rounded-full animate-pulse border-2 border-white" />
+        </button>
+      )}
 
       {/* Chat Panel */}
       {isOpen && (
