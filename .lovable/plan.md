@@ -1,104 +1,63 @@
 
-
-# Upgrading Glee Assistant to a Full AI Agent
+# Expanding Glee Assistant: Instructor Communications & Grade Queries
 
 ## Overview
 
-You already have a **Glee Assistant** that's about 70% built! It has:
-- Voice activation ("Hey Glee")
-- Navigation capabilities
-- Music library search
-- Radio control
-- Basic admin tools (password reset, user management)
-- ElevenLabs voice responses
+You want the assistant to help instructors with two key capabilities:
 
-What's missing are the **enrollment management** and **content creation** tools you need. I'll upgrade the existing assistant to become a full "digital enrollment manager" that can:
+1. **Send emails to students** - Email individual students or groups about grades, assignments, attendance, etc.
+2. **Query student grades** - Ask questions like "What grade is Kevin Johnson getting?" or "List Kevin Johnson's transcripts"
 
-1. **Answer questions about anything on GleeWorld** (trained on site knowledge)
-2. **Create tests, polls, and quizzes** via natural language
-3. **Generate and send email reports** (like the schedule status we just did)
-4. **Manage enrollments and student data**
+The existing `get_student_grades` tool already queries grades, but I'll enhance it to be smarter about finding students by name and generating more comprehensive "transcript-like" reports.
 
 ---
 
-## What You'll Be Able to Do
+## What You'll Be Able to Say
 
-After this upgrade, you can say things like:
+**Email Students:**
+- "Email Kevin Johnson about his missing journal"
+- "Send an email to all students who haven't submitted journals"  
+- "Tell Maya Brown her midterm grade is ready"
+- "Send a grade update to the whole class"
 
-**Enrollment Management:**
-- "How many students submitted their class schedules?"
-- "Send Jordyn a list of students who haven't submitted schedules"
-- "Show me enrollment stats for MUS-240"
-- "Which students haven't completed the orientation form?"
-
-**Test & Quiz Creation:**
-- "Create a 10-question quiz about the Great Migration"
-- "Generate a poll asking students about rehearsal times"
-- "Make a true/false test on Gospel music history"
-
-**Knowledge Questions:**
-- "What's the attendance policy?"
-- "How do I submit a tour absence request?"
-- "When is the last day of class?"
-- "What are the exec board positions?"
+**Query Grades:**
+- "What grade is Kevin Johnson getting in my class?"
+- "List Kevin Johnson's transcripts" (shows all assignments, journals, midterm, participation)
+- "Show me Maya's grade breakdown"
+- "Who has an A in MUS-240?"
+- "Which students are failing?"
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Knowledge Base Integration
-Enhance the system prompt with comprehensive GleeWorld knowledge including:
-- All site features and how to use them
-- Course policies and procedures
-- Handbook content (attendance, dress code, exec positions)
-- Common FAQs and workflows
+### New Tool: `send_student_email`
 
-### Phase 2: New Tools for Enrollment Management
-
-Add these tools to the glee-assistant edge function:
+A dedicated tool for instructors to email students directly through the assistant:
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│                    NEW ASSISTANT TOOLS                      │
-├─────────────────────────────────────────────────────────────┤
-│ check_schedule_submissions                                  │
-│   → Get list of students who have/haven't submitted         │
-│     their class schedules                                   │
-├─────────────────────────────────────────────────────────────┤
-│ get_enrollment_stats                                        │
-│   → Get enrollment statistics for any course                │
-│     (enrolled count, completion rates, etc.)                │
-├─────────────────────────────────────────────────────────────┤
-│ send_report_email                                           │
-│   → Send a formatted email report to any member             │
-│     (uses the existing send-branded-email function)         │
-├─────────────────────────────────────────────────────────────┤
-│ create_quick_poll                                           │
-│   → Create a poll from natural language description         │
-│     (saves to gw_academy_polls or gw_polls)                 │
-├─────────────────────────────────────────────────────────────┤
-│ generate_test                                               │
-│   → Generate a test with AI-created questions               │
-│     (uses generate-test-questions function)                 │
-├─────────────────────────────────────────────────────────────┤
-│ get_student_grades                                          │
-│   → Retrieve grade information for students                 │
-│     (for generating grade reports)                          │
-├─────────────────────────────────────────────────────────────┤
-│ search_site_help                                            │
-│   → Answer questions about GleeWorld features               │
-│     using the comprehensive knowledge base                  │
-└─────────────────────────────────────────────────────────────┘
+send_student_email
+├── student_name: "Kevin Johnson" (or "all", "class")
+├── subject: "Your Midterm Grade"
+├── message: "Great work on the midterm..."
+├── include_grade: true/false (auto-include current grade summary)
+├── course_code: "MUS-240" (defaults to instructor's course)
 ```
 
-### Phase 3: Enhanced System Prompt
+### Enhanced: `get_student_grades` → `get_student_record`
 
-Update the AI's knowledge to include:
-- Complete site navigation guide
-- All form types and their purposes
-- Course structure and requirements
-- Common administrative workflows
-- Email templates and best practices
+Upgrade the existing tool to provide comprehensive "transcript" information:
+
+```text
+get_student_record
+├── student_name: "Kevin Johnson"
+├── course_code: "MUS-240"
+├── include_journals: true (detailed journal breakdown)
+├── include_midterm: true (midterm score + question details)
+├── include_attendance: true (present/absent count)
+├── include_participation: true (poll responses, discussions)
+├── format: "summary" | "detailed" | "transcript"
+```
 
 ---
 
@@ -106,43 +65,104 @@ Update the AI's knowledge to include:
 
 ### Files to Modify
 
-1. **`supabase/functions/glee-assistant/index.ts`**
-   - Add 7 new tool definitions
-   - Implement tool execution handlers
-   - Expand the system prompt with site knowledge
+**`supabase/functions/glee-assistant/index.ts`**
+- Add `send_student_email` tool definition
+- Enhance `get_student_grades` to become `get_student_record`
+- Add fuzzy name matching for student lookups
+- Query multiple grade tables (journals, midterm, participation, submissions)
 
-2. **`src/components/assistant/GleeAssistant.tsx`**
-   - Add handling for new action types (poll creation, email sent confirmation)
-   - Show toast notifications for completed tasks
+### Database Tables Queried
 
-### Database Queries the Assistant Will Use
+For transcript/grade queries:
+- `mus240_journal_grades` - Journal scores and feedback
+- `mus240_midterm_submissions` - Midterm exam grades
+- `mus240_participation_grades` - Participation points
+- `mus240_grade_summaries` - Overall calculated grades
+- `assignment_submissions` - Assignment grades
+- `gw_attendance_records` - Attendance records
 
-The assistant will query these tables:
-- `student_class_schedules` - Schedule submissions
-- `gw_course_enrollments` - Enrollment data
-- `gw_profiles` - User information for emails
-- `gw_academy_polls` - Poll creation
-- `test_drafts` - Test creation
-- `test_questions` - Test question storage
+For emails:
+- `gw_profiles` - Student contact info
+- `send-branded-email` edge function - Email delivery
 
-### Security
+### Fuzzy Name Matching
 
-All new tools will:
-- Check admin/instructor permissions before executing
-- Use the existing Supabase service role client
-- Log actions to the audit trail
+The assistant will use smart name matching:
+```sql
+-- Matches "Kevin" to "Kevin Johnson"
+-- Matches "Johnson" to "Kevin Johnson"  
+-- Matches "kevin j" to "Kevin Johnson"
+WHERE full_name ILIKE '%Kevin%' OR full_name ILIKE '%Johnson%'
+```
+
+---
+
+## Example Conversations
+
+**Instructor:** "What grade is Kevin Johnson getting?"
+
+**Assistant:** "Kevin Johnson currently has a **87.3% (B+)** in MUS-240:
+- Journals: 156/180 pts (4 graded)
+- Midterm: 78/90 pts  
+- Participation: 45/50 pts
+- Attendance: 12/14 classes (86%)
+
+Would you like me to email Kevin his grade summary?"
+
+---
+
+**Instructor:** "List Kevin's transcripts"
+
+**Assistant:** "Here's Kevin Johnson's complete MUS-240 record:
+
+**Journals:**
+- LJ1: 18/20 (A-) - 'Good analysis of blues form'
+- LJ2: 19/20 (A) - 'Excellent connection to spirituals'
+- LJ3: 20/20 (A) - 'Insightful commentary'
+- LJ4: 17/20 (B+) - 'Could expand on historical context'
+
+**Midterm Exam:** 78/90 (87%)
+- Essay 1: 28/30
+- Essay 2: 25/30
+- Short Answer: 25/30
+
+**Participation:** 45/50 (90%)
+- Polls Answered: 8/10
+- Discussion Posts: 4/5
+
+**Attendance:** 12/14 present (86%)
+
+**Current Grade:** 87.3% (B+)"
+
+---
+
+**Instructor:** "Email Kevin that his journal 4 grade is ready"
+
+**Assistant:** "Email sent to Kevin Johnson (kjohnson@spelman.edu):
+
+Subject: Your Journal 4 Grade is Ready
+'Hi Kevin, your Journal 4 has been graded. You earned 17/20 (B+). Check GleeWorld for full feedback. - Dr. Johnson'
+
+✅ Email delivered successfully!"
+
+---
+
+## Security
+
+- Only users with `is_admin`, `is_super_admin`, or course instructor permissions can:
+  - View other students' grades
+  - Send emails to students
+- Students can only query their own grades (not implemented in this phase)
+- All email actions are logged to `gw_user_message_history`
 
 ---
 
 ## Expected Outcome
 
-The Glee Assistant will become your personal administrative AI that:
+The Glee Assistant will become an instructor's communication hub:
 
-✅ Answers any question about GleeWorld instantly  
-✅ Generates enrollment and grade reports on demand  
-✅ Sends branded emails to anyone with natural language  
-✅ Creates tests, quizzes, and polls from simple descriptions  
-✅ Handles routine administrative tasks through conversation  
-
-You'll be able to manage the Glee Club directly from the assistant bubble on your dashboard!
-
+- Query any student's grade with natural language
+- Get detailed "transcript" views with all assignments
+- Email students directly about grades, missing work, or announcements
+- Send bulk emails to groups (all students, students below C, etc.)
+- All from simple voice or text commands!
