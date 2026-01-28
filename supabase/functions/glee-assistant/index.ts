@@ -529,6 +529,26 @@ const tools = [
       },
     },
   },
+  // ==========================================
+  // ATTENDANCE TOOL
+  // ==========================================
+  {
+    type: "function",
+    function: {
+      name: "take_attendance",
+      description: "Start taking attendance for a course by displaying the QR code for the current or next class session. Use when the user says 'take attendance' for any course like MUS-240, Glee Club, Bowman Scholars, etc.",
+      parameters: {
+        type: "object",
+        properties: {
+          course_name: { 
+            type: "string", 
+            description: "The course name or code. Examples: 'MUS-240', 'MUS 240', 'Survey of African American Music', 'Glee Club', 'MUS-070', 'Bowman Scholars', 'LH-100', 'GLEE-000', 'Sight Singing'. The system will match natural language to the correct course code."
+          },
+        },
+        required: ["course_name"],
+      },
+    },
+  },
 ];
 
 // ==========================================
@@ -1605,6 +1625,172 @@ Format as JSON array:
       if (error) return { success: false, message: `Failed: ${error.message}` };
 
       return { success: true, message: args.verified ? `${targetUser.full_name} has been verified.` : `${targetUser.full_name} has been unverified.` };
+    }
+
+    // ==========================================
+    // TAKE ATTENDANCE TOOL
+    // ==========================================
+    case "take_attendance": {
+      // Verify admin/instructor/exec permissions
+      const { data: profile } = await supabase
+        .from("gw_profiles")
+        .select("is_admin, is_super_admin, is_exec_board, exec_board_role")
+        .eq("user_id", userId)
+        .single();
+
+      if (!profile?.is_admin && !profile?.is_super_admin && !profile?.is_exec_board) {
+        return { success: false, message: "Access denied. Only admins, instructors, or exec board members can take attendance." };
+      }
+
+      // Map natural language course names to course codes
+      const courseName = (args.course_name || "").toLowerCase().trim();
+      let courseCode = "";
+      
+      // Mapping logic
+      if (courseName.includes("240") || courseName.includes("survey") || courseName.includes("african american music") || courseName.includes("african-american music")) {
+        courseCode = "MUS 240";
+      } else if (courseName.includes("070") || courseName.includes("glee club") || courseName.includes("glee") && !courseName.includes("101") && !courseName.includes("000")) {
+        courseCode = "MUS 070";
+      } else if (courseName.includes("210") || courseName.includes("conducting") || courseName.includes("choral conducting")) {
+        courseCode = "MUS 210";
+      } else if (courseName.includes("001") || courseName.includes("private") || courseName.includes("applied lessons")) {
+        courseCode = "MUS 001";
+      } else if (courseName.includes("101") || courseName.includes("leadership")) {
+        courseCode = "GLEE 101";
+      } else if (courseName.includes("000") || courseName.includes("sight") || courseName.includes("singing") || courseName.includes("sight reading") || courseName.includes("sight-reading")) {
+        courseCode = "GLEE 000";
+      } else if (courseName.includes("100") || courseName.includes("bowman") || courseName.includes("scholar") || courseName.includes("lh")) {
+        courseCode = "LH 100";
+      } else if (courseName.includes("mus-") || courseName.includes("mus ") || courseName.includes("glee-") || courseName.includes("glee ") || courseName.includes("lh-") || courseName.includes("lh ")) {
+        // Try to extract course code directly
+        courseCode = courseName.replace(/-/g, " ").toUpperCase();
+      } else {
+        return { success: false, message: `Could not identify course "${args.course_name}". Try saying the course code like "MUS-240" or "Glee Club".` };
+      }
+
+      console.log(`Looking for course: ${courseCode}`);
+
+      // Find the course
+      const { data: course, error: courseError } = await supabase
+        .from("gw_courses")
+        .select("id, course_code, title")
+        .or(`course_code.ilike.%${courseCode}%,title.ilike.%${courseCode}%`)
+        .limit(1)
+        .single();
+
+      if (courseError || !course) {
+        console.error("Course lookup error:", courseError);
+        return { success: false, message: `Course "${courseCode}" not found. Available courses: MUS-070 (Glee Club), MUS-240, MUS-210, MUS-001, GLEE-101, GLEE-000, LH-100.` };
+      }
+
+      console.log(`Found course: ${course.course_code} - ${course.title}`);
+
+      // Find current or upcoming session
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      const currentTimeStr = now.toTimeString().slice(0, 8); // HH:MM:SS
+
+      // Priority 1: Current session (happening right now)
+      let { data: currentSession } = await supabase
+        .from("gw_course_class_sessions")
+        .select("id, session_date, start_time, end_time, title, location")
+        .eq("course_id", course.id)
+        .eq("session_date", todayStr)
+        .lte("start_time", currentTimeStr)
+        .gte("end_time", currentTimeStr)
+        .limit(1)
+        .single();
+
+      // Priority 2: Today's upcoming session
+      if (!currentSession) {
+        const { data: upcomingToday } = await supabase
+          .from("gw_course_class_sessions")
+          .select("id, session_date, start_time, end_time, title, location")
+          .eq("course_id", course.id)
+          .eq("session_date", todayStr)
+          .gt("start_time", currentTimeStr)
+          .order("start_time", { ascending: true })
+          .limit(1)
+          .single();
+        
+        if (upcomingToday) currentSession = upcomingToday;
+      }
+
+      // Priority 3: Next upcoming session (future date)
+      if (!currentSession) {
+        const { data: nextSession } = await supabase
+          .from("gw_course_class_sessions")
+          .select("id, session_date, start_time, end_time, title, location")
+          .eq("course_id", course.id)
+          .gt("session_date", todayStr)
+          .order("session_date", { ascending: true })
+          .order("start_time", { ascending: true })
+          .limit(1)
+          .single();
+        
+        if (nextSession) currentSession = nextSession;
+      }
+
+      if (!currentSession) {
+        return { 
+          success: false, 
+          message: `No class sessions found for ${course.course_code}. You may need to create a class session first in the Academy calendar.`,
+          action: "navigate",
+          route: `/academy/${course.course_code.toLowerCase().replace(" ", "-")}?tab=attendance`
+        };
+      }
+
+      console.log(`Found session: ${currentSession.title} on ${currentSession.session_date}`);
+
+      // Generate QR code for this session
+      const { data: qrResult, error: qrError } = await supabase.rpc("generate_session_qr_code", {
+        p_session_id: currentSession.id,
+        p_generated_by: userId,
+        p_expires_in_minutes: 5,
+      });
+
+      if (qrError) {
+        console.error("QR generation error:", qrError);
+        return { success: false, message: `Failed to generate QR code: ${qrError.message}` };
+      }
+
+      const qrData = qrResult as { success: boolean; qr_token?: string; expires_at?: string; error?: string };
+
+      if (!qrData?.success || !qrData.qr_token) {
+        return { success: false, message: qrData?.error || "Failed to generate QR code." };
+      }
+
+      // Get enrollment count for stats
+      const { count: enrolledCount } = await supabase
+        .from("gw_course_enrollments")
+        .select("id", { count: "exact", head: true })
+        .eq("course_id", course.id)
+        .eq("enrollment_status", "active");
+
+      // Get checked-in count for this session
+      const { count: checkedInCount } = await supabase
+        .from("gw_attendance_records")
+        .select("id", { count: "exact", head: true })
+        .eq("attendance_session_id", currentSession.id)
+        .in("status", ["present", "late"]);
+
+      return {
+        success: true,
+        action: "open_attendance_qr",
+        course_code: course.course_code,
+        course_title: course.title,
+        session_id: currentSession.id,
+        session_title: currentSession.title || course.title,
+        session_date: currentSession.session_date,
+        start_time: currentSession.start_time,
+        end_time: currentSession.end_time,
+        location: currentSession.location,
+        qr_token: qrData.qr_token,
+        expires_at: qrData.expires_at,
+        enrolled_count: enrolledCount || 0,
+        checked_in_count: checkedInCount || 0,
+        message: `Opening attendance QR for ${course.course_code} - ${currentSession.title || course.title}. ${checkedInCount || 0}/${enrolledCount || 0} checked in.`,
+      };
     }
 
     default:
