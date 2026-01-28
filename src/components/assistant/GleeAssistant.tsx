@@ -675,7 +675,7 @@ export const GleeAssistant = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 h-14 w-14 rounded-full bg-white border-2 border-[#C4A962] shadow-xl hover:scale-105 transition-transform overflow-hidden z-[9998]"
+          className="fixed bottom-[4.5rem] sm:bottom-6 right-4 sm:right-6 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white border-2 border-[#C4A962] shadow-xl hover:scale-105 transition-transform overflow-hidden z-[9998]"
           aria-label="Open Glee Assistant"
         >
           <img 
@@ -684,7 +684,7 @@ export const GleeAssistant = () => {
             className="w-full h-full object-cover"
           />
           {/* Pulse indicator */}
-          <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary rounded-full animate-pulse border-2 border-white" />
+          <span className="absolute -top-0.5 -right-0.5 h-3 w-3 bg-emerald-500 rounded-full animate-pulse border-2 border-white" />
         </button>
       )}
 
