@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Library } from 'lucide-react';
+import { Camera, Library, Bot } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from '@/components/quick-capture/QuickCaptureCategorySelector';
 import { CategorizedQuickCapture } from '@/components/quick-capture/CategorizedQuickCapture';
 import { MusicalToolkit } from '@/components/musical-toolkit/MusicalToolkit';
+import { useAssistant } from '@/contexts/AssistantContext';
 import { cn } from '@/lib/utils';
 
 interface MobileBottomNavProps {
@@ -16,6 +17,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   const location = useLocation();
   const isPhone = useIsPhone();
   const previousPath = useRef<string>('/');
+  const { openAssistant, isAssistantOpen } = useAssistant();
   
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
@@ -57,6 +59,23 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
           <div className="flex items-center justify-center w-10 h-10 text-foreground">
             <MusicalToolkit className="!p-0" />
           </div>
+
+          {/* Glee Assistant */}
+          <button
+            onClick={openAssistant}
+            className={cn(
+              "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
+              isAssistantOpen
+                ? "text-primary bg-primary/10" 
+                : "text-foreground hover:bg-muted"
+            )}
+            aria-label="Open Glee Assistant"
+          >
+            <Bot className="h-5 w-5" />
+            {!isAssistantOpen && (
+              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
+            )}
+          </button>
 
           {/* Glee Cam - Highlighted Center */}
           <button
