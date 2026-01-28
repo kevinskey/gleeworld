@@ -1,112 +1,148 @@
 
-## What “Didn’t work” most likely means (based on code)
 
-Kennidy’s “Add User” action in **User Management** is powered by the **`import-users`** Supabase Edge Function (not `auto-enroll-user`).
+# Upgrading Glee Assistant to a Full AI Agent
 
-Right now, `import-users` only allows:
-- `is_admin = true`, or
-- `is_super_admin = true`, or
-- `role` in `['admin','super-admin']`
+## Overview
 
-It does **not** allow `is_exec_board = true`, so executive board members (like Kennidy) will continue to get a **403 Unauthorized: Admin privileges required** even after the earlier idea for `auto-enroll-user`.
+You already have a **Glee Assistant** that's about 70% built! It has:
+- Voice activation ("Hey Glee")
+- Navigation capabilities
+- Music library search
+- Radio control
+- Basic admin tools (password reset, user management)
+- ElevenLabs voice responses
 
-Also, the **User Management page route guard** (`src/pages/UserManagement.tsx`) currently only allows admins/super-admins, so exec board access can fail/redirect depending on how she’s navigating to it.
+What's missing are the **enrollment management** and **content creation** tools you need. I'll upgrade the existing assistant to become a full "digital enrollment manager" that can:
 
-## Goal
-
-Allow **all executive board members** (`gw_profiles.is_exec_board = true`) to:
-1) Access the User Management page
-2) Successfully create users via `import-users`
-3) (Optionally) also succeed via `auto-enroll-user` wherever that flow is used elsewhere
-
----
-
-## Implementation Plan (to execute when you switch me to Default mode)
-
-### 1) Fix server-side permission checks (this is the real blocker)
-
-#### 1A) Update `supabase/functions/import-users/index.ts`
-- Expand the privilege check to include exec board:
-  - Change `select('role, is_admin, is_super_admin')` to also select `is_exec_board`
-  - Update the authorization condition to pass if:
-    - `profile.is_super_admin === true` OR
-    - `profile.is_admin === true` OR
-    - `profile.is_exec_board === true` OR
-    - (keep legacy checks if desired) `profile.role in ['admin','super-admin']`
-
-Why: this is the function used by the User Management module, and it currently blocks Kennidy.
-
-Also include small robustness fixes while touching the file:
-- Parse JSON body *before* writing audit logs (the current code tries to read `req.body?.users` which doesn’t exist in Deno Request).
-- Log a clear audit message like:
-  - `console.log("import-users authorized caller", { userId: user.id, is_exec_board: profile.is_exec_board, ... })`
-- Keep the response shape the same so the UI doesn’t break.
-
-#### 1B) Update `supabase/functions/auto-enroll-user/index.ts` (secondary but important)
-- Expand the profile select to include `is_exec_board`
-- Allow permission if `is_admin || is_super_admin || is_exec_board`
-
-Why: even if User Management uses `import-users`, other parts of the app use `auto-enroll-user` (contracts flow), and you explicitly want exec board to have this authority consistently.
+1. **Answer questions about anything on GleeWorld** (trained on site knowledge)
+2. **Create tests, polls, and quizzes** via natural language
+3. **Generate and send email reports** (like the schedule status we just did)
+4. **Manage enrollments and student data**
 
 ---
 
-### 2) Fix client-side access gating so exec board can open the page
+## What You'll Be Able to Do
 
-#### 2A) Update `src/pages/UserManagement.tsx`
-Current `isAdmin` calculation only checks admin/super-admin.
-- Update it to allow exec board as well (e.g., `userProfile?.is_exec_board`).
-- Rename variable from `isAdmin` to something clearer like `canAccessUserManagement` to avoid confusion.
+After this upgrade, you can say things like:
 
-Why: even if the server allows creation, the UI currently may block exec board from even accessing the module.
+**Enrollment Management:**
+- "How many students submitted their class schedules?"
+- "Send Jordyn a list of students who haven't submitted schedules"
+- "Show me enrollment stats for MUS-240"
+- "Which students haven't completed the orientation form?"
 
-#### 2B) (Optional consistency) Update `src/hooks/useUserRole.ts`
-Right now `canManageUsers()` returns true only for Admin+ or `chief_of_staff`.
-Because you said “Yes, all exec board members”, update `canManageUsers()` to:
-- return `true` if `isExecutiveBoard()` (which already includes exec board + admin)
+**Test & Quiz Creation:**
+- "Create a 10-question quiz about the Great Migration"
+- "Generate a poll asking students about rehearsal times"
+- "Make a true/false test on Gospel music history"
 
-Why: other UI areas may use `canManageUsers()` to show/hide links and buttons; this prevents future “link disappears” inconsistencies.
-
----
-
-### 3) Validate end-to-end behavior (fast, conclusive tests)
-
-#### 3A) Confirm Edge Functions are deployed
-- After changes, deploy functions:
-  - `import-users`
-  - `auto-enroll-user`
-
-#### 3B) Test as Kennidy (real auth token)
-- Login as Kennidy in preview
-- Navigate to User Management
-- Add a user via “Add User”
-Expected:
-- No redirect away from `/user-management`
-- `import-users` returns 200 with `success: 1`
-- New user appears after refresh
-
-#### 3C) Verify via logs
-- Check Edge Function logs for:
-  - “authorized caller” log
-  - No “Admin privileges required” error
+**Knowledge Questions:**
+- "What's the attendance policy?"
+- "How do I submit a tour absence request?"
+- "When is the last day of class?"
+- "What are the exec board positions?"
 
 ---
 
-## Security Notes (important)
-- This keeps **server-side enforcement** (Edge Function checks) as the source of truth.
-- We are not relying on client-side flags for security; the UI change is only for visibility/access, not authorization.
-- Long-term, your system should move away from storing “role” strings on profile rows, and instead use a dedicated roles table + SECURITY DEFINER helper, but I will not expand scope unless you ask (because it’s a larger migration).
+## Implementation Plan
+
+### Phase 1: Knowledge Base Integration
+Enhance the system prompt with comprehensive GleeWorld knowledge including:
+- All site features and how to use them
+- Course policies and procedures
+- Handbook content (attendance, dress code, exec positions)
+- Common FAQs and workflows
+
+### Phase 2: New Tools for Enrollment Management
+
+Add these tools to the glee-assistant edge function:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                    NEW ASSISTANT TOOLS                      │
+├─────────────────────────────────────────────────────────────┤
+│ check_schedule_submissions                                  │
+│   → Get list of students who have/haven't submitted         │
+│     their class schedules                                   │
+├─────────────────────────────────────────────────────────────┤
+│ get_enrollment_stats                                        │
+│   → Get enrollment statistics for any course                │
+│     (enrolled count, completion rates, etc.)                │
+├─────────────────────────────────────────────────────────────┤
+│ send_report_email                                           │
+│   → Send a formatted email report to any member             │
+│     (uses the existing send-branded-email function)         │
+├─────────────────────────────────────────────────────────────┤
+│ create_quick_poll                                           │
+│   → Create a poll from natural language description         │
+│     (saves to gw_academy_polls or gw_polls)                 │
+├─────────────────────────────────────────────────────────────┤
+│ generate_test                                               │
+│   → Generate a test with AI-created questions               │
+│     (uses generate-test-questions function)                 │
+├─────────────────────────────────────────────────────────────┤
+│ get_student_grades                                          │
+│   → Retrieve grade information for students                 │
+│     (for generating grade reports)                          │
+├─────────────────────────────────────────────────────────────┤
+│ search_site_help                                            │
+│   → Answer questions about GleeWorld features               │
+│     using the comprehensive knowledge base                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Phase 3: Enhanced System Prompt
+
+Update the AI's knowledge to include:
+- Complete site navigation guide
+- All form types and their purposes
+- Course structure and requirements
+- Common administrative workflows
+- Email templates and best practices
 
 ---
 
-## Files that will be changed (when approved for Default mode)
-- `supabase/functions/import-users/index.ts`  (primary fix)
-- `supabase/functions/auto-enroll-user/index.ts` (consistency fix)
-- `src/pages/UserManagement.tsx` (route access fix)
-- `src/hooks/useUserRole.ts` (optional consistency fix)
+## Technical Details
+
+### Files to Modify
+
+1. **`supabase/functions/glee-assistant/index.ts`**
+   - Add 7 new tool definitions
+   - Implement tool execution handlers
+   - Expand the system prompt with site knowledge
+
+2. **`src/components/assistant/GleeAssistant.tsx`**
+   - Add handling for new action types (poll creation, email sent confirmation)
+   - Show toast notifications for completed tasks
+
+### Database Queries the Assistant Will Use
+
+The assistant will query these tables:
+- `student_class_schedules` - Schedule submissions
+- `gw_course_enrollments` - Enrollment data
+- `gw_profiles` - User information for emails
+- `gw_academy_polls` - Poll creation
+- `test_drafts` - Test creation
+- `test_questions` - Test question storage
+
+### Security
+
+All new tools will:
+- Check admin/instructor permissions before executing
+- Use the existing Supabase service role client
+- Log actions to the audit trail
 
 ---
 
 ## Expected Outcome
-After these changes, **Kennidy (and any exec board member)** can:
-- Open User Management
-- Add users successfully without “Unauthorized/Admin required”
+
+The Glee Assistant will become your personal administrative AI that:
+
+✅ Answers any question about GleeWorld instantly  
+✅ Generates enrollment and grade reports on demand  
+✅ Sends branded emails to anyone with natural language  
+✅ Creates tests, quizzes, and polls from simple descriptions  
+✅ Handles routine administrative tasks through conversation  
+
+You'll be able to manage the Glee Club directly from the assistant bubble on your dashboard!
+
