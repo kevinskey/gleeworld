@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
 
 // Spring 2026 semester start (first day of classes)
-const SEMESTER_START = new Date('2026-01-12');
+const SEMESTER_START = new Date('2026-01-14');
 
 interface StudentAttendance {
   student_id: string;

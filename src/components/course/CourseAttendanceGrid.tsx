@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { useCourseStudents } from '@/hooks/useCourseStudents';
 
 // Spring 2026 semester start (first day of classes)
-const SEMESTER_START = new Date('2026-01-12');
+const SEMESTER_START = new Date('2026-01-14');
 const ET_TIMEZONE = 'America/New_York';
 
 // Helper to convert UTC date to ET for display
