@@ -281,15 +281,20 @@ export const PublicAssistant = () => {
         className={cn(
           "fixed bottom-6 right-6 z-50 flex items-center justify-center",
           "w-16 h-16 rounded-full shadow-2xl",
-          "bg-[#003666] hover:bg-[#002244] text-white",
-          "transition-all duration-300 hover:scale-110",
-          "border-2 border-white/20",
+          "bg-white hover:scale-110",
+          "transition-all duration-300",
+          "border-2 border-[#C4A962]",
+          "overflow-hidden",
           isOpen && "hidden"
         )}
         aria-label="Open Glee Club Assistant"
       >
-        <MessageCircle className="w-7 h-7" />
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#C4A962] rounded-full animate-pulse" />
+        <img 
+          src={gleeAssistantAvatar} 
+          alt="Glee Assistant" 
+          className="w-full h-full object-cover"
+        />
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#C4A962] rounded-full animate-pulse border-2 border-white" />
       </button>
 
       {/* Chat Window */}
