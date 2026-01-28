@@ -580,6 +580,147 @@ const tools = [
     },
   },
   // ==========================================
+  // STUDENT SELF-SERVICE TOOLS
+  // ==========================================
+  {
+    type: "function",
+    function: {
+      name: "get_my_grade",
+      description: "Get the current user's own grade in a specific course. Use when a student asks 'What is my grade?' or 'How am I doing in MUS-240?'",
+      parameters: {
+        type: "object",
+        properties: {
+          course_code: { 
+            type: "string", 
+            description: "Course code (e.g., 'MUS-240', 'Survey of African American Music', 'Glee Club'). Defaults to MUS-240." 
+          },
+          format: {
+            type: "string",
+            enum: ["summary", "detailed"],
+            description: "Output format. 'summary' for quick grade overview, 'detailed' for full breakdown."
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_my_attendance",
+      description: "Get the current user's attendance record. Use when a student asks 'How many classes have I missed?' or 'What is my attendance?'",
+      parameters: {
+        type: "object",
+        properties: {
+          course_code: { 
+            type: "string", 
+            description: "Course code to check attendance for. Defaults to all enrolled courses." 
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "file_absence_excuse",
+      description: "File an excuse for missing a class or request to be excused from an upcoming class. Use when student says 'I need to file an excuse' or 'I missed class because...'",
+      parameters: {
+        type: "object",
+        properties: {
+          course_code: { 
+            type: "string", 
+            description: "Course code (e.g., 'MUS-240', 'Glee Club'). Required." 
+          },
+          absence_date: { 
+            type: "string", 
+            description: "Date of the absence in natural language (e.g., 'today', 'yesterday', 'January 15', 'last Monday'). Required." 
+          },
+          reason: { 
+            type: "string", 
+            description: "Reason for the absence. Required." 
+          },
+          documentation_type: {
+            type: "string",
+            enum: ["medical", "family_emergency", "academic_conflict", "approved_activity", "other"],
+            description: "Type of documentation/reason category."
+          },
+        },
+        required: ["course_code", "absence_date", "reason"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_my_assignments",
+      description: "Get the student's upcoming assignments, due dates, and submission status. Use for questions like 'What assignment is due next?' or 'Am I up-to-date on my assignments?'",
+      parameters: {
+        type: "object",
+        properties: {
+          course_code: { 
+            type: "string", 
+            description: "Course code or name (e.g., 'MUS-240', 'Survey of African American Music', 'Glee Academy'). If not specified, shows all enrolled courses." 
+          },
+          filter: {
+            type: "string",
+            enum: ["all", "upcoming", "overdue", "submitted", "not_submitted"],
+            description: "Filter assignments by status. Defaults to 'upcoming'."
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_next_rehearsal",
+      description: "Get the next Glee Club rehearsal or class session. Use for questions like 'When is the next rehearsal?' or 'Where does the Glee Club rehearse?'",
+      parameters: {
+        type: "object",
+        properties: {
+          course_code: { 
+            type: "string", 
+            description: "Course code (defaults to 'MUS-070' for Glee Club)." 
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "send_message_to_instructor",
+      description: "Send an email or SMS to an instructor, Dr. Johnson, or an executive board member. Use when student says 'Send Dr. Johnson an email' or 'Text the Glee Club president'",
+      parameters: {
+        type: "object",
+        properties: {
+          recipient_role: { 
+            type: "string", 
+            description: "Who to message: 'instructor', 'dr. johnson', 'doc johnson', 'president', 'vice president', 'secretary', 'treasurer', 'chaplain', or a specific name." 
+          },
+          message_type: { 
+            type: "string", 
+            enum: ["email", "sms"],
+            description: "Type of message to send. Defaults to email." 
+          },
+          subject: { 
+            type: "string", 
+            description: "Email subject line (required for emails)." 
+          },
+          message: { 
+            type: "string", 
+            description: "The message content. Required." 
+          },
+        },
+        required: ["recipient_role", "message"],
+      },
+    },
+  },
+  // ==========================================
   // CALENDAR EVENT CREATION TOOL
   // ==========================================
   {
@@ -1712,6 +1853,820 @@ Format as JSON array:
       };
     }
 
+    // ==========================================
+    // STUDENT SELF-SERVICE TOOLS
+    // ==========================================
+    
+    case "get_my_grade": {
+      // Get the current user's own grade
+      const courseCode = args.course_code || "MUS-240";
+      const format = args.format || "summary";
+
+      // Get user profile
+      const { data: profile } = await supabase
+        .from("gw_profiles")
+        .select("user_id, full_name, email, voice_part")
+        .eq("user_id", userId)
+        .single();
+
+      if (!profile) {
+        return { success: false, message: "Could not find your profile. Please contact an administrator." };
+      }
+
+      // Find course (flexible matching)
+      let courseQuery = courseCode.toLowerCase().replace(/-/g, " ").replace(/\s+/g, " ").trim();
+      
+      // Handle common aliases
+      if (courseQuery.includes("survey") || courseQuery.includes("african american")) {
+        courseQuery = "MUS 240";
+      } else if (courseQuery.includes("glee club") && !courseQuery.includes("101") && !courseQuery.includes("000")) {
+        courseQuery = "MUS 070";
+      } else if (courseQuery.includes("glee") && courseQuery.includes("academy")) {
+        // Search all enrolled courses
+        courseQuery = "";
+      }
+
+      let course;
+      if (courseQuery) {
+        const { data: courseData } = await supabase
+          .from("gw_courses")
+          .select("id, title, course_code")
+          .or(`course_code.ilike.%${courseQuery}%,title.ilike.%${courseQuery}%`)
+          .limit(1)
+          .single();
+        course = courseData;
+      }
+
+      if (!course) {
+        // Get all enrolled courses
+        const { data: enrollments } = await supabase
+          .from("gw_course_enrollments")
+          .select(`
+            course_id,
+            gw_courses!inner(id, title, course_code)
+          `)
+          .eq("user_id", userId)
+          .eq("enrollment_status", "active");
+
+        if (!enrollments?.length) {
+          return { success: false, message: "You are not enrolled in any courses." };
+        }
+
+        // If multiple courses, list them
+        if (enrollments.length > 1) {
+          const courseList = enrollments.map(e => e.gw_courses?.course_code).filter(Boolean).join(", ");
+          return { 
+            success: true, 
+            message: `You are enrolled in: ${courseList}. Please specify which course you want to check. For example, "What's my grade in MUS-240?"` 
+          };
+        }
+
+        course = enrollments[0].gw_courses;
+      }
+
+      // Build grade record (similar to get_student_record but for self)
+      const record: any = {
+        student_name: profile.full_name,
+        course: course.course_code,
+      };
+
+      // 1. Get Journal Grades
+      const { data: journals } = await supabase
+        .from("mus240_journal_grades")
+        .select("journal_number, grade, feedback")
+        .eq("student_id", userId)
+        .order("journal_number", { ascending: true });
+
+      const journalTotal = (journals || []).reduce((sum, j) => sum + (j.grade || 0), 0);
+      const journalMax = (journals || []).length * 20;
+      
+      record.journals = {
+        total_earned: journalTotal,
+        total_possible: journalMax,
+        count_graded: (journals || []).filter(j => j.grade !== null).length,
+        grades: format === "detailed" ? journals : undefined,
+      };
+
+      // 2. Get Midterm Score
+      const { data: midterm } = await supabase
+        .from("mus240_midterm_submissions")
+        .select("grade, feedback")
+        .eq("user_id", userId)
+        .single();
+
+      record.midterm = midterm?.grade 
+        ? { grade: midterm.grade, max: 90 }
+        : { submitted: false };
+
+      // 3. Get Participation
+      const { data: participation } = await supabase
+        .from("mus240_participation_grades")
+        .select("grade")
+        .eq("student_id", userId)
+        .single();
+
+      record.participation = participation?.grade 
+        ? { grade: participation.grade, max: 50 }
+        : { not_graded: true };
+
+      // 4. Get Attendance
+      const { data: attendance } = await supabase
+        .from("gw_attendance_records")
+        .select("status")
+        .eq("student_id", userId);
+
+      const present = (attendance || []).filter(a => a.status === "present").length;
+      const late = (attendance || []).filter(a => a.status === "late").length;
+      const absent = (attendance || []).filter(a => a.status === "absent").length;
+      const excused = (attendance || []).filter(a => a.status === "excused").length;
+      const total = (attendance || []).length;
+
+      record.attendance = {
+        present, late, absent_unexcused: absent, excused, total_sessions: total,
+        attendance_rate: total > 0 ? Math.round(((present + late + excused) / total) * 100) : 100,
+      };
+
+      // Calculate Overall Grade
+      let totalEarned = journalTotal + (midterm?.grade || 0) + (participation?.grade || 0);
+      let totalPossible = journalMax + 90 + 50;
+      const attendanceDeduction = absent * 2;
+      
+      const rawPercentage = totalPossible > 0 ? (totalEarned / totalPossible) * 100 : 100;
+      const finalPercentage = Math.max(0, Math.round(rawPercentage - attendanceDeduction));
+      
+      const getLetterGrade = (pct: number) => {
+        if (pct >= 95) return "A";
+        if (pct >= 90) return "A-";
+        if (pct >= 87) return "B+";
+        if (pct >= 83) return "B";
+        if (pct >= 80) return "B-";
+        if (pct >= 77) return "C+";
+        if (pct >= 73) return "C";
+        if (pct >= 70) return "C-";
+        if (pct >= 65) return "D+";
+        if (pct >= 60) return "D";
+        return "F";
+      };
+
+      record.overall = {
+        percentage: finalPercentage,
+        letter_grade: getLetterGrade(finalPercentage),
+        attendance_deduction: attendanceDeduction,
+      };
+
+      // Build message
+      let message = `📊 **Your ${course.course_code} Grade: ${finalPercentage}% (${getLetterGrade(finalPercentage)})**\n`;
+      
+      if (format === "detailed") {
+        message += `\n📚 **Journals:** ${journalTotal}/${journalMax} pts (${record.journals.count_graded} graded)`;
+        if (journals?.length) {
+          journals.forEach(j => {
+            message += `\n   • LJ${j.journal_number}: ${j.grade}/20`;
+          });
+        }
+        message += `\n📝 **Midterm:** ${midterm?.grade || 'Not submitted'}${midterm?.grade ? '/90' : ''}`;
+        message += `\n💬 **Participation:** ${participation?.grade || 'Not graded'}${participation?.grade ? '/50' : ''}`;
+        message += `\n📅 **Attendance:** ${present + late}/${total} present (${record.attendance.attendance_rate}%)`;
+        if (absent > 0) {
+          message += ` - ${absent} unexcused absence(s), -${attendanceDeduction} pts`;
+        }
+      } else {
+        message += `\n• Journals: ${journalTotal}/${journalMax} pts`;
+        message += `\n• Midterm: ${midterm?.grade || 'N/A'}${midterm?.grade ? '/90' : ''}`;
+        message += `\n• Participation: ${participation?.grade || 'N/A'}${participation?.grade ? '/50' : ''}`;
+        message += `\n• Attendance: ${record.attendance.attendance_rate}%`;
+      }
+
+      return {
+        success: true,
+        record: record,
+        message: message,
+      };
+    }
+
+    case "get_my_attendance": {
+      const courseCode = args.course_code;
+
+      // Get user profile
+      const { data: profile } = await supabase
+        .from("gw_profiles")
+        .select("user_id, full_name")
+        .eq("user_id", userId)
+        .single();
+
+      if (!profile) {
+        return { success: false, message: "Could not find your profile." };
+      }
+
+      // Get all attendance records
+      const { data: attendance } = await supabase
+        .from("gw_attendance_records")
+        .select(`
+          status, check_in_time, excuse_reason, excuse_status,
+          gw_course_class_sessions!inner(
+            session_date, start_time, title,
+            gw_courses!inner(course_code, title)
+          )
+        `)
+        .eq("student_id", userId)
+        .order("check_in_time", { ascending: false });
+
+      if (!attendance?.length) {
+        return { success: true, message: "No attendance records found yet. Your attendance will be tracked once you check in to classes." };
+      }
+
+      // Group by course if needed
+      const byCourse: Record<string, any[]> = {};
+      attendance.forEach(a => {
+        const code = a.gw_course_class_sessions?.gw_courses?.course_code || "Unknown";
+        if (!byCourse[code]) byCourse[code] = [];
+        byCourse[code].push(a);
+      });
+
+      // Filter by course if specified
+      if (courseCode) {
+        const normalized = courseCode.toLowerCase().replace(/-/g, " ");
+        const filtered = Object.entries(byCourse).filter(([code]) => 
+          code.toLowerCase().replace(/-/g, " ").includes(normalized)
+        );
+        if (filtered.length === 0) {
+          return { success: false, message: `No attendance records found for "${courseCode}".` };
+        }
+      }
+
+      let message = `📅 **Your Attendance Record**\n`;
+      
+      for (const [code, records] of Object.entries(byCourse)) {
+        const present = records.filter(r => r.status === "present").length;
+        const late = records.filter(r => r.status === "late").length;
+        const absent = records.filter(r => r.status === "absent").length;
+        const excused = records.filter(r => r.status === "excused").length;
+        const total = records.length;
+        const rate = Math.round(((present + late + excused) / total) * 100);
+
+        message += `\n**${code}:** ${present + late + excused}/${total} (${rate}%)`;
+        message += `\n  ✓ Present: ${present} | ⏰ Late: ${late} | 🏥 Excused: ${excused} | ❌ Absent: ${absent}`;
+        
+        if (absent > 0) {
+          message += `\n  ⚠️ ${absent} unexcused absence(s) = -${absent * 2} grade points`;
+        }
+      }
+
+      // List recent absences
+      const recentAbsences = attendance
+        .filter(a => a.status === "absent" || a.status === "excused")
+        .slice(0, 5);
+
+      if (recentAbsences.length > 0) {
+        message += `\n\n**Recent Absences:**`;
+        recentAbsences.forEach(a => {
+          const date = a.gw_course_class_sessions?.session_date || "Unknown date";
+          const course = a.gw_course_class_sessions?.gw_courses?.course_code || "";
+          const status = a.status === "excused" ? "✓ Excused" : "❌ Unexcused";
+          message += `\n  • ${date} (${course}): ${status}`;
+          if (a.excuse_reason) message += ` - ${a.excuse_reason}`;
+        });
+      }
+
+      return {
+        success: true,
+        attendance: byCourse,
+        message: message,
+      };
+    }
+
+    case "file_absence_excuse": {
+      // Parse the absence date
+      const parseDate = (dateStr: string): Date => {
+        const now = new Date();
+        const lower = dateStr.toLowerCase().trim();
+        
+        if (lower === "today") return now;
+        if (lower === "yesterday") {
+          const d = new Date(now);
+          d.setDate(d.getDate() - 1);
+          return d;
+        }
+        if (lower.includes("last")) {
+          const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+          for (let i = 0; i < days.length; i++) {
+            if (lower.includes(days[i])) {
+              const d = new Date(now);
+              const currentDay = d.getDay();
+              const diff = currentDay - i;
+              d.setDate(d.getDate() - (diff > 0 ? diff : diff + 7));
+              return d;
+            }
+          }
+        }
+        return new Date(dateStr);
+      };
+
+      const absenceDate = parseDate(args.absence_date);
+      const absenceDateStr = absenceDate.toISOString().split('T')[0];
+
+      // Get user profile
+      const { data: profile } = await supabase
+        .from("gw_profiles")
+        .select("user_id, full_name, email")
+        .eq("user_id", userId)
+        .single();
+
+      if (!profile) {
+        return { success: false, message: "Could not find your profile." };
+      }
+
+      // Find the course
+      const courseCode = args.course_code.toLowerCase().replace(/-/g, " ");
+      let courseQuery = courseCode;
+      if (courseCode.includes("glee club") || courseCode === "glee") courseQuery = "MUS 070";
+      if (courseCode.includes("survey") || courseCode.includes("african american")) courseQuery = "MUS 240";
+
+      const { data: course } = await supabase
+        .from("gw_courses")
+        .select("id, course_code, title")
+        .or(`course_code.ilike.%${courseQuery}%,title.ilike.%${courseQuery}%`)
+        .limit(1)
+        .single();
+
+      if (!course) {
+        return { success: false, message: `Could not find course "${args.course_code}". Try "MUS-240" or "Glee Club".` };
+      }
+
+      // Find the class session for that date
+      const { data: session } = await supabase
+        .from("gw_course_class_sessions")
+        .select("id, session_date, title")
+        .eq("course_id", course.id)
+        .eq("session_date", absenceDateStr)
+        .limit(1)
+        .single();
+
+      // Check if attendance record exists
+      let attendanceRecord = null;
+      if (session) {
+        const { data: existing } = await supabase
+          .from("gw_attendance_records")
+          .select("id, status, excuse_status")
+          .eq("student_id", userId)
+          .eq("session_id", session.id)
+          .single();
+        attendanceRecord = existing;
+      }
+
+      // Create or update excuse request
+      const excuseData = {
+        student_id: userId,
+        course_id: course.id,
+        session_id: session?.id || null,
+        absence_date: absenceDateStr,
+        excuse_reason: args.reason,
+        documentation_type: args.documentation_type || "other",
+        excuse_status: "pending",
+        submitted_at: new Date().toISOString(),
+      };
+
+      // Try to insert into gw_excuse_requests table or update attendance record
+      if (attendanceRecord) {
+        // Update existing attendance record with excuse
+        await supabase
+          .from("gw_attendance_records")
+          .update({
+            excuse_reason: args.reason,
+            excuse_status: "pending",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", attendanceRecord.id);
+      }
+
+      // Always create an excuse request for admin review
+      const { error: excuseError } = await supabase
+        .from("gw_excuse_requests")
+        .insert({
+          student_id: userId,
+          course_id: course.id,
+          absence_date: absenceDateStr,
+          reason: args.reason,
+          documentation_type: args.documentation_type || "other",
+          status: "pending",
+          session_id: session?.id || null,
+        });
+
+      // If table doesn't exist, log it but continue
+      if (excuseError) {
+        console.log("Could not insert excuse request (table may not exist):", excuseError.message);
+      }
+
+      // Find the secretary or instructor to notify
+      const { data: secretary } = await supabase
+        .from("gw_profiles")
+        .select("email, full_name")
+        .eq("exec_board_role", "Secretary")
+        .eq("is_exec_board", true)
+        .limit(1)
+        .single();
+
+      // Send notification email
+      if (secretary?.email) {
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/send-branded-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+            body: JSON.stringify({
+              to: secretary.email,
+              subject: `Absence Excuse Request - ${profile.full_name}`,
+              html: `
+                <div style="font-family: Georgia, serif; padding: 20px;">
+                  <h2>Absence Excuse Request</h2>
+                  <p><strong>Student:</strong> ${profile.full_name} (${profile.email})</p>
+                  <p><strong>Course:</strong> ${course.course_code} - ${course.title}</p>
+                  <p><strong>Date:</strong> ${absenceDateStr}</p>
+                  <p><strong>Reason:</strong> ${args.reason}</p>
+                  <p><strong>Category:</strong> ${args.documentation_type || 'Other'}</p>
+                  <p style="margin-top: 20px; color: #666;">Please review this request in the GleeWorld admin dashboard.</p>
+                </div>
+              `,
+              replyTo: profile.email,
+            }),
+          });
+        } catch (e) {
+          console.error("Failed to send excuse notification:", e);
+        }
+      }
+
+      const dateFormatted = absenceDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+      return {
+        success: true,
+        action: "excuse_filed",
+        message: `✅ **Excuse Request Submitted**\n\n**Course:** ${course.course_code}\n**Date:** ${dateFormatted}\n**Reason:** ${args.reason}\n\nYour request has been sent to the ${secretary?.full_name || 'Attendance Chair'} for review. You'll be notified once it's approved or if additional documentation is needed.`,
+      };
+    }
+
+    case "get_my_assignments": {
+      const filter = args.filter || "upcoming";
+      const courseCode = args.course_code;
+
+      // Get user's enrolled courses
+      const { data: enrollments } = await supabase
+        .from("gw_course_enrollments")
+        .select(`
+          course_id,
+          gw_courses!inner(id, course_code, title)
+        `)
+        .eq("user_id", userId)
+        .eq("enrollment_status", "active");
+
+      if (!enrollments?.length) {
+        return { success: false, message: "You are not enrolled in any courses." };
+      }
+
+      // Filter by course if specified
+      let courseIds = enrollments.map(e => e.course_id);
+      let courseName = "all your courses";
+      
+      if (courseCode) {
+        const normalized = courseCode.toLowerCase().replace(/-/g, " ");
+        let matchedCourse = null;
+        
+        // Handle aliases
+        if (normalized.includes("survey") || normalized.includes("african american")) {
+          matchedCourse = enrollments.find(e => e.gw_courses?.course_code?.includes("240"));
+        } else if (normalized.includes("glee club") || normalized === "glee") {
+          matchedCourse = enrollments.find(e => e.gw_courses?.course_code?.includes("070"));
+        } else if (normalized.includes("glee") && normalized.includes("academy")) {
+          // Keep all courses
+        } else {
+          matchedCourse = enrollments.find(e => 
+            e.gw_courses?.course_code?.toLowerCase().replace(/-/g, " ").includes(normalized) ||
+            e.gw_courses?.title?.toLowerCase().includes(normalized)
+          );
+        }
+
+        if (matchedCourse) {
+          courseIds = [matchedCourse.course_id];
+          courseName = matchedCourse.gw_courses?.course_code || courseCode;
+        }
+      }
+
+      // Get assignments
+      let assignmentQuery = supabase
+        .from("gw_course_assignments")
+        .select(`
+          id, title, description, due_date, points, assignment_type,
+          gw_courses!inner(course_code)
+        `)
+        .in("course_id", courseIds)
+        .eq("is_published", true)
+        .order("due_date", { ascending: true });
+
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+
+      if (filter === "upcoming") {
+        assignmentQuery = assignmentQuery.gte("due_date", todayStr);
+      } else if (filter === "overdue") {
+        assignmentQuery = assignmentQuery.lt("due_date", todayStr);
+      }
+
+      const { data: assignments } = await assignmentQuery;
+
+      if (!assignments?.length) {
+        if (filter === "upcoming") {
+          return { success: true, message: `🎉 No upcoming assignments in ${courseName}! You're all caught up.` };
+        }
+        return { success: true, message: `No ${filter} assignments found in ${courseName}.` };
+      }
+
+      // Get submission status for each assignment
+      const { data: submissions } = await supabase
+        .from("assignment_submissions")
+        .select("assignment_id, status, grade")
+        .eq("student_id", userId)
+        .in("assignment_id", assignments.map(a => a.id));
+
+      const submissionMap = new Map(submissions?.map(s => [s.assignment_id, s]) || []);
+
+      // Also check journal grades
+      const { data: journalGrades } = await supabase
+        .from("mus240_journal_grades")
+        .select("assignment_id, grade")
+        .eq("student_id", userId);
+
+      const journalMap = new Map(journalGrades?.map(j => [j.assignment_id, j]) || []);
+
+      // Build assignment list with status
+      const assignmentList = assignments.map(a => {
+        const submission = submissionMap.get(a.id);
+        const journal = journalMap.get(a.id);
+        const isSubmitted = !!submission || !!journal;
+        const grade = submission?.grade || journal?.grade;
+        const dueDate = new Date(a.due_date);
+        const isOverdue = dueDate < now && !isSubmitted;
+
+        return {
+          id: a.id,
+          title: a.title,
+          course: a.gw_courses?.course_code,
+          due_date: a.due_date,
+          points: a.points,
+          is_submitted: isSubmitted,
+          grade: grade,
+          is_overdue: isOverdue,
+        };
+      });
+
+      // Apply filter for submitted/not_submitted
+      let filtered = assignmentList;
+      if (filter === "submitted") {
+        filtered = assignmentList.filter(a => a.is_submitted);
+      } else if (filter === "not_submitted") {
+        filtered = assignmentList.filter(a => !a.is_submitted);
+      }
+
+      // Build message
+      let message = `📋 **Assignments for ${courseName}**\n`;
+      
+      const upToDate = filtered.filter(a => a.is_submitted).length === filtered.length;
+      if (upToDate && filter !== "overdue") {
+        message += `\n✅ You're up-to-date on all assignments!\n`;
+      }
+
+      const overdue = filtered.filter(a => a.is_overdue);
+      if (overdue.length > 0) {
+        message += `\n⚠️ **Overdue (${overdue.length}):**`;
+        overdue.forEach(a => {
+          message += `\n  • ${a.title} (${a.course}) - Due ${a.due_date}`;
+        });
+      }
+
+      const upcoming = filtered.filter(a => !a.is_overdue && !a.is_submitted).slice(0, 5);
+      if (upcoming.length > 0) {
+        message += `\n\n📅 **Due Soon:**`;
+        upcoming.forEach(a => {
+          const dueDate = new Date(a.due_date);
+          const formatted = dueDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          message += `\n  • ${a.title} (${a.course}) - Due ${formatted}`;
+        });
+      }
+
+      const submitted = filtered.filter(a => a.is_submitted).slice(0, 3);
+      if (submitted.length > 0 && filter !== "upcoming") {
+        message += `\n\n✓ **Recently Submitted:**`;
+        submitted.forEach(a => {
+          message += `\n  • ${a.title}${a.grade ? ` - ${a.grade} pts` : ''}`;
+        });
+      }
+
+      return {
+        success: true,
+        assignments: filtered,
+        total: filtered.length,
+        submitted_count: filtered.filter(a => a.is_submitted).length,
+        overdue_count: overdue.length,
+        message: message,
+      };
+    }
+
+    case "get_next_rehearsal": {
+      const courseCode = args.course_code || "MUS 070"; // Default to Glee Club
+
+      // Find course
+      const { data: course } = await supabase
+        .from("gw_courses")
+        .select("id, course_code, title, location")
+        .ilike("course_code", `%${courseCode.replace(/-/g, " ")}%`)
+        .limit(1)
+        .single();
+
+      if (!course) {
+        return { success: false, message: `Could not find course "${courseCode}".` };
+      }
+
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      const currentTime = now.toTimeString().slice(0, 8);
+
+      // Get next session
+      const { data: nextSession } = await supabase
+        .from("gw_course_class_sessions")
+        .select("id, session_date, start_time, end_time, title, location")
+        .eq("course_id", course.id)
+        .or(`session_date.gt.${todayStr},and(session_date.eq.${todayStr},start_time.gt.${currentTime})`)
+        .order("session_date", { ascending: true })
+        .order("start_time", { ascending: true })
+        .limit(1)
+        .single();
+
+      if (!nextSession) {
+        // Check if there's a regular schedule in course info
+        return { 
+          success: true, 
+          message: `📍 **${course.course_code} - ${course.title}**\n\nNo upcoming sessions found in the calendar. Regular rehearsals are typically MWF 5:00-6:15 PM.\n\nLocation: ${course.location || 'Sisters Chapel / Glee Club Room'}`,
+        };
+      }
+
+      const sessionDate = new Date(nextSession.session_date);
+      const dateFormatted = sessionDate.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+
+      // Format time
+      const formatTime = (time: string) => {
+        const [hours, minutes] = time.split(':');
+        const h = parseInt(hours);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const hour12 = h % 12 || 12;
+        return `${hour12}:${minutes} ${ampm}`;
+      };
+
+      const startTime = formatTime(nextSession.start_time);
+      const endTime = nextSession.end_time ? formatTime(nextSession.end_time) : '';
+
+      return {
+        success: true,
+        session: nextSession,
+        course: course,
+        message: `🎵 **Next ${course.course_code} Rehearsal**\n\n📅 **${dateFormatted}**\n⏰ **${startTime}${endTime ? ` - ${endTime}` : ''}**\n📍 **${nextSession.location || course.location || 'Sisters Chapel'}**${nextSession.title ? `\n📝 ${nextSession.title}` : ''}`,
+      };
+    }
+
+    case "send_message_to_instructor": {
+      const recipientRole = (args.recipient_role || "").toLowerCase().trim();
+      const messageType = args.message_type || "email";
+      const subject = args.subject || `Message from GleeWorld Student`;
+      const messageContent = args.message;
+
+      // Get sender profile
+      const { data: sender } = await supabase
+        .from("gw_profiles")
+        .select("user_id, full_name, email, phone")
+        .eq("user_id", userId)
+        .single();
+
+      if (!sender) {
+        return { success: false, message: "Could not find your profile." };
+      }
+
+      // Find recipient based on role
+      let recipientQuery = supabase.from("gw_profiles").select("user_id, full_name, email, phone");
+
+      if (recipientRole.includes("dr.") || recipientRole.includes("doc") || recipientRole.includes("johnson") || recipientRole.includes("instructor") || recipientRole.includes("professor")) {
+        // Find Dr. Johnson or course instructor
+        recipientQuery = recipientQuery.or("full_name.ilike.%Johnson%,is_super_admin.eq.true").limit(1);
+      } else if (recipientRole.includes("president") && !recipientRole.includes("vice")) {
+        recipientQuery = recipientQuery.eq("exec_board_role", "President").eq("is_exec_board", true);
+      } else if (recipientRole.includes("vice")) {
+        recipientQuery = recipientQuery.eq("exec_board_role", "Vice President").eq("is_exec_board", true);
+      } else if (recipientRole.includes("secretary")) {
+        recipientQuery = recipientQuery.eq("exec_board_role", "Secretary").eq("is_exec_board", true);
+      } else if (recipientRole.includes("treasurer")) {
+        recipientQuery = recipientQuery.eq("exec_board_role", "Treasurer").eq("is_exec_board", true);
+      } else if (recipientRole.includes("chaplain")) {
+        recipientQuery = recipientQuery.eq("exec_board_role", "Chaplain").eq("is_exec_board", true);
+      } else {
+        // Try fuzzy name match
+        recipientQuery = recipientQuery.ilike("full_name", `%${recipientRole}%`);
+      }
+
+      const { data: recipients } = await recipientQuery.limit(1);
+
+      if (!recipients?.length) {
+        return { success: false, message: `Could not find "${args.recipient_role}". Try "Dr. Johnson", "President", "Secretary", etc.` };
+      }
+
+      const recipient = recipients[0];
+
+      if (messageType === "sms") {
+        // Send SMS via Twilio
+        if (!recipient.phone) {
+          return { success: false, message: `${recipient.full_name} doesn't have a phone number on file. Try sending an email instead.` };
+        }
+
+        try {
+          const smsResponse = await fetch(`${SUPABASE_URL}/functions/v1/gw-send-sms`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+            body: JSON.stringify({
+              to: recipient.phone,
+              message: `GleeWorld: Message from ${sender.full_name}:\n\n${messageContent}\n\nReply to: ${sender.email}`,
+            }),
+          });
+
+          const smsResult = await smsResponse.json();
+
+          if (smsResult.success) {
+            return {
+              success: true,
+              action: "sms_sent",
+              message: `📱 **Text message sent to ${recipient.full_name}!**\n\nYour message has been delivered. They can reply via SMS or contact you at ${sender.email}.`,
+            };
+          } else {
+            throw new Error(smsResult.error || "SMS failed");
+          }
+        } catch (e: any) {
+          console.error("SMS error:", e);
+          return { success: false, message: `Failed to send SMS: ${e.message}. Try sending an email instead.` };
+        }
+      } else {
+        // Send email
+        try {
+          const emailResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-branded-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+            body: JSON.stringify({
+              to: recipient.email,
+              subject: subject,
+              html: `
+                <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+                    <h2 style="color: #d4af37; margin: 0;">Message from ${sender.full_name}</h2>
+                  </div>
+                  <div style="background: #fff; padding: 30px; border: 1px solid #e0e0e0;">
+                    <div style="line-height: 1.8; color: #333; white-space: pre-wrap;">${messageContent}</div>
+                  </div>
+                  <div style="background: #f5f5f5; padding: 15px; text-align: center; border-radius: 0 0 8px 8px;">
+                    <p style="color: #666; font-size: 12px; margin: 0;">
+                      Sent via GleeWorld Assistant<br>
+                      Reply to: <a href="mailto:${sender.email}">${sender.email}</a>
+                    </p>
+                  </div>
+                </div>
+              `,
+              replyTo: sender.email,
+              senderName: sender.full_name,
+            }),
+          });
+
+          const emailResult = await emailResponse.json();
+
+          if (emailResponse.ok) {
+            return {
+              success: true,
+              action: "email_sent",
+              message: `✉️ **Email sent to ${recipient.full_name}!**\n\n**Subject:** ${subject}\n\nThey will receive your message at ${recipient.email} and can reply to ${sender.email}.`,
+            };
+          } else {
+            throw new Error(emailResult.error || "Email failed");
+          }
+        } catch (e: any) {
+          console.error("Email error:", e);
+          return { success: false, message: `Failed to send email: ${e.message}` };
+        }
+      }
+    }
+
     case "search_site_help": {
       // This tool uses the knowledge base to answer questions
       // The actual response will be generated by the AI using the knowledge in the system prompt
@@ -2649,6 +3604,25 @@ ${GLEEWORLD_KNOWLEDGE}
 
 ## Your Capabilities:
 
+### STUDENT SELF-SERVICE (All Students):
+- **get_my_grade**: Check your own grade in any enrolled course
+  - Examples: "What is my grade?", "How am I doing in MUS-240?", "What's my grade in Survey of African American Music?"
+  
+- **get_my_attendance**: View your attendance record
+  - Examples: "How many classes have I missed?", "What is my attendance?", "Show my attendance record"
+  
+- **file_absence_excuse**: Submit an excuse for a missed or upcoming absence
+  - Examples: "I need to file an excuse for missing class yesterday", "I was sick on Monday and missed MUS-240", "I need to miss Glee Club tomorrow for a doctor's appointment"
+  
+- **get_my_assignments**: View your assignments, due dates, and submission status
+  - Examples: "What assignment is due next?", "Am I up-to-date on my assignments?", "What assignments are due in Survey of African American Music?", "Do I have any assignments in Glee Academy?"
+  
+- **get_next_rehearsal**: Find out when and where the next rehearsal is
+  - Examples: "When is the next rehearsal?", "Where does the Glee Club rehearse?", "When is the next MUS-240 class?"
+  
+- **send_message_to_instructor**: Send an email or text to instructors or exec board members
+  - Examples: "Send Dr. Johnson an email about my grade", "Text the Glee Club president", "Email the secretary about my absence", "Message the treasurer about dues"
+
 ### STANDARD FEATURES (All Users):
 - Search and open sheet music from the library
 - Get upcoming events, rehearsals, and concerts
@@ -2725,7 +3699,8 @@ ${GLEEWORLD_KNOWLEDGE}
 ## Guidelines:
 - Be warm, friendly, and helpful - embody the spirit of sisterhood
 - Use tools to provide accurate, real-time information
-- When users ask to do something, use the appropriate tool
+- When a student asks about THEIR OWN grade/attendance/assignments, use the student self-service tools (get_my_grade, get_my_attendance, get_my_assignments)
+- When an instructor asks about A STUDENT's grade, use get_student_record
 - For admin/exec actions, verify permissions before executing
 - If asked about something not in your tools, explain what the user can do manually
 - Today's date is \${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -2733,7 +3708,9 @@ ${GLEEWORLD_KNOWLEDGE}
 - Keep responses concise but helpful
 - When creating events with images, the AI will generate a professional event poster automatically
 - When sending student emails, be professional but warm, and always sign with the instructor's name
-- When reporting grades, use clear formatting and offer to email the student their grade summary`;
+- When reporting grades, use clear formatting
+- For absence excuses, be empathetic and confirm the request was submitted
+- When students ask about rehearsals, always include the location`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
