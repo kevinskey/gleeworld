@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import gleeAssistantAvatar from '@/assets/glee-assistant-avatar.png';
 
 interface TypewriterGreetingProps {
   firstName: string;
@@ -65,6 +66,15 @@ export const TypewriterGreeting = ({
         {/* Decorative elements */}
         <div className="absolute -top-10 -left-10 w-32 h-32 bg-amber-400/20 rounded-full blur-3xl" />
         <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl" />
+
+        {/* Assistant Avatar */}
+        <div className="relative z-10 flex justify-center mb-6">
+          <img 
+            src={gleeAssistantAvatar} 
+            alt="Glee Assistant" 
+            className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white/30 shadow-xl object-cover"
+          />
+        </div>
 
         {/* Greeting text with typewriter effect */}
         <div className="relative z-10 text-center">
