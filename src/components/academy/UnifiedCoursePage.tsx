@@ -50,6 +50,9 @@ const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/Ac
 const GradesAdmin = React.lazy(() => import('@/components/mus240/instructor/GradesAdmin').then(m => ({
   default: m.GradesAdmin
 })));
+const CourseGradesAdmin = React.lazy(() => import('@/components/course/CourseGradesAdmin').then(m => ({
+  default: m.CourseGradesAdmin
+})));
 const EmbeddedStudentGradeView = React.lazy(() => import('@/components/grading/student/EmbeddedStudentGradeView').then(m => ({
   default: m.EmbeddedStudentGradeView
 })));
@@ -542,8 +545,17 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             
 
-            {activeTab === 'grades' && (isAdmin ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
-                  <GradesAdmin />
+{activeTab === 'grades' && (isAdmin ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
+                  {/* Use MUS-240 specific GradesAdmin for MUS 240, otherwise use universal CourseGradesAdmin */}
+                  {(course.courseCode === 'MUS 240' || course.courseCode === 'MUS240') ? (
+                    <GradesAdmin />
+                  ) : (
+                    <CourseGradesAdmin 
+                      courseId={course.id} 
+                      courseCode={course.courseCode}
+                      courseTitle={course.title}
+                    />
+                  )}
                 </React.Suspense> : (course.courseCode === 'MUS 240' || course.courseCode === 'MUS240') ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
                   <EmbeddedStudentGradeView courseId={course.id} />
                 </React.Suspense> : <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />)}
