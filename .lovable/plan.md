@@ -1,106 +1,112 @@
 
+## What “Didn’t work” most likely means (based on code)
 
-# Plan: Enable Executive Board Members to Add Users
+Kennidy’s “Add User” action in **User Management** is powered by the **`import-users`** Supabase Edge Function (not `auto-enroll-user`).
 
-## Problem Summary
+Right now, `import-users` only allows:
+- `is_admin = true`, or
+- `is_super_admin = true`, or
+- `role` in `['admin','super-admin']`
 
-Kennidy Troupe (Alumnae Liaison) is unable to add users through the User Management module. The edge function logs confirm:
+It does **not** allow `is_exec_board = true`, so executive board members (like Kennidy) will continue to get a **403 Unauthorized: Admin privileges required** even after the earlier idea for `auto-enroll-user`.
 
-```
-Permission denied. Caller is not admin. {
-  adminErr: null,
-  adminProfile: { is_admin: false, is_super_admin: false }
-}
-```
+Also, the **User Management page route guard** (`src/pages/UserManagement.tsx`) currently only allows admins/super-admins, so exec board access can fail/redirect depending on how she’s navigating to it.
 
-Kennidy's profile:
-- `is_admin: false`
-- `is_super_admin: false`  
-- `is_exec_board: true`
-- `exec_board_role: alumnae-liaison`
+## Goal
 
-**Root Cause**: The `auto-enroll-user` edge function only checks `is_admin` or `is_super_admin` flags, ignoring `is_exec_board`.
+Allow **all executive board members** (`gw_profiles.is_exec_board = true`) to:
+1) Access the User Management page
+2) Successfully create users via `import-users`
+3) (Optionally) also succeed via `auto-enroll-user` wherever that flow is used elsewhere
 
 ---
 
-## Solution
+## Implementation Plan (to execute when you switch me to Default mode)
 
-Modify the `auto-enroll-user` edge function to also allow users with `is_exec_board: true` to add new users.
+### 1) Fix server-side permission checks (this is the real blocker)
 
----
+#### 1A) Update `supabase/functions/import-users/index.ts`
+- Expand the privilege check to include exec board:
+  - Change `select('role, is_admin, is_super_admin')` to also select `is_exec_board`
+  - Update the authorization condition to pass if:
+    - `profile.is_super_admin === true` OR
+    - `profile.is_admin === true` OR
+    - `profile.is_exec_board === true` OR
+    - (keep legacy checks if desired) `profile.role in ['admin','super-admin']`
 
-## Implementation Details
+Why: this is the function used by the User Management module, and it currently blocks Kennidy.
 
-### File to Modify
+Also include small robustness fixes while touching the file:
+- Parse JSON body *before* writing audit logs (the current code tries to read `req.body?.users` which doesn’t exist in Deno Request).
+- Log a clear audit message like:
+  - `console.log("import-users authorized caller", { userId: user.id, is_exec_board: profile.is_exec_board, ... })`
+- Keep the response shape the same so the UI doesn’t break.
 
-`supabase/functions/auto-enroll-user/index.ts`
+#### 1B) Update `supabase/functions/auto-enroll-user/index.ts` (secondary but important)
+- Expand the profile select to include `is_exec_board`
+- Allow permission if `is_admin || is_super_admin || is_exec_board`
 
-### Changes
-
-**Current Code (lines 60-72):**
-```typescript
-// Check admin privileges via profile flags
-const { data: adminProfile, error: adminErr } = await supabase
-  .from("gw_profiles")
-  .select("is_admin, is_super_admin")
-  .eq("user_id", userResult.user.id)
-  .single();
-
-if (adminErr || !(adminProfile?.is_admin || adminProfile?.is_super_admin)) {
-  console.error("Permission denied. Caller is not admin.", { adminErr, adminProfile });
-  return new Response(JSON.stringify({ error: "Permission denied" }), ...);
-}
-```
-
-**Updated Code:**
-```typescript
-// Check admin/exec board privileges via profile flags
-const { data: callerProfile, error: profileErr } = await supabase
-  .from("gw_profiles")
-  .select("is_admin, is_super_admin, is_exec_board")
-  .eq("user_id", userResult.user.id)
-  .single();
-
-const hasPermission = 
-  callerProfile?.is_admin || 
-  callerProfile?.is_super_admin || 
-  callerProfile?.is_exec_board;
-
-if (profileErr || !hasPermission) {
-  console.error("Permission denied. Caller lacks required privileges.", { 
-    profileErr, 
-    callerProfile 
-  });
-  return new Response(JSON.stringify({ error: "Permission denied" }), ...);
-}
-```
+Why: even if User Management uses `import-users`, other parts of the app use `auto-enroll-user` (contracts flow), and you explicitly want exec board to have this authority consistently.
 
 ---
 
-## Security Considerations
+### 2) Fix client-side access gating so exec board can open the page
 
-- Executive board members are trusted elected student officers
-- This aligns with existing patterns where `is_exec_board` grants elevated permissions (calendar, messenger, music library, etc.)
-- The edge function still requires authentication and profile verification
-- Only profile creation/update is allowed, not deletion (which remains super-admin only)
+#### 2A) Update `src/pages/UserManagement.tsx`
+Current `isAdmin` calculation only checks admin/super-admin.
+- Update it to allow exec board as well (e.g., `userProfile?.is_exec_board`).
+- Rename variable from `isAdmin` to something clearer like `canAccessUserManagement` to avoid confusion.
+
+Why: even if the server allows creation, the UI currently may block exec board from even accessing the module.
+
+#### 2B) (Optional consistency) Update `src/hooks/useUserRole.ts`
+Right now `canManageUsers()` returns true only for Admin+ or `chief_of_staff`.
+Because you said “Yes, all exec board members”, update `canManageUsers()` to:
+- return `true` if `isExecutiveBoard()` (which already includes exec board + admin)
+
+Why: other UI areas may use `canManageUsers()` to show/hide links and buttons; this prevents future “link disappears” inconsistencies.
 
 ---
 
-## Testing
+### 3) Validate end-to-end behavior (fast, conclusive tests)
 
-After implementation:
-1. Kennidy logs in and navigates to Admin → User Management
-2. Goes to "Add User" tab
-3. Enters email and name for a new user
-4. System should successfully create the user without "Permission denied" error
+#### 3A) Confirm Edge Functions are deployed
+- After changes, deploy functions:
+  - `import-users`
+  - `auto-enroll-user`
+
+#### 3B) Test as Kennidy (real auth token)
+- Login as Kennidy in preview
+- Navigate to User Management
+- Add a user via “Add User”
+Expected:
+- No redirect away from `/user-management`
+- `import-users` returns 200 with `success: 1`
+- New user appears after refresh
+
+#### 3C) Verify via logs
+- Check Edge Function logs for:
+  - “authorized caller” log
+  - No “Admin privileges required” error
 
 ---
 
-## Summary
+## Security Notes (important)
+- This keeps **server-side enforcement** (Edge Function checks) as the source of truth.
+- We are not relying on client-side flags for security; the UI change is only for visibility/access, not authorization.
+- Long-term, your system should move away from storing “role” strings on profile rows, and instead use a dedicated roles table + SECURITY DEFINER helper, but I will not expand scope unless you ask (because it’s a larger migration).
 
-| Step | Description |
-|------|-------------|
-| 1 | Update edge function permission check to include `is_exec_board` |
-| 2 | Update logging for clarity |
-| 3 | Deploy and test with Kennidy's account |
+---
 
+## Files that will be changed (when approved for Default mode)
+- `supabase/functions/import-users/index.ts`  (primary fix)
+- `supabase/functions/auto-enroll-user/index.ts` (consistency fix)
+- `src/pages/UserManagement.tsx` (route access fix)
+- `src/hooks/useUserRole.ts` (optional consistency fix)
+
+---
+
+## Expected Outcome
+After these changes, **Kennidy (and any exec board member)** can:
+- Open User Management
+- Add users successfully without “Unauthorized/Admin required”
