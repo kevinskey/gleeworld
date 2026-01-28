@@ -671,11 +671,11 @@ export const GleeAssistant = () => {
         </div>
       )}
 
-      {/* Floating Assistant Button */}
+      {/* Floating Assistant Button - hidden on phones (uses bottom nav instead) */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-[4.5rem] sm:bottom-6 right-4 sm:right-6 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white border-2 border-[#C4A962] shadow-xl hover:scale-105 transition-transform overflow-hidden z-[9998]"
+          className="hidden sm:flex fixed bottom-6 right-6 h-14 w-14 rounded-full bg-white border-2 border-[#C4A962] shadow-xl hover:scale-105 transition-transform overflow-hidden z-[9998] items-center justify-center"
           aria-label="Open Glee Assistant"
         >
           <img 
