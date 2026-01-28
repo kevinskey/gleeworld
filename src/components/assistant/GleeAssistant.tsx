@@ -47,6 +47,11 @@ interface AssistantAction {
   command?: string; // for radio control
   playlist_id?: number; // for playlist request
   playlist_name?: string;
+  // New action types for enrollment management
+  poll_id?: string;
+  draft_id?: string;
+  recipient?: string;
+  message?: string;
 }
 
 export const GleeAssistant = () => {
@@ -508,6 +513,27 @@ export const GleeAssistant = () => {
     } else if (action.action === 'prepare_sms') {
       navigate('/compose?type=sms');
       setIsOpen(false);
+    } else if (action.action === 'email_sent') {
+      toast({
+        title: "Email Sent",
+        description: action.message || `Report sent to ${action.recipient}`,
+      });
+    } else if (action.action === 'poll_created') {
+      toast({
+        title: "Poll Created",
+        description: action.message || "Your poll has been created successfully!",
+      });
+      setIsOpen(false);
+    } else if (action.action === 'test_generated') {
+      toast({
+        title: "Test Generated",
+        description: action.message || "Your test has been drafted and is ready for review.",
+      });
+    } else if (action.action === 'show_schedule_report') {
+      toast({
+        title: "Schedule Report Generated",
+        description: action.message || "Schedule status report is ready.",
+      });
     }
   };
 
@@ -563,12 +589,13 @@ export const GleeAssistant = () => {
               <div className="text-center text-muted-foreground text-sm py-8">
                 <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-16 w-16 mx-auto mb-3 rounded-full opacity-80" />
                 <p className="font-medium">Hi! I'm your Glee Assistant.</p>
-                <p className="mt-1">Ask me to open a score, check assignments, or navigate anywhere!</p>
+                <p className="mt-1">Ask me anything about GleeWorld!</p>
                 <div className="mt-4 space-y-2 text-xs">
                   <p className="text-muted-foreground/70">Try saying:</p>
-                  <p>"Is there an assignment due today?"</p>
-                  <p>"Open the Stabat Mater score"</p>
-                  <p>"What events are coming up?"</p>
+                  <p>"How many students submitted schedules?"</p>
+                  <p>"Create a poll about rehearsal times"</p>
+                  <p>"Generate a quiz on Gospel music"</p>
+                  <p>"What's the attendance policy?"</p>
                 </div>
               </div>
             ) : (
