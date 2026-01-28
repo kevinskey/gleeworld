@@ -19,8 +19,8 @@ const PUBLIC_KNOWLEDGE_BASE = `
 - One of the oldest and most prestigious collegiate choral ensembles in the nation
 
 ### Contact Information
-- Email: gleeclub@spelman.edu
-- Media/Press Inquiries: media@spelman.edu
+- General Inquiries: admin@gleeworld.org
+- Media/Press Inquiries: media@gleeworld.org
 - Phone: (404) 270-5200
 - Address: 350 Spelman Lane SW, Atlanta, GA 30314
 
@@ -85,13 +85,17 @@ const tools = [
     type: "function",
     function: {
       name: "get_public_events",
-      description: "Get upcoming public events from the Glee Club calendar. Only returns events marked as public.",
+      description: "Get upcoming public events from the Glee Club calendar. Use this to find specific events like Christmas Carol, Spring Concert, auditions, etc. Only returns events marked as public.",
       parameters: {
         type: "object",
         properties: {
           limit: {
             type: "number",
             description: "Maximum number of events to return (default 10)"
+          },
+          search_term: {
+            type: "string",
+            description: "Search term to find specific events (e.g., 'Christmas Carol', 'Spring Concert', 'audition')"
           },
           event_type: {
             type: "string",
@@ -151,6 +155,7 @@ async function executeTool(supabase: any, toolName: string, args: any): Promise<
     case "get_public_events": {
       const limit = args.limit || 10;
       const now = new Date().toISOString();
+      const searchTerm = args.search_term;
       
       let query = supabase
         .from('gw_events')
@@ -159,6 +164,11 @@ async function executeTool(supabase: any, toolName: string, args: any): Promise<
         .gte('start_date', now)
         .order('start_date', { ascending: true })
         .limit(limit);
+      
+      // Add search term filter if provided
+      if (searchTerm) {
+        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+      }
       
       if (args.event_type) {
         query = query.ilike('event_type', `%${args.event_type}%`);
@@ -172,8 +182,40 @@ async function executeTool(supabase: any, toolName: string, args: any): Promise<
       }
       
       if (!data || data.length === 0) {
+        // If no results with search term, try getting all upcoming events
+        if (searchTerm) {
+          const { data: allEvents, error: allError } = await supabase
+            .from('gw_events')
+            .select('id, title, description, start_date, end_date, location, venue_name, event_type, is_public')
+            .eq('is_public', true)
+            .gte('start_date', now)
+            .order('start_date', { ascending: true })
+            .limit(5);
+          
+          if (!allError && allEvents && allEvents.length > 0) {
+            const formattedEvents = allEvents.map((event: any) => ({
+              ...event,
+              formatted_date: new Date(event.start_date).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }),
+              formatted_time: new Date(event.start_date).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit'
+              })
+            }));
+            
+            return JSON.stringify({ 
+              message: `No events matching "${searchTerm}" found, but here are the upcoming public events:`,
+              events: formattedEvents 
+            });
+          }
+        }
+        
         return JSON.stringify({ 
-          message: "No upcoming public events found at this time. Please check back later or visit our calendar page for updates.",
+          message: "No upcoming public events found at this time. The Christmas Carol Concert is typically held in December. Please check back later or visit our calendar page for updates.",
           events: [] 
         });
       }
@@ -273,7 +315,7 @@ serve(async (req) => {
 IMPORTANT GUIDELINES:
 1. You ONLY provide PUBLIC information - never discuss internal matters, grades, attendance, or private member data
 2. Be warm, welcoming, and enthusiastic about the Glee Club's legacy
-3. Use the provided tools to get accurate, up-to-date event information
+3. ALWAYS use the get_public_events tool when someone asks about events, concerts, performances, or dates - especially for Christmas Carol
 4. When appropriate, suggest navigation to relevant pages on the website
 5. If someone asks about becoming a member, direct them to audition information
 6. For alumnae, help them access the Alumnae Portal through the login page
@@ -282,13 +324,17 @@ IMPORTANT GUIDELINES:
 9. Use emojis sparingly to add warmth 🎵
 10. Always refer to "The Glee Club" or "Spelman College Glee Club" - never just "Spelman Glee"
 11. Celebrate the 100+ years of excellence and the motto "To Amaze and Inspire"
+12. For contact information, use admin@gleeworld.org as the primary email
+
+IMPORTANT: When users ask about specific events like "Christmas Carol" or "Spring Concert", ALWAYS search for them using the get_public_events tool with the search_term parameter.
 
 NEVER:
 - Share internal policies or handbook content
 - Discuss individual member information
 - Reveal financial details beyond general booking info
 - Access or mention non-public events
-- Pretend to have capabilities you don't have`;
+- Pretend to have capabilities you don't have
+- Use gleeclub@spelman.edu - use admin@gleeworld.org instead`;
 
     // Initial AI call with tools
     let aiMessages = [
@@ -388,7 +434,7 @@ NEVER:
     }
 
     // Extract final response and any navigation actions
-    const content = assistantMessage?.content || "I apologize, but I'm having trouble responding right now. Please try again or contact gleeclub@spelman.edu for assistance.";
+    const content = assistantMessage?.content || "I apologize, but I'm having trouble responding right now. Please try again or contact admin@gleeworld.org for assistance.";
     
     // Parse any navigation suggestions from the response
     let navigationAction = null;
