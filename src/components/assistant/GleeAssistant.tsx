@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { useRadioChannels } from '@/hooks/useRadioChannels';
+import { AttendanceFullScreenModal } from '@/components/course/AttendanceFullScreenModal';
+import QRCode from 'qrcode';
 import { 
   X, 
   Send, 
@@ -52,6 +54,19 @@ interface AssistantAction {
   draft_id?: string;
   recipient?: string;
   message?: string;
+  // Attendance QR action fields
+  course_code?: string;
+  course_title?: string;
+  session_id?: string;
+  session_title?: string;
+  session_date?: string;
+  start_time?: string;
+  end_time?: string;
+  location?: string;
+  qr_token?: string;
+  expires_at?: string;
+  enrolled_count?: number;
+  checked_in_count?: number;
 }
 
 export const GleeAssistant = () => {
@@ -80,6 +95,19 @@ export const GleeAssistant = () => {
   const navigate = useNavigate();
   const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio, setVolume, volume } = useRadioPlayer();
   const { channels } = useRadioChannels();
+
+  // Attendance QR modal state
+  const [attendanceModalOpen, setAttendanceModalOpen] = useState(false);
+  const [attendanceQrDataUrl, setAttendanceQrDataUrl] = useState<string | null>(null);
+  const [attendanceSessionData, setAttendanceSessionData] = useState<{
+    sessionTitle: string;
+    sessionDate: Date;
+    startTime?: string;
+    endTime?: string;
+    location?: string;
+    enrolledCount: number;
+    checkedInCount: number;
+  } | null>(null);
 
   // ElevenLabs voice options
   const voiceOptions = [
@@ -479,6 +507,12 @@ export const GleeAssistant = () => {
           } else if (action.action === 'get_now_playing') {
             // Client-side fallback - server should have returned this info
             break;
+          } else if (action.action === 'open_attendance_qr') {
+            // Open attendance QR modal
+            setTimeout(() => {
+              openAttendanceQR(action);
+            }, 500);
+            break;
           }
         }
       }
@@ -533,6 +567,54 @@ export const GleeAssistant = () => {
       toast({
         title: "Schedule Report Generated",
         description: action.message || "Schedule status report is ready.",
+      });
+    } else if (action.action === 'open_attendance_qr') {
+      // Generate QR code and open fullscreen modal
+      openAttendanceQR(action);
+    }
+  };
+
+  const openAttendanceQR = async (action: AssistantAction) => {
+    if (!action.qr_token) {
+      toast({
+        title: "Error",
+        description: "No QR token available for attendance.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Generate QR code URL
+      const baseUrl = window.location.hostname.includes('lovable') 
+        ? 'https://gleeworld.lovable.app' 
+        : window.location.origin;
+      const checkInUrl = `${baseUrl}/qr-scanner?token=${encodeURIComponent(action.qr_token)}`;
+      
+      const dataUrl = await QRCode.toDataURL(checkInUrl, {
+        width: 500,
+        margin: 2,
+        color: { dark: '#000000', light: '#ffffff' },
+      });
+
+      setAttendanceQrDataUrl(dataUrl);
+      setAttendanceSessionData({
+        sessionTitle: action.session_title || action.course_title || 'Class Session',
+        sessionDate: new Date(action.session_date || new Date()),
+        startTime: action.start_time?.slice(0, 5), // HH:MM
+        endTime: action.end_time?.slice(0, 5),
+        location: action.location,
+        enrolledCount: action.enrolled_count || 0,
+        checkedInCount: action.checked_in_count || 0,
+      });
+      setAttendanceModalOpen(true);
+      setIsOpen(false); // Close assistant to show fullscreen
+    } catch (error) {
+      console.error('Error generating attendance QR:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code.",
+        variant: "destructive",
       });
     }
   };
@@ -716,6 +798,26 @@ export const GleeAssistant = () => {
             </div>
           </div>
         </Card>
+      )}
+
+      {/* Attendance QR Modal */}
+      {attendanceSessionData && (
+        <AttendanceFullScreenModal
+          open={attendanceModalOpen}
+          onClose={() => {
+            setAttendanceModalOpen(false);
+            setAttendanceQrDataUrl(null);
+            setAttendanceSessionData(null);
+          }}
+          qrDataUrl={attendanceQrDataUrl}
+          sessionTitle={attendanceSessionData.sessionTitle}
+          sessionDate={attendanceSessionData.sessionDate}
+          startTime={attendanceSessionData.startTime}
+          endTime={attendanceSessionData.endTime}
+          location={attendanceSessionData.location}
+          enrolledCount={attendanceSessionData.enrolledCount}
+          checkedInCount={attendanceSessionData.checkedInCount}
+        />
       )}
     </>
   );
