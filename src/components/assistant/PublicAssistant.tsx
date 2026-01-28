@@ -1,11 +1,42 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, X, Send, Loader2, ArrowRight } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, ArrowRight, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import gleeAssistantAvatar from "@/assets/glee-assistant-avatar.png";
+
+// Type declarations for Web Speech API
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  onstart: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 interface Message {
   role: "user" | "assistant";
@@ -35,10 +66,88 @@ export const PublicAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [displayedContent, setDisplayedContent] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Initialize speech recognition
+  useEffect(() => {
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognitionAPI) {
+      setSpeechSupported(true);
+      const recognition = new SpeechRecognitionAPI();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const startListening = useCallback(() => {
+    if (!recognitionRef.current) return;
+
+    const recognition = recognitionRef.current;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = Array.from(event.results)
+        .map(result => result[0].transcript)
+        .join('');
+      
+      setInput(transcript);
+      
+      // Check if final result
+      if (event.results[event.results.length - 1].isFinal) {
+        setIsListening(false);
+      }
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      
+      if (event.error === 'not-allowed') {
+        toast({
+          title: "Microphone Access Denied",
+          description: "Please allow microphone access to use voice input.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error('Failed to start speech recognition:', error);
+      setIsListening(false);
+    }
+  }, [toast]);
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  }, []);
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  }, [isListening, startListening, stopListening]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -311,15 +420,39 @@ export const PublicAssistant = () => {
           {/* Input */}
           <div className="p-3 border-t border-neutral-200 bg-white">
             <div className="flex gap-2">
+              {speechSupported && (
+                <Button
+                  onClick={toggleListening}
+                  disabled={isLoading}
+                  size="icon"
+                  variant="outline"
+                  className={cn(
+                    "rounded-full flex-shrink-0 transition-all",
+                    isListening 
+                      ? "bg-red-500 hover:bg-red-600 text-white border-red-500 animate-pulse" 
+                      : "hover:bg-neutral-100"
+                  )}
+                  aria-label={isListening ? "Stop listening" : "Start voice input"}
+                >
+                  {isListening ? (
+                    <MicOff className="w-4 h-4" />
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
+                </Button>
+              )}
               <input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your question..."
+                placeholder={isListening ? "Listening..." : "Type or speak your question..."}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2.5 text-sm bg-neutral-100 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#003666]/30 disabled:opacity-50"
+                className={cn(
+                  "flex-1 px-4 py-2.5 text-sm bg-neutral-100 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#003666]/30 disabled:opacity-50",
+                  isListening && "ring-2 ring-red-300"
+                )}
               />
               <Button
                 onClick={handleSend}
@@ -334,6 +467,11 @@ export const PublicAssistant = () => {
                 )}
               </Button>
             </div>
+            {isListening && (
+              <p className="text-xs text-red-500 text-center mt-2 animate-pulse">
+                🎤 Listening... Speak now
+              </p>
+            )}
           </div>
         </div>
       )}
