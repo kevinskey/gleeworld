@@ -58,18 +58,32 @@ serve(async (req) => {
       )
     }
 
-    // Check if user has admin privileges
+    // Check if user has admin or executive board privileges
     const { data: profile, error: profileError } = await supabaseClient
       .from('gw_profiles')
-      .select('role, is_admin, is_super_admin')
+      .select('role, is_admin, is_super_admin, is_exec_board')
       .eq('user_id', user.id)
       .single()
 
-    if (profileError || !profile || !(profile.is_admin || profile.is_super_admin || ['admin', 'super-admin'].includes(profile.role))) {
+    const hasPermission = profile && (
+      profile.is_super_admin || 
+      profile.is_admin || 
+      profile.is_exec_board || 
+      ['admin', 'super-admin'].includes(profile.role)
+    );
+
+    if (profileError || !hasPermission) {
+      console.error("import-users: Permission denied.", { 
+        profileError, 
+        is_admin: profile?.is_admin,
+        is_super_admin: profile?.is_super_admin,
+        is_exec_board: profile?.is_exec_board,
+        role: profile?.role
+      });
       return new Response(
         JSON.stringify({ 
           success: 0, 
-          errors: ['Unauthorized: Admin privileges required'],
+          errors: ['Unauthorized: Admin or Executive Board privileges required'],
           users: []
         }),
         { 
@@ -79,6 +93,24 @@ serve(async (req) => {
       )
     }
 
+    // Parse JSON body first before logging
+    const { users, source } = await req.json()
+    
+    if (!users || !Array.isArray(users)) {
+      throw new Error('Users array is required')
+    }
+
+    // Log the authorized caller for audit trail
+    console.log("import-users: Authorized caller", { 
+      userId: user.id, 
+      email: user.email,
+      is_admin: profile.is_admin,
+      is_super_admin: profile.is_super_admin,
+      is_exec_board: profile.is_exec_board,
+      userCount: users.length,
+      source: source || 'unknown'
+    });
+
     // Log the admin operation for audit trail
     await supabaseClient
       .from('activity_logs')
@@ -86,14 +118,8 @@ serve(async (req) => {
         user_id: user.id,
         action_type: 'bulk_user_import',
         resource_type: 'users',
-        details: { source: req.headers.get('source') || 'unknown', user_count: Array.isArray(req.body?.users) ? req.body.users.length : 0 }
+        details: { source: source || 'unknown', user_count: users.length }
       })
-
-    const { users, source } = await req.json()
-    
-    if (!users || !Array.isArray(users)) {
-      throw new Error('Users array is required')
-    }
 
     const results = {
       success: 0,

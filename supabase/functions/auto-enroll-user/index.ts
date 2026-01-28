@@ -56,20 +56,38 @@ serve(async (req) => {
       });
     }
 
-    // Check admin privileges via profile flags
-    const { data: adminProfile, error: adminErr } = await supabase
+    // Check admin or executive board privileges via profile flags
+    const { data: callerProfile, error: profileErr } = await supabase
       .from("gw_profiles")
-      .select("is_admin, is_super_admin")
+      .select("is_admin, is_super_admin, is_exec_board")
       .eq("user_id", userResult.user.id)
       .single();
 
-    if (adminErr || !(adminProfile?.is_admin || adminProfile?.is_super_admin)) {
-      console.error("Permission denied. Caller is not admin.", { adminErr, adminProfile });
+    const hasPermission = callerProfile && (
+      callerProfile.is_admin || 
+      callerProfile.is_super_admin || 
+      callerProfile.is_exec_board
+    );
+
+    if (profileErr || !hasPermission) {
+      console.error("Permission denied. Caller lacks required privileges.", { 
+        profileErr, 
+        is_admin: callerProfile?.is_admin,
+        is_super_admin: callerProfile?.is_super_admin,
+        is_exec_board: callerProfile?.is_exec_board
+      });
       return new Response(JSON.stringify({ error: "Permission denied" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log("auto-enroll-user: Authorized caller", {
+      userId: userResult.user.id,
+      is_admin: callerProfile.is_admin,
+      is_super_admin: callerProfile.is_super_admin,
+      is_exec_board: callerProfile.is_exec_board
+    });
 
     // Parse body
     const { email, full_name, role = "member" } = await req.json();
