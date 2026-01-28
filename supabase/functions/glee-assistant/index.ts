@@ -549,6 +549,54 @@ const tools = [
       },
     },
   },
+  // ==========================================
+  // CALENDAR EVENT CREATION TOOL
+  // ==========================================
+  {
+    type: "function",
+    function: {
+      name: "create_calendar_event",
+      description: "Create a new calendar event with specified details. Can include recurring events, public/private visibility, attendance requirements, and generate an AI event image if requested.",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "The event title (required)." },
+          description: { type: "string", description: "Event description." },
+          start_date: { type: "string", description: "Start date and time in ISO format or natural language like 'tomorrow at 5pm', 'March 15 at 2:00 PM', 'next Monday at 7pm'." },
+          end_date: { type: "string", description: "End date and time. If not provided, defaults to 1 hour after start." },
+          location: { type: "string", description: "Event location or venue name." },
+          event_type: { 
+            type: "string", 
+            enum: ["rehearsal", "performance", "concert", "meeting", "workshop", "tour", "social", "academic", "other"],
+            description: "Type of event."
+          },
+          is_public: { type: "boolean", description: "Whether the event is publicly visible (default false for internal events)." },
+          attendance_required: { type: "boolean", description: "Whether attendance is mandatory (default false)." },
+          max_attendees: { type: "number", description: "Maximum number of attendees allowed." },
+          calendar_name: { 
+            type: "string", 
+            description: "Which calendar to add the event to. Options include: 'Glee Club', 'MUS 240', 'MUS 070', 'Bowman Scholars', 'LH 100', 'General'. Defaults to 'Glee Club'."
+          },
+          is_recurring: { type: "boolean", description: "Whether this is a recurring event." },
+          recurrence_type: { 
+            type: "string", 
+            enum: ["daily", "weekly", "monthly"],
+            description: "Type of recurrence if recurring."
+          },
+          recurrence_interval: { type: "number", description: "Interval for recurrence (e.g., every 2 weeks). Defaults to 1." },
+          recurrence_days_of_week: { 
+            type: "array", 
+            items: { type: "number" },
+            description: "Days of week for weekly recurrence (0=Sunday, 1=Monday, etc.)."
+          },
+          recurrence_end_date: { type: "string", description: "When the recurring events should stop." },
+          generate_image: { type: "boolean", description: "Whether to generate an AI image for this event." },
+          image_prompt: { type: "string", description: "Custom prompt for AI image generation. If not provided, one will be generated from the event details." },
+        },
+        required: ["title", "start_date"],
+      },
+    },
+  },
 ];
 
 // ==========================================
@@ -1793,6 +1841,232 @@ Format as JSON array:
       };
     }
 
+    // ==========================================
+    // CREATE CALENDAR EVENT TOOL
+    // ==========================================
+    case "create_calendar_event": {
+      // Verify admin/exec permissions
+      const { data: profile } = await supabase
+        .from("gw_profiles")
+        .select("is_admin, is_super_admin, is_exec_board, exec_board_role, full_name")
+        .eq("user_id", userId)
+        .single();
+
+      if (!profile?.is_admin && !profile?.is_super_admin && !profile?.is_exec_board) {
+        return { success: false, message: "Access denied. Only admins or exec board members can create calendar events." };
+      }
+
+      // Parse the start date from natural language or ISO format
+      const parseDateTime = (dateStr: string): Date => {
+        const now = new Date();
+        const lowerStr = dateStr.toLowerCase().trim();
+        
+        // Handle relative dates
+        if (lowerStr.includes('tomorrow')) {
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const timeMatch = lowerStr.match(/at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+          if (timeMatch) {
+            let hours = parseInt(timeMatch[1]);
+            const minutes = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+            const ampm = timeMatch[3]?.toLowerCase();
+            if (ampm === 'pm' && hours < 12) hours += 12;
+            if (ampm === 'am' && hours === 12) hours = 0;
+            tomorrow.setHours(hours, minutes, 0, 0);
+          } else {
+            tomorrow.setHours(17, 0, 0, 0); // Default 5pm
+          }
+          return tomorrow;
+        }
+        
+        if (lowerStr.includes('next')) {
+          const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+          for (let i = 0; i < daysOfWeek.length; i++) {
+            if (lowerStr.includes(daysOfWeek[i])) {
+              const target = new Date(now);
+              const currentDay = target.getDay();
+              let daysUntil = i - currentDay;
+              if (daysUntil <= 0) daysUntil += 7;
+              target.setDate(target.getDate() + daysUntil);
+              
+              const timeMatch = lowerStr.match(/at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+              if (timeMatch) {
+                let hours = parseInt(timeMatch[1]);
+                const minutes = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+                const ampm = timeMatch[3]?.toLowerCase();
+                if (ampm === 'pm' && hours < 12) hours += 12;
+                if (ampm === 'am' && hours === 12) hours = 0;
+                target.setHours(hours, minutes, 0, 0);
+              } else {
+                target.setHours(17, 0, 0, 0);
+              }
+              return target;
+            }
+          }
+        }
+        
+        // Try to parse as ISO date or common formats
+        const parsed = new Date(dateStr);
+        if (!isNaN(parsed.getTime())) {
+          return parsed;
+        }
+        
+        // Default to now + 1 day if parsing fails
+        const fallback = new Date(now);
+        fallback.setDate(fallback.getDate() + 1);
+        fallback.setHours(17, 0, 0, 0);
+        return fallback;
+      };
+
+      const startDate = parseDateTime(args.start_date);
+      let endDate = args.end_date ? parseDateTime(args.end_date) : new Date(startDate.getTime() + 60 * 60 * 1000); // +1 hour
+
+      // Find the calendar to use
+      let calendarId: string | null = null;
+      const calendarName = args.calendar_name?.toLowerCase() || 'glee club';
+      
+      const { data: calendars } = await supabase
+        .from("gw_calendars")
+        .select("id, name")
+        .eq("is_visible", true);
+      
+      if (calendars && calendars.length > 0) {
+        // Try to find matching calendar
+        const match = calendars.find(c => 
+          c.name.toLowerCase().includes(calendarName) ||
+          calendarName.includes(c.name.toLowerCase())
+        );
+        if (match) {
+          calendarId = match.id;
+        } else {
+          // Default to first calendar or Glee Club
+          const gleeCalendar = calendars.find(c => c.name.toLowerCase().includes('glee'));
+          calendarId = gleeCalendar?.id || calendars[0].id;
+        }
+      }
+
+      if (!calendarId) {
+        return { success: false, message: "No calendars available. Please create a calendar first." };
+      }
+
+      // Generate AI image if requested
+      let imageUrl: string | null = null;
+      if (args.generate_image) {
+        try {
+          const imagePrompt = args.image_prompt || 
+            `Create a professional event poster image for a ${args.event_type || 'music'} event titled "${args.title}". 
+             ${args.description ? `Event description: ${args.description}. ` : ''}
+             Style: Elegant, modern design suitable for the Spelman College Glee Club. 
+             Color palette: Deep navy blue, gold accents, warm cream tones.
+             Include subtle musical elements like notes or choir silhouettes.
+             The image should be visually striking and suitable for social media.`;
+
+          console.log("Generating event image with prompt:", imagePrompt.substring(0, 100) + "...");
+
+          const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-image",
+              messages: [{ role: "user", content: imagePrompt }],
+              modalities: ["image", "text"],
+            }),
+          });
+
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json();
+            const generatedImage = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+            
+            if (generatedImage) {
+              // The image is base64 - we could upload it to storage, but for now we'll store the data URL
+              // In production, you'd want to upload this to Supabase storage
+              imageUrl = generatedImage;
+              console.log("Image generated successfully");
+            }
+          } else {
+            console.error("Image generation failed:", await imageResponse.text());
+          }
+        } catch (imageError) {
+          console.error("Error generating event image:", imageError);
+          // Continue without image
+        }
+      }
+
+      // Create the event
+      const eventData: any = {
+        title: args.title,
+        description: args.description || null,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        location: args.location || null,
+        venue_name: args.location || null,
+        event_type: args.event_type || 'other',
+        is_public: args.is_public ?? false,
+        is_private: !(args.is_public ?? false),
+        attendance_required: args.attendance_required ?? false,
+        max_attendees: args.max_attendees || null,
+        calendar_id: calendarId,
+        created_by: userId,
+        status: 'scheduled',
+        image_url: imageUrl,
+        is_recurring: args.is_recurring ?? false,
+        recurrence_type: args.is_recurring ? (args.recurrence_type || 'weekly') : null,
+        recurrence_interval: args.is_recurring ? (args.recurrence_interval || 1) : null,
+        recurrence_days_of_week: args.is_recurring ? args.recurrence_days_of_week : null,
+        recurrence_end_date: args.is_recurring && args.recurrence_end_date ? parseDateTime(args.recurrence_end_date).toISOString() : null,
+      };
+
+      const { data: newEvent, error: createError } = await supabase
+        .from("gw_events")
+        .insert(eventData)
+        .select("id, title, start_date, end_date, is_public, attendance_required, is_recurring")
+        .single();
+
+      if (createError) {
+        console.error("Error creating event:", createError);
+        return { success: false, message: `Failed to create event: ${createError.message}` };
+      }
+
+      // If recurring, create additional occurrences
+      if (args.is_recurring && newEvent) {
+        try {
+          await supabase.rpc("create_recurring_gw_events", {
+            p_event_id: newEvent.id,
+          });
+        } catch (recurError) {
+          console.error("Error creating recurring events:", recurError);
+          // Continue - the main event was created
+        }
+      }
+
+      // Format response
+      const dateOptions: Intl.DateTimeFormatOptions = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      };
+      const formattedDate = startDate.toLocaleDateString('en-US', dateOptions);
+
+      return {
+        success: true,
+        action: "event_created",
+        event_id: newEvent.id,
+        event_title: args.title,
+        event_date: formattedDate,
+        is_public: args.is_public ?? false,
+        is_recurring: args.is_recurring ?? false,
+        has_image: !!imageUrl,
+        attendance_required: args.attendance_required ?? false,
+        message: `Created event "${args.title}" for ${formattedDate}.${args.is_recurring ? ` Recurring ${args.recurrence_type || 'weekly'}.` : ''}${imageUrl ? ' AI image generated.' : ''}${args.attendance_required ? ' Attendance required.' : ''}`,
+      };
+    }
+
     default:
       return { message: "Unknown tool" };
   }
@@ -1842,6 +2116,24 @@ ${GLEEWORLD_KNOWLEDGE}
 - Answer questions about policies using the handbook
 - Answer general questions about GleeWorld features and how to use the site
 
+### ATTENDANCE MANAGEMENT (Admin/Exec Only):
+- **take_attendance**: Start taking attendance for any course by displaying the QR code. Say "take attendance in MUS-240" or "take attendance for Glee Club"
+
+### CALENDAR & EVENT MANAGEMENT (Admin/Exec Only):
+- **create_calendar_event**: Create calendar events with full control over:
+  - Title, description, date/time (natural language like "tomorrow at 5pm" works)
+  - Location and venue
+  - Public/private visibility
+  - Recurring events (daily, weekly, monthly)
+  - Attendance requirements
+  - AI-generated event images (say "create an image" or "generate image")
+  
+  Examples:
+  - "Create a rehearsal tomorrow at 5pm in Sisters Chapel"
+  - "Schedule a concert on March 15 at 7:30pm, make it public, and create an image"
+  - "Add a weekly exec board meeting every Monday at 4pm"
+  - "Create a private tour planning meeting for next Tuesday"
+
 ### ENROLLMENT MANAGEMENT (Admin/Exec Only):
 - **check_schedule_submissions**: Get list of students who have/haven't submitted class schedules, with conflict detection
 - **get_enrollment_stats**: Get enrollment statistics and voice part breakdown for any course
@@ -1868,6 +2160,7 @@ ${GLEEWORLD_KNOWLEDGE}
 - Today's date is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
 - Current semester: ${new Date().getMonth() >= 0 && new Date().getMonth() <= 4 ? 'Spring' : 'Fall'} ${new Date().getFullYear()}
 - Keep responses concise but helpful
+- When creating events with images, the AI will generate a professional event poster automatically
 - When sending reports, format them clearly with relevant data`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
