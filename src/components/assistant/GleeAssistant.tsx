@@ -67,6 +67,14 @@ interface AssistantAction {
   expires_at?: string;
   enrolled_count?: number;
   checked_in_count?: number;
+  // Calendar event creation fields
+  event_id?: string;
+  event_title?: string;
+  event_date?: string;
+  is_public?: boolean;
+  is_recurring?: boolean;
+  has_image?: boolean;
+  attendance_required?: boolean;
 }
 
 export const GleeAssistant = () => {
@@ -513,6 +521,18 @@ export const GleeAssistant = () => {
               openAttendanceQR(action);
             }, 500);
             break;
+          } else if (action.action === 'event_created') {
+            // Show success toast for event creation
+            toast({
+              title: "Event Created",
+              description: action.message || `Created "${action.event_title}" for ${action.event_date}`,
+            });
+            // Navigate to calendar to see the event
+            setTimeout(() => {
+              navigate('/calendar');
+              setIsOpen(false);
+            }, 1000);
+            break;
           }
         }
       }
@@ -571,6 +591,13 @@ export const GleeAssistant = () => {
     } else if (action.action === 'open_attendance_qr') {
       // Generate QR code and open fullscreen modal
       openAttendanceQR(action);
+    } else if (action.action === 'event_created') {
+      toast({
+        title: "Event Created",
+        description: action.message || `Created "${action.event_title}"`,
+      });
+      navigate('/calendar');
+      setIsOpen(false);
     }
   };
 
