@@ -5,6 +5,8 @@ import { Music, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useMergedProfile } from '@/hooks/useMergedProfile';
+import { TypewriterGreeting } from '@/components/shared/TypewriterGreeting';
 
 interface CourseBadge {
   id: string;
@@ -19,9 +21,22 @@ interface CourseBadge {
 const GleeAcademy = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { firstName } = useMergedProfile(user);
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
   const [badges, setBadges] = useState<CourseBadge[]>([]);
   const [loadingBadges, setLoadingBadges] = useState(true);
+  const [showGreeting, setShowGreeting] = useState(false);
+
+  // Show greeting for logged-in users who just arrived (once per session)
+  useEffect(() => {
+    if (user && firstName) {
+      const greetingShown = sessionStorage.getItem('glee_greeting_shown');
+      if (!greetingShown) {
+        setShowGreeting(true);
+        sessionStorage.setItem('glee_greeting_shown', 'true');
+      }
+    }
+  }, [user, firstName]);
 
   // Fetch badges from database
   useEffect(() => {
@@ -75,6 +90,15 @@ const GleeAcademy = () => {
 
   return (
     <PublicLayout>
+      {/* Typewriter greeting for logged-in users */}
+      {showGreeting && user && (
+        <TypewriterGreeting 
+          firstName={firstName} 
+          onClose={() => setShowGreeting(false)}
+          autoHideAfter={5000}
+        />
+      )}
+      
       <div className="min-h-screen bg-[#1a3a5c]">
         {/* Header Banner */}
         <div 
