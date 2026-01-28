@@ -405,3 +405,6 @@ verify_jwt = true
 
 [functions.conducting-proxy]
 verify_jwt = false
+
+[functions.public-assistant]
+verify_jwt = false
