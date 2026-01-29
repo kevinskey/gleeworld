@@ -2709,14 +2709,22 @@ Format as JSON array:
     }
 
     case "get_upcoming_events": {
-      const daysAhead = args.days_ahead || 7;
+      // Use longer default for tour/concert searches, standard 7 for regular queries
       const eventTypeFilter = args.event_type?.toLowerCase();
       const searchTerm = args.search_term?.toLowerCase();
       
       // Concert-related keywords to match regardless of event_type
       const concertKeywords = ['concert', 'christmas carol', 'annual', 'founder', 'commencement', 'performance', 'carol'];
+      // Tour-related keywords
+      const tourKeywords = ['tour', 'trip', 'travel', 'retreat'];
+      
       const isSearchingForConcerts = eventTypeFilter === 'concert' || 
         concertKeywords.some(kw => searchTerm?.includes(kw));
+      const isSearchingForTours = eventTypeFilter === 'tour' || 
+        tourKeywords.some(kw => searchTerm?.includes(kw));
+      
+      // Extend search range for major events like tours and concerts
+      const daysAhead = args.days_ahead || (isSearchingForConcerts || isSearchingForTours ? 365 : 30);
       
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + daysAhead);
@@ -2760,8 +2768,19 @@ Format as JSON array:
         );
       }
 
-      // Also filter by event type in memory for non-concert searches
-      if (eventTypeFilter && !isSearchingForConcerts) {
+      // Smart tour recognition - match by keywords in title regardless of event_type
+      if (isSearchingForTours) {
+        filteredEvents = filteredEvents.filter(e => {
+          const title = (e.title || e.event_name || '').toLowerCase();
+          const eventType = (e.event_type || '').toLowerCase();
+          
+          return eventType === 'tour' || 
+                 tourKeywords.some(kw => title.includes(kw));
+        });
+      }
+
+      // Also filter by event type in memory for non-concert/tour searches
+      if (eventTypeFilter && !isSearchingForConcerts && !isSearchingForTours) {
         filteredEvents = filteredEvents.filter(e => 
           (e.event_type?.toLowerCase() || '').includes(eventTypeFilter) ||
           (e.title?.toLowerCase() || '').includes(eventTypeFilter)
