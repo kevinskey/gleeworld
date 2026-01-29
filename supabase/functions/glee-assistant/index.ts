@@ -884,31 +884,55 @@ async function executeTool(toolName: string, args: any, userId: string) {
     }
 
     case "get_enrollment_stats": {
-      const courseCode = args.course_code || "MUS-070";
+      const rawCourseCode = args.course_code || "MUS-070";
       const semester = args.semester || currentSemester;
 
-      // Get course info
-      const { data: course } = await supabase
+      // Normalize course code: "mus240" -> "MUS 240", "MUS-240" -> "MUS 240"
+      const normalizedCode = rawCourseCode
+        .toUpperCase()
+        .replace(/[-_]/g, ' ')  // Replace dashes/underscores with spaces
+        .replace(/([A-Z]+)(\d+)/g, '$1 $2')  // Add space between letters and numbers
+        .replace(/\s+/g, ' ')  // Normalize multiple spaces
+        .trim();
+
+      console.log(`Looking up course: raw="${rawCourseCode}", normalized="${normalizedCode}"`);
+
+      // Get course info with flexible matching
+      let { data: course } = await supabase
         .from("gw_courses")
         .select("id, title, course_code, instructor_name")
-        .eq("course_code", courseCode)
+        .eq("course_code", normalizedCode)
         .single();
 
+      // If not found, try ILIKE for fuzzy matching
       if (!course) {
-        return { success: false, message: `Course ${courseCode} not found.` };
+        const fuzzyPattern = `%${rawCourseCode.replace(/[-_\s]/g, '%')}%`;
+        const { data: fuzzyMatch } = await supabase
+          .from("gw_courses")
+          .select("id, title, course_code, instructor_name")
+          .ilike("course_code", fuzzyPattern)
+          .limit(1)
+          .single();
+        course = fuzzyMatch;
       }
 
-      // Get enrollments with profiles
+      if (!course) {
+        return { success: false, message: `Course ${rawCourseCode} not found. Try using format like "MUS 240" or "MUS-070".` };
+      }
+
+      // Get enrollments with profiles - check for both 'enrolled' and 'active' statuses
       const { data: enrollments } = await supabase
         .from("gw_course_enrollments")
         .select(`
           id, enrollment_status,
           gw_profiles!inner(voice_part)
         `)
-        .eq("course_id", course.id)
-        .eq("semester", semester);
+        .eq("course_id", course.id);
 
-      const activeEnrollments = enrollments?.filter(e => e.enrollment_status === "active") || [];
+      // Accept both 'enrolled' and 'active' as valid enrollment statuses
+      const activeEnrollments = enrollments?.filter(e => 
+        e.enrollment_status === "active" || e.enrollment_status === "enrolled"
+      ) || [];
       
       // Voice part breakdown
       const voiceParts: Record<string, number> = {};
