@@ -136,13 +136,13 @@ const tools = [
     type: "function",
     function: {
       name: "get_upcoming_events",
-      description: "Get upcoming events, rehearsals, and concerts from the calendar. For concerts specifically, use event_type='concert' or 'performance' and set days_ahead to 365 to find annual concerts.",
+      description: "Get upcoming events, rehearsals, concerts, and TOURS from the calendar. ALWAYS use this tool when users ask about tour dates, tour schedule, or 'when is tour'. For tours, use search_term='tour' and days_ahead=365. For concerts, use event_type='concert' and days_ahead=365.",
       parameters: {
         type: "object",
         properties: {
-          days_ahead: { type: "number", description: "Number of days ahead to look (default 7, use 365 for concerts)" },
-          event_type: { type: "string", description: "Filter by event type: 'concert', 'performance', 'class', 'meeting', 'rehearsal', 'other'" },
-          search_term: { type: "string", description: "Search term to filter events by title (e.g., 'Christmas Carol', 'Annual')" },
+          days_ahead: { type: "number", description: "Number of days ahead to look (default 7, use 365 for tours and concerts)" },
+          event_type: { type: "string", description: "Filter by event type: 'concert', 'performance', 'tour', 'class', 'meeting', 'rehearsal', 'other'" },
+          search_term: { type: "string", description: "Search term to filter events by title (e.g., 'tour', 'Christmas Carol', 'Annual', 'retreat')" },
         },
         required: [],
       },
@@ -3694,7 +3694,11 @@ ${GLEEWORLD_KNOWLEDGE}
 
 ### STANDARD FEATURES (All Users):
 - Search and open sheet music from the library
-- Get upcoming events, rehearsals, and concerts
+- **get_upcoming_events**: Get upcoming events, rehearsals, concerts, and TOUR DATES
+  - ALWAYS use this tool when users ask "when is tour?", "tour dates", "tour schedule", etc.
+  - For tours: use search_term='tour' and days_ahead=365
+  - For concerts: use event_type='concert' and days_ahead=365
+  - Examples: "When is tour?", "What concerts are coming up?", "When is the Christmas Carol?"
 - Check assignment due dates and class schedules
 - Search for member contact information
 - Navigate to any page in GleeWorld
