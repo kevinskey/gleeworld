@@ -132,11 +132,13 @@ const tools = [
     type: "function",
     function: {
       name: "get_upcoming_events",
-      description: "Get upcoming events, rehearsals, and concerts from the calendar",
+      description: "Get upcoming events, rehearsals, and concerts from the calendar. For concerts specifically, use event_type='concert' or 'performance' and set days_ahead to 365 to find annual concerts.",
       parameters: {
         type: "object",
         properties: {
-          days_ahead: { type: "number", description: "Number of days ahead to look (default 7)" },
+          days_ahead: { type: "number", description: "Number of days ahead to look (default 7, use 365 for concerts)" },
+          event_type: { type: "string", description: "Filter by event type: 'concert', 'performance', 'class', 'meeting', 'rehearsal', 'other'" },
+          search_term: { type: "string", description: "Search term to filter events by title (e.g., 'Christmas Carol', 'Annual')" },
         },
         required: [],
       },
@@ -2704,26 +2706,57 @@ Format as JSON array:
 
     case "get_upcoming_events": {
       const daysAhead = args.days_ahead || 7;
+      const eventTypeFilter = args.event_type?.toLowerCase();
+      const searchTerm = args.search_term?.toLowerCase();
+      
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + daysAhead);
+      const endDateStr = endDate.toISOString();
 
-      const { data: events, error } = await supabase
+      let query = supabase
         .from("events")
         .select("id, title, event_name, description, start_date, event_date_start, end_date, location, event_type")
         .or(`start_date.gte.${today},event_date_start.gte.${today}`)
+        .or(`start_date.lte.${endDateStr},event_date_start.lte.${endDateStr}`)
         .order("start_date", { ascending: true })
-        .limit(10);
+        .limit(20);
+
+      // Apply event type filter if specified
+      if (eventTypeFilter) {
+        query = query.or(`event_type.ilike.%${eventTypeFilter}%,title.ilike.%${eventTypeFilter}%`);
+      }
+
+      const { data: events, error } = await query;
 
       if (error) {
         console.error("Error fetching events:", error);
         return { events: [], message: "Could not fetch events" };
       }
 
-      const formattedEvents = (events || []).map(e => ({
+      // Filter by search term in memory if specified
+      let filteredEvents = events || [];
+      if (searchTerm) {
+        filteredEvents = filteredEvents.filter(e => 
+          (e.title?.toLowerCase() || '').includes(searchTerm) || 
+          (e.event_name?.toLowerCase() || '').includes(searchTerm) ||
+          (e.description?.toLowerCase() || '').includes(searchTerm)
+        );
+      }
+
+      // Also filter by event type in memory for more flexibility
+      if (eventTypeFilter) {
+        filteredEvents = filteredEvents.filter(e => 
+          (e.event_type?.toLowerCase() || '').includes(eventTypeFilter) ||
+          (e.title?.toLowerCase() || '').includes(eventTypeFilter)
+        );
+      }
+
+      const formattedEvents = filteredEvents.map(e => ({
         id: e.id,
         title: e.title || e.event_name,
         description: e.description,
         date: e.start_date || e.event_date_start,
+        end_date: e.end_date,
         location: e.location,
         type: e.event_type
       }));
@@ -2732,8 +2765,8 @@ Format as JSON array:
         events: formattedEvents,
         count: formattedEvents.length,
         message: formattedEvents.length 
-          ? `Found ${formattedEvents.length} upcoming event(s) in the next ${daysAhead} days.`
-          : `No events scheduled in the next ${daysAhead} days.`
+          ? `Found ${formattedEvents.length} upcoming event(s)${eventTypeFilter ? ` (type: ${eventTypeFilter})` : ''} in the next ${daysAhead} days.`
+          : `No ${eventTypeFilter || ''} events scheduled in the next ${daysAhead} days.`
       };
     }
 
