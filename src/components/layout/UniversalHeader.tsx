@@ -27,7 +27,7 @@ import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQ
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
 import { HEADER_ICON_SIZES } from "@/components/layout/headerIconSizes";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+
 import { LandingPageModal } from "@/components/landing/LandingPageModal";
 
 // import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
@@ -490,9 +490,6 @@ export const UniversalHeader = ({
       setIsQuickActionsOpen(false);
     }} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />}
 
-      {/* Mobile Bottom Navigation */}
-      {user && <MobileBottomNav />}
-      
       {/* Landing Page Modal */}
       <LandingPageModal 
         open={isLandingModalOpen} 
