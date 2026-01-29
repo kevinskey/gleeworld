@@ -87,7 +87,11 @@ The Glee Club performs nationally and internationally, representing Spelman Coll
 
 ### Key Dates & Academic Calendar
 - Rehearsals: MWF during academic semesters
-- Major concerts: Fall (Founder's Day), Spring (Annual Concert), Commencement
+- Major concerts:
+  - Fall: Founder's Day Concert
+  - Winter: Spelman-Morehouse Christmas Carol (December) - The signature annual tradition, one of the largest collegiate choral concerts in the nation
+  - Spring: Annual Concert
+  - Commencement Concert
 - Tours typically during spring break or summer
 
 ### Navigation Guide
@@ -2709,32 +2713,45 @@ Format as JSON array:
       const eventTypeFilter = args.event_type?.toLowerCase();
       const searchTerm = args.search_term?.toLowerCase();
       
+      // Concert-related keywords to match regardless of event_type
+      const concertKeywords = ['concert', 'christmas carol', 'annual', 'founder', 'commencement', 'performance', 'carol'];
+      const isSearchingForConcerts = eventTypeFilter === 'concert' || 
+        concertKeywords.some(kw => searchTerm?.includes(kw));
+      
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + daysAhead);
-      const endDateStr = endDate.toISOString();
+      const endDateStr = endDate.toISOString().split('T')[0];
 
-      let query = supabase
+      // Build proper date range query
+      const { data: events, error } = await supabase
         .from("events")
         .select("id, title, event_name, description, start_date, event_date_start, end_date, location, event_type")
-        .or(`start_date.gte.${today},event_date_start.gte.${today}`)
-        .or(`start_date.lte.${endDateStr},event_date_start.lte.${endDateStr}`)
+        .gte("start_date", today)
+        .lte("start_date", endDateStr)
         .order("start_date", { ascending: true })
-        .limit(20);
-
-      // Apply event type filter if specified
-      if (eventTypeFilter) {
-        query = query.or(`event_type.ilike.%${eventTypeFilter}%,title.ilike.%${eventTypeFilter}%`);
-      }
-
-      const { data: events, error } = await query;
+        .limit(50);
 
       if (error) {
         console.error("Error fetching events:", error);
         return { events: [], message: "Could not fetch events" };
       }
 
-      // Filter by search term in memory if specified
       let filteredEvents = events || [];
+
+      // Smart concert recognition - match by keywords in title regardless of event_type
+      if (isSearchingForConcerts) {
+        filteredEvents = filteredEvents.filter(e => {
+          const title = (e.title || e.event_name || '').toLowerCase();
+          const eventType = (e.event_type || '').toLowerCase();
+          
+          // Match if event_type is concert/performance OR if title contains concert keywords
+          return eventType === 'concert' || 
+                 eventType === 'performance' ||
+                 concertKeywords.some(kw => title.includes(kw));
+        });
+      }
+
+      // Filter by search term in memory if specified
       if (searchTerm) {
         filteredEvents = filteredEvents.filter(e => 
           (e.title?.toLowerCase() || '').includes(searchTerm) || 
@@ -2743,8 +2760,8 @@ Format as JSON array:
         );
       }
 
-      // Also filter by event type in memory for more flexibility
-      if (eventTypeFilter) {
+      // Also filter by event type in memory for non-concert searches
+      if (eventTypeFilter && !isSearchingForConcerts) {
         filteredEvents = filteredEvents.filter(e => 
           (e.event_type?.toLowerCase() || '').includes(eventTypeFilter) ||
           (e.title?.toLowerCase() || '').includes(eventTypeFilter)
