@@ -92,7 +92,7 @@ export const GleeAssistant = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const wakeWordRecognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -350,8 +350,8 @@ export const GleeAssistant = () => {
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollViewportRef.current) {
+      scrollViewportRef.current.scrollTop = scrollViewportRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -706,7 +706,7 @@ export const GleeAssistant = () => {
             </button>
 
             {/* Messages area */}
-            <ScrollArea ref={scrollRef} className="max-h-[50vh] sm:max-h-[400px] p-4 pr-8">
+            <ScrollArea viewportRef={scrollViewportRef} className="max-h-[50vh] sm:max-h-[400px] p-4 pr-8">
               {messages.length === 0 ? (
                 <div className="text-center py-4">
                   <div className="flex items-center justify-center gap-2 mb-2">
