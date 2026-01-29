@@ -390,7 +390,7 @@ export const GleeAssistant = () => {
     }
   };
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (!recognitionRef.current) {
       toast({
         title: "Not Supported",
@@ -401,17 +401,63 @@ export const GleeAssistant = () => {
     }
 
     if (isListening) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.log('Error stopping recognition:', e);
+      }
       setIsListening(false);
     } else {
+      // Request microphone permission first
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (e) {
+        console.error('Microphone permission denied:', e);
+        toast({
+          title: "Microphone Access Required",
+          description: "Please allow microphone access to use voice input.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Stop wake word temporarily while manual listening
       if (wakeWordRecognitionRef.current && isWakeWordActive) {
         try {
           wakeWordRecognitionRef.current.stop();
         } catch (e) {}
       }
-      recognitionRef.current.start();
-      setIsListening(true);
+
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        console.log('Speech recognition started');
+      } catch (e: any) {
+        console.error('Error starting speech recognition:', e);
+        // Handle "already started" error
+        if (e.message?.includes('already started') || e.name === 'InvalidStateError') {
+          // Already running, try to restart
+          try {
+            recognitionRef.current.stop();
+            setTimeout(() => {
+              try {
+                recognitionRef.current?.start();
+                setIsListening(true);
+              } catch (e2) {
+                console.error('Failed to restart recognition:', e2);
+              }
+            }, 100);
+          } catch (stopError) {
+            console.error('Error stopping recognition:', stopError);
+          }
+        } else {
+          toast({
+            title: "Voice Error",
+            description: "Could not start voice input. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
     }
   };
 
