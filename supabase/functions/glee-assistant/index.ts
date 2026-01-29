@@ -884,6 +884,20 @@ async function executeTool(toolName: string, args: any, userId: string) {
     }
 
     case "get_enrollment_stats": {
+      // Verify permissions - only admins/exec board can query all student data
+      const { data: requesterProfile } = await supabase
+        .from("gw_profiles")
+        .select("is_admin, is_super_admin, is_exec_board")
+        .eq("user_id", userId)
+        .single();
+
+      if (!requesterProfile?.is_admin && !requesterProfile?.is_super_admin && !requesterProfile?.is_exec_board) {
+        return { 
+          success: false, 
+          message: "Access denied. Only admins or executive board members can view enrollment statistics for all students. You can view your own enrollment status on the Student Dashboard." 
+        };
+      }
+
       const rawCourseCode = args.course_code || "MUS-070";
       const semester = args.semester || currentSemester;
 
