@@ -1,54 +1,83 @@
 
-# Plan: Increase Glee Assistant Button Size on Desktop
 
-## Summary
-Increase the floating assistant button size from the current 56px to 60–64px on desktop to make the avatar image more visible and impactful.
+# Plan: Fix Assistant's Knowledge of Christmas Carol Concert
 
----
+## Problem Summary
+The Glee Assistant doesn't recognize that "Christmas Carol" is a major concert because:
 
-## Recommended Size Options
-
-| Option | Size | Tailwind Classes | Notes |
-|--------|------|------------------|-------|
-| A (Subtle increase) | 60px | `h-[60px] w-[60px]` | Slightly larger, still subtle |
-| B (Recommended) | 64px | `h-16 w-16` | Good for avatar images, still standard |
-| C (Bold) | 72px | `h-[72px] w-[72px]` | More prominent, approaches "large FAB" |
+1. **Knowledge base omission** - The system prompt lists major concerts as "Fall (Founder's Day), Spring (Annual Concert), Commencement" but doesn't mention the 100th Annual Spelman Morehouse Christmas Carol
+2. **Inconsistent event types in database** - Christmas Carol events are tagged as `performance`, `concert`, or `other` instead of consistently as `concert`
+3. **Query logic issue** - The date range filtering may not work correctly due to chained `.or()` clauses
 
 ---
 
-## Implementation
+## Solution
 
-### File to Modify
-`src/components/assistant/GleeAssistant.tsx`
+### 1. Update Knowledge Base (System Prompt)
+**File:** `supabase/functions/glee-assistant/index.ts`
 
-### Change (Line ~678)
-Update the button class from:
-```tsx
-className="hidden sm:flex fixed bottom-6 right-6 h-14 w-14 rounded-full ..."
+Update line 89-90 to explicitly include Christmas Carol:
+
+```text
+### Key Dates & Academic Calendar
+- Rehearsals: MWF during academic semesters
+- Major concerts: 
+  - Fall: Founder's Day Concert
+  - Winter: Spelman-Morehouse Christmas Carol (December) - The signature annual tradition
+  - Spring: Annual Concert
+  - Commencement Concert
+- Tours typically during spring break or summer
 ```
 
-To (using Option B - 64px):
-```tsx
-className="hidden sm:flex fixed bottom-6 right-6 h-16 w-16 rounded-full ..."
+### 2. Add Smart Concert Recognition
+Enhance the `get_upcoming_events` tool to recognize concert keywords even when `event_type` is inconsistent:
+
+```typescript
+// Concert-related keywords to match regardless of event_type
+const concertKeywords = ['concert', 'christmas carol', 'annual', 'founder', 'commencement', 'performance'];
 ```
 
-### Optional: Scale pulse indicator
-Increase pulse indicator from `h-3 w-3` to `h-3.5 w-3.5` to maintain proportion.
+When searching for concerts, also match these keywords in the title.
+
+### 3. Fix Date Range Query
+The current query logic:
+```typescript
+.or(`start_date.gte.${today},event_date_start.gte.${today}`)
+.or(`start_date.lte.${endDateStr},event_date_start.lte.${endDateStr}`)
+```
+
+Should use proper AND logic for the date range:
+```typescript
+.gte('start_date', today)
+.lte('start_date', endDateStr)
+```
 
 ---
 
 ## Technical Details
 
-- **Current size**: `h-14 w-14` = 56px (Material Design standard FAB)
-- **Recommended size**: `h-16 w-16` = 64px (14% larger)
-- **Border consideration**: The 2px border reduces visible avatar area, so slightly larger helps
-- **No mobile impact**: Mobile uses bottom nav (hidden on phones)
+### Files to Modify
+- `supabase/functions/glee-assistant/index.ts`
+
+### Specific Changes
+
+| Location | Current | Change |
+|----------|---------|--------|
+| Lines 89-90 | Major concerts: Fall, Spring, Commencement | Add "Winter: Spelman-Morehouse Christmas Carol (December)" |
+| Lines 2716-2722 | Broken `.or()` date query | Fix to proper date range filter |
+| Lines 2746-2752 | Event type filter only | Add concert keyword matching |
+
+### Database Recommendation
+Consider standardizing `event_type` for Christmas Carol events to `concert` for consistency. Current state:
+- "99th Annual Christmas Carol Concert" → `performance`
+- "100th Annual Spelman Morehouse Christmas Carol" → `concert`  
+- "99th Christmas Carol Broadcast" → `other`
 
 ---
 
-## Recommendation
+## Expected Outcome
+After this fix, when a user asks "when is the next glee concert?", the assistant will:
+1. Know from its knowledge base that Christmas Carol is a major winter concert
+2. Find the December 2026 "100th Annual Spelman Morehouse Christmas Carol" event
+3. Return accurate concert information regardless of inconsistent `event_type` values
 
-Use **64px (`h-16 w-16`)** — this is a sweet spot that:
-- Makes the avatar image more recognizable
-- Stays within industry norms for chat widgets
-- Provides better touch target for tablet users
