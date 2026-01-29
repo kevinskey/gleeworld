@@ -688,158 +688,141 @@ export const GleeAssistant = () => {
         </button>
       )}
 
-      {/* Chat Panel */}
+      {/* Speech Bubble Chat */}
       {isOpen && (
-        <Card className="fixed bottom-4 right-4 left-4 sm:left-auto sm:w-[380px] h-[70vh] sm:h-[520px] max-h-[600px] shadow-2xl flex flex-col overflow-hidden border-2 border-primary/20" style={{ zIndex: 9999 }}>
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-            <div className="flex items-center gap-2">
-              <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-6 w-6 rounded-full object-cover" />
-              <span className="font-semibold">Glee Assistant</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
+        <div 
+          className="fixed bottom-24 sm:bottom-28 right-4 sm:right-6 w-[calc(100%-2rem)] sm:w-[400px] max-w-lg animate-in fade-in slide-in-from-bottom-4 duration-200"
+          style={{ zIndex: 9999 }}
+        >
+          {/* Bubble container */}
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-[#C4A962]/30 overflow-hidden">
+            {/* Close button */}
+            <button
               onClick={() => setIsOpen(false)}
-              className="h-8 w-8 text-primary-foreground hover:bg-white/20"
+              className="absolute top-2 right-2 h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors z-10"
+              aria-label="Close assistant"
             >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+              <X className="h-3 w-3 text-slate-500" />
+            </button>
 
-          {/* Messages */}
-          <ScrollArea ref={scrollRef} className="flex-1 p-4">
-            {messages.length === 0 ? (
-              <div className="text-center text-muted-foreground text-sm py-8">
-                <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-16 w-16 mx-auto mb-3 rounded-full opacity-80" />
-                <p className="font-medium">Hi! I'm your Glee Assistant.</p>
-                <p className="mt-1">Ask me anything about GleeWorld!</p>
-                <div className="mt-4 space-y-2 text-xs">
-                  <p className="text-muted-foreground/70">Try saying:</p>
-                  <p>"How many students submitted schedules?"</p>
-                  <p>"Create a poll about rehearsal times"</p>
-                  <p>"Generate a quiz on Gospel music"</p>
-                  <p>"What's the attendance policy?"</p>
+            {/* Messages area */}
+            <ScrollArea ref={scrollRef} className="max-h-[50vh] sm:max-h-[400px] p-4 pr-8">
+              {messages.length === 0 ? (
+                <div className="text-center py-4">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-8 w-8 rounded-full object-cover" />
+                    <span className="font-semibold text-slate-900 dark:text-white">Glee Assistant</span>
+                  </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Hi! I'm your Glee Assistant. How can I help?</p>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={cn(
-                      "flex gap-2",
-                      msg.role === 'user' ? "justify-end" : "justify-start"
-                    )}
-                  >
-                    {msg.role === 'assistant' && (
-                      <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0">
-                        <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
-                      </div>
-                    )}
-                    <div
-                      className={cn(
-                        "rounded-lg px-3 py-2 max-w-[80%] text-sm",
+              ) : (
+                <div className="space-y-3">
+                  {messages.map((msg, idx) => (
+                    <div key={idx} className={cn("flex gap-2", msg.role === 'user' ? "justify-end" : "justify-start")}>
+                      {msg.role === 'assistant' && (
+                        <div className="h-6 w-6 rounded-full overflow-hidden flex-shrink-0">
+                          <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
+                        </div>
+                      )}
+                      <div className={cn(
+                        "rounded-2xl px-3 py-2 max-w-[85%] text-sm",
                         msg.role === 'user'
                           ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      )}
-                    >
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
-                      
-                      {/* Action buttons */}
-                      {msg.actions && msg.actions.length > 0 && (
-                        <div className="mt-2 space-y-1.5">
-                          {msg.actions.map((action, actionIdx) => (
-                            <Button
-                              key={actionIdx}
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => handleAction(action)}
-                              className="w-full text-xs h-auto py-2 px-2 whitespace-normal text-left justify-start"
-                            >
-                              {action.action === 'open_score' && <Music className="h-3 w-3 mr-1.5 flex-shrink-0" />}
-                              {action.action === 'navigate' && <ExternalLink className="h-3 w-3 mr-1.5 flex-shrink-0" />}
-                              <span className="break-words">{action.title || action.route?.replace('/', '') || 'Go'}</span>
-                            </Button>
-                          ))}
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white"
+                      )}>
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        
+                        {/* Action buttons */}
+                        {msg.actions && msg.actions.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {msg.actions.map((action, actionIdx) => (
+                              <Button
+                                key={actionIdx}
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => handleAction(action)}
+                                className="w-full text-xs h-auto py-1.5 px-2 whitespace-normal text-left justify-start"
+                              >
+                                {action.action === 'open_score' && <Music className="h-3 w-3 mr-1.5 flex-shrink-0" />}
+                                {action.action === 'navigate' && <ExternalLink className="h-3 w-3 mr-1.5 flex-shrink-0" />}
+                                <span className="break-words">{action.title || action.route?.replace('/', '') || 'Go'}</span>
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {msg.role === 'user' && (
+                        <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                          <User className="h-3 w-3 text-primary-foreground" />
                         </div>
                       )}
                     </div>
-                    {msg.role === 'user' && (
-                      <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                        <User className="h-4 w-4 text-primary-foreground" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="flex gap-2">
-                    <div className="h-7 w-7 rounded-full overflow-hidden">
-                      <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
-                    </div>
-                    <div className="bg-muted rounded-lg px-3 py-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </ScrollArea>
-
-          {/* Voice selector and Input */}
-          <div className="p-3 border-t bg-background space-y-2">
-            {/* Voice selector */}
-            <div className="flex items-center gap-2">
-              <Volume2 className="h-4 w-4 text-muted-foreground" />
-              <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-                <SelectTrigger className="h-8 text-xs flex-1">
-                  <SelectValue placeholder="Select voice" />
-                </SelectTrigger>
-                <SelectContent>
-                  {voiceOptions.map((voice) => (
-                    <SelectItem key={voice.id} value={voice.id} className="text-xs">
-                      {voice.name} - {voice.description}
-                    </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Input row */}
-            <div className="flex gap-2">
-              <Button
-                variant={isListening ? "destructive" : "outline"}
-                size="icon"
-                onClick={toggleListening}
-                className="h-10 w-10 flex-shrink-0"
-                disabled={isLoading}
-              >
-                {isListening ? (
-                  <MicOff className="h-4 w-4" />
-                ) : (
-                  <Mic className="h-4 w-4" />
-                )}
-              </Button>
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={isListening ? "Listening..." : "Ask me anything..."}
-                className="flex-1"
-                disabled={isLoading || isListening}
-              />
-              <Button
-                onClick={() => handleSend()}
-                disabled={!input.trim() || isLoading}
-                size="icon"
-                className="h-10 w-10 flex-shrink-0"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+                  {isLoading && (
+                    <div className="flex gap-2">
+                      <div className="h-6 w-6 rounded-full overflow-hidden">
+                        <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
+                      </div>
+                      <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl px-3 py-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </ScrollArea>
+
+            {/* Compact input area */}
+            <div className="border-t border-slate-200 dark:border-slate-700 p-3 bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex gap-2 items-center">
+                <Button
+                  variant={isListening ? "destructive" : "ghost"}
+                  size="icon"
+                  onClick={toggleListening}
+                  className="h-8 w-8 flex-shrink-0 rounded-full"
+                  disabled={isLoading}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={isListening ? "Listening..." : "Ask me anything..."}
+                  className="flex-1 h-8 text-sm rounded-full border-slate-200 dark:border-slate-600"
+                  disabled={isLoading || isListening}
+                />
+                <Button
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() || isLoading}
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0 rounded-full"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+              {/* Voice selector (collapsed) */}
+              <div className="mt-2 flex items-center gap-2">
+                <Volume2 className="h-3 w-3 text-slate-400" />
+                <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                  <SelectTrigger className="h-6 text-[10px] flex-1 border-none bg-transparent p-0 shadow-none">
+                    <SelectValue placeholder="Voice" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {voiceOptions.map((voice) => (
+                      <SelectItem key={voice.id} value={voice.id} className="text-xs">
+                        {voice.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-        </Card>
+
+          {/* Bubble pointer/tail */}
+          <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white dark:bg-slate-900 border-r-2 border-b-2 border-[#C4A962]/30 transform rotate-45" />
+        </div>
       )}
 
       {/* Attendance QR Modal */}
