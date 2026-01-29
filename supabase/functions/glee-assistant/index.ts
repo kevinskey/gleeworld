@@ -2730,8 +2730,18 @@ Format as JSON array:
       endDate.setDate(endDate.getDate() + daysAhead);
       const endDateStr = endDate.toISOString().split('T')[0];
 
-      // Build proper date range query
-      const { data: events, error } = await supabase
+      // Build proper date range query - Query BOTH tables for comprehensive results
+      // First query gw_events (primary calendar events table)
+      const { data: gwEvents, error: gwError } = await supabase
+        .from("gw_events")
+        .select("id, title, description, start_date, end_date, location, event_type, is_public")
+        .gte("start_date", today)
+        .lte("start_date", endDateStr)
+        .order("start_date", { ascending: true })
+        .limit(50);
+
+      // Also query legacy events table
+      const { data: legacyEvents, error: legacyError } = await supabase
         .from("events")
         .select("id, title, event_name, description, start_date, event_date_start, end_date, location, event_type")
         .gte("start_date", today)
@@ -2739,12 +2749,42 @@ Format as JSON array:
         .order("start_date", { ascending: true })
         .limit(50);
 
-      if (error) {
-        console.error("Error fetching events:", error);
-        return { events: [], message: "Could not fetch events" };
+      if (gwError) {
+        console.error("Error fetching gw_events:", gwError);
+      }
+      if (legacyError) {
+        console.error("Error fetching legacy events:", legacyError);
       }
 
-      let filteredEvents = events || [];
+      // Combine results from both tables
+      const combinedEvents = [
+        ...(gwEvents || []).map(e => ({
+          id: e.id,
+          title: e.title,
+          event_name: e.title,
+          description: e.description,
+          start_date: e.start_date,
+          event_date_start: e.start_date,
+          end_date: e.end_date,
+          location: e.location,
+          event_type: e.event_type,
+          is_public: e.is_public
+        })),
+        ...(legacyEvents || []).map(e => ({
+          id: e.id,
+          title: e.title || e.event_name,
+          event_name: e.event_name || e.title,
+          description: e.description,
+          start_date: e.start_date || e.event_date_start,
+          event_date_start: e.event_date_start || e.start_date,
+          end_date: e.end_date,
+          location: e.location,
+          event_type: e.event_type,
+          is_public: true // Legacy events assumed public
+        }))
+      ];
+
+      let filteredEvents = combinedEvents;
 
       // Smart concert recognition - match by keywords in title regardless of event_type
       if (isSearchingForConcerts) {
@@ -2786,6 +2826,9 @@ Format as JSON array:
           (e.title?.toLowerCase() || '').includes(eventTypeFilter)
         );
       }
+
+      // Sort by date and remove duplicates by title
+      filteredEvents.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
 
       const formattedEvents = filteredEvents.map(e => ({
         id: e.id,
