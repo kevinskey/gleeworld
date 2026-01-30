@@ -118,21 +118,15 @@ export const GleeAssistant = () => {
     checkedInCount: number;
   } | null>(null);
 
-  // ElevenLabs voice options
+  // ElevenLabs voice options (female only to match assistant avatar)
   const voiceOptions = [
-    // Black voices (prioritized per community identity)
+    // Black female voices (prioritized per community identity)
     { id: '9wYX8b0wRvLUEYtGuzP5', name: 'KeKe', description: 'Black woman, sassy' },
-    { id: 'CVRACyqNcQefTlxMj9bt', name: 'Lamar Lincoln', description: 'Black male, young raspy' },
     { id: 'OOk3INdXVLRmSaQoAX9D', name: 'Alicia Speaks', description: 'Black woman, calm' },
-    { id: '7sXif1ZLnLgbMgmFvs2G', name: 'Denzel', description: 'Black male, deep' },
-    { id: '1Y79BeuotytFuNrig6K0', name: 'Kevin J', description: 'Black male' },
-    // Standard voices
+    // Standard female voices
     { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', description: 'Young female' },
     { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Soft female' },
     { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Warm female' },
-    { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger', description: 'Warm male' },
-    { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', description: 'Deep male' },
-    { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric', description: 'Friendly male' },
   ];
   const [selectedVoice, setSelectedVoice] = useState('9wYX8b0wRvLUEYtGuzP5'); // Default to KeKe
 
