@@ -17,108 +17,439 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GLEEWORLD_KNOWLEDGE = `
 ## COMPLETE GLEEWORLD SITE KNOWLEDGE
 
-### About the Glee Club
-The Spelman College Glee Club is a historic ensemble celebrating over 100 years of musical excellence. 
-Motto: "To Amaze and Inspire"
-Director: Dr. Kevin P. Johnson ("Doc Johnson")
-The Glee Club performs nationally and internationally, representing Spelman College.
+### About the Spelman College Glee Club
+The Spelman College Glee Club is a premier choral ensemble with over 100 years of musical excellence, founded in 1925.
+- **Motto**: "To Amaze and Inspire"
+- **Director**: Dr. Kevin P. Johnson ("Doc Johnson") - kjohns10@spelman.edu
+- **Office**: Fine Arts Building, Room 105
+- **Office Hours**: MWF 3:00-5:00 PM or by appointment
+- The Glee Club performs nationally and internationally, representing Spelman College at prestigious venues
+- One of the most distinguished collegiate choral ensembles in the nation
+- Known for excellence in sacred, classical, gospel, and contemporary repertoire
+- Website: gleeworld.org | Email: admin@gleeworld.org
 
-### Courses & Academy
-**MUS-070 (Glee Club / Spelman College Glee Club)**
-- The primary ensemble course for active Glee Club members
-- Rehearsals: MWF 5:00-6:15 PM in the Fine Arts building
-- Required for all performing members
-- Students must submit class schedules to check for conflicts
-- This IS the Glee Club course
+### Courses & Glee Academy (IMPORTANT DISTINCTION)
 
-**MUS-240 (Survey of African American Music)**
-- Academic music history course taught by Dr. Johnson
-- NOT the Glee Club rehearsal course
-- Meets MWF during class hours (separate from rehearsals)
+**MUS-070 (Glee Club / Spelman College Glee Club) - THIS IS THE GLEE CLUB**
+- Course Code: MUS-070 or "GLEE-CLUB"
+- The PRIMARY ensemble course for active Glee Club members
+- Rehearsals: Monday, Wednesday, Friday 5:00-6:15 PM in Fine Arts Building
+- Required for ALL performing members - this is where rehearsals happen
+- Students must submit class schedules via the Class Schedule Form to check for conflicts
+- Attendance is mandatory and tracked via QR code check-in
+- Credit: 1 hour
+
+**MUS-240 (Survey of African American Music) - NOT THE GLEE CLUB**
+- Course Code: MUS-240
+- An ACADEMIC music history course taught by Dr. Johnson
+- This is NOT the Glee Club rehearsal course
+- Meets MWF during regular class hours (separate from evening rehearsals)
 - Covers the history and development of African American music traditions
-- Open to all students, not just Glee Club members
+- Topics: Spirituals, Blues, Jazz, Gospel, R&B, Hip-Hop, and their cultural significance
+- Weekly journal entries required
+- Open to ALL students, not just Glee Club members
+- Credit: 3 hours
 
 **MUS-210 (Choral Conducting)**
-- Conducting techniques course
+- Course Code: MUS-210
+- Conducting techniques and leadership course
+- Monday and Wednesday 2:00-2:50 PM
+- Covers baton technique, score study, rehearsal methods
 - Separate from Glee Club rehearsals
+- Credit: 2 hours
 
-### Attendance Policy
-- Attendance is MANDATORY for all rehearsals and performances
-- Must notify the Attendance Chair (Secretary) IN ADVANCE if unable to attend
-- Three unexcused absences = probation
-- Additional absences may result in removal from performances
-- Excused absences require documentation or prior approval
+**MUS-100 (Music Theory Fundamentals)**
+- Basic music theory for beginners
+- Notation, scales, intervals, chords
+- Ear training and sight-singing
 
-### Executive Board Positions
-1. **President** - Leads the organization, represents the club
-2. **Vice President** - Assists President, manages special projects
-3. **Secretary** - Records minutes, manages attendance, communications
-4. **Treasurer** - Manages finances, dues collection
-5. **Chaplain** - Spiritual leadership, devotions
-6. **Parliamentarian** - Enforces bylaws and procedures
-7. **Historian** - Documents club activities, maintains archives
-8. **Public Relations Chair** - External communications, media
-9. **Social Chair** - Plans social events and bonding activities
-10. **Tour Manager** - Coordinates travel logistics
+### Attendance Policy (CRITICAL)
+- Attendance is MANDATORY for ALL rehearsals and performances
+- Check-in via QR code at each session
+- Must notify the Secretary (Attendance Chair) IN ADVANCE if unable to attend
+- Contact via GleeWorld Messages or email
+
+**Consequences:**
+- First unexcused absence: Warning
+- Second unexcused absence: Meeting with Director
+- Three unexcused absences: Academic probation
+- Additional absences: Removal from performances and potential dismissal
+
+**Excused Absences (require documentation):**
+- Medical emergencies (doctor's note required)
+- Family emergencies
+- Academic conflicts (class schedule form must be on file)
+- Prior approval from Dr. Johnson
+
+**Attendance weighs 50% of the Participation Grade (which is 15% of overall course grade)**
+
+### Executive Board Positions & Duties
+
+1. **President**
+   - Chief executive officer of the organization
+   - Represents Glee Club at official functions
+   - Presides over all meetings
+   - Liaison between members and Director
+   - Coordinates with administration
+
+2. **Vice President**
+   - Assists President in all duties
+   - Assumes presidential duties in absence
+   - Manages special projects and initiatives
+   - Coordinates committee work
+
+3. **Secretary**
+   - Records and distributes meeting minutes
+   - MANAGES ATTENDANCE (Attendance Chair)
+   - Tracks student class schedules and conflicts
+   - Handles official correspondence
+   - Maintains membership roster
+
+4. **Treasurer**
+   - Manages all financial matters
+   - Collects dues and payments
+   - Maintains budget records
+   - Processes reimbursements
+   - Coordinates payment plans
+
+5. **Chaplain**
+   - Provides spiritual leadership
+   - Leads devotions before rehearsals/performances
+   - Organizes prayer circle
+   - Supports member wellness
+
+6. **Parliamentarian**
+   - Enforces bylaws and constitution
+   - Ensures proper meeting procedures
+   - Interprets rules and regulations
+   - Mediates disputes
+
+7. **Historian**
+   - Documents all club activities
+   - Maintains photo/video archives
+   - Creates scrapbooks and memory books
+   - Preserves organizational history
+
+8. **Public Relations Chair**
+   - Manages external communications
+   - Social media presence
+   - Press releases and media contact
+   - Promotes events and concerts
+
+9. **Social Chair**
+   - Plans bonding activities
+   - Organizes social events
+   - Coordinates member celebrations
+   - Builds community within the club
+
+10. **Tour Manager**
+    - Coordinates all travel logistics
+    - Room assignments and rooming lists
+    - Transportation arrangements
+    - Itinerary management
+    - Emergency contact coordination
 
 ### Dress Code & Performance Attire
-- Official Glee Club dress (stored in wardrobe)
-- Appropriate undergarments (nude/skin-tone)
-- Nude hosiery
-- Closed-toe black heels (2-3 inches)
-- Hair styled neatly away from face
-- Minimal jewelry (small studs only)
-- No visible tattoos during performances
 
-### Tours
-- Domestic and international tours annually
-- Tour participation requires:
-  - Good academic standing (2.5+ GPA)
-  - All dues paid in full
-  - Clean attendance record
-  - Signed participation agreement
-- Tour absence requests must be submitted in advance via the Tour Absence Form
+**Official Performance Attire:**
+- Official Glee Club concert dress (black or designated color)
+- Dresses stored in wardrobe room, checked out via Wardrobe Checkout form
+- MUST be returned cleaned after each use
+
+**Undergarments:**
+- Nude/skin-tone undergarments ONLY
+- Strapless bra recommended
+- No visible bra straps or lines
+
+**Hosiery:**
+- Nude/skin-tone hosiery required
+- No runs or tears
+- Bring backup pair
+
+**Shoes:**
+- Closed-toe black heels
+- 2-3 inches in height
+- Comfortable for standing
+- No platforms or chunky heels
+
+**Hair & Makeup:**
+- Hair styled neatly AWAY from face
+- Hair must not obstruct view during performances
+- Natural, professional makeup
+- No bold colors or excessive makeup
+
+**Jewelry:**
+- Small stud earrings ONLY
+- No dangling earrings
+- No necklaces, bracelets, or rings (except wedding bands)
+- Remove all piercings if possible
+
+**Other:**
+- No visible tattoos during performances (use concealer if needed)
+- Nails should be clean and conservative
+- No strong perfumes or fragrances
+- Arrive FULLY dressed 30 minutes before call time
+
+### Tours & Travel
+
+**Tour Eligibility Requirements:**
+- Good academic standing (minimum 2.5 GPA)
+- ALL dues paid in full
+- Clean attendance record (no unexcused absences)
+- Signed participation agreement
+- Completed emergency contact forms
+- Valid photo ID
+
+**Tour Types:**
+- Domestic tours (within United States)
+- International tours (varies by year)
+- Day trips for local performances
+- Spring Break tour (annual tradition)
+- Summer tour opportunities
+
+**Tour Absence Requests:**
+- Submit via Tour Absence Request Form on GleeWorld
+- Must be submitted at least 2 weeks in advance
+- Approval at Director's discretion
+- Emergencies handled case-by-case
+
+**Packing & Preparation:**
+- Concert attire (multiple sets if needed)
+- Comfortable travel clothes
+- Music folder and materials
+- Medications and personal items
+- Check tour packing list on GleeWorld
 
 ### Dues & Payments
-- Membership dues cover music, uniforms, and operational costs
-- Payment plans available through the Treasurer
-- All dues must be paid before tour participation
+
+**Membership Dues:**
+- Cover music purchases, uniform maintenance, operational costs
+- Amount set each semester by Executive Board
+- Due dates announced at beginning of semester
+
+**Payment Options:**
+- Full payment upfront
+- Payment plan available through Treasurer
+- Contact Treasurer for hardship accommodations
+
+**Payment Methods:**
+- Online payment via GleeWorld
+- Check (payable to Spelman College Glee Club)
+- Cash (with receipt)
+
+**Late Fees:**
 - Late fees may apply for missed deadlines
+- Delinquent dues affect tour eligibility
+- All dues must be current for performances
 
 ### Forms Available on GleeWorld
-1. **Class Schedule Form** - Submit weekly class schedule to check conflicts
-2. **Tour Absence Request** - Request excusal from tour activities
-3. **Exit Interview** - Complete before leaving the organization
-4. **Wardrobe Checkout** - Check out performance attire
-5. **Concert Ticket Request** - Request tickets for family/guests
-6. **Booking Request** - External groups can request performances
 
-### Key Dates & Academic Calendar
-- Rehearsals: MWF during academic semesters
-- Major concerts:
-  - Fall: Founder's Day Concert
-  - Winter: Spelman-Morehouse Christmas Carol (December) - The signature annual tradition, one of the largest collegiate choral concerts in the nation
-  - Spring: Annual Concert
-  - Commencement Concert
-- Tours typically during spring break or summer
+1. **Class Schedule Form** (Required)
+   - Submit your weekly class schedule
+   - System checks for conflicts with rehearsal times
+   - Must be updated each semester
+   - Located on Course Landing Page
 
-### Navigation Guide
-- Dashboard: Main hub, overview of activities
-- Music Library: Sheet music, PDFs, audio companions
-- Calendar: Events, rehearsals, deadlines
-- Glee Academy: Courses, assignments, grades
-- Messages: Group messaging, polls
-- Glee Lounge: Social hub, radio
-- Handbook: Official policies
-- Wardrobe: Costume management
-- Profile: Personal settings
-- Admin Dashboard: For administrators only
+2. **Tour Absence Request**
+   - Request excusal from tour activities
+   - Submit at least 2 weeks in advance
+   - Include reason and documentation
+
+3. **Exit Interview Form**
+   - Complete when leaving the organization
+   - Provide feedback and return materials
+   - Required for good standing
+
+4. **Wardrobe Checkout Form**
+   - Check out concert attire
+   - Track dress assignments
+   - Record condition and return dates
+
+5. **Concert Ticket Request**
+   - Request tickets for family and guests
+   - Limited availability per member
+   - Submit before deadline
+
+6. **Booking Request** (External)
+   - For organizations requesting Glee Club performances
+   - Include event details, date, budget
+   - Reviewed by Director and management
+
+7. **Medical/Dietary Form**
+   - Report allergies, medications, dietary needs
+   - Required for tour participation
+   - Updated annually
+
+### Major Events & Concerts (Academic Year)
+
+**Fall Semester:**
+- Founder's Day Concert (October)
+- Fall Preview performances
+- Campus recruitment events
+
+**Winter:**
+- **Spelman-Morehouse Christmas Carol** (December)
+  - THE signature annual tradition
+  - One of the largest collegiate choral concerts in the nation
+  - Thousands attend each year at MLK International Chapel
+  - Collaboration with Morehouse College Glee Club
+  - Multiple performances over several days
+
+**Spring Semester:**
+- Annual Spring Concert
+- Spelman Honors Convocation
+- Campus events and special performances
+
+**Commencement:**
+- Commencement Concert
+- Baccalaureate Service
+- Graduation ceremonies
+
+**Tours:**
+- Spring Break Tour (varies by year)
+- Summer performance opportunities
+- International tours (special years)
+
+### GleeWorld Navigation Guide
+
+**Main Pages:**
+- **Home (/)** - Landing page, hero carousel, quick access
+- **Dashboard (/dashboard)** - Member hub, overview, quick links
+- **Calendar (/calendar)** - Events, rehearsals, deadlines, RSVP
+- **Music Library (/music-library)** - Sheet music PDFs, audio companions
+
+**Glee Academy:**
+- **/glee-academy** - Course overview
+- **/mus-070** - Glee Club course (MUS-070)
+- **/mus-240** - Survey of African American Music
+- **/mus-210** - Choral Conducting
+- Student dashboards for assignments, grades, journals
+
+**Communication:**
+- **Messages (/messages)** - Group messaging, polls
+- **Glee Lounge (/glee-lounge)** - Social hub, radio streaming
+
+**Resources:**
+- **Handbook (/handbook)** - Official policies, bylaws
+- **Wardrobe (/wardrobe)** - Costume management, checkout
+- **Member Studio** - Sight reading practice
+
+**Personal:**
+- **Profile (/profile)** - Personal settings, photo, info
+- **Settings (/settings)** - Account preferences
+
+**Admin (Restricted):**
+- **Admin Dashboard (/admin/dashboard)** - Administrative tools
+- Accessible only to admins and executive board
 
 ### Sight Reading Resources
-- SightReadingFactory.com integration
+
+- **SightReadingFactory.com** integration
 - Levels 1-8 available for practice
-- Required for course assessments
+- Required for course assessments and auditions
 - Accessible via Member Sight Reading Studio
+- Practice regularly to improve skills
+- Assessments track progress
+
+### Radio & Glee Lounge
+
+**Glee World Radio:**
+- 24/7 streaming audio
+- Curated playlists featuring Glee Club performances
+- Historical recordings and new releases
+
+**Playlists:**
+- Gospel Classics
+- Classical & Sacred
+- Jazz Standards
+- Christmas Favorites
+- Contemporary Choral
+- Alumni Recordings
+
+**Lounge Features:**
+- Social gathering space
+- Live streaming capability
+- Member connection and bonding
+
+### Auditions & Joining
+
+**Audition Process:**
+- Held at beginning of each semester
+- Submit application on GleeWorld
+- Prepare one piece (your choice)
+- Sight-reading assessment
+- Vocal range evaluation
+- Interview with Director
+
+**Requirements:**
+- Full-time Spelman College student
+- Commitment to attend all rehearsals
+- Willingness to travel for performances
+- Positive attitude and team spirit
+
+**Voice Parts:**
+- Soprano 1 (highest)
+- Soprano 2
+- Alto 1
+- Alto 2 (lowest)
+
+### Contact Information
+
+**Primary Contact:**
+- Email: admin@gleeworld.org
+- Website: gleeworld.org
+
+**Director:**
+- Dr. Kevin P. Johnson
+- Email: kjohns10@spelman.edu
+- Office: Fine Arts 105
+- Hours: MWF 3-5 PM
+
+**For Booking:**
+- Use Booking Request form on GleeWorld
+- Or email admin@gleeworld.org
+
+**Social Media:**
+- Follow Spelman College Glee Club on official channels
+- Stay updated on performances and news
+
+### Alumnae Information
+
+**Alumnae Portal:**
+- Stay connected after graduation
+- Update contact information
+- View newsletters and updates
+- Memory wall and stories
+- Mentorship opportunities
+- Reunion RSVP
+
+**Alumnae Activities:**
+- Annual reunions
+- Mentorship program
+- Legacy giving
+- Performance invitations
+
+### Important Policies
+
+**Academic Priority:**
+- Academics come first
+- Communicate conflicts early
+- Submit class schedules promptly
+- GPA requirements enforced
+
+**Conduct Expectations:**
+- Represent Spelman with excellence
+- Professional behavior at all times
+- Respect for fellow members
+- Follow Director's instructions
+
+**Communication:**
+- Check GleeWorld regularly
+- Respond to messages promptly
+- Use official channels for official business
+- Keep contact information updated
+
+### Sight Reading Resources
 
 ### Radio & Lounge
 - Glee World Radio: 24/7 streaming
