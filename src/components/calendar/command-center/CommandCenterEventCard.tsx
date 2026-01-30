@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock, Trash2, ClipboardList } from "lucide-react";
+import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock, Trash2, ClipboardList, Edit, Eye } from "lucide-react";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
 import { EventHoverCard } from "../EventHoverCard";
@@ -7,6 +8,7 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import {
@@ -19,9 +21,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { EditEventDialog } from "../EditEventDialog";
+import { EventDetailDialog } from "../EventDetailDialog";
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   music: Music,
@@ -51,11 +55,54 @@ export const CommandCenterEventCard = ({
   onClick,
   onEventDeleted,
 }: CommandCenterEventCardProps) => {
+  const { user } = useAuth();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [userPermissions, setUserPermissions] = useState<{isAdmin: boolean, isSuperAdmin: boolean, isExecBoard: boolean} | null>(null);
   
   const Icon = CATEGORY_ICONS[categoryIcon] || Music;
   const startTime = format(new Date(event.start_date), 'h:mm a');
+
+  // Fetch user permissions on mount
+  useEffect(() => {
+    const fetchUserPermissions = async () => {
+      if (!user) {
+        setUserPermissions(null);
+        return;
+      }
+      try {
+        const { data: userProfile } = await supabase
+          .from('gw_profiles')
+          .select('is_admin, is_super_admin, is_exec_board, role')
+          .eq('user_id', user.id)
+          .single();
+
+        if (userProfile) {
+          setUserPermissions({
+            isAdmin: userProfile.is_admin || userProfile.role === 'admin',
+            isSuperAdmin: userProfile.is_super_admin || userProfile.role === 'super-admin',
+            isExecBoard: userProfile.is_exec_board || false
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user permissions:', error);
+        setUserPermissions(null);
+      }
+    };
+    fetchUserPermissions();
+  }, [user]);
+
+  // Check if user can edit/delete this event
+  const canEdit = userPermissions && (
+    userPermissions.isSuperAdmin || 
+    userPermissions.isAdmin || 
+    userPermissions.isExecBoard ||
+    user?.id === event.created_by
+  );
+
+  const canDelete = canEdit;
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -78,13 +125,21 @@ export const CommandCenterEventCard = ({
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onClick) {
+      onClick();
+    } else if (canEdit) {
+      setShowEditDialog(true);
+    } else {
+      setShowViewDialog(true);
+    }
+  };
+
   const cardContent = compact ? (
     // Compact view for monthly grid
     <div
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
-      }}
+      onClick={handleCardClick}
       className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:opacity-90 transition-all text-white shadow-sm"
       style={{ backgroundColor: categoryColor }}
     >
@@ -95,7 +150,7 @@ export const CommandCenterEventCard = ({
   ) : (
     // Full view for agenda/run sheet
     <div
-      onClick={onClick}
+      onClick={handleCardClick}
       className="group flex flex-col rounded-lg border-l-4 bg-white shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
       style={{ borderLeftColor: categoryColor }}
     >
@@ -146,22 +201,57 @@ export const CommandCenterEventCard = ({
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div>
-            <EventHoverCard event={event}>
+            <EventHoverCard event={event} canEdit={canEdit}>
               {cardContent}
             </EventHoverCard>
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-48">
-          <ContextMenuItem
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-red-600 focus:text-red-600 focus:bg-red-50"
+          {/* Event title header */}
+          <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground border-b border-border mb-1">
+            <div className="truncate">{event.title}</div>
+            <div className="text-xs font-normal">
+              {format(new Date(event.start_date), 'MMM d, yyyy')}
+            </div>
+          </div>
+          
+          {/* View Details - always available */}
+          <ContextMenuItem 
+            onClick={() => setShowViewDialog(true)}
+            className="gap-2"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete Event
+            <Eye className="h-4 w-4" />
+            View Details
           </ContextMenuItem>
+          
+          {/* Edit Event - only if user has permission */}
+          {canEdit && (
+            <ContextMenuItem 
+              onClick={() => setShowEditDialog(true)}
+              className="gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              Edit Event
+            </ContextMenuItem>
+          )}
+          
+          {/* Delete Event - only if user has permission */}
+          {canDelete && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem
+                onClick={() => setShowDeleteDialog(true)}
+                className="gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Event
+              </ContextMenuItem>
+            </>
+          )}
         </ContextMenuContent>
       </ContextMenu>
 
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -182,6 +272,25 @@ export const CommandCenterEventCard = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Event Dialog */}
+      <EditEventDialog
+        event={showEditDialog ? event : null}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onEventUpdated={() => {
+          setShowEditDialog(false);
+          onEventDeleted?.();
+        }}
+      />
+
+      {/* View Event Details Dialog */}
+      <EventDetailDialog
+        event={showViewDialog ? event : null}
+        open={showViewDialog}
+        onOpenChange={setShowViewDialog}
+        onEventUpdated={onEventDeleted}
+      />
     </>
   );
 };
