@@ -457,7 +457,7 @@ export const PublicAssistant = () => {
                     "rounded-full flex-shrink-0 transition-all",
                     isListening 
                       ? "bg-red-500 hover:bg-red-600 text-white border-red-500 animate-pulse" 
-                      : "hover:bg-neutral-100"
+                      : "text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:text-neutral-900"
                   )}
                   aria-label={isListening ? "Stop listening" : "Start voice input"}
                 >
