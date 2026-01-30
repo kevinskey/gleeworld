@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import gleeAssistantAvatar from '@/assets/glee-assistant-avatar.png';
+import { requestMicrophonePermission } from '@/utils/microphonePermission';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -372,18 +373,23 @@ export const GleeAssistant = () => {
         description: "Wake word detection turned off.",
       });
     } else {
-      // Request microphone permission
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const perm = await requestMicrophonePermission();
+        if (!perm.ok) {
+          throw perm;
+        }
         setIsWakeWordActive(true);
         toast({
           title: "Hey Glee Enabled",
           description: "Say \"Hey Glee\" to activate the assistant.",
         });
-      } catch (e) {
+      } catch (e: any) {
+        const denied = e?.reason === 'denied' || e?.name === 'NotAllowedError' || e?.name === 'SecurityError';
         toast({
           title: "Microphone Required",
-          description: "Please allow microphone access to use wake word.",
+          description: denied
+            ? "Please allow microphone access in your browser settings, then try again."
+            : "Could not access the microphone. Please try again.",
           variant: "destructive",
         });
       }
@@ -408,14 +414,18 @@ export const GleeAssistant = () => {
       }
       setIsListening(false);
     } else {
-      // Request microphone permission first
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch (e) {
-        console.error('Microphone permission denied:', e);
+        const perm = await requestMicrophonePermission();
+        if (!perm.ok) {
+          throw perm;
+        }
+      } catch (e: any) {
+        console.error('Microphone permission failed:', e);
         toast({
           title: "Microphone Access Required",
-          description: "Please allow microphone access to use voice input.",
+          description: e?.reason === 'not-supported'
+            ? 'Microphone access is not supported in this browser.'
+            : 'Please allow microphone access to use voice input.',
           variant: "destructive",
         });
         return;
@@ -453,7 +463,7 @@ export const GleeAssistant = () => {
         } else {
           toast({
             title: "Voice Error",
-            description: "Could not start voice input. Please try again.",
+            description: `Could not start voice input (${e?.name || 'error'}). Please try again.`,
             variant: "destructive",
           });
         }

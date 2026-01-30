@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import gleeAssistantAvatar from "@/assets/glee-assistant-avatar.png";
+import { requestMicrophonePermission } from "@/utils/microphonePermission";
 
 // Type declarations for Web Speech API
 interface SpeechRecognitionEvent extends Event {
@@ -89,6 +90,18 @@ export const PublicAssistant = () => {
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current) return;
+
+    // Trigger mic permission prompt (and immediately release the stream)
+    // so SpeechRecognition can start reliably across browsers.
+    requestMicrophonePermission().then((perm) => {
+      // Use an `in` guard to keep TS happy across project settings.
+      if (!perm.ok && 'reason' in perm) {
+        // Denied is expected if the user hasn't granted permission yet; other cases are useful for debugging.
+        if (perm.reason !== 'denied') {
+          console.warn('[PublicAssistant] mic permission check failed:', perm);
+        }
+      }
+    });
 
     const recognition = recognitionRef.current;
 
