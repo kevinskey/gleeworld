@@ -1,16 +1,27 @@
 // Mobile Audio Context Unlock Utility
-// iOS/Safari require user interaction to unlock AudioContext
+// iOS/Safari and PWAs require user interaction to unlock AudioContext
 
 let globalAudioContext: AudioContext | null = null;
 let isUnlocked = false;
+let setupComplete = false;
 
-// Create AudioContext with iOS compatibility
+// Detect if running as a PWA (standalone mode)
+const isPWA = (): boolean => {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         (window.navigator as any).standalone === true ||
+         document.referrer.includes('android-app://');
+};
+
+// Create AudioContext with iOS/PWA compatibility
 const createAudioContext = (): AudioContext => {
   const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
   if (!AudioContextClass) {
     throw new Error('Web Audio API not supported');
   }
-  return new AudioContextClass();
+  
+  // For PWA on iOS, use specific sample rate that works better
+  const options = isPWA() ? { sampleRate: 44100 } : undefined;
+  return new AudioContextClass(options);
 };
 
 export const getSharedAudioContext = (): AudioContext => {
@@ -52,6 +63,32 @@ const playUnlockTone = (ctx: AudioContext): void => {
   }
 };
 
+// PWA-specific: Create and play a silent HTML5 audio element
+// This helps unlock audio on iOS PWAs where AudioContext alone may not work
+const playHtml5SilentAudio = (): void => {
+  try {
+    // Create a data URL for a tiny silent MP3
+    const silentMp3 = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+xDEAAPAAADSAAAAAIAAANIAAAARMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EMQpg8AAAaQAAAAAAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
+    
+    const audio = new Audio(silentMp3);
+    audio.volume = 0.001;
+    audio.muted = false;
+    
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.then(() => {
+        audio.pause();
+        audio.remove?.();
+        console.log('[AudioUnlock] HTML5 silent audio played successfully');
+      }).catch(() => {
+        // Ignore - just an additional unlock attempt
+      });
+    }
+  } catch (e) {
+    // Ignore
+  }
+};
+
 export const unlockAudioContext = async (): Promise<AudioContext> => {
   const ctx = getSharedAudioContext();
   
@@ -63,6 +100,11 @@ export const unlockAudioContext = async (): Promise<AudioContext> => {
   // Play silent buffer + tone immediately (synchronous, within user gesture)
   playSilentBuffer(ctx);
   playUnlockTone(ctx);
+  
+  // For PWAs, also try HTML5 audio unlock
+  if (isPWA()) {
+    playHtml5SilentAudio();
+  }
   
   // Resume the context
   if (ctx.state !== 'running') {
@@ -82,7 +124,8 @@ export const getAudioContextState = (): string => {
 // Force unlock - call this directly from a touch/click handler
 // Must be synchronous within user gesture for iOS
 export const forceUnlockAudio = (): boolean => {
-  console.log('[AudioUnlock] forceUnlockAudio called. Current state:', {
+  const isPwaMode = isPWA();
+  console.log('[AudioUnlock] forceUnlockAudio called. PWA:', isPwaMode, 'Current state:', {
     hasContext: !!globalAudioContext,
     state: globalAudioContext?.state || 'not-created',
     isUnlocked,
@@ -102,6 +145,11 @@ export const forceUnlockAudio = (): boolean => {
     // This must happen BEFORE any async operations
     playSilentBuffer(ctx);
     playUnlockTone(ctx);
+    
+    // For PWAs, also try HTML5 audio unlock - this is critical for iOS PWAs
+    if (isPwaMode) {
+      playHtml5SilentAudio();
+    }
     
     // Also try creating and playing an oscillator directly (another iOS unlock method)
     try {
@@ -141,22 +189,30 @@ export const forceUnlockAudio = (): boolean => {
   }
 };
 
-// Pre-unlock on any user interaction (for iOS)
-export const setupMobileAudioUnlock = () => {
+// Pre-unlock on any user interaction (for iOS and PWAs)
+export const setupMobileAudioUnlock = (): (() => void) => {
+  // Prevent duplicate setup
+  if (setupComplete) {
+    return () => {};
+  }
+  
   const unlockOnInteraction = () => {
     if (!isUnlocked) {
-      console.log('[AudioUnlock] User interaction detected, attempting unlock');
+      console.log('[AudioUnlock] User interaction detected, attempting unlock. PWA:', isPWA());
       forceUnlockAudio();
     }
   };
   
-  // Listen for various touch/click events (non-passive, fire only once per event type)
+  // Listen for various touch/click events
+  // Use capture phase to catch events early
   const events: Array<keyof DocumentEventMap> = ['touchstart', 'touchend', 'click', 'pointerdown', 'keydown'];
+  
   events.forEach((event) => {
     try {
+      // Don't use { once: true } - we want to retry on each interaction until unlocked
       document.addEventListener(event, unlockOnInteraction, {
-        once: true,
-        passive: false,
+        capture: true,
+        passive: true,
       });
     } catch (e) {
       // Fallback for older browsers without options support
@@ -164,9 +220,29 @@ export const setupMobileAudioUnlock = () => {
     }
   });
   
+  // Also listen on window for PWA edge cases
+  if (isPWA()) {
+    window.addEventListener('touchstart', unlockOnInteraction, { capture: true, passive: true });
+    window.addEventListener('click', unlockOnInteraction, { capture: true, passive: true });
+  }
+  
+  setupComplete = true;
+  console.log('[AudioUnlock] Mobile audio unlock setup complete. PWA mode:', isPWA());
+  
   return () => {
     events.forEach((event) => {
       document.removeEventListener(event, unlockOnInteraction as EventListener);
     });
+    if (isPWA()) {
+      window.removeEventListener('touchstart', unlockOnInteraction as EventListener);
+      window.removeEventListener('click', unlockOnInteraction as EventListener);
+    }
+    setupComplete = false;
   };
 };
+
+// Auto-setup when module loads (critical for PWAs)
+if (typeof window !== 'undefined') {
+  // Setup immediately when the module loads
+  setupMobileAudioUnlock();
+}
