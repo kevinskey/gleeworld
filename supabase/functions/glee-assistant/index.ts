@@ -24,15 +24,23 @@ Director: Dr. Kevin P. Johnson ("Doc Johnson")
 The Glee Club performs nationally and internationally, representing Spelman College.
 
 ### Courses & Academy
-**MUS-240 (Glee Club)**
-- Primary ensemble course for active members
-- Rehearsals: MWF 5:00-6:15 PM
+**MUS-070 (Glee Club / Spelman College Glee Club)**
+- The primary ensemble course for active Glee Club members
+- Rehearsals: MWF 5:00-6:15 PM in the Fine Arts building
 - Required for all performing members
 - Students must submit class schedules to check for conflicts
+- This IS the Glee Club course
 
-**MUS-070**
-- Introductory course for new members
-- Covers fundamentals of choral singing
+**MUS-240 (Survey of African American Music)**
+- Academic music history course taught by Dr. Johnson
+- NOT the Glee Club rehearsal course
+- Meets MWF during class hours (separate from rehearsals)
+- Covers the history and development of African American music traditions
+- Open to all students, not just Glee Club members
+
+**MUS-210 (Choral Conducting)**
+- Conducting techniques course
+- Separate from Glee Club rehearsals
 
 ### Attendance Policy
 - Attendance is MANDATORY for all rehearsals and performances
