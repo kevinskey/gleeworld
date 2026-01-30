@@ -88,20 +88,29 @@ export const PublicAssistant = () => {
     }
   }, []);
 
-  const startListening = useCallback(() => {
+  const startListening = useCallback(async () => {
     if (!recognitionRef.current) return;
 
-    // Trigger mic permission prompt (and immediately release the stream)
-    // so SpeechRecognition can start reliably across browsers.
-    requestMicrophonePermission().then((perm) => {
-      // Use an `in` guard to keep TS happy across project settings.
-      if (!perm.ok && 'reason' in perm) {
-        // Denied is expected if the user hasn't granted permission yet; other cases are useful for debugging.
-        if (perm.reason !== 'denied') {
-          console.warn('[PublicAssistant] mic permission check failed:', perm);
-        }
+    // Request mic permission FIRST and wait for it before starting recognition
+    const perm = await requestMicrophonePermission();
+    if (!perm.ok) {
+      if ('reason' in perm && perm.reason === 'denied') {
+        toast({
+          title: "Microphone Access Denied",
+          description: "Please allow microphone access in your browser settings to use voice input.",
+          variant: "destructive"
+        });
+      } else if ('reason' in perm && perm.reason === 'not-supported') {
+        toast({
+          title: "Not Supported",
+          description: "Microphone access is not supported in this browser.",
+          variant: "destructive"
+        });
+      } else {
+        console.warn('[PublicAssistant] mic permission check failed:', perm);
       }
-    });
+      return;
+    }
 
     const recognition = recognitionRef.current;
 
