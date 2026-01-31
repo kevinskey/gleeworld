@@ -41,7 +41,7 @@ export const useMus240Enrollment = (semesterOverride?: string) => {
       setLoading(true);
       setError(null);
 
-      // Check gw_course_enrollments - the unified source of truth
+      // First check: direct user_id match in gw_course_enrollments
       const { data: enrollmentData, error: enrollError } = await supabase
         .from('gw_course_enrollments')
         .select('id, user_id, semester, enrollment_status, enrolled_at, grade, created_at, updated_at')
@@ -71,7 +71,85 @@ export const useMus240Enrollment = (semesterOverride?: string) => {
         return;
       }
 
-      // If not enrolled in current semester, check if enrolled in any semester
+      // Second check: match via student_profile_id using email
+      // This handles CSV-imported students who haven't been linked by user_id yet
+      if (user.email) {
+        // Find student profile by email
+        const { data: studentProfile, error: profileError } = await supabase
+          .from('gw_student_profiles')
+          .select('id')
+          .eq('email', user.email)
+          .maybeSingle();
+
+        if (!profileError && studentProfile) {
+          // Check if this student profile is enrolled
+          const { data: profileEnrollment, error: profEnrollError } = await supabase
+            .from('gw_course_enrollments')
+            .select('id, student_profile_id, semester, enrollment_status, enrolled_at, grade, created_at, updated_at')
+            .eq('course_id', MUS240_COURSE_ID)
+            .eq('student_profile_id', studentProfile.id)
+            .eq('semester', semester)
+            .eq('enrollment_status', 'enrolled')
+            .maybeSingle();
+
+          if (!profEnrollError && profileEnrollment) {
+            // Link the user_id to this enrollment for future lookups
+            await supabase
+              .from('gw_course_enrollments')
+              .update({ user_id: user.id })
+              .eq('id', profileEnrollment.id);
+
+            setEnrollment({
+              id: profileEnrollment.id,
+              student_id: user.id,
+              semester: profileEnrollment.semester || semester,
+              enrollment_status: profileEnrollment.enrollment_status || 'enrolled',
+              enrolled_at: profileEnrollment.enrolled_at,
+              final_grade: profileEnrollment.grade,
+              created_at: profileEnrollment.created_at,
+              updated_at: profileEnrollment.updated_at,
+            });
+            setLoading(false);
+            return;
+          }
+
+          // Check any semester for this student profile
+          const { data: anyProfileEnrollment, error: anyProfError } = await supabase
+            .from('gw_course_enrollments')
+            .select('id, student_profile_id, semester, enrollment_status, enrolled_at, grade, created_at, updated_at')
+            .eq('course_id', MUS240_COURSE_ID)
+            .eq('student_profile_id', studentProfile.id)
+            .eq('enrollment_status', 'enrolled')
+            .order('enrolled_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!anyProfError && anyProfileEnrollment) {
+            // Link user_id and auto-switch semester
+            await supabase
+              .from('gw_course_enrollments')
+              .update({ user_id: user.id })
+              .eq('id', anyProfileEnrollment.id);
+
+            console.log(`Auto-switching from ${semester} to enrolled semester: ${anyProfileEnrollment.semester}`);
+            setCurrentSemester(anyProfileEnrollment.semester);
+            setEnrollment({
+              id: anyProfileEnrollment.id,
+              student_id: user.id,
+              semester: anyProfileEnrollment.semester || semester,
+              enrollment_status: anyProfileEnrollment.enrollment_status || 'enrolled',
+              enrolled_at: anyProfileEnrollment.enrolled_at,
+              final_grade: anyProfileEnrollment.grade,
+              created_at: anyProfileEnrollment.created_at,
+              updated_at: anyProfileEnrollment.updated_at,
+            });
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      // If not enrolled in current semester, check if enrolled in any semester by user_id
       const { data: anyEnrollment, error: anyError } = await supabase
         .from('gw_course_enrollments')
         .select('id, user_id, semester, enrollment_status, enrolled_at, grade, created_at, updated_at')
