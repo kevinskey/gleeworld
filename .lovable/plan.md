@@ -1,129 +1,136 @@
 
+# TikTok Video Support for MUS 240
 
-# Performance Grades Entry Interface for MUS 070
-
-## Current Problem
-You've just defined a tiered performance weighting system where the 30% "Performances" category is broken down into specific events:
-- Spring Concert: 10%
-- Graduation/Commencement: 5%
-- Founders Day: 4%
-- TBD Performance 1: 5.5%
-- TBD Performance 2: 5.5%
-
-However, **there is no interface for the secretary or instructor to enter grades for these individual performances**. The existing `Mus070GradeSpreadsheet` only allows editing a single aggregate "Performances" percentage (50% weight under an older schema), not the individual events.
+## Overview
+Enable TikTok video links to be displayed with embedded playback and thumbnails in the MUS 240 module videos modal, matching the existing YouTube experience.
 
 ---
 
-## Proposed Solution
+## What Already Works
+- TikTok URLs can be added to `mus240_module_resources` with `resource_type: 'video'`
+- Clicking a TikTok video in `ModuleVideosModal` opens it in a new browser tab
+- The database schema (`url` field) supports any video URL
 
-Build a **Performance Grade Entry** interface that:
-1. Lists all enrolled students
-2. Provides columns for each performance event (Spring Concert, Founders Day, etc.)
-3. Allows the secretary/instructor to mark:
-   - **Participated** (full credit)
-   - **Excused** (no penalty)
-   - **Absent** (zero credit for that performance weight)
-4. Persists grades to the database (`gw_grades` or a new `gw_performance_grades` table)
-5. Integrates with the student grade view so deductions calculate automatically
+## What Needs Improvement
+1. **No thumbnail preview** - TikTok videos show generic Play icon instead of video thumbnail
+2. **No in-app playback** - Videos open in new tab instead of playing inline
+3. **No visual distinction** - Users can't tell TikTok vs YouTube at a glance
 
 ---
 
-## Implementation Approach
+## Implementation Plan
 
-### 1. Database Schema
-Create a new table `gw_performance_grades` to track individual performance participation:
+### 1. Create TikTok Utility Functions
+**New file:** `src/utils/tiktokUtils.ts`
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | UUID | Primary key |
-| student_profile_id | UUID | FK to gw_profiles |
-| course_id | UUID | FK to gw_courses |
-| performance_name | VARCHAR | e.g., "Spring Concert" |
-| performance_date | DATE | Event date |
-| status | VARCHAR | 'participated', 'excused', 'absent' |
-| notes | TEXT | Optional notes |
-| graded_by | UUID | FK to auth.users |
-| graded_at | TIMESTAMP | When marked |
+```text
+┌─────────────────────────────────────────────┐
+│  extractTikTokVideoId(url)                  │
+│  - Parse @username/video/VIDEO_ID pattern   │
+│  - Handle vm.tiktok.com short URLs          │
+│  - Return { videoId, username } or null     │
+├─────────────────────────────────────────────┤
+│  isTikTokUrl(url)                           │
+│  - Returns boolean if URL matches TikTok    │
+├─────────────────────────────────────────────┤
+│  getTikTokEmbedHtml(url)                    │
+│  - Fetch oEmbed data from TikTok API        │
+│  - Return embed HTML string                 │
+└─────────────────────────────────────────────┘
+```
 
-### 2. New Component: `PerformanceGradeEntry`
-Located at `src/components/mus070/instructor/PerformanceGradeEntry.tsx`
+### 2. Create TikTok Embed Component
+**New file:** `src/components/mus240/TikTokPlayer.tsx`
 
 Features:
-- Grid view with student rows and performance columns
-- Status picker (Participated / Excused / Absent) for each cell
-- Batch operations ("Mark all as Participated")
-- Auto-save on change
-- Permission check (admin, super_admin, or secretary only)
+- Accept TikTok video URL as prop
+- Load TikTok embed script dynamically
+- Render the embedded video with proper sizing
+- Handle loading and error states
+- Responsive design for mobile
 
-### 3. Integration Points
+### 3. Update ModuleVideosModal
+**File:** `src/components/academy/ModuleVideosModal.tsx`
 
-**A. Add to Grades Admin Tabs**
-Update `Mus070GradesAdmin.tsx` and `CourseGradesAdmin.tsx` to include a "Performances" tab:
-```
-Tabs: [Grade Spreadsheet] [Attendance] [Performances] [Roster]
-```
+Changes:
+- Import new TikTok utilities
+- Detect TikTok URLs alongside YouTube
+- Show TikTok thumbnail (fetched via oEmbed) in video list
+- Add TikTok badge to distinguish from YouTube
+- Embed TikTok player when a TikTok video is selected
 
-**B. Update Student Grade Calculation**
-Modify `StudentGradeSpreadsheet.tsx` to:
-1. Fetch performance grades from the new table
-2. Calculate deductions based on absences
-3. Show actual status for each performance (vs. "Pending")
+### 4. Update DocumentViewer (for MUS 240 Resources)
+**File:** `src/components/mus240/DocumentViewer.tsx`
 
-**C. Update Instructor Console**
-The Course Instructor Console already uses `CourseGradesAdmin`, so the new tab will appear automatically.
+Changes:
+- Add TikTok URL detection (similar to existing `isYouTube`)
+- Create `renderTikTokViewer()` function
+- Support TikTok in the viewer type badge
 
 ---
 
 ## User Experience
 
-**Secretary/Instructor Workflow:**
-1. Navigate to MUS 070 → Instructor Console → Grades
-2. Click "Performances" tab
-3. See grid with all students and 5 performance columns
-4. Click a cell to toggle status (Participated → Excused → Absent)
-5. Changes save automatically
-6. After a performance, use "Batch Mark All Present" if most attended
+### For Instructors
+1. Add a TikTok link to a module's video resources (same as before)
+2. No special formatting needed - just paste the TikTok URL
+3. The system auto-detects and displays appropriately
 
-**Student View:**
-Students will see their performance status in the grade breakdown:
-- Spring Concert: ✓ Participated (0% deduction)
-- Founders Day: — Pending
-- TBD Performance 1: ✗ Absent (-5.5% deduction)
-
----
-
-## Technical Details
-
-### Files to Create
-- `supabase/migrations/xxx_create_performance_grades.sql` - Database table
-- `src/components/mus070/instructor/PerformanceGradeEntry.tsx` - Entry interface
-- `src/hooks/usePerformanceGrades.ts` - Data hook for CRUD operations
-
-### Files to Modify
-- `src/components/mus070/instructor/GradesAdmin.tsx` - Add Performances tab
-- `src/components/course/CourseGradesAdmin.tsx` - Add Performances tab for MUS 070
-- `src/components/grading/student/StudentGradeSpreadsheet.tsx` - Fetch and display performance grades
-- `supabase/functions/glee-assistant/index.ts` - Update AI knowledge base
-
-### RLS Policies Required
-- Students can SELECT their own records
-- Admin/super_admin/secretary can INSERT/UPDATE/DELETE all records
+### For Students
+1. Open module videos modal
+2. See TikTok videos with:
+   - TikTok thumbnail image
+   - "TikTok" badge to distinguish from YouTube
+   - Video title and duration (if available)
+3. Click to watch embedded TikTok video in-app
+4. Optional: Click external link to view on TikTok
 
 ---
 
-## Alternative: Simpler Approach
+## Technical Considerations
 
-If you prefer a quicker implementation:
-1. Use the existing `gw_course_assignments` table
-2. Create 5 assignments (one per performance) with matching point values
-3. Secretary grades each "assignment" as 100% or 0%
-4. Existing gradebook infrastructure handles the rest
+### TikTok oEmbed API
+- **Endpoint:** `https://www.tiktok.com/oembed?url={VIDEO_URL}`
+- **No API key required** for basic oEmbed
+- **CORS:** May require edge function proxy for thumbnail fetching
+- **Response:** JSON with `html`, `thumbnail_url`, `author_name`, `title`
 
-This approach requires no new tables but loses some clarity around "performance participation" vs. "assignment submission."
+### Edge Function Option (if CORS issues)
+If browser-side oEmbed calls fail due to CORS, create:
+`supabase/functions/tiktok-oembed/index.ts`
+- Proxies oEmbed requests server-side
+- Caches responses to reduce API calls
+
+### Embed Script Loading
+TikTok requires their embed.js script:
+```javascript
+<script src="https://www.tiktok.com/embed.js" async></script>
+```
+Must be loaded dynamically when TikTok content is present.
 
 ---
 
-## Recommended Next Step
+## Files to Create
+| File | Purpose |
+|------|---------|
+| `src/utils/tiktokUtils.ts` | URL parsing and oEmbed utilities |
+| `src/components/mus240/TikTokPlayer.tsx` | Embedded TikTok player component |
+| `supabase/functions/tiktok-oembed/index.ts` | (Optional) Server-side oEmbed proxy |
 
-Build the dedicated **PerformanceGradeEntry** component with proper database backing. This creates a clear, purpose-built interface that matches how performance grades are conceptually different from assignments or attendance.
+## Files to Modify
+| File | Changes |
+|------|---------|
+| `src/components/academy/ModuleVideosModal.tsx` | Add TikTok detection, thumbnails, embed |
+| `src/components/mus240/DocumentViewer.tsx` | Add TikTok viewer support |
+| `src/utils/youtubeUtils.ts` | (Optional) Rename to `videoUtils.ts` and consolidate |
 
+---
+
+## Testing Checklist
+- [ ] TikTok URLs correctly detected and extracted
+- [ ] Thumbnails load in video list
+- [ ] In-app TikTok playback works
+- [ ] Fallback to external link if embed fails
+- [ ] YouTube videos still work as before
+- [ ] Mobile responsive layout
+- [ ] Error handling for invalid TikTok URLs
