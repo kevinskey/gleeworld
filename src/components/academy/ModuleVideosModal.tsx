@@ -179,12 +179,18 @@ export const ModuleVideosModal: React.FC<ModuleVideosModalProps> = ({
                       )}
                     >
                       {/* Thumbnail */}
-                      <div className="relative w-32 h-20 flex-shrink-0 rounded-md overflow-hidden bg-muted">
+                       <div className="relative w-32 h-20 flex-shrink-0 rounded-md overflow-hidden bg-muted">
                         {thumbnail ? (
                           <img
                             src={thumbnail}
                             alt={video.title}
-                            className="w-full h-full object-cover"
+                             className={cn(
+                               "w-full h-full",
+                               // TikTok thumbnails are typically 9:16; contain avoids the "only top 10%" crop.
+                               isTikTok ? "object-contain" : "object-cover",
+                             )}
+                             loading="lazy"
+                             referrerPolicy="no-referrer"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
