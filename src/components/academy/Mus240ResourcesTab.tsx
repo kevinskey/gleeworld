@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { useMus240Resources, type Mus240Resource } from '@/integrations/supabase/hooks/useMus240Resources';
 import { ResourceViewer } from '@/components/academy/ResourceViewer';
+import FloatingTikTokPlayer from '@/components/mus240/FloatingTikTokPlayer';
+import { isTikTokUrl } from '@/utils/tiktokUtils';
 
 interface Mus240ResourcesTabProps {
   isAdmin?: boolean;
@@ -30,6 +32,17 @@ export const Mus240ResourcesTab: React.FC<Mus240ResourcesTabProps> = ({ isAdmin 
     resource: null,
   });
   
+  // Floating TikTok player state
+  const [tiktokPlayerState, setTiktokPlayerState] = useState<{
+    isOpen: boolean;
+    url: string;
+    title: string;
+  }>({
+    isOpen: false,
+    url: '',
+    title: '',
+  });
+  
   // Search and sort state
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('display_order');
@@ -37,7 +50,20 @@ export const Mus240ResourcesTab: React.FC<Mus240ResourcesTabProps> = ({ isAdmin 
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   const openViewer = (resource: Mus240Resource) => {
+    // For TikTok videos, use floating player instead of modal
+    if (isTikTokUrl(resource.url)) {
+      setTiktokPlayerState({
+        isOpen: true,
+        url: resource.url,
+        title: resource.title,
+      });
+      return;
+    }
     setViewerState({ isOpen: true, resource });
+  };
+
+  const closeTikTokPlayer = () => {
+    setTiktokPlayerState({ isOpen: false, url: '', title: '' });
   };
 
   const closeViewer = () => {
@@ -334,6 +360,15 @@ export const Mus240ResourcesTab: React.FC<Mus240ResourcesTabProps> = ({ isAdmin 
           description: viewerState.resource.description
         } : null}
       />
+
+      {/* Floating TikTok Player */}
+      {tiktokPlayerState.isOpen && (
+        <FloatingTikTokPlayer
+          url={tiktokPlayerState.url}
+          title={tiktokPlayerState.title}
+          onClose={closeTikTokPlayer}
+        />
+      )}
     </Card>
   );
 };
