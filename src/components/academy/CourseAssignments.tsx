@@ -88,10 +88,11 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
 
       if (courseError) throw courseError;
 
-      // Fetch ReadMusic sight-reading assignments
+      // Fetch ReadMusic sight-reading assignments for THIS course only
       const { data: sightReadingData, error: srError } = await supabase
         .from('gw_sight_reading_assignments')
         .select('*')
+        .eq('course_id', courseId)
         .eq('is_active', true)
         .order('due_date', { ascending: true });
 

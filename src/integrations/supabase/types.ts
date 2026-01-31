@@ -17693,6 +17693,7 @@ export type Database = {
           assigned_by: string
           assignment_type: Database["public"]["Enums"]["assignment_type"]
           audio_url: string | null
+          course_id: string | null
           created_at: string
           description: string | null
           due_date: string
@@ -17712,6 +17713,7 @@ export type Database = {
           assigned_by: string
           assignment_type?: Database["public"]["Enums"]["assignment_type"]
           audio_url?: string | null
+          course_id?: string | null
           created_at?: string
           description?: string | null
           due_date: string
@@ -17731,6 +17733,7 @@ export type Database = {
           assigned_by?: string
           assignment_type?: Database["public"]["Enums"]["assignment_type"]
           audio_url?: string | null
+          course_id?: string | null
           created_at?: string
           description?: string | null
           due_date?: string
@@ -17747,6 +17750,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "gw_sight_reading_assignments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gw_sight_reading_assignments_sheet_music_id_fkey"
             columns: ["sheet_music_id"]
