@@ -2,8 +2,9 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CourseAttendanceGrid } from './CourseAttendanceGrid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Trophy, Calendar } from 'lucide-react';
+import { Users, Trophy } from 'lucide-react';
 import { Mus070StudentRoster } from '@/components/mus070/instructor/Mus070StudentRoster';
+import { Mus070GradeSpreadsheet } from '@/components/mus070/instructor/Mus070GradeSpreadsheet';
 import { PerformanceGradeEntry } from '@/components/mus070/instructor/PerformanceGradeEntry';
 import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 
@@ -20,7 +21,7 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
   courseTitle,
   semester = 'Spring 2026'
 }) => {
-  // Check if this is MUS 070 (Glee Club) for roster component
+  // Check if this is MUS 070 (Glee Club) for specialized components
   const isMus070 = courseCode === 'MUS 070' || courseCode === 'MUS070';
   
   // Check if this course has performance-based grading components
@@ -31,7 +32,7 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
   
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="attendance" className="w-full">
+      <Tabs defaultValue="spreadsheet" className="w-full">
         <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="spreadsheet">Grade Spreadsheet</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
@@ -39,23 +40,27 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
           <TabsTrigger value="roster">Detailed Roster</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="spreadsheet" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-primary" />
-                Grade Spreadsheet
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Grade spreadsheet for {courseCode} - {courseTitle} coming soon.
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                This will show a comprehensive grade breakdown including assignments, tests, participation, and attendance.
-              </p>
-            </CardContent>
-          </Card>
+        <TabsContent value="spreadsheet" className="mt-4 overflow-visible">
+          {isMus070 ? (
+            <Mus070GradeSpreadsheet />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  Grade Spreadsheet
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Grade spreadsheet for {courseCode} - {courseTitle} coming soon.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  This will show a comprehensive grade breakdown including assignments, tests, participation, and attendance.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
         
         <TabsContent value="attendance" className="mt-4 overflow-visible">
