@@ -105,6 +105,8 @@ const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
       maxHeight={800}
       bounds="window"
       dragHandleClassName="tiktok-drag-handle"
+      // Prevent header control clicks from being interpreted as drag gestures
+      cancel=".tiktok-player-control"
       onDragStop={(e, d) => {
         setPosition({ x: d.x, y: d.y });
       }}
@@ -136,7 +138,7 @@ const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
           <div className="flex items-center gap-1" style={{ pointerEvents: 'auto' }}>
             <button
               type="button"
-              className="h-6 w-6 flex items-center justify-center text-white hover:bg-white/20 rounded"
+              className="tiktok-player-control h-6 w-6 flex items-center justify-center text-white hover:bg-white/20 rounded"
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -149,7 +151,7 @@ const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
             </button>
             <button
               type="button"
-              className="h-6 w-6 flex items-center justify-center text-white hover:bg-destructive hover:text-destructive-foreground rounded"
+              className="tiktok-player-control h-6 w-6 flex items-center justify-center text-white hover:bg-destructive hover:text-destructive-foreground rounded"
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -214,8 +216,12 @@ const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
                 src={`https://www.tiktok.com/embed/v2/${oembedData.videoId}`}
                 className="w-full h-full border-0"
                 allowFullScreen
-                allow="encrypted-media"
-                referrerPolicy="no-referrer"
+                // TikTok embeds often require additional permissions for consistent playback
+                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                // Avoid overly-strict referrer policy which can cause TikTok to render a degraded embed
+                referrerPolicy="strict-origin-when-cross-origin"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
+                title={oembedData.title}
               />
             ) : null}
           </div>
