@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft } from 'lucide-react';
+import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
 import { AcademyCourse } from '@/config/academyCourses';
@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { CourseTopicSlider } from '@/components/academy/CourseTopicSlider';
 import { ClassScheduleForm } from '@/components/academy/ClassScheduleForm';
 import { useCourseGrade } from '@/hooks/useCourseGrade';
+import { MobilePlaylistDropdown } from './MobilePlaylistDropdown';
 
 interface MobileCourseLandingProps {
   course: AcademyCourse;
@@ -24,6 +25,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   const { user } = useAuth();
   const { profile } = useMergedProfile(user);
   const { letterGrade, percentage, loading: gradeLoading } = useCourseGrade(course.id);
+  const [playlistOpen, setPlaylistOpen] = useState(false);
 
   // Fetch current module based on date
   const { data: currentModule } = useQuery({
@@ -123,19 +125,35 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
 
       {/* Main Content - Vertical Stack */}
       <main className="p-4 space-y-4 pb-24">
-        {/* 2. Listen to Tracks Card */}
-        <Card variant="outline" className="shadow-sm">
-          <CardContent className="py-3">
-            <Button 
-              onClick={() => navigate(`/academy/${courseSlug}/audio`)}
-              variant="outline"
-              className="w-full h-10 text-sm font-semibold border-border hover:bg-muted/50"
-            >
-              <Play className="h-4 w-4 mr-2" />
-              Listen to Tracks
-            </Button>
-          </CardContent>
-        </Card>
+        {/* 2. Listen to Tracks - Dropdown Toggle */}
+        <div className="relative">
+          <Card variant="outline" className="shadow-sm">
+            <CardContent className="py-3">
+              <Button 
+                onClick={() => setPlaylistOpen(!playlistOpen)}
+                variant="outline"
+                className="w-full h-10 text-sm font-semibold border-border hover:bg-muted/50 justify-between"
+              >
+                <div className="flex items-center">
+                  <Play className="h-4 w-4 mr-2" />
+                  Listen to Tracks
+                </div>
+                {playlistOpen ? (
+                  <ChevronUp className="h-4 w-4 ml-2" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Playlist Dropdown */}
+          <MobilePlaylistDropdown
+            courseId={course.id}
+            isOpen={playlistOpen}
+            onOpenChange={setPlaylistOpen}
+          />
+        </div>
 
         {/* 3. Current Module Card */}
         {currentModule && (
