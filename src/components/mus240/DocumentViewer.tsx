@@ -6,6 +6,7 @@ import { ExternalLink, X, Presentation } from 'lucide-react';
 import { toast } from 'sonner';
 import { PresentationViewer } from './PresentationViewer';
 import { NativePowerPointViewer } from './NativePowerPointViewer';
+import { TikTokPlayer } from './TikTokPlayer';
 import { FastPDFViewer } from '@/components/FastPDFViewer';
 
 interface DocumentViewerProps {
@@ -41,6 +42,7 @@ export function DocumentViewer({
     fileUrl.toLowerCase().includes('.pptx');
   const isGoogleSlides = fileUrl.includes('docs.google.com/presentation') || fileUrl.includes('slides.google.com');
   const isYouTube = fileUrl.includes('youtu.be') || fileUrl.includes('youtube.com/watch');
+  const isTikTok = fileUrl.includes('tiktok.com');
 
   const lowerName = `${fileName} ${fileUrl}`.toLowerCase();
   const isAudio = fileType.startsWith('audio/') || ['.mp3', '.wav', '.ogg', '.m4a'].some(ext => lowerName.includes(ext));
@@ -48,7 +50,7 @@ export function DocumentViewer({
 
   // Supabase storage URLs cannot be iframed due to CSP - treat them as unsupported files (will show download option)
   const isSupabaseStorage = fileUrl.includes('supabase.co/storage');
-  const isWebsite = !isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isAudio && !isVideoFile && !isSupabaseStorage && (fileUrl.startsWith('http') || fileUrl.startsWith('https'));
+  const isWebsite = !isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isTikTok && !isAudio && !isVideoFile && !isSupabaseStorage && (fileUrl.startsWith('http') || fileUrl.startsWith('https'));
 
   const handleOpenExternal = () => {
     // Stay in the same tab (in-app navigation) rather than opening a new window.
@@ -60,6 +62,7 @@ export function DocumentViewer({
     if (isPowerPoint) return 'PowerPoint';
     if (isGoogleSlides) return 'Google Slides';
     if (isYouTube) return 'YouTube Video';
+    if (isTikTok) return 'TikTok Video';
     if (isVideoFile) return 'Video';
     if (isAudio) return 'Audio';
     if (isWebsite) return 'Website';
@@ -226,6 +229,14 @@ export function DocumentViewer({
     );
   };
 
+  const renderTikTokViewer = () => {
+    return (
+      <div className="h-full flex items-center justify-center p-4 overflow-auto">
+        <TikTokPlayer url={fileUrl} title={title} />
+      </div>
+    );
+  };
+
   const renderWebsiteViewer = () => {
     return (
       <div className="h-full">
@@ -305,6 +316,7 @@ export function DocumentViewer({
           {isPowerPoint && renderPowerPointViewer()}
           {isGoogleSlides && renderGoogleSlidesViewer()}
           {isYouTube && renderYouTubeViewer()}
+          {isTikTok && renderTikTokViewer()}
           {isVideoFile && (
             <div className="h-full w-full flex items-center justify-center bg-black rounded-lg overflow-hidden">
               <video className="w-full h-full" controls playsInline src={fileUrl} />
@@ -318,7 +330,7 @@ export function DocumentViewer({
             </div>
           )}
           {isWebsite && renderWebsiteViewer()}
-          {!isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isVideoFile && !isAudio && !isWebsite && renderUnsupportedFile()}
+          {!isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isTikTok && !isVideoFile && !isAudio && !isWebsite && renderUnsupportedFile()}
         </div>
 
         <div className="flex-shrink-0 pt-4 border-t">
