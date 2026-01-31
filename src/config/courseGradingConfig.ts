@@ -30,7 +30,11 @@ export const COURSE_GRADING_CONFIGS: Record<string, CourseGradingConfig> = {
     courseCode: 'MUS 070',
     components: [
       { component: 'Attendance', weight: 45, description: 'Required attendance at all scheduled rehearsals' },
-      { component: 'Performances', weight: 30, description: 'Video performance submissions on Flipgrid, assessed using performance rubric' },
+      { component: 'Spring Concert', weight: 10, description: 'Flagship Spring 2026 performance' },
+      { component: 'Graduation/Commencement', weight: 5, description: 'Commencement ceremony performance' },
+      { component: 'Founders Day', weight: 4, description: 'Spelman Founders Day celebration' },
+      { component: 'TBD Performance 1', weight: 5.5, description: 'Community outreach, AUC collaboration, or festival' },
+      { component: 'TBD Performance 2', weight: 5.5, description: 'Community outreach, AUC collaboration, or festival' },
       { component: 'Sight Singing – Music Reading', weight: 15, description: '2 weekly sight singing quizzes + 30 min/week on SightReadingFactory.com' },
       { component: 'Sectionals', weight: 10, description: 'Attendance and participation in section rehearsals led by section leaders' }
     ],
