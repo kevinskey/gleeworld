@@ -14,9 +14,21 @@ interface FloatingTikTokPlayerProps {
 interface TikTokOEmbedData {
   title: string;
   authorName: string;
-  authorUrl: string;
   thumbnailUrl: string;
-  html: string;
+  videoId: string;
+}
+
+// Extract TikTok video ID from various URL formats
+function extractTikTokVideoId(url: string): string | null {
+  // Standard format: @username/video/VIDEO_ID
+  const standardMatch = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
+  if (standardMatch) return standardMatch[1];
+  
+  // From embed HTML - data-video-id attribute
+  const embedMatch = url.match(/data-video-id="(\d+)"/);
+  if (embedMatch) return embedMatch[1];
+  
+  return null;
 }
 
 const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
@@ -29,13 +41,13 @@ const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [oembedData, setOembedData] = useState<TikTokOEmbedData | null>(null);
-  const [size, setSize] = useState({ width: 340, height: 480 });
+  const [size, setSize] = useState({ width: 340, height: 600 });
   const [position, setPosition] = useState({ 
     x: window.innerWidth - 360, 
     y: 20 
   });
 
-  // Fetch oEmbed data
+  // Fetch oEmbed data and extract video ID
   useEffect(() => {
     const fetchOembedData = async () => {
       try {
@@ -54,7 +66,23 @@ const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
           throw new Error(data?.error || 'Failed to load TikTok video');
         }
 
-        setOembedData(data.data);
+        // Extract video ID from URL or HTML
+        let videoId = extractTikTokVideoId(url);
+        if (!videoId && data.data.html) {
+          const htmlMatch = data.data.html.match(/data-video-id="(\d+)"/);
+          if (htmlMatch) videoId = htmlMatch[1];
+        }
+
+        if (!videoId) {
+          throw new Error('Could not extract video ID from TikTok URL');
+        }
+
+        setOembedData({
+          title: data.data.title,
+          authorName: data.data.authorName,
+          thumbnailUrl: data.data.thumbnailUrl,
+          videoId,
+        });
         setLoading(false);
       } catch (err) {
         console.error('Error loading TikTok data:', err);
@@ -66,35 +94,15 @@ const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
     fetchOembedData();
   }, [url]);
 
-  // Load embed when playing
-  useEffect(() => {
-    if (!isPlaying || !oembedData) return;
-
-    // Load the TikTok embed script
-    const existingScript = document.querySelector('script[src*="tiktok.com/embed.js"]');
-    if (existingScript) {
-      if ((window as any).tiktokEmbed?.lib?.render) {
-        setTimeout(() => {
-          (window as any).tiktokEmbed.lib.render();
-        }, 100);
-      }
-    } else {
-      const script = document.createElement('script');
-      script.src = 'https://www.tiktok.com/embed.js';
-      script.async = true;
-      document.body.appendChild(script);
-    }
-  }, [isPlaying, oembedData]);
-
   const content = (
     <Rnd
       data-floating-tiktok-player="true"
       position={position}
       size={{ width: size.width, height: isMinimized ? 48 : size.height }}
-      minWidth={280}
-      minHeight={isMinimized ? 48 : 400}
+      minWidth={320}
+      minHeight={isMinimized ? 48 : 500}
       maxWidth={500}
-      maxHeight={700}
+      maxHeight={800}
       bounds="window"
       dragHandleClassName="tiktok-drag-handle"
       onDragStop={(e, d) => {
@@ -157,7 +165,7 @@ const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
 
         {/* TikTok Content */}
         {!isMinimized && (
-          <div className="flex-1 bg-black relative overflow-auto">
+          <div className="flex-1 bg-black relative overflow-hidden">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-full text-white">
                 <Loader2 className="h-8 w-8 animate-spin mb-2" />
@@ -175,7 +183,7 @@ const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
                 </button>
               </div>
             ) : !isPlaying && oembedData ? (
-              // Thumbnail preview
+              // Thumbnail preview with play button
               <div 
                 className="w-full h-full relative cursor-pointer group flex items-center justify-center"
                 onClick={() => setIsPlaying(true)}
@@ -201,10 +209,13 @@ const FloatingTikTokPlayer: React.FC<FloatingTikTokPlayerProps> = ({
                 </div>
               </div>
             ) : oembedData ? (
-              // Embedded player
-              <div 
-                className="w-full h-full flex justify-center items-start pt-2 overflow-auto"
-                dangerouslySetInnerHTML={{ __html: oembedData.html }}
+              // TikTok iframe embed - this actually plays the video
+              <iframe
+                src={`https://www.tiktok.com/embed/v2/${oembedData.videoId}`}
+                className="w-full h-full border-0"
+                allowFullScreen
+                allow="encrypted-media"
+                referrerPolicy="no-referrer"
               />
             ) : null}
           </div>
