@@ -344,11 +344,12 @@ export const EnrollmentManager = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      {/* Header - stacked on mobile */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-2xl font-bold">Course Enrollment Management</h3>
-          <p className="text-muted-foreground">Manage student enrollments for MUS 240</p>
+          <h3 className="text-xl md:text-2xl font-bold">Course Enrollment</h3>
+          <p className="text-sm md:text-base text-muted-foreground">Manage student enrollments for MUS 240</p>
         </div>
         <div className="flex gap-2">
           {courseId && (
@@ -361,9 +362,10 @@ export const EnrollmentManager = () => {
           
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button size="sm" className="h-9">
                 <UserPlus className="h-4 w-4 mr-2" />
-                Add Student
+                <span className="hidden sm:inline">Add Student</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </DialogTrigger>
           <DialogContent>
@@ -399,22 +401,24 @@ export const EnrollmentManager = () => {
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex gap-4">
-          <div className="flex-1">
+      {/* Search and filters - mobile responsive */}
+      <div className="space-y-3">
+        {/* Search + Semester - always visible */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+          <div className="flex-1 min-w-0">
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search students..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-10"
               />
             </div>
           </div>
           <Select value={selectedSemester} onValueChange={setSelectedSemester}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Select semester" />
+            <SelectTrigger className="w-full sm:w-44 h-10">
+              <SelectValue placeholder="Semester" />
             </SelectTrigger>
             <SelectContent className="bg-background border z-50">
               {validSemesters.map((semester) => (
@@ -433,12 +437,13 @@ export const EnrollmentManager = () => {
           </Select>
         </div>
         
-        <div className="flex gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+        {/* Filters row - horizontal scroll on mobile */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className="w-32 h-9 text-sm">
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -451,27 +456,27 @@ export const EnrollmentManager = () => {
           </div>
           
           <Select value={gradeFilter} onValueChange={setGradeFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Filter by grade" />
+            <SelectTrigger className="w-28 h-9 text-sm flex-shrink-0">
+              <SelectValue placeholder="Grade" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Grades</SelectItem>
+              <SelectItem value="all">All</SelectItem>
               <SelectItem value="graded">Graded</SelectItem>
               <SelectItem value="ungraded">Ungraded</SelectItem>
             </SelectContent>
           </Select>
           
-          <div className="flex items-center gap-2">
-            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Sort by" />
+              <SelectTrigger className="w-28 h-9 text-sm">
+                <SelectValue placeholder="Sort" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="name">Full Name</SelectItem>
                 <SelectItem value="last_name">Last Name</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="enrolled_at">Enrollment Date</SelectItem>
+                <SelectItem value="enrolled_at">Date</SelectItem>
                 <SelectItem value="status">Status</SelectItem>
                 <SelectItem value="grade">Grade</SelectItem>
               </SelectContent>
@@ -482,29 +487,30 @@ export const EnrollmentManager = () => {
             variant="outline"
             size="sm"
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="flex items-center gap-1"
+            className="h-9 px-2 flex-shrink-0"
           >
             {sortOrder === 'asc' ? (
               <SortAsc className="h-4 w-4" />
             ) : (
               <SortDesc className="h-4 w-4" />
             )}
-            {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
           </Button>
-          
-          <div className="ml-auto text-sm text-muted-foreground">
-            {filteredAndSortedEnrollments.length} of {enrollments.length} students
-          </div>
+        </div>
+        
+        {/* Count */}
+        <div className="text-sm text-muted-foreground">
+          {filteredAndSortedEnrollments.length} of {enrollments.length} students
         </div>
       </div>
 
-      <div className="grid gap-4">
+      {/* Student cards - mobile optimized */}
+      <div className="grid gap-3 md:gap-4">
         {filteredAndSortedEnrollments.length === 0 ? (
           <Card>
-            <CardContent className="p-8 text-center">
-              <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">No enrollments found</h3>
-              <p className="text-muted-foreground">
+            <CardContent className="p-6 md:p-8 text-center">
+              <Users className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-muted-foreground" />
+              <h3 className="text-base md:text-lg font-semibold mb-2">No enrollments found</h3>
+              <p className="text-sm text-muted-foreground">
                 {searchTerm ? 'No students match your search criteria.' : 'No students are enrolled in this semester.'}
               </p>
             </CardContent>
@@ -516,9 +522,69 @@ export const EnrollmentManager = () => {
               className="cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => navigate(`/mus-240/instructor/student/${enrollment.student_profile_id || enrollment.user_id}`)}
             >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
+              <CardContent className="p-4 md:p-6">
+                {/* Mobile layout: stacked */}
+                <div className="flex flex-col gap-3 md:hidden">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-semibold text-base truncate">
+                        {enrollment.gw_student_profiles?.full_name || enrollment.gw_profiles?.full_name || 'Unknown Student'}
+                      </h4>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {enrollment.gw_student_profiles?.email || enrollment.gw_profiles?.email}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1 items-end flex-shrink-0">
+                      <Badge variant={getStatusBadgeVariant(enrollment.enrollment_status)} className="text-xs">
+                        {enrollment.enrollment_status}
+                      </Badge>
+                      {enrollment.grade && (
+                        <Badge variant="outline" className="text-xs">
+                          {enrollment.grade}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>Enrolled: {new Date(enrollment.enrolled_at).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <Select
+                      value={enrollment.enrollment_status}
+                      onValueChange={(value) => updateEnrollmentStatus(enrollment.id, value)}
+                    >
+                      <SelectTrigger className="flex-1 h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="enrolled">Enrolled</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="dropped">Dropped</SelectItem>
+                        <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Input
+                      placeholder="Grade"
+                      value={enrollment.grade || ''}
+                      onChange={(e) => updateFinalGrade(enrollment.id, e.target.value)}
+                      className="w-20 h-9 text-sm"
+                    />
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeEnrollment(enrollment.id)}
+                      className="h-9 w-9 p-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Desktop layout: horizontal */}
+                <div className="hidden md:flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       <h4 className="font-semibold">
                         {enrollment.gw_student_profiles?.full_name || enrollment.gw_profiles?.full_name || 'Unknown Student'}
