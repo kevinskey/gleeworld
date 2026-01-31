@@ -40,9 +40,10 @@ The Spelman College Glee Club is a premier choral ensemble with over 100 years o
 - Credit: 1 or 0 credit hours (student choice)
 
 **MUS-070/071 Grading Breakdown (Official Syllabus):**
-- Performances: 50% (Video performance submissions on Flipgrid)
-- Attendance at Sectionals and Rehearsals: 25%
-- Sight Singing – Music Reading: 25% (2 weekly quizzes + 30 min/week on SightReadingFactory.com)
+- Attendance: 45%
+- Performances: 30% (Video performance submissions on Flipgrid)
+- Sight Singing – Music Reading: 15% (2 weekly quizzes + 30 min/week on SightReadingFactory.com)
+- Sectionals: 10%
 
 **MUS-070/071 Course Requirements:**
 - Students must audition to enroll
