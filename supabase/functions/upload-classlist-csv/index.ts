@@ -373,58 +373,80 @@ serve(async (req) => {
           }
         } else {
           // General course (MUS-240, etc.): use gw_student_profiles (simple profiles)
-          const { data: existingProfile } = await supabaseClient
-            .from('gw_student_profiles')
-            .select('id, user_id')
-            .eq('student_id', student.studentId)
+          
+          // FIRST: Try to find an existing gw_profiles user by name match
+          // This ensures that if a student already has an account, they get linked directly
+          const { data: gwProfileMatch } = await supabaseClient
+            .from('gw_profiles')
+            .select('user_id, full_name')
+            .or(`full_name.ilike.%${firstName}%${lastName}%,full_name.ilike.%${lastName}%${firstName}%`)
+            .limit(1)
             .maybeSingle();
 
-          if (existingProfile) {
-            console.log(`Found existing gw_student_profile: id=${existingProfile.id}`);
-            studentProfileId = existingProfile.id;
-            userId = existingProfile.user_id;
+          if (gwProfileMatch?.user_id) {
+            console.log(`Found existing gw_profiles user: ${gwProfileMatch.full_name} (user_id=${gwProfileMatch.user_id})`);
+            userId = gwProfileMatch.user_id;
+            // Also update their student_id if not set
+            await supabaseClient
+              .from('gw_profiles')
+              .update({ student_id: student.studentId })
+              .eq('user_id', gwProfileMatch.user_id)
+              .is('student_id', null);
           } else {
-            // Try name match
-            const { data: nameMatch } = await supabaseClient
+            // No existing account - use gw_student_profiles
+            const { data: existingProfile } = await supabaseClient
               .from('gw_student_profiles')
               .select('id, user_id')
-              .or(`full_name.ilike.%${firstName}%${lastName}%,full_name.ilike.%${lastName}%${firstName}%`)
-              .limit(1)
+              .eq('student_id', student.studentId)
               .maybeSingle();
 
-            if (nameMatch) {
-              console.log(`Found name match in gw_student_profiles: id=${nameMatch.id}`);
-              await supabaseClient
-                .from('gw_student_profiles')
-                .update({ student_id: student.studentId, academic_year: student.classYear })
-                .eq('id', nameMatch.id);
-              studentProfileId = nameMatch.id;
-              userId = nameMatch.user_id;
+            if (existingProfile) {
+              console.log(`Found existing gw_student_profile: id=${existingProfile.id}`);
+              studentProfileId = existingProfile.id;
+              userId = existingProfile.user_id;
             } else {
-              // Create new simple student profile
-              console.log(`Creating new gw_student_profile...`);
-              const { data: newProfile, error: createError } = await supabaseClient
+              // Try name match in student_profiles
+              const { data: nameMatch } = await supabaseClient
                 .from('gw_student_profiles')
-                .insert({
-                  student_id: student.studentId,
-                  full_name: student.name,
-                  first_name: firstName,
-                  last_name: lastName,
-                  academic_year: student.classYear,
-                  status: 'active',
-                })
-                .select('id')
-                .single();
+                .select('id, user_id')
+                .or(`full_name.ilike.%${firstName}%${lastName}%,full_name.ilike.%${lastName}%${firstName}%`)
+                .limit(1)
+                .maybeSingle();
 
-              if (createError) {
-                console.error(`Create student profile error:`, createError.message);
-                errors.push({ row: students.indexOf(student) + 1, error: createError.message });
-                continue;
+              if (nameMatch) {
+                console.log(`Found name match in gw_student_profiles: id=${nameMatch.id}`);
+                await supabaseClient
+                  .from('gw_student_profiles')
+                  .update({ student_id: student.studentId, academic_year: student.classYear })
+                  .eq('id', nameMatch.id);
+                studentProfileId = nameMatch.id;
+                userId = nameMatch.user_id;
+              } else {
+                // Create new simple student profile
+                console.log(`Creating new gw_student_profile...`);
+                const { data: newProfile, error: createError } = await supabaseClient
+                  .from('gw_student_profiles')
+                  .insert({
+                    student_id: student.studentId,
+                    full_name: student.name,
+                    first_name: firstName,
+                    last_name: lastName,
+                    academic_year: student.classYear,
+                    status: 'active',
+                  })
+                  .select('id')
+                  .single();
+
+                if (createError) {
+                  console.error(`Create student profile error:`, createError.message);
+                  errors.push({ row: students.indexOf(student) + 1, error: createError.message });
+                  continue;
+                }
+
+                console.log(`Created new gw_student_profile: id=${newProfile.id}`);
+                studentProfileId = newProfile.id;
+                enrollmentResults.profilesCreated++;
               }
-
-              console.log(`Created new gw_student_profile: id=${newProfile.id}`);
-              studentProfileId = newProfile.id;
-              enrollmentResults.profilesCreated++;
             }
           }
         }
