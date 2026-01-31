@@ -1,83 +1,57 @@
 
+# Update MUS 070 Performance Weighting
 
-# Plan: Fix Assistant's Knowledge of Christmas Carol Concert
+## Summary
+Update the grading configuration to break down the 30% Performances component into specific weighted events for Spring 2026.
 
-## Problem Summary
-The Glee Assistant doesn't recognize that "Christmas Carol" is a major concert because:
+## Performance Breakdown (30% Total)
 
-1. **Knowledge base omission** - The system prompt lists major concerts as "Fall (Founder's Day), Spring (Annual Concert), Commencement" but doesn't mention the 100th Annual Spelman Morehouse Christmas Carol
-2. **Inconsistent event types in database** - Christmas Carol events are tagged as `performance`, `concert`, or `other` instead of consistently as `concert`
-3. **Query logic issue** - The date range filtering may not work correctly due to chained `.or()` clauses
+| Performance | Weight |
+|-------------|--------|
+| Spring Concert | 10% |
+| Graduation/Commencement | 5% |
+| Founders Day | 4% |
+| TBD Performance 1 | 5.5% |
+| TBD Performance 2 | 5.5% |
+| **Total** | **30%** |
+
+## Implementation Approach
+
+There are two ways to implement this:
+
+**Option A: Expand to Individual Line Items**
+Break out each performance as its own grading component in the configuration. This gives maximum visibility but changes the grading breakdown display.
+
+**Option B: Add Sub-Components to Existing Structure**
+Extend the `GradingComponent` interface to support nested sub-items, keeping "Performances" as the main 30% category but showing the individual event weights as details.
+
+**Recommendation:** Option A is simpler and more transparent for students—they'll see exactly how each performance is weighted.
+
+## Changes Required
+
+### 1. Update `src/config/courseGradingConfig.ts`
+Replace the single "Performances" component with five individual performance entries:
+
+```typescript
+components: [
+  { component: 'Attendance', weight: 45, description: 'Required attendance at all scheduled rehearsals' },
+  { component: 'Spring Concert', weight: 10, description: 'Flagship Spring 2026 performance' },
+  { component: 'Graduation/Commencement', weight: 5, description: 'Commencement ceremony performance' },
+  { component: 'Founders Day', weight: 4, description: 'Spelman Founders Day celebration' },
+  { component: 'TBD Performance 1', weight: 5.5, description: 'Community outreach, AUC collaboration, or festival' },
+  { component: 'TBD Performance 2', weight: 5.5, description: 'Community outreach, AUC collaboration, or festival' },
+  { component: 'Sight Singing – Music Reading', weight: 15, description: '2 weekly sight singing quizzes + 30 min/week on SightReadingFactory.com' },
+  { component: 'Sectionals', weight: 10, description: 'Attendance and participation in section rehearsals' }
+]
+```
+
+### 2. Update `supabase/functions/glee-assistant/index.ts`
+Sync the AI assistant's knowledge base with the new performance weighting structure.
+
+### 3. Redeploy Edge Function
+Deploy the updated `glee-assistant` function to apply the changes.
 
 ---
 
-## Solution
-
-### 1. Update Knowledge Base (System Prompt)
-**File:** `supabase/functions/glee-assistant/index.ts`
-
-Update line 89-90 to explicitly include Christmas Carol:
-
-```text
-### Key Dates & Academic Calendar
-- Rehearsals: MWF during academic semesters
-- Major concerts: 
-  - Fall: Founder's Day Concert
-  - Winter: Spelman-Morehouse Christmas Carol (December) - The signature annual tradition
-  - Spring: Annual Concert
-  - Commencement Concert
-- Tours typically during spring break or summer
-```
-
-### 2. Add Smart Concert Recognition
-Enhance the `get_upcoming_events` tool to recognize concert keywords even when `event_type` is inconsistent:
-
-```typescript
-// Concert-related keywords to match regardless of event_type
-const concertKeywords = ['concert', 'christmas carol', 'annual', 'founder', 'commencement', 'performance'];
-```
-
-When searching for concerts, also match these keywords in the title.
-
-### 3. Fix Date Range Query
-The current query logic:
-```typescript
-.or(`start_date.gte.${today},event_date_start.gte.${today}`)
-.or(`start_date.lte.${endDateStr},event_date_start.lte.${endDateStr}`)
-```
-
-Should use proper AND logic for the date range:
-```typescript
-.gte('start_date', today)
-.lte('start_date', endDateStr)
-```
-
----
-
-## Technical Details
-
-### Files to Modify
-- `supabase/functions/glee-assistant/index.ts`
-
-### Specific Changes
-
-| Location | Current | Change |
-|----------|---------|--------|
-| Lines 89-90 | Major concerts: Fall, Spring, Commencement | Add "Winter: Spelman-Morehouse Christmas Carol (December)" |
-| Lines 2716-2722 | Broken `.or()` date query | Fix to proper date range filter |
-| Lines 2746-2752 | Event type filter only | Add concert keyword matching |
-
-### Database Recommendation
-Consider standardizing `event_type` for Christmas Carol events to `concert` for consistency. Current state:
-- "99th Annual Christmas Carol Concert" → `performance`
-- "100th Annual Spelman Morehouse Christmas Carol" → `concert`  
-- "99th Christmas Carol Broadcast" → `other`
-
----
-
-## Expected Outcome
-After this fix, when a user asks "when is the next glee concert?", the assistant will:
-1. Know from its knowledge base that Christmas Carol is a major winter concert
-2. Find the December 2026 "100th Annual Spelman Morehouse Christmas Carol" event
-3. Return accurate concert information regardless of inconsistent `event_type` values
-
+## Technical Note
+The current `GradingComponent` interface uses `weight: number`, so the 5.5% values will work correctly. The student grading view will automatically reflect these changes once the configuration is updated.
