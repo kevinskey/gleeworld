@@ -408,3 +408,6 @@ verify_jwt = false
 
 [functions.public-assistant]
 verify_jwt = false
+
+[functions.tiktok-oembed]
+verify_jwt = false
