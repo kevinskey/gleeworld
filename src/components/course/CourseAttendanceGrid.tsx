@@ -188,8 +188,17 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
   }, [courseId, enrolledStudentIdsKey, enrolledStudents, enrollmentLoading, isInstructor, targetStudentId]);
 
   useEffect(() => {
-    if (!enrollmentLoading && (enrolledStudentIds.length > 0 || !isInstructor)) {
-      fetchData();
+    // For instructors: wait for enrollment data to load before fetching attendance
+    // For students: can fetch immediately (will filter to just their data)
+    if (!enrollmentLoading) {
+      if (isInstructor && enrolledStudentIds.length > 0) {
+        fetchData();
+      } else if (!isInstructor) {
+        fetchData();
+      } else if (isInstructor && enrolledStudentIds.length === 0) {
+        // No students enrolled - still show the grid but empty
+        setLoading(false);
+      }
     }
   }, [fetchData, enrollmentLoading, enrolledStudentIds.length, isInstructor]);
 
