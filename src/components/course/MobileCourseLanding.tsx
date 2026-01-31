@@ -85,31 +85,30 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Course Title Bar with Grade - Below Global Header */}
+      {/* Course Title Bar with Grade - Balanced Layout */}
       <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Badge className="bg-primary text-primary-foreground font-semibold px-2.5 py-1">
-            {course.courseCode}
-          </Badge>
-          <span className="font-semibold text-foreground text-lg">{course.title}</span>
-        </div>
+        {/* Left: Course Badge */}
+        <Badge className="bg-primary text-primary-foreground font-semibold px-2.5 py-1 shrink-0">
+          {course.courseCode}
+        </Badge>
         
-        {/* Mobile Grade Box - Top Right */}
+        {/* Center: Course Title */}
+        <span className="font-semibold text-foreground text-lg text-center flex-1 mx-3">
+          {course.title}
+        </span>
+        
+        {/* Right: Grade Box - Same height as badge */}
         <button
           onClick={() => navigate(`/grading/student/course/${course.id}`)}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors touch-manipulation"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors touch-manipulation shrink-0"
           aria-label="View grade breakdown"
         >
-          <GraduationCap className="h-5 w-5 text-primary" />
-          <div className="flex items-baseline gap-1">
-            <span className="text-lg font-bold text-foreground">
-              {gradeLoading ? '--' : `${percentage}%`}
-            </span>
-            <span className="text-sm font-semibold text-primary">
-              {gradeLoading ? '' : letterGrade}
-            </span>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-bold text-foreground">
+            {gradeLoading ? '--' : `${percentage}%`}
+          </span>
+          <span className="text-xs font-semibold text-primary">
+            {gradeLoading ? '' : letterGrade}
+          </span>
         </button>
       </div>
 
