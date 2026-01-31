@@ -24,14 +24,14 @@ export interface CourseGradingConfig {
  */
 export const COURSE_GRADING_CONFIGS: Record<string, CourseGradingConfig> = {
   // MUS 070 - Glee Club
+  // MUS 070 - Glee Club (per official Fall 2025 Syllabus)
   'a0000000-0000-0000-0000-000000000070': {
     courseId: 'a0000000-0000-0000-0000-000000000070',
     courseCode: 'MUS 070',
     components: [
-      { component: 'Attendance & Participation', weight: 40, description: 'Regular attendance and engagement in rehearsals' },
-      { component: 'Concert Performances', weight: 30, description: 'Participation in all scheduled concerts and events' },
-      { component: 'Sectional Preparation', weight: 15, description: 'Preparation for and attendance at sectional rehearsals' },
-      { component: 'Uniform & Professionalism', weight: 15, description: 'Proper attire and professional conduct' }
+      { component: 'Performances', weight: 50, description: 'Video performance submissions on Flipgrid, assessed using performance rubric' },
+      { component: 'Attendance at Sectionals and Rehearsals', weight: 25, description: 'Required attendance at all scheduled rehearsals and sectionals' },
+      { component: 'Sight Singing – Music Reading', weight: 25, description: '2 weekly sight singing quizzes + 30 min/week on SightReadingFactory.com' }
     ],
     usesDeductiveModel: true,
     attendanceDeductionPerAbsence: 2

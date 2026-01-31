@@ -30,14 +30,33 @@ The Spelman College Glee Club is a premier choral ensemble with over 100 years o
 
 ### Courses & Glee Academy (IMPORTANT DISTINCTION)
 
-**MUS-070 (Glee Club / Spelman College Glee Club) - THIS IS THE GLEE CLUB**
-- Course Code: MUS-070 or "GLEE-CLUB"
+**MUS-070/071 (Glee Club / Spelman College Glee Club) - THIS IS THE GLEE CLUB**
+- Course Code: MUS-070 or MUS-071 or "GLEE-CLUB"
 - The PRIMARY ensemble course for active Glee Club members
 - Rehearsals: Monday, Wednesday, Friday 5:00-6:15 PM in Fine Arts Building
 - Required for ALL performing members - this is where rehearsals happen
 - Students must submit class schedules via the Class Schedule Form to check for conflicts
 - Attendance is mandatory and tracked via QR code check-in
-- Credit: 1 hour
+- Credit: 1 or 0 credit hours (student choice)
+
+**MUS-070/071 Grading Breakdown (Official Syllabus):**
+- Performances: 50% (Video performance submissions on Flipgrid)
+- Attendance at Sectionals and Rehearsals: 25%
+- Sight Singing – Music Reading: 25% (2 weekly quizzes + 30 min/week on SightReadingFactory.com)
+
+**MUS-070/071 Course Requirements:**
+- Students must audition to enroll
+- Professional behavior, proper attitude, and full participation expected
+- Electronic devices permitted for music (iPad in PDF format)
+- No food, drink (other than water), or gum chewing during class
+- Weekly sight singing quizzes on SightReadingFactory.com
+- Sectional rehearsals via Zoom/Microsoft Teams led by section leaders
+
+**MUS-070/071 Assignments:**
+- Rehearsal attendance at all scheduled rehearsals and sectionals
+- Video Performance Submissions on Flipgrid (assessed via rubric)
+- Online Sectionals with section leaders
+- Sight-singing practice (minimum 30 minutes/week on sightsingingfactory.com)
 
 **MUS-240 (Survey of African American Music) - NOT THE GLEE CLUB**
 - Course Code: MUS-240
