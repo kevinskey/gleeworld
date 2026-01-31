@@ -123,18 +123,15 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
 
       {/* Main Content - Vertical Stack */}
       <main className="p-4 space-y-4 pb-24">
-        {/* 2. Primary Card — Course Audio Library */}
-        <Card className="border-0 shadow-md">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-xl font-bold text-foreground">Course Audio Library</CardTitle>
-            <p className="text-muted-foreground text-sm">Spirituals • Jubilee • Rehearsal Recordings</p>
-          </CardHeader>
-          <CardContent>
+        {/* 2. Listen to Tracks Card */}
+        <Card variant="outline" className="shadow-sm">
+          <CardContent className="py-3">
             <Button 
               onClick={() => navigate(`/academy/${courseSlug}/audio`)}
-              className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90"
+              variant="outline"
+              className="w-full h-10 text-sm font-semibold border-border hover:bg-muted/50"
             >
-              <Play className="h-5 w-5 mr-2" />
+              <Play className="h-4 w-4 mr-2" />
               Listen to Tracks
             </Button>
           </CardContent>
