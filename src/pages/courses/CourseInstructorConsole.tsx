@@ -38,6 +38,31 @@ import { CoursePlaylistManager } from '@/components/modules/CoursePlaylistManage
 import { QuickAttendanceQR } from '@/components/course/QuickAttendanceQR';
 import { CourseVisibilitySettings } from '@/components/course/CourseVisibilitySettings';
 
+// Map DB term codes (e.g., 202601) to human semester labels used in enrollments (e.g., "Spring 2026").
+const termToSemesterLabel = (term: string | null | undefined): string => {
+  if (!term) return 'Spring 2026';
+
+  // Already a human label
+  if (/spring|summer|fall|winter/i.test(term)) return term;
+
+  // Common numeric format: YYYYTT where TT = 01(Spring), 05(Summer), 08(Fall), 12(Winter)
+  if (/^\d{6}$/.test(term)) {
+    const year = term.slice(0, 4);
+    const t = term.slice(4, 6);
+    const seasonMap: Record<string, string> = {
+      '01': 'Spring',
+      '05': 'Summer',
+      '08': 'Fall',
+      '12': 'Winter',
+    };
+    const season = seasonMap[t];
+    if (season) return `${season} ${year}`;
+  }
+
+  // Fallback: don't filter by semester if we can't map it reliably
+  return 'Spring 2026';
+};
+
 // Convert URL slug to course code (e.g., mus-240 -> MUS 240)
 const slugToCourseCode = (slug: string): string => {
   const parts = slug.split('-');
@@ -63,6 +88,7 @@ export const CourseInstructorConsole = () => {
     term: string | null;
   } | null>(null);
   const [dbLoading, setDbLoading] = useState(true);
+  const semesterLabel = termToSemesterLabel(dbCourse?.term);
 
   // Find the course from config
   const courseCode = courseSlug ? slugToCourseCode(courseSlug) : '';
@@ -367,7 +393,7 @@ export const CourseInstructorConsole = () => {
                 courseId={dbCourse.id} 
                 courseCode={course.courseCode}
                 courseTitle={course.title}
-                semester={dbCourse.term || 'Spring 2026'}
+                semester={semesterLabel}
               />
             )}
             {activeTab === 'students' && dbCourse && <CourseEnrollmentManager courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} term={dbCourse.term || undefined} />}
