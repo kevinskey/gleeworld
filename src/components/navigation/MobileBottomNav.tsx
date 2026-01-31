@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Library, Bot } from 'lucide-react';
+import { Camera, Library } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from '@/components/quick-capture/QuickCaptureCategorySelector';
 import { CategorizedQuickCapture } from '@/components/quick-capture/CategorizedQuickCapture';
 import { MusicalToolkit } from '@/components/musical-toolkit/MusicalToolkit';
-import { useAssistant } from '@/contexts/AssistantContext';
 import { cn } from '@/lib/utils';
 
 interface MobileBottomNavProps {
@@ -17,7 +16,6 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   const location = useLocation();
   const isPhone = useIsPhone();
   const previousPath = useRef<string>('/');
-  const { openAssistant, isAssistantOpen } = useAssistant();
   
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
@@ -54,33 +52,16 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="flex items-center justify-evenly w-full h-12 px-4 bg-background">
+        <div className="flex items-center justify-evenly w-full h-14 px-4 bg-background">
           {/* Musical Toolkit */}
-          <div className="flex items-center justify-center w-10 h-10 text-foreground">
-            <MusicalToolkit className="!p-0" />
+          <div className="flex items-center justify-center w-12 h-12 text-foreground">
+            <MusicalToolkit className="!p-0 [&_svg]:h-6 [&_svg]:w-6" />
           </div>
 
-          {/* Glee Assistant */}
-          <button
-            onClick={openAssistant}
-            className={cn(
-              "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
-              isAssistantOpen
-                ? "text-primary bg-primary/10" 
-                : "text-foreground hover:bg-muted"
-            )}
-            aria-label="Open Glee Assistant"
-          >
-            <Bot className="h-5 w-5" />
-            {!isAssistantOpen && (
-              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
-            )}
-          </button>
-
-          {/* Glee Cam - Highlighted Center */}
+          {/* Glee Cam - Highlighted Center with Navy Blue */}
           <button
             onClick={() => setShowCategorySelector(true)}
-            className="flex items-center justify-center w-12 h-12 -mt-4 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all border-2 border-background"
+            className="flex items-center justify-center w-12 h-12 -mt-4 rounded-full bg-[#003666] text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all border-2 border-background"
           >
             <Camera className="h-5 w-5" />
           </button>
@@ -89,13 +70,13 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
           <button
             onClick={handleLibraryClick}
             className={cn(
-              "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
+              "relative flex items-center justify-center w-12 h-12 rounded-full transition-all",
               isActive('/music-library')
                 ? "text-primary bg-primary/10" 
                 : "text-foreground hover:bg-muted"
             )}
           >
-            <Library className="h-5 w-5" />
+            <Library className="h-6 w-6" />
           </button>
         </div>
       </nav>
