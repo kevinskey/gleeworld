@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
 import { AcademyCourse } from '@/config/academyCourses';
@@ -26,6 +27,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   const { profile } = useMergedProfile(user);
   const { letterGrade, percentage, loading: gradeLoading } = useCourseGrade(course.id);
   const [playlistOpen, setPlaylistOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   // Fetch current module based on date
   const { data: currentModule } = useQuery({
@@ -240,11 +242,32 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
           />
         </Card>
 
-        {/* 7. Class Schedule Form - Only for MUS 070 (Glee Club) */}
+        {/* 7. Class Schedule Form - Only for MUS 070 (Glee Club) - Collapsed by default */}
         {course.courseCode === 'MUS 070' && (
-          <div className="border-2 border-red-500 rounded-lg p-1">
-            <ClassScheduleForm semester="Spring 2026" />
-          </div>
+          <Collapsible open={scheduleOpen} onOpenChange={setScheduleOpen}>
+            <Card variant="outline" className="border-2 border-red-500">
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="py-3 px-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-red-500" />
+                      <CardTitle className="text-sm font-semibold text-foreground">Your Class Schedule</CardTitle>
+                    </div>
+                    {scheduleOpen ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0 px-1 pb-1">
+                  <ClassScheduleForm semester="Spring 2026" />
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
         )}
       </main>
     </div>
