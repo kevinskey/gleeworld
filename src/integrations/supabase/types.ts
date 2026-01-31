@@ -13860,6 +13860,63 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_performance_grades: {
+        Row: {
+          course_id: string
+          created_at: string
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          notes: string | null
+          performance_date: string | null
+          performance_name: string
+          status: string
+          student_profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          notes?: string | null
+          performance_date?: string | null
+          performance_name: string
+          status?: string
+          student_profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          notes?: string | null
+          performance_date?: string | null
+          performance_name?: string
+          status?: string
+          student_profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_performance_grades_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_performance_grades_student_profile_id_fkey"
+            columns: ["student_profile_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_performance_reviews: {
         Row: {
           created_at: string

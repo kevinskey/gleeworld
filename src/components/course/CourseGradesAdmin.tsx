@@ -4,6 +4,8 @@ import { CourseAttendanceGrid } from './CourseAttendanceGrid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Trophy, Calendar } from 'lucide-react';
 import { Mus070StudentRoster } from '@/components/mus070/instructor/Mus070StudentRoster';
+import { PerformanceGradeEntry } from '@/components/mus070/instructor/PerformanceGradeEntry';
+import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 
 interface CourseGradesAdminProps {
   courseId: string;
@@ -21,12 +23,19 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
   // Check if this is MUS 070 (Glee Club) for roster component
   const isMus070 = courseCode === 'MUS 070' || courseCode === 'MUS070';
   
+  // Check if this course has performance-based grading components
+  const gradingConfig = getCourseGradingConfig(courseId);
+  const hasPerformances = gradingConfig.components.some(c => 
+    ['Spring Concert', 'Graduation/Commencement', 'Founders Day', 'TBD Performance 1', 'TBD Performance 2'].includes(c.component)
+  );
+  
   return (
     <div className="space-y-6">
       <Tabs defaultValue="attendance" className="w-full">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="spreadsheet">Grade Spreadsheet</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          {hasPerformances && <TabsTrigger value="performances">Performances</TabsTrigger>}
           <TabsTrigger value="roster">Detailed Roster</TabsTrigger>
         </TabsList>
         
@@ -57,6 +66,12 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
             isInstructor={true} 
           />
         </TabsContent>
+
+        {hasPerformances && (
+          <TabsContent value="performances" className="mt-4 overflow-visible">
+            <PerformanceGradeEntry courseId={courseId} courseCode={courseCode} />
+          </TabsContent>
+        )}
         
         <TabsContent value="roster" className="mt-4 overflow-visible">
           {isMus070 ? (
