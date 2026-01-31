@@ -333,19 +333,22 @@ export function DocumentViewer({
           {!isPDF && !isPowerPoint && !isGoogleSlides && !isYouTube && !isTikTok && !isVideoFile && !isAudio && !isWebsite && renderUnsupportedFile()}
         </div>
 
-        <div className="flex-shrink-0 pt-4 border-t">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-4">
-              <span>File: {fileName}</span>
-              {fileUrl && (
-                <span>Size: Loading...</span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <span>Use Ctrl+F to search within the document</span>
+        {/* Footer - hide for video content types */}
+        {!isYouTube && !isTikTok && !isVideoFile && (
+          <div className="flex-shrink-0 pt-4 border-t">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-4">
+                <span>File: {fileName}</span>
+                {fileUrl && (
+                  <span>Size: Loading...</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span>Use Ctrl+F to search within the document</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
         
         {/* Native PowerPoint Slideshow Viewer */}
         {isPowerPoint && (
