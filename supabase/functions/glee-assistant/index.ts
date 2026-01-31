@@ -39,9 +39,14 @@ The Spelman College Glee Club is a premier choral ensemble with over 100 years o
 - Attendance is mandatory and tracked via QR code check-in
 - Credit: 1 or 0 credit hours (student choice)
 
-**MUS-070/071 Grading Breakdown (Official Syllabus):**
+**MUS-070/071 Grading Breakdown (Official Syllabus - Spring 2026):**
 - Attendance: 45%
-- Performances: 30% (Video performance submissions on Flipgrid)
+- Performances: 30% total, broken down as:
+  - Spring Concert: 10% (Flagship performance)
+  - Graduation/Commencement: 5%
+  - Founders Day: 4%
+  - TBD Performance 1: 5.5% (Community outreach, AUC collaboration, or festival)
+  - TBD Performance 2: 5.5% (Community outreach, AUC collaboration, or festival)
 - Sight Singing – Music Reading: 15% (2 weekly quizzes + 30 min/week on SightReadingFactory.com)
 - Sectionals: 10%
 
