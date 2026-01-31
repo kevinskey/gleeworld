@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, GraduationCap } from 'lucide-react';
+import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
 import { AcademyCourse } from '@/config/academyCourses';
@@ -85,25 +85,34 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Course Title Bar with Grade - Balanced Layout */}
-      <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
-        {/* Left: Course Badge */}
-        <Badge className="bg-primary text-primary-foreground font-semibold px-2.5 py-1 shrink-0">
-          {course.courseCode}
-        </Badge>
+      {/* Course Title Bar with Back, Title, and Grade */}
+      <div className="bg-card border-b border-border px-3 py-3 flex items-center justify-between gap-2">
+        {/* Left: Back Button + Course Badge */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-muted transition-colors touch-manipulation"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+          </button>
+          <Badge className="bg-primary text-primary-foreground font-semibold px-2 py-0.5 text-xs shrink-0">
+            {course.courseCode}
+          </Badge>
+        </div>
         
         {/* Center: Course Title */}
-        <span className="font-semibold text-foreground text-lg text-center flex-1 mx-3">
+        <span className="font-semibold text-foreground text-base text-center flex-1 truncate">
           {course.title}
         </span>
         
-        {/* Right: Grade Box - Same height as badge */}
+        {/* Right: Grade Box */}
         <button
           onClick={() => navigate(`/grading/student/course/${course.id}`)}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors touch-manipulation shrink-0"
+          className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors touch-manipulation shrink-0"
           aria-label="View grade breakdown"
         >
-          <span className="text-sm font-bold text-foreground">
+          <span className="text-xs font-bold text-foreground">
             {gradeLoading ? '--' : `${percentage}%`}
           </span>
           <span className="text-xs font-semibold text-primary">
