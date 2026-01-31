@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar } from 'lucide-react';
+import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
 import { AcademyCourse } from '@/config/academyCourses';
@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { CourseTopicSlider } from '@/components/academy/CourseTopicSlider';
 import { ClassScheduleForm } from '@/components/academy/ClassScheduleForm';
+import { useCourseGrade } from '@/hooks/useCourseGrade';
 
 interface MobileCourseLandingProps {
   course: AcademyCourse;
@@ -22,7 +23,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile } = useMergedProfile(user);
-  
+  const { letterGrade, percentage, loading: gradeLoading } = useCourseGrade(course.id);
 
   // Fetch current module based on date
   const { data: currentModule } = useQuery({
@@ -84,12 +85,32 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Course Title Bar - Below Global Header */}
-      <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3">
-        <Badge className="bg-primary text-primary-foreground font-semibold px-2.5 py-1">
-          {course.courseCode}
-        </Badge>
-        <span className="font-semibold text-foreground text-lg">{course.title}</span>
+      {/* Course Title Bar with Grade - Below Global Header */}
+      <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Badge className="bg-primary text-primary-foreground font-semibold px-2.5 py-1">
+            {course.courseCode}
+          </Badge>
+          <span className="font-semibold text-foreground text-lg">{course.title}</span>
+        </div>
+        
+        {/* Mobile Grade Box - Top Right */}
+        <button
+          onClick={() => navigate(`/grading/student/course/${course.id}`)}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors touch-manipulation"
+          aria-label="View grade breakdown"
+        >
+          <GraduationCap className="h-5 w-5 text-primary" />
+          <div className="flex items-baseline gap-1">
+            <span className="text-lg font-bold text-foreground">
+              {gradeLoading ? '--' : `${percentage}%`}
+            </span>
+            <span className="text-sm font-semibold text-primary">
+              {gradeLoading ? '' : letterGrade}
+            </span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
       </div>
 
       {/* Main Content - Vertical Stack */}
