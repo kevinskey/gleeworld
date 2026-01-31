@@ -18,7 +18,8 @@ import {
 } from 'lucide-react';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { NativePowerPointViewer } from '@/components/mus240/NativePowerPointViewer';
-
+import { TikTokPlayer } from '@/components/mus240/TikTokPlayer';
+import { isTikTokUrl } from '@/utils/tiktokUtils';
 interface ResourceViewerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -78,13 +79,15 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
       setError(false);
       setShowPptxViewer(false);
       // Only show loading for embeddable content (PDFs, videos, Google Slides)
+      // but not TikTok (TikTokPlayer handles its own loading state)
       const lowerUrl = resource.url.toLowerCase();
       const isPdf = lowerUrl.includes('.pdf');
       const isPowerPoint = lowerUrl.includes('.ppt') || lowerUrl.includes('.pptx');
+      const isTikTokVideo = isTikTokUrl(resource.url);
       const isVideo = resource.resource_type === 'video' || isYouTubeUrl(resource.url) || resource.url.includes('vimeo');
       const isGoogleSlides = resource.url.includes('docs.google.com/presentation') || 
         resource.url.includes('slides.google.com');
-      const needsIframe = isPdf || isVideo || isGoogleSlides;
+      const needsIframe = isPdf || (isVideo && !isTikTokVideo) || isGoogleSlides;
       setLoading(needsIframe && !isPowerPoint);
     } else {
       setLoading(false);
@@ -99,6 +102,7 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   const isPdf = lowerUrl.includes('.pdf');
   const isPowerPoint = lowerUrl.includes('.ppt') || lowerUrl.includes('.pptx');
   const isYouTube = isYouTubeUrl(resource.url);
+  const isTikTok = isTikTokUrl(resource.url);
   const isVideo = resource.resource_type === 'video' || isYouTube || resource.url.includes('vimeo');
   const isAudio = resource.resource_type === 'audio' || resource.url.includes('soundcloud');
   const isWebsite = resource.resource_type === 'website';
@@ -133,13 +137,14 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   // - PDFs work via Google Docs Viewer (but not SharePoint PDFs)
   // - YouTube and Vimeo work with embed URLs
   // - Google Slides work with embed URLs
+  // - TikTok requires special handling with TikTokPlayer component
   // - Most external websites block iframing (X-Frame-Options, CSP), so we open them externally
   // - PowerPoint files need special native viewer handling
   // - External readings/audio/generic websites open in new tab
-  const canEmbed = ((isPdf && !isSharePoint) || isVideo || isGoogleSlides) && !isSharePoint;
+  const canEmbed = ((isPdf && !isSharePoint) || (isVideo && !isTikTok) || isGoogleSlides) && !isSharePoint;
   
   // For websites that aren't known embeddable types, show open button
-  const isGenericWebsite = isWebsite && !isPdf && !isVideo && !isGoogleSlides && !isPowerPoint;
+  const isGenericWebsite = isWebsite && !isPdf && !isVideo && !isGoogleSlides && !isPowerPoint && !isTikTok;
   const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint || isGenericWebsite || isSharePoint;
 
   const handleOpenExternal = () => {
@@ -219,6 +224,11 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
                 Open Slideshow
               </Button>
             </div>
+          </div>
+        ) : isTikTok ? (
+          // TikTok videos get special handling with TikTokPlayer component
+          <div className="flex items-center justify-center h-full p-4 overflow-auto">
+            <TikTokPlayer url={resource.url} title={resource.title} />
           </div>
         ) : canEmbed ? (
           <iframe
