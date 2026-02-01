@@ -133,6 +133,10 @@ export const GleeAssistant = () => {
   // ElevenLabs TTS function - uses fetch for binary audio data
   const speakWithElevenLabs = async (text: string) => {
     try {
+      // Import and call forceUnlockAudio to ensure audio works on iOS/PWA
+      const { forceUnlockAudio } = await import('@/utils/mobileAudioUnlock');
+      forceUnlockAudio();
+      
       console.log('Speaking with ElevenLabs:', text.substring(0, 50) + '...');
       
       // Use fetch instead of supabase.functions.invoke for binary audio
@@ -172,11 +176,20 @@ export const GleeAssistant = () => {
       const audio = new Audio(audioUrl);
       audioRef.current = audio;
       
+      // For iOS/PWA: set properties before play
+      audio.preload = 'auto';
+      audio.volume = 1.0;
+      
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
       };
       
-      await audio.play();
+      // Try to play with error handling
+      try {
+        await audio.play();
+      } catch (playError) {
+        console.warn('Audio play failed, will retry on next interaction:', playError);
+      }
     } catch (error) {
       console.error('TTS error:', error);
       // Fallback to browser TTS
@@ -360,20 +373,29 @@ export const GleeAssistant = () => {
     }
   }, [messages]);
 
-  // Greet user when assistant opens
+  // Track if greeting has been spoken (only speak after user interaction)
+  const greetingSpokenRef = useRef(false);
+  
+  // Greet user when assistant opens (text only - audio deferred until interaction)
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      // Add greeting message and speak it
+      // Add greeting message (text only for now)
       const greetingMessage: Message = { 
         role: 'assistant', 
         content: 'How can I help you?' 
       };
       setMessages([greetingMessage]);
-      
-      // Speak the greeting
-      speakWithElevenLabs('How can I help you?');
+      greetingSpokenRef.current = false;
     }
   }, [isOpen]);
+  
+  // Speak greeting on first user interaction (required for iOS/PWA audio unlock)
+  const handleAssistantInteraction = useCallback(() => {
+    if (!greetingSpokenRef.current && messages.length === 1 && messages[0]?.role === 'assistant') {
+      greetingSpokenRef.current = true;
+      speakWithElevenLabs('How can I help you?');
+    }
+  }, [messages, selectedVoice]);
 
   const toggleWakeWord = async () => {
     if (!wakeWordRecognitionRef.current) {
@@ -768,6 +790,8 @@ export const GleeAssistant = () => {
         <div 
           className="fixed bottom-20 sm:bottom-28 right-4 sm:right-6 w-[calc(100%-2rem)] sm:w-[400px] max-w-lg animate-in fade-in slide-in-from-bottom-4 duration-200"
           style={{ zIndex: 100001 }}
+          onClick={handleAssistantInteraction}
+          onTouchStart={handleAssistantInteraction}
         >
           {/* Bubble container */}
           <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-[#C4A962]/30 overflow-hidden">
