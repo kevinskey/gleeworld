@@ -8,7 +8,7 @@ export const cleanupAuthState = () => {
     // Clean localStorage - Remove all Supabase auth keys (project-agnostic)
     const localStorageKeysToRemove: string[] = [];
     Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-') || key.startsWith('pwa-')) {
         localStorageKeysToRemove.push(key);
       }
     });
