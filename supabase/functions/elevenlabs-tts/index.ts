@@ -14,11 +14,12 @@ serve(async (req) => {
 
   try {
     const { text, voiceId } = await req.json();
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+    // Support both the connector secret and legacy secret
+    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY_1") || Deno.env.get("ELEVENLABS_API_KEY");
 
     if (!ELEVENLABS_API_KEY) {
-      console.error("ELEVENLABS_API_KEY not configured");
-      throw new Error("ELEVENLABS_API_KEY is not configured");
+      console.error("ElevenLabs API key not configured (checked ELEVENLABS_API_KEY_1 and ELEVENLABS_API_KEY)");
+      throw new Error("ElevenLabs API key is not configured");
     }
 
     if (!text) {
@@ -28,7 +29,7 @@ serve(async (req) => {
     console.log("Generating TTS for text:", text.substring(0, 100) + "...");
     console.log("Using voice ID:", voiceId);
 
-    // Default to Jessica voice - natural, young female voice
+    // Default to Jessica voice - natural, young female voice matching the Glee Assistant persona
     const selectedVoiceId = voiceId || "cgSgspJ2msm6clMCkdW9";
 
     const response = await fetch(

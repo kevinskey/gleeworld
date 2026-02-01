@@ -130,17 +130,27 @@ export const GleeAssistant = () => {
   ];
   const [selectedVoice, setSelectedVoice] = useState('9wYX8b0wRvLUEYtGuzP5'); // Default to KeKe
 
-  // ElevenLabs TTS function
+  // ElevenLabs TTS function - uses fetch for binary audio data
   const speakWithElevenLabs = async (text: string) => {
     try {
       console.log('Speaking with ElevenLabs:', text.substring(0, 50) + '...');
       
-      const response = await supabase.functions.invoke('elevenlabs-tts', {
-        body: { text, voiceId: selectedVoice }
-      });
+      // Use fetch instead of supabase.functions.invoke for binary audio
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text, voiceId: selectedVoice }),
+        }
+      );
 
-      if (response.error) {
-        console.error('ElevenLabs TTS error:', response.error);
+      if (!response.ok) {
+        console.error('ElevenLabs TTS error:', response.status);
         // Fallback to browser TTS
         if ('speechSynthesis' in window) {
           const utterance = new SpeechSynthesisUtterance(text);
@@ -151,8 +161,8 @@ export const GleeAssistant = () => {
         return;
       }
 
-      // Create audio from the response
-      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+      // Get audio as blob
+      const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
       
       if (audioRef.current) {
