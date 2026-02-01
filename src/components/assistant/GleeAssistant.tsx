@@ -360,6 +360,21 @@ export const GleeAssistant = () => {
     }
   }, [messages]);
 
+  // Greet user when assistant opens
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      // Add greeting message and speak it
+      const greetingMessage: Message = { 
+        role: 'assistant', 
+        content: 'How can I help you?' 
+      };
+      setMessages([greetingMessage]);
+      
+      // Speak the greeting
+      speakWithElevenLabs('How can I help you?');
+    }
+  }, [isOpen]);
+
   const toggleWakeWord = async () => {
     if (!wakeWordRecognitionRef.current) {
       toast({
@@ -773,7 +788,7 @@ export const GleeAssistant = () => {
                     <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-8 w-8 rounded-full object-cover" />
                     <span className="font-semibold text-slate-900 dark:text-white">Glee Assistant</span>
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Hi! I'm your Glee Assistant. How can I help?</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Loading...</p>
                 </div>
               ) : (
                 <div className="space-y-3">
