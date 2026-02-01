@@ -725,7 +725,7 @@ export const GleeAssistant = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="flex fixed bottom-20 sm:bottom-6 right-4 sm:right-6 h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-white border-2 border-[#C4A962] shadow-xl hover:scale-105 transition-transform overflow-hidden z-[9998] items-center justify-center"
+          className="flex fixed bottom-16 sm:bottom-6 right-4 sm:right-6 h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-white border-2 border-[#C4A962] shadow-xl hover:scale-105 transition-transform overflow-hidden z-[100000] items-center justify-center"
           aria-label="Open Glee Assistant"
         >
           <img 
@@ -741,8 +741,8 @@ export const GleeAssistant = () => {
       {/* Speech Bubble Chat */}
       {isOpen && (
         <div 
-          className="fixed bottom-24 sm:bottom-28 right-4 sm:right-6 w-[calc(100%-2rem)] sm:w-[400px] max-w-lg animate-in fade-in slide-in-from-bottom-4 duration-200"
-          style={{ zIndex: 9999 }}
+          className="fixed bottom-20 sm:bottom-28 right-4 sm:right-6 w-[calc(100%-2rem)] sm:w-[400px] max-w-lg animate-in fade-in slide-in-from-bottom-4 duration-200"
+          style={{ zIndex: 100001 }}
         >
           {/* Bubble container */}
           <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-[#C4A962]/30 overflow-hidden">
