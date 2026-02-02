@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface EnrolledStudent {
-  user_id: string;
+  user_id: string; // Can be actual user_id or student_profile_id for CSV imports
   full_name: string;
   email: string | null;
   voice_part?: string | null;
   enrolled_at?: string;
+  is_csv_import?: boolean; // True if from gw_student_profiles (CSV import)
 }
 
 interface UseCourseStudentsOptions {
@@ -43,10 +44,10 @@ export const useCourseStudents = ({
     setError(null);
 
     try {
-      // Build enrollment query with filters
+      // Build enrollment query with filters - include both user_id and student_profile_id
       let enrollmentQuery = supabase
         .from('gw_course_enrollments')
-        .select('user_id, enrolled_at')
+        .select('user_id, student_profile_id, enrolled_at')
         .eq('course_id', courseId);
 
       // Filter by enrollment status unless including inactive
@@ -66,43 +67,86 @@ export const useCourseStudents = ({
         throw enrollError;
       }
 
+      // Separate enrollments by type
       const userIds = (enrollments || [])
         .map(e => e.user_id)
-        .filter(Boolean);
+        .filter((id): id is string => id !== null);
+      
+      const studentProfileIds = (enrollments || [])
+        .filter(e => !e.user_id && e.student_profile_id)
+        .map(e => e.student_profile_id)
+        .filter((id): id is string => id !== null);
 
-      if (userIds.length === 0) {
-        setStudents([]);
-        setLoading(false);
-        return;
+      const allStudents: EnrolledStudent[] = [];
+
+      // Fetch profiles for users with user_id (logged-in users)
+      if (userIds.length > 0) {
+        const { data: profiles, error: profileError } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email, voice_part')
+          .in('user_id', userIds);
+
+        if (profileError) {
+          console.error('Error fetching profiles:', profileError);
+          throw profileError;
+        }
+
+        // Create enrollment date map for user_ids
+        const enrollmentMap = new Map(
+          (enrollments || [])
+            .filter(e => e.user_id)
+            .map(e => [e.user_id, e.enrolled_at])
+        );
+
+        // Add logged-in users
+        (profiles || []).forEach(p => {
+          allStudents.push({
+            user_id: p.user_id,
+            full_name: p.full_name || 'Unknown',
+            email: p.email,
+            voice_part: p.voice_part,
+            enrolled_at: enrollmentMap.get(p.user_id) || undefined,
+            is_csv_import: false
+          });
+        });
       }
 
-      // Fetch profiles for enrolled students
-      const { data: profiles, error: profileError } = await supabase
-        .from('gw_profiles')
-        .select('user_id, full_name, email, voice_part')
-        .in('user_id', userIds)
-        .order('full_name');
+      // Fetch student profiles for CSV imports (students with student_profile_id but no user_id)
+      if (studentProfileIds.length > 0) {
+        const { data: studentProfiles, error: studentProfileError } = await supabase
+          .from('gw_student_profiles')
+          .select('id, full_name, email')
+          .in('id', studentProfileIds);
 
-      if (profileError) {
-        console.error('Error fetching profiles:', profileError);
-        throw profileError;
+        if (studentProfileError) {
+          console.error('Error fetching student profiles:', studentProfileError);
+          throw studentProfileError;
+        }
+
+        // Create enrollment date map for student_profile_ids
+        const enrollmentMapCSV = new Map(
+          (enrollments || [])
+            .filter(e => !e.user_id && e.student_profile_id)
+            .map(e => [e.student_profile_id, e.enrolled_at])
+        );
+
+        // Add CSV-imported students
+        (studentProfiles || []).forEach(sp => {
+          allStudents.push({
+            user_id: sp.id, // Use student_profile_id as the identifier
+            full_name: sp.full_name || 'Unknown',
+            email: sp.email,
+            voice_part: null,
+            enrolled_at: enrollmentMapCSV.get(sp.id) || undefined,
+            is_csv_import: true
+          });
+        });
       }
 
-      // Create enrollment date map
-      const enrollmentMap = new Map(
-        (enrollments || []).map(e => [e.user_id, e.enrolled_at])
-      );
+      // Sort all students by name
+      allStudents.sort((a, b) => a.full_name.localeCompare(b.full_name));
 
-      // Map to EnrolledStudent format
-      const enrolledStudents: EnrolledStudent[] = (profiles || []).map(p => ({
-        user_id: p.user_id,
-        full_name: p.full_name || 'Unknown',
-        email: p.email,
-        voice_part: p.voice_part,
-        enrolled_at: enrollmentMap.get(p.user_id) || undefined
-      }));
-
-      setStudents(enrolledStudents);
+      setStudents(allStudents);
     } catch (err) {
       console.error('Error in useCourseStudents:', err);
       setError('Failed to fetch enrolled students');
