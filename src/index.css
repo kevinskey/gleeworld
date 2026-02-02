@@ -133,7 +133,7 @@
 
     /* Muted Elements - WCAG AA Compliant (4.5:1 contrast on white) */
     --muted: 40 10% 96%; /* Warm off-white */
-    --muted-foreground: 0 0% 30%; /* Darker gray for better contrast - meets 4.5:1 */
+    --muted-foreground: 0 0% 20%; /* Much darker gray for better contrast - meets 7:1 */
 
     /* Accent for Interactive Elements */
     --accent: 40 10% 96%; /* Warm neutral accent */
