@@ -701,7 +701,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
       </div>
 
       {/* Mac-style Setlist List */}
-      <div className="space-y-1 max-h-[50vh] overflow-y-auto">
+      <div className="space-y-1 max-h-[70vh] overflow-y-auto">
         {setlists.map((setlist) => (
           <div key={setlist.id}>
             {/* Setlist Row */}
