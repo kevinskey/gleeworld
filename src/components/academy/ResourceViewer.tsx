@@ -152,7 +152,16 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint || isGenericWebsite || isSharePoint || isNonEmbeddableGoogle;
 
   const handleOpenExternal = () => {
-    window.open(resource.url, '_blank', 'noopener,noreferrer');
+    // Use anchor element approach to ensure clean referrer stripping
+    // Some Google services block window.open from certain origins
+    const anchor = document.createElement('a');
+    anchor.href = resource.url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    anchor.referrerPolicy = 'no-referrer';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
   };
 
   const content = (
