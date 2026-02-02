@@ -107,6 +107,10 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   const isAudio = resource.resource_type === 'audio' || resource.url.includes('soundcloud');
   const isWebsite = resource.resource_type === 'website';
   const isSharePoint = resource.url.includes('sharepoint.com') || resource.url.includes('sharepoint-my.com');
+  // Google services that block iframe embedding
+  const isNonEmbeddableGoogle = resource.url.includes('notebooklm.google.com') || 
+    resource.url.includes('drive.google.com') ||
+    resource.url.includes('calendar.google.com');
   const isExternalReading = resource.resource_type === 'reading' ||
     resource.url.includes('bible.usccb.org') ||
     resource.url.includes('usccb.org');
@@ -141,11 +145,11 @@ export const ResourceViewer: React.FC<ResourceViewerProps> = ({
   // - Most external websites block iframing (X-Frame-Options, CSP), so we open them externally
   // - PowerPoint files need special native viewer handling
   // - External readings/audio/generic websites open in new tab
-  const canEmbed = ((isPdf && !isSharePoint) || (isVideo && !isTikTok) || isGoogleSlides) && !isSharePoint;
+  const canEmbed = ((isPdf && !isSharePoint) || (isVideo && !isTikTok) || isGoogleSlides) && !isSharePoint && !isNonEmbeddableGoogle;
   
   // For websites that aren't known embeddable types, show open button
   const isGenericWebsite = isWebsite && !isPdf && !isVideo && !isGoogleSlides && !isPowerPoint && !isTikTok;
-  const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint || isGenericWebsite || isSharePoint;
+  const shouldShowOpenButton = isExternalReading || isAudio || isPowerPoint || isGenericWebsite || isSharePoint || isNonEmbeddableGoogle;
 
   const handleOpenExternal = () => {
     window.open(resource.url, '_blank', 'noopener,noreferrer');
