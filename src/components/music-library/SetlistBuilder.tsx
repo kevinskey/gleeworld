@@ -745,13 +745,13 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                 {selectedSetlist.items?.map((item, index) => (
                   <div 
                     key={item.id} 
-                    className="flex items-center gap-2 px-2 py-1.5 rounded bg-muted/50 hover:bg-muted group/item"
+                    className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/90 hover:bg-white group/item border border-border/50"
                   >
-                    <span className="text-xs text-muted-foreground w-5 text-right font-mono">{index + 1}.</span>
+                    <span className="text-xs text-slate-600 w-5 text-right font-mono">{index + 1}.</span>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm text-foreground truncate block">{item.sheet_music?.title}</span>
+                      <span className="text-sm text-slate-900 font-medium truncate block">{item.sheet_music?.title}</span>
                       {item.sheet_music?.composer && (
-                        <span className="text-xs text-muted-foreground truncate block">{item.sheet_music.composer}</span>
+                        <span className="text-xs text-slate-600 truncate block">{item.sheet_music.composer}</span>
                       )}
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
