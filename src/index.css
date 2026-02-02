@@ -131,9 +131,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    /* Muted Elements - WCAG AA Compliant (4.5:1 contrast on white) */
+    /* Muted Elements - High contrast for readability */
     --muted: 40 10% 96%; /* Warm off-white */
-    --muted-foreground: 0 0% 20%; /* Much darker gray for better contrast - meets 7:1 */
+    --muted-foreground: 0 0% 10%; /* Near-black for maximum readability */
 
     /* Accent for Interactive Elements */
     --accent: 40 10% 96%; /* Warm neutral accent */
