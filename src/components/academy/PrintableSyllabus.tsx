@@ -8,7 +8,10 @@ interface PrintableSyllabusProps {
 
 export const PrintableSyllabus: React.FC<PrintableSyllabusProps> = ({ syllabus }) => {
   return (
-    <div className="max-w-4xl mx-auto bg-white text-black print:bg-white print:text-black p-8 print:p-6">
+    <div 
+      className="max-w-4xl mx-auto p-8 print:p-6"
+      style={{ backgroundColor: '#ffffff', color: '#000000' }}
+    >
       {/* Header */}
       <header className="text-center mb-6 print:mb-4">
         <div className="flex justify-center mb-4 print:mb-2">

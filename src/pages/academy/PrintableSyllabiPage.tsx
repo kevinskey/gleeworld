@@ -105,7 +105,8 @@ export default function PrintableSyllabiPage() {
         <div className="max-w-6xl mx-auto px-4 pb-8 print:px-0 print:pb-0 print:max-w-none">
           <div 
             ref={printRef} 
-            className="bg-white shadow-lg print:shadow-none rounded-lg print:rounded-none overflow-hidden"
+            className="shadow-lg print:shadow-none rounded-lg print:rounded-none overflow-hidden"
+            style={{ backgroundColor: '#ffffff' }}
           >
             <PrintableSyllabus syllabus={selectedSyllabus} />
           </div>
