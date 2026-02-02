@@ -875,10 +875,12 @@ export const GleeAssistant = () => {
             <div className="border-t border-slate-200 dark:border-slate-700 p-3 bg-slate-50 dark:bg-slate-800/50">
               <div className="flex gap-2 items-center">
                 <Button
-                  variant={isListening ? "destructive" : "ghost"}
+                  variant={isListening ? "destructive" : "outline"}
                   size="icon"
                   onClick={toggleListening}
-                  className="h-8 w-8 flex-shrink-0 rounded-full"
+                  className={`h-8 w-8 flex-shrink-0 rounded-full ${
+                    !isListening ? 'bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600' : ''
+                  }`}
                   disabled={isLoading}
                 >
                   {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
