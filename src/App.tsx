@@ -54,6 +54,7 @@ import CourseOnboarding from "./pages/academy/CourseOnboarding";
 import AcademyCoursesAdmin from "./pages/admin/AcademyCoursesAdmin";
 import CourseInstructorConsole from "./pages/courses/CourseInstructorConsole";
 import LH100BowmanScholars from "./pages/academy/LH100BowmanScholars";
+import PrintableSyllabiPage from "./pages/academy/PrintableSyllabiPage";
 
 
 import Index from "./pages/Index";
@@ -520,6 +521,16 @@ const App = () => {
               <Route path="/mus-210" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/choral-conducting-literature" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/classes/mus210" element={<Navigate to="/academy/mus-210" replace />} />
+              
+              {/* Printable Syllabi Page - must be before wildcard route */}
+              <Route 
+                path="/academy/printable-syllabi" 
+                element={
+                  <ProtectedRoute>
+                    <PrintableSyllabiPage />
+                  </ProtectedRoute>
+                }
+              />
               
               {/* Course Audio Page - must be before wildcard route */}
               <Route 
