@@ -221,80 +221,43 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     
     const clipboardData = e.clipboardData;
     let pastedData = clipboardData.getData('text/html');
-    
-    const parseCssColorToRgb = (input: string): { r: number; g: number; b: number } | null => {
-      const c = input.trim().toLowerCase();
-
-      // rgb / rgba
-      const rgbMatch = c.match(/rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(\d*\.?\d+)\s*)?\)/);
-      if (rgbMatch) {
-        const r = Number(rgbMatch[1]);
-        const g = Number(rgbMatch[2]);
-        const b = Number(rgbMatch[3]);
-        if ([r, g, b].some((n) => Number.isNaN(n))) return null;
-        return { r: Math.max(0, Math.min(255, r)), g: Math.max(0, Math.min(255, g)), b: Math.max(0, Math.min(255, b)) };
-      }
-
-      // hex (#rgb / #rrggbb)
-      const hexMatch = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-      if (hexMatch) {
-        const hex = hexMatch[1];
-        if (hex.length === 3) {
-          const r = parseInt(hex[0] + hex[0], 16);
-          const g = parseInt(hex[1] + hex[1], 16);
-          const b = parseInt(hex[2] + hex[2], 16);
-          return { r, g, b };
-        }
-        const r = parseInt(hex.slice(0, 2), 16);
-        const g = parseInt(hex.slice(2, 4), 16);
-        const b = parseInt(hex.slice(4, 6), 16);
-        return { r, g, b };
-      }
-
-      // Named colors (minimal set we care about)
-      if (c === 'white') return { r: 255, g: 255, b: 255 };
-      if (c === 'black') return { r: 0, g: 0, b: 0 };
-
-      return null;
-    };
-
-    const isTooLightForWhiteBg = (cssColor: string): boolean => {
-      const rgb = parseCssColorToRgb(cssColor);
-      if (!rgb) return false;
-
-      // Relative luminance (sRGB) — if it's very bright, it will be hard to read on white.
-      const srgb = [rgb.r, rgb.g, rgb.b].map((v) => {
-        const c = v / 255;
-        return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-      });
-      const [r, g, b] = srgb;
-      const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-      // ~0.85+ tends to look “washed out / invisible” on white (e.g., #ccc, #ddd, etc.)
-      return luminance >= 0.85;
-    };
 
     if (pastedData) {
       // Create a temporary container to parse and clean the HTML
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = pastedData;
       
-      // Aggressively remove ALL background colors and light text colors
+      // Aggressively remove ALL background + color styling so pasted/typed content defaults to black.
+      // (Also handle legacy <font color="..."> and elements with a `color` attribute.)
       const allElements = tempDiv.querySelectorAll('*');
       allElements.forEach((el) => {
         const element = el as HTMLElement;
-        // Remove ALL background colors - they cause visibility issues
-        // Strip ALL background styles
-        element.style.backgroundColor = '';
+
+        // Strip background/highlight (inline styles)
+        element.style.removeProperty('background');
+        element.style.removeProperty('background-color');
         element.style.background = '';
-        
-        // Force ALL text to black - strip any color styling
+        element.style.backgroundColor = '';
+
+        // Strip text color (inline styles)
+        element.style.removeProperty('color');
         element.style.color = '';
+
+        // Strip legacy attributes that can force white text
+        element.removeAttribute('color');
       });
       
       // Also strip bgcolor attributes from tables
       tempDiv.querySelectorAll('[bgcolor]').forEach(el => el.removeAttribute('bgcolor'));
       tempDiv.querySelectorAll('[background]').forEach(el => el.removeAttribute('background'));
+
+      // Specifically handle <font color="..."> tags (common from older clients)
+      tempDiv.querySelectorAll('font[color]').forEach((el) => el.removeAttribute('color'));
+
+      // Remove <mark> highlights by unwrapping the tag (defaults can render yellow highlights)
+      tempDiv.querySelectorAll('mark').forEach((el) => {
+        el.replaceWith(...Array.from(el.childNodes));
+      });
       
       pastedData = tempDiv.innerHTML;
     } else {
