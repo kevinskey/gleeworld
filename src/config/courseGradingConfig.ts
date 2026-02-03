@@ -61,11 +61,12 @@ export const COURSE_GRADING_CONFIGS: Record<string, CourseGradingConfig> = {
     courseId: '23c4ee3c-7bbb-4534-8c0a-eecd88298d37',
     courseCode: 'MUS 240',
     components: [
-      { component: 'Listening Journals', weight: 25, description: 'Weekly journal entries analyzing assigned music' },
-      { component: 'Research Paper', weight: 25, description: 'Major research paper on a course topic' },
-      { component: 'Midterm Exam', weight: 20, description: 'Midterm examination' },
-      { component: 'Final Exam', weight: 20, description: 'Comprehensive final examination' },
-      { component: 'Class Participation', weight: 10, description: 'Polls, discussions, and attendance' }
+      { component: 'Listening Journals', weight: 30, description: '10 × 20 pts = 200 pts: Weekly 250–300 word essays connecting listening examples to cultural context' },
+      { component: 'Research Project', weight: 23, description: '150 pts: Includes proposal, annotated bibliography, and final online presentation' },
+      { component: 'AI Group Project', weight: 15, description: '100 pts: Six collaborative teams explore AI\'s role in African American music' },
+      { component: 'Midterm Exam', weight: 15, description: '100 pts: Listening identification + essays on style and context' },
+      { component: 'Final Reflection Essay', weight: 8, description: '50 pts: 4–5 page synthesis essay connecting course themes and personal insights' },
+      { component: 'Participation/Discussion/Attendance', weight: 8, description: '50 pts: Consistent preparation and engagement in class' }
     ],
     usesDeductiveModel: true,
     attendanceDeductionPerAbsence: 2
