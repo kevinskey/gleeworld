@@ -514,16 +514,18 @@ export const MessengerModal: React.FC = () => {
                             </Button>
                           )}
                         </div>
-                        <div className="flex flex-wrap gap-2 p-2 min-h-[44px] border rounded-lg bg-background">
-                          {recipients.map((r, i) => (
-                            <Badge key={i} variant="secondary" className="gap-1 pr-1">
-                              {r}
-                              <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                          <div className="relative flex-1 min-w-[200px]">
+                        <div className="border rounded-lg bg-background">
+                          <div className="flex flex-wrap gap-2 p-2 min-h-[44px] max-h-[120px] overflow-y-auto">
+                            {recipients.map((r, i) => (
+                              <Badge key={i} variant="secondary" className="gap-1 pr-1 shrink-0">
+                                {r}
+                                <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="relative border-t">
                             <Input
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
@@ -533,7 +535,7 @@ export const MessengerModal: React.FC = () => {
                                 }
                               }}
                               placeholder="Search or type email..."
-                              className="border-0 h-8 p-0 focus-visible:ring-0"
+                              className="border-0 h-10 px-2 focus-visible:ring-0 rounded-t-none"
                             />
                             {searchResults.length > 0 && (
                               <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -621,21 +623,23 @@ export const MessengerModal: React.FC = () => {
                               </Button>
                             )}
                           </div>
-                          <div className="flex flex-wrap gap-2 p-2 min-h-[44px] border rounded-lg bg-background">
-                            {smsRecipients.map((r) => (
-                              <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1">
-                                {r.full_name}
-                                <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </Badge>
-                            ))}
-                            <div className="relative flex-1 min-w-[200px]">
+                          <div className="border rounded-lg bg-background">
+                            <div className="flex flex-wrap gap-2 p-2 min-h-[44px] max-h-[120px] overflow-y-auto">
+                              {smsRecipients.map((r) => (
+                                <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1 shrink-0">
+                                  {r.full_name}
+                                  <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
+                            <div className="relative border-t">
                               <Input
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search members..."
-                                className="border-0 h-8 p-0 focus-visible:ring-0"
+                                className="border-0 h-10 px-2 focus-visible:ring-0 rounded-t-none"
                               />
                               {searchResults.length > 0 && (
                                 <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -896,16 +900,18 @@ export const MessengerModal: React.FC = () => {
                       {/* Recipients */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">To:</Label>
-                        <div className="flex flex-wrap gap-2 p-2 min-h-[44px] border rounded-lg bg-background">
-                          {recipients.map((r, i) => (
-                            <Badge key={i} variant="secondary" className="gap-1 pr-1">
-                              {r}
-                              <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                          <div className="relative flex-1 min-w-[200px]">
+                        <div className="border rounded-lg bg-background">
+                          <div className="flex flex-wrap gap-2 p-2 min-h-[44px] max-h-[120px] overflow-y-auto">
+                            {recipients.map((r, i) => (
+                              <Badge key={i} variant="secondary" className="gap-1 pr-1 shrink-0">
+                                {r}
+                                <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="relative border-t">
                             <Input
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
@@ -915,7 +921,7 @@ export const MessengerModal: React.FC = () => {
                                 }
                               }}
                               placeholder="Search members or enter email..."
-                              className="border-0 shadow-none focus-visible:ring-0 h-8 text-sm"
+                              className="border-0 shadow-none focus-visible:ring-0 h-10 px-2 text-sm rounded-t-none"
                             />
                             {isSearching && (
                               <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
