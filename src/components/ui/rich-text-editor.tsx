@@ -1,57 +1,12 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  List,
-  ListOrdered,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Link as LinkIcon,
-  Undo,
-  Redo,
-  Image,
-  Video,
-  Quote,
-  Minus,
-  Type,
-  Palette,
-  RemoveFormatting,
-  Heading1,
-  Heading2,
-  Heading3,
-  Loader2,
-  Search,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-
+import { Bold, Italic, Underline, Strikethrough, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, Undo, Redo, Image, Video, Quote, Minus, Type, Palette, RemoveFormatting, Heading1, Heading2, Heading3, Loader2, Search, ChevronDown, ChevronUp } from 'lucide-react';
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -59,7 +14,6 @@ interface RichTextEditorProps {
   className?: string;
   minHeight?: string;
 }
-
 interface MediaItem {
   id: string;
   title: string;
@@ -67,58 +21,104 @@ interface MediaItem {
   file_type: string;
   created_at: string;
 }
-
 const FONT_FAMILIES = [
-  // System Fonts
-  { value: 'Arial, sans-serif', label: 'Arial' },
-  { value: 'Georgia, serif', label: 'Georgia' },
-  { value: 'Times New Roman, serif', label: 'Times New Roman' },
-  { value: 'Verdana, sans-serif', label: 'Verdana' },
-  { value: 'Courier New, monospace', label: 'Courier New' },
-  // Google Fonts - Sans Serif
-  { value: 'Montserrat, sans-serif', label: 'Montserrat' },
-  { value: 'Open Sans, sans-serif', label: 'Open Sans' },
-  { value: 'Lato, sans-serif', label: 'Lato' },
-  { value: 'Poppins, sans-serif', label: 'Poppins' },
-  { value: 'Raleway, sans-serif', label: 'Raleway' },
-  { value: 'Oswald, sans-serif', label: 'Oswald' },
-  { value: 'Roboto, sans-serif', label: 'Roboto' },
-  // Google Fonts - Serif
-  { value: 'Playfair Display, serif', label: 'Playfair Display' },
-  { value: 'Merriweather, serif', label: 'Merriweather' },
-  { value: 'Libre Baskerville, serif', label: 'Libre Baskerville' },
-  { value: 'Cormorant Garamond, serif', label: 'Cormorant Garamond' },
-  { value: 'Cinzel, serif', label: 'Cinzel' },
-  // Google Fonts - Display/Script
-  { value: 'Dancing Script, cursive', label: 'Dancing Script' },
-  { value: 'Bebas Neue, sans-serif', label: 'Bebas Neue' },
-  { value: 'Graduate, serif', label: 'Graduate' },
-];
-
-const FONT_SIZES = [
-  { value: '1', label: 'Tiny (10px)' },
-  { value: '2', label: 'Small (13px)' },
-  { value: '3', label: 'Normal (16px)' },
-  { value: '4', label: 'Medium (18px)' },
-  { value: '5', label: 'Large (24px)' },
-  { value: '6', label: 'X-Large (32px)' },
-  { value: '7', label: 'Huge (48px)' },
-];
-
-const COLORS = [
-  '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
-  '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
-  '#e6b8af', '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#c9daf8', '#cfe2f3', '#d9d2e9', '#ead1dc',
-  '#dd7e6b', '#ea9999', '#f9cb9c', '#ffe599', '#b6d7a8', '#a2c4c9', '#a4c2f4', '#9fc5e8', '#b4a7d6', '#d5a6bd',
-  '#cc4125', '#e06666', '#f6b26b', '#ffd966', '#93c47d', '#76a5af', '#6d9eeb', '#6fa8dc', '#8e7cc3', '#c27ba0',
-];
-
+// System Fonts
+{
+  value: 'Arial, sans-serif',
+  label: 'Arial'
+}, {
+  value: 'Georgia, serif',
+  label: 'Georgia'
+}, {
+  value: 'Times New Roman, serif',
+  label: 'Times New Roman'
+}, {
+  value: 'Verdana, sans-serif',
+  label: 'Verdana'
+}, {
+  value: 'Courier New, monospace',
+  label: 'Courier New'
+},
+// Google Fonts - Sans Serif
+{
+  value: 'Montserrat, sans-serif',
+  label: 'Montserrat'
+}, {
+  value: 'Open Sans, sans-serif',
+  label: 'Open Sans'
+}, {
+  value: 'Lato, sans-serif',
+  label: 'Lato'
+}, {
+  value: 'Poppins, sans-serif',
+  label: 'Poppins'
+}, {
+  value: 'Raleway, sans-serif',
+  label: 'Raleway'
+}, {
+  value: 'Oswald, sans-serif',
+  label: 'Oswald'
+}, {
+  value: 'Roboto, sans-serif',
+  label: 'Roboto'
+},
+// Google Fonts - Serif
+{
+  value: 'Playfair Display, serif',
+  label: 'Playfair Display'
+}, {
+  value: 'Merriweather, serif',
+  label: 'Merriweather'
+}, {
+  value: 'Libre Baskerville, serif',
+  label: 'Libre Baskerville'
+}, {
+  value: 'Cormorant Garamond, serif',
+  label: 'Cormorant Garamond'
+}, {
+  value: 'Cinzel, serif',
+  label: 'Cinzel'
+},
+// Google Fonts - Display/Script
+{
+  value: 'Dancing Script, cursive',
+  label: 'Dancing Script'
+}, {
+  value: 'Bebas Neue, sans-serif',
+  label: 'Bebas Neue'
+}, {
+  value: 'Graduate, serif',
+  label: 'Graduate'
+}];
+const FONT_SIZES = [{
+  value: '1',
+  label: 'Tiny (10px)'
+}, {
+  value: '2',
+  label: 'Small (13px)'
+}, {
+  value: '3',
+  label: 'Normal (16px)'
+}, {
+  value: '4',
+  label: 'Medium (18px)'
+}, {
+  value: '5',
+  label: 'Large (24px)'
+}, {
+  value: '6',
+  label: 'X-Large (32px)'
+}, {
+  value: '7',
+  label: 'Huge (48px)'
+}];
+const COLORS = ['#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff', '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff', '#e6b8af', '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#c9daf8', '#cfe2f3', '#d9d2e9', '#ead1dc', '#dd7e6b', '#ea9999', '#f9cb9c', '#ffe599', '#b6d7a8', '#a2c4c9', '#a4c2f4', '#9fc5e8', '#b4a7d6', '#d5a6bd', '#cc4125', '#e06666', '#f6b26b', '#ffd966', '#93c47d', '#76a5af', '#6d9eeb', '#6fa8dc', '#8e7cc3', '#c27ba0'];
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   value,
   onChange,
   placeholder = 'Type your message...',
   className = '',
-  minHeight = '200px',
+  minHeight = '200px'
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const isInternalChange = useRef(false);
@@ -154,17 +154,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       fetchMediaImages();
     }
   }, [showMediaLibrary]);
-
   const fetchMediaImages = async () => {
     setLoadingMedia(true);
     try {
-      const { data, error } = await supabase
-        .from('gw_media_library')
-        .select('id, title, file_url, file_type, created_at')
-        .like('file_type', 'image/%')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
+      const {
+        data,
+        error
+      } = await supabase.from('gw_media_library').select('id, title, file_url, file_type, created_at').like('file_type', 'image/%').order('created_at', {
+        ascending: false
+      }).limit(100);
       if (error) throw error;
       const rows = (data ?? []) as MediaItem[];
       console.log('Media library images loaded:', rows.length);
@@ -176,11 +174,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       setLoadingMedia(false);
     }
   };
-
   const filteredMedia = (() => {
     const needle = mediaSearch.trim().toLowerCase();
     if (!needle) return mediaItems;
-    return mediaItems.filter((item) => {
+    return mediaItems.filter(item => {
       const title = (item.title ?? '').toLowerCase();
       const url = (item.file_url ?? '').toLowerCase();
       return title.includes(needle) || url.includes(needle);
@@ -189,14 +186,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // Store selection range to restore after dialog closes
   const savedSelection = useRef<Range | null>(null);
-
   const saveSelection = useCallback(() => {
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
       savedSelection.current = selection.getRangeAt(0).cloneRange();
     }
   }, []);
-
   const restoreSelection = useCallback(() => {
     if (savedSelection.current && editorRef.current) {
       editorRef.current.focus();
@@ -207,7 +202,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       }
     }
   }, []);
-
   const handleInput = useCallback(() => {
     if (editorRef.current) {
       isInternalChange.current = true;
@@ -218,19 +212,17 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // Handle paste to strip ALL problematic styles (backgrounds, white text)
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     e.preventDefault();
-    
     const clipboardData = e.clipboardData;
     let pastedData = clipboardData.getData('text/html');
-
     if (pastedData) {
       // Create a temporary container to parse and clean the HTML
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = pastedData;
-      
+
       // Aggressively remove ALL background + color styling so pasted/typed content defaults to black.
       // (Also handle legacy <font color="..."> and elements with a `color` attribute.)
       const allElements = tempDiv.querySelectorAll('*');
-      allElements.forEach((el) => {
+      allElements.forEach(el => {
         const element = el as HTMLElement;
 
         // Strip background/highlight (inline styles)
@@ -246,26 +238,24 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         // Strip legacy attributes that can force white text
         element.removeAttribute('color');
       });
-      
+
       // Also strip bgcolor attributes from tables
       tempDiv.querySelectorAll('[bgcolor]').forEach(el => el.removeAttribute('bgcolor'));
       tempDiv.querySelectorAll('[background]').forEach(el => el.removeAttribute('background'));
 
       // Specifically handle <font color="..."> tags (common from older clients)
-      tempDiv.querySelectorAll('font[color]').forEach((el) => el.removeAttribute('color'));
+      tempDiv.querySelectorAll('font[color]').forEach(el => el.removeAttribute('color'));
 
       // Remove <mark> highlights by unwrapping the tag (defaults can render yellow highlights)
-      tempDiv.querySelectorAll('mark').forEach((el) => {
+      tempDiv.querySelectorAll('mark').forEach(el => {
         el.replaceWith(...Array.from(el.childNodes));
       });
-      
       pastedData = tempDiv.innerHTML;
     } else {
       // Fall back to plain text
       pastedData = clipboardData.getData('text/plain');
       pastedData = pastedData.replace(/\n/g, '<br>');
     }
-    
     document.execCommand('insertHTML', false, pastedData);
     handleInput();
   }, [handleInput]);
@@ -280,10 +270,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       // Detect current alignment
       const float = img.style.float;
       const margin = img.style.marginLeft;
-      if (float === 'left') setImageAlign('left');
-      else if (float === 'right') setImageAlign('right');
-      else if (margin === 'auto') setImageAlign('center');
-      else setImageAlign('inline');
+      if (float === 'left') setImageAlign('left');else if (float === 'right') setImageAlign('right');else if (margin === 'auto') setImageAlign('center');else setImageAlign('inline');
       img.classList.add('rte-image-selected');
     } else {
       // Deselect if clicking elsewhere
@@ -302,7 +289,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       selectedImage.style.marginLeft = '';
       selectedImage.style.marginRight = '';
       selectedImage.style.display = 'block';
-      
       switch (align) {
         case 'left':
           selectedImage.style.float = 'left';
@@ -338,13 +324,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       handleInput();
     }
   }, [selectedImage, handleInput]);
-
   const exec = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
     editorRef.current?.focus();
     handleInput();
   }, [handleInput]);
-
   const insertImage = useCallback((imageUrl: string) => {
     console.log('Inserting image:', imageUrl);
 
@@ -354,7 +338,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     // Defer insertion to the next tick so the Dialog unmount doesn’t steal focus
     window.setTimeout(() => {
       if (!editorRef.current) return;
-
       editorRef.current.focus();
 
       // If we have a saved selection, restore it
@@ -365,7 +348,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           selection.addRange(savedSelection.current);
         }
       }
-
       const imgHtml = `<img src="${imageUrl}" alt="Email image" class="rte-image" style="max-width: 300px; width: 300px; height: auto; border-radius: 8px; margin: 8px 0; display: block; cursor: pointer;" />`;
 
       // Try inserting at cursor
@@ -376,27 +358,21 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       if (!success) {
         editorRef.current.innerHTML = `${editorRef.current.innerHTML}${imgHtml}<br/>`;
       }
-
       isInternalChange.current = true;
       onChange(editorRef.current.innerHTML);
     }, 0);
   }, [onChange]);
-
   const insertVideo = useCallback(() => {
     if (!videoUrl) {
       console.log('No video URL provided');
       return;
     }
-    
     console.log('Attempting to insert video:', videoUrl);
-    
     let videoId = '';
     let platform = '';
     let thumbnailUrl = '';
-    
     const youtubeMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/);
     const vimeoMatch = videoUrl.match(/vimeo\.com\/(\d+)/);
-    
     if (youtubeMatch) {
       videoId = youtubeMatch[1];
       platform = 'YouTube';
@@ -410,20 +386,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       console.log('Unknown video format, using generic embed');
       platform = 'Video';
     }
+    const watchUrl = platform === 'YouTube' ? `https://www.youtube.com/watch?v=${videoId}` : platform === 'Vimeo' ? `https://vimeo.com/${videoId}` : videoUrl;
 
-    const watchUrl = platform === 'YouTube' 
-      ? `https://www.youtube.com/watch?v=${videoId}`
-      : platform === 'Vimeo'
-      ? `https://vimeo.com/${videoId}`
-      : videoUrl;
-    
     // Wrap in anchor tag so it's clickable in emails
     const htmlToInsert = `<a href="${watchUrl}" target="_blank" rel="noopener noreferrer" style="display: block; text-decoration: none; max-width: 560px; margin: 16px 0;">
       <div contenteditable="false" style="position: relative; border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 2px solid #333;">
-        ${thumbnailUrl 
-          ? `<img src="${thumbnailUrl}" alt="${platform} video" style="width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover;" />` 
-          : `<div style="aspect-ratio: 16/9; background: linear-gradient(135deg, #1e3a5f 0%, #0056a6 100%);"></div>`
-        }
+        ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="${platform} video" style="width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover;" />` : `<div style="aspect-ratio: 16/9; background: linear-gradient(135deg, #1e3a5f 0%, #0056a6 100%);"></div>`}
         <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
           <div style="width: 80px; height: 56px; background: rgba(255,0,0,0.9); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
             <div style="width: 0; height: 0; border-left: 24px solid white; border-top: 14px solid transparent; border-bottom: 14px solid transparent; margin-left: 6px;"></div>
@@ -434,26 +402,23 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </div>
       </div>
     </a>&nbsp;`;
-    
     console.log('Inserting HTML');
-    
+
     // Focus the editor first
     editorRef.current?.focus();
-    
+
     // Use insertHTML command
     const success = document.execCommand('insertHTML', false, htmlToInsert);
     console.log('insertHTML success:', success);
-    
+
     // Manually trigger input handler
     if (editorRef.current) {
       isInternalChange.current = true;
       onChange(editorRef.current.innerHTML);
     }
-    
     setVideoUrl('');
     setShowVideoPopover(false);
   }, [videoUrl, onChange]);
-
   const insertLink = useCallback(() => {
     if (linkUrl) {
       exec('createLink', linkUrl);
@@ -461,34 +426,21 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       setShowLinkPopover(false);
     }
   }, [linkUrl, exec]);
-
-  const ToolbarButton = ({ 
-    onClick, 
-    icon: Icon, 
+  const ToolbarButton = ({
+    onClick,
+    icon: Icon,
     title,
-    active = false,
-  }: { 
-    onClick: () => void; 
-    icon: React.ElementType; 
+    active = false
+  }: {
+    onClick: () => void;
+    icon: React.ElementType;
     title: string;
     active?: boolean;
-  }) => (
-    <Button
-      type="button"
-      variant={active ? "secondary" : "ghost"}
-      size="sm"
-      className="h-8 w-8 p-0"
-      onClick={onClick}
-      title={title}
-    >
+  }) => <Button type="button" variant={active ? "secondary" : "ghost"} size="sm" className="h-8 w-8 p-0" onClick={onClick} title={title}>
       <Icon className="h-4 w-4" />
-    </Button>
-  );
-
+    </Button>;
   const ToolbarDivider = () => <div className="w-px h-6 bg-border mx-1" />;
-
-  return (
-    <>
+  return <>
       <div className={`border rounded-lg overflow-hidden bg-background ${className}`}>
         {/* Mobile Compact Toolbar - Always visible on mobile */}
         <div className="flex sm:hidden items-center justify-between gap-1 p-2 border-b bg-muted/30">
@@ -500,50 +452,41 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <ToolbarButton onClick={() => exec('insertUnorderedList')} icon={List} title="Bullet List" />
             <ToolbarButton onClick={() => exec('insertOrderedList')} icon={ListOrdered} title="Numbered List" />
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 text-xs flex items-center gap-1"
-            onClick={() => setToolbarExpanded(!toolbarExpanded)}
-          >
+          <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs flex items-center gap-1" onClick={() => setToolbarExpanded(!toolbarExpanded)}>
             {toolbarExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             <span className="sr-only sm:not-sr-only">More</span>
           </Button>
         </div>
 
         {/* Mobile Expanded Toolbar - Hidden by default on mobile */}
-        {toolbarExpanded && (
-          <div className="sm:hidden flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
+        {toolbarExpanded && <div className="sm:hidden flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
             <ToolbarButton onClick={() => exec('undo')} icon={Undo} title="Undo" />
             <ToolbarButton onClick={() => exec('redo')} icon={Redo} title="Redo" />
             <ToolbarDivider />
             
             {/* Font Family - Compact on mobile */}
-            <Select onValueChange={(val) => exec('fontName', val)}>
+            <Select onValueChange={val => exec('fontName', val)}>
               <SelectTrigger className="h-8 w-28 text-xs">
                 <SelectValue placeholder="Font" />
               </SelectTrigger>
               <SelectContent className="max-h-80">
-                {FONT_FAMILIES.map((font) => (
-                  <SelectItem key={font.value} value={font.value} style={{ fontFamily: font.value }} className="text-sm">
+                {FONT_FAMILIES.map(font => <SelectItem key={font.value} value={font.value} style={{
+              fontFamily: font.value
+            }} className="text-sm">
                     {font.label}
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
 
             {/* Font Size */}
-            <Select onValueChange={(val) => exec('fontSize', val)}>
+            <Select onValueChange={val => exec('fontSize', val)}>
               <SelectTrigger className="h-8 w-20 text-xs">
                 <SelectValue placeholder="Size" />
               </SelectTrigger>
               <SelectContent>
-                {FONT_SIZES.map((size) => (
-                  <SelectItem key={size.value} value={size.value} className="text-xs">
+                {FONT_SIZES.map(size => <SelectItem key={size.value} value={size.value} className="text-xs">
                     {size.label}
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
             
@@ -565,15 +508,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               </PopoverTrigger>
               <PopoverContent className="w-auto p-2" align="start">
                 <div className="grid grid-cols-10 gap-1">
-                  {COLORS.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => exec('foreColor', color)}
-                      className="w-5 h-5 rounded border border-border hover:scale-110 transition-transform"
-                      style={{ backgroundColor: color }}
-                      title={color}
-                    />
-                  ))}
+                  {COLORS.map(color => <button key={color} onClick={() => exec('foreColor', color)} className="w-5 h-5 rounded border border-border hover:scale-110 transition-transform" style={{
+                backgroundColor: color
+              }} title={color} />)}
                 </div>
               </PopoverContent>
             </Popover>
@@ -596,26 +533,17 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               <PopoverContent className="w-80" align="start">
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Insert Link</Label>
-                  <Input
-                    value={linkUrl}
-                    onChange={(e) => setLinkUrl(e.target.value)}
-                    placeholder="https://example.com"
-                    onKeyDown={(e) => e.key === 'Enter' && insertLink()}
-                  />
+                  <Input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="https://example.com" onKeyDown={e => e.key === 'Enter' && insertLink()} />
                   <Button size="sm" onClick={insertLink} className="w-full">Insert Link</Button>
                 </div>
               </PopoverContent>
             </Popover>
 
             {/* Image */}
-            <ToolbarButton 
-              onClick={() => {
-                saveSelection();
-                setShowMediaLibrary(true);
-              }} 
-              icon={Image} 
-              title="Insert Image" 
-            />
+            <ToolbarButton onClick={() => {
+          saveSelection();
+          setShowMediaLibrary(true);
+        }} icon={Image} title="Insert Image" />
 
             {/* Video */}
             <Popover open={showVideoPopover} onOpenChange={setShowVideoPopover}>
@@ -628,12 +556,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Insert Video</Label>
                   <p className="text-xs text-muted-foreground">Paste YouTube or Vimeo URL</p>
-                  <Input
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://youtube.com/watch?v=..."
-                    onKeyDown={(e) => e.key === 'Enter' && insertVideo()}
-                  />
+                  <Input value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." onKeyDown={e => e.key === 'Enter' && insertVideo()} />
                   <Button size="sm" onClick={insertVideo} className="w-full">Insert Video</Button>
                 </div>
               </PopoverContent>
@@ -642,8 +565,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <ToolbarDivider />
             <ToolbarButton onClick={() => exec('insertHorizontalRule')} icon={Minus} title="Horizontal Line" />
             <ToolbarButton onClick={() => exec('removeFormat')} icon={RemoveFormatting} title="Clear Formatting" />
-          </div>
-        )}
+          </div>}
 
         {/* Desktop Toolbar Row 1 - History, Font, Size (hidden on mobile) */}
         <div className="hidden sm:flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
@@ -652,30 +574,28 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <ToolbarDivider />
           
           {/* Font Family */}
-          <Select onValueChange={(val) => exec('fontName', val)}>
+          <Select onValueChange={val => exec('fontName', val)}>
             <SelectTrigger className="h-8 w-40 text-xs">
               <SelectValue placeholder="Font Family" />
             </SelectTrigger>
             <SelectContent className="max-h-80">
-              {FONT_FAMILIES.map((font) => (
-                <SelectItem key={font.value} value={font.value} style={{ fontFamily: font.value }} className="text-sm">
+              {FONT_FAMILIES.map(font => <SelectItem key={font.value} value={font.value} style={{
+              fontFamily: font.value
+            }} className="text-sm">
                   {font.label}
-                </SelectItem>
-              ))}
+                </SelectItem>)}
             </SelectContent>
           </Select>
 
           {/* Font Size */}
-          <Select onValueChange={(val) => exec('fontSize', val)}>
+          <Select onValueChange={val => exec('fontSize', val)}>
             <SelectTrigger className="h-8 w-28 text-xs">
               <SelectValue placeholder="Text Size" />
             </SelectTrigger>
             <SelectContent>
-              {FONT_SIZES.map((size) => (
-                <SelectItem key={size.value} value={size.value} className="text-xs">
+              {FONT_SIZES.map(size => <SelectItem key={size.value} value={size.value} className="text-xs">
                   {size.label}
-                </SelectItem>
-              ))}
+                </SelectItem>)}
             </SelectContent>
           </Select>
 
@@ -706,15 +626,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             </PopoverTrigger>
             <PopoverContent className="w-auto p-2" align="start">
               <div className="grid grid-cols-10 gap-1">
-                {COLORS.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => exec('foreColor', color)}
-                    className="w-5 h-5 rounded border border-border hover:scale-110 transition-transform"
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  />
-                ))}
+                {COLORS.map(color => <button key={color} onClick={() => exec('foreColor', color)} className="w-5 h-5 rounded border border-border hover:scale-110 transition-transform" style={{
+                backgroundColor: color
+              }} title={color} />)}
               </div>
             </PopoverContent>
           </Popover>
@@ -743,26 +657,17 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <PopoverContent className="w-80" align="start">
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Insert Link</Label>
-                <Input
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  onKeyDown={(e) => e.key === 'Enter' && insertLink()}
-                />
+                <Input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="https://example.com" onKeyDown={e => e.key === 'Enter' && insertLink()} />
                 <Button size="sm" onClick={insertLink} className="w-full">Insert Link</Button>
               </div>
             </PopoverContent>
           </Popover>
 
           {/* Image - Opens Media Library */}
-          <ToolbarButton 
-            onClick={() => {
-              saveSelection();
-              setShowMediaLibrary(true);
-            }} 
-            icon={Image} 
-            title="Insert Image from Media Library" 
-          />
+          <ToolbarButton onClick={() => {
+          saveSelection();
+          setShowMediaLibrary(true);
+        }} icon={Image} title="Insert Image from Media Library" />
 
           {/* Video */}
           <Popover open={showVideoPopover} onOpenChange={setShowVideoPopover}>
@@ -775,12 +680,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Insert Video</Label>
                 <p className="text-xs text-muted-foreground">Paste YouTube or Vimeo URL</p>
-                <Input
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://youtube.com/watch?v=..."
-                  onKeyDown={(e) => e.key === 'Enter' && insertVideo()}
-                />
+                <Input value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." onKeyDown={e => e.key === 'Enter' && insertVideo()} />
                 <Button size="sm" onClick={insertVideo} className="w-full">Insert Video</Button>
               </div>
             </PopoverContent>
@@ -793,29 +693,29 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </div>
 
         {/* Image Formatting Controls */}
-        {selectedImage && (
-          <div className="flex flex-wrap items-center gap-3 px-3 py-2 border-t bg-muted/50">
+        {selectedImage && <div className="flex flex-wrap items-center gap-3 px-3 py-2 border-t bg-muted/50">
             {/* Alignment */}
             <div className="flex items-center gap-1">
               <span className="text-xs text-muted-foreground mr-1">Wrap:</span>
-              {[
-                { value: 'inline', label: 'Block', title: 'Image on its own line' },
-                { value: 'left', label: '◧ Left', title: 'Float left, text wraps right' },
-                { value: 'center', label: '◉ Center', title: 'Centered' },
-                { value: 'right', label: '◨ Right', title: 'Float right, text wraps left' },
-              ].map((opt) => (
-                <Button
-                  key={opt.value}
-                  type="button"
-                  variant={imageAlign === opt.value ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => applyImageAlignment(opt.value as typeof imageAlign)}
-                  title={opt.title}
-                >
+              {[{
+            value: 'inline',
+            label: 'Block',
+            title: 'Image on its own line'
+          }, {
+            value: 'left',
+            label: '◧ Left',
+            title: 'Float left, text wraps right'
+          }, {
+            value: 'center',
+            label: '◉ Center',
+            title: 'Centered'
+          }, {
+            value: 'right',
+            label: '◨ Right',
+            title: 'Float right, text wraps left'
+          }].map(opt => <Button key={opt.value} type="button" variant={imageAlign === opt.value ? 'default' : 'outline'} size="sm" className="h-7 px-2 text-xs" onClick={() => applyImageAlignment(opt.value as typeof imageAlign)} title={opt.title}>
                   {opt.label}
-                </Button>
-              ))}
+                </Button>)}
             </div>
 
             <div className="w-px h-5 bg-border" />
@@ -823,61 +723,24 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             {/* Size */}
             <div className="flex items-center gap-1">
               <span className="text-xs text-muted-foreground mr-1">Size:</span>
-              <Input
-                type="number"
-                value={imageWidth}
-                onChange={(e) => setImageWidth(e.target.value)}
-                className="w-16 h-7 text-xs"
-                min={50}
-                max={1200}
-              />
+              <Input type="number" value={imageWidth} onChange={e => setImageWidth(e.target.value)} className="w-16 h-7 text-xs" min={50} max={1200} />
               <span className="text-xs text-muted-foreground">px</span>
-              {[150, 300, 450].map((w) => (
-                <Button
-                  key={w}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => applyImageResize(w)}
-                >
+              {[150, 300, 450].map(w => <Button key={w} type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => applyImageResize(w)}>
                   {w}
-                </Button>
-              ))}
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => applyImageResize(Number(imageWidth) || 300)}
-              >
+                </Button>)}
+              <Button type="button" variant="default" size="sm" className="h-7 px-2 text-xs" onClick={() => applyImageResize(Number(imageWidth) || 300)}>
                 Apply
               </Button>
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Editor */}
-        <div
-          ref={editorRef}
-          contentEditable
-          role="textbox"
-          aria-multiline
-          aria-label="Rich text editor"
-          suppressContentEditableWarning
-          onInput={handleInput}
-          onBlur={handleInput}
-          onClick={handleEditorClick}
-          onPaste={handlePaste}
-          data-placeholder={placeholder}
-          className="p-4 focus:outline-none prose prose-sm max-w-none overflow-y-auto"
-          style={{ 
-            minHeight,
-            position: 'relative',
-            color: '#1e293b',
-            backgroundColor: 'white',
-          }}
-        />
+        <div ref={editorRef} contentEditable role="textbox" aria-multiline aria-label="Rich text editor" suppressContentEditableWarning onInput={handleInput} onBlur={handleInput} onClick={handleEditorClick} onPaste={handlePaste} data-placeholder={placeholder} className="p-4 focus:outline-none prose prose-sm max-w-none overflow-y-auto text-inherit" style={{
+        minHeight,
+        position: 'relative',
+        color: '#1e293b',
+        backgroundColor: 'white'
+      }} />
 
         <style>{`
           [contenteditable][data-placeholder]:empty:before {
@@ -927,71 +790,43 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <DialogHeader>
             <DialogTitle>Select Image from Media Library</DialogTitle>
             <DialogDescription>
-              {loadingMedia
-                ? 'Loading…'
-                : `${mediaItems.length} image(s) loaded${mediaItems[0]?.title ? ` • First: ${mediaItems[0].title}` : ''}`}
+              {loadingMedia ? 'Loading…' : `${mediaItems.length} image(s) loaded${mediaItems[0]?.title ? ` • First: ${mediaItems[0].title}` : ''}`}
             </DialogDescription>
           </DialogHeader>
           
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={mediaSearch}
-              onChange={(e) => setMediaSearch(e.target.value)}
-              placeholder="Search images..."
-              className="pl-10"
-            />
+            <Input value={mediaSearch} onChange={e => setMediaSearch(e.target.value)} placeholder="Search images..." className="pl-10" />
           </div>
 
           {/* Image Grid */}
           <div className="h-[55vh] overflow-auto pr-3">
-            {loadingMedia ? (
-              <div className="flex items-center justify-center h-40">
+            {loadingMedia ? <div className="flex items-center justify-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : mediaItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+              </div> : mediaItems.length === 0 ? <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
                 <Image className="h-12 w-12 mb-2 opacity-50" />
                 <p>No images found in the media library</p>
                 <p className="text-xs text-muted-foreground mt-1">(Nothing returned from gw_media_library)</p>
-              </div>
-            ) : filteredMedia.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+              </div> : filteredMedia.length === 0 ? <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
                 <Search className="h-10 w-10 mb-2 opacity-50" />
                 <p>No matches</p>
                 <p className="text-xs text-muted-foreground mt-1">Try a different search term</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
+              </div> : <div className="space-y-4">
                 {/* Thumbnail Grid */}
                 <div className="grid grid-cols-4 gap-3">
-                  {filteredMedia.slice(0, 60).map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => insertImage(item.file_url)}
-                      className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary hover:ring-2 hover:ring-primary/20 transition-all bg-muted/30"
-                      title={item.title}
-                    >
-                      <img
-                        src={item.file_url}
-                        alt={item.title || 'Media image'}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
+                  {filteredMedia.slice(0, 60).map(item => <button key={item.id} onClick={() => insertImage(item.file_url)} className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary hover:ring-2 hover:ring-primary/20 transition-all bg-muted/30" title={item.title}>
+                      <img src={item.file_url} alt={item.title || 'Media image'} className="w-full h-full object-cover" loading="lazy" />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">
                         <p className="text-[11px] font-medium truncate text-white">
                           {item.title || 'Untitled'}
                         </p>
                       </div>
-                    </button>
-                  ))}
+                    </button>)}
                 </div>
-              </div>
-            )}
+              </div>}
           </div>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 };
