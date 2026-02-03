@@ -60,7 +60,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
       email: 'kjohns10@spelman.edu',
       phone: '470-622-1392',
       office: 'Rock Fine Arts Bldg. 109',
-      officeHours: 'MW 4–5 PM or by appointment',
+      officeHours: 'MWF 3–5 PM or by appointment',
     },
     description: 'The Spelman College Glee Club is the premier choral ensemble with over 100 years of musical excellence. This performance-based course develops vocal technique, musicianship, and ensemble skills through rehearsals, concerts, and touring experiences. Members represent the college at local, national, and international events.',
     objectives: [
@@ -138,7 +138,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
       email: 'kjohns10@spelman.edu',
       phone: '470-622-1392',
       office: 'Rock Fine Arts Bldg. 109',
-      officeHours: 'MW 4–5 PM or by appointment',
+      officeHours: 'MWF 3–5 PM or by appointment',
     },
     description: 'This course is designed as a historical survey of selected styles of African American Music in the United States. Certain features of West African music will be identified and traced as they are retained in different styles of African American music. Emphasis will be placed on stylistic characteristics, performers, and social influences of each style. No prerequisites. Satisfies Fine Arts course requirement.',
     objectives: [
@@ -219,7 +219,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
       email: 'kjohns10@spelman.edu',
       phone: '470-622-1392',
       office: 'Rock Fine Arts Bldg. 109',
-      officeHours: 'MW 4–5 PM or by appointment',
+      officeHours: 'MWF 3–5 PM or by appointment',
     },
     description: 'This course provides a comprehensive introduction to the art of choral conducting. Students will develop conducting technique, score analysis skills, and rehearsal strategies. The course includes a survey of significant choral literature from various historical periods and cultural traditions.',
     objectives: [
@@ -297,7 +297,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
       office: 'Rock Fine Arts Bldg. 109',
-      officeHours: 'MW 4–5 PM or by appointment',
+      officeHours: 'MWF 3–5 PM or by appointment',
     },
     description: 'This intensive workshop develops essential sight-reading and ear-training skills for choral musicians. Using solfège (movable do) and rhythmic syllables, students build confidence in reading music at sight. Required for all new Glee Club members; open to all students wishing to strengthen musicianship.',
     objectives: [
