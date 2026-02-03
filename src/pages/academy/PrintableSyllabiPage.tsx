@@ -3,18 +3,73 @@ import { PrintableSyllabus } from '@/components/academy/PrintableSyllabus';
 import { getAllSyllabi } from '@/config/syllabusData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Printer, FileDown, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { Printer, FileDown, ChevronLeft, ChevronRight, BookOpen, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { toast } from 'sonner';
 
 export default function PrintableSyllabiPage() {
   const allSyllabi = getAllSyllabi();
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   const selectedSyllabus = allSyllabi[selectedIndex];
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!printRef.current) return;
+    
+    setIsGeneratingPdf(true);
+    toast.info('Generating PDF...', { duration: 2000 });
+
+    try {
+      const element = printRef.current;
+      
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'in',
+        format: 'letter',
+      });
+
+      const pageWidth = 8.5;
+      const pageHeight = 11;
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`${selectedSyllabus.courseCode}_Syllabus.pdf`);
+      toast.success('PDF downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF. Please try printing instead.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   const handlePrevious = () => {
@@ -123,9 +178,19 @@ export default function PrintableSyllabiPage() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-2 border-amber-300 text-amber-800 hover:bg-amber-100">
-                    <FileDown className="h-4 w-4" />
-                    Download as PDF
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2 border-amber-300 text-amber-800 hover:bg-amber-100"
+                    onClick={handleDownloadPdf}
+                    disabled={isGeneratingPdf}
+                  >
+                    {isGeneratingPdf ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileDown className="h-4 w-4" />
+                    )}
+                    {isGeneratingPdf ? 'Generating...' : 'Download as PDF'}
                   </Button>
                 </div>
               </div>
