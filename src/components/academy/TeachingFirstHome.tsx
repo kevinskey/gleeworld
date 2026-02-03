@@ -278,31 +278,69 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           };
         });
 
-        // Fetch discussions
-        const { data: discussionsData } = await supabase
-          .from('course_discussions')
-          .select('id, title, content, due_date, max_points, course_id')
-          .eq('course_id', courseId)
-          .not('due_date', 'is', null)
-          .order('due_date', { ascending: true })
-          .limit(10);
+        // Fetch discussions from both tables and merge
+        // discussion_prompts has the instructor-updated due dates
+        const [{ data: promptsData }, { data: legacyDiscussionsData }] = await Promise.all([
+          supabase
+            .from('discussion_prompts')
+            .select('id, title, prompt_text, individual_due_at, course_id')
+            .eq('course_id', courseId)
+            .not('individual_due_at', 'is', null)
+            .order('individual_due_at', { ascending: true })
+            .limit(10),
+          supabase
+            .from('course_discussions')
+            .select('id, title, content, due_date, max_points, course_id')
+            .eq('course_id', courseId)
+            .not('due_date', 'is', null)
+            .order('due_date', { ascending: true })
+            .limit(10)
+        ]);
 
-        const discussionIds: string[] = (discussionsData || []).map((d: any) => d.id as string);
+        // Collect all discussion IDs for reply checking
+        const promptIds = (promptsData || []).map((d: any) => d.id);
+        const legacyIds = (legacyDiscussionsData || []).map((d: any) => d.id);
+        const allDiscussionIds = [...new Set([...promptIds, ...legacyIds])];
+        
         let repliedDiscussionIds = new Set<string>();
-        if (discussionIds.length > 0 && user?.id) {
+        if (allDiscussionIds.length > 0 && user?.id) {
           const repliesQuery = supabase.from('discussion_replies').select('discussion_id');
           const { data: repliesData } = await (repliesQuery as any).eq('created_by', user.id);
           if (repliesData) {
             repliedDiscussionIds = new Set(
               (repliesData as any[])
-                .filter((r: any) => discussionIds.includes(r.discussion_id))
+                .filter((r: any) => allDiscussionIds.includes(r.discussion_id))
                 .map((r: any) => r.discussion_id as string)
             );
           }
         }
 
-        const discussionAssignments: Assignment[] = (discussionsData || [])
-          .filter((d: any) => d.due_date)
+        // Map discussion_prompts (preferred source with updated dates)
+        const promptAssignments: Assignment[] = (promptsData || []).map((d: any) => {
+          const due = new Date(d.individual_due_at);
+          const hasReplied = repliedDiscussionIds.has(d.id);
+          let status: Assignment['status'] = 'pending';
+          if (hasReplied) {
+            status = 'submitted';
+          } else if (due < now) {
+            status = 'overdue';
+          }
+          return {
+            id: d.id,
+            title: d.title,
+            due_date: d.individual_due_at,
+            points: 10,
+            status,
+            course_id: d.course_id,
+            description: d.prompt_text,
+            is_discussion: true
+          };
+        });
+
+        // Map legacy course_discussions (only include if not already in prompts)
+        const promptIdSet = new Set(promptIds);
+        const legacyAssignments: Assignment[] = (legacyDiscussionsData || [])
+          .filter((d: any) => !promptIdSet.has(d.id))
           .map((d: any) => {
             const due = new Date(d.due_date);
             const hasReplied = repliedDiscussionIds.has(d.id);
@@ -323,6 +361,8 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               is_discussion: true
             };
           });
+
+        const discussionAssignments = [...promptAssignments, ...legacyAssignments];
 
         // Merge and sort chronologically by due date
         const allAssignments = [...mappedAssignments, ...discussionAssignments]
