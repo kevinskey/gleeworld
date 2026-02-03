@@ -130,7 +130,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     courseCode: 'MUS 240',
     courseTitle: 'Survey of African American Music',
     term: 'Fall 2025',
-    credits: 3,
+    credits: 4,
     classTime: 'MWF 10:00–10:50 AM',
     classroom: 'Rock Fine Arts Bldg. 110',
     instructor: {
