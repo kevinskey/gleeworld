@@ -886,6 +886,16 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             pointer-events: none;
             position: absolute;
           }
+          /*
+            Enforce readable defaults:
+            - Always inherit editor text color (prevents white/washed-out paste)
+            - Never allow background highlights from pasted HTML
+          */
+          [contenteditable] * {
+            color: inherit !important;
+            background: transparent !important;
+            background-color: transparent !important;
+          }
           [contenteditable] blockquote {
             border-left: 4px solid hsl(var(--primary));
             padding-left: 16px;
@@ -905,7 +915,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             outline-offset: 2px;
           }
           [contenteditable] a {
-            color: hsl(var(--primary));
+            color: hsl(var(--primary)) !important;
             text-decoration: underline;
           }
         `}</style>
