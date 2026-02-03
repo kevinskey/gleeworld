@@ -103,74 +103,81 @@ export const PrintableSyllabus: React.FC<PrintableSyllabusProps> = ({ syllabus }
         </ul>
       </section>
 
-      {/* Assignments */}
+      {/* Assignments & Activities */}
       <section className="mb-6 print:mb-4">
         <h2 
           className="text-lg print:text-base font-semibold mb-2 print:mb-1 border-b-2 pb-1"
-          style={{ color: '#000000', borderColor: '#1f2937' }}
+          style={{ color: '#1e40af', borderColor: '#1e40af' }}
         >
           Assignments & Activities
         </h2>
-        <div className="space-y-3 print:space-y-2">
+        <ul className="space-y-2 print:space-y-1 text-sm print:text-xs list-disc list-outside ml-5" style={{ color: '#1f2937' }}>
           {syllabus.assignments.map((assignment, i) => (
-            <div key={i} className="border-l-2 pl-3 print:pl-2" style={{ borderColor: '#9ca3af' }}>
-              <h3 className="font-medium text-sm print:text-xs" style={{ color: '#000000' }}>
-                {assignment.name} {assignment.points && <span style={{ color: '#4b5563' }}>({assignment.points})</span>}
-              </h3>
-              <p className="text-xs" style={{ color: '#374151' }}>{assignment.description}</p>
-            </div>
+            <li key={i}>
+              <span className="font-semibold" style={{ color: '#000000' }}>
+                {assignment.name} {assignment.points && `(${assignment.points})`}:
+              </span>{' '}
+              {assignment.description}
+            </li>
           ))}
-        </div>
+        </ul>
+        <p className="text-xs mt-3 print:mt-2 italic" style={{ color: '#4b5563' }}>
+          Detailed rubrics are included in the Appendix.
+        </p>
       </section>
 
       {/* Grading Policies */}
       <section className="mb-6 print:mb-4 print:break-inside-avoid">
         <h2 
           className="text-lg print:text-base font-semibold mb-2 print:mb-1 border-b-2 pb-1"
-          style={{ color: '#000000', borderColor: '#1f2937' }}
+          style={{ color: '#1e40af', borderColor: '#1e40af' }}
         >
           Grading Policies
         </h2>
+        
+        {/* Grading Table */}
         <table className="w-full border-collapse text-sm print:text-xs mb-4">
           <thead>
-            <tr style={{ borderBottom: '1px solid #9ca3af' }}>
-              <th className="text-left py-2 font-semibold" style={{ color: '#000000' }}>Component</th>
+            <tr>
+              <th className="text-left py-2 font-semibold" style={{ color: '#000000', borderBottom: '1px solid #000000' }}>Category</th>
               {syllabus.grading[0]?.points !== undefined && (
-                <th className="text-right py-2 font-semibold" style={{ color: '#000000' }}>Points</th>
+                <th className="text-left py-2 font-semibold w-20" style={{ color: '#000000', borderBottom: '1px solid #000000' }}>Points</th>
               )}
-              <th className="text-right py-2 font-semibold" style={{ color: '#000000' }}>Weight</th>
+              <th className="text-left py-2 font-semibold w-24" style={{ color: '#000000', borderBottom: '1px solid #000000' }}>Percentage</th>
             </tr>
           </thead>
           <tbody>
             {syllabus.grading.map((item, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <td className="py-1.5" style={{ color: '#1f2937' }}>{item.name}</td>
+              <tr key={i}>
+                <td className="py-1" style={{ color: '#000000', fontWeight: 600 }}>{item.name}</td>
                 {item.points !== undefined && (
-                  <td className="text-right py-1.5" style={{ color: '#1f2937' }}>{item.points}</td>
+                  <td className="py-1" style={{ color: '#1f2937' }}>{item.points}</td>
                 )}
-                <td className="text-right py-1.5" style={{ color: '#1f2937' }}>{item.weight}</td>
+                <td className="py-1" style={{ color: '#1f2937' }}>{item.weight}</td>
               </tr>
             ))}
-            <tr className="font-semibold" style={{ borderTop: '1px solid #9ca3af' }}>
-              <td className="py-1.5" style={{ color: '#000000' }}>Total</td>
+            <tr className="font-bold" style={{ borderTop: '1px solid #000000' }}>
+              <td className="py-1 pt-2" style={{ color: '#000000' }}>Total</td>
               {syllabus.grading[0]?.points !== undefined && (
-                <td className="text-right py-1.5" style={{ color: '#000000' }}>
+                <td className="py-1 pt-2" style={{ color: '#000000' }}>
                   {syllabus.grading.reduce((sum, g) => sum + (g.points || 0), 0)}
                 </td>
               )}
-              <td className="text-right py-1.5" style={{ color: '#000000' }}>100%</td>
+              <td className="py-1 pt-2" style={{ color: '#000000' }}>100%</td>
             </tr>
           </tbody>
         </table>
 
-        <h3 className="font-medium text-sm print:text-xs mb-2" style={{ color: '#000000' }}>Grading Scale</h3>
-        <div className="grid grid-cols-4 gap-2 print:gap-1 text-xs" style={{ color: '#1f2937' }}>
-          {syllabus.gradingScale.map((item, i) => (
-            <div key={i} className="flex justify-between py-1" style={{ borderBottom: '1px solid #e5e7eb' }}>
-              <span className="font-medium">{item.grade}</span>
-              <span>{item.range}</span>
-            </div>
-          ))}
+        {/* Grading Scale */}
+        <div className="text-sm print:text-xs" style={{ color: '#1f2937' }}>
+          <h3 className="font-semibold mb-1" style={{ color: '#000000' }}>Grading Scale</h3>
+          <div className="space-y-0">
+            {syllabus.gradingScale.map((item, i) => (
+              <div key={i}>
+                {item.grade} = {item.range}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
