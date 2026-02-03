@@ -6,140 +6,107 @@ interface PrintableSyllabusProps {
 }
 
 export const PrintableSyllabus: React.FC<PrintableSyllabusProps> = ({ syllabus }) => {
+  // Blue color matching the PDF style
+  const blueColor = '#0078D4';
+  
   return (
     <div 
       className="max-w-4xl mx-auto print:max-w-none"
       style={{ 
         backgroundColor: '#ffffff', 
         color: '#000000',
-        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontFamily: 'Calibri, "Segoe UI", Arial, sans-serif',
         fontSize: '11pt',
-        lineHeight: '1.4',
+        lineHeight: '1.5',
         padding: '0.75in',
+        position: 'relative',
+        minHeight: '100%',
       }}
     >
-      {/* Header with Spelman Logo */}
-      <header style={{ textAlign: 'center', marginBottom: '24px', borderBottom: '3px solid #003366', paddingBottom: '16px' }}>
-        <img 
-          src="/lovable-uploads/0f4599dd-da86-457f-808a-819f3ec7ae66.png" 
-          alt="Spelman College" 
-          style={{ height: '60px', marginBottom: '12px' }}
-        />
+      {/* Header - Large Title */}
+      <header style={{ marginBottom: '24px' }}>
         <h1 style={{ 
-          fontSize: '24pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
+          fontSize: '36pt', 
+          fontWeight: 'normal', 
+          color: blueColor, 
           margin: '0 0 4px 0',
-          fontFamily: 'Georgia, serif'
+          letterSpacing: '-0.5px',
         }}>
           {syllabus.courseTitle}
         </h1>
-        <h2 style={{ 
-          fontSize: '16pt', 
-          fontWeight: 'normal', 
-          color: '#003366', 
-          margin: '0 0 4px 0'
+        <p style={{ 
+          fontSize: '14pt', 
+          color: '#666666', 
+          margin: '0 0 2px 0'
         }}>
           {syllabus.courseCode}
-        </h2>
-        <p style={{ fontSize: '12pt', color: '#333333', margin: 0 }}>
+        </p>
+        <p style={{ 
+          fontSize: '14pt', 
+          color: '#000000', 
+          margin: 0,
+          textDecoration: 'underline'
+        }}>
           {syllabus.term}
         </p>
       </header>
 
       {/* Instructor Information Section */}
-      <section style={{ marginBottom: '20px' }}>
+      <section style={{ marginBottom: '24px' }}>
         <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
+          fontSize: '16pt', 
+          fontWeight: 'normal', 
+          color: blueColor, 
+          margin: '0 0 8px 0'
         }}>
           Instructor Information
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11pt' }}>
+        <div style={{ fontSize: '11pt', lineHeight: '1.6' }}>
           <p style={{ margin: '2px 0' }}>
-            <strong>Instructor:</strong> {syllabus.instructor.name}
+            Instructor: {syllabus.instructor.name}
           </p>
           <p style={{ margin: '2px 0' }}>
-            <strong>Office:</strong> {syllabus.instructor.office}
+            Office: {syllabus.instructor.office}
           </p>
           <p style={{ margin: '2px 0' }}>
-            <strong>Email:</strong> {syllabus.instructor.email}
-          </p>
-          <p style={{ margin: '2px 0' }}>
-            <strong>Office Hours:</strong> {syllabus.instructor.officeHours}
+            {syllabus.instructor.officeHours}
           </p>
           {syllabus.instructor.phone && (
             <p style={{ margin: '2px 0' }}>
-              <strong>Phone:</strong> {syllabus.instructor.phone}
+              Phone: {syllabus.instructor.phone}
             </p>
           )}
-        </div>
-      </section>
-
-      {/* Course Information */}
-      <section style={{ marginBottom: '20px' }}>
-        <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
-        }}>
-          Course Information
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11pt' }}>
           <p style={{ margin: '2px 0' }}>
-            <strong>Course Code:</strong> {syllabus.courseCode}
-          </p>
-          <p style={{ margin: '2px 0' }}>
-            <strong>Credits:</strong> {syllabus.credits}
-          </p>
-          <p style={{ margin: '2px 0' }}>
-            <strong>Class Time:</strong> {syllabus.classTime}
-          </p>
-          <p style={{ margin: '2px 0' }}>
-            <strong>Location:</strong> {syllabus.classroom}
+            Email: <span style={{ color: blueColor }}>{syllabus.instructor.email}</span>
           </p>
         </div>
       </section>
 
       {/* Course Description */}
-      <section style={{ marginBottom: '20px' }}>
+      <section style={{ marginBottom: '24px' }}>
         <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
+          fontSize: '16pt', 
+          fontWeight: 'normal', 
+          color: blueColor, 
+          margin: '0 0 8px 0'
         }}>
           Course Description
         </h2>
-        <p style={{ margin: 0, textAlign: 'justify' }}>
+        <p style={{ margin: 0, textAlign: 'left' }}>
           {syllabus.description}
         </p>
       </section>
 
       {/* Learning Objectives */}
-      <section style={{ marginBottom: '20px' }}>
+      <section style={{ marginBottom: '24px' }}>
         <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
+          fontSize: '16pt', 
+          fontWeight: 'normal', 
+          color: blueColor, 
+          margin: '0 0 8px 0'
         }}>
           Learning Objectives
         </h2>
-        <p style={{ marginBottom: '8px', fontStyle: 'italic', color: '#444444' }}>
-          At the end of this course, students will be able to:
-        </p>
         <ol style={{ margin: 0, paddingLeft: '24px' }}>
           {syllabus.objectives.map((obj, i) => (
             <li key={i} style={{ marginBottom: '4px' }}>{obj}</li>
@@ -147,19 +114,17 @@ export const PrintableSyllabus: React.FC<PrintableSyllabusProps> = ({ syllabus }
         </ol>
       </section>
 
-      {/* Required Materials */}
-      <section style={{ marginBottom: '20px' }}>
+      {/* Course Materials */}
+      <section style={{ marginBottom: '24px' }}>
         <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
+          fontSize: '16pt', 
+          fontWeight: 'normal', 
+          color: blueColor, 
+          margin: '0 0 8px 0'
         }}>
           Course Materials
         </h2>
-        <ul style={{ margin: 0, paddingLeft: '24px' }}>
+        <ul style={{ margin: 0, paddingLeft: '24px', listStyleType: 'disc' }}>
           {syllabus.materials.map((mat, i) => (
             <li key={i} style={{ marginBottom: '4px' }}>{mat}</li>
           ))}
@@ -167,110 +132,70 @@ export const PrintableSyllabus: React.FC<PrintableSyllabusProps> = ({ syllabus }
       </section>
 
       {/* Assignments & Activities */}
-      <section style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+      <section style={{ marginBottom: '24px', pageBreakInside: 'avoid' }}>
         <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
+          fontSize: '16pt', 
+          fontWeight: 'normal', 
+          color: blueColor, 
+          margin: '0 0 8px 0'
         }}>
-          Assignments & Activities
+          Assignments/Activities
         </h2>
         {syllabus.assignments.map((assignment, i) => (
           <div key={i} style={{ marginBottom: '12px' }}>
             <h3 style={{ 
-              fontSize: '11pt', 
+              fontSize: '12pt', 
               fontWeight: 'bold', 
               color: '#000000',
-              marginBottom: '4px'
+              margin: '0 0 4px 0'
             }}>
-              {assignment.name} {assignment.points && <span style={{ fontWeight: 'normal' }}>({assignment.points})</span>}
+              {assignment.name}
             </h3>
-            <p style={{ margin: 0, paddingLeft: '16px' }}>{assignment.description}</p>
+            <p style={{ margin: 0, paddingLeft: '0' }}>{assignment.description}</p>
           </div>
         ))}
       </section>
 
       {/* Grading Policies */}
-      <section style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+      <section style={{ marginBottom: '24px', pageBreakInside: 'avoid' }}>
         <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
+          fontSize: '16pt', 
+          fontWeight: 'normal', 
+          color: blueColor, 
+          margin: '0 0 8px 0'
         }}>
           Grading Policies
         </h2>
-        <p style={{ marginBottom: '12px', fontStyle: 'italic' }}>
+        <p style={{ marginBottom: '12px' }}>
           The final grade for this course will be computed on the following basis:
         </p>
         
-        {/* Grading Table */}
-        <table style={{ 
-          width: '100%', 
-          borderCollapse: 'collapse', 
-          marginBottom: '16px',
-          fontSize: '10pt'
-        }}>
+        {/* Grading Breakdown as bullet list */}
+        <ul style={{ margin: '0 0 16px 0', paddingLeft: '24px', listStyleType: 'disc' }}>
+          {syllabus.grading.map((item, i) => (
+            <li key={i} style={{ marginBottom: '2px' }}>
+              {item.name} {item.weight}
+            </li>
+          ))}
+        </ul>
+
+        <p style={{ marginBottom: '12px' }}>
+          {syllabus.lateWorkPolicy || 'Late work will be assigned a lower grade to be determined by instructor. Work must be turned in online by the stated deadline unless indicated otherwise.'}
+        </p>
+
+        {/* Grading Scale */}
+        <h3 style={{ fontSize: '12pt', fontWeight: 'bold', margin: '16px 0 8px 0' }}>Grading Scale is as follows:</h3>
+        <table style={{ borderCollapse: 'collapse', fontSize: '11pt' }}>
           <thead>
-            <tr style={{ backgroundColor: '#f0f0f0' }}>
-              <th style={{ 
-                textAlign: 'left', 
-                padding: '8px', 
-                borderBottom: '2px solid #003366',
-                fontWeight: 'bold'
-              }}>Category</th>
-              {syllabus.grading[0]?.points !== undefined && (
-                <th style={{ 
-                  textAlign: 'center', 
-                  padding: '8px', 
-                  borderBottom: '2px solid #003366',
-                  fontWeight: 'bold',
-                  width: '80px'
-                }}>Points</th>
-              )}
-              <th style={{ 
-                textAlign: 'center', 
-                padding: '8px', 
-                borderBottom: '2px solid #003366',
-                fontWeight: 'bold',
-                width: '80px'
-              }}>Weight</th>
+            <tr>
+              <th style={{ textAlign: 'left', padding: '4px 24px 4px 0', borderBottom: '1px solid #ccc' }}>Grade</th>
+              <th style={{ textAlign: 'left', padding: '4px 0', borderBottom: '1px solid #ccc' }}>Ranges</th>
             </tr>
           </thead>
           <tbody>
-            {syllabus.grading.map((item, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid #cccccc' }}>
-                <td style={{ padding: '6px 8px' }}>{item.name}</td>
-                {item.points !== undefined && (
-                  <td style={{ padding: '6px 8px', textAlign: 'center' }}>{item.points}</td>
-                )}
-                <td style={{ padding: '6px 8px', textAlign: 'center' }}>{item.weight}</td>
-              </tr>
-            ))}
-            <tr style={{ fontWeight: 'bold', borderTop: '2px solid #003366' }}>
-              <td style={{ padding: '8px' }}>Total</td>
-              {syllabus.grading[0]?.points !== undefined && (
-                <td style={{ padding: '8px', textAlign: 'center' }}>
-                  {syllabus.grading.reduce((sum, g) => sum + (g.points || 0), 0)}
-                </td>
-              )}
-              <td style={{ padding: '8px', textAlign: 'center' }}>100%</td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Grading Scale */}
-        <h3 style={{ fontSize: '12pt', fontWeight: 'bold', marginBottom: '8px' }}>Grading Scale</h3>
-        <table style={{ borderCollapse: 'collapse', fontSize: '10pt' }}>
-          <tbody>
             {syllabus.gradingScale.map((item, i) => (
               <tr key={i}>
-                <td style={{ padding: '2px 16px 2px 0', fontWeight: 'bold', width: '40px' }}>{item.grade}</td>
+                <td style={{ padding: '2px 24px 2px 0' }}>{item.grade}</td>
                 <td style={{ padding: '2px 0' }}>{item.range}</td>
               </tr>
             ))}
@@ -278,149 +203,122 @@ export const PrintableSyllabus: React.FC<PrintableSyllabusProps> = ({ syllabus }
         </table>
       </section>
 
-      {/* Course Policies */}
-      <section style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
-        <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
-        }}>
-          Course Policies
-        </h2>
-        
-        <div style={{ marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '12pt', fontWeight: 'bold', marginBottom: '6px' }}>Attendance Policy</h3>
-          <p style={{ margin: 0, textAlign: 'justify' }}>{syllabus.attendancePolicy}</p>
-        </div>
-
-        {syllabus.lateWorkPolicy && (
-          <div style={{ marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '12pt', fontWeight: 'bold', marginBottom: '6px' }}>Late Work Policy</h3>
-            <p style={{ margin: 0, textAlign: 'justify' }}>{syllabus.lateWorkPolicy}</p>
-          </div>
-        )}
+      {/* Attendance Policy */}
+      <section style={{ marginBottom: '24px', pageBreakInside: 'avoid' }}>
+        <p style={{ margin: 0 }}>
+          {syllabus.attendancePolicy}
+        </p>
       </section>
 
-      {/* Course Schedule */}
-      <section style={{ marginBottom: '20px' }}>
-        <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
-        }}>
-          Course Schedule
-        </h2>
-        <table style={{ 
-          width: '100%', 
-          borderCollapse: 'collapse', 
-          fontSize: '9pt'
-        }}>
-          <thead>
-            <tr style={{ backgroundColor: '#003366', color: '#ffffff' }}>
-              <th style={{ 
-                textAlign: 'left', 
-                padding: '8px', 
-                width: '70px',
-                fontWeight: 'bold'
-              }}>Week</th>
-              <th style={{ 
-                textAlign: 'left', 
-                padding: '8px',
-                fontWeight: 'bold'
-              }}>Topics</th>
-              <th style={{ 
-                textAlign: 'left', 
-                padding: '8px',
-                width: '140px',
-                fontWeight: 'bold'
-              }}>Assignments</th>
-            </tr>
-          </thead>
-          <tbody>
-            {syllabus.schedule.map((week, i) => (
-              <tr key={week.week} style={{ 
-                borderBottom: '1px solid #dddddd',
-                backgroundColor: i % 2 === 0 ? '#ffffff' : '#f8f8f8',
-                pageBreakInside: 'avoid'
-              }}>
-                <td style={{ padding: '6px 8px', verticalAlign: 'top' }}>
-                  <strong>{week.week}</strong>
-                  {week.date && (
-                    <div style={{ fontSize: '8pt', color: '#666666' }}>{week.date}</div>
-                  )}
-                </td>
-                <td style={{ padding: '6px 8px', verticalAlign: 'top' }}>
-                  <strong>{week.title}</strong>
-                  {week.description && (
-                    <div style={{ fontSize: '9pt', color: '#444444', marginTop: '2px' }}>
-                      {week.description}
-                    </div>
-                  )}
-                </td>
-                <td style={{ padding: '6px 8px', verticalAlign: 'top', color: '#444444' }}>
-                  {week.assignments || '—'}
-                </td>
+      {/* Schedule Section - if exists and has items */}
+      {syllabus.schedule && syllabus.schedule.length > 0 && (
+        <section style={{ marginBottom: '24px' }}>
+          <h2 style={{ 
+            fontSize: '16pt', 
+            fontWeight: 'normal', 
+            color: blueColor, 
+            margin: '0 0 8px 0'
+          }}>
+            Schedule
+          </h2>
+          <p style={{ marginBottom: '12px' }}>
+            Regularly scheduled class sessions will consist of announcements, warm-ups, music reading, followed by rehearsal of selected literature or lecture content. The material covered in each session will depend upon the ensemble's or class's progress.
+          </p>
+          <table style={{ 
+            width: '100%', 
+            borderCollapse: 'collapse', 
+            fontSize: '10pt'
+          }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid #ccc' }}>
+                <th style={{ 
+                  textAlign: 'left', 
+                  padding: '6px 8px', 
+                  width: '60px',
+                  fontWeight: 'bold'
+                }}>Week</th>
+                <th style={{ 
+                  textAlign: 'left', 
+                  padding: '6px 8px',
+                  fontWeight: 'bold'
+                }}>Topics</th>
+                <th style={{ 
+                  textAlign: 'left', 
+                  padding: '6px 8px',
+                  width: '140px',
+                  fontWeight: 'bold'
+                }}>Assignments</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {syllabus.schedule.map((week, i) => (
+                <tr key={week.week} style={{ 
+                  borderBottom: '1px solid #eee',
+                  pageBreakInside: 'avoid'
+                }}>
+                  <td style={{ padding: '4px 8px', verticalAlign: 'top' }}>
+                    {week.week}
+                    {week.date && (
+                      <div style={{ fontSize: '9pt', color: '#666666' }}>{week.date}</div>
+                    )}
+                  </td>
+                  <td style={{ padding: '4px 8px', verticalAlign: 'top' }}>
+                    <strong>{week.title}</strong>
+                    {week.description && (
+                      <div style={{ fontSize: '10pt', color: '#444444', marginTop: '2px' }}>
+                        {week.description}
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ padding: '4px 8px', verticalAlign: 'top', color: '#444444' }}>
+                    {week.assignments || '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       {/* Student Access Statement */}
-      <section style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+      <section style={{ marginBottom: '24px', pageBreakInside: 'avoid' }}>
         <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
+          fontSize: '16pt', 
+          fontWeight: 'normal', 
+          color: blueColor, 
+          margin: '0 0 8px 0'
         }}>
           Student Access Statement
         </h2>
-        <p style={{ margin: 0, textAlign: 'justify', fontSize: '10pt' }}>
+        <p style={{ margin: 0, fontSize: '10pt' }}>
           {syllabus.accessStatement}
         </p>
       </section>
 
       {/* Academic Integrity */}
-      <section style={{ marginBottom: '20px', pageBreakInside: 'avoid' }}>
+      <section style={{ marginBottom: '24px', pageBreakInside: 'avoid' }}>
         <h2 style={{ 
-          fontSize: '14pt', 
-          fontWeight: 'bold', 
-          color: '#003366', 
-          borderBottom: '2px solid #003366',
-          paddingBottom: '4px',
-          marginBottom: '12px'
+          fontSize: '16pt', 
+          fontWeight: 'normal', 
+          color: blueColor, 
+          margin: '0 0 8px 0'
         }}>
           Academic Integrity Policy
         </h2>
-        <p style={{ margin: 0, textAlign: 'justify', fontSize: '10pt' }}>
+        <p style={{ margin: 0, fontSize: '10pt' }}>
           {syllabus.academicIntegrity}
         </p>
       </section>
 
       {/* Footer */}
       <footer style={{ 
-        textAlign: 'center', 
-        marginTop: '32px', 
-        paddingTop: '16px', 
-        borderTop: '2px solid #003366',
-        fontSize: '9pt',
-        color: '#666666'
+        position: 'absolute',
+        bottom: '0.5in',
+        right: '0.75in',
+        fontSize: '10pt',
+        color: blueColor,
       }}>
-        <p style={{ margin: '0 0 4px 0' }}>
-          <em>This syllabus is subject to change at the discretion of the instructor.</em>
-        </p>
-        <p style={{ margin: 0, fontWeight: 'bold', color: '#003366' }}>
-          Spelman College • Department of Music • {syllabus.term}
-        </p>
+        {syllabus.courseCode} | {syllabus.term}
       </footer>
     </div>
   );
