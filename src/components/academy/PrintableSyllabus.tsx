@@ -16,7 +16,7 @@ export const PrintableSyllabus: React.FC<PrintableSyllabusProps> = ({ syllabus }
         backgroundColor: '#ffffff', 
         color: '#000000',
         fontFamily: 'Calibri, "Segoe UI", Arial, sans-serif',
-        fontSize: '11pt',
+        fontSize: '12pt',
         lineHeight: '1.5',
         padding: '0.75in',
         position: 'relative',
