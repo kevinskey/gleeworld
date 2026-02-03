@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { radioCoService } from '@/services/radioco';
 import { forceUnlockAudio, unlockAudioContext } from '@/utils/mobileAudioUnlock';
+import { useAudioCoordinator } from '@/hooks/useAudioCoordinator';
 
 export interface RadioTrack {
   title: string;
@@ -73,6 +74,9 @@ export const useRadioPlayer = () => {
   const lastTimeUpdateRef = sharedLastTimeUpdateRef;
   const heartbeatIntervalRef = sharedHeartbeatIntervalRef;
   const { toast } = useToast();
+  
+  // Audio coordination - ensure only one audio source plays at a time
+  const { requestPlayback, registerPauseCallback, unregisterPauseCallback, notifyPaused } = useAudioCoordinator();
 
   const refreshNowPlaying = useCallback(async () => {
     try {
@@ -480,9 +484,28 @@ export const useRadioPlayer = () => {
     return () => clearInterval(interval);
   }, [refreshNowPlaying]);
 
+  // Register pause callback for audio coordination
+  useEffect(() => {
+    const pauseRadio = () => {
+      userPausedRef.current = true;
+      isPlayingRef.current = false;
+      wasPlayingBeforeHiddenRef.current = false;
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setState(prev => ({ ...prev, isPlaying: false }));
+    };
+    
+    registerPauseCallback('radio', pauseRadio);
+    return () => unregisterPauseCallback('radio');
+  }, [registerPauseCallback, unregisterPauseCallback]);
+
   const play = useCallback(async () => {
     if (!audioRef.current) return;
     const audio = audioRef.current;
+
+    // Request exclusive audio playback - pauses other audio sources
+    requestPlayback('radio');
 
     // CRITICAL: Unlock audio context for iOS/Safari/mobile before attempting playback
     // This must happen synchronously within the user gesture
@@ -542,6 +565,9 @@ export const useRadioPlayer = () => {
     isPlayingRef.current = false;
     wasPlayingBeforeHiddenRef.current = false;
     
+    // Notify audio coordinator that radio is paused
+    notifyPaused('radio');
+    
     // Clear any pending reconnect/heartbeat
     clearReconnectTimeout();
     clearHeartbeat();
@@ -549,7 +575,7 @@ export const useRadioPlayer = () => {
     if (audioRef.current) {
       audioRef.current.pause();
     }
-  }, [clearReconnectTimeout, clearHeartbeat]);
+  }, [clearReconnectTimeout, clearHeartbeat, notifyPaused]);
 
   const togglePlayPause = useCallback(() => {
     if (state.isPlaying) {

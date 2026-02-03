@@ -3,6 +3,7 @@ import { Track, Album } from '@/hooks/useMusic';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAudioCoordinator } from '@/hooks/useAudioCoordinator';
 
 interface MusicPlayerState {
   // Current playback state
@@ -66,6 +67,9 @@ export const MusicPlayerProvider = ({ children }: MusicPlayerProviderProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
+  
+  // Audio coordination - ensure only one audio source plays at a time
+  const { requestPlayback, registerPauseCallback, unregisterPauseCallback, notifyPaused } = useAudioCoordinator();
   
   const [state, setState] = useState<MusicPlayerState>({
     currentTrack: null,
@@ -145,6 +149,9 @@ export const MusicPlayerProvider = ({ children }: MusicPlayerProviderProps) => {
   const playTrack = async (track: Track, playlist: Track[] = [track], album?: Album) => {
     const trackIndex = playlist.findIndex(t => t.id === track.id);
     
+    // Request exclusive audio playback - pauses other audio sources
+    requestPlayback('music');
+    
     setState(prev => ({
       ...prev,
       currentTrack: track,
@@ -166,6 +173,7 @@ export const MusicPlayerProvider = ({ children }: MusicPlayerProviderProps) => {
       } catch (error) {
         console.error('Error playing track:', error);
         setState(prev => ({ ...prev, isPlaying: false }));
+        notifyPaused('music');
       }
     }
   };
@@ -237,13 +245,17 @@ export const MusicPlayerProvider = ({ children }: MusicPlayerProviderProps) => {
     if (state.isPlaying) {
       audioRef.current.pause();
       setState(prev => ({ ...prev, isPlaying: false }));
+      notifyPaused('music');
     } else {
+      // Request exclusive audio playback when resuming
+      requestPlayback('music');
       try {
         await audioRef.current.play();
         setState(prev => ({ ...prev, isPlaying: true }));
       } catch (error) {
         console.error('Error playing audio:', error);
         setState(prev => ({ ...prev, isPlaying: false }));
+        notifyPaused('music');
       }
     }
   };
@@ -273,10 +285,24 @@ export const MusicPlayerProvider = ({ children }: MusicPlayerProviderProps) => {
 
   const hidePlayer = () => {
     setState(prev => ({ ...prev, isVisible: false, isPlaying: false }));
+    notifyPaused('music');
     if (audioRef.current) {
       audioRef.current.pause();
     }
   };
+
+  // Register pause callback for audio coordination
+  useEffect(() => {
+    const pauseMusic = () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setState(prev => ({ ...prev, isPlaying: false }));
+    };
+    
+    registerPauseCallback('music', pauseMusic);
+    return () => unregisterPauseCallback('music');
+  }, [registerPauseCallback, unregisterPauseCallback]);
 
   const toggleShuffle = () => {
     setState(prev => ({ ...prev, isShuffled: !prev.isShuffled }));
