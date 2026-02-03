@@ -254,7 +254,7 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
 
             {/* Assignment Tag (when applicable) */}
             {currentTrack && (
-              <Badge className="hidden sm:flex bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]">
+              <Badge className="hidden sm:flex bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200 border-amber-300 dark:border-amber-700 text-[10px] font-medium">
                 Listening Assignment
               </Badge>
             )}
