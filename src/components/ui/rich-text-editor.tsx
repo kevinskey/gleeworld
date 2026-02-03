@@ -284,14 +284,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       allElements.forEach((el) => {
         const element = el as HTMLElement;
         // Remove ALL background colors - they cause visibility issues
+        // Strip ALL background styles
         element.style.backgroundColor = '';
         element.style.background = '';
         
-        // Remove text colors that would be hard to read on our white editor surface.
-        // This fixes "invisible paste" from Docs/Sheets/email clients that use light gray text.
-        if (element.style.color && isTooLightForWhiteBg(element.style.color)) {
-          element.style.color = '';
-        }
+        // Force ALL text to black - strip any color styling
+        element.style.color = '';
       });
       
       // Also strip bgcolor attributes from tables
