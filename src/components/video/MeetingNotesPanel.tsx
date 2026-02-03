@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   FileText, Users, ListChecks, MessageSquare, CheckCircle2, 
   Plus, X, Save, Clock, User
@@ -13,6 +14,12 @@ import {
 import { useMeetingNotes } from '@/hooks/useMeetingNotes';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Student {
+  user_id: string;
+  full_name: string;
+}
 
 interface MeetingNotesPanelProps {
   roomName: string;
@@ -33,11 +40,41 @@ export const MeetingNotesPanel: React.FC<MeetingNotesPanelProps> = ({
   } = useMeetingNotes(roomName);
   
   const [newAttendee, setNewAttendee] = useState('');
+  const [students, setStudents] = useState<Student[]>([]);
+  const [studentsLoading, setStudentsLoading] = useState(true);
+
+  // Fetch students for dropdown
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name')
+          .not('full_name', 'is', null)
+          .order('full_name');
+        
+        if (!error && data) {
+          setStudents(data.filter(s => s.full_name));
+        }
+      } catch (err) {
+        console.error('Error fetching students:', err);
+      } finally {
+        setStudentsLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const handleAddAttendee = () => {
     if (newAttendee.trim()) {
       addAttendee(newAttendee.trim());
       setNewAttendee('');
+    }
+  };
+
+  const handleSelectStudent = (studentName: string) => {
+    if (studentName && !notes?.attendees?.includes(studentName)) {
+      addAttendee(studentName);
     }
   };
 
@@ -118,12 +155,38 @@ export const MeetingNotesPanel: React.FC<MeetingNotesPanelProps> = ({
                 </Badge>
               ))}
             </div>
+            
+            {/* Student dropdown */}
+            <Select onValueChange={handleSelectStudent}>
+              <SelectTrigger className="w-full bg-background">
+                <SelectValue placeholder="Select a student..." />
+              </SelectTrigger>
+              <SelectContent className="bg-background border shadow-lg z-50 max-h-[200px]">
+                {studentsLoading ? (
+                  <SelectItem value="_loading" disabled>Loading students...</SelectItem>
+                ) : students.length === 0 ? (
+                  <SelectItem value="_empty" disabled>No students found</SelectItem>
+                ) : (
+                  students.map((student) => (
+                    <SelectItem 
+                      key={student.user_id} 
+                      value={student.full_name}
+                      disabled={notes?.attendees?.includes(student.full_name)}
+                    >
+                      {student.full_name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Manual entry fallback */}
             <div className="flex gap-2">
               <Input
                 value={newAttendee}
                 onChange={(e) => setNewAttendee(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddAttendee()}
-                placeholder="Add attendee..."
+                placeholder="Or type a name..."
                 className="text-sm"
               />
               <Button size="sm" onClick={handleAddAttendee} disabled={!newAttendee.trim()}>
