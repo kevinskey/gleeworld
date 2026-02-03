@@ -163,7 +163,7 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
 
   if (isInMeeting && activeRoom) {
     return (
-      <div className={`w-full h-[600px] ${className}`}>
+      <div className={`w-full h-[calc(100vh-12rem)] min-h-[500px] ${className}`}>
         <MeetingWithNotes
           roomName={activeRoom}
           userName={userProfile?.full_name || userProfile?.display_name || user?.email || 'Guest'}
