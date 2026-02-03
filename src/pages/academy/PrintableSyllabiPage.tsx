@@ -139,14 +139,31 @@ export default function PrintableSyllabiPage() {
         @media print {
           @page {
             size: letter;
-            margin: 0.5in;
+            margin: 0.4in 0.5in;
           }
           body {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            background: white !important;
+          }
+          html, body {
+            background: white !important;
           }
           .print\\:hidden {
             display: none !important;
+          }
+          table {
+            page-break-inside: auto;
+          }
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+          }
+          thead {
+            display: table-header-group;
+          }
+          section {
+            page-break-inside: avoid;
           }
         }
       `}</style>
