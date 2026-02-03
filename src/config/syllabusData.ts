@@ -106,24 +106,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     attendancePolicy: 'Attendance at all rehearsals and performances is mandatory. Members begin with 100% attendance credit. Two unexcused absences are permitted per semester. Each additional unexcused absence results in a 5-point deduction. Absences from concerts may result in removal from the ensemble. Excused absences require advance notice and documentation.',
     academicIntegrity: 'Members are expected to uphold the highest standards of integrity, representing both Spelman College and the Glee Club tradition with honor.',
     accessStatement: 'Spelman College is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations. Located in MacVicar Hall, Room 106.',
-    schedule: [
-      { week: 1, title: 'Welcome & Orientation', description: 'Introduction to semester repertoire, voice placement assessments' },
-      { week: 2, title: 'Foundations', description: 'Warm-up techniques, breathing exercises, sight-reading introduction' },
-      { week: 3, title: 'Repertoire Introduction', description: 'Begin learning Fall Concert pieces' },
-      { week: 4, title: 'Section Work', description: 'Intensive sectional rehearsals begin' },
-      { week: 5, title: 'Ensemble Building', description: 'Focus on blend, balance, and unified vowels' },
-      { week: 6, title: 'Musical Expression', description: 'Dynamics, phrasing, and interpretation' },
-      { week: 7, title: 'Performance Preparation', description: 'Stage presence, choreography, concert etiquette' },
-      { week: 8, title: 'Mid-Semester Review', description: 'Individual check-ins, progress assessments' },
-      { week: 9, title: 'Fall Concert Preparation', description: 'Final preparations for Fall Concert' },
-      { week: 10, title: 'Fall Concert Week', description: '★ FALL CONCERT PERFORMANCE ★', assignments: 'Concert Performance' },
-      { week: 11, title: 'Holiday Repertoire', description: 'Begin Holiday Concert music' },
-      { week: 12, title: 'Holiday Preparation', description: 'Intensive Holiday Concert rehearsals' },
-      { week: 13, title: 'Holiday Concert Week', description: '★ HOLIDAY CONCERT PERFORMANCE ★', assignments: 'Concert Performance' },
-      { week: 14, title: 'Thanksgiving Break', description: 'No rehearsals' },
-      { week: 15, title: 'Semester Wrap-Up', description: 'Recording session, semester reflections' },
-      { week: 16, title: 'Finals Week', description: 'No final exam; attendance at any scheduled performances required' },
-    ],
+    schedule: [], // Performance ensemble - no weekly academic schedule
   },
 
   'MUS 240': {
