@@ -46,6 +46,7 @@ import { Mus240CalendarManager } from '@/components/mus240/instructor/Mus240Cale
 import { BulkPasswordReset } from '@/components/mus240/admin/BulkPasswordReset';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 import { DiscussionSummaryDashboard } from '@/components/course/DiscussionSummaryDashboard';
+import { DiscussionModule } from '@/components/discussion-groups/DiscussionModule';
 import { CourseAnnouncementsManager } from '@/components/course/CourseAnnouncementsManager';
 import { Mus240ResourcesTab } from '@/components/academy/Mus240ResourcesTab';
 import { CoursePlaylistManager } from '@/components/modules/CoursePlaylistManager';
@@ -514,13 +515,29 @@ export const InstructorConsole = () => {
                     Discussion Forum
                   </CardTitle>
                   <p className="text-sm md:text-base text-muted-foreground mt-1">
-                    Overview, participation tracking, and grading
+                    Manage discussions, edit deadlines, and grade student responses
                   </p>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4 md:p-6 space-y-6">
-                  <DiscussionSummaryDashboard courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" />
-                  <Separator className="my-6" />
-                  <DiscussionsSection courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" />
+                  <Tabs defaultValue="prompts" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 mb-4">
+                      <TabsTrigger value="prompts">Discussion Prompts</TabsTrigger>
+                      <TabsTrigger value="legacy">Legacy Discussions</TabsTrigger>
+                      <TabsTrigger value="analytics">Overview</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="prompts">
+                      <DiscussionModule courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" isInstructor={true} />
+                    </TabsContent>
+                    
+                    <TabsContent value="legacy">
+                      <DiscussionsSection courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" />
+                    </TabsContent>
+                    
+                    <TabsContent value="analytics">
+                      <DiscussionSummaryDashboard courseId="23c4ee3c-7bbb-4534-8c0a-eecd88298d37" />
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             )}
