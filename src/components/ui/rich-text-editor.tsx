@@ -215,6 +215,56 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [onChange]);
 
+  // Handle paste to strip problematic styles (white text, white background)
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    e.preventDefault();
+    
+    // Get the pasted HTML or text
+    const clipboardData = e.clipboardData;
+    let pastedData = clipboardData.getData('text/html');
+    
+    if (pastedData) {
+      // Create a temporary container to parse and clean the HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = pastedData;
+      
+      // Remove problematic inline styles from all elements
+      const allElements = tempDiv.querySelectorAll('*');
+      allElements.forEach((el) => {
+        const element = el as HTMLElement;
+        // Remove white/light background colors
+        if (element.style.backgroundColor) {
+          const bg = element.style.backgroundColor.toLowerCase();
+          if (bg === 'white' || bg === '#ffffff' || bg === '#fff' || 
+              bg === 'rgb(255, 255, 255)' || bg === 'rgba(255, 255, 255, 1)' ||
+              bg.includes('255, 255, 255')) {
+            element.style.backgroundColor = '';
+          }
+        }
+        // Remove white/light text colors
+        if (element.style.color) {
+          const color = element.style.color.toLowerCase();
+          if (color === 'white' || color === '#ffffff' || color === '#fff' || 
+              color === 'rgb(255, 255, 255)' || color === 'rgba(255, 255, 255, 1)' ||
+              color.includes('255, 255, 255')) {
+            element.style.color = '';
+          }
+        }
+      });
+      
+      pastedData = tempDiv.innerHTML;
+    } else {
+      // Fall back to plain text
+      pastedData = clipboardData.getData('text/plain');
+      // Convert plain text line breaks to <br>
+      pastedData = pastedData.replace(/\n/g, '<br>');
+    }
+    
+    // Insert the cleaned content
+    document.execCommand('insertHTML', false, pastedData);
+    handleInput();
+  }, [handleInput]);
+
   // Handle click on images for resize
   const handleEditorClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -813,11 +863,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           onInput={handleInput}
           onBlur={handleInput}
           onClick={handleEditorClick}
+          onPaste={handlePaste}
           data-placeholder={placeholder}
-          className="p-4 focus:outline-none prose prose-sm max-w-none dark:prose-invert overflow-y-auto"
+          className="p-4 focus:outline-none prose prose-sm max-w-none overflow-y-auto"
           style={{ 
             minHeight,
             position: 'relative',
+            color: '#1e293b',
+            backgroundColor: 'white',
           }}
         />
 
