@@ -99,7 +99,10 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
           data: profileData,
           error: profileError
         } = await supabase.from('gw_profiles').select('user_id, full_name, email').in('user_id', userIds);
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Error fetching profiles:', profileError);
+          throw profileError;
+        }
         
         profileMap = new Map((profileData || []).map(p => [p.user_id, {
           full_name: p.full_name,
@@ -113,7 +116,10 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
           data: studentProfileData,
           error: studentProfileError
         } = await supabase.from('gw_student_profiles').select('id, full_name, email').in('id', studentProfileIds);
-        if (studentProfileError) throw studentProfileError;
+        if (studentProfileError) {
+          console.error('Error fetching student profiles:', studentProfileError);
+          throw studentProfileError;
+        }
         
         studentProfileMap = new Map((studentProfileData || []).map(p => [p.id, {
           full_name: p.full_name,
