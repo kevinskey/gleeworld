@@ -691,8 +691,11 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                 </TabsList>
 
                 {/* Email Tab */}
-                <TabsContent value="email" className="flex-1 overflow-auto mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-                  <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                <TabsContent
+                  value="email"
+                  className="flex-1 min-h-0 overflow-hidden mt-0 data-[state=active]:flex data-[state=active]:flex-col"
+                >
+                  <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
                     {/* Email Compose Section */}
                     <div className="flex-1 flex flex-col min-w-0 lg:border-r border-border">
                       {/* Toggle for mobile only */}
@@ -719,7 +722,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
 
                       {/* Compose form - hide on mobile when viewing history */}
                       <div className={`flex-1 flex flex-col min-h-0 ${showEmailHistory ? 'hidden lg:flex' : 'flex'}`}>
-                        <ScrollArea className="flex-1">
+                        <ScrollArea className="flex-1 min-h-0">
                           <div className="bg-card p-4 lg:p-6 space-y-4">
                             {/* Recipients */}
                             <div className="space-y-1">
@@ -734,8 +737,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                     </CollapsibleTrigger>
                                     <CollapsibleContent>
                                       <div className="flex flex-wrap gap-2 px-3 pb-3 max-h-[200px] overflow-y-auto">
-                                        {recipients.map((r, i) => (
-                                          <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                                        {recipients.map((r) => (
+                                          <Badge key={r} variant="secondary" className="gap-1 pr-1">
                                             {r}
                                             <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
                                               <X className="h-3 w-3" />
@@ -747,8 +750,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                   </Collapsible>
                                 ) : (
                                   <div className="flex flex-wrap gap-2 p-3 min-h-[48px]">
-                                    {recipients.map((r, i) => (
-                                      <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                                    {recipients.map((r) => (
+                                      <Badge key={r} variant="secondary" className="gap-1 pr-1">
                                         {r}
                                         <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
                                           <X className="h-3 w-3" />
@@ -807,8 +810,11 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                 </TabsContent>
 
                 {/* SMS Tab */}
-                <TabsContent value="sms" className="flex-1 overflow-auto mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-                  <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                <TabsContent
+                  value="sms"
+                  className="flex-1 min-h-0 overflow-hidden mt-0 data-[state=active]:flex data-[state=active]:flex-col"
+                >
+                  <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
                     {/* SMS Compose Section */}
                     <div className="flex-1 flex flex-col min-w-0 border-r border-border">
                       <div className="flex-1 bg-muted/50 p-4 space-y-4 overflow-auto">
