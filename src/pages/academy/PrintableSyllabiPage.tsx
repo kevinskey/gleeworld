@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { PrintableSyllabus } from '@/components/academy/PrintableSyllabus';
-import { getAllSyllabi, getSyllabus, CourseSyllabus } from '@/config/syllabusData';
+import { getAllSyllabi } from '@/config/syllabusData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Printer, FileDown, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
@@ -27,7 +26,7 @@ export default function PrintableSyllabiPage() {
   };
 
   return (
-    <UniversalLayout showHeader={true} showFooter={false}>
+    <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
         {/* Header - Hidden in print */}
         <div className="print:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
@@ -151,6 +150,6 @@ export default function PrintableSyllabiPage() {
           }
         }
       `}</style>
-    </UniversalLayout>
+    </>
   );
 }
