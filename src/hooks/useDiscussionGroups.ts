@@ -98,7 +98,7 @@ export function useDiscussionPrompts(courseId: string) {
         .from('discussion_prompts')
         .select('*')
         .eq('course_id', courseId)
-        .order('created_at', { ascending: false });
+        .order('individual_due_at', { ascending: true });
       
       if (error) throw error;
       return data as DiscussionPrompt[];
