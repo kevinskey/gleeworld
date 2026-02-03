@@ -719,82 +719,83 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
 
                       {/* Compose form - hide on mobile when viewing history */}
                       <div className={`flex-1 flex flex-col min-h-0 ${showEmailHistory ? 'hidden lg:flex' : 'flex'}`}>
-                        <div className="flex-1 bg-card p-4 lg:p-6 space-y-4 overflow-y-auto min-h-0">
-                          {/* Recipients */}
-                          <div className="space-y-1">
-                            <Label className="text-sm font-medium text-foreground">To:</Label>
-                            <div className="border border-border rounded-lg bg-background">
-                              {/* Collapsible recipients when there are many */}
-                              {recipients.length > 3 ? (
-                                <Collapsible defaultOpen={false}>
-                                  <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 text-left hover:bg-muted/50 transition-colors">
-                                    <ChevronRight className="h-4 w-4 transition-transform [[data-state=open]>&]:rotate-90" />
-                                    <span className="text-sm font-medium">{recipients.length} recipients selected</span>
-                                  </CollapsibleTrigger>
-                                  <CollapsibleContent>
-                                    <div className="flex flex-wrap gap-2 px-3 pb-3 max-h-[200px] overflow-y-auto">
-                                      {recipients.map((r, i) => (
-                                        <Badge key={i} variant="secondary" className="gap-1 pr-1">
-                                          {r}
-                                          <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
-                                            <X className="h-3 w-3" />
-                                          </button>
-                                        </Badge>
-                                      ))}
-                                    </div>
-                                  </CollapsibleContent>
-                                </Collapsible>
-                              ) : (
-                                <div className="flex flex-wrap gap-2 p-3 min-h-[48px]">
-                                  {recipients.map((r, i) => (
-                                    <Badge key={i} variant="secondary" className="gap-1 pr-1">
-                                      {r}
-                                      <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
-                                        <X className="h-3 w-3" />
-                                      </button>
-                                    </Badge>
-                                  ))}
+                        <ScrollArea className="flex-1">
+                          <div className="bg-card p-4 lg:p-6 space-y-4">
+                            {/* Recipients */}
+                            <div className="space-y-1">
+                              <Label className="text-sm font-medium text-foreground">To:</Label>
+                              <div className="border border-border rounded-lg bg-background">
+                                {/* Collapsible recipients when there are many */}
+                                {recipients.length > 3 ? (
+                                  <Collapsible defaultOpen={false}>
+                                    <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 text-left hover:bg-muted/50 transition-colors">
+                                      <ChevronRight className="h-4 w-4 transition-transform [[data-state=open]>&]:rotate-90" />
+                                      <span className="text-sm font-medium">{recipients.length} recipients selected</span>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent>
+                                      <div className="flex flex-wrap gap-2 px-3 pb-3 max-h-[200px] overflow-y-auto">
+                                        {recipients.map((r, i) => (
+                                          <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                                            {r}
+                                            <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                              <X className="h-3 w-3" />
+                                            </button>
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </CollapsibleContent>
+                                  </Collapsible>
+                                ) : (
+                                  <div className="flex flex-wrap gap-2 p-3 min-h-[48px]">
+                                    {recipients.map((r, i) => (
+                                      <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                                        {r}
+                                        <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                          <X className="h-3 w-3" />
+                                        </button>
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                                {/* Search input always visible */}
+                                <div className="relative p-3 pt-0">
+                                  <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
+                                    if (e.key === 'Enter' && searchQuery.includes('@')) {
+                                      addRecipient(searchQuery);
+                                    }
+                                  }} placeholder="Search or type email..." className="h-8 bg-transparent text-foreground placeholder:text-muted-foreground" />
+                                  {filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                      {filteredContacts.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
+                                          <span className="font-medium">{result.full_name}</span>
+                                          <span className="text-sm text-muted-foreground">{result.email}</span>
+                                        </button>)}
+                                    </div>}
                                 </div>
-                              )}
-                              {/* Search input always visible */}
-                              <div className="relative p-3 pt-0">
-                                <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
-                                  if (e.key === 'Enter' && searchQuery.includes('@')) {
-                                    addRecipient(searchQuery);
-                                  }
-                                }} placeholder="Search or type email..." className="h-8 bg-transparent text-foreground placeholder:text-muted-foreground" />
-                                {filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                    {filteredContacts.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
-                                        <span className="font-medium">{result.full_name}</span>
-                                        <span className="text-sm text-muted-foreground">{result.email}</span>
-                                      </button>)}
-                                  </div>}
                               </div>
                             </div>
-                          </div>
 
-                          {/* Subject */}
-                          <div className="space-y-1">
-                            <Label className="text-sm font-medium text-foreground">Subject:</Label>
-                            <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject line..." className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground" />
-                          </div>
+                            {/* Subject */}
+                            <div className="space-y-1">
+                              <Label className="text-sm font-medium text-foreground">Subject:</Label>
+                              <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject line..." className="h-10 bg-background border-border text-foreground placeholder:text-muted-foreground" />
+                            </div>
 
-                          {/* Content */}
-                          <div className="space-y-1 flex-1 flex flex-col min-h-0">
-                            <Label className="text-sm font-medium text-foreground flex-shrink-0">Message:</Label>
-                            <div className="flex-1 min-h-[200px] max-h-[400px] overflow-y-auto">
-                              <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="200px" />
+                            {/* Content - Rich text editor with good height */}
+                            <div className="space-y-1">
+                              <Label className="text-sm font-medium text-foreground">Message:</Label>
+                              <div className="border border-border rounded-lg overflow-hidden bg-background">
+                                <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="300px" />
+                              </div>
+                            </div>
+
+                            {/* Send Button */}
+                            <div className="pt-2 pb-4">
+                              <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full h-12">
+                                {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
+                              </Button>
                             </div>
                           </div>
-                        </div>
-                        
-                        {/* Send Button - Always Visible */}
-                        <div className="flex-shrink-0 p-4 bg-muted border-t border-border sticky bottom-0">
-                          <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full">
-                            {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
-                          </Button>
-                        </div>
-                        
+                        </ScrollArea>
                       </div>
                     </div>
 
