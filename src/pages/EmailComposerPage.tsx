@@ -266,6 +266,7 @@ const EmailComposerPage = () => {
           subject: subject,
           html: htmlContent,
           text: content,
+          replyTo: user?.email,
           cc: ccRecipients.length > 0 ? ccRecipients : undefined,
           bcc: bccRecipients.length > 0 ? bccRecipients : undefined
         }
