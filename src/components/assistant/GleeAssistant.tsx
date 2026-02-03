@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { useRadioChannels } from '@/hooks/useRadioChannels';
 import { AttendanceFullScreenModal } from '@/components/course/AttendanceFullScreenModal';
@@ -102,8 +102,17 @@ export const GleeAssistant = () => {
   const isOpenRef = useRef(isOpen);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio, setVolume, volume } = useRadioPlayer();
   const { channels } = useRadioChannels();
+
+  // Hide assistant on printable syllabi page
+  const hiddenPaths = ['/academy/printable-syllabi'];
+  const isHidden = hiddenPaths.some(path => location.pathname.startsWith(path));
+
+  if (isHidden) {
+    return null;
+  }
 
   // Attendance QR modal state
   const [attendanceModalOpen, setAttendanceModalOpen] = useState(false);
