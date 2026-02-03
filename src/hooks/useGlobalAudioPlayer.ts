@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { useEffect } from 'react';
+import { useAudioCoordinator } from '@/hooks/useAudioCoordinator';
 
 export interface AudioTrack {
   id: string;
@@ -18,13 +20,15 @@ interface GlobalAudioPlayerState {
   
   // Actions
   setPlaylist: (tracks: AudioTrack[]) => void;
-  playTrack: (track: AudioTrack, index: number) => void;
-  togglePlay: () => void;
+  playTrack: (track: AudioTrack, index: number, requestPlaybackFn?: () => void) => void;
+  togglePlay: (requestPlaybackFn?: () => void) => void;
   pause: () => void;
-  play: () => void;
-  skipNext: () => void;
-  skipPrevious: () => void;
+  play: (requestPlaybackFn?: () => void) => void;
+  skipNext: (requestPlaybackFn?: () => void) => void;
+  skipPrevious: (requestPlaybackFn?: () => void) => void;
   stop: () => void;
+  // Internal pause for coordination
+  _coordinatorPause: () => void;
 }
 
 // Create a singleton audio element
@@ -38,7 +42,7 @@ const getAudioElement = () => {
   return audioElement;
 };
 
-export const useGlobalAudioPlayer = create<GlobalAudioPlayerState>((set, get) => ({
+const useGlobalAudioPlayerStore = create<GlobalAudioPlayerState>((set, get) => ({
   playlist: [],
   currentTrack: null,
   currentIndex: -1,
@@ -49,9 +53,12 @@ export const useGlobalAudioPlayer = create<GlobalAudioPlayerState>((set, get) =>
     set({ playlist: tracks });
   },
 
-  playTrack: (track, index) => {
+  playTrack: (track, index, requestPlaybackFn) => {
     const audio = getAudioElement();
     if (!audio) return;
+
+    // Request exclusive audio playback
+    requestPlaybackFn?.();
 
     // Stop current playback
     audio.pause();
@@ -80,7 +87,7 @@ export const useGlobalAudioPlayer = create<GlobalAudioPlayerState>((set, get) =>
         const nextIndex = state.currentIndex + 1;
         const nextTrack = state.playlist[nextIndex];
         if (nextTrack) {
-          get().playTrack(nextTrack, nextIndex);
+          get().playTrack(nextTrack, nextIndex, requestPlaybackFn);
         }
       } else {
         set({ isPlaying: false });
@@ -88,12 +95,12 @@ export const useGlobalAudioPlayer = create<GlobalAudioPlayerState>((set, get) =>
     };
   },
 
-  togglePlay: () => {
-    const { audio, isPlaying, currentTrack, playlist, currentIndex } = get();
+  togglePlay: (requestPlaybackFn) => {
+    const { audio, isPlaying, currentTrack, currentIndex } = get();
     
     if (!audio && currentTrack) {
       // Reinitialize if audio was lost
-      get().playTrack(currentTrack, currentIndex);
+      get().playTrack(currentTrack, currentIndex, requestPlaybackFn);
       return;
     }
 
@@ -103,6 +110,7 @@ export const useGlobalAudioPlayer = create<GlobalAudioPlayerState>((set, get) =>
       audio.pause();
       set({ isPlaying: false });
     } else {
+      requestPlaybackFn?.();
       audio.play().then(() => {
         set({ isPlaying: true });
       }).catch(err => {
@@ -119,8 +127,17 @@ export const useGlobalAudioPlayer = create<GlobalAudioPlayerState>((set, get) =>
     }
   },
 
-  play: () => {
+  _coordinatorPause: () => {
+    const { audio } = get();
+    if (audio) {
+      audio.pause();
+      set({ isPlaying: false });
+    }
+  },
+
+  play: (requestPlaybackFn) => {
     const { audio, currentTrack, currentIndex } = get();
+    requestPlaybackFn?.();
     if (audio) {
       audio.play().then(() => {
         set({ isPlaying: true });
@@ -128,22 +145,22 @@ export const useGlobalAudioPlayer = create<GlobalAudioPlayerState>((set, get) =>
         console.error('Error playing audio:', err);
       });
     } else if (currentTrack) {
-      get().playTrack(currentTrack, currentIndex);
+      get().playTrack(currentTrack, currentIndex, requestPlaybackFn);
     }
   },
 
-  skipNext: () => {
+  skipNext: (requestPlaybackFn) => {
     const { playlist, currentIndex } = get();
     if (currentIndex < playlist.length - 1) {
       const nextIndex = currentIndex + 1;
       const nextTrack = playlist[nextIndex];
       if (nextTrack) {
-        get().playTrack(nextTrack, nextIndex);
+        get().playTrack(nextTrack, nextIndex, requestPlaybackFn);
       }
     }
   },
 
-  skipPrevious: () => {
+  skipPrevious: (requestPlaybackFn) => {
     const { playlist, currentIndex, audio } = get();
     
     // If more than 3 seconds in, restart current track
@@ -156,7 +173,7 @@ export const useGlobalAudioPlayer = create<GlobalAudioPlayerState>((set, get) =>
       const prevIndex = currentIndex - 1;
       const prevTrack = playlist[prevIndex];
       if (prevTrack) {
-        get().playTrack(prevTrack, prevIndex);
+        get().playTrack(prevTrack, prevIndex, requestPlaybackFn);
       }
     }
   },
@@ -170,3 +187,35 @@ export const useGlobalAudioPlayer = create<GlobalAudioPlayerState>((set, get) =>
     }
   },
 }));
+
+// Wrapper hook that integrates audio coordination
+export const useGlobalAudioPlayer = () => {
+  const store = useGlobalAudioPlayerStore();
+  const { requestPlayback, registerPauseCallback, unregisterPauseCallback } = useAudioCoordinator();
+
+  // Register pause callback for audio coordination
+  useEffect(() => {
+    registerPauseCallback('global', store._coordinatorPause);
+    return () => unregisterPauseCallback('global');
+  }, [registerPauseCallback, unregisterPauseCallback, store._coordinatorPause]);
+
+  // Return wrapped functions that include coordination
+  return {
+    ...store,
+    playTrack: (track: AudioTrack, index: number) => {
+      store.playTrack(track, index, () => requestPlayback('global'));
+    },
+    togglePlay: () => {
+      store.togglePlay(() => requestPlayback('global'));
+    },
+    play: () => {
+      store.play(() => requestPlayback('global'));
+    },
+    skipNext: () => {
+      store.skipNext(() => requestPlayback('global'));
+    },
+    skipPrevious: () => {
+      store.skipPrevious(() => requestPlayback('global'));
+    },
+  };
+};
