@@ -637,7 +637,9 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   }
   // Main content component (used in both embedded and full page modes)
   const mainContent = (
-    <div className={`flex flex-col ${embedded ? 'h-full' : 'h-[calc(100dvh-var(--gw-header-h,4rem))]'}`}>
+    <div
+      className={`flex flex-col ${embedded ? 'h-full' : 'h-[calc(100dvh-var(--gw-header-h,4rem)-var(--gw-radio-bar-height,0px))]'}`}
+    >
       {/* Persistent Header - hide in embedded mode */}
       {!embedded && (
         <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border backdrop-blur px-3 sm:px-6 lg:px-10 py-3 sm:py-6 bg-card shadow-lg">
