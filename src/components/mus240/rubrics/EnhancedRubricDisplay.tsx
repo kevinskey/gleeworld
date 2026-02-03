@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   GraduationCap, 
-  Bot, 
   TrendingUp, 
   Clock, 
   Target, 
@@ -48,13 +47,16 @@ interface EnhancedRubricDisplayProps {
     confidence?: number | null;
     reasoning?: string | null;
   };
+  /** When true, hides AI-specific language from students */
+  isStudentView?: boolean;
 }
 
 export const EnhancedRubricDisplay: React.FC<EnhancedRubricDisplayProps> = ({ 
   grade, 
   showDetailed = true,
   interactive = true,
-  aiDetection
+  aiDetection,
+  isStudentView = false
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedCriteria, setExpandedCriteria] = useState<Set<string>>(new Set());
@@ -108,12 +110,13 @@ export const EnhancedRubricDisplay: React.FC<EnhancedRubricDisplayProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* AI Detection Warning - Show right above grade card */}
+      {/* Academic Integrity Warning - Show right above grade card */}
       {aiDetection?.detected && (
         <AIDetectionAlert
           detected={aiDetection.detected}
           confidence={aiDetection.confidence}
           reasoning={aiDetection.reasoning}
+          isStudentView={isStudentView}
         />
       )}
       
@@ -122,7 +125,7 @@ export const EnhancedRubricDisplay: React.FC<EnhancedRubricDisplayProps> = ({
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <GraduationCap className="h-5 w-5" />
-              AI Grade Assessment
+              Grade Assessment
             </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="default" className="text-lg px-3 py-1">
@@ -134,12 +137,6 @@ export const EnhancedRubricDisplay: React.FC<EnhancedRubricDisplayProps> = ({
             {grade.rubric_scores && totalPossible > 0 && (
               <Badge variant="outline" className="text-xs">
                 Raw: {totalEarned.toFixed(1)}/{totalPossible}
-              </Badge>
-            )}
-            {grade.ai_model && (
-              <Badge variant="outline" className="flex items-center gap-1">
-                <Bot className="h-3 w-3" />
-                AI Graded
               </Badge>
             )}
           </div>

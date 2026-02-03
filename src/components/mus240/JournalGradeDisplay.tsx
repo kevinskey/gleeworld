@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { EnhancedRubricDisplay } from './rubrics/EnhancedRubricDisplay';
-import { AIDetectionAlert } from './AIDetectionAlert';
 
 interface RubricScore {
   criterion_name: string;
@@ -58,6 +57,7 @@ export const JournalGradeDisplay: React.FC<JournalGradeDisplayProps> = ({ grade 
       grade={enhancedGrade}
       showDetailed={true}
       interactive={true}
+      isStudentView={true}
       aiDetection={grade.ai_writing_detected ? {
         detected: grade.ai_writing_detected,
         confidence: grade.ai_detection_confidence,
