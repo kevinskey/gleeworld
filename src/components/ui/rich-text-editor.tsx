@@ -215,11 +215,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [onChange]);
 
-  // Handle paste to strip problematic styles (white text, white background)
+  // Handle paste to strip ALL problematic styles (backgrounds, white text)
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     e.preventDefault();
     
-    // Get the pasted HTML or text
     const clipboardData = e.clipboardData;
     let pastedData = clipboardData.getData('text/html');
     
@@ -228,39 +227,40 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = pastedData;
       
-      // Remove problematic inline styles from all elements
+      // Aggressively remove ALL background colors and white/light text colors
       const allElements = tempDiv.querySelectorAll('*');
       allElements.forEach((el) => {
         const element = el as HTMLElement;
-        // Remove white/light background colors
-        if (element.style.backgroundColor) {
-          const bg = element.style.backgroundColor.toLowerCase();
-          if (bg === 'white' || bg === '#ffffff' || bg === '#fff' || 
-              bg === 'rgb(255, 255, 255)' || bg === 'rgba(255, 255, 255, 1)' ||
-              bg.includes('255, 255, 255')) {
-            element.style.backgroundColor = '';
-          }
-        }
-        // Remove white/light text colors
+        // Remove ALL background colors - they cause visibility issues
+        element.style.backgroundColor = '';
+        element.style.background = '';
+        
+        // Remove white/light text colors that would be invisible
         if (element.style.color) {
           const color = element.style.color.toLowerCase();
+          // Check for white, near-white, or light colors
           if (color === 'white' || color === '#ffffff' || color === '#fff' || 
-              color === 'rgb(255, 255, 255)' || color === 'rgba(255, 255, 255, 1)' ||
-              color.includes('255, 255, 255')) {
+              color.includes('255, 255, 255') || color.includes('254, 254, 254') ||
+              color.includes('253, 253, 253') || color.includes('250, 250, 250') ||
+              color.includes('248, 248, 248') || color.includes('245, 245, 245') ||
+              color.includes('240, 240, 240') || color.includes('rgb(255') ||
+              /^#f[a-f0-9]{5}$/i.test(color) || /^#f[a-f0-9]{2}$/i.test(color)) {
             element.style.color = '';
           }
         }
       });
       
+      // Also strip bgcolor attributes from tables
+      tempDiv.querySelectorAll('[bgcolor]').forEach(el => el.removeAttribute('bgcolor'));
+      tempDiv.querySelectorAll('[background]').forEach(el => el.removeAttribute('background'));
+      
       pastedData = tempDiv.innerHTML;
     } else {
       // Fall back to plain text
       pastedData = clipboardData.getData('text/plain');
-      // Convert plain text line breaks to <br>
       pastedData = pastedData.replace(/\n/g, '<br>');
     }
     
-    // Insert the cleaned content
     document.execCommand('insertHTML', false, pastedData);
     handleInput();
   }, [handleInput]);
