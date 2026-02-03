@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, Bot, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Bot, CheckCircle, ShieldAlert } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface AIDetectionAlertProps {
@@ -8,16 +8,22 @@ interface AIDetectionAlertProps {
   confidence?: number | null;
   reasoning?: string | null;
   compact?: boolean;
+  /** When true, hides AI-specific language from students */
+  isStudentView?: boolean;
 }
 
 export const AIDetectionAlert: React.FC<AIDetectionAlertProps> = ({
   detected,
   confidence,
   reasoning,
-  compact = false
+  compact = false,
+  isStudentView = false
 }) => {
   if (!detected) {
     if (compact) return null;
+    
+    // Only show "authentic work" message to instructors
+    if (isStudentView) return null;
     
     return (
       <Alert className="border-green-200 bg-green-50">
@@ -64,12 +70,40 @@ export const AIDetectionAlert: React.FC<AIDetectionAlertProps> = ({
   if (compact) {
     return (
       <Badge variant="outline" className={`${colors.badge} flex items-center gap-1`}>
-        <Bot className="h-3 w-3" />
-        AI Detected ({Math.round(confidencePercent)}%)
+        <ShieldAlert className="h-3 w-3" />
+        {isStudentView ? 'Flagged for Review' : `AI Detected (${Math.round(confidencePercent)}%)`}
       </Badge>
     );
   }
 
+  // Student-facing version - no AI language
+  if (isStudentView) {
+    return (
+      <Alert className={`${colors.border} ${colors.bg} relative z-50`}>
+        <AlertTriangle className={`h-4 w-4 ${colors.icon}`} />
+        <AlertTitle className={`${colors.text} flex items-center gap-2`}>
+          ⚠️ Academic Integrity Concern
+        </AlertTitle>
+        <AlertDescription className={colors.text}>
+          <div className="space-y-2 mt-2">
+            <p className="font-medium">
+              This submission has been flagged for review.
+            </p>
+            {reasoning && (
+              <div className="mt-2 p-3 bg-white/50 rounded-md text-sm">
+                <p>{reasoning}</p>
+              </div>
+            )}
+            <p className="text-sm mt-2 italic">
+              Please ensure all submitted work is your own original writing.
+            </p>
+          </div>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Instructor-facing version - full details
   return (
     <Alert className={`${colors.border} ${colors.bg} relative z-50`}>
       <AlertTriangle className={`h-4 w-4 ${colors.icon}`} />

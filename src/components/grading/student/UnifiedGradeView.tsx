@@ -23,7 +23,6 @@ interface UnifiedGrade {
   feedback: string | null;
   graded_at: string | null;
   status: 'graded' | 'pending' | 'submitted' | 'draft';
-  is_ai_graded: boolean;
   submitted_at: string | null;
 }
 
@@ -84,7 +83,6 @@ export const UnifiedGradeView: React.FC = () => {
           feedback: grade?.instructor_feedback ?? grade?.ai_feedback ?? null,
           graded_at: grade?.instructor_graded_at ?? grade?.graded_at ?? null,
           status: grade ? 'graded' : (entry.submitted_at ? 'submitted' : 'draft'),
-          is_ai_graded: !!grade?.ai_model && !grade?.instructor_score,
           submitted_at: entry.submitted_at
         });
       });
@@ -171,9 +169,6 @@ export const UnifiedGradeView: React.FC = () => {
                         {grade.course_code}
                       </Badge>
                       <h4 className="font-semibold">{grade.assignment_title}</h4>
-                      {grade.is_ai_graded && (
-                        <Badge variant="secondary" className="text-xs">AI Graded</Badge>
-                      )}
                     </div>
                     {grade.feedback && (
                       <p className="text-sm text-muted-foreground line-clamp-2 mt-1">

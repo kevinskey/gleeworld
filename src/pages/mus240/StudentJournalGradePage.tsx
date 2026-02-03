@@ -225,19 +225,17 @@ export const StudentJournalGradePage = () => {
           </Button>
         </div>
 
-        {/* AI Detection Warning */}
+        {/* Academic Integrity Warning */}
         {grade?.ai_writing_detected && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <strong>AI Writing Detected</strong>
+              <strong>Academic Integrity Concern</strong>
               <p className="mt-1">
-                Our system detected that this submission may have been written using AI tools 
-                (Confidence: {grade.ai_detection_confidence}%). {grade.ai_detection_notes}
+                This submission has been flagged for review. {grade.ai_detection_notes}
               </p>
               <p className="mt-2 text-sm">
-                Academic integrity requires original work. If you used AI assistance, please resubmit 
-                with your own authentic writing.
+                Academic integrity requires original work. Please ensure your submission reflects your own authentic writing.
               </p>
             </AlertDescription>
           </Alert>
@@ -338,7 +336,7 @@ export const StudentJournalGradePage = () => {
                   <ul className="text-sm list-disc list-inside mt-2 space-y-1">
                     <li>Write in your own authentic voice</li>
                     <li>Address the feedback provided in the rubric</li>
-                    <li>Do NOT use AI writing tools - academic integrity is required</li>
+                    <li>Submit only your own original work - academic integrity is required</li>
                     <li>Proofread carefully before submitting</li>
                   </ul>
                 </AlertDescription>
