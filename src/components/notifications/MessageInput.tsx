@@ -108,7 +108,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               style={{ 
                 minHeight: '36px',
                 maxHeight: '100px',
-                overflow: 'hidden'
+                overflowY: 'auto'
               }}
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
