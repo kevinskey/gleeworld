@@ -325,9 +325,14 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                           <Input
                             value={slide.youtube_video_id || ''}
                             onChange={(e) => {
-                              // Extract video ID if a full URL is pasted
                               const input = e.target.value.trim();
                               const videoId = extractYouTubeVideoId(input) || input;
+                              updateSlide.mutate({ id: slide.id, youtube_video_id: videoId });
+                            }}
+                            onPaste={(e) => {
+                              e.preventDefault();
+                              const pastedText = e.clipboardData.getData('text').trim();
+                              const videoId = extractYouTubeVideoId(pastedText) || pastedText;
                               updateSlide.mutate({ id: slide.id, youtube_video_id: videoId });
                             }}
                             placeholder="https://youtube.com/watch?v=... or video ID"
