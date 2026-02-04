@@ -753,7 +753,7 @@ export const UnifiedUserManagement = () => {
                 <div className="flex items-start gap-3">
                   <UserPlus className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-blue-800">How Auto-Enrollment Works</h4>
+                    <h4 className="font-medium text-foreground">How Auto-Enrollment Works</h4>
                     <p className="text-sm text-blue-700 mt-1">
                       This will create a new user account and send them an invitation email to set up their password.
                       The user will be assigned the selected role immediately.
