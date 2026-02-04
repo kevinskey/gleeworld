@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,28 +8,39 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useSecurityEnhanced } from "@/hooks/useSecurityEnhanced";
-import { Loader2, Users, Heart } from "lucide-react";
+import { useRegistrationRequest } from "@/hooks/useRegistrationRequest";
+import { RoleSelectionStep } from "./RoleSelectionStep";
+import { Loader2, Users, Heart, ArrowLeft } from "lucide-react";
+
+type SignupStep = 'credentials' | 'role-selection';
 
 export const SignupForm = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [isFanSignup, setIsFanSignup] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   
+  // Multi-step signup state
+  const [currentStep, setCurrentStep] = useState<SignupStep>('credentials');
+  const [signedUpUserId, setSignedUpUserId] = useState<string | null>(null);
+  const [isFanOrAlumnaFlow, setIsFanOrAlumnaFlow] = useState(false);
+  
   const { enhancedSignUp, checkRateLimit } = useSecurityEnhanced();
+  const { createRegistrationRequest, loading: registrationLoading } = useRegistrationRequest();
 
   useEffect(() => {
     const role = searchParams.get('role');
-    setIsFanSignup(role === 'fan');
+    // If role is fan or alumna, we'll show role selection after signup
+    setIsFanOrAlumnaFlow(role === 'fan' || role === 'alumna');
   }, [searchParams]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -42,23 +53,60 @@ export const SignupForm = () => {
       }
 
       // Use enhanced signup with security validation
+      // Use 'user' role initially - actual role will be set after approval
       const result = await enhancedSignUp(
         email, 
         password, 
         fullName, 
-        isFanSignup ? 'fan' : 'user'
+        'user'
       );
 
       if (!result.user) {
         throw new Error("Signup failed - please try again");
       }
-      // Persist intended redirect for post-auth
-      try { sessionStorage.setItem('redirectAfterAuth', '/auditioner'); } catch {}
-      setSuccess(true);
+
+      setSignedUpUserId(result.user.id);
+
+      // If this is a fan/alumna flow, show role selection
+      if (isFanOrAlumnaFlow) {
+        setCurrentStep('role-selection');
+      } else {
+        // Regular signup - redirect to auditioner dashboard
+        try { sessionStorage.setItem('redirectAfterAuth', '/auditioner'); } catch {}
+        setSuccess(true);
+      }
     } catch (error: any) {
       setError(error.message || "An error occurred during sign up");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRoleSelected = async (
+    role: 'fan' | 'alumna', 
+    additionalData?: { graduationYear?: number; voicePart?: string }
+  ) => {
+    if (!signedUpUserId) {
+      setError("Session error - please try again");
+      return;
+    }
+
+    const result = await createRegistrationRequest(
+      signedUpUserId,
+      email,
+      fullName,
+      {
+        role,
+        graduationYear: additionalData?.graduationYear,
+        voicePart: additionalData?.voicePart
+      }
+    );
+
+    if (result.success) {
+      // Redirect to thank you page
+      navigate(`/registration-thank-you?role=${role}`);
+    } else {
+      setError(result.error || "Failed to submit registration request");
     }
   };
 
@@ -81,14 +129,13 @@ export const SignupForm = () => {
     }
   };
 
+  // Success state for regular signup
   if (success) {
     return (
       <div className="space-y-4">
         <Alert>
           <AlertDescription>
-            {isFanSignup 
-              ? "Welcome to the GleeWorld fan community! Please verify your email to complete registration."
-              : "Please verify your email to complete your registration."}
+            Please verify your email to complete your registration.
           </AlertDescription>
         </Alert>
         {resendMessage && (
@@ -116,17 +163,47 @@ export const SignupForm = () => {
     );
   }
 
+  // Role selection step
+  if (currentStep === 'role-selection') {
+    return (
+      <div className="space-y-4">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => setCurrentStep('credentials')}
+          className="text-white/70 hover:text-white hover:bg-white/10 -ml-2"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
+        <RoleSelectionStep 
+          onRoleSelected={handleRoleSelected}
+          loading={registrationLoading}
+        />
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {isFanSignup && (
+      {isFanOrAlumnaFlow && (
         <div className="text-center p-4 bg-white/10 rounded border border-white/20">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Heart className="h-5 w-5 text-white" />
-            <Badge variant="secondary" className="text-sm bg-white/20 text-white border-white/30">Fan Registration</Badge>
+            <Badge variant="secondary" className="text-sm bg-white/20 text-white border-white/30">
+              {searchParams.get('role') === 'fan' ? 'Fan Registration' : 'Alumna Registration'}
+            </Badge>
             <Users className="h-5 w-5 text-white" />
           </div>
           <p className="text-sm text-white/80">
-            Join the GleeWorld fan community and get exclusive access to content and events!
+            {searchParams.get('role') === 'fan' 
+              ? 'Join the GleeWorld fan community and get exclusive access to content and events!'
+              : 'Reconnect with your Glee Club sisters and access exclusive alumnae features!'}
           </p>
         </div>
       )}
@@ -138,7 +215,7 @@ export const SignupForm = () => {
       )}
 
       {/* Email/Password Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleCredentialsSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="fullName" className="text-white">Full Name</Label>
           <Input
@@ -182,14 +259,7 @@ export const SignupForm = () => {
         
         <Button type="submit" className="w-full bg-[#0066CC] hover:bg-[#0077DD] text-white border border-white/20" disabled={loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isFanSignup ? (
-            <>
-              <Heart className="mr-2 h-4 w-4" />
-              Join as Fan
-            </>
-          ) : (
-            'Create Account'
-          )}
+          {isFanOrAlumnaFlow ? 'Continue' : 'Create Account'}
         </Button>
       </form>
     </div>

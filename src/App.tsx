@@ -252,6 +252,7 @@ import EventCheckinPage from "./pages/EventCheckinPage";
 import ChildrenGoAuditionsAdmin from "./pages/admin/ChildrenGoAuditionsAdmin";
 import ConcertTicketRequest from "./pages/ConcertTicketRequest";
 import ConcertTicketAdmin from "./pages/admin/ConcertTicketAdmin";
+import RegistrationThankYou from "./pages/RegistrationThankYou";
 
 import GrandStaves from "./pages/GrandStaves";
 import GrandStaffClassroom from "./pages/GrandStaffClassroom";
@@ -400,6 +401,14 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <Onboarding />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/registration-thank-you" 
+                element={
+                  <PublicRoute>
+                    <RegistrationThankYou />
                   </PublicRoute>
                 } 
               />
