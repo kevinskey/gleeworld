@@ -85,7 +85,7 @@ export const MessageComposer = ({
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder="Enter a clear, descriptive subject..."
-            className="text-base"
+            className="h-12 text-base touch-manipulation"
           />
         </div>
 

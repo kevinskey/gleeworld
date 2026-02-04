@@ -183,7 +183,7 @@ export const SimplifiedNotificationsPanel = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="send" className="space-y-6 mt-6">
+          <TabsContent value="send" className="space-y-6 mt-6 pb-24 md:pb-6">
             <form onSubmit={handleSendNotification} className="space-y-4">
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
@@ -196,7 +196,7 @@ export const SimplifiedNotificationsPanel = () => {
                     setFormData(prev => ({ ...prev, recipient: value }))
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 text-base touch-manipulation">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -214,7 +214,7 @@ export const SimplifiedNotificationsPanel = () => {
                     onValueChange={(value) => setFormData(prev => ({ ...prev, selectedUserId: value }))}
                     disabled={usersLoading}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 text-base touch-manipulation">
                       <SelectValue placeholder={usersLoading ? "Loading users..." : "Select a user"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -240,6 +240,7 @@ export const SimplifiedNotificationsPanel = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter notification title"
                   required
+                  className="h-12 text-base touch-manipulation"
                 />
               </div>
 
@@ -250,8 +251,9 @@ export const SimplifiedNotificationsPanel = () => {
                   value={formData.message}
                   onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
                   placeholder="Enter your message"
-                  rows={3}
+                  rows={4}
                   required
+                  className="text-base touch-manipulation min-h-[120px]"
                 />
               </div>
 
@@ -261,7 +263,7 @@ export const SimplifiedNotificationsPanel = () => {
                   value={formData.type}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 text-base touch-manipulation">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -276,13 +278,13 @@ export const SimplifiedNotificationsPanel = () => {
               <Button 
                 type="submit" 
                 disabled={sendLoading || !formData.title || !formData.message}
-                className="w-full"
+                className="w-full h-14 text-base touch-manipulation"
               >
                 {sendLoading ? (
                   <LoadingSpinner size="sm" />
                 ) : (
                   <>
-                    <Send className="h-4 w-4 mr-2" />
+                    <Send className="h-5 w-5 mr-2" />
                     Send Notification
                   </>
                 )}
