@@ -106,16 +106,6 @@ export const GleeAssistant = () => {
   const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio, setVolume, volume } = useRadioPlayer();
   const { channels } = useRadioChannels();
 
-  // Hide assistant on pages that have their own assistant or shouldn't show it
-  const hiddenPaths = ['/academy/printable-syllabi', '/'];
-  const isHidden = hiddenPaths.some(path => 
-    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
-  );
-
-  if (isHidden) {
-    return null;
-  }
-
   // Attendance QR modal state
   const [attendanceModalOpen, setAttendanceModalOpen] = useState(false);
   const [attendanceQrDataUrl, setAttendanceQrDataUrl] = useState<string | null>(null);
@@ -760,6 +750,17 @@ export const GleeAssistant = () => {
       handleSend();
     }
   };
+
+  // Hide assistant on pages that have their own assistant or shouldn't show it
+  // NOTE: This check MUST be after all hooks to comply with React's rules of hooks
+  const hiddenPaths = ['/academy/printable-syllabi', '/'];
+  const isHidden = hiddenPaths.some(path => 
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
+  );
+
+  if (isHidden) {
+    return null;
+  }
 
   return (
     <>
