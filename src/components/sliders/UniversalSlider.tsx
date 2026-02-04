@@ -272,7 +272,11 @@ const SlideRenderer: React.FC<{
       {/* Overlay */}
       {slide.overlay_enabled && (
         <div 
-          className="absolute inset-0" 
+          className={cn(
+            'absolute inset-0',
+            // Never block interaction with embeds
+            slide.slide_type === 'youtube' && 'pointer-events-none'
+          )}
           style={{ backgroundColor: slide.overlay_color }}
         />
       )}
@@ -282,6 +286,8 @@ const SlideRenderer: React.FC<{
         <div 
           className={cn(
             'absolute inset-0 flex flex-col p-6 z-10',
+            // Never block interaction with embeds
+            slide.slide_type === 'youtube' && 'pointer-events-none',
             getPositionClasses(slide.title_position_h, slide.title_position_v)
           )}
         >
