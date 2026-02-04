@@ -32,6 +32,7 @@ import { HeroManager } from "@/components/alumnae/HeroManager";
 import { SpotlightManager } from "@/components/alumnae/SpotlightManager";
 import { AnnouncementManager } from "@/components/alumnae/AnnouncementManager";
 import { AlumnaeMemberList } from "@/components/alumnae/AlumnaeMemberList";
+import { RegistrationRequestsPanel } from "@/components/admin/RegistrationRequestsPanel";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -383,9 +384,13 @@ export default function AlumnaeAdmin() {
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="content" className="space-y-2 md:space-y-4">
+        <Tabs defaultValue="registrations" className="space-y-2 md:space-y-4">
           <div className="overflow-x-auto -mx-4 px-4">
             <TabsList className="inline-flex w-auto min-w-full h-auto gap-0.5 p-0.5">
+              <TabsTrigger value="registrations" className="flex items-center gap-1 py-2 px-3 text-xs md:text-sm whitespace-nowrap">
+                <UserCheck className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Registrations</span>
+              </TabsTrigger>
               <TabsTrigger value="members" className="flex items-center gap-1 py-2 px-3 text-xs md:text-sm whitespace-nowrap">
                 <Users className="h-3 w-3 md:h-4 md:w-4" />
                 <span className="hidden sm:inline">Members</span>
@@ -418,6 +423,11 @@ export default function AlumnaeAdmin() {
               <TabsTrigger value="messages" className="py-2 px-3 text-xs md:text-sm whitespace-nowrap">Messages</TabsTrigger>
             </TabsList>
           </div>
+
+          {/* Registration Requests Tab */}
+          <TabsContent value="registrations">
+            <RegistrationRequestsPanel />
+          </TabsContent>
 
           {/* Alumnae Members Tab */}
           <TabsContent value="members">
