@@ -260,10 +260,12 @@ const SlideRenderer: React.FC<{
       {/* YouTube Embed */}
       {slide.slide_type === 'youtube' && slide.youtube_video_id && (
         <iframe
-          src={`https://www.youtube.com/embed/${slide.youtube_video_id}?autoplay=${slide.youtube_autoplay ? 1 : 0}&mute=${slide.youtube_muted ? 1 : 0}&loop=${slide.youtube_loop ? 1 : 0}&playlist=${slide.youtube_video_id}`}
+          src={`https://www.youtube.com/embed/${slide.youtube_video_id}?autoplay=${slide.youtube_autoplay ? 1 : 0}&mute=${slide.youtube_muted ? 1 : 0}&loop=${slide.youtube_loop ? 1 : 0}&playlist=${slide.youtube_video_id}&playsinline=1&rel=0&modestbranding=1&enablejsapi=1`}
           className="absolute inset-0 w-full h-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          style={{ border: 'none' }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
+          title={slide.title || 'YouTube video'}
         />
       )}
 
