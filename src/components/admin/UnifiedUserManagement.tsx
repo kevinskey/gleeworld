@@ -5,53 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { 
-  Search, 
-  UserCog, 
-  Shield, 
-  Crown, 
-  User,
-  UserCheck,
-  UserX,
-  Mail,
-  Calendar,
-  MoreHorizontal,
-  Plus,
-  RefreshCw,
-  UserPlus,
-  Users,
-  Settings,
-  KeyRound,
-  Trash2,
-  BookOpen,
-  Boxes,
-  Star,
-  GraduationCap,
-  FolderOpen
-} from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, UserCog, Shield, Crown, User, UserCheck, UserX, Mail, Calendar, MoreHorizontal, Plus, RefreshCw, UserPlus, Users, Settings, KeyRound, Trash2, BookOpen, Boxes, Star, GraduationCap, FolderOpen } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -70,7 +27,6 @@ import { useUsernamePermissionsAdmin } from '@/hooks/useUsernamePermissions';
 import { usePermissionGroups } from '@/hooks/usePermissionGroups';
 import MemberDossiersModule from '@/components/modules/member-dossiers/MemberDossiersModule';
 import type { User as AdminUser } from '@/hooks/useUsers';
-
 interface UserProfile {
   id: string; // profile row id
   user_id?: string; // auth user id
@@ -89,34 +45,29 @@ interface UserProfile {
 
 // Permission Groups Overview Component
 const PermissionOverview = () => {
-  const { groups, loading } = usePermissionGroups();
-
+  const {
+    groups,
+    loading
+  } = usePermissionGroups();
   if (loading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
+    return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => <Card key={i} className="animate-pulse">
             <CardHeader className="pb-2">
               <div className="h-4 bg-muted rounded w-3/4"></div>
             </CardHeader>
             <CardContent>
               <div className="h-8 bg-muted rounded w-1/2"></div>
             </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+          </Card>)}
+      </div>;
   }
-
   const stats = {
     totalGroups: groups.length,
     defaultGroups: groups.filter(g => g.is_default).length,
     customGroups: groups.filter(g => !g.is_default).length,
-    activeGroups: groups.filter(g => g.is_active).length,
+    activeGroups: groups.filter(g => g.is_active).length
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -180,34 +131,22 @@ const PermissionOverview = () => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {groups.map(group => (
-              <Badge
-                key={group.id}
-                variant={group.is_default ? "default" : "secondary"}
-                className="flex items-center gap-2"
-                style={{
-                  backgroundColor: `${group.color}20`,
-                  borderColor: group.color,
-                  color: group.color
-                }}
-              >
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: group.color }}
-                />
+            {groups.map(group => <Badge key={group.id} variant={group.is_default ? "default" : "secondary"} className="flex items-center gap-2" style={{
+            backgroundColor: `${group.color}20`,
+            borderColor: group.color,
+            color: group.color
+          }}>
+                <div className="w-2 h-2 rounded-full" style={{
+              backgroundColor: group.color
+            }} />
                 {group.name}
-                {group.is_default && (
-                  <span className="text-xs opacity-70">(Default)</span>
-                )}
-              </Badge>
-            ))}
+                {group.is_default && <span className="text-xs opacity-70">(Default)</span>}
+              </Badge>)}
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export const UnifiedUserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -220,82 +159,94 @@ export const UnifiedUserManagement = () => {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('');
-  const { toast } = useToast();
-  const { autoEnrollUser, enrolling } = useAutoEnrollUser();
-  const { grantPermission } = useUsernamePermissionsAdmin();
-
+  const {
+    toast
+  } = useToast();
+  const {
+    autoEnrollUser,
+    enrolling
+  } = useAutoEnrollUser();
+  const {
+    grantPermission
+  } = useUsernamePermissionsAdmin();
   useEffect(() => {
     fetchUsers();
   }, []);
-
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      
-      const { data: profiles, error: profilesError } = await supabase
-        .from('gw_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      const {
+        data: profiles,
+        error: profilesError
+      } = await supabase.from('gw_profiles').select('*').order('created_at', {
+        ascending: false
+      });
       if (profilesError) throw profilesError;
-
       setUsers(profiles || []);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
         title: "Error",
         description: "Failed to load users. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
   const filteredUsers = users.filter(user => {
-    const matchesSearch = !searchTerm || 
-      (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+    const matchesSearch = !searchTerm || user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    
     return matchesSearch && matchesRole;
   });
-
   const getRoleBadgeColor = (role?: string) => {
     switch (role) {
-      case 'super-admin': return 'bg-red-500/20 text-red-600';
-      case 'admin': return 'bg-purple-500/20 text-purple-600';
-      case 'executive': return 'bg-blue-500/20 text-blue-600';
-      case 'student': return 'bg-green-500/20 text-green-600';
-      case 'alumna': return 'bg-gold-500/20 text-gold-600';
-      case 'fan': return 'bg-gray-500/20 text-gray-600';
-      case 'student': return 'bg-blue-500/20 text-blue-600';
-      case 'auditioner': return 'bg-yellow-500/20 text-yellow-600';
-      default: return 'bg-gray-500/20 text-gray-600';
+      case 'super-admin':
+        return 'bg-red-500/20 text-red-600';
+      case 'admin':
+        return 'bg-purple-500/20 text-purple-600';
+      case 'executive':
+        return 'bg-blue-500/20 text-blue-600';
+      case 'student':
+        return 'bg-green-500/20 text-green-600';
+      case 'alumna':
+        return 'bg-gold-500/20 text-gold-600';
+      case 'fan':
+        return 'bg-gray-500/20 text-gray-600';
+      case 'student':
+        return 'bg-blue-500/20 text-blue-600';
+      case 'auditioner':
+        return 'bg-yellow-500/20 text-yellow-600';
+      default:
+        return 'bg-gray-500/20 text-gray-600';
     }
   };
-
   const getRoleIcon = (role?: string) => {
     switch (role) {
-      case 'super-admin': return <Crown className="h-4 w-4" />;
-      case 'admin': return <Shield className="h-4 w-4" />;
-      case 'executive': return <UserCog className="h-4 w-4" />;
-      case 'student': return <User className="h-4 w-4" />;
-      case 'alumna': return <UserCheck className="h-4 w-4" />;
-      case 'fan': return <UserX className="h-4 w-4" />;
-      case 'student': return <User className="h-4 w-4" />;
-      case 'auditioner': return <Calendar className="h-4 w-4" />;
-      default: return <User className="h-4 w-4" />;
+      case 'super-admin':
+        return <Crown className="h-4 w-4" />;
+      case 'admin':
+        return <Shield className="h-4 w-4" />;
+      case 'executive':
+        return <UserCog className="h-4 w-4" />;
+      case 'student':
+        return <User className="h-4 w-4" />;
+      case 'alumna':
+        return <UserCheck className="h-4 w-4" />;
+      case 'fan':
+        return <UserX className="h-4 w-4" />;
+      case 'student':
+        return <User className="h-4 w-4" />;
+      case 'auditioner':
+        return <Calendar className="h-4 w-4" />;
+      default:
+        return <User className="h-4 w-4" />;
     }
   };
-
   const handleAutoEnroll = async () => {
     if (!email || !role) return;
-    
     try {
       const result = await autoEnrollUser(email, fullName || undefined, undefined, role);
-      
       if (result.success && result.enrolled) {
         setEmail('');
         setFullName('');
@@ -306,89 +257,80 @@ export const UnifiedUserManagement = () => {
       console.error('Auto-enroll error:', error);
     }
   };
-
   const handleQuickRoleChange = async (userId: string, newRole: string) => {
     try {
-      const { data, error, count } = await supabase
-        .from('gw_profiles')
-        .update({ role: newRole })
-        .eq('user_id', userId)
-        .select();
-
+      const {
+        data,
+        error,
+        count
+      } = await supabase.from('gw_profiles').update({
+        role: newRole
+      }).eq('user_id', userId).select();
       if (error) throw error;
 
       // Check if the update actually affected any rows
       if (!data || data.length === 0) {
         throw new Error('Update failed - you may not have permission to change this user\'s role');
       }
-
-      setUsers(users.map(user => 
-        user.user_id === userId ? { ...user, role: newRole } : user
-      ));
-
+      setUsers(users.map(user => user.user_id === userId ? {
+        ...user,
+        role: newRole
+      } : user));
       toast({
         title: "Role Updated",
-        description: `User role changed to ${newRole}`,
+        description: `User role changed to ${newRole}`
       });
     } catch (error: any) {
       console.error('Error updating role:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update user role",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleVerificationToggle = async (userId: string, currentStatus: boolean) => {
     try {
       const newStatus = !currentStatus;
-      const { error } = await supabase
-        .from('gw_profiles')
-        .update({ verified: newStatus })
-        .eq('user_id', userId);
-
+      const {
+        error
+      } = await supabase.from('gw_profiles').update({
+        verified: newStatus
+      }).eq('user_id', userId);
       if (error) throw error;
-
-      setUsers(users.map(user => 
-        user.user_id === userId ? { ...user, verified: newStatus } : user
-      ));
-
+      setUsers(users.map(user => user.user_id === userId ? {
+        ...user,
+        verified: newStatus
+      } : user));
       toast({
         title: "Status Updated",
-        description: `User ${newStatus ? 'verified' : 'unverified'}`,
+        description: `User ${newStatus ? 'verified' : 'unverified'}`
       });
     } catch (error) {
       console.error('Error updating verification:', error);
       toast({
         title: "Error",
         description: "Failed to update verification status",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const userStats = {
     total: users.length,
     admins: users.filter(u => u.role === 'admin' || u.role === 'super-admin').length,
     students: users.filter(u => u.role === 'student').length,
     executives: users.filter(u => u.role === 'executive' || u.is_exec_board).length,
     vips: users.filter(u => u.role === 'vip').length,
-    alumnae: users.filter(u => u.role === 'alumna').length,
+    alumnae: users.filter(u => u.role === 'alumna').length
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
+    return <div className="flex items-center justify-center py-12">
         <LoadingSpinner size="lg" text="Loading users..." />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">User & Permission Management</h1>
+        <h1 className="text-3xl font-bold text-black">User & Permission Management</h1>
         <p className="text-muted-foreground">
           Unified management for users, roles, and permissions across the Glee Club platform
         </p>
@@ -486,12 +428,7 @@ export const UnifiedUserManagement = () => {
                     Manage all registered users, their roles, and permissions
                   </CardDescription>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={fetchUsers}
-                  disabled={loading}
-                >
+                <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Refresh
                 </Button>
@@ -502,12 +439,7 @@ export const UnifiedUserManagement = () => {
                 <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search by name or email..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+                    <Input placeholder="Search by name or email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
                   </div>
                 </div>
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -533,8 +465,7 @@ export const UnifiedUserManagement = () => {
 
               {/* Mobile Cards View */}
               <div className="sm:hidden space-y-3">
-                {filteredUsers.map((user) => (
-                  <Card key={user.id} className="p-3">
+                {filteredUsers.map(user => <Card key={user.id} className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -555,57 +486,51 @@ export const UnifiedUserManagement = () => {
                           <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => {
-                            setSelectedUser({
-                              id: user.user_id,
-                              email: user.email,
-                              full_name: user.full_name,
-                              role: user.role,
-                              created_at: user.created_at,
-                              exec_board_role: user.exec_board_role ?? null,
-                              is_exec_board: !!user.is_exec_board,
-                              avatar_url: user.avatar_url ?? null,
-                              verified: !!user.verified,
-                              is_admin: !!user.is_admin,
-                              is_super_admin: !!user.is_super_admin,
-                            });
-                            setShowResetDialog(true);
-                          }}>
+                        setSelectedUser({
+                          id: user.user_id,
+                          email: user.email,
+                          full_name: user.full_name,
+                          role: user.role,
+                          created_at: user.created_at,
+                          exec_board_role: user.exec_board_role ?? null,
+                          is_exec_board: !!user.is_exec_board,
+                          avatar_url: user.avatar_url ?? null,
+                          verified: !!user.verified,
+                          is_admin: !!user.is_admin,
+                          is_super_admin: !!user.is_super_admin
+                        });
+                        setShowResetDialog(true);
+                      }}>
                             <KeyRound className="h-4 w-4 mr-2 text-blue-500" />
                             Reset Password
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleVerificationToggle(user.user_id!, user.verified || false)}>
-                            {user.verified ? (
-                              <><UserX className="h-4 w-4 mr-2 text-yellow-500" />Mark Unverified</>
-                            ) : (
-                              <><UserCheck className="h-4 w-4 mr-2 text-green-500" />Mark Verified</>
-                            )}
+                            {user.verified ? <><UserX className="h-4 w-4 mr-2 text-yellow-500" />Mark Unverified</> : <><UserCheck className="h-4 w-4 mr-2 text-green-500" />Mark Verified</>}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => {
-                            setSelectedUser({
-                              id: user.user_id!,
-                              email: user.email,
-                              full_name: user.full_name,
-                              role: user.role,
-                              created_at: user.created_at,
-                              exec_board_role: user.exec_board_role ?? null,
-                              is_exec_board: !!user.is_exec_board,
-                              avatar_url: user.avatar_url ?? null,
-                              verified: !!user.verified,
-                              is_admin: !!user.is_admin,
-                              is_super_admin: !!user.is_super_admin,
-                            });
-                            setDeleteDialogOpen(true);
-                          }} className="text-destructive">
+                        setSelectedUser({
+                          id: user.user_id!,
+                          email: user.email,
+                          full_name: user.full_name,
+                          role: user.role,
+                          created_at: user.created_at,
+                          exec_board_role: user.exec_board_role ?? null,
+                          is_exec_board: !!user.is_exec_board,
+                          avatar_url: user.avatar_url ?? null,
+                          verified: !!user.verified,
+                          is_admin: !!user.is_admin,
+                          is_super_admin: !!user.is_super_admin
+                        });
+                        setDeleteDialogOpen(true);
+                      }} className="text-destructive">
                             <Trash2 className="h-4 w-4 mr-2" />Delete User
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-                          {['vip', 'guest', 'fan', 'student', 'member', 'alumna', 'executive', 'admin', 'super-admin'].map(r => (
-                            <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r}>
+                          {['vip', 'guest', 'fan', 'student', 'member', 'alumna', 'executive', 'admin', 'super-admin'].map(r => <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r}>
                               {getRoleIcon(r)}
                               <span className="ml-2 capitalize">{r.replace('-', ' ')}</span>
-                            </DropdownMenuItem>
-                          ))}
+                            </DropdownMenuItem>)}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -614,17 +539,14 @@ export const UnifiedUserManagement = () => {
                         {getRoleIcon(user.role)}
                         <span className="ml-1">{user.role || 'No role'}</span>
                       </Badge>
-                      {user.is_exec_board && (
-                        <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs">
+                      {user.is_exec_board && <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs">
                           {user.exec_board_role || 'Exec'}
-                        </Badge>
-                      )}
+                        </Badge>}
                       <Badge variant={user.verified ? "default" : "secondary"} className="text-xs">
                         {user.verified ? 'Verified' : 'Unverified'}
                       </Badge>
                     </div>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
 
               {/* Desktop Table View */}
@@ -641,8 +563,7 @@ export const UnifiedUserManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
+                    {filteredUsers.map(user => <TableRow key={user.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -668,13 +589,9 @@ export const UnifiedUserManagement = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {user.is_exec_board ? (
-                            <Badge variant="outline" className="text-blue-600 border-blue-200">
+                          {user.is_exec_board ? <Badge variant="outline" className="text-blue-600 border-blue-200">
                               {user.exec_board_role || 'Executive'}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">—</span>
-                          )}
+                            </Badge> : <span className="text-muted-foreground text-sm">—</span>}
                         </TableCell>
                         <TableCell>
                           <Badge variant={user.verified ? "default" : "secondary"}>
@@ -684,10 +601,7 @@ export const UnifiedUserManagement = () => {
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Calendar className="h-3 w-3" />
-                            {user.created_at 
-                              ? new Date(user.created_at).toLocaleDateString()
-                              : 'Unknown'
-                            }
+                            {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
@@ -697,71 +611,56 @@ export const UnifiedUserManagement = () => {
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent 
-                              align="end" 
-                              className="w-56 max-h-[400px] overflow-y-auto z-50 bg-popover"
-                              sideOffset={5}
-                            >
+                            <DropdownMenuContent align="end" className="w-56 max-h-[400px] overflow-y-auto z-50 bg-popover" sideOffset={5}>
                               <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               
-                              <DropdownMenuItem 
-                                onClick={() => {
-                                  setSelectedUser({
-                                    id: user.user_id,
-                                    email: user.email,
-                                    full_name: user.full_name,
-                                    role: user.role,
-                                    created_at: user.created_at,
-                                    exec_board_role: user.exec_board_role ?? null,
-                                    is_exec_board: !!user.is_exec_board,
-                                    avatar_url: user.avatar_url ?? null,
-                                    verified: !!user.verified,
-                                    is_admin: !!user.is_admin,
-                                    is_super_admin: !!user.is_super_admin,
-                                  });
-                                  setShowResetDialog(true);
-                                }}
-                              >
+                              <DropdownMenuItem onClick={() => {
+                            setSelectedUser({
+                              id: user.user_id,
+                              email: user.email,
+                              full_name: user.full_name,
+                              role: user.role,
+                              created_at: user.created_at,
+                              exec_board_role: user.exec_board_role ?? null,
+                              is_exec_board: !!user.is_exec_board,
+                              avatar_url: user.avatar_url ?? null,
+                              verified: !!user.verified,
+                              is_admin: !!user.is_admin,
+                              is_super_admin: !!user.is_super_admin
+                            });
+                            setShowResetDialog(true);
+                          }}>
                                 <KeyRound className="h-4 w-4 mr-2 text-blue-500" />
                                 Reset Password
                               </DropdownMenuItem>
                               
-                              <DropdownMenuItem 
-                                onClick={() => handleVerificationToggle(user.user_id!, user.verified || false)}
-                              >
-                                {user.verified ? (
-                                  <>
+                              <DropdownMenuItem onClick={() => handleVerificationToggle(user.user_id!, user.verified || false)}>
+                                {user.verified ? <>
                                     <UserX className="h-4 w-4 mr-2 text-yellow-500" />
                                     Mark Unverified
-                                  </>
-                                ) : (
-                                  <>
+                                  </> : <>
                                     <UserCheck className="h-4 w-4 mr-2 text-green-500" />
                                     Mark Verified
-                                  </>
-                                )}
+                                  </>}
                               </DropdownMenuItem>
                               
-                              <DropdownMenuItem 
-                                onClick={() => {
-                                  setSelectedUser({
-                                    id: user.user_id!,
-                                    email: user.email,
-                                    full_name: user.full_name,
-                                    role: user.role,
-                                    created_at: user.created_at,
-                                    exec_board_role: user.exec_board_role ?? null,
-                                    is_exec_board: !!user.is_exec_board,
-                                    avatar_url: user.avatar_url ?? null,
-                                    verified: !!user.verified,
-                                    is_admin: !!user.is_admin,
-                                    is_super_admin: !!user.is_super_admin,
-                                  });
-                                  setDeleteDialogOpen(true);
-                                }}
-                                className="text-destructive"
-                              >
+                              <DropdownMenuItem onClick={() => {
+                            setSelectedUser({
+                              id: user.user_id!,
+                              email: user.email,
+                              full_name: user.full_name,
+                              role: user.role,
+                              created_at: user.created_at,
+                              exec_board_role: user.exec_board_role ?? null,
+                              is_exec_board: !!user.is_exec_board,
+                              avatar_url: user.avatar_url ?? null,
+                              verified: !!user.verified,
+                              is_admin: !!user.is_admin,
+                              is_super_admin: !!user.is_super_admin
+                            });
+                            setDeleteDialogOpen(true);
+                          }} className="text-destructive">
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete User
                               </DropdownMenuItem>
@@ -770,81 +669,50 @@ export const UnifiedUserManagement = () => {
                               <DropdownMenuLabel>Change Role</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               
-                              <DropdownMenuItem 
-                                onClick={() => handleQuickRoleChange(user.user_id!, 'vip')}
-                                disabled={user.role === 'vip'}
-                              >
+                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'vip')} disabled={user.role === 'vip'}>
                                 <Star className="h-4 w-4 mr-2 text-yellow-500" />
                                 Make VIP
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleQuickRoleChange(user.user_id!, 'guest')}
-                                disabled={user.role === 'guest'}
-                              >
+                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'guest')} disabled={user.role === 'guest'}>
                                 <User className="h-4 w-4 mr-2" />
                                 Make Guest
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleQuickRoleChange(user.user_id!, 'fan')}
-                                disabled={user.role === 'fan'}
-                              >
+                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'fan')} disabled={user.role === 'fan'}>
                                 <UserX className="h-4 w-4 mr-2" />
                                 Make Fan
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleQuickRoleChange(user.user_id!, 'student')}
-                                disabled={user.role === 'student'}
-                              >
+                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'student')} disabled={user.role === 'student'}>
                                 <User className="h-4 w-4 mr-2" />
                                 Make Student
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleQuickRoleChange(user.user_id!, 'member')}
-                                disabled={user.role === 'member'}
-                              >
+                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'member')} disabled={user.role === 'member'}>
                                 <User className="h-4 w-4 mr-2" />
                                 Make Member
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleQuickRoleChange(user.user_id!, 'alumna')}
-                                disabled={user.role === 'alumna'}
-                              >
+                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'alumna')} disabled={user.role === 'alumna'}>
                                 <UserCheck className="h-4 w-4 mr-2" />
                                 Make Alumna
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleQuickRoleChange(user.user_id!, 'executive')}
-                                disabled={user.role === 'executive'}
-                              >
+                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'executive')} disabled={user.role === 'executive'}>
                                 <UserCog className="h-4 w-4 mr-2" />
                                 Make Executive
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleQuickRoleChange(user.user_id!, 'admin')}
-                                disabled={user.role === 'admin'}
-                              >
+                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'admin')} disabled={user.role === 'admin'}>
                                 <Shield className="h-4 w-4 mr-2" />
                                 Make Admin
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleQuickRoleChange(user.user_id!, 'super-admin')}
-                                disabled={user.role === 'super-admin'}
-                              >
+                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'super-admin')} disabled={user.role === 'super-admin'}>
                                 <Crown className="h-4 w-4 mr-2" />
                                 Make Super Admin
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleQuickRoleChange(user.user_id!, 'auditioner')}
-                                disabled={user.role === 'auditioner'}
-                              >
+                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'auditioner')} disabled={user.role === 'auditioner'}>
                                 <Calendar className="h-4 w-4 mr-2" />
                                 Make Auditioner
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
-                      </TableRow>
-                    ))}
+                      </TableRow>)}
                   </TableBody>
                 </Table>
               </div>
@@ -896,24 +764,12 @@ export const UnifiedUserManagement = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="user@spelman.edu"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <Input id="email" type="email" placeholder="user@spelman.edu" value={email} onChange={e => setEmail(e.target.value)} required />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name (Optional)</Label>
-                <Input
-                  id="fullName"
-                  placeholder="Alexandra Williams"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
+                <Input id="fullName" placeholder="Alexandra Williams" value={fullName} onChange={e => setFullName(e.target.value)} />
               </div>
 
               <div className="space-y-2">
@@ -937,23 +793,14 @@ export const UnifiedUserManagement = () => {
               </div>
 
               <div className="pt-4">
-                <Button 
-                  onClick={handleAutoEnroll}
-                  disabled={!email.trim() || !role || enrolling}
-                  className="w-full"
-                  size="lg"
-                >
-                  {enrolling ? (
-                    <>
+                <Button onClick={handleAutoEnroll} disabled={!email.trim() || !role || enrolling} className="w-full" size="lg">
+                  {enrolling ? <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                       Enrolling User...
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       <UserPlus className="h-4 w-4 mr-2" />
                       Auto-Enroll User
-                    </>
-                  )}
+                    </>}
                 </Button>
               </div>
             </CardContent>
@@ -978,21 +825,11 @@ export const UnifiedUserManagement = () => {
         </TabsContent>
       </Tabs>
 
-      <ResetPasswordDialog 
-        user={selectedUser}
-        open={showResetDialog}
-        onOpenChange={setShowResetDialog}
-      />
+      <ResetPasswordDialog user={selectedUser} open={showResetDialog} onOpenChange={setShowResetDialog} />
 
-      <DeleteUserDialog 
-        user={selectedUser}
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onUserDeleted={() => {
-          setSelectedUser(null);
-          fetchUsers();
-        }}
-      />
-    </div>
-  );
+      <DeleteUserDialog user={selectedUser} open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} onUserDeleted={() => {
+      setSelectedUser(null);
+      fetchUsers();
+    }} />
+    </div>;
 };
