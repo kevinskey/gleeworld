@@ -236,10 +236,12 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
         </div>
 
         {/* 6. Announcements / Media Slider */}
-        <Card className="border-0 shadow-sm overflow-hidden">
-          <CourseTopicSlider 
-            courseCode={course.courseCode}
-          />
+        <Card className="border-0 shadow-sm overflow-hidden relative z-0">
+          <div className="pointer-events-auto">
+            <CourseTopicSlider 
+              courseCode={course.courseCode}
+            />
+          </div>
         </Card>
 
         {/* 7. Class Schedule Form - Only for MUS 070 (Glee Club) - Collapsed by default */}
