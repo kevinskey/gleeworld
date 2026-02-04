@@ -106,9 +106,11 @@ export const GleeAssistant = () => {
   const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio, setVolume, volume } = useRadioPlayer();
   const { channels } = useRadioChannels();
 
-  // Hide assistant on printable syllabi page
-  const hiddenPaths = ['/academy/printable-syllabi'];
-  const isHidden = hiddenPaths.some(path => location.pathname.startsWith(path));
+  // Hide assistant on pages that have their own assistant or shouldn't show it
+  const hiddenPaths = ['/academy/printable-syllabi', '/'];
+  const isHidden = hiddenPaths.some(path => 
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
+  );
 
   if (isHidden) {
     return null;
