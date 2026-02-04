@@ -1,136 +1,237 @@
 
-# TikTok Video Support for MUS 240
 
-## Overview
-Enable TikTok video links to be displayed with embedded playback and thumbnails in the MUS 240 module videos modal, matching the existing YouTube experience.
+# Alumni and Fan Registration Approval System
 
----
+## Current System Analysis
 
-## What Already Works
-- TikTok URLs can be added to `mus240_module_resources` with `resource_type: 'video'`
-- Clicking a TikTok video in `ModuleVideosModal` opens it in a new browser tab
-- The database schema (`url` field) supports any video URL
+After exploring the codebase, I found:
 
-## What Needs Improvement
-1. **No thumbnail preview** - TikTok videos show generic Play icon instead of video thumbnail
-2. **No in-app playback** - Videos open in new tab instead of playing inline
-3. **No visual distinction** - Users can't tell TikTok vs YouTube at a glance
+1. **Authentication**: Single `/auth` page handles all user types with optional `?role=` parameter support
+2. **Profile Storage**: `gw_profiles` table has `verified` field and `role` field (includes 'alumna', 'fan', 'student', etc.)
+3. **Existing Approval Patterns**: Budget approvals, excuse requests, and story approvals already exist with similar workflows
+4. **Email System**: `gw-send-email` edge function using Resend is already configured
+5. **Role Management**: Separate `user_roles` table exists for proper role storage
+6. **Alumna Landing**: `/alumnae` page exists with verified alumna checks
 
----
+## What We'll Build
 
-## Implementation Plan
-
-### 1. Create TikTok Utility Functions
-**New file:** `src/utils/tiktokUtils.ts`
+### Registration Flow for New Users
 
 ```text
-┌─────────────────────────────────────────────┐
-│  extractTikTokVideoId(url)                  │
-│  - Parse @username/video/VIDEO_ID pattern   │
-│  - Handle vm.tiktok.com short URLs          │
-│  - Return { videoId, username } or null     │
-├─────────────────────────────────────────────┤
-│  isTikTokUrl(url)                           │
-│  - Returns boolean if URL matches TikTok    │
-├─────────────────────────────────────────────┤
-│  getTikTokEmbedHtml(url)                    │
-│  - Fetch oEmbed data from TikTok API        │
-│  - Return embed HTML string                 │
-└─────────────────────────────────────────────┘
+User clicks "Sign Up" → Role Selection Screen
+         ↓
+   ┌─────┴─────┐
+   ↓           ↓
+ "Fan"      "Alumna"
+   ↓           ↓
+Fill Form   Fill Form
+   ↓           ↓
+Submit → Creates account with verified=false
+   ↓
+Email sent to webmaster(s) for approval
+   ↓
+Redirect to "Thank You" page with messaging
+   ↓
+Webmaster receives approval request
+   ↓
+Webmaster approves/denies in Admin Dashboard
+   ↓
+Confirmation email sent to user
 ```
 
-### 2. Create TikTok Embed Component
-**New file:** `src/components/mus240/TikTokPlayer.tsx`
+### Existing User Flow
 
-Features:
-- Accept TikTok video URL as prop
-- Load TikTok embed script dynamically
-- Render the embedded video with proper sizing
-- Handle loading and error states
-- Responsive design for mobile
-
-### 3. Update ModuleVideosModal
-**File:** `src/components/academy/ModuleVideosModal.tsx`
-
-Changes:
-- Import new TikTok utilities
-- Detect TikTok URLs alongside YouTube
-- Show TikTok thumbnail (fetched via oEmbed) in video list
-- Add TikTok badge to distinguish from YouTube
-- Embed TikTok player when a TikTok video is selected
-
-### 4. Update DocumentViewer (for MUS 240 Resources)
-**File:** `src/components/mus240/DocumentViewer.tsx`
-
-Changes:
-- Add TikTok URL detection (similar to existing `isYouTube`)
-- Create `renderTikTokViewer()` function
-- Support TikTok in the viewer type badge
+If an alumna is already registered on GleeWorld (perhaps as a former student), the admin can update their role to 'alumna' directly from the Admin Dashboard.
 
 ---
 
-## User Experience
+## Technical Implementation
 
-### For Instructors
-1. Add a TikTok link to a module's video resources (same as before)
-2. No special formatting needed - just paste the TikTok URL
-3. The system auto-detects and displays appropriately
+### 1. Database Changes
 
-### For Students
-1. Open module videos modal
-2. See TikTok videos with:
-   - TikTok thumbnail image
-   - "TikTok" badge to distinguish from YouTube
-   - Video title and duration (if available)
-3. Click to watch embedded TikTok video in-app
-4. Optional: Click external link to view on TikTok
+**New table: `registration_requests`**
+- `id` (uuid)
+- `user_id` (uuid) - links to auth.users
+- `email` (text)
+- `full_name` (text)
+- `requested_role` (text) - 'fan' or 'alumna'
+- `graduation_year` (integer, nullable) - for alumnae
+- `voice_part` (text, nullable) - for alumnae
+- `status` (text) - 'pending', 'approved', 'denied'
+- `admin_notes` (text, nullable)
+- `reviewed_by` (uuid, nullable)
+- `reviewed_at` (timestamp, nullable)
+- `created_at` (timestamp)
+
+### 2. Frontend Components
+
+**RoleSelectionForm** (new component)
+- Displayed after email/password entry on signup
+- Two large cards: "Join as Fan/Supporter" and "Join as Alumna"
+- Clear descriptions of what each role gets access to
+
+**ThankYouPage** (new page)
+- Shows after registration submission
+- Personalized message based on selected role
+- "Check your email for confirmation" messaging
+- Link back to public landing page
+
+**AdminRegistrationRequests** (new admin component)
+- Table of pending requests with filters (fan/alumna/all)
+- Approve/Deny buttons with optional notes
+- Shows graduation year and voice part for alumnae requests
+- Bulk actions for efficiency
+
+### 3. Edge Function Updates
+
+**gw-registration-notification** (new function)
+- Called when new registration request is created
+- Sends email to webmaster/admin with request details
+- Includes approve/deny links (deep links to admin panel)
+
+**gw-registration-decision** (new function)
+- Called when admin approves/denies request
+- Updates `gw_profiles.verified` and `gw_profiles.role`
+- If approved, adds entry to `user_roles` table
+- Sends confirmation email to user
+
+### 4. Auth Flow Updates
+
+**SignupForm.tsx** modifications:
+- After successful auth.signUp, show role selection
+- Create `registration_requests` entry with pending status
+- Do not automatically grant role access
+- Profile created with `verified = false`
+
+**AuthLayout.tsx**:
+- Add support for 'alumna' and 'fan' themes (already partially exists)
+
+### 5. Profile and Access Control Updates
+
+**AlumnaeRoute.tsx**:
+- Already checks `verified === true` for alumna access
+- No changes needed
+
+**FanRoute.tsx**:
+- Add verified check if needed for fan-exclusive content
 
 ---
 
-## Technical Considerations
+## User Experience Details
 
-### TikTok oEmbed API
-- **Endpoint:** `https://www.tiktok.com/oembed?url={VIDEO_URL}`
-- **No API key required** for basic oEmbed
-- **CORS:** May require edge function proxy for thumbnail fetching
-- **Response:** JSON with `html`, `thumbnail_url`, `author_name`, `title`
+### Role Selection Cards
 
-### Edge Function Option (if CORS issues)
-If browser-side oEmbed calls fail due to CORS, create:
-`supabase/functions/tiktok-oembed/index.ts`
-- Proxies oEmbed requests server-side
-- Caches responses to reduce API calls
+| Fan/Supporter | Alumna |
+|---------------|--------|
+| Access to exclusive content | Access to alumnae-only events |
+| Concert updates and announcements | Mentorship opportunities |
+| Community forum participation | Reunion planning tools |
+| Behind-the-scenes updates | Memory wall and legacy stories |
 
-### Embed Script Loading
-TikTok requires their embed.js script:
-```javascript
-<script src="https://www.tiktok.com/embed.js" async></script>
+### Admin Email Notification Template
+
 ```
-Must be loaded dynamically when TikTok content is present.
+Subject: New GleeWorld Registration Request: [Fan/Alumna]
+
+Hello Webmaster,
+
+A new user has registered on GleeWorld and is awaiting your approval:
+
+Name: [Full Name]
+Email: [Email]
+Requested Role: [Fan / Alumna]
+Graduation Year: [Year] (if alumna)
+Voice Part: [Part] (if alumna)
+Submitted: [Date/Time]
+
+Please review this request in the Admin Dashboard:
+[Link to Admin Registration Panel]
+
+Best,
+GleeWorld Automated System
+```
+
+### User Confirmation Email Templates
+
+**Approved:**
+```
+Subject: Welcome to GleeWorld - Your Account is Approved!
+
+Dear [Name],
+
+Great news! Your GleeWorld [Fan/Alumna] registration has been approved.
+
+You can now log in and access:
+- [List of features based on role]
+
+Log in here: [Link]
+
+Welcome to the family!
+The GleeWorld Team
+```
+
+**Denied:**
+```
+Subject: GleeWorld Registration Update
+
+Dear [Name],
+
+Thank you for your interest in joining GleeWorld.
+
+Unfortunately, we were unable to approve your [Fan/Alumna] 
+registration at this time.
+
+[Admin notes if provided]
+
+If you have questions, please contact us at [contact email].
+
+Best regards,
+The GleeWorld Team
+```
 
 ---
 
 ## Files to Create
+
 | File | Purpose |
 |------|---------|
-| `src/utils/tiktokUtils.ts` | URL parsing and oEmbed utilities |
-| `src/components/mus240/TikTokPlayer.tsx` | Embedded TikTok player component |
-| `supabase/functions/tiktok-oembed/index.ts` | (Optional) Server-side oEmbed proxy |
+| `src/components/auth/RoleSelectionStep.tsx` | Role selection cards after signup |
+| `src/pages/RegistrationThankYou.tsx` | Thank you page after submission |
+| `src/components/admin/RegistrationRequestsPanel.tsx` | Admin panel for approvals |
+| `supabase/functions/gw-registration-notification/index.ts` | Email to webmaster |
+| `supabase/functions/gw-registration-decision/index.ts` | Process approval/denial |
+| `supabase/migrations/XXXXXX_add_registration_requests.sql` | Database table |
 
 ## Files to Modify
+
 | File | Changes |
 |------|---------|
-| `src/components/academy/ModuleVideosModal.tsx` | Add TikTok detection, thumbnails, embed |
-| `src/components/mus240/DocumentViewer.tsx` | Add TikTok viewer support |
-| `src/utils/youtubeUtils.ts` | (Optional) Rename to `videoUtils.ts` and consolidate |
+| `src/components/auth/SignupForm.tsx` | Integrate role selection step |
+| `src/components/auth/AuthTabs.tsx` | Handle multi-step signup flow |
+| `src/pages/admin/AlumnaeAdmin.tsx` | Add registration requests tab |
+| `src/App.tsx` | Add thank you page route |
 
 ---
 
-## Testing Checklist
-- [ ] TikTok URLs correctly detected and extracted
-- [ ] Thumbnails load in video list
-- [ ] In-app TikTok playback works
-- [ ] Fallback to external link if embed fails
-- [ ] YouTube videos still work as before
-- [ ] Mobile responsive layout
-- [ ] Error handling for invalid TikTok URLs
+## Admin Capability: Direct User Role Assignment
+
+The existing User Management page already allows admins to edit user profiles. We'll ensure:
+- Admins can set any user's role to 'alumna' or 'fan'
+- Admins can toggle the `verified` field
+- This allows converting existing users (like graduated students) to alumnae
+
+---
+
+## Security Considerations
+
+1. **Email verification**: New users must verify email before their registration request is processed
+2. **RLS policies**: Only admins can view/update registration_requests table
+3. **Edge function auth**: Registration notification only triggers after verified email
+4. **Rate limiting**: Prevent spam registration attempts
+
+---
+
+## Summary
+
+This plan creates a gated registration process where new fans and alumnae must be approved by the webmaster before gaining access to role-specific features. It maintains the shared profile system while adding approval workflow infrastructure that matches existing patterns in the codebase (like budget approvals and excuse requests).
+
