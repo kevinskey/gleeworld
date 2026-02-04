@@ -800,13 +800,13 @@ export const GleeAssistant = () => {
       {/* Speech Bubble Chat */}
       {isOpen && (
         <div 
-          className="fixed bottom-20 sm:bottom-28 right-4 sm:right-6 w-[calc(100%-2rem)] sm:w-[400px] max-w-lg animate-in fade-in slide-in-from-bottom-4 duration-200"
+          className="fixed bottom-20 sm:bottom-28 right-4 sm:right-6 w-[320px] sm:w-[380px] max-w-[calc(100vw-2rem)] animate-in fade-in slide-in-from-bottom-4 duration-200"
           style={{ zIndex: 100001 }}
           onClick={handleAssistantInteraction}
           onTouchStart={handleAssistantInteraction}
         >
-          {/* Bubble container */}
-          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-[#C4A962]/30 overflow-hidden">
+          {/* Bubble container - constrained window, not fullscreen */}
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-[#C4A962]/30 overflow-hidden max-h-[70vh]">
             {/* Close button */}
             <button
               onClick={() => setIsOpen(false)}
