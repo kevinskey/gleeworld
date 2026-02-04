@@ -34,7 +34,8 @@ const Auth = () => {
         return;
       }
 
-      navigate('/glee-academy', { replace: true });
+      // Redirect to root - useRoleBasedRedirect will handle the proper destination
+      navigate('/', { replace: true });
     }
   }, [user, loading, navigate]);
 
