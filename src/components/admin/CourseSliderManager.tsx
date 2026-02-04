@@ -265,20 +265,20 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                           updateSlide.mutate({ id: slide.id, slide_type: value })
                         }
                       >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
+                        <SelectTrigger className="mt-1 w-full">
+                          <SelectValue placeholder="Select slide type" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="z-[100] bg-background border shadow-lg">
                           <SelectItem value="image">
                             <div className="flex items-center gap-2">
                               <ImageIcon className="h-4 w-4" />
-                              Image
+                              <span>Image</span>
                             </div>
                           </SelectItem>
                           <SelectItem value="youtube">
                             <div className="flex items-center gap-2">
                               <Youtube className="h-4 w-4 text-destructive" />
-                              YouTube Video
+                              <span>YouTube Video</span>
                             </div>
                           </SelectItem>
                         </SelectContent>
