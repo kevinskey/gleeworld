@@ -5,11 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, ChevronDown, Upload, Eye, EyeOff, Images, ExternalLink } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Trash2, ChevronDown, Upload, Eye, EyeOff, Images, ExternalLink, Youtube, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useSliderByPlacement, useCreateSlider, useCreateSlide, useUpdateSlide, useDeleteSlide } from '@/hooks/useUniversalSlider';
 import { cn } from '@/lib/utils';
+import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
 
 interface CourseSliderManagerProps {
   courseCode: string;
@@ -202,7 +204,13 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                   <div className="flex items-center gap-3 p-3 hover:bg-accent/50 transition-colors">
                     {/* Thumbnail */}
                     <div className="w-16 h-12 rounded overflow-hidden bg-muted flex-shrink-0">
-                      {slide.image_url ? (
+                      {slide.slide_type === 'youtube' && slide.youtube_video_id ? (
+                        <img 
+                          src={`https://img.youtube.com/vi/${slide.youtube_video_id}/default.jpg`} 
+                          alt={slide.title || `Slide ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : slide.image_url ? (
                         <img 
                           src={slide.image_url} 
                           alt={slide.title || `Slide ${index + 1}`}
@@ -217,11 +225,18 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
 
                     {/* Info */}
                     <div className="flex-1 text-left">
-                      <div className="font-medium text-sm">
+                      <div className="font-medium text-sm flex items-center gap-1.5">
+                        {slide.slide_type === 'youtube' ? (
+                          <Youtube className="h-3.5 w-3.5 text-red-500" />
+                        ) : (
+                          <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
                         {slide.title || `Slide ${index + 1}`}
                       </div>
                       <div className="text-xs text-muted-foreground truncate max-w-[200px]">
-                        {slide.description || 'No description'}
+                        {slide.slide_type === 'youtube' 
+                          ? `YouTube: ${slide.youtube_video_id || 'No video ID'}`
+                          : (slide.description || 'No description')}
                       </div>
                     </div>
 
@@ -241,35 +256,124 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
 
                 <CollapsibleContent>
                   <div className="border-t p-4 space-y-4 bg-background">
-                    {/* Image Upload */}
+                    {/* Slide Type Selector */}
                     <div>
-                      <Label className="text-sm font-medium">Image</Label>
-                      <div className="mt-1 flex gap-2">
-                        <Input
-                          value={slide.image_url || ''}
-                          onChange={(e) => updateSlide.mutate({ id: slide.id, image_url: e.target.value })}
-                          placeholder="https://..."
-                          className="flex-1 text-sm"
-                        />
-                        <label className="cursor-pointer">
-                          <Button variant="outline" size="sm" asChild>
-                            <span>
-                              <Upload className="h-4 w-4 mr-1" />
-                              Upload
-                            </span>
-                          </Button>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleImageUpload(slide.id, file);
-                            }}
-                          />
-                        </label>
-                      </div>
+                      <Label className="text-sm font-medium">Slide Type</Label>
+                      <Select
+                        value={slide.slide_type}
+                        onValueChange={(value: 'image' | 'youtube') => 
+                          updateSlide.mutate({ id: slide.id, slide_type: value })
+                        }
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="image">
+                            <div className="flex items-center gap-2">
+                              <ImageIcon className="h-4 w-4" />
+                              Image
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="youtube">
+                            <div className="flex items-center gap-2">
+                              <Youtube className="h-4 w-4 text-destructive" />
+                              YouTube Video
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
+
+                    {/* Image Fields - only show for image type */}
+                    {slide.slide_type === 'image' && (
+                      <div>
+                        <Label className="text-sm font-medium">Image</Label>
+                        <div className="mt-1 flex gap-2">
+                          <Input
+                            value={slide.image_url || ''}
+                            onChange={(e) => updateSlide.mutate({ id: slide.id, image_url: e.target.value })}
+                            placeholder="https://..."
+                            className="flex-1 text-sm"
+                          />
+                          <label className="cursor-pointer">
+                            <Button variant="outline" size="sm" asChild>
+                              <span>
+                                <Upload className="h-4 w-4 mr-1" />
+                                Upload
+                              </span>
+                            </Button>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(slide.id, file);
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* YouTube Fields - only show for youtube type */}
+                    {slide.slide_type === 'youtube' && (
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium">YouTube URL or Video ID</Label>
+                          <Input
+                            value={slide.youtube_video_id || ''}
+                            onChange={(e) => {
+                              // Extract video ID if a full URL is pasted
+                              const input = e.target.value.trim();
+                              const videoId = extractYouTubeVideoId(input) || input;
+                              updateSlide.mutate({ id: slide.id, youtube_video_id: videoId });
+                            }}
+                            placeholder="https://youtube.com/watch?v=... or video ID"
+                            className="mt-1 text-sm"
+                          />
+                          {slide.youtube_video_id && (
+                            <div className="mt-2 rounded overflow-hidden border">
+                              <img 
+                                src={`https://img.youtube.com/vi/${slide.youtube_video_id}/mqdefault.jpg`}
+                                alt="Video thumbnail"
+                                className="w-full h-auto"
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-4">
+                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={slide.youtube_autoplay || false}
+                              onChange={(e) => updateSlide.mutate({ id: slide.id, youtube_autoplay: e.target.checked })}
+                              className="rounded"
+                            />
+                            Autoplay
+                          </label>
+                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={slide.youtube_muted || false}
+                              onChange={(e) => updateSlide.mutate({ id: slide.id, youtube_muted: e.target.checked })}
+                              className="rounded"
+                            />
+                            Muted
+                          </label>
+                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={slide.youtube_loop || false}
+                              onChange={(e) => updateSlide.mutate({ id: slide.id, youtube_loop: e.target.checked })}
+                              className="rounded"
+                            />
+                            Loop
+                          </label>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Title */}
                     <div>
@@ -282,27 +386,31 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                       />
                     </div>
 
-                    {/* Description */}
-                    <div>
-                      <Label className="text-sm font-medium">Description</Label>
-                      <Input
-                        value={slide.description || ''}
-                        onChange={(e) => updateSlide.mutate({ id: slide.id, description: e.target.value })}
-                        placeholder="Brief description..."
-                        className="mt-1 text-sm"
-                      />
-                    </div>
+                    {/* Description - only for images */}
+                    {slide.slide_type === 'image' && (
+                      <div>
+                        <Label className="text-sm font-medium">Description</Label>
+                        <Input
+                          value={slide.description || ''}
+                          onChange={(e) => updateSlide.mutate({ id: slide.id, description: e.target.value })}
+                          placeholder="Brief description..."
+                          className="mt-1 text-sm"
+                        />
+                      </div>
+                    )}
 
-                    {/* Link URL */}
-                    <div>
-                      <Label className="text-sm font-medium">Link URL (optional)</Label>
-                      <Input
-                        value={slide.link_url || ''}
-                        onChange={(e) => updateSlide.mutate({ id: slide.id, link_url: e.target.value })}
-                        placeholder="https://..."
-                        className="mt-1 text-sm"
-                      />
-                    </div>
+                    {/* Link URL - only for images */}
+                    {slide.slide_type === 'image' && (
+                      <div>
+                        <Label className="text-sm font-medium">Link URL (optional)</Label>
+                        <Input
+                          value={slide.link_url || ''}
+                          onChange={(e) => updateSlide.mutate({ id: slide.id, link_url: e.target.value })}
+                          placeholder="https://..."
+                          className="mt-1 text-sm"
+                        />
+                      </div>
+                    )}
 
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-2 border-t">
