@@ -23648,6 +23648,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_locked: boolean | null
+          is_published: boolean | null
           learning_objectives: Json | null
           module_id: string
           semester: string | null
@@ -23664,6 +23665,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_locked?: boolean | null
+          is_published?: boolean | null
           learning_objectives?: Json | null
           module_id: string
           semester?: string | null
@@ -23680,6 +23682,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_locked?: boolean | null
+          is_published?: boolean | null
           learning_objectives?: Json | null
           module_id?: string
           semester?: string | null

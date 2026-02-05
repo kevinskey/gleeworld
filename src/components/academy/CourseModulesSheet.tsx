@@ -82,7 +82,8 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
         // Use mus240_module_settings for MUS-240
         const { data, error } = await supabase
           .from('mus240_module_settings')
-          .select('id, module_id, week_number, title, description, is_active, is_locked')
+          .select('id, module_id, week_number, title, description, is_active, is_locked, is_published, start_date, end_date')
+          .eq('is_published', true) // Only show published modules to students
           .order('week_number', { ascending: true });
         
         if (error) throw error;

@@ -689,19 +689,28 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
           });
         });
 
+        // Get current date for determining active week
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
         // Build modules from settings + resources
         let builtModules: WeeklyModule[] = (settings || [])
-          .sort((a, b) => {
-            const weekA = a.week_number || parseInt(a.module_id.replace('week-', '')) || 0;
-            const weekB = b.week_number || parseInt(b.module_id.replace('week-', '')) || 0;
-            return weekA - weekB;
-          })
           .map(setting => {
             const moduleResources = resourcesByModule[setting.module_id] || [];
             const completedCount = moduleResources.filter(r => r.completed).length;
             const completionPct = moduleResources.length > 0 
               ? Math.round((completedCount / moduleResources.length) * 100)
               : 0;
+
+            // Determine if this is the current active week based on dates
+            let isCurrentWeek = false;
+            if (setting.start_date && setting.end_date) {
+              const start = new Date(setting.start_date);
+              const end = new Date(setting.end_date);
+              start.setHours(0, 0, 0, 0);
+              end.setHours(23, 59, 59, 999);
+              isCurrentWeek = today >= start && today <= end;
+            }
 
             return {
               id: setting.module_id,
@@ -710,18 +719,26 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
               description: setting.description || '',
               start_date: setting.start_date || new Date().toISOString(),
               end_date: setting.end_date || new Date().toISOString(),
-              is_active: setting.is_active ?? true,
+              is_active: isCurrentWeek, // Use date-based detection for "current week"
               is_locked: setting.is_locked ?? false,
+              is_published: setting.is_published ?? true, // Track visibility separately
               learning_objectives: (setting.learning_objectives as string[]) || [],
               resources: moduleResources,
               completion_percentage: completionPct,
             };
           });
 
-        // Filter out inactive modules for non-admin users
+        // Filter out unpublished modules for non-admin users (use is_published for visibility)
         if (!isAdmin) {
-          builtModules = builtModules.filter(mod => mod.is_active);
+          builtModules = builtModules.filter(mod => (mod as any).is_published !== false);
         }
+
+        // Sort: current week first, then descending by week number (most recent first)
+        builtModules.sort((a, b) => {
+          if (a.is_active && !b.is_active) return -1;
+          if (!a.is_active && b.is_active) return 1;
+          return b.week_number - a.week_number;
+        });
 
         setModules(builtModules);
       } catch (err) {
