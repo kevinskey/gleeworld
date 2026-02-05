@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Image, Layout, Newspaper, Users, Monitor, Church, GraduationCap, BookOpen, Mic, Music, Award, Eye } from "lucide-react";
+import { Image, Layout, Newspaper, Users, Monitor, Church, GraduationCap, BookOpen, Mic, Music, Award, Eye, Heart } from "lucide-react";
 
 export interface HeroContext {
   id: string;
   label: string;
   description: string;
-  table: 'gw_hero_slides' | 'dashboard_hero_slides' | 'alumnae_newsletter_hero_slides' | 'advertising_hero' | 'lyke_house_hero' | 'academy_course_badges' | 'gw_universal_sliders';
+  table: 'gw_hero_slides' | 'dashboard_hero_slides' | 'alumnae_newsletter_hero_slides' | 'advertising_hero' | 'lyke_house_hero' | 'academy_course_badges' | 'gw_universal_sliders' | 'alumnae_page_hero';
   usageContext?: string;
   icon: React.ReactNode;
   slideCount?: number;
@@ -47,6 +47,13 @@ const HERO_CONTEXTS: HeroContext[] = [
     description: 'Promotional banners and advertisements',
     table: 'advertising_hero',
     icon: <Monitor className="h-4 w-4" />
+  },
+  {
+    id: 'alumnae-landing',
+    label: 'Alumnae Landing Hero',
+    description: 'Hero images for the alumnae portal landing page',
+    table: 'alumnae_page_hero',
+    icon: <Heart className="h-4 w-4" />
   },
   {
     id: 'lyke-house',

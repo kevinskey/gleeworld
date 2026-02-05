@@ -33,7 +33,7 @@
    const fetchHeroSlides = async () => {
      try {
        const { data, error } = await supabase
-         .from('advertising_hero')
+        .from('alumnae_page_hero')
          .select('id, image_url, mobile_image_url, link_url, link_target, display_order')
          .eq('is_active', true)
          .order('display_order', { ascending: true });
