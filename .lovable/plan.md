@@ -1,73 +1,86 @@
 
+# Plan: Populate Course Schedules and Generate Attendance Sessions
 
-# Fix Course Module Active Status Detection
-
-## Problem
-The course modules page is showing multiple modules as "current" because:
-1. Weeks 1, 2, and 3 all have `is_active: true` in the database
-2. The current code uses the boolean flag as the primary source, only falling back to date-based detection when the flag is `false`
-3. This means old weeks that were manually marked active stay marked active
-
-## Solution
-Two-part fix to ensure only the truly current week is marked active:
+## Overview
+Establish the complete course schedule infrastructure by updating `gw_courses` with `meeting_patterns` data and generating class sessions for Spring 2026 so all courses appear on calendars with attendance tracking enabled.
 
 ---
 
-### Part 1: Fix the Code Logic
-Change the active status detection to use **date-based calculation as the primary method** when dates are available:
+## Confirmed Course Schedules
 
-**Current logic (lines 173-179):**
-```typescript
-let isActive = mod.is_active;
-if (!isActive && mod.start_date && mod.end_date) {
-  // Only check dates if flag is false
-}
-```
-
-**New logic:**
-```typescript
-// If dates exist, always use date-based detection (more reliable)
-let isActive = false;
-if (mod.start_date && mod.end_date) {
-  const startDate = new Date(mod.start_date);
-  const endDate = new Date(mod.end_date);
-  startDate.setHours(0, 0, 0, 0);
-  endDate.setHours(23, 59, 59, 999);
-  isActive = today >= startDate && today <= endDate;
-} else {
-  // Fall back to boolean flag only if no dates
-  isActive = mod.is_active;
-}
-```
+| Course | Days | Time | Duration |
+|--------|------|------|----------|
+| **MUS 240** | Mon/Wed/Fri | 1:00-1:50 PM | 50 min |
+| **MUS 070** | Mon/Wed/Fri | 5:00-6:15 PM | 75 min |
+| **MUS 210** | Mon/Wed | 2:00-2:50 PM | 50 min |
+| **LH 100** | Thu + Sun | Thu 7-9 PM, Sun 10 AM-1 PM | 2h / 3h |
+| **GLEE 101** | By Appointment | — | No sessions |
+| **MUS 001** | By Appointment | — | No sessions |
+| **GLEE 000** | *Awaiting confirmation* | T/Th 4:00-5:15 PM? | 75 min? |
 
 ---
 
-### Part 2: Clean Up Database (One-time fix)
-Update stale `is_active` flags in the database so the data is consistent:
+## Implementation Steps
 
-```sql
--- Fix mus240_module_settings
-UPDATE mus240_module_settings 
-SET is_active = (CURRENT_DATE >= start_date AND CURRENT_DATE <= end_date);
+### 1. Update `meeting_patterns` in Database
+For each course with a fixed schedule, populate the JSONB column with days and times:
 
--- Fix gw_course_modules for MUS-240
-UPDATE gw_course_modules 
-SET is_active = (CURRENT_DATE >= start_date AND CURRENT_DATE <= end_date)
-WHERE course_id IN (SELECT id FROM gw_courses WHERE course_code = 'MUS 240');
+```text
+MUS 240: { days: [1,3,5], startTime: "13:00", endTime: "13:50" }
+MUS 070: { days: [1,3,5], startTime: "17:00", endTime: "18:15" }
+MUS 210: { days: [1,3], startTime: "14:00", endTime: "14:50" }
+LH 100:  { patterns: [
+            { days: [4], startTime: "19:00", endTime: "21:00" },
+            { days: [0], startTime: "10:00", endTime: "13:00" }
+          ]}
 ```
 
----
+### 2. Update Configuration Files
+- Correct `src/config/academySyllabusDefaults.ts` times that conflict with user-provided schedules
+- Update `src/utils/generateSpring2026Sessions.ts` with confirmed schedules
+- Sync `src/config/academyCourses.ts` instructor office hours if needed
 
-## Result After Fix
-- **Week 3 (Blues: From Delta to Urban)** will be the only module marked "Current" and pinned to the top
-- Weeks 1 and 2 will sort below Week 3 (in descending order: 2, then 1)
-- Future weeks will be shown after past weeks
+### 3. Generate Class Sessions for Spring 2026
+Using the existing `CourseClassCalendar` generation logic:
+- **Semester**: Jan 14 – Apr 29
+- **Exception dates**: MLK Day (Jan 19), Spring Break (Mar 9-13), Good Friday (Apr 3), Founders Day (Apr 9), Research Day (Apr 17)
+
+Expected session counts:
+- MUS 240 (MWF): ~42 sessions
+- MUS 070 (MWF): ~42 sessions  
+- MUS 210 (MW): ~28 sessions
+- LH 100 (Thu+Sun): ~28 sessions (14 Thu + 14 Sun)
+
+### 4. Auto-Generate QR Codes for Attendance
+Each created session gets a corresponding `gw_attendance_qr_codes` record linked via `qr_code_id` to enable instant attendance tracking.
+
+### 5. Create Calendar Events
+Link sessions to `gw_events` using the course's `calendar_id` so they appear on both the instructor calendar and the main GleeWorld calendar.
 
 ---
 
 ## Files to Modify
-| File | Change |
-|------|--------|
-| `src/components/academy/CourseModulesSheet.tsx` | Prioritize date-based active detection over boolean flag |
-| Database migration | Clean up stale `is_active` values |
 
+| File | Changes |
+|------|---------|
+| `src/config/academySyllabusDefaults.ts` | Fix MUS 240 time (1-1:50 PM, MWF not T/Th), MUS 070 time (5-6:15 PM) |
+| `src/utils/generateSpring2026Sessions.ts` | Update course configs with confirmed schedules |
+| Database: `gw_courses` | Populate `meeting_patterns` JSONB for each course |
+| Database: `gw_course_class_sessions` | Insert session records for all courses |
+| Database: `gw_attendance_qr_codes` | Insert QR codes linked to sessions |
+| Database: `gw_events` | Insert calendar events for visibility |
+
+---
+
+## One Clarification Needed
+
+**GLEE 000 (Sight Singing Institute)**: The default shows T/Th 4:00-5:15 PM. Is this correct, or should it have a different schedule?
+
+---
+
+## Technical Notes
+
+- The `CourseClassCalendar` component already has a "Generate Semester" button that can create sessions once `meeting_patterns` is populated
+- LH 100 requires special handling for dual time slots (Thursday evening vs Sunday morning)
+- Sessions for "by appointment" courses (GLEE 101, MUS 001) will not be generated
+- All times are stored in `America/New_York` timezone per project standards
