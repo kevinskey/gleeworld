@@ -85,7 +85,7 @@ export default function AlumnaePageView() {
       <UniversalHeader />
       
       {/* Welcome Header */}
-      <div className="w-full py-6 md:py-8 bg-primary">
+      <div className="w-full py-6 md:py-8 bg-primary mt-16">
         <div className="container mx-auto px-4">
           <h1 className="text-2xl md:text-4xl font-display text-white text-center tracking-wide">
             Welcome Spelman College Glee Club Alumna
