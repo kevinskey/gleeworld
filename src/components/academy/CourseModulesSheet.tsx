@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ModuleVideosModal } from './ModuleVideosModal';
 import { useCourseModules } from '@/hooks/useCourseModules';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface CourseModulesSheetProps {
   courseId: string;
@@ -53,6 +54,7 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
   trigger
 }) => {
   const { user } = useAuth();
+  const { isAdmin, isSuperAdmin, isInstructor } = useUserRole();
   const navigate = useNavigate();
   const [modules, setModules] = useState<WeekModule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,12 +62,15 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedModule, setSelectedModule] = useState<WeekModule | null>(null);
 
-  // Use the universal hook for modules data (published only for students)
+  // Staff members (admin, super admin, instructor) see all modules; students see published only
+  const hasStaffAccess = isAdmin() || isSuperAdmin() || isInstructor();
+  
+  // Use the universal hook for modules data
   const { 
     modules: courseModulesData, 
     isLoading: modulesLoading,
     refetch: refetchModules
-  } = useCourseModules({ courseId, publishedOnly: true });
+  } = useCourseModules({ courseId, publishedOnly: !hasStaffAccess });
 
   useEffect(() => {
     if (open && user) {
