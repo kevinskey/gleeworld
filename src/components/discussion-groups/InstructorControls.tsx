@@ -153,33 +153,44 @@ export const InstructorControls: React.FC<InstructorControlsProps> = ({
 
   const handleUpdatePhaseDeadline = async (phase: string, newDate: string) => {
    if (!newDate || newDate.trim() === '') {
-     toast({ 
-       title: 'Invalid Date', 
-       description: 'Please select a valid date and time', 
-       variant: 'destructive' 
-     });
-     return;
-   }
+      toast({ 
+        title: 'Invalid Date', 
+        description: 'Please select a valid date and time', 
+        variant: 'destructive' 
+      });
+      return;
+    }
     
     try {
-     // Validate that the date string can be parsed
-     const dateObj = new Date(newDate);
-     if (isNaN(dateObj.getTime())) {
-       throw new Error('Invalid date format');
-     }
-     
+      // Validate that the date string can be parsed
+      const dateObj = new Date(newDate);
+      if (isNaN(dateObj.getTime())) {
+        throw new Error('Invalid date format');
+      }
+      
       const fieldMap: Record<string, string> = {
         'individual': 'individual_due_at',
         'peer': 'peer_due_at',
         'synthesis': 'synthesis_due_at'
       };
       
+      // Update discussion_prompts table
       const { error } = await supabase
         .from('discussion_prompts')
-       .update({ [fieldMap[phase]]: dateObj.toISOString() })
+        .update({ [fieldMap[phase]]: dateObj.toISOString() })
         .eq('id', discussionId);
 
       if (error) throw error;
+      
+      // Also sync to legacy course_discussions table if updating individual phase
+      // (this is the due_date students see in their view)
+      // The IDs are shared between discussion_prompts and course_discussions
+      if (phase === 'individual') {
+        await supabase
+          .from('course_discussions')
+          .update({ due_date: dateObj.toISOString() })
+          .eq('id', discussionId);
+      }
       
       toast({ title: 'Deadline Updated', description: `${phase} deadline has been updated` });
       setEditingPhase(null);
