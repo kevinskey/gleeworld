@@ -9072,9 +9072,11 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_locked: boolean | null
+          is_published: boolean | null
           learning_objectives: Json | null
           module_id: string
           semester: string | null
+          semester_id: string | null
           start_date: string | null
           title: string
           unlock_date: string | null
@@ -9090,9 +9092,11 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_locked?: boolean | null
+          is_published?: boolean | null
           learning_objectives?: Json | null
           module_id: string
           semester?: string | null
+          semester_id?: string | null
           start_date?: string | null
           title: string
           unlock_date?: string | null
@@ -9108,9 +9112,11 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_locked?: boolean | null
+          is_published?: boolean | null
           learning_objectives?: Json | null
           module_id?: string
           semester?: string | null
+          semester_id?: string | null
           start_date?: string | null
           title?: string
           unlock_date?: string | null
@@ -9123,6 +9129,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_course_modules_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "gw_semesters"
             referencedColumns: ["id"]
           },
         ]
@@ -23652,6 +23665,7 @@ export type Database = {
           learning_objectives: Json | null
           module_id: string
           semester: string | null
+          semester_id: string | null
           start_date: string | null
           title: string | null
           unlock_date: string | null
@@ -23669,6 +23683,7 @@ export type Database = {
           learning_objectives?: Json | null
           module_id: string
           semester?: string | null
+          semester_id?: string | null
           start_date?: string | null
           title?: string | null
           unlock_date?: string | null
@@ -23686,6 +23701,7 @@ export type Database = {
           learning_objectives?: Json | null
           module_id?: string
           semester?: string | null
+          semester_id?: string | null
           start_date?: string | null
           title?: string | null
           unlock_date?: string | null
@@ -23693,7 +23709,15 @@ export type Database = {
           updated_by?: string | null
           week_number?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mus240_module_settings_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "gw_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mus240_participation_grades: {
         Row: {
