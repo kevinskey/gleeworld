@@ -93,11 +93,8 @@ export default function AlumnaePageView() {
         </div>
       </div>
 
-      <AlumnaeHero />
-      <HeroSlideshow />
-      <div className="flex-1 w-full">
-        {sections.map(section => <DynamicSection key={section.id} section={section} />)}
-      </div>
+      <div className="flex-1 w-full" />
+      
       <UniversalFooter />
     </div>;
 }
