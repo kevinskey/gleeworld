@@ -3,7 +3,7 @@ import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Calendar, Video, Headphones, FolderOpen, Megaphone, PenTool, CalendarDays, Music, Shield, ListMusic, ChevronDown, QrCode } from 'lucide-react';
+import { Eye, GraduationCap, Menu, Home } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCourseTA } from '@/hooks/useCourseTA';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,10 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { supabase } from '@/integrations/supabase/client';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
+// Universal instructor console infrastructure
+import { InstructorCourseSwitcher } from '@/components/course/CourseSwitcher';
+import { getFilteredNavCategories, InstructorNavCategory } from '@/config/instructorConsoleConfig';
 
 // Import shared components that can work with any course
 import { CourseAssignmentManager } from '@/components/course/CourseAssignmentManager';
@@ -134,111 +137,9 @@ export const CourseInstructorConsole = () => {
   if (!isAdmin() && !isTA) {
     return <Navigate to={`/academy/${courseSlug}`} replace />;
   }
-  const navCategories = [{
-    label: 'Content',
-    items: [{
-      value: 'syllabus',
-      label: 'Syllabus',
-      icon: FileText
-    }, {
-      value: 'modules',
-      label: 'Modules',
-      icon: FolderOpen
-    }, {
-      value: 'class-notes',
-      label: 'Class Notes',
-      icon: BookOpen
-    }, {
-      value: 'calendar',
-      label: 'Calendar',
-      icon: Calendar
-    }]
-  }, {
-    label: 'Assessment',
-    items: [{
-      value: 'assignments',
-      label: 'Assignments',
-      icon: BookOpen
-    }, {
-      value: 'sight-reading',
-      label: 'Sight Reading',
-      icon: Music
-    }, {
-      value: 'tests',
-      label: 'Tests',
-      icon: ClipboardCheck
-    }, {
-      value: 'polls',
-      label: 'Polls',
-      icon: BarChart3
-    }, {
-      value: 'rubrics',
-      label: 'Rubrics',
-      icon: ListChecks
-    }, {
-      value: 'grades',
-      label: 'Grades',
-      icon: Trophy
-    }]
-  }, {
-    label: 'Students',
-    items: [{
-      value: 'students',
-      label: 'Enrollment',
-      icon: UserPlus
-    }, {
-      value: 'quick-attendance',
-      label: 'Attendance',
-      icon: QrCode
-    }, {
-      value: 'analytics',
-      label: 'Analytics',
-      icon: BarChart
-    }, {
-      value: 'announcements',
-      label: 'Announcements',
-      icon: Megaphone
-    }]
-  }, {
-    label: 'Resources',
-    items: [{
-      value: 'resources',
-      label: 'Course Materials',
-      icon: BookOpen
-    }, {
-      value: 'playlists',
-      label: 'Playlists',
-      icon: ListMusic
-    }, {
-      value: 'videos',
-      label: 'Video Library',
-      icon: Video
-    }, {
-      value: 'audio',
-      label: 'Audio Examples',
-      icon: Headphones
-    }]
-  }, {
-    label: 'Tools',
-    items: [{
-      value: 'attendance-security',
-      label: 'Attendance Security',
-      icon: Shield
-    }, {
-      value: 'semesters',
-      label: 'Semesters',
-      icon: CalendarDays
-    }, {
-      value: 'ai-assistant',
-      label: 'AI Assistant',
-      icon: Brain
-    }, {
-      value: 'settings',
-      label: 'Settings',
-      icon: Settings
-    }]
-  }];
-  const navItems = navCategories.flatMap(cat => cat.items);
+  // Use universal instructor nav configuration (filtered by course features)
+  const navCategories = getFilteredNavCategories(course.id);
+  
   const SidebarNav = ({
     isMobile = false
   }) => <nav className="space-y-4">
@@ -303,36 +204,9 @@ export const CourseInstructorConsole = () => {
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-56 xl:w-64 border-r bg-card sticky top-[132px] self-start max-h-[calc(100vh-132px)] overflow-y-auto">
             <div className="p-4 xl:p-6">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div className="mb-6 xl:mb-8 pb-4 xl:pb-6 border-b px-[10px] py-[10px] bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg xl:text-xl font-bold text-primary-foreground">{course.courseCode}</h2>
-                      <ChevronDown className="h-4 w-4 text-primary-foreground" />
-                    </div>
-                    <p className="text-xs mt-1 xl:mt-1.5 text-primary-foreground xl:text-base">{course.title}</p>
-                    <p className="text-[10px] mt-0.5 xl:mt-1 text-primary-foreground/80 xl:text-sm">{course.instructor?.name}</p>
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-64">
-                  {ACADEMY_COURSES.filter(c => c.isActive).map((c) => {
-                    const slug = c.courseCode.toLowerCase().replace(' ', '-');
-                    return (
-                      <DropdownMenuItem 
-                        key={c.id}
-                        onClick={() => navigate(`/${slug}/instructor/console`)}
-                        className={cn(
-                          "flex flex-col items-start gap-0.5 py-2",
-                          c.courseCode === course.courseCode && "bg-accent"
-                        )}
-                      >
-                        <span className="font-semibold">{c.courseCode}</span>
-                        <span className="text-xs text-muted-foreground">{c.title}</span>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="mb-6 xl:mb-8 pb-4 xl:pb-6 border-b">
+                <InstructorCourseSwitcher currentCourse={course} />
+              </div>
               <SidebarNav />
             </div>
           </aside>
@@ -340,42 +214,16 @@ export const CourseInstructorConsole = () => {
           {/* Mobile Sidebar */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetContent side="left" className="w-64 sm:w-72 p-4 sm:p-6">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div className="mb-6 sm:mb-8 pb-4 sm:pb-6 border-b bg-primary text-primary-foreground px-3 py-3 rounded-lg cursor-pointer hover:bg-primary/90 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg sm:text-xl font-bold text-primary-foreground">{course.courseCode}</h2>
-                      <ChevronDown className="h-4 w-4 text-primary-foreground" />
-                    </div>
-                    <p className="text-xs sm:text-sm text-primary-foreground/90 mt-1 sm:mt-1.5">{course.title}</p>
-                    <p className="text-[10px] sm:text-xs text-primary-foreground/80 mt-0.5 sm:mt-1">{course.instructor?.name}</p>
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-64">
-                  {ACADEMY_COURSES.filter(c => c.isActive).map((c) => {
-                    const slug = c.courseCode.toLowerCase().replace(' ', '-');
-                    return (
-                      <DropdownMenuItem 
-                        key={c.id}
-                        onClick={() => {
-                          navigate(`/${slug}/instructor/console`);
-                          setSidebarOpen(false);
-                        }}
-                        className={cn(
-                          "flex flex-col items-start gap-0.5 py-2",
-                          c.courseCode === course.courseCode && "bg-accent"
-                        )}
-                      >
-                        <span className="font-semibold">{c.courseCode}</span>
-                        <span className="text-xs text-muted-foreground">{c.title}</span>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="mb-6 sm:mb-8 pb-4 sm:pb-6 border-b">
+                <InstructorCourseSwitcher 
+                  currentCourse={course} 
+                  onClose={() => setSidebarOpen(false)}
+                />
+              </div>
               <SidebarNav isMobile />
             </SheetContent>
           </Sheet>
+
 
           {/* Main Content */}
           <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24">
