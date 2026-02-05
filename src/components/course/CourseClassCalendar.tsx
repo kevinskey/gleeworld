@@ -14,8 +14,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGleeWorldEvents } from '@/hooks/useGleeWorldEvents';
 import QRCode from 'qrcode';
-import { Calendar as CalendarIcon, Plus, QrCode, Users, Clock, MapPin, ChevronLeft, ChevronRight, Loader2, Download, RefreshCw, BookOpen, Music, Trash2, CheckCircle, Sparkles, GraduationCap, AlertCircle, Repeat } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, QrCode, Users, Clock, MapPin, ChevronLeft, ChevronRight, Loader2, Download, RefreshCw, BookOpen, Music, Trash2, CheckCircle, Sparkles, GraduationCap, AlertCircle, Repeat, Settings2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { CONFIRMED_SCHEDULES } from '@/utils/updateCourseMeetingPatterns';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO, addHours, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -125,6 +126,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
   const [activeSemester, setActiveSemester] = useState<Semester | null>(null);
   const [courseInfo, setCourseInfo] = useState<CourseInfo | null>(null);
   const [generatingSessions, setGeneratingSessions] = useState(false);
+  const [syncingSchedule, setSyncingSchedule] = useState(false);
 
   // Create session dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -216,6 +218,46 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       }
     } catch (error) {
       console.error('Error fetching course info:', error);
+    }
+  };
+
+  // Sync meeting pattern from confirmed schedules
+  const syncMeetingPattern = async () => {
+    const schedule = CONFIRMED_SCHEDULES[courseCode?.replace('-', ' ') || ''] || CONFIRMED_SCHEDULES[courseCode || ''];
+    if (!schedule) {
+      toast({
+        title: 'No Schedule Found',
+        description: `No confirmed schedule for ${courseCode}. Contact admin.`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setSyncingSchedule(true);
+      const { error } = await supabase
+        .from('gw_courses')
+        .update({ meeting_patterns: schedule.pattern as any })
+        .eq('id', courseId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Schedule Synced',
+        description: `Meeting pattern updated for ${courseCode}`
+      });
+      
+      // Refresh course info to show new pattern
+      await fetchCourseInfo();
+    } catch (error) {
+      console.error('Error syncing schedule:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to sync schedule. Check permissions.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSyncingSchedule(false);
     }
   };
 
@@ -829,6 +871,13 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
           </p>
         </div>
         {isInstructor && <div className="flex items-center gap-2">
+            {/* Show Sync Schedule if no meeting patterns exist but we have a confirmed schedule */}
+            {activeSemester && !courseInfo?.meeting_patterns && CONFIRMED_SCHEDULES[courseCode?.replace('-', ' ') || ''] && (
+              <Button variant="outline" onClick={syncMeetingPattern} disabled={syncingSchedule}>
+                {syncingSchedule ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Settings2 className="h-4 w-4 mr-2" />}
+                Sync Schedule
+              </Button>
+            )}
             {activeSemester && courseInfo?.meeting_patterns && <Button variant="outline" onClick={generateSemesterSessions} disabled={generatingSessions}>
                 {generatingSessions ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
                 Generate Semester
