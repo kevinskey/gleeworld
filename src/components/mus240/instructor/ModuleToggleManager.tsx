@@ -58,11 +58,24 @@ export const ModuleToggleManager: React.FC = () => {
 
       if (error) throw error;
       
-      // Sort by week number
+      // Get current date for determining active week
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Sort: current week first, then descending by week number (most recent first)
       const sorted = (data || []).sort((a, b) => {
-        const weekA = parseInt(a.module_id.replace('week-', ''));
-        const weekB = parseInt(b.module_id.replace('week-', ''));
-        return weekA - weekB;
+        const weekA = a.week_number || parseInt(a.module_id.replace('week-', '')) || 0;
+        const weekB = b.week_number || parseInt(b.module_id.replace('week-', '')) || 0;
+        
+        // Check if either is the current week
+        const isCurrentA = a.start_date && a.end_date && 
+          today >= new Date(a.start_date) && today <= new Date(a.end_date);
+        const isCurrentB = b.start_date && b.end_date && 
+          today >= new Date(b.start_date) && today <= new Date(b.end_date);
+        
+        if (isCurrentA && !isCurrentB) return -1;
+        if (!isCurrentA && isCurrentB) return 1;
+        return weekB - weekA; // Descending order
       });
       
       setModules(sorted);
