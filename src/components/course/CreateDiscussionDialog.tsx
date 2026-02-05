@@ -93,6 +93,9 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
     mutationFn: async () => {
       if (!user) throw new Error('You must be logged in');
       
+      const dueDateISO = dueDate ? new Date(dueDate).toISOString() : null;
+      
+      // Create in course_discussions (student view reads from here)
       const { data, error } = await supabase
         .from('course_discussions')
         .insert({
@@ -104,16 +107,42 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
           is_locked: false,
           is_graded: isGraded,
           max_points: isGraded ? maxPoints : null,
-          due_date: dueDate ? new Date(dueDate).toISOString() : null,
+          due_date: dueDateISO,
         })
         .select()
         .single();
 
       if (error) throw error;
+      
+      // Also create in discussion_prompts (instructor console & TeachingFirstHome read from here)
+      // Use the same ID to keep them synchronized
+      const { error: promptError } = await supabase
+        .from('discussion_prompts')
+        .insert({
+          id: data.id,
+          course_id: courseId,
+          title: title.trim(),
+          prompt_text: content.trim(),
+          individual_due_at: dueDateISO,
+          peer_due_at: dueDateISO ? new Date(new Date(dueDateISO).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString() : null,
+          synthesis_due_at: dueDateISO ? new Date(new Date(dueDateISO).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString() : null,
+          word_min: 100,
+          word_max: 500,
+          current_phase: 'individual_open',
+          is_locked: false,
+          created_by: user.id,
+        });
+      
+      if (promptError) {
+        console.error('Failed to sync to discussion_prompts:', promptError);
+        // Don't fail the whole operation - student view will still work
+      }
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['course-discussions', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['discussion-prompts', courseId] });
       toast.success('Discussion created successfully');
       resetForm();
       onOpenChange(false);
@@ -127,6 +156,9 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
     mutationFn: async () => {
       if (!editingDiscussion) throw new Error('No discussion to update');
       
+      const dueDateISO = dueDate ? new Date(dueDate).toISOString() : null;
+      
+      // Update course_discussions (student view)
       const { data, error } = await supabase
         .from('course_discussions')
         .update({
@@ -134,17 +166,53 @@ export const CreateDiscussionDialog: React.FC<CreateDiscussionDialogProps> = ({
           content: content.trim(),
           is_graded: isGraded,
           max_points: isGraded ? maxPoints : null,
-          due_date: dueDate ? new Date(dueDate).toISOString() : null,
+          due_date: dueDateISO,
         })
         .eq('id', editingDiscussion.id)
         .select()
         .single();
 
       if (error) throw error;
+      
+      // Also update discussion_prompts (instructor console & TeachingFirstHome)
+      const { error: promptError } = await supabase
+        .from('discussion_prompts')
+        .update({
+          title: title.trim(),
+          prompt_text: content.trim(),
+          individual_due_at: dueDateISO,
+        })
+        .eq('id', editingDiscussion.id);
+      
+      if (promptError) {
+        console.error('Failed to sync to discussion_prompts:', promptError);
+        // Don't fail - try upsert in case record doesn't exist
+        await supabase
+          .from('discussion_prompts')
+          .upsert(
+            {
+              id: editingDiscussion.id,
+              course_id: courseId,
+              title: title.trim(),
+              prompt_text: content.trim(),
+              individual_due_at: dueDateISO,
+              peer_due_at: dueDateISO ? new Date(new Date(dueDateISO).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString() : null,
+              synthesis_due_at: dueDateISO ? new Date(new Date(dueDateISO).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString() : null,
+              word_min: 100,
+              word_max: 500,
+              current_phase: 'individual_open',
+              is_locked: false,
+              created_by: user?.id || editingDiscussion.created_by || '',
+            },
+            { onConflict: 'id' }
+          );
+      }
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['course-discussions', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['discussion-prompts', courseId] });
       toast.success('Discussion updated successfully');
       resetForm();
       onOpenChange(false);
