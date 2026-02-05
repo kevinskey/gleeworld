@@ -169,14 +169,17 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
         // Get resources for this module (MUS-240)
         const moduleResources = resourcesMap[mod.module_id] || [];
 
-        // Calculate is_active: use flag if set, otherwise check date range
-        let isActive = mod.is_active;
-        if (!isActive && mod.start_date && mod.end_date) {
+        // Calculate is_active: prioritize date-based detection when dates exist
+        let isActive = false;
+        if (mod.start_date && mod.end_date) {
           const startDate = new Date(mod.start_date);
           const endDate = new Date(mod.end_date);
           startDate.setHours(0, 0, 0, 0);
           endDate.setHours(23, 59, 59, 999);
           isActive = today >= startDate && today <= endDate;
+        } else {
+          // Fall back to boolean flag only if no dates exist
+          isActive = mod.is_active;
         }
 
         return {
