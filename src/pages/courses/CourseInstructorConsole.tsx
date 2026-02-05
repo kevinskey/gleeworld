@@ -142,32 +142,55 @@ export const CourseInstructorConsole = () => {
   
   const SidebarNav = ({
     isMobile = false
-  }) => <nav className="space-y-4">
-      {navCategories.map(category => <div key={category.label}>
+  }) => (
+    <nav className="space-y-4">
+      {/* Student View Button - Prominent at top */}
+      <Button
+        variant="outline"
+        className="w-full flex items-center justify-center gap-2 bg-accent/50 hover:bg-accent border-primary/20"
+        onClick={() => {
+          navigate(`/academy/${courseSlug}`);
+          if (isMobile) setSidebarOpen(false);
+        }}
+      >
+        <Eye className="h-4 w-4" />
+        <span>View as Student</span>
+      </Button>
+      
+      {navCategories.map(category => (
+        <div key={category.label}>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-3">
             {category.label}
           </h3>
           <div className="space-y-1">
             {category.items.map(item => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.value;
-          return <button key={item.value} onClick={() => {
-            setActiveTab(item.value);
-            if (isMobile) setSidebarOpen(false);
-          }} className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-            isActive 
-              ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/20" 
-              : "text-foreground hover:bg-accent hover:text-accent-foreground"
-          )}>
+              const Icon = item.icon;
+              const isActive = activeTab === item.value;
+              return (
+                <button 
+                  key={item.value} 
+                  onClick={() => {
+                    setActiveTab(item.value);
+                    if (isMobile) setSidebarOpen(false);
+                  }} 
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                    isActive 
+                      ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/20" 
+                      : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
                   <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
                   <span>{item.label}</span>
                   {isActive && <div className="ml-auto h-2 w-2 rounded-full bg-primary-foreground/80" />}
-                </button>;
-        })}
+                </button>
+              );
+            })}
           </div>
-        </div>)}
-    </nav>;
+        </div>
+      ))}
+    </nav>
+  );
   return <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-background">
         {/* Stats Bar */}
