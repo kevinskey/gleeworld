@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -261,167 +260,118 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
   // Show loading while getting signed URL
   if (!pdfUrl) {
     return (
-      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
-        <CardContent className="p-8">
-          <div className="flex items-center justify-center">
-            <p className="text-muted-foreground">No PDF available</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className={cn("w-full flex items-center justify-center p-8", className)}>
+        <p className="text-muted-foreground">No PDF available</p>
+      </div>
     );
   }
 
   if (urlLoading) {
     return (
-      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
-        <CardContent className="p-8">
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Preparing PDF...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className={cn("w-full flex flex-col items-center justify-center p-8 space-y-2", className)}>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Preparing PDF...</p>
+      </div>
     );
   }
 
   if (urlError || !signedUrl) {
     return (
-      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
-        <CardContent className="p-8">
-          <div className="flex flex-col items-center justify-center text-center space-y-4">
-            <AlertCircle className="h-12 w-12 text-destructive" />
-            <div>
-              <h3 className="text-lg font-semibold text-destructive">Failed to Load PDF</h3>
-              <p className="text-sm text-muted-foreground mt-1">{urlError || 'PDF unavailable'}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => window.open(pdfUrl, '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Try Direct Link
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className={cn("w-full flex flex-col items-center justify-center text-center p-8 space-y-4", className)}>
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <div>
+          <h3 className="text-lg font-semibold text-destructive">Failed to Load PDF</h3>
+          <p className="text-sm text-muted-foreground mt-1">{urlError || 'PDF unavailable'}</p>
+        </div>
+        <Button variant="outline" onClick={() => window.open(pdfUrl, '_blank')}>
+          <ExternalLink className="h-4 w-4 mr-2" />
+          Try Direct Link
+        </Button>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
-        <CardContent className="p-8">
-          <div className="flex flex-col items-center justify-center text-center space-y-4">
-            <AlertCircle className="h-12 w-12 text-destructive" />
-            <div>
-              <h3 className="text-lg font-semibold text-destructive">Failed to Load PDF</h3>
-              <p className="text-sm text-muted-foreground mt-1">{error}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => window.open(signedUrl || pdfUrl, '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Open in New Tab
-              </Button>
-              <Button 
-                onClick={() => {
-                  setError(null);
-                  setIsLoading(true);
-                }} 
-                variant="outline"
-              >
-                Try Again
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className={cn("w-full flex flex-col items-center justify-center text-center p-8 space-y-4", className)}>
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <div>
+          <h3 className="text-lg font-semibold text-destructive">Failed to Load PDF</h3>
+          <p className="text-sm text-muted-foreground mt-1">{error}</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => window.open(signedUrl || pdfUrl, '_blank')}>
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Open in New Tab
+          </Button>
+          <Button onClick={() => { setError(null); setIsLoading(true); }} variant="outline">
+            Try Again
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className={cn("w-full max-w-7xl mx-auto", className)}>
-      <CardContent className="p-0">
-        <div 
-          ref={containerRef}
-          className="relative w-full h-[calc(100dvh-10rem)] min-h-[60vh] md:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-8rem)] overflow-y-auto overflow-x-hidden touch-pan-y"
-          style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-        >
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-              <div className="flex flex-col items-center space-y-2">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Loading PDF...</p>
-              </div>
+    <div className={cn("w-full h-full", className)}>
+      <div 
+        ref={containerRef}
+        className="relative w-full h-full overflow-auto touch-pan-y"
+        style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+      >
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+            <div className="flex flex-col items-center space-y-2">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Loading PDF...</p>
             </div>
-          )}
-          
-          <canvas
-            ref={canvasRef}
-            className="w-full h-auto block mx-auto border"
-            style={{ 
-              maxHeight: '100%', 
-              objectFit: 'contain',
-              background: 'white',
-              minHeight: '400px',
-              border: '1px solid #ddd',
-              opacity: isLoading ? 0.5 : 1,
-              willChange: 'contents', // Hint to browser for GPU acceleration
-              imageRendering: 'crisp-edges' // Faster rendering
-            }}
-          />
+          </div>
+        )}
+        
+        <canvas
+          ref={canvasRef}
+          className="block mx-auto"
+          style={{ 
+            width: '100%',
+            maxWidth: '100%',
+            height: 'auto',
+            background: 'white',
+            opacity: isLoading ? 0.5 : 1,
+            willChange: 'contents',
+            imageRendering: 'crisp-edges'
+          }}
+        />
 
-          {/* Touch/Click zones visual hint */}
-          <>
-            {/* Left tap zone */}
-            <div className="absolute left-0 top-0 w-1/3 h-full z-10 flex items-center justify-start pl-4 opacity-0 hover:opacity-20 transition-opacity pointer-events-none">
-              <div className="bg-primary/30 rounded-full p-2">
-                <ChevronLeft className="h-6 w-6 text-primary" />
-              </div>
+        {/* Page navigation - top right, out of the way */}
+        {totalPages > 1 && (
+          <div className="absolute top-2 right-2 z-20">
+            <div className="flex items-center gap-1 rounded-full border bg-background/95 backdrop-blur-md px-2 py-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 rounded-full" 
+                onClick={prevPage} 
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+              <span className="text-[10px] font-medium tabular-nums min-w-[40px] text-center">
+                {currentPage} / {totalPages}
+              </span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 rounded-full" 
+                onClick={nextPage} 
+                disabled={currentPage >= totalPages}
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
             </div>
-            {/* Right tap zone */}
-            <div className="absolute right-0 top-0 w-1/3 h-full z-10 flex items-center justify-end pr-4 opacity-0 hover:opacity-20 transition-opacity pointer-events-none">
-              <div className="bg-primary/30 rounded-full p-2">
-                <ChevronRight className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-          </>
-
-          {/* Page navigation controls */}
-          {totalPages > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20">
-              <div className="flex items-center gap-2 rounded-md border bg-background/90 backdrop-blur px-3 py-2">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-8 w-8" 
-                  onClick={prevPage} 
-                  disabled={currentPage <= 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm font-medium tabular-nums min-w-[60px] text-center">
-                  {currentPage} / {totalPages}
-                </span>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-8 w-8" 
-                  onClick={nextPage} 
-                  disabled={currentPage >= totalPages}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
