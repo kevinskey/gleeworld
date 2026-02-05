@@ -29,47 +29,45 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
       modal={false}
     >
       <DialogContent
-        className="w-[90vw] max-w-[90vw] max-h-[90vh] p-0 z-[9999] flex flex-col"
+        className="w-[98vw] max-w-[98vw] h-[95vh] max-h-[95vh] p-0 z-[9999] flex flex-col gap-0"
         style={{ zIndex: 9999 }}
         onInteractOutside={(e) => {
-          // Prevent closing when interacting with floating YouTube player
           const target = e.target as HTMLElement;
           if (target?.closest('[data-floating-youtube-player]') || target?.closest('iframe[src*="youtube"]')) {
             e.preventDefault();
           }
         }}
         onPointerDownOutside={(e) => {
-          // Prevent closing when clicking on floating YouTube player
           const target = e.target as HTMLElement;
           if (target?.closest('[data-floating-youtube-player]') || target?.closest('iframe[src*="youtube"]')) {
             e.preventDefault();
           }
         }}
       >
-        <div className="flex flex-col h-full overflow-hidden">
-          <div className="px-2 py-1 border-b flex items-center gap-2 flex-shrink-0">
-            <h2 className="text-xs font-semibold text-foreground truncate flex-1">
-              {title ?? 'PDF'}
-            </h2>
+        {/* Minimal header - just title and close */}
+        <div className="px-3 py-1.5 border-b flex items-center gap-2 flex-shrink-0 bg-background">
+          <h2 className="text-sm font-medium text-foreground truncate flex-1">
+            {title ?? 'Sheet Music'}
+          </h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => onOpenChange(false)}
+            aria-label="Close PDF viewer"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
 
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              aria-label="Close PDF viewer"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <PDFViewerWithAnnotations
-              pdfUrl={pdfUrl}
-              musicId={musicId}
-              musicTitle={title}
-              className="min-h-full"
-            />
-          </div>
+        {/* Full-height PDF viewer */}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <PDFViewerWithAnnotations
+            pdfUrl={pdfUrl}
+            musicId={musicId}
+            musicTitle={title}
+            className="h-full"
+          />
         </div>
       </DialogContent>
     </Dialog>
