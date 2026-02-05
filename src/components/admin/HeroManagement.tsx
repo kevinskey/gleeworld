@@ -478,19 +478,25 @@ export const HeroManagement = () => {
 
     setSaving(true);
     try {
-      const payload = {
+        // Build base payload - exclude video_url for tables that don't have it
+        const basePayload = {
         title: formData.title.trim() || null,
         description: formData.description || null,
         image_url: formData.image_url || null,
         mobile_image_url: formData.mobile_image_url || null,
         ipad_image_url: formData.ipad_image_url || null,
-        video_url: formData.video_url || null,
         display_order: formData.display_order,
         is_active: formData.is_active,
         duration_ms: formData.duration_ms,
         layout: formData.layout,
         transition: formData.transition,
-      } as const;
+        };
+
+        // Only include video_url for tables that support it
+        const tablesWithVideoUrl = ['gw_hero_slides'];
+        const payload = tablesWithVideoUrl.includes(table)
+          ? { ...basePayload, video_url: formData.video_url || null }
+          : basePayload;
 
       if (editingId && editingId !== 'new') {
         // Update existing
