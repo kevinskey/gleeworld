@@ -4,12 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { UniversalFooter } from '@/components/layout/UniversalFooter';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { DynamicSection } from '@/components/alumnae/viewer/DynamicSection';
-import { HeroSlideshow } from '@/components/alumnae/HeroSlideshow';
-import { AlumnaeHero } from '@/components/alumnae/AlumnaeHero';
+import { AlumnaePageHero } from '@/components/alumnae/AlumnaePageHero';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { GraduationCap } from 'lucide-react';
 export default function AlumnaePageView() {
   const navigate = useNavigate();
@@ -93,6 +89,8 @@ export default function AlumnaePageView() {
         </div>
       </div>
 
+      <AlumnaePageHero />
+      
       <div className="flex-1 w-full" />
       
       <UniversalFooter />
