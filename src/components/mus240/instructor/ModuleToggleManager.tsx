@@ -11,9 +11,13 @@ import { useAuth } from '@/contexts/AuthContext';
 interface ModuleSetting {
   id: string;
   module_id: string;
+  week_number: number;
   is_active: boolean;
   is_locked: boolean;
+  is_published: boolean;
   semester: string;
+  start_date: string;
+  end_date: string;
 }
 
 const MODULE_TITLES: Record<string, string> = {
@@ -70,20 +74,21 @@ export const ModuleToggleManager: React.FC = () => {
     }
   };
 
-  const toggleActive = async (moduleId: string, currentValue: boolean) => {
+  // Toggle visibility (is_published) - controls whether students can see the module
+  const togglePublished = async (moduleId: string, currentValue: boolean) => {
     const updated = modules.map(m => 
-      m.module_id === moduleId ? { ...m, is_active: !currentValue } : m
+      m.module_id === moduleId ? { ...m, is_published: !currentValue } : m
     );
     setModules(updated);
 
     try {
       const { error } = await supabase
         .from('mus240_module_settings')
-        .update({ is_active: !currentValue, updated_by: user?.id, updated_at: new Date().toISOString() })
+        .update({ is_published: !currentValue, updated_by: user?.id, updated_at: new Date().toISOString() })
         .eq('module_id', moduleId);
 
       if (error) throw error;
-      toast.success(`Module ${!currentValue ? 'enabled' : 'disabled'}`);
+      toast.success(`Module ${!currentValue ? 'visible to students' : 'hidden from students'}`);
     } catch (error) {
       console.error('Error updating module:', error);
       toast.error('Failed to update module');
@@ -112,37 +117,37 @@ export const ModuleToggleManager: React.FC = () => {
     }
   };
 
-  const enableAll = async () => {
+  const publishAll = async () => {
     setSaving(true);
     try {
       const { error } = await supabase
         .from('mus240_module_settings')
-        .update({ is_active: true, is_locked: false, updated_by: user?.id })
+        .update({ is_published: true, is_locked: false, updated_by: user?.id })
         .neq('module_id', '');
 
       if (error) throw error;
-      toast.success('All modules enabled');
+      toast.success('All modules visible to students');
       fetchModules();
     } catch (error) {
-      toast.error('Failed to enable all modules');
+      toast.error('Failed to publish all modules');
     } finally {
       setSaving(false);
     }
   };
 
-  const disableAll = async () => {
+  const unpublishAll = async () => {
     setSaving(true);
     try {
       const { error } = await supabase
         .from('mus240_module_settings')
-        .update({ is_active: false, updated_by: user?.id })
+        .update({ is_published: false, updated_by: user?.id })
         .neq('module_id', '');
 
       if (error) throw error;
-      toast.success('All modules disabled');
+      toast.success('All modules hidden from students');
       fetchModules();
     } catch (error) {
-      toast.error('Failed to disable all modules');
+      toast.error('Failed to hide all modules');
     } finally {
       setSaving(false);
     }
@@ -152,63 +157,88 @@ export const ModuleToggleManager: React.FC = () => {
     return <div className="text-center py-8 text-muted-foreground">Loading modules...</div>;
   }
 
+  // Calculate current week based on today's date
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const getCurrentWeek = (mod: ModuleSetting) => {
+    if (!mod.start_date || !mod.end_date) return false;
+    const start = new Date(mod.start_date);
+    const end = new Date(mod.end_date);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    return today >= start && today <= end;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 mb-4">
-        <Button variant="outline" size="sm" onClick={enableAll} disabled={saving}>
+        <Button variant="outline" size="sm" onClick={publishAll} disabled={saving}>
           <Eye className="h-4 w-4 mr-2" />
-          Enable All
+          Show All to Students
         </Button>
-        <Button variant="outline" size="sm" onClick={disableAll} disabled={saving}>
+        <Button variant="outline" size="sm" onClick={unpublishAll} disabled={saving}>
           <EyeOff className="h-4 w-4 mr-2" />
-          Disable All
+          Hide All from Students
         </Button>
       </div>
 
       <div className="grid gap-2">
-        {modules.map((module) => (
-          <Card key={module.id} className={`${!module.is_active ? 'opacity-60' : ''}`}>
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm sm:text-base truncate">
-                    {MODULE_TITLES[module.module_id] || module.module_id}
-                  </h4>
-                  <div className="flex gap-2 mt-1">
-                    {module.is_active ? (
-                      <Badge variant="default" className="text-xs">Visible</Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">Hidden</Badge>
-                    )}
-                    {module.is_locked && (
-                      <Badge variant="outline" className="text-xs">
-                        <Lock className="h-3 w-3 mr-1" />
-                        Locked
-                      </Badge>
-                    )}
+        {modules.map((module) => {
+          const isCurrentWeek = getCurrentWeek(module);
+          return (
+            <Card key={module.id} className={`${!module.is_published ? 'opacity-60 border-dashed' : ''} ${isCurrentWeek ? 'ring-2 ring-primary border-primary' : ''}`}>
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm sm:text-base truncate">
+                      {MODULE_TITLES[module.module_id] || module.module_id}
+                    </h4>
+                    <div className="flex gap-2 mt-1 flex-wrap">
+                      {isCurrentWeek && (
+                        <Badge variant="default" className="text-xs bg-green-600">Current Week</Badge>
+                      )}
+                      {module.is_published ? (
+                        <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">
+                          <Eye className="h-3 w-3 mr-1" />
+                          Visible
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          <EyeOff className="h-3 w-3 mr-1" />
+                          Hidden
+                        </Badge>
+                      )}
+                      {module.is_locked && (
+                        <Badge variant="outline" className="text-xs">
+                          <Lock className="h-3 w-3 mr-1" />
+                          Locked
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs text-muted-foreground">Visible</span>
+                      <Switch
+                        checked={module.is_published}
+                        onCheckedChange={() => togglePublished(module.module_id, module.is_published)}
+                      />
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs text-muted-foreground">Locked</span>
+                      <Switch
+                        checked={module.is_locked}
+                        onCheckedChange={() => toggleLocked(module.module_id, module.is_locked)}
+                      />
+                    </div>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-xs text-muted-foreground">Active</span>
-                    <Switch
-                      checked={module.is_active}
-                      onCheckedChange={() => toggleActive(module.module_id, module.is_active)}
-                    />
-                  </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-xs text-muted-foreground">Locked</span>
-                    <Switch
-                      checked={module.is_locked}
-                      onCheckedChange={() => toggleLocked(module.module_id, module.is_locked)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
