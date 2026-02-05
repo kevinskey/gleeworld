@@ -142,6 +142,12 @@ export const HeroManagement = () => {
         .select('*', { count: 'exact', head: true });
       counts['academy-slider'] = academyCount || 0;
       
+      // Fetch alumnae_page_hero count
+      const { count: alumnaeCount } = await supabase
+        .from('alumnae_page_hero')
+        .select('*', { count: 'exact', head: true });
+      counts['alumnae-landing'] = alumnaeCount || 0;
+      
       setSlideCounts(counts);
     } catch (error) {
       console.error('Error fetching slide counts:', error);
@@ -230,6 +236,28 @@ export const HeroManagement = () => {
           created_at: s.created_at,
           updated_at: s.updated_at,
           duration_ms: s.duration_ms ?? 6000,
+          layout: s.layout ?? 'one',
+          transition: s.transition ?? 'fade'
+        }));
+      } else if (selectedContext.table === 'alumnae_page_hero') {
+        const { data, error } = await supabase
+          .from('alumnae_page_hero')
+          .select('*')
+          .order('display_order', { ascending: true });
+        if (error) throw error;
+        slidesData = (data || []).map(s => ({
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          image_url: s.image_url || '',
+          mobile_image_url: s.mobile_image_url,
+          ipad_image_url: s.ipad_image_url,
+          video_url: null,
+          display_order: s.display_order,
+          is_active: s.is_active,
+          created_at: s.created_at,
+          updated_at: s.updated_at,
+          duration_ms: s.duration_ms ?? 5000,
           layout: s.layout ?? 'one',
           transition: s.transition ?? 'fade'
         }));
