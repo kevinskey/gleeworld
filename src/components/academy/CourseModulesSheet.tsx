@@ -5,13 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BookOpen, Play, Headphones, BookMarked, MessageSquare, PenLine, 
-  FileText, CheckCircle, ChevronRight, Calendar, LayoutGrid
+  FileText, CheckCircle, LayoutGrid
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ModuleVideosModal } from './ModuleVideosModal';
+import { useCourseModules } from '@/hooks/useCourseModules';
 
 interface CourseModulesSheetProps {
   courseId: string;
@@ -59,57 +60,40 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedModule, setSelectedModule] = useState<WeekModule | null>(null);
 
+  // Use the universal hook for modules data (published only for students)
+  const { 
+    modules: courseModulesData, 
+    isLoading: modulesLoading,
+    refetch: refetchModules
+  } = useCourseModules({ courseId, publishedOnly: true });
+
   useEffect(() => {
     if (open && user) {
-      fetchModules();
+      fetchModuleActivities();
     }
-  }, [open, user, courseId]);
+  }, [open, user, courseId, courseModulesData]);
 
-  const fetchModules = async () => {
-    if (!user) return;
+  const fetchModuleActivities = async () => {
+    if (!user || courseModulesData.length === 0) return;
     
     try {
       setLoading(true);
       
-      // Check if this is MUS-240 - use specialized table
       const isMus240 = courseCode.toUpperCase().includes('MUS') && courseCode.includes('240');
       
-      let modulesData: any[] = [];
-      
+      // Fetch resources for MUS-240
       let resourcesMap: Record<string, ModuleResource[]> = {};
       
       if (isMus240) {
-        // Use mus240_module_settings for MUS-240
-        const { data, error } = await supabase
-          .from('mus240_module_settings')
-          .select('id, module_id, week_number, title, description, is_active, is_locked, is_published, start_date, end_date')
-          .eq('is_published', true) // Only show published modules to students
-          .order('week_number', { ascending: true });
-        
-        if (error) throw error;
-        modulesData = data || [];
-        
-        // Fetch module resources for MUS-240
         const { data: resourcesData } = await supabase
           .from('mus240_module_resources')
           .select('id, module_id, title, resource_type, url, description, duration, is_required, display_order')
           .order('display_order', { ascending: true });
         
-        // Group resources by module_id
         (resourcesData || []).forEach((r: any) => {
           if (!resourcesMap[r.module_id]) resourcesMap[r.module_id] = [];
           resourcesMap[r.module_id].push(r);
         });
-      } else {
-        // Use gw_course_modules for other courses
-        const { data, error } = await supabase
-          .from('gw_course_modules')
-          .select('*')
-          .eq('course_id', courseId)
-          .order('week_number', { ascending: true });
-        
-        if (error) throw error;
-        modulesData = data || [];
       }
 
       // Fetch all assignments for the course
@@ -142,15 +126,10 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
         'Journal': ['journal', 'reflection']
       };
 
-      // Get current date for date-based active detection
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Process modules
-      const processedModules: WeekModule[] = (modulesData || []).map(mod => {
+      // Process modules using data from universal hook (already sorted correctly)
+      const processedModules: WeekModule[] = courseModulesData.map(mod => {
         // Map activities with completion status
         const activities: ModuleActivity[] = standardTypes.map(type => {
-          // Find matching assignment
           const matchingTypes = typeMapping[type] || [];
           const assignment = (assignmentsData || []).find((a: any) => {
             const isDiscussion = a.category === 'discussion' || a.assignment_type === 'discussion';
@@ -170,42 +149,21 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
         // Get resources for this module (MUS-240)
         const moduleResources = resourcesMap[mod.module_id] || [];
 
-        // Calculate is_active: prioritize date-based detection when dates exist
-        let isActive = false;
-        if (mod.start_date && mod.end_date) {
-          const startDate = new Date(mod.start_date);
-          const endDate = new Date(mod.end_date);
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(23, 59, 59, 999);
-          isActive = today >= startDate && today <= endDate;
-        } else {
-          // Fall back to boolean flag only if no dates exist
-          isActive = mod.is_active;
-        }
-
         return {
           id: mod.id,
           module_id: mod.module_id,
-          week_number: mod.week_number || 0,
+          week_number: mod.week_number,
           title: mod.title?.replace(/^Week \d+:\s*/, '') || `Week ${mod.week_number}`,
-          description: mod.description,
-          is_active: isActive,
+          description: mod.description || undefined,
+          is_active: mod.isCurrent || false,
           activities,
           resources: moduleResources
         };
       });
 
-      // Sort with current/active week at top, then remaining weeks in descending order (most recent first)
-      const sortedModules = [...processedModules].sort((a, b) => {
-        if (a.is_active && !b.is_active) return -1;
-        if (!a.is_active && b.is_active) return 1;
-        // Both active or both inactive - sort descending so higher week numbers come first
-        return b.week_number - a.week_number;
-      });
-
-      setModules(sortedModules);
+      setModules(processedModules);
     } catch (error) {
-      console.error('Error fetching modules:', error);
+      console.error('Error fetching module activities:', error);
     } finally {
       setLoading(false);
     }
