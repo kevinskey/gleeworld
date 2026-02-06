@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mus070GradeSpreadsheet } from './Mus070GradeSpreadsheet';
-import { Mus070AttendanceGrid } from '../attendance/Mus070AttendanceGrid';
+import { CourseAttendanceGrid } from '@/components/course/CourseAttendanceGrid';
 import { Mus070StudentRoster } from './Mus070StudentRoster';
 import { PerformanceGradeEntry } from './PerformanceGradeEntry';
 
@@ -21,7 +21,11 @@ export const Mus070GradesAdmin = () => {
           <Mus070GradeSpreadsheet />
         </TabsContent>
         <TabsContent value="attendance" className="mt-4 overflow-visible">
-          <Mus070AttendanceGrid isInstructor={true} />
+          <CourseAttendanceGrid 
+            courseId={MUS_070_COURSE_ID} 
+            courseCode="MUS 070"
+            isInstructor={true} 
+          />
         </TabsContent>
         <TabsContent value="performances" className="mt-4 overflow-visible">
           <PerformanceGradeEntry courseId={MUS_070_COURSE_ID} courseCode="MUS 070" />
