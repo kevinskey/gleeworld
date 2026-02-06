@@ -340,14 +340,13 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
   };
 
-  const getTypeBadgeColor = (type: string | null) => {
+  const getTypeBadgeColor = (type: string | null): "destructive" | "default" | "secondary" | "outline" | "info" => {
     switch (type) {
       case 'exam':
         return 'destructive';
       case 'project':
-        return 'default';
       case 'presentation':
-        return 'secondary';
+        return 'info';
       case 'quiz':
         return 'outline';
       default:
@@ -364,7 +363,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
   return <div className="space-y-3 sm:space-y-4 w-full min-w-0">
       {/* Stats Cards - 2x2 grid */}
       <div className="grid grid-cols-2 gap-1.5 sm:gap-2 md:gap-3">
-        <Card className="bg-card border-border overflow-hidden">
+        <Card className="bg-white border border-border/60 shadow-sm overflow-hidden">
           <CardContent className="p-2 sm:p-3 md:p-4">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
               <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
@@ -378,11 +377,11 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
           </CardContent>
         </Card>
         
-        <Card className="bg-card border-border overflow-hidden">
+        <Card className="bg-white border border-border/60 shadow-sm overflow-hidden">
           <CardContent className="p-2 sm:p-3 md:p-4">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-blue-500/10 flex-shrink-0">
-                <FileCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-blue-500" />
+              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                <FileCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalSubmissions}</p>
@@ -392,10 +391,10 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
           </CardContent>
         </Card>
         
-        <Card className="bg-card border-border overflow-hidden">
+        <Card className="bg-white border border-border/60 shadow-sm overflow-hidden">
           <CardContent className="p-2 sm:p-3 md:p-4">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-amber-500/10 flex-shrink-0">
+              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-amber-50 flex-shrink-0">
                 <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-amber-500" />
               </div>
               <div className="min-w-0 flex-1">
@@ -406,11 +405,11 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
           </CardContent>
         </Card>
         
-        <Card className="bg-card border-border overflow-hidden">
+        <Card className="bg-white border border-border/60 shadow-sm overflow-hidden">
           <CardContent className="p-2 sm:p-3 md:p-4">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-green-500/10 flex-shrink-0">
-                <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-green-500" />
+              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-emerald-50 flex-shrink-0">
+                <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-emerald-500" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalGraded}</p>
@@ -563,7 +562,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       </div>
 
       {/* Sort & Filter Toolbar - Mobile optimized */}
-      <div className="flex flex-col gap-2 p-2 sm:p-3 bg-muted/30 rounded-lg border">
+      <div className="flex flex-col gap-2 p-2 sm:p-3 bg-white rounded-lg border border-border/60 shadow-sm">
         {/* Search - full width */}
         <div className="relative w-full">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
@@ -618,10 +617,10 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
           {filteredAndSortedAssignments.map(assignment => (
             <div 
               key={assignment.id} 
-              className={`flex items-start sm:items-center justify-between p-2 sm:p-3 md:p-4 rounded-lg border transition-colors gap-2 ${
+              className={`flex items-start sm:items-center justify-between p-2 sm:p-3 md:p-4 rounded-lg border transition-all gap-2 ${
                 assignment.is_published 
-                  ? 'bg-card hover:bg-muted/50' 
-                  : 'bg-muted/30 border-dashed opacity-75'
+                  ? 'bg-white border-border/60 shadow-sm hover:shadow-md' 
+                  : 'bg-gray-50 border-dashed border-border/40 opacity-75'
               }`}
             >
               <div className="flex flex-col gap-0.5 sm:gap-1 flex-1 min-w-0">

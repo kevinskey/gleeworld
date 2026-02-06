@@ -200,10 +200,10 @@ export const CourseAnnouncementsManager: React.FC<CourseAnnouncementsManagerProp
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Create/Edit Announcement */}
-      <Card>
+      <Card className="bg-white border border-border/60 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {editingId ? <Edit2 className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            {editingId ? <Edit2 className="h-5 w-5 text-primary" /> : <Plus className="h-5 w-5 text-primary" />}
             {editingId ? 'Edit Announcement' : 'New Announcement'}
           </CardTitle>
         </CardHeader>
@@ -265,10 +265,10 @@ export const CourseAnnouncementsManager: React.FC<CourseAnnouncementsManagerProp
       </Card>
 
       {/* Announcements List */}
-      <Card>
+      <Card className="bg-white border border-border/60 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Megaphone className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <Megaphone className="h-5 w-5 text-primary" />
             Posted Announcements ({announcements.length})
           </CardTitle>
         </CardHeader>
@@ -283,7 +283,7 @@ export const CourseAnnouncementsManager: React.FC<CourseAnnouncementsManagerProp
             ) : (
               <div className="space-y-4">
                 {announcements.map((announcement) => (
-                  <div key={announcement.id} className="border rounded-lg p-4 bg-card">
+                  <div key={announcement.id} className="border border-border/60 rounded-lg p-4 bg-white shadow-sm">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
