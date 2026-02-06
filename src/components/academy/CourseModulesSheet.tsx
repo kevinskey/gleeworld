@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { ModuleVideosModal } from './ModuleVideosModal';
 import { useCourseModules } from '@/hooks/useCourseModules';
 import { useUserRole } from '@/hooks/useUserRole';
-
+import { useCourseVisibilitySettings } from '@/hooks/useCourseVisibilitySettings';
 interface CourseModulesSheetProps {
   courseId: string;
   courseCode: string;
@@ -64,6 +64,9 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
 
   // Staff members (admin, super admin, instructor) see all modules; students see published only
   const hasStaffAccess = isAdmin() || isSuperAdmin() || isInstructor();
+  
+  // Course visibility settings - controls which activity types students can see
+  const { settings: visibilitySettings } = useCourseVisibilitySettings(courseId);
   
   // Use the universal hook for modules data
   const { 
@@ -119,9 +122,6 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
           .map((s: any) => s.assignment_id)
       );
 
-      // Standard activity types
-      const standardTypes: ModuleActivity['type'][] = ['Video', 'Reading', 'Listening', 'Discussion', 'Journal'];
-      
       // Type mapping for assignments
       const typeMapping: Record<string, string[]> = {
         'Video': ['video', 'video_response'],
@@ -131,28 +131,72 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
         'Journal': ['journal', 'reflection']
       };
 
+      // Visibility filter: map activity types to visibility settings
+      const visibilityFilter: Record<string, boolean> = {
+        'Discussion': hasStaffAccess || visibilitySettings.show_discussions,
+        'Journal': hasStaffAccess || visibilitySettings.show_journals,
+        'Video': true,
+        'Reading': true,
+        'Listening': true,
+      };
+
       // Process modules using data from universal hook (already sorted correctly)
       const processedModules: WeekModule[] = courseModulesData.map(mod => {
-        // Map activities with completion status
-        const activities: ModuleActivity[] = standardTypes.map(type => {
-          const matchingTypes = typeMapping[type] || [];
-          const assignment = (assignmentsData || []).find((a: any) => {
-            const isDiscussion = a.category === 'discussion' || a.assignment_type === 'discussion';
-            if (isDiscussion && type === 'Discussion') return true;
-            const lowerTitle = (a.title || '').toLowerCase();
-            const lowerType = (a.assignment_type || '').toLowerCase();
-            return matchingTypes.some(t => lowerTitle.includes(t) || lowerType.includes(t));
-          });
-
-          return {
-            type,
-            isCompleted: assignment ? submittedAssignments.has(assignment.id) : false,
-            assignmentId: assignment?.id
-          };
-        });
-
-        // Get resources for this module (MUS-240)
+        const activities: ModuleActivity[] = [];
+        
+        // Get resources for this module (MUS-240 uses module_id like 'week-1')
         const moduleResources = resourcesMap[mod.module_id] || [];
+        
+        // Only add Video activity if this module actually has video resources
+        const hasVideos = moduleResources.some(r => r.resource_type === 'video');
+        if (hasVideos && visibilityFilter['Video']) {
+          activities.push({ type: 'Video', isCompleted: false });
+        }
+        
+        // Only add Reading if this module has reading resources
+        const hasReadings = moduleResources.some(r => r.resource_type === 'reading');
+        if (hasReadings && visibilityFilter['Reading']) {
+          activities.push({ type: 'Reading', isCompleted: false });
+        }
+        
+        // Only add Listening if this module has listening/audio resources
+        const hasListening = moduleResources.some(r => r.resource_type === 'listening' || r.resource_type === 'audio');
+        if (hasListening && visibilityFilter['Listening']) {
+          activities.push({ type: 'Listening', isCompleted: false });
+        }
+        
+        // Only add Discussion if there's a matching assignment AND visibility allows it
+        if (visibilityFilter['Discussion']) {
+          const discussionAssignment = (assignmentsData || []).find((a: any) => {
+            const isDiscussion = a.category === 'discussion' || a.assignment_type === 'discussion';
+            const weekMatch = (a.title || '').toLowerCase().includes(`week ${mod.week_number}`) 
+              || (a.title || '').toLowerCase().includes(`w${mod.week_number}`);
+            return isDiscussion && weekMatch;
+          });
+          if (discussionAssignment) {
+            activities.push({ 
+              type: 'Discussion', 
+              isCompleted: submittedAssignments.has(discussionAssignment.id),
+              assignmentId: discussionAssignment.id
+            });
+          }
+        }
+        
+        // Only add Journal if there's a matching assignment AND visibility allows it
+        if (visibilityFilter['Journal']) {
+          const journalAssignment = (assignmentsData || []).find((a: any) => {
+            const isJournal = a.category === 'journal' || a.assignment_type === 'journal' || a.assignment_type === 'reflection';
+            const weekMatch = (a.title || '').toLowerCase().includes(`week ${mod.week_number}`);
+            return isJournal && weekMatch;
+          });
+          if (journalAssignment) {
+            activities.push({ 
+              type: 'Journal', 
+              isCompleted: submittedAssignments.has(journalAssignment.id),
+              assignmentId: journalAssignment.id
+            });
+          }
+        }
 
         return {
           id: mod.id,
@@ -296,36 +340,42 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
                     </div>
                   </div>
 
-                  {/* Activity Items */}
-                  <div className="space-y-2">
-                    {module.activities.map((activity) => (
-                      <div
-                        key={activity.type}
-                        onClick={() => handleActivityClick(activity, module)}
-                        className={cn(
-                          "flex items-center gap-3 p-2.5 rounded-md cursor-pointer transition-colors",
-                          activity.isCompleted 
-                            ? "bg-green-50 border border-green-200 dark:bg-green-950/30 dark:border-green-800" 
-                            : "bg-muted/30 hover:bg-muted/50 border border-transparent"
-                        )}
-                      >
-                        <div className={cn(
-                          "h-7 w-7 rounded-md flex items-center justify-center",
-                          activity.isCompleted 
-                            ? "bg-green-100 text-green-600" 
-                            : "bg-primary/10 text-primary"
-                        )}>
-                          {getActivityIcon(activity.type)}
+                  {/* Activity Items - only shown when real data exists */}
+                  {module.activities.length > 0 ? (
+                    <div className="space-y-2">
+                      {module.activities.map((activity) => (
+                        <div
+                          key={activity.type}
+                          onClick={() => handleActivityClick(activity, module)}
+                          className={cn(
+                            "flex items-center gap-3 p-2.5 rounded-md cursor-pointer transition-colors",
+                            activity.isCompleted 
+                              ? "bg-green-50 border border-green-200 dark:bg-green-950/30 dark:border-green-800" 
+                              : "bg-muted/30 hover:bg-muted/50 border border-transparent"
+                          )}
+                        >
+                          <div className={cn(
+                            "h-7 w-7 rounded-md flex items-center justify-center",
+                            activity.isCompleted 
+                              ? "bg-green-100 text-green-600" 
+                              : "bg-primary/10 text-primary"
+                          )}>
+                            {getActivityIcon(activity.type)}
+                          </div>
+                          <span className="flex-1 font-medium text-sm">{activity.type}</span>
+                          {activity.isCompleted ? (
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Start</span>
+                          )}
                         </div>
-                        <span className="flex-1 font-medium text-sm">{activity.type}</span>
-                        {activity.isCompleted ? (
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Start</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic py-1">
+                      No activities assigned yet
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
