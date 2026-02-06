@@ -23,14 +23,19 @@ export const CourseTestsSection: React.FC<CourseTestsSectionProps> = ({
   // Use legacy ID if provided, otherwise use courseId
   const dbCourseId = legacyCourseId || courseId;
 
-  // Fetch published tests for this course
+  // Fetch published tests for this course (match both UUID and legacy slug)
   const { data: tests = [], isLoading: testsLoading } = useQuery({
-    queryKey: ['course-tests', dbCourseId],
+    queryKey: ['course-tests', courseId, dbCourseId],
     queryFn: async () => {
+      const orParts = [`course_id.eq.${dbCourseId}`];
+      if (courseId !== dbCourseId) {
+        orParts.push(`course_id.eq.${courseId}`);
+      }
+
       const { data, error } = await supabase
         .from('glee_academy_tests')
         .select('*')
-        .eq('course_id', dbCourseId)
+        .or(orParts.join(','))
         .eq('is_published', true)
         .order('created_at', { ascending: false });
       
