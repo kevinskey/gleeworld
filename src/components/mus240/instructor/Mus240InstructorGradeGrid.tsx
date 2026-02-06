@@ -346,31 +346,33 @@ export const Mus240InstructorGradeGrid: React.FC = () => {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          MUS-240 Grade Spreadsheet
-          <Badge variant="outline">{processedData.students.length} Students</Badge>
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Users className="h-5 w-5 flex-shrink-0" />
+          <span className="truncate">MUS-240 Grade Spreadsheet</span>
+          <Badge variant="outline" className="flex-shrink-0">{processedData.students.length} Students</Badge>
         </CardTitle>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={fetchData}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+          <Button variant="outline" size="sm" onClick={fetchData} className="h-8 sm:h-9">
+            <RefreshCw className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={exportToCSV}>
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
+          <Button variant="outline" size="sm" onClick={exportToCSV} className="h-8 sm:h-9">
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export CSV</span>
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-3 sm:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 w-full max-w-lg mb-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="essays">Essays</TabsTrigger>
-            <TabsTrigger value="participation">Participation</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-1 px-1 mb-4">
+            <TabsList className="w-full sm:w-auto sm:max-w-lg grid grid-cols-4">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3">Overview</TabsTrigger>
+              <TabsTrigger value="attendance" className="text-xs sm:text-sm px-2 sm:px-3">Attendance</TabsTrigger>
+              <TabsTrigger value="essays" className="text-xs sm:text-sm px-2 sm:px-3">Essays</TabsTrigger>
+              <TabsTrigger value="participation" className="text-xs sm:text-sm px-2 sm:px-3">Participation</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Overview Tab */}
           <TabsContent value="overview">
