@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface EnrolledStudent {
   user_id: string; // Can be actual user_id or student_profile_id for CSV imports
+  profile_id: string; // gw_profiles.id — used as student_profile_id in attendance records
   full_name: string;
   email: string | null;
   voice_part?: string | null;
@@ -83,7 +84,7 @@ export const useCourseStudents = ({
       if (userIds.length > 0) {
         const { data: profiles, error: profileError } = await supabase
           .from('gw_profiles')
-          .select('user_id, full_name, email, voice_part')
+          .select('id, user_id, full_name, email, voice_part')
           .in('user_id', userIds);
 
         if (profileError) {
@@ -102,6 +103,7 @@ export const useCourseStudents = ({
         (profiles || []).forEach(p => {
           allStudents.push({
             user_id: p.user_id,
+            profile_id: p.id, // gw_profiles.id — needed for attendance records
             full_name: p.full_name || 'Unknown',
             email: p.email,
             voice_part: p.voice_part,
@@ -134,6 +136,7 @@ export const useCourseStudents = ({
         (studentProfiles || []).forEach(sp => {
           allStudents.push({
             user_id: sp.id, // Use student_profile_id as the identifier
+            profile_id: sp.id, // For CSV imports, profile_id IS the student_profile_id
             full_name: sp.full_name || 'Unknown',
             email: sp.email,
             voice_part: null,

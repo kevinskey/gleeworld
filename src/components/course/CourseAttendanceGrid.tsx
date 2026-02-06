@@ -27,7 +27,8 @@ const ET_TIMEZONE = 'America/New_York';
 const toET = (dateStr: string) => toZonedTime(parseISO(dateStr), ET_TIMEZONE);
 
 interface StudentAttendance {
-  student_id: string;
+  student_id: string; // user_id for filtering/display
+  profile_id: string; // gw_profiles.id — used as student_profile_id in attendance records
   student_name: string;
   records: Map<string, 'present' | 'absent' | 'excused' | 'late' | null>;
   totals: {
@@ -81,7 +82,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
   const targetStudentId = studentId || user?.id;
 
   // Use unified hook for enrollment data
-  const { students: enrolledStudents, studentIds: enrolledStudentIds, loading: enrollmentLoading } = useCourseStudents({
+  const { students: enrolledStudents, loading: enrollmentLoading } = useCourseStudents({
     courseId,
     semester,
   });
@@ -91,8 +92,14 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
     return differenceInWeeks(date, SEMESTER_START) + 1;
   };
 
-  // Stabilize references for useCallback dependencies
-  const enrolledStudentIdsKey = enrolledStudentIds.join(',');
+  // Build profile_id list (gw_profiles.id) — this is what attendance records use
+  const enrolledProfileIds = useMemo(() => enrolledStudents.map(s => s.profile_id), [enrolledStudents]);
+  const enrolledProfileIdsKey = enrolledProfileIds.join(',');
+
+  // Map: profile_id → user_id (for filtering to current student)
+  const profileToUserMap = useMemo(() => new Map(enrolledStudents.map(s => [s.profile_id, s.user_id])), [enrolledStudents]);
+  // Map: user_id → profile_id (for finding the current student's profile_id)  
+  const userToProfileMap = useMemo(() => new Map(enrolledStudents.map(s => [s.user_id, s.profile_id])), [enrolledStudents]);
 
   const fetchData = useCallback(async () => {
     if (!courseId || enrollmentLoading) return;
@@ -116,21 +123,29 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
       }));
       setSessions(sessionList);
 
-      // Get student IDs (filter to single student if not instructor)
-      const studentIdsList = enrolledStudentIdsKey.split(',').filter(Boolean);
-      let filteredStudentIds = studentIdsList;
+      // Use profile_ids (gw_profiles.id) — the attendance records key
+      const profileIdsList = enrolledProfileIdsKey.split(',').filter(Boolean);
+      let filteredProfileIds = profileIdsList;
+      
+      // If student view, filter to just the current student's profile_id
       if (!isInstructor && targetStudentId) {
-        filteredStudentIds = studentIdsList.filter(id => id === targetStudentId);
+        const myProfileId = userToProfileMap.get(targetStudentId);
+        if (myProfileId) {
+          filteredProfileIds = [myProfileId];
+        } else {
+          // Fallback: maybe targetStudentId IS the profile_id
+          filteredProfileIds = profileIdsList.filter(id => id === targetStudentId);
+        }
       }
 
-      if (filteredStudentIds.length === 0) {
+      if (filteredProfileIds.length === 0) {
         setStudents([]);
         setLoading(false);
         return;
       }
 
-      // Create profile map from enrolled students
-      const profileMap = new Map(enrolledStudents.map(s => [s.user_id, s.full_name]));
+      // Create profile map from enrolled students (profile_id → full_name)
+      const profileMap = new Map(enrolledStudents.map(s => [s.profile_id, s.full_name]));
 
       // Fetch attendance records if sessions exist
       let gwAttendanceData: any[] = [];
@@ -140,16 +155,16 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
           .from('gw_attendance_records')
           .select('student_profile_id, attendance_session_id, status')
           .in('attendance_session_id', sessionIds)
-          .in('student_profile_id', filteredStudentIds);
+          .in('student_profile_id', filteredProfileIds);
         gwAttendanceData = gwRecords || [];
       }
 
-      // Build student attendance data
-      const studentAttendance: StudentAttendance[] = filteredStudentIds.map(sid => {
+      // Build student attendance data using profile_id as the key
+      const studentAttendance: StudentAttendance[] = filteredProfileIds.map(profileId => {
         const records = new Map<string, 'present' | 'absent' | 'excused' | 'late' | null>();
         
         gwAttendanceData.forEach(r => {
-          if (r.student_profile_id === sid) {
+          if (r.student_profile_id === profileId) {
             records.set(r.attendance_session_id, r.status);
           }
         });
@@ -167,8 +182,9 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
         const rate = totalMarked > 0 ? Math.round(((present + excused) / totalMarked) * 100) : 100;
 
         return {
-          student_id: sid,
-          student_name: profileMap.get(sid) || 'Unknown',
+          student_id: profileId, // Use profile_id as student_id throughout the grid
+          profile_id: profileId,
+          student_name: profileMap.get(profileId) || 'Unknown',
           records,
           totals: { present, absent, excused, late, rate }
         };
@@ -188,22 +204,22 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [courseId, enrolledStudentIdsKey, enrolledStudents, enrollmentLoading, isInstructor, targetStudentId]);
+  }, [courseId, enrolledProfileIdsKey, enrolledStudents, enrollmentLoading, isInstructor, targetStudentId, userToProfileMap]);
 
   useEffect(() => {
     // For instructors: wait for enrollment data to load before fetching attendance
     // For students: can fetch immediately (will filter to just their data)
     if (!enrollmentLoading) {
-      if (isInstructor && enrolledStudentIds.length > 0) {
+      if (isInstructor && enrolledProfileIds.length > 0) {
         fetchData();
       } else if (!isInstructor) {
         fetchData();
-      } else if (isInstructor && enrolledStudentIds.length === 0) {
+      } else if (isInstructor && enrolledProfileIds.length === 0) {
         // No students enrolled - still show the grid but empty
         setLoading(false);
       }
     }
-  }, [fetchData, enrollmentLoading, enrolledStudentIds.length, isInstructor]);
+  }, [fetchData, enrollmentLoading, enrolledProfileIds.length, isInstructor]);
 
   const handleStatusChange = (studentId: string, sessionId: string, newStatus: string | null) => {
     if (!isInstructor) return;
