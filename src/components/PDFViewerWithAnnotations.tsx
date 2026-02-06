@@ -134,6 +134,10 @@ const scrollModePluginInstance = scrollModePlugin();
   const [zoomLevel, setZoomLevel] = useState(1); // Zoom level for annotation mode
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
   const [useGoogle, setUseGoogle] = useState(false);
+
+  // Page cache for instant page turns during performance
+  const pageCacheRef = useRef<Map<string, HTMLCanvasElement>>(new Map());
+  const preloadingRef = useRef<Set<string>>(new Set());
   const [googleProvider, setGoogleProvider] = useState<'gview' | 'viewerng'>('gview');
 const timerRef = useRef<number | null>(null);
 const [engine, setEngine] = useState<'google' | 'react'>('google');
@@ -718,29 +722,106 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     };
   }, [signedUrl]);
 
-  // Render PDF page when pdf, currentPage, or scale changes
+  // Helper: render a single page to an offscreen canvas (for caching)
+  const renderPageToOffscreen = useCallback(async (pageNum: number, renderScale: number): Promise<HTMLCanvasElement | null> => {
+    if (!pdf || pageNum < 1 || pageNum > pdf.numPages) return null;
+    const cacheKey = `${pageNum}-${renderScale}`;
+    if (pageCacheRef.current.has(cacheKey)) return pageCacheRef.current.get(cacheKey)!;
+    if (preloadingRef.current.has(cacheKey)) return null; // already loading
+    preloadingRef.current.add(cacheKey);
+    try {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: renderScale });
+      const offscreen = document.createElement('canvas');
+      offscreen.width = viewport.width;
+      offscreen.height = viewport.height;
+      const ctx = offscreen.getContext('2d', { alpha: false, desynchronized: true });
+      if (!ctx) return null;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      pageCacheRef.current.set(cacheKey, offscreen);
+      // Evict old entries if cache too large
+      if (pageCacheRef.current.size > 40) {
+        const keys = Array.from(pageCacheRef.current.keys());
+        for (let i = 0; i < keys.length - 30; i++) pageCacheRef.current.delete(keys[i]);
+      }
+      return offscreen;
+    } catch (err) {
+      console.error(`Error pre-rendering page ${pageNum}:`, err);
+      return null;
+    } finally {
+      preloadingRef.current.delete(cacheKey);
+    }
+  }, [pdf]);
+
+  // Clear cache when pdf or scale changes
+  useEffect(() => {
+    pageCacheRef.current.clear();
+    preloadingRef.current.clear();
+  }, [pdf, scale]);
+
+  // Aggressively pre-render ALL pages after PDF loads for instant turns
+  useEffect(() => {
+    if (!pdf) return;
+    let cancelled = false;
+    const preloadAll = async () => {
+      const total = pdf.numPages;
+      // Batch 3 pages at a time to avoid overwhelming the renderer
+      for (let batch = 0; batch < Math.ceil(total / 3); batch++) {
+        if (cancelled) return;
+        const promises: Promise<any>[] = [];
+        for (let j = 0; j < 3; j++) {
+          const p = batch * 3 + j + 1;
+          if (p <= total) promises.push(renderPageToOffscreen(p, scale));
+        }
+        await Promise.allSettled(promises);
+      }
+    };
+    // Small delay so the current page renders first
+    const timer = setTimeout(preloadAll, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [pdf, scale, renderPageToOffscreen]);
+
+  // Render PDF page with caching — instant if pre-cached
   useEffect(() => {
     if (!pdf || !canvasRef.current) return;
 
     let cancelled = false;
 
     const renderPage = async () => {
-      try {
-        const page = await pdf.getPage(currentPage);
+      const cacheKey = `${currentPage}-${scale}`;
+      const cached = pageCacheRef.current.get(cacheKey);
+
+      if (cached) {
+        // Instant page turn from cache
         const canvas = canvasRef.current;
         if (!canvas || cancelled) return;
-        
         const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
         if (!ctx) return;
+        canvas.width = cached.width;
+        canvas.height = cached.height;
+        ctx.drawImage(cached, 0, 0);
+      } else {
+        // Cache miss — render directly then cache
+        const offscreen = await renderPageToOffscreen(currentPage, scale);
+        if (cancelled || !offscreen || !canvasRef.current) return;
+        const ctx = canvasRef.current.getContext('2d', { alpha: false, desynchronized: true });
+        if (!ctx) return;
+        canvasRef.current.width = offscreen.width;
+        canvasRef.current.height = offscreen.height;
+        ctx.drawImage(offscreen, 0, 0);
+      }
 
-        // Use the current scale state for rendering
-        const viewport = page.getViewport({ scale });
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        await page.render({ canvasContext: ctx, viewport }).promise;
-      } catch (err) {
-        console.error('Error rendering page:', err);
+      // Pre-load adjacent pages in the background for instant future turns
+      if (!cancelled) {
+        const PRELOAD = 5;
+        for (let i = 1; i <= PRELOAD; i++) {
+          if (currentPage + i <= (totalPages || pdf.numPages)) {
+            renderPageToOffscreen(currentPage + i, scale);
+          }
+          if (currentPage - i >= 1) {
+            renderPageToOffscreen(currentPage - i, scale);
+          }
+        }
       }
     };
 
@@ -749,7 +830,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     return () => {
       cancelled = true;
     };
-  }, [pdf, currentPage, scale, annotationMode]);
+  }, [pdf, currentPage, scale, annotationMode, renderPageToOffscreen, totalPages]);
 
   // Show loading while getting signed URL
   if (!pdfUrl) {
