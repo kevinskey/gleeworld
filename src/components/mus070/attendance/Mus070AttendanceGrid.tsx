@@ -50,11 +50,11 @@ interface Mus070AttendanceGridProps {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'present', label: 'P', icon: Check, color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' },
-  { value: 'absent', label: 'A', icon: X, color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' },
-  { value: 'excused', label: 'E', icon: AlertCircle, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
-  { value: 'late', label: 'L', icon: Clock, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
-  { value: null, label: '-', icon: Minus, color: 'bg-muted text-muted-foreground' },
+  { value: 'present', label: 'P', icon: Check, color: 'bg-green-200 text-green-900 border border-green-400 dark:bg-green-900/50 dark:text-green-200 dark:border-green-600' },
+  { value: 'absent', label: 'A', icon: X, color: 'bg-red-200 text-red-900 border border-red-400 dark:bg-red-900/50 dark:text-red-200 dark:border-red-600' },
+  { value: 'excused', label: 'E', icon: AlertCircle, color: 'bg-blue-200 text-blue-900 border border-blue-400 dark:bg-blue-900/50 dark:text-blue-200 dark:border-blue-600' },
+  { value: 'late', label: 'L', icon: Clock, color: 'bg-amber-200 text-amber-900 border border-amber-400 dark:bg-amber-900/50 dark:text-amber-200 dark:border-amber-600' },
+  { value: null, label: '-', icon: Minus, color: 'bg-slate-100 text-slate-500 border border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600' },
 ] as const;
 
 export const Mus070AttendanceGrid: React.FC<Mus070AttendanceGridProps> = ({ 
