@@ -146,20 +146,159 @@ export const SheetMusicViewDialog = ({
     }
   };
 
+  // Shared PDF content renderer
+  const renderPdfContent = () => (
+    <div className="flex gap-0 h-full overflow-hidden">
+      <div className="w-full overflow-y-auto">
+        <div className="grid grid-cols-1 h-full">
+          <div className="col-span-1 h-full">
+            {item.pdf_url ? (
+              <PDFViewerWithAnnotations 
+                pdfUrl={item.pdf_url} 
+                musicId={item.id}
+                musicTitle={item.title}
+                startInAnnotationMode
+                isInMobileViewer={isPhone}
+                className="w-full h-full rounded-none border-0"
+                toolbarActions={isPhone ? (
+                  <>
+                    {canCropPDF && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setShowCropEditor(true)}
+                        className="h-7 w-7 p-0 touch-manipulation rounded-full"
+                        aria-label="Crop PDF"
+                      >
+                        <Scissors className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onOpenChange(false)}
+                      className="h-7 w-7 p-0 touch-manipulation rounded-full"
+                      aria-label="Close"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
+                ) : undefined}
+              />
+            ) : (
+              <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center">
+                  <FileText className="h-24 w-24 text-muted-foreground" />
+                  <p className="text-muted-foreground mt-2">No PDF available</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right: Tab content panel */}
+          <div className="hidden">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <TabsList className="grid w-full grid-cols-5 h-10 md:h-12 border-b">
+                <TabsTrigger value="overview" className="text-xs md:text-sm py-2 px-1">Overview</TabsTrigger>
+                <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-1">Notes</TabsTrigger>
+                <TabsTrigger value="marked" className="text-xs md:text-sm py-2 px-1">Marked</TabsTrigger>
+                <TabsTrigger value="practice" className="text-xs md:text-sm py-2 px-1">Practice</TabsTrigger>
+                <TabsTrigger value="smart" className="text-xs md:text-sm py-2 px-1">Smart Tools</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <div className="mt-2 space-y-4">
+              {activeTab === 'overview' && (
+                <SheetMusicHistory musicId={item.id} />
+              )}
+
+              {activeTab === 'notes' && (
+                <div className="space-y-2">
+                  <Tabs defaultValue="shared" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="shared">Shared</TabsTrigger>
+                      <TabsTrigger value="personal">Personal</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="shared">
+                      <SheetMusicNotes musicId={item.id} />
+                    </TabsContent>
+                    <TabsContent value="personal">
+                      <PersonalNotes musicId={item.id} />
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              )}
+
+              {activeTab === 'marked' && (
+                <MarkedScores 
+                  musicId={item.id} 
+                  musicTitle={item.title}
+                  originalPdfUrl={item.pdf_url}
+                  voiceParts={item.voice_parts || []} 
+                />
+              )}
+
+              {activeTab === 'practice' && (
+                <PracticeLinks musicId={item.id} voiceParts={item.voice_parts || []} />
+              )}
+
+              {activeTab === 'smart' && (
+                <SmartToolsSidebar sheetMusic={item} />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const cropEditorDialog = showCropEditor && item.pdf_url && (
+    <Dialog open={showCropEditor} onOpenChange={setShowCropEditor}>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Crop & Straighten PDF</DialogTitle>
+        </DialogHeader>
+        <PDFCropEditor
+          pdfUrl={item.pdf_url}
+          title={item.title}
+          onSave={handleSaveCroppedPDF}
+          onClose={() => setShowCropEditor(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Phone: bypass Radix Dialog entirely — render a simple fixed fullscreen overlay
+  if (isPhone) {
+    if (!open) return null;
+    return (
+      <>
+        <div 
+          className="fixed inset-0 z-[100000] bg-background flex flex-col"
+          style={{ height: '100dvh' }}
+        >
+          {renderPdfContent()}
+        </div>
+        {cropEditorDialog}
+      </>
+    );
+  }
+
+  // Tablet / Desktop: use Radix Dialog as before
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className={`!fixed !inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !p-0 !w-screen !h-screen !max-w-none !max-h-none overflow-hidden !rounded-none !border-0 ${isPhone ? '!z-[100000]' : '!z-[9990]'}`}
+        className="!fixed !inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !p-0 !w-screen !h-screen !max-w-none !max-h-none overflow-hidden !rounded-none !border-0 !z-[9990]" 
         style={{ 
-          top: isPhone ? '0px' : 'calc(var(--gw-header-h, 0px) + var(--gw-radio-bar-height, 0px))', 
-          height: isPhone ? '100dvh' : 'calc(100vh - var(--gw-header-h, 0px) - var(--gw-radio-bar-height, 0px))',
-          paddingBottom: isPhone ? '0px' : 'env(safe-area-inset-bottom)'
+          top: 'calc(var(--gw-header-h, 0px) + var(--gw-radio-bar-height, 0px))', 
+          height: 'calc(100vh - var(--gw-header-h, 0px) - var(--gw-radio-bar-height, 0px))',
+          paddingBottom: 'env(safe-area-inset-bottom)'
         }}
       >
         <DialogHeader className="hidden" />
-        {/* Crop & Close buttons - hidden on phones, visible on tablet/desktop */}
+        {/* Crop & Close buttons */}
         <div 
-          className={`absolute right-3 z-50 gap-2 ${isPhone ? 'hidden' : 'flex'}`}
+          className="absolute right-3 z-50 flex gap-2"
           style={{ top: 'calc(env(safe-area-inset-top) + 0.75rem)' }}
         >
           {item.pdf_url && canCropPDF && (
@@ -181,128 +320,8 @@ export const SheetMusicViewDialog = ({
           </Button>
         </div>
 
-        <div className="flex gap-0 h-full overflow-hidden">
-          <div className="w-full overflow-y-auto">
-            <div className="grid grid-cols-1 h-full">
-              {/* Left: PDF stays fixed */}
-              <div className="col-span-1 h-full">
-                {item.pdf_url ? (
-                  <PDFViewerWithAnnotations 
-                    pdfUrl={item.pdf_url} 
-                    musicId={item.id}
-                    musicTitle={item.title}
-                    startInAnnotationMode
-                    isInMobileViewer={isPhone}
-                    className="w-full h-full rounded-none border-0"
-                    toolbarActions={isPhone ? (
-                      <>
-                        {canCropPDF && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setShowCropEditor(true)}
-                            className="h-7 w-7 p-0 touch-manipulation rounded-full"
-                            aria-label="Crop PDF"
-                          >
-                            <Scissors className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => onOpenChange(false)}
-                          className="h-7 w-7 p-0 touch-manipulation rounded-full"
-                          aria-label="Close"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </>
-                    ) : undefined}
-                  />
-                ) : (
-                  <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
-                    <div className="w-full h-full flex items-center justify-center">
-                      <FileText className="h-24 w-24 text-muted-foreground" />
-                      <p className="text-muted-foreground mt-2">No PDF available</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right: Tab content panel */}
-              <div className="hidden">
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                  <TabsList className="grid w-full grid-cols-5 h-10 md:h-12 border-b">
-                    <TabsTrigger value="overview" className="text-xs md:text-sm py-2 px-1">Overview</TabsTrigger>
-                    <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-1">Notes</TabsTrigger>
-                    <TabsTrigger value="marked" className="text-xs md:text-sm py-2 px-1">Marked</TabsTrigger>
-                    <TabsTrigger value="practice" className="text-xs md:text-sm py-2 px-1">Practice</TabsTrigger>
-                    <TabsTrigger value="smart" className="text-xs md:text-sm py-2 px-1">Smart Tools</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-
-                <div className="mt-2 space-y-4">
-                  {activeTab === 'overview' && (
-                    <SheetMusicHistory musicId={item.id} />
-                  )}
-
-
-                  {activeTab === 'notes' && (
-                    <div className="space-y-2">
-                      <Tabs defaultValue="shared" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="shared">Shared</TabsTrigger>
-                          <TabsTrigger value="personal">Personal</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="shared">
-                          <SheetMusicNotes musicId={item.id} />
-                        </TabsContent>
-                        <TabsContent value="personal">
-                          <PersonalNotes musicId={item.id} />
-                        </TabsContent>
-                      </Tabs>
-                    </div>
-                  )}
-
-                  {activeTab === 'marked' && (
-                    <MarkedScores 
-                      musicId={item.id} 
-                      musicTitle={item.title}
-                      originalPdfUrl={item.pdf_url}
-                      voiceParts={item.voice_parts || []} 
-                    />
-                  )}
-
-                  {activeTab === 'practice' && (
-                    <PracticeLinks musicId={item.id} voiceParts={item.voice_parts || []} />
-                  )}
-
-                  {activeTab === 'smart' && (
-                    <SmartToolsSidebar sheetMusic={item} />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Crop Editor Dialog */}
-        {showCropEditor && item.pdf_url && (
-          <Dialog open={showCropEditor} onOpenChange={setShowCropEditor}>
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Crop & Straighten PDF</DialogTitle>
-              </DialogHeader>
-              <PDFCropEditor
-                pdfUrl={item.pdf_url}
-                title={item.title}
-                onSave={handleSaveCroppedPDF}
-                onClose={() => setShowCropEditor(false)}
-              />
-            </DialogContent>
-          </Dialog>
-        )}
+        {renderPdfContent()}
+        {cropEditorDialog}
       </DialogContent>
     </Dialog>
   );
