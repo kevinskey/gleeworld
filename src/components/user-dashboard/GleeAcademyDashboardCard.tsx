@@ -10,6 +10,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import officeHoursBadge from '@/assets/office-hours-badge.png';
 
 interface CourseBadge {
   id: string;
@@ -117,27 +118,34 @@ export const GleeAcademyDashboardCard = () => {
             ))}
           </div>
         ) : badges.length > 0 ? (
-          badges.map(badge => (
-            <div 
-              key={badge.id} 
-              onClick={() => badge.link_url ? navigate(badge.link_url) : null}
-              className="flex-shrink-0 snap-center cursor-pointer transition-all duration-300 hover:scale-105"
-            >
-              {badge.badge_image_url ? (
-                <img 
-                  src={badge.badge_image_url} 
-                  alt={`${badge.course_code} - ${badge.course_title}`}
-                  className="h-28 sm:h-44 md:h-52 w-auto object-contain drop-shadow-2xl hover:brightness-110"
-                />
-              ) : (
-                <div className="h-28 sm:h-44 md:h-52 w-36 sm:w-48 md:w-56 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
-                  <span className="text-white font-bold text-lg sm:text-xl">{badge.course_code}</span>
-                  <span className="text-white/80 text-xs sm:text-sm text-center mt-2 line-clamp-2">{badge.course_title}</span>
-                  <span className="text-amber-400 text-xs mt-3 font-medium">Enter Course →</span>
-                </div>
-              )}
-            </div>
-          ))
+          badges.map(badge => {
+            // Resolve image URL - use local import for office hours badge
+            const imgSrc = badge.badge_image_url?.includes('office-hours-badge') 
+              ? officeHoursBadge 
+              : badge.badge_image_url;
+            
+            return (
+              <div 
+                key={badge.id} 
+                onClick={() => badge.link_url ? navigate(badge.link_url) : null}
+                className="flex-shrink-0 snap-center cursor-pointer transition-all duration-300 hover:scale-105"
+              >
+                {imgSrc ? (
+                  <img 
+                    src={imgSrc} 
+                    alt={`${badge.course_code} - ${badge.course_title}`}
+                    className="h-36 sm:h-52 md:h-60 w-auto object-contain drop-shadow-2xl hover:brightness-110 rounded-2xl"
+                  />
+                ) : (
+                  <div className="h-36 sm:h-52 md:h-60 w-36 sm:w-52 md:w-60 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
+                    <span className="text-white font-bold text-lg sm:text-xl">{badge.course_code}</span>
+                    <span className="text-white/80 text-xs sm:text-sm text-center mt-2 line-clamp-2">{badge.course_title}</span>
+                    <span className="text-amber-400 text-xs mt-3 font-medium">Enter Course →</span>
+                  </div>
+                )}
+              </div>
+            );
+          })
         ) : (
           <div className="text-white/60 text-center py-8 w-full">
             No course badges configured. Add them in Hero Manager → Academy Slider.
