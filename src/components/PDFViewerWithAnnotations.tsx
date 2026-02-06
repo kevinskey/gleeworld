@@ -106,6 +106,20 @@ const scrollModePluginInstance = scrollModePlugin();
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; time: number } | null>(null);
   const [touchEnd, setTouchEnd] = useState<{ x: number; y: number; time: number } | null>(null);
 
+  // Auto-hide controls on mobile
+  const [mobileControlsVisible, setMobileControlsVisible] = useState(true);
+  const mobileControlsTimerRef = useRef<number | null>(null);
+
+  const showMobileControls = useCallback(() => {
+    setMobileControlsVisible(true);
+    if (mobileControlsTimerRef.current) clearTimeout(mobileControlsTimerRef.current);
+    mobileControlsTimerRef.current = window.setTimeout(() => {
+      setMobileControlsVisible(false);
+    }, 3000);
+  }, []);
+
+  // Auto-hide controls after 3s on mobile viewer (effect placed after currentPage state below)
+
   const suppressClickUntilRef = useRef<number>(0);
 
   const [currentMarkedScoreId, setCurrentMarkedScoreId] = useState<string | null>(null);
@@ -134,6 +148,15 @@ const scrollModePluginInstance = scrollModePlugin();
   const [zoomLevel, setZoomLevel] = useState(1); // Zoom level for annotation mode
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
   const [useGoogle, setUseGoogle] = useState(false);
+
+  // Auto-hide controls after 3s on mobile viewer
+  useEffect(() => {
+    if (!isInMobileViewer) return;
+    showMobileControls();
+    return () => {
+      if (mobileControlsTimerRef.current) clearTimeout(mobileControlsTimerRef.current);
+    };
+  }, [isInMobileViewer, currentPage, showMobileControls]);
 
   // Page cache for instant page turns during performance
   const pageCacheRef = useRef<Map<string, HTMLCanvasElement>>(new Map());
@@ -311,8 +334,12 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         } else if (tapX > containerRect.width - tapZoneWidth) {
           // Right tap zone - next page
           nextPage();
+        } else {
+          // Middle zone - toggle controls visibility on mobile
+          if (isInMobileViewer) {
+            showMobileControls();
+          }
         }
-        // Middle zone does nothing to avoid accidental navigation
       }
     }
     
@@ -1112,12 +1139,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
           )}
 
-          {/* Top toolbar when NOT in annotation mode - stays out of the way of the score */}
+          {/* Top toolbar when NOT in annotation mode - auto-hides on mobile */}
           {!annotationMode && (
             <div 
               className={cn(
-                "absolute left-1/2 -translate-x-1/2 z-30",
-                isInMobileViewer ? "top-1" : "top-2"
+                "absolute left-1/2 -translate-x-1/2 z-30 transition-opacity duration-300",
+                isInMobileViewer ? "top-1" : "top-2",
+                isInMobileViewer && !mobileControlsVisible && "opacity-0 pointer-events-none"
               )}
               style={{ touchAction: 'none' } as React.CSSProperties}
               onTouchStart={(e) => e.stopPropagation()}
@@ -1241,8 +1269,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 ref={canvasRef}
                 className="block bg-white transition-opacity duration-300 mx-auto"
                 style={{ 
-                  width: `${scale * 100}%`,
-                  maxWidth: scale > 1 ? 'none' : '100%',
+                  width: isInMobileViewer ? '100%' : `${scale * 100}%`,
+                  maxWidth: isInMobileViewer ? '100%' : (scale > 1 ? 'none' : '100%'),
                   height: 'auto', 
                   opacity: isLoading ? 0.6 : 1
                 }}
@@ -1344,12 +1372,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </>
           ) : null}
 
-          {/* Page navigation - positioned at top-right to avoid covering sheet music */}
+          {/* Page navigation - positioned at top-right, auto-hides on mobile */}
           {signedUrl && totalPages > 1 && (
              <div 
               className={cn(
-                "absolute right-2 z-30",
-                isInMobileViewer ? "top-1" : "top-2"
+                "absolute right-2 z-30 transition-opacity duration-300",
+                isInMobileViewer ? "top-1" : "top-2",
+                isInMobileViewer && !mobileControlsVisible && "opacity-0 pointer-events-none"
               )}
               style={{ touchAction: 'none' } as React.CSSProperties}
               onTouchStart={(e) => e.stopPropagation()}
