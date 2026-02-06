@@ -413,6 +413,8 @@ export const Mus070AttendanceGrid: React.FC<Mus070AttendanceGridProps> = ({
               onCycleStatus={cycleStatus}
               dirtyRecords={dirtyRecords}
               formatDate={(d) => toET(d)}
+              saving={saving}
+              onSave={saveChanges}
             />
           ) : (
             <ScrollArea className="w-full h-[60vh]">
