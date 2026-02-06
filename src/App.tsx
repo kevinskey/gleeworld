@@ -7,7 +7,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
@@ -326,6 +326,12 @@ const ProtectedRoute = ({ children, skipProfileCheck = false }: { children: Reac
   }
 };
 
+// Redirect /instructor/:courseCode → /:courseCode/instructor/console
+const InstructorRedirect = () => {
+  const { courseCode } = useParams<{ courseCode: string }>();
+  return <Navigate to={`/${courseCode}/instructor/console`} replace />;
+};
+
 // Public route wrapper - no auth check needed
 const PublicRoute = ({ children }: { children: ReactNode }) => {
   return <>{children}</>;
@@ -582,6 +588,11 @@ const App = () => {
                     <CourseInstructorConsole />
                   </ProtectedRoute>
                 }
+              />
+              {/* Shorthand /instructor/:courseCode → canonical /:courseCode/instructor/console */}
+              <Route 
+                path="/instructor/:courseCode" 
+                element={<InstructorRedirect />}
               />
               
               {/* Legacy course lounge redirect - now goes to dashboard */}
