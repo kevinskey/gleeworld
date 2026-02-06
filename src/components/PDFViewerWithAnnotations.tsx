@@ -56,6 +56,8 @@ interface PDFViewerWithAnnotationsProps {
   musicTitle?: string;
   className?: string;
   startInAnnotationMode?: boolean;
+  /** When true, toolbars are repositioned to avoid overlapping the parent mobile header */
+  isInMobileViewer?: boolean;
 }
 interface PDFViewerHandle {
   promptToSaveIfDirty: () => Promise<boolean>;
@@ -67,6 +69,7 @@ export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWit
   musicTitle,
   className = "",
   startInAnnotationMode = false,
+  isInMobileViewer = false,
 }: PDFViewerWithAnnotationsProps, ref) => {
   const { user } = useAuth();
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
@@ -1031,7 +1034,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           {/* Top toolbar when NOT in annotation mode - stays out of the way of the score */}
           {!annotationMode && (
             <div 
-              className="absolute top-2 left-1/2 -translate-x-1/2 z-30"
+              className={cn(
+                "absolute left-1/2 -translate-x-1/2 z-30",
+                isInMobileViewer ? "top-1" : "top-2"
+              )}
               style={{ touchAction: 'none' } as React.CSSProperties}
               onTouchStart={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
@@ -1259,8 +1265,11 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {/* Page navigation - positioned at top-right to avoid covering sheet music */}
           {signedUrl && totalPages > 1 && (
-            <div 
-              className="absolute top-2 right-2 z-30"
+             <div 
+              className={cn(
+                "absolute right-2 z-30",
+                isInMobileViewer ? "top-1" : "top-2"
+              )}
               style={{ touchAction: 'none' } as React.CSSProperties}
               onTouchStart={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}

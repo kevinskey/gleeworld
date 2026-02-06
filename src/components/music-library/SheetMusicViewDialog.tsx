@@ -145,9 +145,19 @@ export const SheetMusicViewDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!fixed !inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !p-0 !w-screen !h-screen !max-w-none !max-h-none overflow-hidden !rounded-none !border-0 !z-[9990]" style={{ top: 'calc(var(--gw-header-h, 0px) + var(--gw-radio-bar-height, 0px))', height: 'calc(100vh - var(--gw-header-h, 0px) - var(--gw-radio-bar-height, 0px))' }}>
+      <DialogContent 
+        className="!fixed !inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !p-0 !w-screen !h-screen !max-w-none !max-h-none overflow-hidden !rounded-none !border-0 !z-[9990]" 
+        style={{ 
+          top: 'calc(var(--gw-header-h, 0px) + var(--gw-radio-bar-height, 0px))', 
+          height: 'calc(100vh - var(--gw-header-h, 0px) - var(--gw-radio-bar-height, 0px))',
+          paddingBottom: 'env(safe-area-inset-bottom)'
+        }}
+      >
         <DialogHeader className="hidden" />
-        <div className="absolute top-20 right-3 z-50 flex gap-2">
+        <div 
+          className="absolute right-3 z-50 flex gap-2"
+          style={{ top: 'calc(env(safe-area-inset-top) + 0.75rem)' }}
+        >
           {item.pdf_url && canCropPDF && (
             <Button
               variant="secondary"

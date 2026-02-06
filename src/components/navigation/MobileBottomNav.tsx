@@ -48,6 +48,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
       <nav 
         className={cn(
           "fixed bottom-0 left-0 right-0 z-[99999] bg-background border-t border-border shadow-2xl",
+          "pointer-events-auto",
           className
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
