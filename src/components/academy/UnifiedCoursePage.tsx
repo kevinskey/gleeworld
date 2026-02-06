@@ -14,7 +14,7 @@ import { AcademyCourse } from '@/config/academyCourses';
 import { getCourseTemplateConfig, CourseNavItem } from '@/config/courseTemplateConfig';
 import { CourseAssignments } from './CourseAssignments';
 import { CourseGradebook } from './CourseGradebook';
-import { CourseAttendance } from './CourseAttendance';
+import { CourseAttendanceGrid } from '@/components/course/CourseAttendanceGrid';
 import { CourseCalendarView } from './CourseCalendarView';
 import { CalendarWithAttendance } from './CalendarWithAttendance';
 import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
@@ -552,7 +552,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                   <EmbeddedStudentGradeView courseId={course.id} />
                 </React.Suspense> : <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />)}
 
-            {activeTab === 'attendance' && <CourseAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} />}
+            {activeTab === 'attendance' && (
+              <CourseAttendanceGrid 
+                courseId={course.id} 
+                courseCode={course.courseCode}
+                isInstructor={isAdmin} 
+              />
+            )}
 
             {/* Secretary Attendance Manager Tab */}
             {activeTab === 'secretary' && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading...</CardContent></Card>}>
