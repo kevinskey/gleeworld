@@ -190,8 +190,8 @@ export const CourseAnnouncementsManager: React.FC<CourseAnnouncementsManagerProp
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <Megaphone className="h-8 w-8 animate-pulse mx-auto mb-2 text-muted-foreground" />
-          <p className="text-muted-foreground">Loading announcements...</p>
+          <Megaphone className="h-8 w-8 animate-pulse mx-auto mb-2" style={{ color: '#64748B' }} />
+          <p style={{ color: '#475569' }}>Loading announcements...</p>
         </div>
       </div>
     );
@@ -275,10 +275,10 @@ export const CourseAnnouncementsManager: React.FC<CourseAnnouncementsManagerProp
         <CardContent>
           <ScrollArea className="h-[500px]">
             {announcements.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-20" />
-                <p>No announcements yet</p>
-                <p className="text-sm">Create your first announcement to notify students</p>
+              <div className="text-center py-8">
+                <Megaphone className="h-16 w-16 mx-auto mb-4" style={{ color: '#94A3B8' }} />
+                <p style={{ color: '#0F172A' }}>No announcements yet</p>
+                <p className="text-sm" style={{ color: '#475569' }}>Create your first announcement to notify students</p>
               </div>
             ) : (
               <div className="space-y-4">
