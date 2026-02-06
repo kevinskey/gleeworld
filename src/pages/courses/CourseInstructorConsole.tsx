@@ -282,14 +282,6 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'resources' && <ResourcesAdmin />}
             {activeTab === 'playlists' && dbCourse && <CoursePlaylistManager courseId={dbCourse.id} />}
             {activeTab === 'videos' && dbCourse && <CourseVideoLibrary courseId={dbCourse.id} isInstructor={true} />}
-            {activeTab === 'audio' && <Card>
-                <CardHeader>
-                  <CardTitle>Audio Examples</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Audio library coming soon.</p>
-                </CardContent>
-              </Card>}
             {activeTab === 'attendance-security' && dbCourse && (
               <AttendanceSecurityControls 
                 eventId={dbCourse.id} 
