@@ -61,10 +61,9 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
         </div>
       </div>
 
-      {/* PDF Viewer - takes remaining space, with bottom padding for safe area + bottom nav */}
+      {/* PDF Viewer - takes remaining space, full bleed */}
       <div 
         className="flex-1 min-h-0 w-full"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 3.5rem)' }}
       >
         <PDFViewerWithAnnotations 
           key={selectedPdf.url}
