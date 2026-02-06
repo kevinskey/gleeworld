@@ -143,23 +143,23 @@ export const CourseInstructorConsole = () => {
   const SidebarNav = ({
     isMobile = false
   }) => (
-    <nav className="space-y-6">
+    <nav className="space-y-7">
       {/* Student View Button */}
       <Button
         variant="outline"
-        className="w-full flex items-center justify-center gap-2 border-primary/30 text-primary hover:bg-primary/5 hover:text-primary font-medium"
+        className="w-full flex items-center justify-center gap-2 border-primary/30 text-primary hover:bg-primary/5 hover:text-primary text-[15px] font-medium py-2.5"
         onClick={() => {
           navigate(`/academy/${courseSlug}`);
           if (isMobile) setSidebarOpen(false);
         }}
       >
-        <Eye className="h-4 w-4" />
+        <Eye className="h-[22px] w-[22px]" />
         <span>View as Student</span>
       </Button>
       
       {navCategories.map(category => (
         <div key={category.label}>
-          <h3 className="text-[11px] font-semibold uppercase tracking-widest mb-2 px-3" style={{ color: '#475569' }}>
+          <h3 className="text-xs font-semibold uppercase tracking-widest mb-2.5 px-3" style={{ color: '#475569' }}>
             {category.label}
           </h3>
           <div className="space-y-0.5">
@@ -174,14 +174,26 @@ export const CourseInstructorConsole = () => {
                     if (isMobile) setSidebarOpen(false);
                   }} 
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium transition-all",
+                    "w-full flex items-center gap-3 px-3 rounded-md transition-all",
                     isActive 
                       ? "bg-primary/10 text-primary border border-primary/15" 
                       : "hover:bg-muted/50"
                   )}
-                  style={{ color: isActive ? undefined : '#334155' }}
+                  style={{ 
+                    color: isActive ? undefined : '#334155',
+                    fontSize: '16px',
+                    fontWeight: 500,
+                    height: '38px',
+                  }}
                 >
-                  <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "")} style={isActive ? undefined : { color: '#475569' }} />
+                  <Icon 
+                    className={cn("flex-shrink-0", isActive ? "text-primary" : "")} 
+                    style={{ 
+                      width: '22px', 
+                      height: '22px',
+                      color: isActive ? undefined : '#475569',
+                    }} 
+                  />
                   <span>{item.label}</span>
                   {isActive && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
                 </button>
@@ -227,8 +239,8 @@ export const CourseInstructorConsole = () => {
         {/* Main Layout */}
         <div className="flex max-w-[1800px] mx-auto min-h-0">
           {/* Desktop Sidebar — white, clean */}
-          <aside className="hidden lg:block w-56 xl:w-60 border-r border-border/60 bg-white sticky top-[132px] self-start max-h-[calc(100vh-132px)] overflow-y-auto">
-            <div className="p-4 xl:p-5">
+          <aside className="hidden lg:block w-[250px] xl:w-[260px] border-r border-border/60 bg-white sticky top-[132px] self-start max-h-[calc(100vh-132px)] overflow-y-auto">
+            <div className="p-5 xl:p-6">
               <div className="mb-6 pb-5 border-b border-border/50">
                 <InstructorCourseSwitcher currentCourse={course} />
               </div>
