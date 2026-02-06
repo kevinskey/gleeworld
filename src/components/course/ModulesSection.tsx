@@ -323,7 +323,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
             }
             const dateRange = getWeekDateRange(weekLabel, semesterData?.start_date || null, index);
             return <Collapsible key={index} defaultOpen={index < 3} className="group/collapsible">
-                    <Card className="overflow-hidden group">
+                    <Card className="overflow-hidden group bg-white border border-border/60 shadow-sm hover:shadow-md transition-shadow">
                       <CollapsibleTrigger className="w-full [&[data-state=open]>div>div:last-child>svg:last-child]:rotate-180">
                         <CardHeader className="py-4">
                           <div className="flex items-center justify-between">
@@ -370,16 +370,16 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                         </CardHeader>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="animate-accordion-down data-[state=closed]:animate-accordion-up">
-                        <CardContent className="pt-0 pb-4 space-y-4 bg-primary-foreground">
+                        <CardContent className="pt-0 pb-4 space-y-4 bg-white">
 
                           {/* Readings */}
-                          {readings.length > 0 && <div className="space-y-2 bg-primary-foreground">
+                          {readings.length > 0 && <div className="space-y-2">
                               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground pt-[20px] pl-[10px]">
                                 <BookOpen className="h-4 w-4" />
                                 Readings
                               </div>
                               <ul className="space-y-1.5 ml-6">
-                                {readings.map((reading, i) => <li key={i} className="text-sm flex items-start gap-2 bg-primary-foreground pb-[10px]">
+                                {readings.map((reading, i) => <li key={i} className="text-sm flex items-start gap-2 pb-[10px] text-foreground/80">
                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
                                     {reading}
                                   </li>)}
@@ -412,10 +412,10 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
             </div> : <Card>
               <CardContent className="py-12 flex flex-col items-center justify-center text-center">
                 <Calendar className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                <p className="text-primary-foreground">
+                <p className="text-muted-foreground">
                   No course outline available yet.
                 </p>
-                <p className="text-sm mt-1 text-primary-foreground">
+                <p className="text-sm mt-1 text-muted-foreground">
                   Click "Add Week" to create your first module.
                 </p>
               </CardContent>
@@ -425,7 +425,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
         {/* Resources (Modules) Tab */}
         <TabsContent value="modules" className="space-y-4 mt-4">
           {hasModules ? modules.map(module => <Collapsible key={module.id} defaultOpen>
-                <Card>
+                <Card className="bg-white border border-border/60 shadow-sm">
                   <CollapsibleTrigger className="w-full">
                     <CardHeader>
                       <div className="flex items-center justify-between">

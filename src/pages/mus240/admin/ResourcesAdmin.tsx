@@ -77,13 +77,13 @@ export default function ResourcesAdmin() {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'reading': return 'bg-blue-100 text-blue-800';
-      case 'website': return 'bg-green-100 text-green-800';
-      case 'video': return 'bg-purple-100 text-purple-800';
-      case 'article': return 'bg-orange-100 text-orange-800';
-      case 'database': return 'bg-indigo-100 text-indigo-800';
-      case 'audio': return 'bg-pink-100 text-pink-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'reading': return 'bg-primary/10 text-primary';
+      case 'website': return 'bg-emerald-50 text-emerald-700';
+      case 'video': return 'bg-violet-50 text-violet-700';
+      case 'article': return 'bg-amber-50 text-amber-700';
+      case 'database': return 'bg-primary/10 text-primary';
+      case 'audio': return 'bg-rose-50 text-rose-700';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -156,7 +156,7 @@ export default function ResourcesAdmin() {
             </Card>
           ) : (
             resources?.map((resource) => (
-              <Card key={resource.id} className="hover:shadow-md transition-shadow">
+              <Card key={resource.id} className="bg-white border border-border/60 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="space-y-2 flex-1">
@@ -176,7 +176,7 @@ export default function ResourcesAdmin() {
                           Order: {resource.display_order}
                         </span>
                       </div>
-                      <CardTitle className="text-lg">{resource.title}</CardTitle>
+                      <CardTitle className="text-lg text-foreground">{resource.title}</CardTitle>
                     </div>
                     <div className="flex items-center gap-2">
                       {resource.is_file_upload && canPreview(resource) && (
@@ -258,9 +258,9 @@ export default function ResourcesAdmin() {
       </TabsContent>
 
       <TabsContent value="upload" className="space-y-4">
-        <Card>
+        <Card className="bg-white border border-border/60 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-foreground">
               <Upload className="h-5 w-5" />
               Bulk File Upload
             </CardTitle>
