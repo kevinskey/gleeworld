@@ -411,3 +411,9 @@ verify_jwt = false
 
 [functions.tiktok-oembed]
 verify_jwt = false
+
+[functions.office-hours-notify]
+verify_jwt = false
+
+[functions.office-hours-action]
+verify_jwt = false
