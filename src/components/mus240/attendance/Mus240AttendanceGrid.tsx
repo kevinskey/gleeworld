@@ -427,6 +427,8 @@ export const Mus240AttendanceGrid: React.FC<Mus240AttendanceGridProps> = ({
               onCycleStatus={cycleStatus}
               dirtyRecords={dirtyRecords}
               formatDate={(d) => parseISO(d)}
+              saving={saving}
+              onSave={saveChanges}
             />
           ) : (
             <ScrollArea className="w-full">

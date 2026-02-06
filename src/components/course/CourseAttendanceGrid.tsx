@@ -460,6 +460,8 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
               onCycleStatus={cycleStatus}
               dirtyRecords={dirtyRecords}
               formatDate={(d) => toET(d)}
+              saving={saving}
+              onSave={saveChanges}
             />
           ) : (
             <ScrollArea className="w-full h-[60vh]">
