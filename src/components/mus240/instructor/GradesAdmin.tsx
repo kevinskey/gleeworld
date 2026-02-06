@@ -6,13 +6,15 @@ import { Mus240AttendanceGrid } from '../attendance/Mus240AttendanceGrid';
 
 export const GradesAdmin = () => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Tabs defaultValue="spreadsheet" className="w-full">
-        <TabsList>
-          <TabsTrigger value="spreadsheet">Grade Spreadsheet</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="roster">Detailed Roster</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-1 px-1">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="spreadsheet" className="text-xs sm:text-sm">Grade Spreadsheet</TabsTrigger>
+            <TabsTrigger value="attendance" className="text-xs sm:text-sm">Attendance</TabsTrigger>
+            <TabsTrigger value="roster" className="text-xs sm:text-sm">Detailed Roster</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="spreadsheet">
           <Mus240InstructorGradeGrid />
         </TabsContent>
