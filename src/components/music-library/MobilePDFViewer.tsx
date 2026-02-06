@@ -29,10 +29,13 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      {/* Ultra-compact floating header */}
-      <div className="absolute top-0 left-0 right-0 z-30 safe-top">
-        <div className="flex items-center justify-between px-2 py-1.5 bg-gradient-to-b from-background/95 via-background/80 to-transparent backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100000] bg-background flex flex-col">
+      {/* Header in document flow with safe-area top padding */}
+      <div 
+        className="flex-shrink-0 bg-background/95 backdrop-blur-sm border-b border-border"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
+        <div className="flex items-center justify-between px-2 py-1.5 h-10">
           <Button 
             variant="secondary" 
             size="sm" 
@@ -58,13 +61,17 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
         </div>
       </div>
 
-      {/* Full-screen PDF Viewer - edge to edge */}
-      <div className="flex-1 w-full h-full">
+      {/* PDF Viewer - takes remaining space, with bottom padding for safe area + bottom nav */}
+      <div 
+        className="flex-1 min-h-0 w-full"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 3.5rem)' }}
+      >
         <PDFViewerWithAnnotations 
           key={selectedPdf.url}
           pdfUrl={selectedPdf.url}
           musicTitle={selectedPdf.title}
           musicId={selectedPdf.id}
+          isInMobileViewer
           className="w-full h-full"
         />
       </div>
