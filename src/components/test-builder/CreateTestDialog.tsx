@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateTest } from '@/hooks/useTestBuilder';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreateTestDialogProps {
   open: boolean;
@@ -32,6 +33,20 @@ interface TestFormData {
 export const CreateTestDialog = ({ open, onOpenChange, courseId }: CreateTestDialogProps) => {
   const navigate = useNavigate();
   const createTest = useCreateTest();
+
+  // Fetch real courses from DB for the dropdown
+  const { data: courses = [] } = useQuery({
+    queryKey: ['gw-courses-for-tests'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_courses')
+        .select('id, course_code, title')
+        .order('course_code');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const { register, handleSubmit, reset, setValue, watch } = useForm<TestFormData>({
     defaultValues: {
       course_id: courseId,
@@ -73,9 +88,11 @@ export const CreateTestDialog = ({ open, onOpenChange, courseId }: CreateTestDia
                   <SelectValue placeholder="Select a course" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mus240">MUS 240 - African American Music</SelectItem>
-                  <SelectItem value="mus101">MUS 101 - Music Theory I</SelectItem>
-                  <SelectItem value="mus102">MUS 102 - Music Theory II</SelectItem>
+                  {courses.map((c: any) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.course_code} - {c.title}
+                    </SelectItem>
+                  ))}
                   <SelectItem value="all">All Courses</SelectItem>
                 </SelectContent>
               </Select>
