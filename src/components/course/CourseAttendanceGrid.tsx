@@ -472,7 +472,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
                               "w-6 h-6 rounded text-xs font-bold flex items-center justify-center transition-all",
                               getStatusStyle(status),
                               isInstructor && "hover:ring-2 hover:ring-primary/50 cursor-pointer",
-                              dirtyRecords.has(`${student.student_id}-${session.id}`) && "ring-2 ring-yellow-500"
+                              dirtyRecords.has(`${student.student_id}::${session.id}`) && "ring-2 ring-yellow-500"
                             )}
                           >
                             {getStatusLabel(status)}
