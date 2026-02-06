@@ -121,23 +121,28 @@
     
     /* High-Contrast Backgrounds - PURE WHITE, NEUTRAL */
     --background: 0 0% 100%; /* Pure white background */
-    --foreground: 0 0% 10%; /* Near-black text for readability */
+    --foreground: 222 47% 11%; /* #0F172A - Primary text */
 
     /* Card System - Clean white cards */
     --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 0 0% 10%; /* Dark text */
+    --card-foreground: 222 47% 11%; /* #0F172A */
 
     /* Popover and Dropdown Elements */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 222 47% 11%; /* #0F172A */
 
     /* Muted Elements - High contrast for readability */
     --muted: 40 10% 96%; /* Warm off-white */
-    --muted-foreground: 0 0% 10%; /* Near-black for maximum readability */
+    --muted-foreground: 215 16% 37%; /* #475569 - Secondary text, WCAG AA 7:1 */
 
     /* Accent for Interactive Elements */
     --accent: 40 10% 96%; /* Warm neutral accent */
-    --accent-foreground: 0 0% 10%; /* Dark text on accent */
+    --accent-foreground: 222 47% 11%; /* #0F172A */
+
+    /* Tiered Text Color Tokens */
+    --text-primary: 222 47% 11%; /* #0F172A — headings, titles, body */
+    --text-secondary: 215 16% 37%; /* #475569 — descriptions, secondary info */
+    --text-metadata: 215 14% 47%; /* #64748B — timestamps, counts, labels */
 
     /* System Colors */
     --destructive: 0 84% 60%;
@@ -151,7 +156,6 @@
     --radius: 0.375rem;
 
     /* Enhanced Color Tokens - WCAG Compliant */
-    --text-secondary: 0 0% 25%; /* Readable secondary text - meets 4.5:1 */
     --hover-accent: 219 78% 40%; /* Subtle blue for hovers */
     
     /* Professional Gradients - minimal, not dark */
@@ -405,15 +409,15 @@ header a.bg-\[\#003666\]:hover span {
 /* Use on pages that must stay white even when a theme class is present on <html>. */
   .academy-neutral {
     --background: 0 0% 100%;
-    --foreground: 0 0% 8%;
+    --foreground: 222 47% 11%; /* #0F172A */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
+    --card-foreground: 222 47% 11%; /* #0F172A */
     --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 30%; /* WCAG AA compliant */
+    --muted-foreground: 215 16% 37%; /* #475569 — WCAG AA compliant */
     --border: 0 0% 85%;
     --input: 0 0% 98%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --popover-foreground: 222 47% 11%; /* #0F172A */
     --theme-background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 100%) 100%);
   }
 

@@ -257,7 +257,7 @@ export const CourseAnnouncementsManager: React.FC<CourseAnnouncementsManagerProp
             )}
           </div>
 
-          <div className="text-xs text-muted-foreground flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+          <div className="text-xs flex items-start gap-2 p-3 bg-muted/50 rounded-lg" style={{ color: '#64748B' }}>
             <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
             <p>Announcements will appear on the student's Announcements tab for this course.</p>
           </div>
@@ -295,7 +295,7 @@ export const CourseAnnouncementsManager: React.FC<CourseAnnouncementsManagerProp
                             </Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                        <div className="flex items-center gap-1 text-xs mt-1" style={{ color: '#64748B' }}>
                           <Clock className="h-3 w-3" />
                           {format(new Date(announcement.created_at), 'MMM d, yyyy h:mm a')}
                         </div>
@@ -330,7 +330,7 @@ export const CourseAnnouncementsManager: React.FC<CourseAnnouncementsManagerProp
                         </Button>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-3 whitespace-pre-wrap">
+                    <p className="text-sm line-clamp-3 whitespace-pre-wrap" style={{ color: '#475569' }}>
                       {announcement.content}
                     </p>
                   </div>
