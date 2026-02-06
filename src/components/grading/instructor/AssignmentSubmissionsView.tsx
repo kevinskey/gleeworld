@@ -210,32 +210,78 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
         });
       }
 
-      // Default: standard assignment submissions from gw_assignment_submissions
-      const { data: submissionsData, error: submissionsError } = await supabase
+      // Try gw_assignment_submissions first (video/recording assignments)
+      const { data: gwAssignSubs, error: gwAssignErr } = await supabase
         .from('gw_assignment_submissions' as any)
         .select('*')
         .eq('assignment_id', assignmentId)
         .order('submitted_at', { ascending: false });
 
-      if (submissionsError) throw submissionsError;
+      if (gwAssignErr) console.warn('gw_assignment_submissions error:', gwAssignErr);
 
-      const userIds = [...new Set(submissionsData?.map((s: any) => s.user_id) || [])];
-      const { data: profiles } = await supabase
-        .from('gw_profiles')
-        .select('user_id, full_name, email')
-        .in('user_id', userIds);
+      // Also check gw_course_submissions (essay/writing assignments)
+      const { data: courseSubsData, error: courseSubsErr } = await supabase
+        .from('gw_course_submissions' as any)
+        .select('*')
+        .eq('assignment_id', assignmentId)
+        .order('submitted_at', { ascending: false });
 
-      const profileMap = (profiles || []).reduce((acc: any, p: any) => {
-        acc[p.user_id] = p;
-        return acc;
-      }, {});
+      if (courseSubsErr) console.warn('gw_course_submissions error:', courseSubsErr);
 
-      return (submissionsData || []).map((submission: any) => ({
+      // Merge results, preferring whichever table has data
+      const gwAssignResults = gwAssignSubs || [];
+      const courseSubResults = courseSubsData || [];
+
+      // Collect all user IDs from both sources
+      const allUserIds = [
+        ...gwAssignResults.map((s: any) => s.user_id),
+        ...courseSubResults.map((s: any) => s.student_id),
+      ].filter(Boolean);
+      const uniqueUserIds = [...new Set(allUserIds)];
+
+      let profileMap: Record<string, any> = {};
+      if (uniqueUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', uniqueUserIds);
+
+        profileMap = (profiles || []).reduce((acc: any, p: any) => {
+          acc[p.user_id] = p;
+          return acc;
+        }, {});
+      }
+
+      // Map gw_assignment_submissions
+      const mappedGwAssign = gwAssignResults.map((submission: any) => ({
         ...submission,
-        student_id: submission.user_id, // Map user_id to student_id for compatibility
+        student_id: submission.user_id,
         gw_profiles: profileMap[submission.user_id],
         _type: 'standard',
       }));
+
+      // Map gw_course_submissions (essay submissions)
+      const mappedCourseSubs = courseSubResults.map((submission: any) => ({
+        ...submission,
+        student_id: submission.student_id,
+        submitted_at: submission.submitted_at || submission.created_at,
+        gw_profiles: profileMap[submission.student_id],
+        _type: 'course_submission',
+      }));
+
+      // Combine both, deduplicating by student_id (prefer course_submission if both exist)
+      const seenStudents = new Set<string>();
+      const combined: any[] = [];
+      
+      for (const sub of [...mappedCourseSubs, ...mappedGwAssign]) {
+        const sid = sub.student_id;
+        if (!seenStudents.has(sid)) {
+          seenStudents.add(sid);
+          combined.push(sub);
+        }
+      }
+
+      return combined;
     },
   });
 
@@ -582,16 +628,17 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
                 )}
 
                 <Button
-                  onClick={() =>
-                    navigate(
-                      (assignment?.legacy_source === 'mus240_assignments' || assignment?.assignment_type === 'listening_journal')
-                        ? `/classes/mus240/journal/${submission.id}/review`
-                        : `/grading/instructor/submission/${submission.id}`,
-                      {
-                        state: { fromGradingSystem: true }
-                      }
-                    )
-                  }
+                  onClick={() => {
+                    if (assignment?.assignment_type === 'listening_journal') {
+                      navigate(`/classes/mus240/journal/${submission.id}/review`, { state: { fromGradingSystem: true } });
+                    } else if (submission._type === 'course_submission') {
+                      navigate(`/grading/instructor/submission/${submission.id}`, {
+                        state: { fromGradingSystem: true, submissionTable: 'gw_course_submissions' }
+                      });
+                    } else {
+                      navigate(`/grading/instructor/submission/${submission.id}`, { state: { fromGradingSystem: true } });
+                    }
+                  }}
                 >
                   {submission.graded_at ? 'Review Grading' : 'Grade Submission'}
                 </Button>

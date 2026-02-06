@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, User, Calendar } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { RubricGradingInterface } from './RubricGradingInterface';
@@ -15,10 +15,56 @@ interface SubmissionGradingViewProps {
 
 export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ submissionId }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const submissionTable = (location.state as any)?.submissionTable || 'gw_assignment_submissions';
 
   const { data: submission, isLoading, refetch } = useQuery({
-    queryKey: ['gw-submission', submissionId],
+    queryKey: ['gw-submission', submissionId, submissionTable],
     queryFn: async () => {
+      if (submissionTable === 'gw_course_submissions') {
+        // Fetch from gw_course_submissions (essay submissions)
+        const { data, error } = await supabase
+          .from('gw_course_submissions' as any)
+          .select('*')
+          .eq('id', submissionId)
+          .single();
+
+        if (error) throw error;
+        const base: any = data as any;
+
+        // Fetch assignment info
+        let assignmentData: any = null;
+        if (base?.assignment_id) {
+          const { data: aData } = await supabase
+            .from('gw_course_assignments')
+            .select('title, description, points')
+            .eq('id', base.assignment_id)
+            .maybeSingle();
+          assignmentData = aData;
+        }
+
+        // Fetch profile
+        let profile: any = null;
+        if (base?.student_id) {
+          const { data: profileData } = await supabase
+            .from('gw_profiles')
+            .select('full_name, email')
+            .eq('user_id', base.student_id)
+            .maybeSingle();
+          profile = profileData;
+        }
+
+        return {
+          ...base,
+          user_id: base.student_id,
+          notes: base.content,
+          gw_course_assignments: assignmentData,
+          gw_profiles: profile,
+          _table: 'gw_course_submissions',
+        } as any;
+      }
+
+      // Default: gw_assignment_submissions
       const { data, error } = await supabase
         .from('gw_assignment_submissions' as any)
         .select('*, gw_course_assignments(title, description, points)')
@@ -39,7 +85,7 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
         profile = profileData;
       }
 
-      return { ...base, gw_profiles: profile } as any;
+      return { ...base, gw_profiles: profile, _table: 'gw_assignment_submissions' } as any;
     },
   });
 
@@ -84,10 +130,10 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
             )}
           </div>
           <div className="p-4 bg-muted rounded-lg">
-            {submission?.notes || submission?.recording_url ? (
+            {submission?.content || submission?.notes || submission?.recording_url ? (
               <div className="space-y-2">
-                {submission.notes && (
-                  <pre className="whitespace-pre-wrap font-sans">{submission.notes}</pre>
+                {(submission.content || submission.notes) && (
+                  <pre className="whitespace-pre-wrap font-sans">{submission.content || submission.notes}</pre>
                 )}
                 {submission.recording_url && (
                   submission.recording_url.includes('.webm') || 
@@ -113,9 +159,9 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
       {/* AI Grading Interface */}
       <RubricGradingInterface
         submissionId={submissionId}
-        assignmentTitle={submission?.gw_assignments?.title || 'Assignment'}
+        assignmentTitle={submission?.gw_course_assignments?.title || 'Assignment'}
         studentName={submission?.gw_profiles?.full_name || submission?.gw_profiles?.email || 'Student'}
-        content={submission?.notes || ''}
+        content={submission?.content || submission?.notes || ''}
         existingGrade={submission}
         onGradeUpdate={() => refetch()}
       />
