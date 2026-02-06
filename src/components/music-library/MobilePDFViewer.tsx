@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
-import { Eye, ArrowLeft, BookOpen } from 'lucide-react';
+import { Eye, ArrowLeft, BookOpen, SlidersHorizontal } from 'lucide-react';
 
 interface MobilePDFViewerProps {
   selectedPdf: {url: string; title: string; id?: string} | null;
@@ -10,6 +10,8 @@ interface MobilePDFViewerProps {
 }
 
 export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFViewerProps) => {
+  const pdfRef = useRef<{ promptToSaveIfDirty: () => Promise<boolean>; toggleToolbar: () => void } | null>(null);
+
   if (!selectedPdf) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-4 text-center">
@@ -46,26 +48,36 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
             <span>Library</span>
           </Button>
           
-          <h2 className="text-xs font-medium truncate max-w-[40%] text-center px-2">
+          <h2 className="text-xs font-medium truncate max-w-[35%] text-center px-1">
             {selectedPdf.title}
           </h2>
           
-          <Button 
-            size="sm" 
-            onClick={onStudyMode} 
-            className="h-7 px-2 text-xs gap-1 shadow-sm"
-          >
-            <BookOpen className="h-3.5 w-3.5" />
-            <span>Study</span>
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => pdfRef.current?.toggleToolbar()}
+              className="h-7 w-7 p-0 shadow-sm"
+              aria-label="Toggle tools"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+            </Button>
+            <Button 
+              size="sm" 
+              onClick={onStudyMode} 
+              className="h-7 px-2 text-xs gap-1 shadow-sm"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              <span>Study</span>
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* PDF Viewer - takes remaining space, full bleed */}
-      <div 
-        className="flex-1 min-h-0 w-full"
-      >
+      <div className="flex-1 min-h-0 w-full">
         <PDFViewerWithAnnotations 
+          ref={pdfRef}
           key={selectedPdf.url}
           pdfUrl={selectedPdf.url}
           musicTitle={selectedPdf.title}
