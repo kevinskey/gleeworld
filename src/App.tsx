@@ -2185,10 +2185,7 @@ const App = () => {
                                     path="/mus-240/instructor" 
                                     element={<Navigate to="/instructor/mus-240" replace />}
                                   />
-                                  <Route 
-                                    path="/mus-240/instructor/console" 
-                                    element={<Navigate to="/instructor/mus-240" replace />}
-                                  />
+                                  {/* /mus-240/instructor/console is now handled by /:courseCode/instructor/console */}
                                   <Route 
                                     path="/mus-240/instructor/student/:studentId" 
                                     element={
