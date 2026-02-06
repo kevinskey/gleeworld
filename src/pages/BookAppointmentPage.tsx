@@ -162,11 +162,32 @@ export default function BookAppointmentPage() {
       if (error) throw error;
       const result = data as {
         success: boolean;
+        appointment_id?: string;
         message?: string;
         error?: string;
       };
       if (result.success) {
         toast.success(result.message || 'Appointment booked successfully!');
+        
+        // Send SMS notification to admin for approve/deny
+        try {
+          await supabase.functions.invoke('office-hours-notify', {
+            body: {
+              appointment_id: result.appointment_id || '',
+              student_name: profile?.full_name || user?.email || 'Student',
+              student_email: user?.email || '',
+              student_phone: (profile as any)?.phone || null,
+              appointment_type: selectedTypeData?.name || selectedType,
+              appointment_date: selectedDateStr,
+              appointment_time: selectedTime,
+              topic: topic,
+              notes: notes || undefined,
+            }
+          });
+        } catch (smsError) {
+          console.error('SMS notification failed (non-blocking):', smsError);
+        }
+        
         setSelectedType('');
         setSelectedDateStr('');
         setSelectedTime('');

@@ -6646,6 +6646,8 @@ export type Database = {
           recurrence_end_date: string | null
           recurrence_interval: number | null
           recurrence_type: string | null
+          sms_action_token: string | null
+          sms_notified_at: string | null
           status: string
           stripe_session_id: string | null
           stripe_subscription_id: string | null
@@ -6677,6 +6679,8 @@ export type Database = {
           recurrence_end_date?: string | null
           recurrence_interval?: number | null
           recurrence_type?: string | null
+          sms_action_token?: string | null
+          sms_notified_at?: string | null
           status?: string
           stripe_session_id?: string | null
           stripe_subscription_id?: string | null
@@ -6708,6 +6712,8 @@ export type Database = {
           recurrence_end_date?: string | null
           recurrence_interval?: number | null
           recurrence_type?: string | null
+          sms_action_token?: string | null
+          sms_notified_at?: string | null
           status?: string
           stripe_session_id?: string | null
           stripe_subscription_id?: string | null

@@ -22,6 +22,7 @@ import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
 import { FourCardLayout } from './FourCardLayout';
 import { DashboardStoreSection } from './DashboardStoreSection';
 import { YouTubeChannelSlider } from './YouTubeChannelSlider';
+import { OfficeHoursWidget } from './OfficeHoursWidget';
 
 // Lazy load heavy components
 const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then(m => ({
@@ -354,6 +355,13 @@ export const UnifiedDashboard = () => {
       <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
         <GleeAcademyDashboardCard />
       </Suspense>
+
+      {/* Office Hours Widget - visible to super admin only, right after academy */}
+      {(profile?.is_super_admin || profile?.is_admin) && (
+        <div className="px-4 pt-4">
+          <OfficeHoursWidget />
+        </div>
+      )}
 
       {/* Modern Store Section */}
       <DashboardStoreSection />
