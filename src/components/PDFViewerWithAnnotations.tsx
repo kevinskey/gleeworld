@@ -63,6 +63,7 @@ interface PDFViewerWithAnnotationsProps {
 }
 interface PDFViewerHandle {
   promptToSaveIfDirty: () => Promise<boolean>;
+  toggleToolbar: () => void;
 }
 
 export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWithAnnotationsProps>(({ 
@@ -118,8 +119,17 @@ const scrollModePluginInstance = scrollModePlugin();
     if (mobileControlsTimerRef.current) clearTimeout(mobileControlsTimerRef.current);
     mobileControlsTimerRef.current = window.setTimeout(() => {
       setMobileControlsVisible(false);
-    }, 3000);
+    }, 4000);
   }, []);
+
+  const toggleMobileControls = useCallback(() => {
+    if (mobileControlsVisible) {
+      setMobileControlsVisible(false);
+      if (mobileControlsTimerRef.current) clearTimeout(mobileControlsTimerRef.current);
+    } else {
+      showMobileControls();
+    }
+  }, [mobileControlsVisible, showMobileControls]);
 
   // Auto-hide controls after 3s on mobile viewer (effect placed after currentPage state below)
 
@@ -141,6 +151,7 @@ const scrollModePluginInstance = scrollModePlugin();
   
   useImperativeHandle(ref, () => ({
     promptToSaveIfDirty,
+    toggleToolbar: toggleMobileControls,
   }));
   
   // PDF-specific state
@@ -343,10 +354,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           // Right tap zone - next page
           nextPage();
         } else {
-          // Middle zone - toggle controls visibility on mobile
-          if (isInMobileViewer) {
-            showMobileControls();
-          }
+          // Middle zone - no action (use header button instead)
         }
       }
     }
