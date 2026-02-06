@@ -13,7 +13,7 @@ const COURSE_SCHEDULE = [
   {
     class: "MUS 070",
     name: "Glee Club",
-    schedule: "MWF 3:00-4:15pm",
+    schedule: "MWF 5:00-6:15pm",
     instructor: "Dr. Kevin Johnson"
   },
   {
