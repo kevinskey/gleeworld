@@ -95,14 +95,15 @@ export default function ResourcesAdmin() {
           <div className="flex items-center gap-4">
             <Link 
               to="/mus-240/resources" 
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-2 hover:text-foreground transition-colors"
+              style={{ color: '#475569' }}
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Resources
             </Link>
             <div className="flex items-center gap-2">
               <Settings className="h-5 w-5 text-primary" />
-              <h1 className="text-2xl font-bold">Manage MUS 240 Resources</h1>
+              <h1 className="text-2xl font-bold" style={{ color: '#0F172A' }}>Manage MUS 240 Resources</h1>
             </div>
           </div>
         </div>
@@ -141,13 +142,13 @@ export default function ResourcesAdmin() {
           {isLoading ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">Loading resources...</p>
+                <p style={{ color: '#475569' }}>Loading resources...</p>
               </CardContent>
             </Card>
           ) : resources?.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground mb-4">No resources found</p>
+                <p className="mb-4" style={{ color: '#475569' }}>No resources found</p>
                 <Button onClick={handleCreate}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add First Resource

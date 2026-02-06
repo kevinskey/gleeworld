@@ -355,7 +355,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
   };
   if (isLoading) {
     return <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">
+        <CardContent className="py-8 text-center" style={{ color: '#475569' }}>
           Loading assignments...
         </CardContent>
       </Card>;
@@ -565,7 +565,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       <div className="flex flex-col gap-2 p-2 sm:p-3 bg-white rounded-lg border border-border/60 shadow-sm">
         {/* Search - full width */}
         <div className="relative w-full">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color: '#64748B' }} />
           <Input
             placeholder="Search..."
             value={searchQuery}
@@ -625,9 +625,10 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
             >
               <div className="flex flex-col gap-0.5 sm:gap-1 flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                  <span className={`text-sm sm:text-base md:text-lg font-medium line-clamp-1 ${
-                    assignment.is_published ? 'text-foreground' : 'text-muted-foreground'
-                  }`}>
+                  <span 
+                    className="text-sm sm:text-base md:text-lg font-medium line-clamp-1"
+                    style={{ color: assignment.is_published ? '#0F172A' : '#64748B' }}
+                  >
                     {assignment.title}
                   </span>
                   <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 sm:py-0.5 flex-shrink-0">
@@ -666,7 +667,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                         {assignment.is_published ? (
                           <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
                         ) : (
-                          <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+                          <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color: '#64748B' }} />
                         )}
                       </Button>
                     </TooltipTrigger>
@@ -687,7 +688,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
 
           {filteredAndSortedAssignments.length === 0 && (
             <div className="border rounded-lg p-4 sm:p-6 md:p-8 text-center">
-              <p className="text-muted-foreground text-sm sm:text-base mb-2 sm:mb-3">
+              <p className="text-sm sm:text-base mb-2 sm:mb-3" style={{ color: '#475569' }}>
                 {assignments.length === 0 ? 'No assignments yet' : 'No assignments match your filters'}
               </p>
               {assignments.length === 0 && (

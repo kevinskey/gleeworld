@@ -263,7 +263,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
   const hasWeeklySchedule = weeklySchedule.length > 0;
   const hasModules = modules && modules.length > 0;
   return <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Course Modules</h2>
+      <h2 className="text-2xl font-bold" style={{ color: '#0F172A' }}>Course Modules</h2>
 
       <Tabs defaultValue="outline" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -341,7 +341,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                                     </span>
                                   )}
                                 </div>
-                                {topicItems.length > 0 && <p className="text-sm mt-0.5 line-clamp-3 text-muted-foreground pt-[10px] pb-[10px] leading-relaxed">
+                                 {topicItems.length > 0 && <p className="text-sm mt-0.5 line-clamp-3 pt-[10px] pb-[10px] leading-relaxed" style={{ color: '#475569' }}>
                                     {topicItems[0]}
                                   </p>}
                               </div>
@@ -364,7 +364,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
-                              <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
+                              <ChevronDown className="h-5 w-5 transition-transform duration-200" style={{ color: '#475569' }} />
                             </div>
                           </div>
                         </CardHeader>
@@ -379,7 +379,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                                 Readings
                               </div>
                               <ul className="space-y-1.5 ml-6">
-                                {readings.map((reading, i) => <li key={i} className="text-sm flex items-start gap-2 pb-[10px] text-foreground">
+                                {readings.map((reading, i) => <li key={i} className="text-sm flex items-start gap-2 pb-[10px]" style={{ color: '#0F172A' }}>
                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
                                     {reading}
                                   </li>)}
@@ -401,7 +401,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                             </div>}
 
                           {/* Show raw content if no structured data */}
-                          {topicItems.length === 0 && readings.length === 0 && assignments.length === 0 && week.topics && <p className="text-sm text-foreground whitespace-pre-wrap">
+                                 {topicItems.length === 0 && readings.length === 0 && assignments.length === 0 && week.topics && <p className="text-sm whitespace-pre-wrap" style={{ color: '#0F172A' }}>
                               {week.topics}
                             </p>}
                         </CardContent>
@@ -411,11 +411,11 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
           })}
             </div> : <Card>
               <CardContent className="py-12 flex flex-col items-center justify-center text-center">
-                <Calendar className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                <p className="text-foreground">
+                <Calendar className="h-12 w-12 mb-4" style={{ color: '#64748B' }} />
+                <p style={{ color: '#0F172A' }}>
                   No course outline available yet.
                 </p>
-                <p className="text-sm mt-1" style={{ color: '#64748B' }}>
+                <p className="text-sm mt-1" style={{ color: '#475569' }}>
                   Click "Add Week" to create your first module.
                 </p>
               </CardContent>
@@ -436,12 +436,12 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                               <CardTitle className="text-lg">{module.title}</CardTitle>
                               {!module.is_published && <Badge variant="secondary">Draft</Badge>}
                             </div>
-                            {module.description && <p className="text-sm text-muted-foreground mt-1">
+                            {module.description && <p className="text-sm mt-1" style={{ color: '#475569' }}>
                                 {module.description}
                               </p>}
                           </div>
                         </div>
-                        <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform" />
+                        <ChevronDown className="h-5 w-5 transition-transform" style={{ color: '#475569' }} />
                       </div>
                     </CardHeader>
                   </CollapsibleTrigger>
@@ -453,11 +453,11 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                     return <div key={item.id} className="flex items-center justify-between p-3 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
                                   <div className="flex items-center gap-3">
                                     <ItemIcon className="h-4 w-4 text-primary" />
-                                    <span className="text-sm text-foreground">{item.title}</span>
+                                    <span className="text-sm" style={{ color: '#0F172A' }}>{item.title}</span>
                                   </div>
                                   {item.points && <Badge variant="outline">{item.points} pts</Badge>}
                                 </div>;
-                  }) : <p className="text-sm text-muted-foreground text-center py-4">
+                   }) : <p className="text-sm text-center py-4" style={{ color: '#475569' }}>
                             No items in this module
                           </p>}
                       </div>
@@ -465,7 +465,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                   </CollapsibleContent>
                 </Card>
               </Collapsible>) : <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
+              <CardContent className="py-8 text-center" style={{ color: '#475569' }}>
                 No resource modules created yet. Switch to "Create Module" tab to add one.
               </CardContent>
             </Card>}
