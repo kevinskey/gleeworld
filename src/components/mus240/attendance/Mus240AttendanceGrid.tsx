@@ -226,7 +226,7 @@ export const Mus240AttendanceGrid: React.FC<Mus240AttendanceGridProps> = ({
     // Track dirty records
     setDirtyRecords(prev => {
       const newMap = new Map(prev);
-      newMap.set(`${studentId}-${sessionId}`, newStatus || 'null');
+      newMap.set(`${studentId}::${sessionId}`, newStatus || 'null');
       return newMap;
     });
   };
@@ -246,7 +246,7 @@ export const Mus240AttendanceGrid: React.FC<Mus240AttendanceGridProps> = ({
       const updates: { student_profile_id: string; attendance_session_id: string; status: string }[] = [];
       
       dirtyRecords.forEach((status, key) => {
-        const [studentId, sessionId] = key.split('-');
+        const [studentId, sessionId] = key.split('::');
         if (status !== 'null') {
           updates.push({
             student_profile_id: studentId,
@@ -457,7 +457,7 @@ export const Mus240AttendanceGrid: React.FC<Mus240AttendanceGridProps> = ({
                     {/* Attendance cells */}
                     {sessions.map(session => {
                       const status = student.records.get(session.id) || null;
-                      const isDirty = dirtyRecords.has(`${student.student_id}-${session.id}`);
+                      const isDirty = dirtyRecords.has(`${student.student_id}::${session.id}`);
                       
                       return (
                         <div 
