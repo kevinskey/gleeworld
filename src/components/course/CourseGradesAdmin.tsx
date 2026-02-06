@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Trophy } from 'lucide-react';
 import { Mus070StudentRoster } from '@/components/mus070/instructor/Mus070StudentRoster';
 import { Mus070GradeSpreadsheet } from '@/components/mus070/instructor/Mus070GradeSpreadsheet';
+import { Mus240InstructorGradeGrid } from '@/components/mus240/instructor/Mus240InstructorGradeGrid';
+import { StudentGradesRoster } from '@/components/mus240/instructor/StudentGradesRoster';
 import { PerformanceGradeEntry } from '@/components/mus070/instructor/PerformanceGradeEntry';
 import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 
@@ -21,8 +23,9 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
   courseTitle,
   semester = 'Spring 2026'
 }) => {
-  // Check if this is MUS 070 (Glee Club) for specialized components
+  // Detect specific courses for specialized components
   const isMus070 = courseCode === 'MUS 070' || courseCode === 'MUS070';
+  const isMus240 = courseCode === 'MUS 240' || courseCode === 'MUS240';
   
   // Check if this course has performance-based grading components
   const gradingConfig = getCourseGradingConfig(courseId);
@@ -33,16 +36,20 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
   return (
     <div className="space-y-6">
       <Tabs defaultValue="spreadsheet" className="w-full">
-        <TabsList className="flex-wrap h-auto gap-1">
-          <TabsTrigger value="spreadsheet">Grade Spreadsheet</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          {hasPerformances && <TabsTrigger value="performances">Performances</TabsTrigger>}
-          <TabsTrigger value="roster">Detailed Roster</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-1 px-1">
+          <TabsList className="flex-wrap h-auto gap-1 w-full sm:w-auto">
+            <TabsTrigger value="spreadsheet" className="text-xs sm:text-sm">Grade Spreadsheet</TabsTrigger>
+            <TabsTrigger value="attendance" className="text-xs sm:text-sm">Attendance</TabsTrigger>
+            {hasPerformances && <TabsTrigger value="performances" className="text-xs sm:text-sm">Performances</TabsTrigger>}
+            <TabsTrigger value="roster" className="text-xs sm:text-sm">Detailed Roster</TabsTrigger>
+          </TabsList>
+        </div>
         
         <TabsContent value="spreadsheet" className="mt-4 overflow-visible">
           {isMus070 ? (
             <Mus070GradeSpreadsheet />
+          ) : isMus240 ? (
+            <Mus240InstructorGradeGrid />
           ) : (
             <Card>
               <CardHeader>
@@ -54,9 +61,6 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
               <CardContent>
                 <p className="text-muted-foreground">
                   Grade spreadsheet for {courseCode} - {courseTitle} coming soon.
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  This will show a comprehensive grade breakdown including assignments, tests, participation, and attendance.
                 </p>
               </CardContent>
             </Card>
@@ -81,6 +85,8 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
         <TabsContent value="roster" className="mt-4 overflow-visible">
           {isMus070 ? (
             <Mus070StudentRoster />
+          ) : isMus240 ? (
+            <StudentGradesRoster />
           ) : (
             <Card>
               <CardHeader>
@@ -92,9 +98,6 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
               <CardContent>
                 <p className="text-muted-foreground">
                   Detailed student roster for {courseCode} - {courseTitle} coming soon.
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  This will show complete student information including contact details, voice part, and enrollment status.
                 </p>
               </CardContent>
             </Card>
