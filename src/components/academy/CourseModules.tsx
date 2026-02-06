@@ -689,9 +689,9 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
           });
         });
 
-        // Get current date for determining active week
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        // Get current date for determining active week (use UTC-safe date string comparison)
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
         // Build modules from settings + resources
         let builtModules: WeeklyModule[] = (settings || [])
@@ -702,14 +702,12 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
               ? Math.round((completedCount / moduleResources.length) * 100)
               : 0;
 
-            // Determine if this is the current active week based on dates
+            // Determine if this is the current active week using string comparison (timezone-safe)
             let isCurrentWeek = false;
             if (setting.start_date && setting.end_date) {
-              const start = new Date(setting.start_date);
-              const end = new Date(setting.end_date);
-              start.setHours(0, 0, 0, 0);
-              end.setHours(23, 59, 59, 999);
-              isCurrentWeek = today >= start && today <= end;
+              const startStr = setting.start_date.slice(0, 10);
+              const endStr = setting.end_date.slice(0, 10);
+              isCurrentWeek = todayStr >= startStr && todayStr <= endStr;
             }
 
             return {
@@ -812,12 +810,13 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
     ? modules.reduce((acc, mod) => acc + (mod.completion_percentage || 0), 0) / modules.length
     : 0;
 
-  // Find current week
-  const today = new Date();
+  // Find current week (use timezone-safe string comparison)
+  const nowForCurrent = new Date();
+  const currentDateStr = `${nowForCurrent.getFullYear()}-${String(nowForCurrent.getMonth() + 1).padStart(2, '0')}-${String(nowForCurrent.getDate()).padStart(2, '0')}`;
   const currentWeekModule = modules.find(mod => {
-    const start = new Date(mod.start_date);
-    const end = new Date(mod.end_date);
-    return today >= start && today <= end;
+    const startStr = mod.start_date?.slice(0, 10) || '';
+    const endStr = mod.end_date?.slice(0, 10) || '';
+    return currentDateStr >= startStr && currentDateStr <= endStr;
   });
 
   // Show loading state
