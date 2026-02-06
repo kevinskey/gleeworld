@@ -50,22 +50,49 @@ export interface AnswerOption {
   created_at: string;
 }
 
+// Derive a legacy slug from a UUID course ID (e.g., look up course_code -> 'mus240')
+const getLegacyCourseSlug = async (courseId: string): Promise<string | null> => {
+  // If it's already a slug (not a UUID), return as-is
+  if (!/^[0-9a-f]{8}-/.test(courseId)) return null;
+
+  const { data } = await supabase
+    .from('gw_courses')
+    .select('course_code')
+    .eq('id', courseId)
+    .maybeSingle();
+
+  if (data?.course_code) {
+    return data.course_code.toLowerCase().replace(/\s+/g, '');
+  }
+  return null;
+};
+
 // Fetch tests for a course
 export const useTests = (courseId: string) => {
   return useQuery({
     queryKey: ['tests', courseId],
     queryFn: async () => {
-      let query = supabase
+      if (courseId === 'all') {
+        const { data, error } = await supabase
+          .from('glee_academy_tests')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data as GleeAcademyTest[];
+      }
+
+      // Build an OR filter matching both UUID and legacy slug
+      const legacySlug = await getLegacyCourseSlug(courseId);
+      const orParts = [`course_id.eq.${courseId}`];
+      if (legacySlug) {
+        orParts.push(`course_id.eq.${legacySlug}`);
+      }
+
+      const { data, error } = await supabase
         .from('glee_academy_tests')
         .select('*')
+        .or(orParts.join(','))
         .order('created_at', { ascending: false });
-      
-      // Only filter by course_id if it's not 'all'
-      if (courseId !== 'all') {
-        query = query.eq('course_id', courseId);
-      }
-      
-      const { data, error } = await query;
 
       if (error) throw error;
       return data as GleeAcademyTest[];
