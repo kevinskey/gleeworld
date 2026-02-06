@@ -38,7 +38,7 @@ import { SemesterManager } from '@/components/admin/SemesterManager';
 import { SightReadingAssignmentManager } from '@/components/sight-singing/SightReadingAssignmentManager';
 import { AttendanceSecurityControls } from '@/components/attendance/AttendanceSecurityControls';
 import { CoursePlaylistManager } from '@/components/modules/CoursePlaylistManager';
-import { QuickAttendanceQR } from '@/components/course/QuickAttendanceQR';
+import { InstructorAttendanceHub } from '@/components/course/InstructorAttendanceHub';
 import { CourseVisibilitySettings } from '@/components/course/CourseVisibilitySettings';
 
 // Map DB term codes (e.g., 202601) to human semester labels used in enrollments (e.g., "Spring 2026").
@@ -270,10 +270,11 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'students' && dbCourse && <CourseEnrollmentManager courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} term={dbCourse.term || undefined} />}
             
             {activeTab === 'quick-attendance' && dbCourse && (
-              <QuickAttendanceQR 
+              <InstructorAttendanceHub 
                 courseId={dbCourse.id} 
                 courseCode={course.courseCode} 
                 courseTitle={course.title}
+                semester={semesterLabel}
               />
             )}
             {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
