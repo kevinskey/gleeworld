@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
+import officeHoursBadge from '@/assets/office-hours-badge.png';
 import { TypewriterGreeting } from '@/components/shared/TypewriterGreeting';
 
 interface CourseBadge {
@@ -128,27 +129,33 @@ const GleeAcademy = () => {
             </div>
           ) : badges.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8 justify-items-center">
-              {badges.map(badge => (
-                <div 
-                  key={badge.id} 
-                  onClick={() => handleBadgeClick(badge)}
-                  className="cursor-pointer transition-all duration-300 hover:scale-105 flex items-center justify-center"
-                >
-                  {badge.badge_image_url ? (
-                    <img 
-                      src={badge.badge_image_url} 
-                      alt={`${badge.course_code} - ${badge.course_title}`}
-                      className="w-full h-auto max-h-64 object-contain drop-shadow-2xl hover:brightness-110 mx-auto"
-                    />
-                  ) : (
-                    <div className="aspect-square w-full bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
-                      <span className="text-white font-bold text-xl sm:text-2xl">{badge.course_code}</span>
-                      <span className="text-white/80 text-sm text-center mt-2 line-clamp-2">{badge.course_title}</span>
-                      <span className="text-amber-400 text-sm mt-3 font-medium">Enter Course →</span>
-                    </div>
-                  )}
-                </div>
-              ))}
+              {badges.map(badge => {
+                const imgSrc = badge.badge_image_url?.includes('office-hours-badge')
+                  ? officeHoursBadge
+                  : badge.badge_image_url;
+
+                return (
+                  <div 
+                    key={badge.id} 
+                    onClick={() => handleBadgeClick(badge)}
+                    className="cursor-pointer transition-all duration-300 hover:scale-105 flex items-center justify-center"
+                  >
+                    {imgSrc ? (
+                      <img 
+                        src={imgSrc} 
+                        alt={`${badge.course_code} - ${badge.course_title}`}
+                        className="w-full h-auto max-h-64 object-contain drop-shadow-2xl hover:brightness-110 mx-auto rounded-2xl"
+                      />
+                    ) : (
+                      <div className="aspect-square w-full bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
+                        <span className="text-white font-bold text-xl sm:text-2xl">{badge.course_code}</span>
+                        <span className="text-white/80 text-sm text-center mt-2 line-clamp-2">{badge.course_title}</span>
+                        <span className="text-amber-400 text-sm mt-3 font-medium">Enter Course →</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="text-white/60 text-center py-8 w-full">
