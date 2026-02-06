@@ -110,7 +110,7 @@ const scrollModePluginInstance = scrollModePlugin();
   const [touchEnd, setTouchEnd] = useState<{ x: number; y: number; time: number } | null>(null);
 
   // Auto-hide controls on mobile
-  const [mobileControlsVisible, setMobileControlsVisible] = useState(true);
+  const [mobileControlsVisible, setMobileControlsVisible] = useState(false);
   const mobileControlsTimerRef = useRef<number | null>(null);
 
   const showMobileControls = useCallback(() => {
@@ -152,9 +152,14 @@ const scrollModePluginInstance = scrollModePlugin();
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
   const [useGoogle, setUseGoogle] = useState(false);
 
-  // Auto-hide controls after 3s on mobile viewer
+  // Show controls briefly on page change (not on initial mount)
+  const hasInitializedRef = useRef(false);
   useEffect(() => {
     if (!isInMobileViewer) return;
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      return; // Skip showing controls on first mount
+    }
     showMobileControls();
     return () => {
       if (mobileControlsTimerRef.current) clearTimeout(mobileControlsTimerRef.current);
