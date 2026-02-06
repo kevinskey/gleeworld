@@ -211,7 +211,6 @@ import AcademyStudentRegistration from "./pages/AcademyStudentRegistration";
 import { ProviderDashboard } from "./components/providers/ProviderDashboard";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
-import { Mus240StaffRoute } from "./components/auth/Mus240StaffRoute";
 import { ProfileCompletionGuard } from "./components/auth/ProfileCompletionGuard";
 import TimesheetPage from "./pages/TimesheetPage";
 import BownaScholarLanding from "./pages/BownaScholarLanding";
@@ -230,16 +229,10 @@ import GroupDetail from "./pages/mus240/GroupDetail";
 import GroupUpdateForm from "./pages/mus240/GroupUpdateForm";
 import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 
-import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { StudentMidtermGrading } from "./pages/mus240/StudentMidtermGrading";
 import { StudentWorkOverview } from "./pages/mus240/StudentWorkOverview";
 import { StudentDashboard } from "./pages/mus240/StudentDashboard";
-import { BulkJournalGradingPage } from "./pages/mus240/BulkJournalGradingPage";
 import { PeerReviewBrowserPage } from "./pages/mus240/PeerReviewBrowserPage";
-import { JournalReviewPage } from "./pages/mus240/JournalReviewPage";
-import { InstructorJournalsPage } from "./pages/mus240/InstructorJournalsPage";
-import JournalSubmissionGradingPage from "./pages/mus240/JournalSubmissionGradingPage";
-import { StudentJournalGradePage } from "./pages/mus240/StudentJournalGradePage";
 import MidtermExam from "./pages/mus240/MidtermExam";
 import SMUS100MidtermExamPage from "./pages/SMUS100MidtermExamPage";
 import CourseStatistics from "./pages/admin/CourseStatistics";
@@ -2059,13 +2052,7 @@ const App = () => {
                                   />
                                  <Route 
                                   path="/mus-240/student/journal/:journal_id/grade" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <Mus240EnrollmentRoute>
-                                        <StudentJournalGradePage />
-                                      </Mus240EnrollmentRoute>
-                                    </ProtectedRoute>
-                                  }
+                                  element={<Navigate to="/academy/mus-240" replace />}
                                  />
                               <Route 
                                path="/mus-240/syllabus" 
@@ -2178,23 +2165,18 @@ const App = () => {
                                     </Mus240EnrollmentRoute>
                                   }
                                 />
+                                  {/* Legacy MUS-240 instructor routes → redirect to universal console */}
                                   <Route 
                                     path="/mus-240/admin" 
-                                    element={<Navigate to="/mus-240/instructor/console" replace />}
+                                    element={<Navigate to="/instructor/mus-240" replace />}
                                   />
                                   <Route 
                                     path="/mus-240/instructor" 
-                                    element={<Navigate to="/mus-240/instructor/console" replace />}
+                                    element={<Navigate to="/instructor/mus-240" replace />}
                                   />
                                   <Route 
                                     path="/mus-240/instructor/console" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <Mus240StaffRoute>
-                                          <InstructorConsole />
-                                        </Mus240StaffRoute>
-                                      </ProtectedRoute>
-                                    } 
+                                    element={<Navigate to="/instructor/mus-240" replace />}
                                   />
                                   <Route 
                                     path="/mus-240/instructor/student/:studentId" 
@@ -2216,45 +2198,16 @@ const App = () => {
                                       </ProtectedRoute>
                                     } 
                                   />
-                                  <Route 
-                                    path="/mus-240/instructor/bulk-grading" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <Mus240StaffRoute>
-                                          <BulkJournalGradingPage />
-                                        </Mus240StaffRoute>
-                                      </ProtectedRoute>
-                                    } 
-                                  />
+                                  {/* Removed journal/grading routes - journals removed from curriculum */}
+                                  <Route path="/mus-240/instructor/bulk-grading" element={<Navigate to="/instructor/mus-240" replace />} />
+                                  <Route path="/mus-240/journal/:journalId/review" element={<Navigate to="/academy/mus-240" replace />} />
+                                  <Route path="/mus-240/instructor/journals" element={<Navigate to="/instructor/mus-240" replace />} />
+                                  <Route path="/mus-240/instructor/journal/:journal_id/grade" element={<Navigate to="/instructor/mus-240" replace />} />
                                   <Route 
                                     path="/mus-240/peer-review" 
                                     element={
                                       <ProtectedRoute>
                                         <PeerReviewBrowserPage />
-                                      </ProtectedRoute>
-                                    } 
-                                  />
-                                  <Route 
-                                    path="/mus-240/journal/:journalId/review" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <JournalReviewPage />
-                                      </ProtectedRoute>
-                                    } 
-                                  />
-                                  <Route 
-                                    path="/mus-240/instructor/journals" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <InstructorJournalsPage />
-                                      </ProtectedRoute>
-                                    } 
-                                  />
-                                  <Route 
-                                    path="/mus-240/instructor/journal/:journal_id/grade" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <JournalSubmissionGradingPage />
                                       </ProtectedRoute>
                                     } 
                                   />
