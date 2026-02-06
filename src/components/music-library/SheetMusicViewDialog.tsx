@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +12,10 @@ import {
   Brain,
   List,
   FileCheck,
-  Scissors
+  Scissors,
+  X
 } from "lucide-react";
+import { useIsPhone } from '@/hooks/use-mobile';
 import { SheetMusicNotes } from '@/modules/glee-library/notes/SheetMusicNotes';
 import { MarkedScores } from '@/modules/glee-library/marked-scores/MarkedScores';
 import { PersonalNotes } from '@/modules/glee-library/personal-notes/PersonalNotes';
@@ -62,6 +64,7 @@ export const SheetMusicViewDialog = ({
   const { user } = useAuth();
   const { isAdmin, profile } = useUserRole();
   const { stop, closeYouTube } = useAudioCompanion();
+  const isPhone = useIsPhone();
   
   const [setlistInfo, setSetlistInfo] = useState<any>(null);
   const [licenseInfo, setLicenseInfo] = useState<any>(null);
@@ -154,8 +157,9 @@ export const SheetMusicViewDialog = ({
         }}
       >
         <DialogHeader className="hidden" />
+        {/* Crop & Close buttons - hidden on phones, visible on tablet/desktop */}
         <div 
-          className="absolute right-3 z-50 flex gap-2"
+          className={`absolute right-3 z-50 gap-2 ${isPhone ? 'hidden' : 'flex'}`}
           style={{ top: 'calc(env(safe-area-inset-top) + 0.75rem)' }}
         >
           {item.pdf_url && canCropPDF && (
@@ -188,7 +192,32 @@ export const SheetMusicViewDialog = ({
                     musicId={item.id}
                     musicTitle={item.title}
                     startInAnnotationMode
+                    isInMobileViewer={isPhone}
                     className="w-full h-full rounded-none border-0"
+                    toolbarActions={isPhone ? (
+                      <>
+                        {canCropPDF && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowCropEditor(true)}
+                            className="h-7 w-7 p-0 touch-manipulation rounded-full"
+                            aria-label="Crop PDF"
+                          >
+                            <Scissors className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onOpenChange(false)}
+                          className="h-7 w-7 p-0 touch-manipulation rounded-full"
+                          aria-label="Close"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
+                    ) : undefined}
                   />
                 ) : (
                   <div className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
