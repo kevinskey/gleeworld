@@ -10,7 +10,7 @@ import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseResourcesList } from './CourseResourcesList';
 import { MusicLibrary } from '@/components/music-library/MusicLibrary';
 import { CoursePlaylistDisplay } from '@/components/public/CoursePlaylistDisplay';
-import { Mus070AttendanceGrid } from '@/components/mus070/attendance/Mus070AttendanceGrid';
+import { CourseAttendanceGrid } from '@/components/course/CourseAttendanceGrid';
 interface CoursePageLayoutProps {
   courseId: string;
   courseSemester: string;
@@ -291,16 +291,12 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
             )}
 
             {activeSection === 'attendance' && (
-              courseId === 'glee-club' ? (
-                <Mus070AttendanceGrid isInstructor={isTA} />
-              ) : (
-                <Card className="bg-card/50 border-border">
-                  <CardContent className="p-6">
-                    <h2 className="text-xl font-bold text-foreground mb-4">Attendance</h2>
-                    <p className="text-muted-foreground">Attendance records and tracking will be shown here.</p>
-                  </CardContent>
-                </Card>
-              )
+              <CourseAttendanceGrid 
+                courseId={courseId} 
+                courseCode={courseCode}
+                semester={courseSemester}
+                isInstructor={isTA} 
+              />
             )}
 
             {activeSection === 'rubrics' && (

@@ -43,7 +43,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
-import { Mus240AttendanceGrid } from '@/components/mus240/attendance/Mus240AttendanceGrid';
+import { CourseAttendanceGrid } from '@/components/course/CourseAttendanceGrid';
+
+const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
 
 export const StudentDashboard = () => {
   const { user } = useAuth();
@@ -538,7 +540,12 @@ export const StudentDashboard = () => {
 
           {/* Attendance Tab */}
           <TabsContent value="attendance" className="space-y-4">
-            <Mus240AttendanceGrid isInstructor={false} />
+            <CourseAttendanceGrid 
+              courseId={MUS240_COURSE_ID} 
+              courseCode="MUS 240"
+              semester={currentSemester}
+              isInstructor={false} 
+            />
           </TabsContent>
 
           <TabsContent value="assignments" className="space-y-4">
