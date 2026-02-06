@@ -371,7 +371,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalAssignments}</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Total</p>
+                <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Total</p>
               </div>
             </div>
           </CardContent>
@@ -385,7 +385,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalSubmissions}</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Submitted</p>
+                <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Submitted</p>
               </div>
             </div>
           </CardContent>
@@ -399,7 +399,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.pendingGrading}</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Pending</p>
+                <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Pending</p>
               </div>
             </div>
           </CardContent>
@@ -413,7 +413,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalGraded}</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Graded</p>
+                <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Graded</p>
               </div>
             </div>
           </CardContent>
@@ -424,7 +424,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <h2 className="text-sm sm:text-base md:text-lg font-semibold text-foreground truncate">Assignments</h2>
-          <span className="text-xs sm:text-sm md:text-base text-muted-foreground flex-shrink-0">({filteredAndSortedAssignments.length})</span>
+          <span className="text-xs sm:text-sm md:text-base flex-shrink-0" style={{ color: '#64748B' }}>({filteredAndSortedAssignments.length})</span>
         </div>
         <Dialog open={isCreateOpen || !!editingAssignment} onOpenChange={open => {
         if (!open) {
@@ -532,7 +532,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm" style={{ color: '#64748B' }}>
                   Rubric will be used for AI-assisted grading
                 </p>
               </div>
@@ -639,7 +639,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                     </Badge>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-base text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-base" style={{ color: '#64748B' }}>
                   <span>{assignment.points} pts</span>
                   {assignment.due_date && (
                     <span className="flex items-center gap-1">

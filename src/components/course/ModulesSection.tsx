@@ -303,7 +303,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                         ...editedWeek,
                         topics: e.target.value
                       })} placeholder="Enter topics, readings (prefix with 'Read:'), assignments (prefix with 'Due:')" rows={6} />
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs" style={{ color: '#64748B' }}>
                               Tip: Use "Read:" for readings and "Due:" for assignments
                             </p>
                           </div>
@@ -335,7 +335,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                                 <div className="flex items-center gap-2">
                                   <CardTitle className="text-base font-semibold">{weekLabel}</CardTitle>
                                   {dateRange && (
-                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <span className="text-xs flex items-center gap-1" style={{ color: '#64748B' }}>
                                       <Calendar className="h-3 w-3" />
                                       {dateRange}
                                     </span>
@@ -374,12 +374,12 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
 
                           {/* Readings */}
                           {readings.length > 0 && <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground pt-[20px] pl-[10px]">
+                              <div className="flex items-center gap-2 text-sm font-medium pt-[20px] pl-[10px]" style={{ color: '#475569' }}>
                                 <BookOpen className="h-4 w-4" />
                                 Readings
                               </div>
                               <ul className="space-y-1.5 ml-6">
-                                {readings.map((reading, i) => <li key={i} className="text-sm flex items-start gap-2 pb-[10px] text-foreground/80">
+                                {readings.map((reading, i) => <li key={i} className="text-sm flex items-start gap-2 pb-[10px] text-foreground">
                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
                                     {reading}
                                   </li>)}
@@ -388,7 +388,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
 
                           {/* Assignments */}
                           {assignments.length > 0 && <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                              <div className="flex items-center gap-2 text-sm font-medium" style={{ color: '#475569' }}>
                                 <ClipboardList className="h-4 w-4" />
                                 Assignments Due
                               </div>
@@ -401,7 +401,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                             </div>}
 
                           {/* Show raw content if no structured data */}
-                          {topicItems.length === 0 && readings.length === 0 && assignments.length === 0 && week.topics && <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {topicItems.length === 0 && readings.length === 0 && assignments.length === 0 && week.topics && <p className="text-sm text-foreground whitespace-pre-wrap">
                               {week.topics}
                             </p>}
                         </CardContent>
@@ -412,10 +412,10 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
             </div> : <Card>
               <CardContent className="py-12 flex flex-col items-center justify-center text-center">
                 <Calendar className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                <p className="text-muted-foreground">
+                <p className="text-foreground">
                   No course outline available yet.
                 </p>
-                <p className="text-sm mt-1 text-muted-foreground">
+                <p className="text-sm mt-1" style={{ color: '#64748B' }}>
                   Click "Add Week" to create your first module.
                 </p>
               </CardContent>
@@ -452,8 +452,8 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
                     const ItemIcon = getItemIcon(item.item_type);
                     return <div key={item.id} className="flex items-center justify-between p-3 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
                                   <div className="flex items-center gap-3">
-                                    <ItemIcon className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-sm">{item.title}</span>
+                                    <ItemIcon className="h-4 w-4 text-primary" />
+                                    <span className="text-sm text-foreground">{item.title}</span>
                                   </div>
                                   {item.points && <Badge variant="outline">{item.points} pts</Badge>}
                                 </div>;

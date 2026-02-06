@@ -172,7 +172,7 @@ export default function ResourcesAdmin() {
                         {!resource.is_active && (
                           <Badge variant="secondary">Inactive</Badge>
                         )}
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm" style={{ color: '#64748B' }}>
                           Order: {resource.display_order}
                         </span>
                       </div>
@@ -224,13 +224,13 @@ export default function ResourcesAdmin() {
                 </CardHeader>
                 
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-sm leading-relaxed" style={{ color: '#475569' }}>
                     {resource.description}
                   </p>
                   
                   <div className="flex items-center gap-2">
                     {resource.is_file_upload ? (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm" style={{ color: '#64748B' }}>
                         📁 {resource.file_name} ({resource.file_size ? `${(resource.file_size / 1024 / 1024).toFixed(1)}MB` : 'Unknown size'})
                       </span>
                     ) : (
@@ -246,7 +246,7 @@ export default function ResourcesAdmin() {
                     )}
                   </div>
                   
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs" style={{ color: '#64748B' }}>
                     Created: {new Date(resource.created_at).toLocaleDateString()} • 
                     Updated: {new Date(resource.updated_at).toLocaleDateString()}
                   </div>
@@ -264,7 +264,7 @@ export default function ResourcesAdmin() {
               <Upload className="h-5 w-5" />
               Bulk File Upload
             </CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm" style={{ color: '#475569' }}>
               Upload multiple files at once. Each file will become a separate resource.
             </p>
           </CardHeader>

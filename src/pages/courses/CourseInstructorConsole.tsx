@@ -159,7 +159,7 @@ export const CourseInstructorConsole = () => {
       
       {navCategories.map(category => (
         <div key={category.label}>
-          <h3 className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-2 px-3">
+          <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 px-3">
             {category.label}
           </h3>
           <div className="space-y-0.5">
@@ -180,7 +180,7 @@ export const CourseInstructorConsole = () => {
                       : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   )}
                 >
-                  <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "text-muted-foreground/60")} />
+                  <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
                   <span>{item.label}</span>
                   {isActive && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
                 </button>
@@ -206,15 +206,15 @@ export const CourseInstructorConsole = () => {
               </div>
               
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden h-8 text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden h-8 text-foreground hover:text-foreground">
                   <Menu className="h-4 w-4" />
                   <span className="ml-1.5 text-xs">Menu</span>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/academy/${courseSlug}`)} className="hidden sm:flex items-center gap-1.5 h-8 text-xs text-muted-foreground hover:text-primary">
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/academy/${courseSlug}`)} className="hidden sm:flex items-center gap-1.5 h-8 text-xs text-foreground hover:text-primary">
                   <Eye className="h-3.5 w-3.5" />
                   <span>Student View</span>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/academy/${courseSlug}`)} className="hidden sm:flex items-center gap-1.5 h-8 text-xs text-muted-foreground hover:text-primary">
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/academy/${courseSlug}`)} className="hidden sm:flex items-center gap-1.5 h-8 text-xs text-foreground hover:text-primary">
                   <Home className="h-3.5 w-3.5" />
                   <span>Course Page</span>
                 </Button>
