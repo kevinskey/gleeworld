@@ -230,7 +230,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
 
     setDirtyRecords(prev => {
       const newMap = new Map(prev);
-      newMap.set(`${studentId}-${sessionId}`, newStatus || 'null');
+      newMap.set(`${studentId}::${sessionId}`, newStatus || 'null');
       return newMap;
     });
   };
@@ -250,7 +250,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
       const updates: { student_profile_id: string; attendance_session_id: string; status: string }[] = [];
       
       dirtyRecords.forEach((status, key) => {
-        const [studentId, sessionId] = key.split('-');
+        const [studentId, sessionId] = key.split('::');
         if (status !== 'null') {
           updates.push({
             student_profile_id: studentId,
