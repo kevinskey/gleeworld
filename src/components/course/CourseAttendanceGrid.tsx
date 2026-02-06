@@ -16,6 +16,8 @@ import { toZonedTime } from 'date-fns-tz';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { useCourseStudents } from '@/hooks/useCourseStudents';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { AttendanceMobileCards } from '@/components/course/AttendanceMobileCards';
 
 // Spring 2026 semester start (first day of classes)
 const SEMESTER_START = new Date('2026-01-14');
@@ -68,6 +70,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
   studentId 
 }) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [students, setStudents] = useState<StudentAttendance[]>([]);
   const [sessions, setSessions] = useState<ClassSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -373,12 +376,12 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Calendar className="h-5 w-5 text-primary" />
               {isInstructor ? 'Class Attendance Grid' : 'My Attendance Record'}
             </CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
-              {isInstructor && (
+              {isInstructor && !isMobile && (
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -411,6 +414,19 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
             </div>
           </div>
 
+          {/* Mobile search */}
+          {isInstructor && isMobile && (
+            <div className="relative mt-2">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search students..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pl-9 h-10 text-base"
+              />
+            </div>
+          )}
+
           {/* Legend */}
           <div className="flex items-center gap-3 mt-3 text-xs flex-wrap">
             {STATUS_OPTIONS.slice(0, 4).map(opt => (
@@ -436,16 +452,24 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
               <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
               <p className="font-medium">No students found</p>
             </div>
+          ) : isMobile ? (
+            <AttendanceMobileCards
+              students={filteredStudents}
+              sessions={sessions}
+              isInstructor={isInstructor}
+              onCycleStatus={cycleStatus}
+              dirtyRecords={dirtyRecords}
+              formatDate={(d) => toET(d)}
+            />
           ) : (
             <ScrollArea className="w-full h-[60vh]">
               <div className="min-w-max">
                 {/* Header Row */}
                 <div className="flex border-b bg-muted/50 sticky top-0 z-10">
-                  <div className="w-40 sm:w-48 min-w-40 sm:min-w-48 p-2 font-semibold text-xs border-r sticky left-0 bg-muted/50 z-20">
+                  <div className="w-48 min-w-48 p-2 font-semibold text-xs border-r sticky left-0 bg-muted/50 z-20">
                     Student
                   </div>
                   
-                  {/* Session columns grouped by week */}
                   {sessions.map((session) => (
                     <Tooltip key={session.id}>
                       <TooltipTrigger asChild>
@@ -463,7 +487,6 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
                     </Tooltip>
                   ))}
 
-                  {/* Totals columns */}
                   <div className="flex bg-muted/70 sticky right-0 z-10 border-l-2 border-primary/20">
                     <div className="w-8 p-1 text-center text-[9px] font-semibold border-r" title="Present">P</div>
                     <div className="w-8 p-1 text-center text-[9px] font-semibold border-r" title="Absent">A</div>
@@ -473,7 +496,6 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
                   </div>
                 </div>
 
-                {/* Student Rows */}
                 {filteredStudents.map((student, rowIdx) => (
                   <div 
                     key={student.student_id} 
@@ -482,12 +504,10 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
                       rowIdx % 2 === 0 ? "bg-background" : "bg-muted/10"
                     )}
                   >
-                    {/* Student name */}
-                    <div className="w-40 sm:w-48 min-w-40 sm:min-w-48 p-2 border-r sticky left-0 bg-inherit z-10">
+                    <div className="w-48 min-w-48 p-2 border-r sticky left-0 bg-inherit z-10">
                       <div className="font-medium text-sm truncate">{student.student_name}</div>
                     </div>
 
-                    {/* Attendance cells */}
                     {sessions.map(session => {
                       const status = student.records.get(session.id) || null;
                       return (
@@ -511,7 +531,6 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
                       );
                     })}
 
-                    {/* Totals */}
                     <div className="flex bg-muted/30 sticky right-0 z-10 border-l-2 border-primary/20">
                       <div className="w-8 p-1 text-center text-xs font-medium border-r text-green-600">
                         {student.totals.present}

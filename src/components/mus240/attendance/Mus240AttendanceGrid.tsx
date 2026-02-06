@@ -15,6 +15,8 @@ import { format, parseISO, startOfWeek, differenceInWeeks, addWeeks } from 'date
 import { useAuth } from '@/contexts/AuthContext';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { AttendanceMobileCards } from '@/components/course/AttendanceMobileCards';
 
 const MUS240_COURSE_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
 
@@ -60,6 +62,7 @@ export const Mus240AttendanceGrid: React.FC<Mus240AttendanceGridProps> = ({
 }) => {
   const { user } = useAuth();
   const { currentSemester } = useMus240SemesterSafe();
+  const isMobile = useIsMobile();
   const [students, setStudents] = useState<StudentAttendance[]>([]);
   const [sessions, setSessions] = useState<ClassSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -340,12 +343,12 @@ export const Mus240AttendanceGrid: React.FC<Mus240AttendanceGridProps> = ({
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Calendar className="h-5 w-5 text-primary" />
               {isInstructor ? 'Class Attendance Grid' : 'My Attendance Record'}
             </CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
-              {isInstructor && (
+              {isInstructor && !isMobile && (
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -378,6 +381,19 @@ export const Mus240AttendanceGrid: React.FC<Mus240AttendanceGridProps> = ({
             </div>
           </div>
 
+          {/* Mobile search */}
+          {isInstructor && isMobile && (
+            <div className="relative mt-2">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search students..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pl-9 h-10 text-base"
+              />
+            </div>
+          )}
+
           {/* Legend */}
           <div className="flex items-center gap-3 mt-3 text-xs flex-wrap">
             {STATUS_OPTIONS.slice(0, 4).map(opt => (
@@ -403,17 +419,25 @@ export const Mus240AttendanceGrid: React.FC<Mus240AttendanceGridProps> = ({
               <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
               <p className="font-medium">No students found</p>
             </div>
+          ) : isMobile ? (
+            <AttendanceMobileCards
+              students={filteredStudents}
+              sessions={sessions}
+              isInstructor={isInstructor}
+              onCycleStatus={cycleStatus}
+              dirtyRecords={dirtyRecords}
+              formatDate={(d) => parseISO(d)}
+            />
           ) : (
             <ScrollArea className="w-full">
               <div className="min-w-max">
                 {/* Header Row */}
                 <div className="flex border-b bg-muted/50 sticky top-0 z-10">
-                  <div className="w-40 sm:w-48 min-w-40 sm:min-w-48 p-2 font-semibold text-xs border-r sticky left-0 bg-muted/50 z-20">
+                  <div className="w-48 min-w-48 p-2 font-semibold text-xs border-r sticky left-0 bg-muted/50 z-20">
                     Student
                   </div>
                   
-                  {/* Session columns grouped by week */}
-                  {sessions.map((session, idx) => (
+                  {sessions.map((session) => (
                     <Tooltip key={session.id}>
                       <TooltipTrigger asChild>
                         <div className="w-9 min-w-9 p-1 text-center border-r text-[10px] cursor-help">
@@ -449,12 +473,10 @@ export const Mus240AttendanceGrid: React.FC<Mus240AttendanceGridProps> = ({
                       rowIdx % 2 === 0 ? "bg-background" : "bg-muted/10"
                     )}
                   >
-                    {/* Student name */}
-                    <div className="w-40 sm:w-48 min-w-40 sm:min-w-48 p-2 border-r sticky left-0 bg-inherit z-10">
+                    <div className="w-48 min-w-48 p-2 border-r sticky left-0 bg-inherit z-10">
                       <div className="font-medium text-sm truncate">{student.student_name}</div>
                     </div>
 
-                    {/* Attendance cells */}
                     {sessions.map(session => {
                       const status = student.records.get(session.id) || null;
                       const isDirty = dirtyRecords.has(`${student.student_id}::${session.id}`);
