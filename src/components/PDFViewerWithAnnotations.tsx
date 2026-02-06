@@ -58,6 +58,8 @@ interface PDFViewerWithAnnotationsProps {
   startInAnnotationMode?: boolean;
   /** When true, toolbars are repositioned to avoid overlapping the parent mobile header */
   isInMobileViewer?: boolean;
+  /** Optional extra toolbar actions (rendered inside the auto-hiding toolbar on mobile) */
+  toolbarActions?: React.ReactNode;
 }
 interface PDFViewerHandle {
   promptToSaveIfDirty: () => Promise<boolean>;
@@ -70,6 +72,7 @@ export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWit
   className = "",
   startInAnnotationMode = false,
   isInMobileViewer = false,
+  toolbarActions,
 }: PDFViewerWithAnnotationsProps, ref) => {
   const { user } = useAuth();
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
@@ -1221,6 +1224,14 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 >
                   <Palette className="h-3.5 w-3.5" />
                 </Button>
+
+                {/* Extra toolbar actions (e.g. Crop/Close on mobile) */}
+                {toolbarActions && (
+                  <>
+                    <div className="w-px h-4 bg-border mx-0.5" />
+                    {toolbarActions}
+                  </>
+                )}
               </div>
             </div>
           )}
