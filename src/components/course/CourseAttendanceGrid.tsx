@@ -242,6 +242,9 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
     handleStatusChange(studentId, sessionId, statusOrder[nextIndex]);
   };
 
+  const isValidUUID = (id: string) => 
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
   const saveChanges = async () => {
     if (dirtyRecords.size === 0) return;
 
@@ -250,7 +253,27 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
       const updates: { student_profile_id: string; attendance_session_id: string; status: string }[] = [];
       
       dirtyRecords.forEach((status, key) => {
-        const [studentId, sessionId] = key.split('::');
+        // Support both :: (new) and legacy - separator
+        const separatorIdx = key.indexOf('::');
+        let studentId: string;
+        let sessionId: string;
+        
+        if (separatorIdx !== -1) {
+          studentId = key.substring(0, separatorIdx);
+          sessionId = key.substring(separatorIdx + 2);
+        } else {
+          // Fallback: try to split a UUID pair joined by - 
+          // UUIDs are 36 chars (8-4-4-4-12), so first UUID ends at index 36
+          console.warn('Legacy separator detected in dirty record key:', key);
+          studentId = key.substring(0, 36);
+          sessionId = key.substring(37);
+        }
+
+        if (!isValidUUID(studentId) || !isValidUUID(sessionId)) {
+          console.error('Invalid UUID detected — skipping:', { key, studentId, sessionId });
+          return;
+        }
+
         if (status !== 'null') {
           updates.push({
             student_profile_id: studentId,
@@ -259,6 +282,13 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
           });
         }
       });
+
+      if (updates.length === 0) {
+        toast.info('No valid changes to save');
+        setDirtyRecords(new Map());
+        setSaving(false);
+        return;
+      }
 
       for (const update of updates) {
         const { error } = await supabase
