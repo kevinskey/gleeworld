@@ -310,6 +310,24 @@ export default function BookAppointmentPage() {
                 background-color: #004080 !important;
                 color: white !important;
               }
+              .oh-picker-btn {
+                background-color: white !important;
+                color: #0F172A !important;
+                border: 2px solid #cbd5e1 !important;
+              }
+              .oh-picker-btn:hover {
+                background-color: #f8fafc !important;
+                border-color: #3b82f6 !important;
+              }
+              .oh-picker-btn:disabled {
+                background-color: #f1f5f9 !important;
+                color: #64748b !important;
+                border-color: #e2e8f0 !important;
+                opacity: 1 !important;
+              }
+              .oh-picker-btn svg {
+                color: #334155 !important;
+              }
             `}</style>
             <Tabs defaultValue="book">
               <TabsList className="grid w-full grid-cols-3 h-20 bg-gradient-to-b from-[#004080] to-[#003666] p-0 pb-0 rounded-t-xl rounded-b-none relative z-10 shadow-lg">
@@ -360,13 +378,11 @@ export default function BookAppointmentPage() {
                             <Button
                               variant="outline"
                               disabled={!selectedType}
-                              className="w-[160px] justify-start text-left font-semibold h-12 rounded-lg border-2 border-slate-300 !bg-white !text-slate-900 hover:!bg-slate-50 hover:border-primary transition-all disabled:!bg-slate-100 disabled:!text-slate-500 disabled:!opacity-100 disabled:border-slate-200"
+                              className="oh-picker-btn w-[160px] justify-start text-left font-semibold h-12 rounded-lg transition-all"
                               style={{ fontSize: '16px' }}
                             >
-                              <CalendarIcon className="mr-2 h-5 w-5 text-slate-700" />
-                              <span style={{ color: selectedDate ? '#0F172A' : '#475569' }}>
-                                {selectedDate ? format(selectedDate, "MMM d") : "Date"}
-                              </span>
+                              <CalendarIcon className="mr-2 h-5 w-5" />
+                              <span>{selectedDate ? format(selectedDate, "MMM d") : "Date"}</span>
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent 
@@ -412,13 +428,11 @@ export default function BookAppointmentPage() {
                             <Button
                               variant="outline"
                               disabled={!selectedType || !selectedDateStr}
-                              className="w-[140px] justify-start text-left font-semibold h-12 rounded-lg border-2 border-slate-300 !bg-white !text-slate-900 hover:!bg-slate-50 hover:border-primary transition-all disabled:!bg-slate-100 disabled:!text-slate-500 disabled:!opacity-100 disabled:border-slate-200"
+                              className="oh-picker-btn w-[140px] justify-start text-left font-semibold h-12 rounded-lg transition-all"
                               style={{ fontSize: '16px' }}
                             >
-                              <Clock className="mr-2 h-5 w-5 text-slate-700" />
-                              <span style={{ color: selectedTime ? '#0F172A' : '#475569' }}>
-                                {selectedTime || "Time"}
-                              </span>
+                              <Clock className="mr-2 h-5 w-5" />
+                              <span>{selectedTime || "Time"}</span>
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent 
