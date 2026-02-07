@@ -319,10 +319,10 @@ export default function BookAppointmentPage() {
               <TabsContent value="book" className="mt-0 space-y-4 bg-gradient-to-b from-white to-gray-50 border border-t-0 border-border rounded-b-xl p-6 relative shadow-xl">
                 {/* Booking Form */}
                 <Card>
-                  <CardContent className="p-5 space-y-5 bg-primary-foreground">
+                  <CardContent className="p-5 space-y-5 bg-white">
                     {/* Service Selection */}
-                    <div className="space-y-3 bg-primary-foreground">
-                      <Label className="text-xl font-semibold">Service Type *</Label>
+                    <div className="space-y-3">
+                      <Label className="text-xl font-semibold text-slate-900">Service Type *</Label>
                       <Select value={selectedType} onValueChange={val => {
                       setSelectedType(val);
                       setSelectedTime('');
@@ -343,7 +343,7 @@ export default function BookAppointmentPage() {
 
                     {/* Date & Time Row - Zoom-style pill design */}
                     <div className="space-y-3">
-                      <Label className="text-lg">Date & Time *</Label>
+                      <Label className="text-lg text-slate-900">Date & Time *</Label>
                       <div className="flex items-center gap-3 flex-wrap">
                         {/* Date Picker */}
                         <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={true}>
@@ -450,13 +450,13 @@ export default function BookAppointmentPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <Label className="text-lg">Topic/Purpose *</Label>
-                      <Input value={topic} onChange={e => setTopic(e.target.value)} placeholder="What would you like to discuss?" className="h-14 text-lg" />
+                      <Label className="text-lg text-slate-900">Topic/Purpose *</Label>
+                      <Input value={topic} onChange={e => setTopic(e.target.value)} placeholder="What would you like to discuss?" className="h-14 text-lg text-slate-900 placeholder:text-slate-400 bg-white border-slate-300" />
                     </div>
 
                     <div className="space-y-3">
-                      <Label className="text-lg">Additional Notes</Label>
-                      <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional context..." rows={4} className="text-lg" />
+                      <Label className="text-lg text-slate-900">Additional Notes</Label>
+                      <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional context..." rows={4} className="text-lg text-slate-900 placeholder:text-slate-400 bg-white border-slate-300" />
                     </div>
 
                     <Button onClick={handleBookAppointment} disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic} className="w-full h-16 text-2xl font-semibold text-white shadow-lg hover:shadow-xl transition-all" style={{
@@ -552,27 +552,27 @@ export default function BookAppointmentPage() {
 
                 {/* Send Message */}
                 <Card>
-                  <CardHeader className="pb-3 bg-zinc-200">
-                    <CardTitle className="text-base">Send a Message</CardTitle>
-                    <CardDescription className="text-xs">
+                  <CardHeader className="pb-3 bg-white border-b">
+                    <CardTitle className="text-base text-slate-900">Send a Message</CardTitle>
+                    <CardDescription className="text-xs text-slate-600">
                       Send Dr. Johnson a direct message
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3 bg-muted">
+                  <CardContent className="space-y-3 bg-white pt-4">
                     <div className="space-y-2">
-                      <Label className="text-sm">Subject</Label>
-                      <Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="What is this about?" className="h-10" />
+                      <Label className="text-sm text-slate-800 font-medium">Subject</Label>
+                      <Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="What is this about?" className="h-10 text-slate-900 placeholder:text-slate-400 bg-white border-slate-300" />
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm">Message</Label>
-                      <Textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} placeholder="Type your message here..." rows={4} />
+                      <Label className="text-sm text-slate-800 font-medium">Message</Label>
+                      <Textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} placeholder="Type your message here..." rows={4} className="text-slate-900 placeholder:text-slate-400 bg-white border-slate-300" />
                     </div>
 
-                    <div className="bg-muted/50 rounded-lg p-2.5 text-xs flex items-center gap-2">
-                      <User className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-muted-foreground">
-                        From: <strong className="text-foreground">{profile?.full_name || user?.email}</strong>
+                    <div className="bg-slate-50 rounded-lg p-2.5 text-xs flex items-center gap-2">
+                      <User className="h-3.5 w-3.5 text-slate-500" />
+                      <span className="text-slate-600">
+                        From: <strong className="text-slate-900">{profile?.full_name || user?.email}</strong>
                       </span>
                     </div>
 
