@@ -261,7 +261,7 @@ export default function BookAppointmentPage() {
       backgroundColor: '#003666'
     }}>
         <h1 className="text-center tracking-wide text-white" style={{ fontSize: '30px', fontWeight: 700 }}>
-          OFFICE HOURS
+          OFFICE HOURS with Dr. Johnson
         </h1>
       </div>
       
