@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadFileAndGetUrl } from '@/utils/storage';
 import { DocumentScanner } from './DocumentScanner';
+import { BulkPDFUploader } from './BulkPDFUploader';
 
 interface PDFImportForm {
   title: string;
@@ -159,7 +160,10 @@ export const PDFImportManager = () => {
 
   return (
     <div className="space-y-6">
-      {/* Import Method Selection */}
+      {/* Bulk Upload Section */}
+      <BulkPDFUploader />
+
+      {/* Single Import Method Selection */}
       <div className="flex gap-4">
         <Button
           variant={importMethod === 'file' ? 'default' : 'outline'}
