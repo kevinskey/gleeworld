@@ -274,8 +274,8 @@ export const SheetMusicViewDialog = ({
     return (
       <>
         <div 
-          className="fixed inset-0 z-[100000] bg-background flex flex-col"
-          style={{ height: '100dvh' }}
+          className="fixed inset-x-0 bottom-0 z-[100000] bg-background flex flex-col"
+          style={{ top: 'env(safe-area-inset-top, 12px)' }}
         >
           {renderPdfContent()}
         </div>

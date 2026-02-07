@@ -1155,14 +1155,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
           )}
 
-          {/* Top toolbar when NOT in annotation mode - auto-hides on mobile */}
-          {!annotationMode && (
+          {/* Top toolbar when NOT in annotation mode - hidden on mobile (moved to bottom bar) */}
+          {!annotationMode && !isInMobileViewer && (
             <div 
-              className={cn(
-                "absolute left-1/2 -translate-x-1/2 z-30 transition-opacity duration-300",
-                isInMobileViewer ? "top-1" : "top-2",
-                isInMobileViewer && !mobileControlsVisible && "opacity-0 pointer-events-none"
-              )}
+              className="absolute left-1/2 -translate-x-1/2 z-30 top-2"
               style={{ touchAction: 'none' } as React.CSSProperties}
               onTouchStart={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
@@ -1396,14 +1392,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </>
           ) : null}
 
-          {/* Page navigation - positioned at top-right, auto-hides on mobile */}
-          {signedUrl && totalPages > 1 && (
+          {/* Page navigation - positioned at top-right, hidden on mobile (moved to bottom bar) */}
+          {signedUrl && totalPages > 1 && !isInMobileViewer && (
              <div 
-              className={cn(
-                "absolute right-2 z-30 transition-opacity duration-300",
-                isInMobileViewer ? "top-1" : "top-2",
-                isInMobileViewer && !mobileControlsVisible && "opacity-0 pointer-events-none"
-              )}
+              className="absolute right-2 z-30 top-2"
               style={{ touchAction: 'none' } as React.CSSProperties}
               onTouchStart={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
@@ -1438,8 +1430,114 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           )}
         </div>
       </CardContent>
-      
-      {/* Removed verbose annotation mode footer - toolbar provides enough guidance */}
+
+      {/* Mobile bottom control bar - always visible, not overlaying the PDF */}
+      {isInMobileViewer && !annotationMode && (
+        <div 
+          className="flex-shrink-0 bg-background/95 backdrop-blur-sm border-t border-border px-3 py-2"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
+        >
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: Zoom controls */}
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleScaleZoomOut}
+                onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleZoomOut(); }}
+                disabled={scale <= 0.5}
+                className="h-8 w-8 p-0 touch-manipulation rounded-full"
+                aria-label="Zoom out"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="text-xs font-medium tabular-nums min-w-[32px] text-center">
+                {Math.round(scale * 100)}%
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleScaleZoomIn}
+                onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleZoomIn(); }}
+                disabled={scale >= 3}
+                className="h-8 w-8 p-0 touch-manipulation rounded-full"
+                aria-label="Zoom in"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Center: Page navigation */}
+            {signedUrl && totalPages > 1 && (
+              <div className="flex items-center gap-1 rounded-full border bg-muted/50 px-2 py-0.5">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 rounded-full touch-manipulation" 
+                  onClick={prevPage}
+                  onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); prevPage(); }}
+                  disabled={isLoading || currentPage <= 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs tabular-nums font-medium min-w-[40px] text-center">
+                  {currentPage} / {totalPages || (pdf?.numPages ?? 0) || 1}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 rounded-full touch-manipulation" 
+                  onClick={nextPage}
+                  onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); nextPage(); }}
+                  disabled={isLoading || currentPage >= (totalPages || (pdf?.numPages ?? 0) || 1)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Right: Tools */}
+            <div className="flex items-center gap-1">
+              {showAudioCompanion ? (
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
+              ) : (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowAudioCompanion(true)}
+                  onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowAudioCompanion(true); }}
+                  aria-label="Listen along"
+                  className="h-8 w-8 p-0 touch-manipulation rounded-full"
+                >
+                  <Music className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant={showPiano ? "secondary" : "ghost"}
+                onClick={() => setShowPiano(!showPiano)}
+                onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowPiano(!showPiano); }}
+                aria-label={showPiano ? "Hide piano" : "Show piano"}
+                className={`h-8 w-8 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-secondary' : ''}`}
+              >
+                <Piano className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => { setError(null); setAnnotationMode(true); }}
+                onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setError(null); setAnnotationMode(true); }}
+                aria-label="Enable annotations"
+                className="h-8 w-8 p-0 touch-manipulation rounded-full"
+              >
+                <Palette className="h-4 w-4" />
+              </Button>
+              {/* Extra toolbar actions (e.g. Crop/Close) */}
+              {toolbarActions}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showSavePrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
