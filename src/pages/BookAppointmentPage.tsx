@@ -552,43 +552,43 @@ export default function BookAppointmentPage() {
               </TabsContent>
 
               {/* Contact Tab */}
-              <TabsContent value="contact" className="mt-0 space-y-4 bg-gradient-to-b from-white to-gray-50 border border-t-0 border-border rounded-b-xl p-6 relative shadow-xl">
+              <TabsContent value="contact" className="mt-0 space-y-4 bg-white border border-t-0 border-border rounded-b-xl p-6 relative shadow-xl">
                 {/* Quick Contact Links */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <a href="mailto:docjohnson@spelman.edu" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-accent transition-colors text-center">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Mail className="h-5 w-5 text-primary" />
+                  <a href="mailto:docjohnson@spelman.edu" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-slate-50 transition-colors text-center">
+                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <Mail className="h-5 w-5 text-blue-600" />
                     </div>
-                    <span className="text-xs font-medium">Email</span>
+                    <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Email</span>
                   </a>
 
-                  <a href="tel:+14706221392" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-accent transition-colors text-center">
-                    <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <a href="tel:+14706221392" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-slate-50 transition-colors text-center">
+                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
                       <Phone className="h-5 w-5 text-green-600" />
                     </div>
-                    <span className="text-xs font-medium">Call</span>
+                    <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Call</span>
                   </a>
 
-                  <a href="https://zoom.us/j/drjohnson" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-accent transition-colors text-center">
-                    <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <a href="https://zoom.us/j/drjohnson" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-slate-50 transition-colors text-center">
+                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                       <Video className="h-5 w-5 text-blue-600" />
                     </div>
-                    <span className="text-xs font-medium">Zoom</span>
+                    <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Zoom</span>
                   </a>
 
-                  <div className="flex flex-col items-center gap-2 p-4 rounded-lg border bg-muted/30 text-center">
-                    <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-2 p-4 rounded-lg border bg-slate-50 text-center">
+                    <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
                       <MapPin className="h-5 w-5 text-amber-600" />
                     </div>
-                    <span className="text-xs font-medium">Room 204</span>
+                    <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Room 105</span>
                   </div>
                 </div>
 
                 {/* Send Message */}
-                <Card>
-                  <CardHeader className="pb-3 bg-white border-b">
-                    <CardTitle className="text-base text-slate-900">Send a Message</CardTitle>
-                    <CardDescription className="text-xs text-slate-600">
+                <Card className="bg-white border-slate-200">
+                  <CardHeader className="pb-3 bg-white border-b border-slate-200">
+                    <CardTitle style={{ fontSize: '18px', color: '#0F172A', fontWeight: 600 }}>Send a Message</CardTitle>
+                    <CardDescription style={{ fontSize: '14px', color: '#475569' }}>
                       Send Dr. Johnson a direct message
                     </CardDescription>
                   </CardHeader>
