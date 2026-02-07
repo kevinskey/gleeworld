@@ -350,12 +350,12 @@ export default function BookAppointmentPage() {
                               variant="outline"
                               disabled={!selectedType}
                               className={cn(
-                                "w-[160px] justify-start text-left font-normal h-12 rounded-lg border-2 hover:border-primary transition-all",
-                                !selectedDate ? "text-slate-500" : ""
+                                "w-[160px] justify-start text-left font-semibold h-12 rounded-lg border-2 bg-white hover:bg-white hover:border-primary transition-all",
+                                !selectedDate ? "" : ""
                               )}
-                              style={{ fontSize: '16px', color: selectedDate ? '#0F172A' : '#475569' }}
+                              style={{ fontSize: '16px', color: selectedDate ? '#0F172A' : '#475569', backgroundColor: 'white' }}
                             >
-                              <CalendarIcon className="mr-2 h-5 w-5" />
+                              <CalendarIcon className="mr-2 h-5 w-5" style={{ color: '#0F172A' }} />
                               {selectedDate ? format(selectedDate, "MMM d") : "Date"}
                             </Button>
                           </PopoverTrigger>
@@ -403,12 +403,12 @@ export default function BookAppointmentPage() {
                               variant="outline"
                               disabled={!selectedType || !selectedDateStr}
                               className={cn(
-                                "w-[140px] justify-start text-left font-normal h-12 rounded-lg border-2 hover:border-primary transition-all",
-                                !selectedTime ? "text-slate-500" : ""
+                                "w-[140px] justify-start text-left font-semibold h-12 rounded-lg border-2 bg-white hover:bg-white hover:border-primary transition-all",
+                                !selectedTime ? "" : ""
                               )}
-                              style={{ fontSize: '16px', color: selectedTime ? '#0F172A' : '#475569' }}
+                              style={{ fontSize: '16px', color: selectedTime ? '#0F172A' : '#475569', backgroundColor: 'white' }}
                             >
-                              <Clock className="mr-2 h-5 w-5" />
+                              <Clock className="mr-2 h-5 w-5" style={{ color: '#0F172A' }} />
                               {selectedTime || "Time"}
                             </Button>
                           </PopoverTrigger>
