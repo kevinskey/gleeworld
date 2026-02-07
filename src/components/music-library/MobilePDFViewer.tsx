@@ -31,11 +31,10 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
   }
 
   return (
-    <div className="fixed inset-0 z-[100000] bg-background flex flex-col">
-      {/* Header in document flow with safe-area top padding */}
+    <div className="fixed inset-x-0 bottom-0 z-[100000] bg-background flex flex-col" style={{ top: 'env(safe-area-inset-top, 12px)' }}>
+      {/* Header in document flow */}
       <div 
         className="flex-shrink-0 bg-background/95 backdrop-blur-sm border-b border-border"
-        style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         <div className="flex items-center justify-between px-2 py-1.5 h-10">
           <Button 
