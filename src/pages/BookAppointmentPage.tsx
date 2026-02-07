@@ -276,7 +276,7 @@ export default function BookAppointmentPage() {
               <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
                 <h2 style={{ fontSize: '18px', fontWeight: 500 }}>Dr. Kevin Johnson</h2>
                 <p className="flex items-center gap-2 mt-1" style={{ fontSize: '18px', fontWeight: 500, opacity: 0.95 }}>
-                  <MapPin className="h-4 w-4" /> Fine Arts Building, Room 204
+                  <MapPin className="h-4 w-4" /> Rockefeller Fine Arts Building 105
                 </p>
               </div>
             </div>
