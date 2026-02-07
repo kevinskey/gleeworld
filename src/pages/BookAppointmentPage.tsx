@@ -349,14 +349,13 @@ export default function BookAppointmentPage() {
                             <Button
                               variant="outline"
                               disabled={!selectedType}
-                              className={cn(
-                                "w-[160px] justify-start text-left font-semibold h-12 rounded-lg border-2 bg-white hover:bg-white hover:border-primary transition-all",
-                                !selectedDate ? "" : ""
-                              )}
-                              style={{ fontSize: '16px', color: selectedDate ? '#0F172A' : '#475569', backgroundColor: 'white' }}
+                              className="w-[160px] justify-start text-left font-semibold h-12 rounded-lg border-2 border-slate-300 !bg-white !text-slate-900 hover:!bg-slate-50 hover:border-primary transition-all disabled:!bg-slate-100 disabled:!text-slate-500 disabled:!opacity-100 disabled:border-slate-200"
+                              style={{ fontSize: '16px' }}
                             >
-                              <CalendarIcon className="mr-2 h-5 w-5" style={{ color: '#0F172A' }} />
-                              {selectedDate ? format(selectedDate, "MMM d") : "Date"}
+                              <CalendarIcon className="mr-2 h-5 w-5 text-slate-700" />
+                              <span style={{ color: selectedDate ? '#0F172A' : '#475569' }}>
+                                {selectedDate ? format(selectedDate, "MMM d") : "Date"}
+                              </span>
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent 
@@ -402,14 +401,13 @@ export default function BookAppointmentPage() {
                             <Button
                               variant="outline"
                               disabled={!selectedType || !selectedDateStr}
-                              className={cn(
-                                "w-[140px] justify-start text-left font-semibold h-12 rounded-lg border-2 bg-white hover:bg-white hover:border-primary transition-all",
-                                !selectedTime ? "" : ""
-                              )}
-                              style={{ fontSize: '16px', color: selectedTime ? '#0F172A' : '#475569', backgroundColor: 'white' }}
+                              className="w-[140px] justify-start text-left font-semibold h-12 rounded-lg border-2 border-slate-300 !bg-white !text-slate-900 hover:!bg-slate-50 hover:border-primary transition-all disabled:!bg-slate-100 disabled:!text-slate-500 disabled:!opacity-100 disabled:border-slate-200"
+                              style={{ fontSize: '16px' }}
                             >
-                              <Clock className="mr-2 h-5 w-5" style={{ color: '#0F172A' }} />
-                              {selectedTime || "Time"}
+                              <Clock className="mr-2 h-5 w-5 text-slate-700" />
+                              <span style={{ color: selectedTime ? '#0F172A' : '#475569' }}>
+                                {selectedTime || "Time"}
+                              </span>
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent 
