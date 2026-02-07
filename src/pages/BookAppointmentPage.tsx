@@ -361,7 +361,7 @@ export default function BookAppointmentPage() {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent 
-                            className="w-auto p-0 bg-popover border-2 shadow-2xl z-[9999]" 
+                            className="w-auto p-0 bg-white border-2 border-slate-200 shadow-2xl z-[9999]" 
                             align="start"
                             side="bottom"
                             sideOffset={8}
@@ -380,7 +380,17 @@ export default function BookAppointmentPage() {
                               }}
                               disabled={(date) => date < new Date()}
                               initialFocus
-                              className="p-3 pointer-events-auto bg-popover"
+                              className="p-3 pointer-events-auto bg-white text-slate-900"
+                              classNames={{
+                                caption_label: "text-lg font-medium text-slate-900",
+                                head_cell: "text-slate-500 rounded-md w-full font-normal text-sm sm:text-base flex-1 p-2 text-center",
+                                day: "h-12 w-full p-0 font-normal text-slate-800 hover:bg-slate-100 hover:text-slate-900 focus:bg-slate-100 focus:text-slate-900 aria-selected:opacity-100 text-sm sm:text-base",
+                                day_selected: "bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white",
+                                day_today: "bg-slate-100 text-slate-900 font-semibold",
+                                day_outside: "text-slate-300 opacity-50",
+                                day_disabled: "text-slate-300 opacity-50",
+                                nav_button: "h-9 w-9 bg-transparent p-0 text-slate-600 hover:text-slate-900 opacity-70 hover:opacity-100 border border-slate-200 rounded-md",
+                              }}
                             />
                           </PopoverContent>
                         </Popover>
