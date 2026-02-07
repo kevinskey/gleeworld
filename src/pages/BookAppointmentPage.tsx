@@ -283,16 +283,16 @@ export default function BookAppointmentPage() {
             <CardContent className="p-5">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="font-bold" style={{ fontSize: '18px', color: '#003666' }}>{completedCount}</div>
-                  <div className="text-xs uppercase tracking-wide mt-1" style={{ color: '#475569' }}>Completed</div>
+                  <div className="font-bold" style={{ fontSize: '18px', color: 'white' }}>{completedCount}</div>
+                  <div className="text-xs uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>Completed</div>
                 </div>
                 <div>
-                  <div className="font-bold text-green-700" style={{ fontSize: '18px' }}>{upcomingCount}</div>
-                  <div className="text-xs uppercase tracking-wide mt-1" style={{ color: '#475569' }}>Upcoming</div>
+                  <div className="font-bold" style={{ fontSize: '18px', color: '#86efac' }}>{upcomingCount}</div>
+                  <div className="text-xs uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>Upcoming</div>
                 </div>
                 <div>
-                  <div className="font-bold text-amber-700" style={{ fontSize: '18px' }}>{pendingCount}</div>
-                  <div className="text-xs uppercase tracking-wide mt-1" style={{ color: '#475569' }}>Pending</div>
+                  <div className="font-bold" style={{ fontSize: '18px', color: '#fcd34d' }}>{pendingCount}</div>
+                  <div className="text-xs uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>Pending</div>
                 </div>
               </div>
             </CardContent>
