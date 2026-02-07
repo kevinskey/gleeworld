@@ -260,7 +260,7 @@ export default function BookAppointmentPage() {
       <div className="w-full py-6" style={{
       backgroundColor: '#003666'
     }}>
-        <h1 className="text-center tracking-wide text-white" style={{ fontSize: '30px', fontWeight: 700 }}>
+        <h1 className="text-center tracking-wide text-white" style={{ fontSize: '42px', fontWeight: 700 }}>
           OFFICE HOURS with Dr. Johnson
         </h1>
       </div>
