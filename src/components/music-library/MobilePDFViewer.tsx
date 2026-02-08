@@ -31,7 +31,7 @@ export const MobilePDFViewer = ({ selectedPdf, onBack, onStudyMode }: MobilePDFV
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[100000] bg-background flex flex-col" style={{ top: 'env(safe-area-inset-top, 12px)' }}>
+    <div className="fixed inset-x-0 bottom-0 z-[100000] bg-background flex flex-col" style={{ top: 'max(env(safe-area-inset-top, 0px) + 48px, 56px)' }}>
       {/* Header in document flow */}
       <div 
         className="flex-shrink-0 bg-background/95 backdrop-blur-sm border-b border-border"
