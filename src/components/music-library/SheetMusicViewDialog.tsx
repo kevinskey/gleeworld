@@ -277,6 +277,39 @@ export const SheetMusicViewDialog = ({
           className="fixed inset-x-0 bottom-0 z-[100000] bg-background flex flex-col"
           style={{ top: 'max(env(safe-area-inset-top, 0px) + 48px, 56px)' }}
         >
+          {/* Study Mode header with back button */}
+          <div className="flex-shrink-0 bg-background/95 backdrop-blur-sm border-b border-border">
+            <div className="flex items-center justify-between px-2 py-1.5 h-10">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={() => onOpenChange(false)} 
+                className="h-7 px-2 text-xs gap-1 shadow-sm"
+              >
+                <X className="h-3.5 w-3.5" />
+                <span>Close Study</span>
+              </Button>
+              
+              <h2 className="text-xs font-medium truncate max-w-[45%] text-center px-1">
+                {item.title}
+              </h2>
+              
+              <div className="flex items-center gap-1">
+                {canCropPDF && item.pdf_url && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowCropEditor(true)}
+                    className="h-7 w-7 p-0 shadow-sm"
+                    aria-label="Crop PDF"
+                  >
+                    <Scissors className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {renderPdfContent()}
         </div>
         {cropEditorDialog}
