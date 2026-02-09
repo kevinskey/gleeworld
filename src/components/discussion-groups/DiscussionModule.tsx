@@ -12,7 +12,8 @@ import {
   Award,
   ChevronRight,
   Plus,
-  RefreshCw
+  RefreshCw,
+  Brain
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,6 +40,7 @@ import { GroupSynthesisEditor } from './GroupSynthesisEditor';
 import { InstructorControls } from './InstructorControls';
 import { GradingPanel } from './GradingPanel';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
+import { TemperamentSummary } from './TemperamentSummary';
 
 interface DiscussionModuleProps {
   courseId: string;
@@ -284,6 +286,10 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
                     <BarChart3 className="h-4 w-4" />
                     Analytics
                   </TabsTrigger>
+                  <TabsTrigger value="temperament" className="gap-2">
+                    <Brain className="h-4 w-4" />
+                    Temperament
+                  </TabsTrigger>
                 </>
               )}
             </TabsList>
@@ -405,6 +411,10 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
                     students={enrolledStudents}
                     groups={groups}
                   />
+                </TabsContent>
+
+                <TabsContent value="temperament">
+                  <TemperamentSummary courseId={courseId} />
                 </TabsContent>
               </>
             )}
