@@ -363,56 +363,56 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
   return <div className="space-y-3 sm:space-y-4 w-full min-w-0">
       {/* Stats Cards - 2x2 grid */}
       <div className="grid grid-cols-2 gap-1.5 sm:gap-2 md:gap-3">
-        <Card className="bg-white border border-border/60 shadow-sm overflow-hidden">
+        <Card className="border border-border/60 shadow-sm overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
           <CardContent className="p-2 sm:p-3 md:p-4">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
               <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
                 <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalAssignments}</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold" style={{ color: '#0F172A' }}>{stats.totalAssignments}</p>
                 <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Total</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border border-border/60 shadow-sm overflow-hidden">
+        <Card className="border border-border/60 shadow-sm overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
           <CardContent className="p-2 sm:p-3 md:p-4">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
               <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
                 <FileCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalSubmissions}</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold" style={{ color: '#0F172A' }}>{stats.totalSubmissions}</p>
                 <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Submitted</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border border-border/60 shadow-sm overflow-hidden">
+        <Card className="border border-border/60 shadow-sm overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
           <CardContent className="p-2 sm:p-3 md:p-4">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
               <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-amber-50 flex-shrink-0">
                 <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-amber-500" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.pendingGrading}</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold" style={{ color: '#0F172A' }}>{stats.pendingGrading}</p>
                 <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Pending</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border border-border/60 shadow-sm overflow-hidden">
+        <Card className="border border-border/60 shadow-sm overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
           <CardContent className="p-2 sm:p-3 md:p-4">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
               <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-emerald-50 flex-shrink-0">
                 <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-emerald-500" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">{stats.totalGraded}</p>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold" style={{ color: '#0F172A' }}>{stats.totalGraded}</p>
                 <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Graded</p>
               </div>
             </div>
@@ -423,7 +423,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       {/* Header with Add button */}
       <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          <h2 className="text-sm sm:text-base md:text-lg font-semibold text-foreground truncate">Assignments</h2>
+          <h2 className="text-sm sm:text-base md:text-lg font-semibold truncate" style={{ color: '#0F172A' }}>Assignments</h2>
           <span className="text-xs sm:text-sm md:text-base flex-shrink-0" style={{ color: '#64748B' }}>({filteredAndSortedAssignments.length})</span>
         </div>
         <Dialog open={isCreateOpen || !!editingAssignment} onOpenChange={open => {
@@ -562,7 +562,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
       </div>
 
       {/* Sort & Filter Toolbar - Mobile optimized */}
-      <div className="flex flex-col gap-2 p-2 sm:p-3 bg-white rounded-lg border border-border/60 shadow-sm">
+      <div className="flex flex-col gap-2 p-2 sm:p-3 rounded-lg border border-border/60 shadow-sm" style={{ backgroundColor: '#ffffff' }}>
         {/* Search - full width */}
         <div className="relative w-full">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color: '#64748B' }} />
