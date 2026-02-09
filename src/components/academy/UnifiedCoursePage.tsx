@@ -122,11 +122,26 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
     return config;
   }, [course.id]);
 
-  // Filter navigation items based on visibility settings (for students only)
+  // Map tab names to feature flags for filtering
+  const TAB_FEATURE_MAP: Record<string, string> = {
+    journals: 'hasJournals',
+    polls: 'hasPolls',
+    tests: 'hasTests',
+    discussions: 'hasDiscussions',
+    readmusic: 'hasSightReading',
+  };
+
+  // Filter navigation items based on feature flags AND visibility settings
   const filteredPrimaryNav = useMemo(() => {
-    if (isAdmin) return templateConfig.primaryNav; // Admins see everything
-    return templateConfig.primaryNav.filter(item => !hiddenTabs.includes(item.tab));
-  }, [templateConfig.primaryNav, hiddenTabs, isAdmin]);
+    // First filter by feature flags (applies to everyone including admins)
+    const featureFiltered = templateConfig.primaryNav.filter(item => {
+      const featureKey = TAB_FEATURE_MAP[item.tab];
+      if (featureKey && templateConfig.features[featureKey] === false) return false;
+      return true;
+    });
+    if (isAdmin) return featureFiltered; // Admins see all feature-enabled tabs
+    return featureFiltered.filter(item => !hiddenTabs.includes(item.tab));
+  }, [templateConfig.primaryNav, templateConfig.features, hiddenTabs, isAdmin]);
 
   // Sync tab with URL changes
   useEffect(() => {
