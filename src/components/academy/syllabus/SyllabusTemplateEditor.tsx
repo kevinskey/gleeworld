@@ -249,12 +249,12 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
   if (loading) {
     return <div className="p-6 text-center">Loading syllabus...</div>;
   }
-  return <div className="space-y-3">
+  return <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between bg-card rounded-lg border p-4">
         <div>
-          <h2 className="text-base font-bold">{courseCode} Syllabus</h2>
-          <p className="text-xs text-muted-foreground">{courseTitle}</p>
+          <h2 className="text-xl font-bold text-foreground">{courseCode} Syllabus</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">{courseTitle}</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={syllabus.is_published ? 'default' : 'secondary'} className="text-xs">
