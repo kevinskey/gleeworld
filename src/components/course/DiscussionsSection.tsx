@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Lock, MessageCircle, Plus, Calendar, Award, AlertCircle, Edit } from 'lucide-react';
+import { MessageSquare, Lock, MessageCircle, Plus, Calendar, Award, AlertCircle, Edit, Star } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format, isPast, isFuture, differenceInHours } from 'date-fns';
+import { format, isPast, isFuture, differenceInHours, differenceInWeeks } from 'date-fns';
 import { CreateDiscussionDialog } from './CreateDiscussionDialog';
 import { DiscussionThread } from './DiscussionThread';
 import { useAuth } from '@/contexts/AuthContext';
@@ -54,6 +54,37 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
       return data as Discussion[];
     }
   });
+
+  // Calculate current week number (semester starts Jan 14, 2026)
+  const SEMESTER_START = new Date('2026-01-14');
+  const currentWeekNumber = differenceInWeeks(new Date(), SEMESTER_START) + 1;
+
+  // Sort discussions: current week first, then by due_date
+  const sortedDiscussions = useMemo(() => {
+    if (!discussions) return [];
+    
+    // Extract week number from title (e.g., "Week 5: ..." → 5)
+    const getWeek = (title: string): number | null => {
+      const match = title.match(/^Week\s+(\d+)/i);
+      return match ? parseInt(match[1], 10) : null;
+    };
+
+    return [...discussions].sort((a, b) => {
+      const weekA = getWeek(a.title);
+      const weekB = getWeek(b.title);
+      const isCurrentA = weekA === currentWeekNumber;
+      const isCurrentB = weekB === currentWeekNumber;
+      
+      // Current week pinned to top
+      if (isCurrentA && !isCurrentB) return -1;
+      if (!isCurrentA && isCurrentB) return 1;
+      
+      // Then by due_date ascending
+      const dateA = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+      const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+      return dateA - dateB;
+    });
+  }, [discussions, currentWeekNumber]);
 
   // Auto-select discussion when discussionId is provided
   useEffect(() => {
@@ -142,11 +173,15 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
       </div>
 
       <div className="space-y-3">
-        {discussions && discussions.length > 0 ? (
-          discussions.map((discussion) => (
+        {sortedDiscussions.length > 0 ? (
+          sortedDiscussions.map((discussion) => {
+            const weekMatch = discussion.title.match(/^Week\s+(\d+)/i);
+            const isCurrentWeek = weekMatch ? parseInt(weekMatch[1], 10) === currentWeekNumber : false;
+            
+            return (
             <Card 
               key={discussion.id} 
-              className="hover:shadow-md transition-shadow cursor-pointer"
+              className={`hover:shadow-md transition-shadow cursor-pointer ${isCurrentWeek ? 'ring-2 ring-primary border-primary' : ''}`}
               onClick={() => setSelectedDiscussion(discussion)}
             >
               <CardHeader className="pb-2">
@@ -156,6 +191,12 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <span className="truncate">{discussion.title}</span>
+                        {isCurrentWeek && (
+                          <Badge className="bg-primary text-primary-foreground flex items-center gap-1 flex-shrink-0">
+                            <Star className="h-3 w-3" />
+                            This Week
+                          </Badge>
+                        )}
                         {discussion.is_locked && (
                           <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         )}
@@ -196,7 +237,8 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
                 <p className="text-foreground/80 line-clamp-2">{discussion.content}</p>
               </CardContent>
             </Card>
-          ))
+            );
+          })
         ) : (
           <Card>
             <CardContent className="py-12 text-center">
