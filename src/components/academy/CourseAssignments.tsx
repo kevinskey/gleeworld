@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { DeleteConfirmDialog } from '@/components/music-library/DeleteConfirmDialog';
+import { COURSE_TEMPLATE_CONFIGS } from '@/config/courseTemplateConfig';
 
 interface CourseAssignmentsProps {
   courseId: string;
@@ -92,45 +93,46 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
 
       if (courseError) throw courseError;
 
-      // Fetch ReadMusic sight-reading assignments for THIS course only
-      const { data: sightReadingData, error: srError } = await supabase
-        .from('gw_sight_reading_assignments')
-        .select('*')
-        .eq('course_id', courseId)
-        .eq('is_active', true)
-        .order('due_date', { ascending: true });
+      // Fetch ReadMusic sight-reading assignments for THIS course only (if enabled)
+      const courseConfig = COURSE_TEMPLATE_CONFIGS[courseId];
+      const hasSightReading = courseConfig?.features?.hasSightReading !== false;
+      
+      let readMusicAssignments: Assignment[] = [];
+      if (hasSightReading) {
+        const { data: sightReadingData, error: srError } = await supabase
+          .from('gw_sight_reading_assignments')
+          .select('*')
+          .eq('course_id', courseId)
+          .eq('is_active', true)
+          .order('due_date', { ascending: true });
 
-      if (srError) {
-        console.error('Error fetching sight-reading assignments:', srError);
-      }
-
-
-
-      // Transform sight-reading assignments to match Assignment interface
-      const readMusicAssignments: Assignment[] = (sightReadingData || []).map(sr => {
-        // Extract external_id from notes field (format: "external_id:uuid | exercises:N")
-        let externalId: string | null = null;
-        if (sr.notes) {
-          const match = sr.notes.match(/external_id:([a-f0-9-]+)/i);
-          if (match) {
-            externalId = match[1];
-          }
+        if (srError) {
+          console.error('Error fetching sight-reading assignments:', srError);
         }
-        
-        return {
-          id: sr.id,
-          title: sr.title,
-          description: sr.description || 'ReadMusic Sight-Reading Assignment',
-          points: sr.points_possible || 100,
-          due_date: sr.due_date,
-          assignment_type: 'sight_reading',
-          source: 'readmusic' as const,
-          // Link directly to the assignment if we have an external_id
-          external_url: externalId 
-            ? `https://readmusic.gleeworld.org/assignment/${externalId}`
-            : 'https://readmusic.gleeworld.org'
-        };
-      });
+
+        readMusicAssignments = (sightReadingData || []).map(sr => {
+          let externalId: string | null = null;
+          if (sr.notes) {
+            const match = sr.notes.match(/external_id:([a-f0-9-]+)/i);
+            if (match) {
+              externalId = match[1];
+            }
+          }
+          
+          return {
+            id: sr.id,
+            title: sr.title,
+            description: sr.description || 'ReadMusic Sight-Reading Assignment',
+            points: sr.points_possible || 100,
+            due_date: sr.due_date,
+            assignment_type: 'sight_reading',
+            source: 'readmusic' as const,
+            external_url: externalId 
+              ? `https://readmusic.gleeworld.org/assignment/${externalId}`
+              : 'https://readmusic.gleeworld.org'
+          };
+        });
+      }
 
       // Combine all sources
       const allAssignments = [
