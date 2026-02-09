@@ -1,0 +1,1 @@
+ALTER TABLE public.gw_media_library ADD COLUMN IF NOT EXISTS is_deleted boolean NOT NULL DEFAULT false;

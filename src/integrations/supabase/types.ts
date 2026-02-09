@@ -12243,6 +12243,7 @@ export type Database = {
           folder_id: string | null
           glee_cam_category_id: string | null
           id: string
+          is_deleted: boolean
           is_featured: boolean
           is_public: boolean
           tags: string[] | null
@@ -12267,6 +12268,7 @@ export type Database = {
           folder_id?: string | null
           glee_cam_category_id?: string | null
           id?: string
+          is_deleted?: boolean
           is_featured?: boolean
           is_public?: boolean
           tags?: string[] | null
@@ -12291,6 +12293,7 @@ export type Database = {
           folder_id?: string | null
           glee_cam_category_id?: string | null
           id?: string
+          is_deleted?: boolean
           is_featured?: boolean
           is_public?: boolean
           tags?: string[] | null

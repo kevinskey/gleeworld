@@ -30,6 +30,7 @@ interface FinderInspectorProps {
   isAdmin: boolean;
   getFileType: (file: MediaFile) => string;
   startEditing?: boolean;
+  onDelete?: (fileIds: string[]) => void;
 }
 
 export const FinderInspector = ({
@@ -39,7 +40,8 @@ export const FinderInspector = ({
   onRefresh,
   isAdmin,
   getFileType,
-  startEditing = false
+  startEditing = false,
+  onDelete
 }: FinderInspectorProps) => {
   const [isEditing, setIsEditing] = useState(startEditing);
   const [title, setTitle] = useState(file.title || '');
@@ -112,24 +114,8 @@ export const FinderInspector = ({
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this file?')) return;
-
-    try {
-      const table = (file as any).source === 'quick_capture' ? 'quick_capture_media' : 'gw_media_library';
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq('id', file.id);
-
-      if (error) throw error;
-
-      toast({ title: "File deleted" });
-      onClose();
-      onRefresh();
-    } catch (error) {
-      toast({ title: "Error deleting", variant: "destructive" });
-    }
+  const handleDelete = () => {
+    onDelete?.([file.id]);
   };
 
   return (

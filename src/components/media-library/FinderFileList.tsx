@@ -14,6 +14,9 @@ interface FinderFileListProps {
   onRename: (file: MediaFile) => void;
   getFileType: (file: MediaFile) => string;
   onRefresh?: () => void;
+  onDelete?: (fileIds: string[]) => void;
+  onRestore?: (fileIds: string[]) => void;
+  isTrashView?: boolean;
 }
 
 // Extended file type detection
@@ -41,7 +44,10 @@ export const FinderFileList = ({
   onOpen,
   onRename,
   getFileType,
-  onRefresh
+  onRefresh,
+  onDelete,
+  onRestore,
+  isTrashView
 }: FinderFileListProps) => {
   const { data: folders = [] } = useAllMediaFolders();
   const moveToFolder = useMoveToFolder();
@@ -179,9 +185,28 @@ export const FinderFileList = ({
                       )}
                     </ContextMenuSubContent>
                   </ContextMenuSub>
-                  <ContextMenuItem>Add to Favorites</ContextMenuItem>
+                  {isTrashView && (
+                    <ContextMenuItem
+                      onClick={() => {
+                        const ids = selectedFiles.includes(file.id) && selectedFiles.length > 1
+                          ? selectedFiles : [file.id];
+                        onRestore?.(ids);
+                      }}
+                    >
+                      Restore
+                    </ContextMenuItem>
+                  )}
                   <ContextMenuSeparator />
-                  <ContextMenuItem className="text-destructive">Delete</ContextMenuItem>
+                  <ContextMenuItem 
+                    className="text-destructive"
+                    onClick={() => {
+                      const ids = selectedFiles.includes(file.id) && selectedFiles.length > 1
+                        ? selectedFiles : [file.id];
+                      onDelete?.(ids);
+                    }}
+                  >
+                    {isTrashView ? 'Delete Permanently' : 'Delete'}
+                  </ContextMenuItem>
                 </ContextMenuContent>
               </ContextMenu>
             </DraggableFileItem>

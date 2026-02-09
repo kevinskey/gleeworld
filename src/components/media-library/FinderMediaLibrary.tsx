@@ -440,8 +440,79 @@ export const FinderMediaLibrary = () => {
     disabled: !isAdmin || uploading,
     noClick: true
   });
+  // Soft-delete: move files to trash
+  const handleDeleteFiles = useCallback(async (fileIds: string[]) => {
+    if (fileIds.length === 0) return;
+    
+    const label = fileIds.length === 1 ? 'this file' : `${fileIds.length} files`;
+    if (!confirm(`Move ${label} to trash?`)) return;
 
-  // Selection handlers
+    try {
+      const { error } = await supabase
+        .from('gw_media_library')
+        .update({ is_deleted: true })
+        .in('id', fileIds);
+
+      if (error) throw error;
+
+      toast({ title: fileIds.length === 1 ? 'File moved to trash' : `${fileIds.length} files moved to trash` });
+      setSelectedFiles([]);
+      setShowInspector(false);
+      refreshMedia();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({ title: 'Error deleting files', variant: 'destructive' });
+    }
+  }, [toast, refreshMedia]);
+
+  // Restore files from trash
+  const handleRestoreFiles = useCallback(async (fileIds: string[]) => {
+    try {
+      const { error } = await supabase
+        .from('gw_media_library')
+        .update({ is_deleted: false })
+        .in('id', fileIds);
+
+      if (error) throw error;
+
+      toast({ title: fileIds.length === 1 ? 'File restored' : `${fileIds.length} files restored` });
+      setSelectedFiles([]);
+      refreshMedia();
+    } catch (error) {
+      toast({ title: 'Error restoring files', variant: 'destructive' });
+    }
+  }, [toast, refreshMedia]);
+
+  // Permanently delete files
+  const handlePermanentDelete = useCallback(async (fileIds: string[]) => {
+    if (!confirm('Permanently delete? This cannot be undone.')) return;
+
+    try {
+      // Also remove from storage
+      const filesToDelete = allFiles.filter(f => fileIds.includes(f.id));
+      for (const file of filesToDelete) {
+        if (file.file_path && file.bucket_id) {
+          await supabase.storage.from(file.bucket_id).remove([file.file_path]);
+        }
+      }
+
+      const { error } = await supabase
+        .from('gw_media_library')
+        .delete()
+        .in('id', fileIds);
+
+      if (error) throw error;
+
+      toast({ title: 'Permanently deleted' });
+      setSelectedFiles([]);
+      setShowInspector(false);
+      refreshMedia();
+    } catch (error) {
+      toast({ title: 'Error deleting', variant: 'destructive' });
+    }
+  }, [toast, refreshMedia, allFiles]);
+
+
   const handleFileSelect = (file: MediaFile, event: React.MouseEvent) => {
     if (event.shiftKey && selectedFiles.length > 0) {
       // Range selection
@@ -587,6 +658,9 @@ export const FinderMediaLibrary = () => {
                     onRename={handleFileRename}
                     getFileType={getFileType}
                     onRefresh={refreshMedia}
+                    onDelete={activeSection === 'trash' ? handlePermanentDelete : handleDeleteFiles}
+                    onRestore={handleRestoreFiles}
+                    isTrashView={activeSection === 'trash'}
                   />
                 ) : (
                   <FinderFileList
@@ -597,6 +671,9 @@ export const FinderMediaLibrary = () => {
                     onRename={handleFileRename}
                     getFileType={getFileType}
                     onRefresh={refreshMedia}
+                    onDelete={activeSection === 'trash' ? handlePermanentDelete : handleDeleteFiles}
+                    onRestore={handleRestoreFiles}
+                    isTrashView={activeSection === 'trash'}
                   />
                 )}
               </div>
@@ -630,6 +707,7 @@ export const FinderMediaLibrary = () => {
             isAdmin={isAdmin}
             getFileType={getFileType}
             startEditing={startEditing}
+            onDelete={activeSection === 'trash' ? handlePermanentDelete : handleDeleteFiles}
           />
         )}
 
