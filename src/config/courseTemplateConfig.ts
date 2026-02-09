@@ -112,9 +112,9 @@ export const COURSE_TEMPLATE_CONFIGS: Record<string, CourseTemplateConfig> = {
     courseCore: DEFAULT_COURSE_CORE,
     features: {
       ...DEFAULT_FEATURES,
-      hasJournals: true,
+      hasJournals: false,
       hasPolls: true,
-      hasPeerReview: true,
+      hasPeerReview: false,
       hasGroups: false,
       hasListeningHub: true,
     },

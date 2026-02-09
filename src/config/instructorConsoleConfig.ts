@@ -87,6 +87,10 @@ export const DEFAULT_INSTRUCTOR_FEATURES: Record<string, boolean> = {
 
 // Course-specific instructor feature overrides
 export const INSTRUCTOR_FEATURE_OVERRIDES: Record<string, Partial<typeof DEFAULT_INSTRUCTOR_FEATURES>> = {
+  // MUS 240 - Survey of African American Music (no journals)
+  '23c4ee3c-7bbb-4534-8c0a-eecd88298d37': {
+    hasJournals: false,
+  },
   // MUS 001 - Private Lessons (minimal features)
   'a0000000-0000-0000-0000-000000000001': {
     hasTests: false,
