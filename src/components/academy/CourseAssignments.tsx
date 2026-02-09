@@ -3,14 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ClipboardList, Calendar, Lock, CheckCircle, Clock, AlertCircle, Music, ExternalLink, PenLine } from 'lucide-react';
+import { ClipboardList, Calendar, Lock, CheckCircle, Clock, AlertCircle, Music, ExternalLink, PenLine, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { DeleteConfirmDialog } from '@/components/music-library/DeleteConfirmDialog';
 
 interface CourseAssignmentsProps {
   courseId: string;
   isEnrolled: boolean;
+  isAdmin?: boolean;
 }
 
 interface Assignment {
@@ -28,12 +31,13 @@ interface Assignment {
   };
 }
 
-export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, isEnrolled }) => {
+export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, isEnrolled, isAdmin = false }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(isEnrolled);
+  const [deleteTarget, setDeleteTarget] = useState<Assignment | null>(null);
 
   const handleStartAssignment = (assignment: Assignment) => {
     // For ReadMusic assignments, open in new tab
@@ -278,6 +282,26 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
     return <Badge variant="secondary">In Progress</Badge>;
   };
 
+  const handleDeleteAssignment = async () => {
+    if (!deleteTarget) return;
+    try {
+      const table = deleteTarget.source === 'mus240_journal' ? 'mus240_assignments' :
+                    deleteTarget.source === 'readmusic' ? 'gw_sight_reading_assignments' :
+                    'gw_course_assignments';
+      
+      const { error } = await supabase.from(table as any).delete().eq('id', deleteTarget.id);
+      if (error) throw error;
+      
+      setAssignments(prev => prev.filter(a => a.id !== deleteTarget.id));
+      toast.success('Assignment deleted');
+    } catch (err: any) {
+      console.error('Error deleting assignment:', err);
+      toast.error('Failed to delete assignment');
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
   if (!hasAccess) {
     return (
       <Card>
@@ -351,26 +375,46 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
                     <span>{assignment.points} points</span>
                   </div>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="border-border text-foreground hover:bg-accent"
-                  onClick={() => handleStartAssignment(assignment)}
-                >
-                  {assignment.source === 'readmusic' ? (
-                    <>
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      Open
-                    </>
-                  ) : (
-                    assignment.submission ? 'View' : 'Start'
+                <div className="flex items-center gap-2">
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeleteTarget(assignment)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   )}
-                </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-border text-foreground hover:bg-accent"
+                    onClick={() => handleStartAssignment(assignment)}
+                  >
+                    {assignment.source === 'readmusic' ? (
+                      <>
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        Open
+                      </>
+                    ) : (
+                      assignment.submission ? 'View' : 'Start'
+                    )}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </CardContent>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete Assignment"
+        description={`Are you sure you want to delete "${deleteTarget?.title}"? This action cannot be undone.`}
+        onConfirm={handleDeleteAssignment}
+      />
     </Card>
   );
 };

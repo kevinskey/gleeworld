@@ -473,7 +473,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </div>
               </Card>}
 
-            {activeTab === 'assignments' && <CourseAssignments courseId={course.id} isEnrolled={isEnrolled || isAdmin} />}
+            {activeTab === 'assignments' && <CourseAssignments courseId={course.id} isEnrolled={isEnrolled || isAdmin} isAdmin={isAdmin} />}
 
 
             {activeTab === 'journals' && <ClassSessionJournals courseId={course.id} isAdmin={isAdmin} />}
