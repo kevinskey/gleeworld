@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
+import { getCourseTemplateConfig } from '@/config/courseTemplateConfig';
 import { CourseTopicSlider } from './CourseTopicSlider';
 import { ModuleVideosModal } from './ModuleVideosModal';
 import { ModuleReadingsModal } from './ModuleReadingsModal';
@@ -461,8 +462,14 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           }
         }
 
-        // Standard content types for each module
-        const standardContentTypes = ['Video', 'Reading', 'Listening', 'Discussion', 'Journal'];
+        // Standard content types for each module, filtered by course features
+        const templateConfig = getCourseTemplateConfig(courseId);
+        const allContentTypes = ['Video', 'Reading', 'Listening', 'Discussion', 'Journal'];
+        const standardContentTypes = allContentTypes.filter(type => {
+          if (type === 'Journal' && !templateConfig.features.hasJournals) return false;
+          if (type === 'Discussion' && !templateConfig.features.hasDiscussions) return false;
+          return true;
+        });
         
         // Map assignments to content types based on assignment_type
         const getAssignmentForType = (type: string): Assignment | undefined => {
