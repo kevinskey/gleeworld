@@ -374,6 +374,67 @@ export const FinderMediaLibrary = () => {
     setUploading(false);
   };
 
+  // Handle native file drop onto a sidebar folder
+  const handleNativeFileDrop = useCallback(async (files: File[], folderId: string) => {
+    if (!isAdmin) {
+      toast({ title: "Permission denied", variant: "destructive" });
+      return;
+    }
+
+    const supportedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf'];
+    const validFiles = files.filter(file => {
+      const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+      return supportedExtensions.includes(ext) && file.size <= 50 * 1024 * 1024;
+    });
+
+    if (validFiles.length === 0) {
+      toast({ title: "No supported files found", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    let successCount = 0;
+
+    for (const file of validFiles) {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `media/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('media-library')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from('media-library').getPublicUrl(filePath);
+
+        const { error: dbError } = await supabase.from('gw_media_library').insert({
+          file_path: filePath,
+          file_url: data.publicUrl,
+          file_type: file.type || 'application/octet-stream',
+          file_size: file.size || 0,
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          bucket_id: 'media-library',
+          category: 'uploads',
+          folder_id: folderId
+        });
+
+        if (dbError) throw dbError;
+        successCount++;
+      } catch (error) {
+        console.error('Upload error:', error);
+      }
+    }
+
+    if (successCount > 0) {
+      toast({ title: `${successCount} file(s) uploaded to folder` });
+      refreshMedia();
+      queryClient.invalidateQueries({ queryKey: ['media-folders'] });
+    }
+    setUploading(false);
+  }, [isAdmin, toast, refreshMedia, queryClient]);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: handleUpload,
     disabled: !isAdmin || uploading,
@@ -463,6 +524,7 @@ export const FinderMediaLibrary = () => {
           }}
           onNewFolder={() => setNewFolderDialogOpen(true)}
           isAdmin={isAdmin}
+          onNativeFileDrop={handleNativeFileDrop}
         />
 
         {/* Main Content */}
