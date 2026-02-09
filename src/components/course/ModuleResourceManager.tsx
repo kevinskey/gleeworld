@@ -42,11 +42,17 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
       const { data, error } = await supabase
         .from('gw_media_library')
         .select('id, title, file_url, file_type, folder_id')
-        .in('file_type', ['audio', 'video', 'document', 'image'])
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(300);
       if (error) throw error;
-      return data || [];
+      // Normalize file_type for display
+      return (data || []).map(item => ({
+        ...item,
+        file_type: item.file_type?.startsWith('audio') ? 'audio'
+          : item.file_type?.startsWith('video') ? 'video'
+          : item.file_type?.startsWith('image') ? 'image'
+          : 'document'
+      }));
     },
     enabled: pickerOpen,
   });
