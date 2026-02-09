@@ -240,7 +240,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
         const now = new Date();
         const assignmentIds = assignmentsData.map((a: any) => a.id);
 
-        const [{ data: videoSubmissions }, { data: essaySubmissions }] = await Promise.all([
+        const [{ data: videoSubmissions }, { data: essaySubmissions }, { data: legacySubmissions }] = await Promise.all([
           supabase
             .from('gw_assignment_submissions')
             .select('assignment_id, status')
@@ -251,11 +251,17 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             .select('assignment_id, status')
             .eq('student_id', user.id)
             .in('assignment_id', assignmentIds),
+          supabase
+            .from('assignment_submissions')
+            .select('assignment_id, status')
+            .eq('student_id', user.id)
+            .in('assignment_id', assignmentIds),
         ]);
 
         const submissionStatusByAssignmentId = new Map<string, string>();
         videoSubmissions?.forEach((s: any) => submissionStatusByAssignmentId.set(s.assignment_id, s.status));
         essaySubmissions?.forEach((s: any) => submissionStatusByAssignmentId.set(s.assignment_id, s.status));
+        legacySubmissions?.forEach((s: any) => submissionStatusByAssignmentId.set(s.assignment_id, s.status));
 
         const mappedAssignments: Assignment[] = assignmentsData.map((a: any) => {
           const submissionStatus = submissionStatusByAssignmentId.get(a.id);
@@ -527,7 +533,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             title: moduleData.title.replace(/^Week \d+:\s*/, ''),
             week_number: moduleData.week_number || 1,
             content_types: contentTypesWithData,
-            assignments: allAssignments.filter(a => a.status === 'pending' || a.status === 'overdue').slice(0, 3),
+            assignments: allAssignments.filter(a => a.status === 'pending' || a.status === 'overdue').sort((a, b) => Math.abs(new Date(a.due_date).getTime() - now.getTime()) - Math.abs(new Date(b.due_date).getTime() - now.getTime())).slice(0, 5),
             discussionId: moduleDiscussionId,
           });
         } else {
@@ -537,7 +543,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             title: 'Current Week',
             week_number: 1,
             content_types: contentTypesWithData,
-            assignments: allAssignments.filter(a => a.status === 'pending' || a.status === 'overdue').slice(0, 3),
+            assignments: allAssignments.filter(a => a.status === 'pending' || a.status === 'overdue').sort((a, b) => Math.abs(new Date(a.due_date).getTime() - now.getTime()) - Math.abs(new Date(b.due_date).getTime() - now.getTime())).slice(0, 5),
           });
         }
 
