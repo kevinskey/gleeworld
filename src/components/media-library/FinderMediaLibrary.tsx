@@ -273,13 +273,23 @@ export const FinderMediaLibrary = () => {
 
     for (const file of validFiles) {
       try {
-        const fileExt = file.name.split('.').pop();
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `media/${fileName}`;
 
+        // Determine normalized file_type category
+        const normalizedType = file.type?.startsWith('audio/') ? 'audio'
+          : file.type?.startsWith('video/') ? 'video'
+          : file.type?.startsWith('image/') ? 'image'
+          : ['pdf'].includes(fileExt) ? 'document'
+          : file.type || 'document';
+
         const { error: uploadError } = await supabase.storage
           .from('media-library')
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            contentType: file.type || 'application/octet-stream',
+            cacheControl: '3600',
+          });
 
         if (uploadError) throw uploadError;
 
@@ -288,7 +298,7 @@ export const FinderMediaLibrary = () => {
         const { error: dbError } = await supabase.from('gw_media_library').insert({
           file_path: filePath,
           file_url: data.publicUrl,
-          file_type: file.type || 'application/octet-stream',
+          file_type: normalizedType,
           file_size: file.size || 0,
           title: file.name.replace(/\.[^/.]+$/, ''),
           bucket_id: 'media-library',
@@ -301,8 +311,9 @@ export const FinderMediaLibrary = () => {
         }
 
         successCount++;
-      } catch (error) {
+      } catch (error: any) {
         console.error('Upload error for', file.name, ':', error);
+        toast({ title: `Failed: ${file.name}`, description: error?.message || 'Upload error', variant: 'destructive' });
       }
     }
 
