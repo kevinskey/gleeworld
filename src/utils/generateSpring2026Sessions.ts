@@ -125,15 +125,19 @@ function getWeekIndex(sessionDate: Date, semesterStart: Date): number {
 
 function generateSessionDates(days: number[]): Date[] {
   const dates: Date[] = [];
-  const start = new Date(SEMESTER_START);
-  const end = new Date(SEMESTER_END);
+  // Parse dates as local ET noon to avoid timezone day-shift issues
+  const start = new Date(`${SEMESTER_START}T12:00:00`);
+  const end = new Date(`${SEMESTER_END}T12:00:00`);
   
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const dayOfWeek = d.getDay();
-    const dateStr = d.toISOString().split('T')[0];
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
     
     if (days.includes(dayOfWeek) && !EXCEPTION_DATES.has(dateStr)) {
-      dates.push(new Date(d));
+      dates.push(new Date(`${dateStr}T12:00:00`));
     }
   }
   
