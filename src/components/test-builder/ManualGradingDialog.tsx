@@ -144,7 +144,7 @@ export const ManualGradingDialog = ({
         .from('test_submissions')
         .update({
           total_score: totalScore,
-          passed: totalScore >= (test?.passing_score || 70)
+          passed: ((totalScore / (test?.total_points || 1)) * 100) >= (test?.passing_score || 70)
         })
         .eq('id', submission.id);
 

@@ -96,6 +96,7 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
 
       // Calculate score
       let totalScore = 0;
+      const maxPossiblePoints = questions.reduce((sum, q) => sum + (q.points || 0), 0);
       const answerRecords = questions.map(q => {
         const userAnswer = answers[q.id] || '';
         // Check if answer is correct by comparing with options
@@ -123,6 +124,9 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
         };
       });
 
+      const effectiveMaxPoints = maxPossiblePoints || test?.total_points || 1;
+      const percentage = (totalScore / effectiveMaxPoints) * 100;
+
       // Create submission
       const { data: submission, error: submissionError } = await supabase
         .from('test_submissions')
@@ -130,7 +134,7 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
           test_id: testId,
           student_id: user.user.id,
           total_score: totalScore,
-          passed: totalScore >= (test?.passing_score || 70),
+          passed: percentage >= (test?.passing_score || 70),
           status: 'submitted',
           submitted_at: new Date().toISOString()
         })
@@ -153,7 +157,7 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
 
       toast({
         title: 'Test Submitted',
-        description: `Score: ${totalScore}/${test?.total_points} (${Math.round((totalScore / (test?.total_points || 1)) * 100)}%)`
+        description: `Score: ${totalScore}/${effectiveMaxPoints} (${Math.round(percentage)}%)`
       });
 
       navigate(-1);

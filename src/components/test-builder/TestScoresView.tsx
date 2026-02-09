@@ -56,7 +56,16 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
         .single();
 
       if (testError) throw testError;
-      setTest(testData);
+
+      // Get actual sum of question points (more accurate than test.total_points)
+      const { data: questionsData } = await supabase
+        .from('test_questions')
+        .select('points')
+        .eq('test_id', testId);
+
+      const actualTotalPoints = questionsData?.reduce((sum, q) => sum + (q.points || 0), 0) || testData.total_points;
+      
+      setTest({ ...testData, total_points: actualTotalPoints });
 
       // Get all submissions for this test
       const { data: submissionsData, error: submissionsError } = await supabase
