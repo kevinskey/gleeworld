@@ -35,6 +35,7 @@ import { JournalArchives } from './journals/JournalArchives';
 import { Mus240ResourcesTab } from './Mus240ResourcesTab';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 import { CoursePlaylistPlayer } from '@/components/course/CoursePlaylistPlayer';
+import { ClassNotesManager } from '@/components/course/ClassNotesManager';
 import { CourseHeroPlayer } from '@/components/course/CourseHeroPlayer';
 import { CourseGradeStat } from '@/components/course/CourseGradeStat';
 import { useCourseTeachingAssistants } from '@/hooks/useCourseTeachingAssistants';
@@ -511,6 +512,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {/* Discussions Tab */}
             {activeTab === 'discussions' && <DiscussionsSection courseId={course.id} discussionId={searchParams.get('discussionId')} />}
+
+            {/* Class Notes Tab - Read-only for students */}
+            {activeTab === 'class-notes' && <ClassNotesManager courseId={course.id} isInstructor={isAdmin} />}
 
 
 

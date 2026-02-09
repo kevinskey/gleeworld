@@ -65,6 +65,7 @@ const DEFAULT_PRIMARY_NAV: CourseNavItem[] = [
 // Default course core navigation for all courses
 const DEFAULT_COURSE_CORE: CourseNavItem[] = [
   { icon: Users, label: 'Engagement', tab: 'engagement' },
+  { icon: BookOpen, label: 'Class Notes', tab: 'class-notes' },
   { icon: Video, label: 'Video', tab: 'video-library' },
   { icon: Headphones, label: 'Audio', tab: 'playlist' },
   { icon: Music, label: 'Sheet Music', tab: 'music-library' },
