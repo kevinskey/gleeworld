@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSliderByPlacement, useCreateSlider, useCreateSlide, useUpdateSlide, useDeleteSlide } from '@/hooks/useUniversalSlider';
 import { cn } from '@/lib/utils';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
+
+// Local-state text input that saves on blur to prevent re-render focus loss
+const SlideTextInput: React.FC<{
+  value: string;
+  onSave: (val: string) => void;
+  placeholder?: string;
+  className?: string;
+}> = ({ value, onSave, placeholder, className }) => {
+  const [local, setLocal] = useState(value);
+  const ref = useRef(value);
+  // Sync if external value changes while not focused
+  React.useEffect(() => { ref.current = value; setLocal(value); }, [value]);
+  return (
+    <Input
+      value={local}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={() => { if (local !== ref.current) onSave(local); }}
+      onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
+      placeholder={placeholder}
+      className={className}
+    />
+  );
+};
 
 interface CourseSliderManagerProps {
   courseCode: string;
@@ -105,13 +128,24 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
 
   const handleVideoUpload = async (slideId: string, file: File) => {
     try {
-      const fileExt = file.name.split('.').pop();
+      // Validate file size (50MB max)
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error('Video file must be under 50MB');
+        return;
+      }
+      
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'mp4';
       const fileName = `${courseCode.toLowerCase().replace(/\s+/g, '')}-video-${Date.now()}.${fileExt}`;
       const filePath = `slider-videos/${fileName}`;
 
+      toast.loading('Uploading video...', { id: 'video-upload' });
+
       const { error: uploadError } = await supabase.storage
         .from('user-files')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          contentType: file.type || 'video/mp4',
+        });
 
       if (uploadError) throw uploadError;
 
@@ -120,11 +154,11 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
         .getPublicUrl(filePath);
 
       await updateSlide.mutateAsync({ id: slideId, video_url: publicUrl });
-      toast.success('Video uploaded');
+      toast.success('Video uploaded', { id: 'video-upload' });
       refetch();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading video:', error);
-      toast.error('Failed to upload video');
+      toast.error(error.message || 'Failed to upload video', { id: 'video-upload' });
     }
   };
 
@@ -466,9 +500,9 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                     {/* Title */}
                     <div>
                       <Label className="text-sm font-medium">Title</Label>
-                      <Input
+                      <SlideTextInput
                         value={slide.title || ''}
-                        onChange={(e) => updateSlide.mutate({ id: slide.id, title: e.target.value })}
+                        onSave={(val) => updateSlide.mutate({ id: slide.id, title: val })}
                         placeholder="Slide title..."
                         className="mt-1 text-sm"
                       />
