@@ -893,7 +893,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                     {currentModule.assignments.map((assignment) => (
                       <div 
                         key={assignment.id}
-                        className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
+                        className={`p-3 rounded-lg border transition-colors cursor-pointer space-y-2 ${
                           assignment.status === 'overdue' 
                             ? 'bg-destructive/5 border-destructive/30 hover:bg-destructive/10' 
                             : 'bg-card hover:bg-muted/50'
@@ -906,14 +906,14 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                           }
                         }}
                       >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{assignment.title}</p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <div>
+                          <p className="text-sm font-medium">{assignment.title}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                             <Calendar className="h-3 w-3" />
                             Due {format(new Date(assignment.due_date), 'MMM d, h:mm a')} · {assignment.points} pts
                           </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between">
                           {getStatusBadge(assignment.status)}
                           <Button 
                             size="sm" 
