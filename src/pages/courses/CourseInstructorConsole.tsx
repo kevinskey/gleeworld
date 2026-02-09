@@ -40,6 +40,7 @@ import { AttendanceSecurityControls } from '@/components/attendance/AttendanceSe
 import { CoursePlaylistManager } from '@/components/modules/CoursePlaylistManager';
 import { InstructorAttendanceHub } from '@/components/course/InstructorAttendanceHub';
 import { CourseVisibilitySettings } from '@/components/course/CourseVisibilitySettings';
+import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 
 // Map DB term codes (e.g., 202601) to human semester labels used in enrollments (e.g., "Spring 2026").
 const termToSemesterLabel = (term: string | null | undefined): string => {
@@ -273,6 +274,7 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'sight-reading' && <SightReadingAssignmentManager />}
             {activeTab === 'tests' && dbCourse && <TestBuilder courseId={dbCourse.id} courseName={course.title} />}
             {activeTab === 'polls' && dbCourse && <CoursePollManager courseId={dbCourse.id} courseName={course.title} />}
+            {activeTab === 'discussions' && dbCourse && <DiscussionsSection courseId={dbCourse.id} />}
             {activeTab === 'rubrics' && <RubricManager />}
             {activeTab === 'grades' && dbCourse && (
               <CourseGradesAdmin 
