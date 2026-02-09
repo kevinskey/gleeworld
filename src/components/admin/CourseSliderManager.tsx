@@ -128,9 +128,9 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
 
   const handleVideoUpload = async (slideId: string, file: File) => {
     try {
-      // Validate file size (50MB max)
-      if (file.size > 50 * 1024 * 1024) {
-        toast.error('Video file must be under 50MB');
+      // Validate file size (200MB max)
+      if (file.size > 200 * 1024 * 1024) {
+        toast.error('Video file must be under 200MB');
         return;
       }
       
