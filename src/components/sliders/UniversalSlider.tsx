@@ -269,6 +269,19 @@ const SlideRenderer: React.FC<{
         />
       )}
 
+      {/* Uploaded Video */}
+      {slide.slide_type === 'video' && slide.video_url && (
+        <video
+          src={slide.video_url}
+          className="absolute inset-0 w-full h-full object-cover"
+          controls
+          playsInline
+          muted
+          loop
+          title={slide.title || 'Video'}
+        />
+      )}
+
       {/* Overlay */}
       {slide.overlay_enabled && (
         <div 

@@ -20042,6 +20042,7 @@ export type Database = {
           title_position_h: string | null
           title_position_v: string | null
           updated_at: string | null
+          video_url: string | null
           youtube_autoplay: boolean | null
           youtube_loop: boolean | null
           youtube_muted: boolean | null
@@ -20091,6 +20092,7 @@ export type Database = {
           title_position_h?: string | null
           title_position_v?: string | null
           updated_at?: string | null
+          video_url?: string | null
           youtube_autoplay?: boolean | null
           youtube_loop?: boolean | null
           youtube_muted?: boolean | null
@@ -20140,6 +20142,7 @@ export type Database = {
           title_position_h?: string | null
           title_position_v?: string | null
           updated_at?: string | null
+          video_url?: string | null
           youtube_autoplay?: boolean | null
           youtube_loop?: boolean | null
           youtube_muted?: boolean | null

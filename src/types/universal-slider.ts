@@ -1,7 +1,7 @@
 // Universal Slider Type Definitions
 
 export type SliderType = 'youtube' | 'ad' | 'product' | 'amazon_affiliate' | 'calendar' | 'custom';
-export type SlideType = 'image' | 'youtube' | 'product' | 'amazon' | 'calendar_event' | 'custom_html';
+export type SlideType = 'image' | 'youtube' | 'video' | 'product' | 'amazon' | 'calendar_event' | 'custom_html';
 export type HeightPreset = 'small' | 'medium' | 'large' | 'custom';
 export type TransitionEffect = 'fade' | 'slide' | 'none';
 export type PositionH = 'left' | 'center' | 'right';
@@ -48,6 +48,9 @@ export interface UniversalSliderSlide {
   youtube_autoplay: boolean;
   youtube_muted: boolean;
   youtube_loop: boolean;
+  
+  // Uploaded Video
+  video_url: string | null;
   
   // Product/Amazon
   product_id: string | null;
