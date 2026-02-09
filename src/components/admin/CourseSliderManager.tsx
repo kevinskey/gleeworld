@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, ChevronDown, Upload, Eye, EyeOff, Images, ExternalLink, Youtube, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, Upload, Eye, EyeOff, Images, ExternalLink, Youtube, Image as ImageIcon, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useSliderByPlacement, useCreateSlider, useCreateSlide, useUpdateSlide, useDeleteSlide } from '@/hooks/useUniversalSlider';
@@ -100,6 +100,31 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload image');
+    }
+  };
+
+  const handleVideoUpload = async (slideId: string, file: File) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${courseCode.toLowerCase().replace(/\s+/g, '')}-video-${Date.now()}.${fileExt}`;
+      const filePath = `slider-videos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('user-files')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-files')
+        .getPublicUrl(filePath);
+
+      await updateSlide.mutateAsync({ id: slideId, video_url: publicUrl });
+      toast.success('Video uploaded');
+      refetch();
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      toast.error('Failed to upload video');
     }
   };
 
@@ -210,6 +235,10 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                           alt={slide.title || `Slide ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
+                      ) : slide.slide_type === 'video' && slide.video_url ? (
+                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                          <Video className="h-4 w-4 text-primary" />
+                        </div>
                       ) : slide.image_url ? (
                         <img 
                           src={slide.image_url} 
@@ -228,6 +257,8 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                       <div className="font-medium text-sm flex items-center gap-1.5">
                         {slide.slide_type === 'youtube' ? (
                           <Youtube className="h-3.5 w-3.5 text-red-500" />
+                        ) : slide.slide_type === 'video' ? (
+                          <Video className="h-3.5 w-3.5 text-primary" />
                         ) : (
                           <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
                         )}
@@ -236,6 +267,8 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                       <div className="text-xs text-muted-foreground truncate max-w-[200px]">
                         {slide.slide_type === 'youtube' 
                           ? `YouTube: ${slide.youtube_video_id || 'No video ID'}`
+                          : slide.slide_type === 'video'
+                          ? `Video: ${slide.video_url ? 'Uploaded' : 'No video'}`
                           : (slide.description || 'No description')}
                       </div>
                     </div>
@@ -261,7 +294,7 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                       <Label className="text-sm font-medium">Slide Type</Label>
                       <Select
                         value={slide.slide_type}
-                        onValueChange={(value: 'image' | 'youtube') => 
+                        onValueChange={(value: 'image' | 'youtube' | 'video') => 
                           updateSlide.mutate({ id: slide.id, slide_type: value })
                         }
                       >
@@ -273,6 +306,12 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                             <div className="flex items-center gap-2">
                               <ImageIcon className="h-4 w-4" />
                               <span>Image</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="video">
+                            <div className="flex items-center gap-2">
+                              <Video className="h-4 w-4 text-primary" />
+                              <span>Uploaded Video</span>
                             </div>
                           </SelectItem>
                           <SelectItem value="youtube">
@@ -377,6 +416,50 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                             Loop
                           </label>
                         </div>
+                      </div>
+                    )}
+
+                    {/* Uploaded Video Fields */}
+                    {slide.slide_type === 'video' && (
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium">Video File</Label>
+                          <div className="mt-1 flex gap-2">
+                            <Input
+                              value={slide.video_url || ''}
+                              onChange={(e) => updateSlide.mutate({ id: slide.id, video_url: e.target.value })}
+                              placeholder="https://... or upload a file"
+                              className="flex-1 text-sm"
+                            />
+                            <label className="cursor-pointer">
+                              <Button variant="outline" size="sm" asChild>
+                                <span>
+                                  <Upload className="h-4 w-4 mr-1" />
+                                  Upload
+                                </span>
+                              </Button>
+                              <input
+                                type="file"
+                                accept="video/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleVideoUpload(slide.id, file);
+                                }}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                        {slide.video_url && (
+                          <div className="mt-2 rounded overflow-hidden border bg-black">
+                            <video
+                              src={slide.video_url}
+                              className="w-full h-auto max-h-48"
+                              controls
+                              muted
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
 
