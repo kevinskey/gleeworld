@@ -45,6 +45,7 @@ export interface CourseTemplateConfig {
     hasPhotoGallery: boolean;  // LH 100 specific
     hasElections: boolean;
     hasHandbook: boolean;
+    hasSightReading?: boolean;
   };
 }
 
@@ -117,6 +118,7 @@ export const COURSE_TEMPLATE_CONFIGS: Record<string, CourseTemplateConfig> = {
       hasPeerReview: false,
       hasGroups: false,
       hasListeningHub: true,
+      hasSightReading: false,
     },
   },
 
