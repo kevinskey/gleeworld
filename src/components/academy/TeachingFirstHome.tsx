@@ -376,12 +376,12 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
         
         if (isMus240) {
           const today = new Date().toISOString().split('T')[0];
+          // Primary: find module whose date range contains today (regardless of is_active)
           const { data: mus240Module } = await supabase
             .from('mus240_module_settings')
             .select('*')
             .lte('start_date', today)
             .gte('end_date', today)
-            .eq('is_active', true)
             .order('start_date', { ascending: false })
             .limit(1)
             .maybeSingle();
@@ -396,12 +396,12 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               is_active: mus240Module.is_active
             };
           } else {
-            // Fallback: get first active module
+            // Fallback: get the most recent module whose end_date has passed (latest week)
             const { data: fallbackModule } = await supabase
               .from('mus240_module_settings')
               .select('*')
-              .eq('is_active', true)
-              .order('module_id', { ascending: true })
+              .lte('start_date', today)
+              .order('start_date', { ascending: false })
               .limit(1)
               .maybeSingle();
             
@@ -422,7 +422,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             .from('mus240_module_settings')
             .select('id, module_id, title, start_date, end_date')
             .lt('end_date', today)
-            .eq('is_active', true)
             .order('start_date', { ascending: false });
           
           if (priorModulesData) {
