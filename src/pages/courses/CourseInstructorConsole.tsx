@@ -208,7 +208,7 @@ export const CourseInstructorConsole = () => {
   );
 
   return <UniversalLayout containerized={false}>
-      <div className="min-h-screen" style={{ backgroundColor: '#F7F9FC' }}>
+      <div className="min-h-screen academy-neutral" style={{ backgroundColor: '#F7F9FC' }}>
         {/* Top Bar — clean, minimal */}
         <div className="border-b bg-white">
           <div className="max-w-[1800px] mx-auto px-3 sm:px-5 md:px-8 py-3">

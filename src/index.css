@@ -217,13 +217,15 @@
   /* ========================================
      AUTOMATIC CONTRAST ENFORCEMENT
      Ensures readable text on colored backgrounds
+     
+     IMPORTANT: Only target EXACT bg-primary/bg-secondary classes,
+     NOT opacity variants like bg-primary/10 which are light tints
+     and need dark text, not white text.
      ======================================== */
   
-  /* Primary backgrounds (blue) always get white text */
-  .bg-primary,
-  [class*="bg-primary"],
-  .bg-secondary,
-  [class*="bg-secondary"],
+  /* Primary backgrounds (solid blue) always get white text */
+  .bg-primary:not([class*="bg-primary/"]),
+  .bg-secondary:not([class*="bg-secondary/"]),
   .bg-spelman-blue-dark,
   .bg-spelman-blue-light,
   .bg-brand-600,
@@ -244,9 +246,9 @@
     color: hsl(0 0% 100%) !important;
   }
   
-  /* Ensure nested elements also get white text on primary backgrounds */
-  .bg-primary *,
-  .bg-secondary *,
+  /* Ensure nested elements in SOLID primary/secondary backgrounds get white text */
+  .bg-primary:not([class*="bg-primary/"]) *,
+  .bg-secondary:not([class*="bg-secondary/"]) *,
   .bg-spelman-blue-dark *,
   .bg-spelman-blue-light *,
   .bg-brand-600 *,
@@ -256,18 +258,17 @@
     --tw-text-opacity: 1;
   }
   
-  .bg-primary h1, .bg-primary h2, .bg-primary h3, .bg-primary h4, .bg-primary h5, .bg-primary h6,
-  .bg-primary p, .bg-primary span, .bg-primary label, .bg-primary a, .bg-primary button,
-  .bg-secondary h1, .bg-secondary h2, .bg-secondary h3, .bg-secondary h4, .bg-secondary h5, .bg-secondary h6,
-  .bg-secondary p, .bg-secondary span, .bg-secondary label, .bg-secondary a, .bg-secondary button {
+  .bg-primary:not([class*="bg-primary/"]) h1, .bg-primary:not([class*="bg-primary/"]) h2, .bg-primary:not([class*="bg-primary/"]) h3, .bg-primary:not([class*="bg-primary/"]) h4, .bg-primary:not([class*="bg-primary/"]) h5, .bg-primary:not([class*="bg-primary/"]) h6,
+  .bg-primary:not([class*="bg-primary/"]) p, .bg-primary:not([class*="bg-primary/"]) span, .bg-primary:not([class*="bg-primary/"]) label, .bg-primary:not([class*="bg-primary/"]) a, .bg-primary:not([class*="bg-primary/"]) button,
+  .bg-secondary:not([class*="bg-secondary/"]) h1, .bg-secondary:not([class*="bg-secondary/"]) h2, .bg-secondary:not([class*="bg-secondary/"]) h3, .bg-secondary:not([class*="bg-secondary/"]) h4, .bg-secondary:not([class*="bg-secondary/"]) h5, .bg-secondary:not([class*="bg-secondary/"]) h6,
+  .bg-secondary:not([class*="bg-secondary/"]) p, .bg-secondary:not([class*="bg-secondary/"]) span, .bg-secondary:not([class*="bg-secondary/"]) label, .bg-secondary:not([class*="bg-secondary/"]) a, .bg-secondary:not([class*="bg-secondary/"]) button {
     color: hsl(0 0% 100%) !important;
   }
   
-  /* Ensure buttons with bg-primary always have white text and icons */
-  button.bg-primary,
-  button[class*="bg-primary"],
-  .bg-primary svg,
-  .bg-secondary svg {
+  /* Ensure buttons with solid bg-primary always have white text and icons */
+  button.bg-primary:not([class*="bg-primary/"]),
+  .bg-primary:not([class*="bg-primary/"]) svg,
+  .bg-secondary:not([class*="bg-secondary/"]) svg {
     color: hsl(0 0% 100%) !important;
   }
   
@@ -276,14 +277,13 @@
     color: hsl(0 0% 100%) !important;
   }
   
-  /* Destructive backgrounds get white text */
-  .bg-destructive,
-  [class*="bg-destructive"] {
+  /* Destructive backgrounds get white text - only solid, not tints */
+  .bg-destructive:not([class*="bg-destructive/"]) {
     color: hsl(0 0% 100%) !important;
   }
   
-  .bg-destructive h1, .bg-destructive h2, .bg-destructive h3, .bg-destructive h4, .bg-destructive h5, .bg-destructive h6,
-  .bg-destructive p, .bg-destructive span, .bg-destructive label, .bg-destructive a {
+  .bg-destructive:not([class*="bg-destructive/"]) h1, .bg-destructive:not([class*="bg-destructive/"]) h2, .bg-destructive:not([class*="bg-destructive/"]) h3, .bg-destructive:not([class*="bg-destructive/"]) h4, .bg-destructive:not([class*="bg-destructive/"]) h5, .bg-destructive:not([class*="bg-destructive/"]) h6,
+  .bg-destructive:not([class*="bg-destructive/"]) p, .bg-destructive:not([class*="bg-destructive/"]) span, .bg-destructive:not([class*="bg-destructive/"]) label, .bg-destructive:not([class*="bg-destructive/"]) a {
     color: hsl(0 0% 100%) !important;
   }
   
@@ -406,19 +406,37 @@ header a.bg-\[\#003666\]:hover span {
   color: #003666 !important;
 }
 
-/* Use on pages that must stay white even when a theme class is present on <html>. */
+/* Use on pages that must stay white even when a theme class is present on <html>.
+   This class OVERRIDES all theme tokens to ensure light, readable content areas.
+   Apply to instructor consoles, admin panels, and any content-heavy pages. */
   .academy-neutral {
     --background: 0 0% 100%;
     --foreground: 222 47% 11%; /* #0F172A */
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%; /* #0F172A */
-    --muted: 0 0% 96%;
+    --muted: 210 20% 96%;
     --muted-foreground: 215 16% 37%; /* #475569 — WCAG AA compliant */
-    --border: 0 0% 85%;
+    --border: 214 20% 88%;
     --input: 0 0% 98%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%; /* #0F172A */
+    --accent: 210 20% 96%;
+    --accent-foreground: 222 47% 11%;
     --theme-background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 100%) 100%);
+  }
+  
+  /* Neutralize glass-theme effects inside academy-neutral areas */
+  .academy-neutral [data-slot="card"],
+  .academy-neutral .bg-card,
+  .academy-neutral [class*="Card"],
+  .academy-neutral .card {
+    background: hsl(0 0% 100%) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  .academy-neutral .bg-white {
+    background-color: hsl(0 0% 100%) !important;
   }
 
 /* Musical Notation Styles */
