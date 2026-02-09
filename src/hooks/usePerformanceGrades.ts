@@ -61,7 +61,7 @@ async function fetchEnrolledStudentsWithGrades(
   performanceNames: string[]
 ): Promise<StudentWithPerformanceGrades[]> {
   // Step 1: Get enrolled student profile IDs
-  // @ts-expect-error - Supabase deep type instantiation
+  // @ts-ignore - Supabase deep type instantiation
   const enrollResult = await supabase
     .from('gw_course_enrollments')
     .select('student_profile_id')

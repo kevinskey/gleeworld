@@ -251,10 +251,27 @@ export const FinderMediaLibrary = () => {
       return;
     }
 
+    // Filter for supported files under 50MB
+    const supportedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf'];
+    const maxSize = 50 * 1024 * 1024;
+    const validFiles = files.filter(file => {
+      const ext = '.' + (file.name.split('.').pop()?.toLowerCase() || '');
+      return supportedExtensions.includes(ext) && file.size <= maxSize;
+    });
+
+    if (validFiles.length === 0) {
+      toast({ title: "No supported files found", description: "Supported: images, video, audio, PDF (max 50MB)", variant: "destructive" });
+      return;
+    }
+
+    if (validFiles.length < files.length) {
+      toast({ title: `${files.length - validFiles.length} file(s) skipped`, description: "Unsupported format or too large" });
+    }
+
     setUploading(true);
     let successCount = 0;
 
-    for (const file of files) {
+    for (const file of validFiles) {
       try {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -273,7 +290,7 @@ export const FinderMediaLibrary = () => {
           file_url: data.publicUrl,
           file_type: file.type || 'application/octet-stream',
           file_size: file.size || 0,
-          title: cleanDisplayTitle(file.name),
+          title: file.name.replace(/\.[^/.]+$/, ''),
           bucket_id: 'media-library',
           category: 'uploads'
         });
@@ -285,13 +302,15 @@ export const FinderMediaLibrary = () => {
 
         successCount++;
       } catch (error) {
-        console.error('Upload error:', error);
+        console.error('Upload error for', file.name, ':', error);
       }
     }
 
     if (successCount > 0) {
       toast({ title: `${successCount} file(s) uploaded` });
       refreshMedia();
+    } else {
+      toast({ title: "Upload failed", description: "Files could not be uploaded. Check file sizes and try again.", variant: "destructive" });
     }
     setUploading(false);
   };
