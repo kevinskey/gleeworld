@@ -176,22 +176,24 @@ export const CourseInstructorConsole = () => {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 rounded-md transition-all",
                     isActive 
-                      ? "bg-primary/10 text-primary border border-primary/15" 
+                      ? "border" 
                       : "hover:bg-muted/50"
                   )}
                   style={{ 
-                    color: isActive ? undefined : '#334155',
+                    color: isActive ? '#003666' : '#334155',
+                    backgroundColor: isActive ? '#e0f2fe' : undefined,
+                    borderColor: isActive ? '#bae6fd' : undefined,
                     fontSize: '16px',
-                    fontWeight: 500,
+                    fontWeight: isActive ? 600 : 500,
                     height: '38px',
                   }}
                 >
                   <Icon 
-                    className={cn("flex-shrink-0", isActive ? "text-primary" : "")} 
+                    className="flex-shrink-0"
                     style={{ 
                       width: '22px', 
                       height: '22px',
-                      color: isActive ? undefined : '#475569',
+                      color: isActive ? '#003666' : '#475569',
                     }} 
                   />
                   <span>{item.label}</span>
