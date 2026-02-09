@@ -427,6 +427,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                       </> : <>
                       <TabsTrigger value="home" className="text-xs px-3 py-2">Home</TabsTrigger>
                         <TabsTrigger value="modules" className="text-xs px-3 py-2">Modules</TabsTrigger>
+                        <TabsTrigger value="class-notes" className="text-xs px-3 py-2">Notes</TabsTrigger>
                         <TabsTrigger value="messages" className="text-xs px-3 py-2">Messages</TabsTrigger>
                         {(isAdmin || !hiddenTabs.includes('assignments')) && (
                           <TabsTrigger value="assignments" className="text-xs px-3 py-2">Assignments</TabsTrigger>
@@ -513,7 +514,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {/* Discussions Tab */}
             {activeTab === 'discussions' && <DiscussionsSection courseId={course.id} discussionId={searchParams.get('discussionId')} />}
 
-            {/* Class Notes Tab - Read-only for students */}
+            {/* Class Notes Tab - Students have full CRUD on their own notes */}
             {activeTab === 'class-notes' && <ClassNotesManager courseId={course.id} isInstructor={isAdmin} />}
 
 
