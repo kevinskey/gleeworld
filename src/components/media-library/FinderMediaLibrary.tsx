@@ -251,16 +251,22 @@ export const FinderMediaLibrary = () => {
       return;
     }
 
-    // Filter for supported files under 50MB
+    // Filter for supported files under 100MB
     const supportedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf'];
-    const maxSize = 50 * 1024 * 1024;
+    const maxSize = 100 * 1024 * 1024;
     const validFiles = files.filter(file => {
       const ext = '.' + (file.name.split('.').pop()?.toLowerCase() || '');
-      return supportedExtensions.includes(ext) && file.size <= maxSize;
+      const supported = supportedExtensions.includes(ext);
+      const withinSize = file.size <= maxSize;
+      if (!supported) {
+        toast({ title: `Skipped: ${file.name}`, description: `Unsupported file type (${ext})`, variant: 'destructive' });
+      } else if (!withinSize) {
+        toast({ title: `Skipped: ${file.name}`, description: `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB, max 100MB)`, variant: 'destructive' });
+      }
+      return supported && withinSize;
     });
 
     if (validFiles.length === 0) {
-      toast({ title: "No supported files found", description: "Supported: images, video, audio, PDF (max 50MB)", variant: "destructive" });
       return;
     }
 
@@ -414,7 +420,7 @@ export const FinderMediaLibrary = () => {
     const supportedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf'];
     const validFiles = files.filter(file => {
       const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-      return supportedExtensions.includes(ext) && file.size <= 50 * 1024 * 1024;
+      return supportedExtensions.includes(ext) && file.size <= 100 * 1024 * 1024;
     });
 
     if (validFiles.length === 0) {
