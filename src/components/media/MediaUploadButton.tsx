@@ -293,7 +293,7 @@ export const MediaUploadButton = ({
           const { data: mediaData, error: dbError } = await supabase
             .from('gw_media_library')
             .insert({
-              title: selectedFiles.length === 1 ? title : `${title} - ${file.name}`,
+              title: selectedFiles.length === 1 ? title : file.name.replace(/\.[^/.]+$/, ''),
               description: description || null,
               file_url: urlData.publicUrl,
               file_path: filePath,
@@ -322,7 +322,7 @@ export const MediaUploadButton = ({
 
           return { 
             id: mediaData.id, 
-            title: selectedFiles.length === 1 ? title : `${title} - ${file.name}`, 
+            title: selectedFiles.length === 1 ? title : file.name.replace(/\.[^/.]+$/, ''), 
             file_url: urlData.publicUrl,
             success: true,
             fileName: file.name
