@@ -54,6 +54,7 @@ const DEFAULT_PRIMARY_NAV: CourseNavItem[] = [
   { icon: Home, label: 'Home', tab: 'home' },
   { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
   { icon: Layers, label: 'Modules', tab: 'modules' },
+  { icon: BookOpen, label: 'Class Notes', tab: 'class-notes' },
   { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
   { icon: MessageSquare, label: 'Discussions', tab: 'discussions' },
   { icon: PenLine, label: 'Journals', tab: 'journals' },
@@ -65,7 +66,6 @@ const DEFAULT_PRIMARY_NAV: CourseNavItem[] = [
 // Default course core navigation for all courses
 const DEFAULT_COURSE_CORE: CourseNavItem[] = [
   { icon: Users, label: 'Engagement', tab: 'engagement' },
-  { icon: BookOpen, label: 'Class Notes', tab: 'class-notes' },
   { icon: Video, label: 'Video', tab: 'video-library' },
   { icon: Headphones, label: 'Audio', tab: 'playlist' },
   { icon: Music, label: 'Sheet Music', tab: 'music-library' },
