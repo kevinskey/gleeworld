@@ -1,0 +1,1 @@
+UPDATE gw_courses SET show_journals = false WHERE id = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';

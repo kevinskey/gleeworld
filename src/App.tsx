@@ -2211,14 +2211,7 @@ const App = () => {
                                   <Route path="/mus-240/journal/:journalId/review" element={<Navigate to="/academy/mus-240" replace />} />
                                   <Route path="/mus-240/instructor/journals" element={<Navigate to="/instructor/mus-240" replace />} />
                                   <Route path="/mus-240/instructor/journal/:journal_id/grade" element={<Navigate to="/instructor/mus-240" replace />} />
-                                  <Route 
-                                    path="/mus-240/peer-review" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <PeerReviewBrowserPage />
-                                      </ProtectedRoute>
-                                    } 
-                                  />
+                                   <Route path="/mus-240/peer-review" element={<Navigate to="/academy/mus-240" replace />} />
                                    <Route 
                                      path="/test-builder"
                                      element={

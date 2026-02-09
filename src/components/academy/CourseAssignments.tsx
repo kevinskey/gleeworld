@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ClipboardList, Calendar, Lock, CheckCircle, Clock, AlertCircle, Music, ExternalLink, PenLine, Trash2 } from 'lucide-react';
+import { ClipboardList, Calendar, Lock, CheckCircle, Clock, AlertCircle, Music, ExternalLink, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -23,7 +23,7 @@ interface Assignment {
   points: number;
   due_date: string;
   assignment_type: string;
-  source?: 'course' | 'readmusic' | 'mus240_journal';
+  source?: 'course' | 'readmusic';
   external_url?: string;
   submission?: {
     status: string;
@@ -43,11 +43,6 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
     // For ReadMusic assignments, open in new tab
     if (assignment.source === 'readmusic' && assignment.external_url) {
       window.open(assignment.external_url, '_blank');
-      return;
-    }
-    // For MUS 240 listening journals, navigate to the course modules tab where journals are managed
-    if (assignment.source === 'mus240_journal') {
-      navigate(`/academy/mus-240?tab=modules`);
       return;
     }
     // Navigate to the grading system's student assignment page for database-backed assignments
@@ -109,31 +104,7 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
         console.error('Error fetching sight-reading assignments:', srError);
       }
 
-      // For MUS 240, also fetch listening journals from legacy table
-      let mus240Journals: Assignment[] = [];
-      const isMUS240 = courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
-      
-      if (isMUS240) {
-        const { data: legacyJournals, error: legacyError } = await supabase
-          .from('mus240_assignments')
-          .select('*')
-          .eq('is_active', true)
-          .order('due_date', { ascending: true });
 
-        if (legacyError) {
-          console.error('Error fetching MUS 240 journals:', legacyError);
-        } else {
-          mus240Journals = (legacyJournals || []).map(j => ({
-            id: j.id,
-            title: j.title,
-            description: j.description || 'Listening Journal',
-            points: j.points || 100,
-            due_date: j.due_date,
-            assignment_type: j.assignment_type || 'listening_journal',
-            source: 'mus240_journal' as const
-          }));
-        }
-      }
 
       // Transform sight-reading assignments to match Assignment interface
       const readMusicAssignments: Assignment[] = (sightReadingData || []).map(sr => {
@@ -165,7 +136,6 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
       const allAssignments = [
         ...(courseData || []).map(a => ({ ...a, source: 'course' as const })),
         ...readMusicAssignments,
-        ...mus240Journals
       ];
 
       // Sort by due date
@@ -178,7 +148,6 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
       // Fetch submissions for current user from all relevant tables
       if (user) {
         const courseAssignmentIds = (courseData || []).map(a => a.id);
-        const journalAssignmentIds = mus240Journals.map(a => a.id);
         
         // Check gw_assignment_submissions (video/sight-reading assignments)
         const { data: videoSubmissions } = await supabase
@@ -194,18 +163,6 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
           .eq('student_id', user.id)
           .in('assignment_id', courseAssignmentIds.length > 0 ? courseAssignmentIds : ['none']);
 
-        // Check mus240_journal_entries for legacy journals
-        let journalSubmissions: any[] = [];
-        if (isMUS240 && journalAssignmentIds.length > 0) {
-          const { data: legacySubmissions } = await supabase
-            .from('mus240_journal_entries')
-            .select('assignment_id, submitted_at, is_published')
-            .eq('student_id', user.id)
-            .in('assignment_id', journalAssignmentIds);
-          
-          journalSubmissions = legacySubmissions || [];
-        }
-
         // Merge all submission sources into a single map
         const submissionMap = new Map<string, { status: string; grade: number | null }>();
         
@@ -216,30 +173,6 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
         essaySubmissions?.forEach(s => {
           submissionMap.set(s.assignment_id, { status: s.status, grade: s.points_earned });
         });
-
-        journalSubmissions.forEach(s => {
-          // Mark as submitted if there's an entry
-          submissionMap.set(s.assignment_id, { 
-            status: s.submitted_at ? 'submitted' : 'draft', 
-            grade: null 
-          });
-        });
-
-        // Also check mus240_journal_grades for graded journals
-        if (isMUS240 && journalAssignmentIds.length > 0) {
-          const { data: journalGrades } = await supabase
-            .from('mus240_journal_grades')
-            .select('assignment_id, overall_score')
-            .eq('student_id', user.id)
-            .in('assignment_id', journalAssignmentIds);
-
-          (journalGrades as any[])?.forEach((g: any) => {
-            submissionMap.set(g.assignment_id, { 
-              status: 'graded', 
-              grade: g.overall_score 
-            });
-          });
-        }
 
         const enrichedAssignments = allAssignments.map(assignment => ({
           ...assignment,
@@ -285,8 +218,7 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
   const handleDeleteAssignment = async () => {
     if (!deleteTarget) return;
     try {
-      const table = deleteTarget.source === 'mus240_journal' ? 'mus240_assignments' :
-                    deleteTarget.source === 'readmusic' ? 'gw_sight_reading_assignments' :
+      const table = deleteTarget.source === 'readmusic' ? 'gw_sight_reading_assignments' :
                     'gw_course_assignments';
       
       const { error } = await supabase.from(table as any).delete().eq('id', deleteTarget.id);
@@ -341,8 +273,7 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
               <div 
                 key={assignment.id} 
                 className={`flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors border ${
-                  assignment.source === 'readmusic' ? 'border-blue-200 bg-blue-50/50' : 
-                  assignment.source === 'mus240_journal' ? 'border-purple-200 bg-purple-50/50' : 'border-border'
+                  assignment.source === 'readmusic' ? 'border-blue-200 bg-blue-50/50' : 'border-border'
                 }`}
               >
                 <div className="flex-1">
@@ -351,12 +282,6 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
                       <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
                         <Music className="h-3 w-3 mr-1" />
                         ReadMusic
-                      </Badge>
-                    )}
-                    {assignment.source === 'mus240_journal' && (
-                      <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300">
-                        <PenLine className="h-3 w-3 mr-1" />
-                        Journal
                       </Badge>
                     )}
                     <h4 className="font-semibold text-foreground">{assignment.title}</h4>
