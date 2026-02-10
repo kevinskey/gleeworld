@@ -184,10 +184,10 @@ export const WardrobeInventoryDashboard = () => {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-white rounded-lg border shadow-sm">
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border">
-        <h2 className="text-xl font-semibold text-blue-800 mb-2">Inventory Management</h2>
-        <p className="text-blue-600 text-sm">
+    <div className="space-y-6 p-6 bg-card rounded-lg border border-border shadow-sm">
+      <div className="bg-accent/50 p-6 rounded-lg border border-border">
+        <h2 className="text-xl font-semibold text-foreground mb-2">Inventory Management</h2>
+        <p className="text-muted-foreground text-sm">
           Manage wardrobe item quantities and track availability
         </p>
       </div>
@@ -198,10 +198,10 @@ export const WardrobeInventoryDashboard = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Items</p>
-                <p className="text-2xl font-bold">{items.length}</p>
+                <p className="text-sm text-muted-foreground">Total Items</p>
+                <p className="text-2xl font-bold text-foreground">{items.length}</p>
               </div>
-              <Package className="h-8 w-8 text-blue-500" />
+              <Package className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -209,10 +209,10 @@ export const WardrobeInventoryDashboard = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Out of Stock</p>
-                <p className="text-2xl font-bold text-red-600">{lowStockItems.length}</p>
+                <p className="text-sm text-muted-foreground">Out of Stock</p>
+                <p className="text-2xl font-bold text-destructive">{lowStockItems.length}</p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
+              <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
           </CardContent>
         </Card>
@@ -220,10 +220,10 @@ export const WardrobeInventoryDashboard = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Stock</p>
-                <p className="text-2xl font-bold">{items.reduce((sum, item) => sum + item.total_quantity, 0)}</p>
+                <p className="text-sm text-muted-foreground">Total Stock</p>
+                <p className="text-2xl font-bold text-foreground">{items.reduce((sum, item) => sum + item.total_quantity, 0)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
+              <TrendingUp className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -231,10 +231,10 @@ export const WardrobeInventoryDashboard = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Available</p>
-                <p className="text-2xl font-bold text-green-600">{items.reduce((sum, item) => sum + item.available_quantity, 0)}</p>
+                <p className="text-sm text-muted-foreground">Available</p>
+                <p className="text-2xl font-bold text-primary">{items.reduce((sum, item) => sum + item.available_quantity, 0)}</p>
               </div>
-              <Package className="h-8 w-8 text-green-500" />
+              <Package className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -294,7 +294,7 @@ export const WardrobeInventoryDashboard = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Available:</span>
-                  <span className={`text-sm font-bold ${item.available_quantity === 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  <span className={`text-sm font-bold ${item.available_quantity === 0 ? 'text-destructive' : 'text-primary'}`}>
                     {item.available_quantity}
                   </span>
                 </div>
@@ -304,9 +304,9 @@ export const WardrobeInventoryDashboard = () => {
                 </div>
                 
                 {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div 
-                    className="bg-green-600 h-2 rounded-full" 
+                    className="bg-primary h-2 rounded-full" 
                     style={{
                       width: item.total_quantity > 0 ? `${(item.available_quantity / item.total_quantity) * 100}%` : '0%'
                     }}
@@ -386,11 +386,11 @@ export const WardrobeInventoryDashboard = () => {
           </DialogHeader>
           {selectedItem && (
             <div className="space-y-4">
-              <div className="p-3 bg-gray-50 rounded">
+              <div className="p-3 bg-muted rounded">
                 <h4 className="font-medium">{selectedItem.name}</h4>
-                <p className="text-sm text-gray-600">Current stock: {selectedItem.total_quantity}</p>
-                <p className="text-sm text-gray-600">Available: {selectedItem.available_quantity}</p>
-                <p className="text-sm text-gray-600">Checked out: {selectedItem.total_quantity - selectedItem.available_quantity}</p>
+                <p className="text-sm text-muted-foreground">Current stock: {selectedItem.total_quantity}</p>
+                <p className="text-sm text-muted-foreground">Available: {selectedItem.available_quantity}</p>
+                <p className="text-sm text-muted-foreground">Checked out: {selectedItem.total_quantity - selectedItem.available_quantity}</p>
               </div>
 
               <div>

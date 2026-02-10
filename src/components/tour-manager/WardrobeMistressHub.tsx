@@ -14,55 +14,55 @@ export const WardrobeMistressHub = () => {
   return (
     <div className="space-y-8">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg border">
-        <h1 className="text-2xl font-bold text-purple-800 mb-3">Wardrobe Mistress Hub</h1>
-        <p className="text-purple-600">
+      <div className="bg-accent/50 p-6 rounded-lg border border-border">
+        <h1 className="text-2xl font-bold text-foreground mb-3">Wardrobe Mistress Hub</h1>
+        <p className="text-muted-foreground">
           Comprehensive wardrobe management for formal dresses, lipstick, pearls, polos, and t-shirts
         </p>
       </div>
 
       {/* Navigation Tabs - More Space and Better Layout */}
-      <div className="bg-white rounded-lg border shadow-sm p-4">
+      <div className="bg-card rounded-lg border border-border shadow-sm p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 h-auto gap-2 bg-muted p-2 mb-12 sticky top-0 z-20">
             <TabsTrigger 
               value="inventory" 
-              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
             >
               <Package className="h-6 w-6" />
               <span>Inventory</span>
             </TabsTrigger>
             <TabsTrigger 
               value="members" 
-              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
             >
               <Users className="h-6 w-6" />
               <span>Members</span>
             </TabsTrigger>
             <TabsTrigger 
               value="checkout" 
-              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
             >
               <ClipboardCheck className="h-6 w-6" />
               <span>Check In/Out</span>
             </TabsTrigger>
             <TabsTrigger 
               value="orders" 
-              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
             >
               <ShoppingCart className="h-6 w-6" />
               <span>Orders</span>
             </TabsTrigger>
             <TabsTrigger 
               value="announcements" 
-              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
             >
               <MessageSquare className="h-6 w-6" />
               <span>Communications</span>
             </TabsTrigger>
             <TabsTrigger 
               value="reports" 
-              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
             >
               <FileText className="h-6 w-6" />
               <span>Reports</span>
