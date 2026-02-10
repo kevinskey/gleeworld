@@ -398,13 +398,13 @@ export const AIRoutePlanner = ({
   const getStatusColor = (status: TourRoute['status']) => {
     switch (status) {
       case 'planning':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-accent text-accent-foreground';
       case 'optimized':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-primary/10 text-primary';
       case 'approved':
-        return 'bg-green-100 text-green-800';
+        return 'bg-primary/20 text-foreground';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
     }
   };
   const getStatusIcon = (status: TourRoute['status']) => {
@@ -709,7 +709,7 @@ export const AIRoutePlanner = ({
                         </Badge>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm text-primary-foreground">{stop.city}</span>
+                            <span className="font-medium text-sm text-foreground">{stop.city}</span>
                             {stop.venue && stop.venue !== 'TBD' && <>
                                 <span className="text-xs text-muted-foreground">•</span>
                                 <span className="text-sm">{stop.venue}</span>
