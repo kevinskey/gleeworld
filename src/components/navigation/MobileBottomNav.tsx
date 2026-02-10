@@ -56,7 +56,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
         <div className="flex items-center justify-evenly w-full h-12 px-4 bg-background">
           {/* Musical Toolkit */}
           <div className="flex items-center justify-center w-14 h-14 text-foreground">
-            <MusicalToolkit className="!p-0 [&_svg]:h-7 [&_svg]:w-7" />
+            <MusicalToolkit className="!p-0 [&_svg]:!h-10 [&_svg]:!w-10" />
           </div>
 
           {/* Glee Cam - Highlighted Center with Navy Blue */}
