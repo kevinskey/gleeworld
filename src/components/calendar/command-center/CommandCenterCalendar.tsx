@@ -237,17 +237,25 @@ export const CommandCenterCalendar = () => {
         {/* Center Content */}
         <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
           {/* Calendar Grid or Agenda */}
-          <div className="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
+          <div className="flex-1 min-h-0 overflow-auto p-2 lg:p-4">
             {viewMode === 'agenda' || isMobile ? (
-              <AgendaView
-                events={filteredEvents}
-                selectedDate={selectedDate}
-                onDateSelect={setSelectedDate}
-                onNavigateDay={navigateDay}
-                getCategoryForEvent={getCategoryForEvent}
-                categoryConfigs={CATEGORY_CONFIGS}
-                onEventDeleted={fetchEvents}
-              />
+              <>
+                <AgendaView
+                  events={filteredEvents}
+                  selectedDate={selectedDate}
+                  onDateSelect={setSelectedDate}
+                  onNavigateDay={navigateDay}
+                  getCategoryForEvent={getCategoryForEvent}
+                  categoryConfigs={CATEGORY_CONFIGS}
+                  onEventDeleted={fetchEvents}
+                />
+                {/* Mobile Super Admin Control Panel */}
+                {isMobile && !roleLoading && isSuperAdmin() && (
+                  <div className="mt-3">
+                    <SuperAdminControlPanel />
+                  </div>
+                )}
+              </>
             ) : (
               <CommandCenterGrid
                 events={filteredEvents}
