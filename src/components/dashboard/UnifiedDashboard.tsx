@@ -343,7 +343,7 @@ export const UnifiedDashboard = () => {
       </div>
 
       {/* Glee Academy Section - white background wrapper */}
-      <div className="bg-background px-4 py-2">
+      <div className="px-4 py-2" style={{ backgroundColor: '#ffffff' }}>
         <button onClick={() => navigate('/glee-academy')} style={{
           fontFamily: "'Cinzel', serif"
         }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] text-white flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 hover:brightness-110 pt-[10px] pb-[10px] pl-[20px] my-[5px]">
@@ -363,12 +363,12 @@ export const UnifiedDashboard = () => {
         </div>}
 
       {/* Modern Store Section - white background wrapper */}
-      <div className="bg-background px-4 py-2">
+      <div className="px-4 py-2" style={{ backgroundColor: '#ffffff' }}>
         <DashboardStoreSection />
       </div>
 
       {/* YouTube Channel Slider - white background wrapper */}
-      <div className="bg-background px-4 py-2">
+      <div className="px-4 py-2" style={{ backgroundColor: '#ffffff' }}>
         <YouTubeChannelSlider />
       </div>
 
