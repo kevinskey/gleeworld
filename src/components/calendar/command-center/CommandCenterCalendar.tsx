@@ -143,10 +143,9 @@ export const CommandCenterCalendar = () => {
       const matchesCategoryFilter = activeCategoryFilters.includes(category);
       
       // For calendar filter, check if event's calendar_id is in active filters
-      // If event has no calendar_id (like assignments), check if any calendar filter is active
+      // Events without a calendar_id (like assignments) pass through if their category is active
       const matchesCalendarFilter = !event.calendar_id || 
-        activeCalendarFilters.includes(event.calendar_id) ||
-        activeCalendarFilters.length === 0;
+        activeCalendarFilters.includes(event.calendar_id);
       
       const matchesSearch = !searchQuery || 
         event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
