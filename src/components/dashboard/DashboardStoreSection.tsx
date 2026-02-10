@@ -123,11 +123,11 @@ export const DashboardStoreSection = () => {
   return <div className="w-full bg-background">
 
       {/* Shop Section Header - Edge to Edge */}
-      <div className="h-[12px] w-full bg-primary-foreground" />
+      
       <h2 style={{
       fontFamily: "'Cinzel', serif",
       color: 'white'
-    }} className="relative z-10 h-12 text-sm sm:text-xl font-bold bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-lg border-t border-t-white/20 [&_svg]:text-white font-serif pl-[25px]">
+    }} className="relative z-10 h-12 text-sm sm:text-xl font-bold bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-lg border-t border-t-white/20 [&_svg]:text-white font-serif pl-[25px] py-[5px]">
         <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 pl-px" />
         Shop
       </h2>
