@@ -118,11 +118,7 @@ const AttendanceScanPage = () => {
         }, 1200);
       } else {
         setError(result.message || 'Failed to record attendance');
-        toast({
-          title: "Scan Failed",
-          description: result.message || "Failed to record attendance",
-          variant: "destructive",
-        });
+        // Inline alert already shows the error — no duplicate toast needed
       }
 
     } catch (err) {
@@ -216,7 +212,7 @@ const AttendanceScanPage = () => {
             </div>
           )}
 
-          {error && (
+          {error && !scanResult && (
             <Alert className="border-red-200 bg-red-50">
               <XCircle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">

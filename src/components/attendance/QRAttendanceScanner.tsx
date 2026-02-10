@@ -237,13 +237,8 @@ export const QRAttendanceScanner = () => {
         setTimeout(() => {
           navigate(target);
         }, 2000);
-      } else {
-        toast({
-          title: "Scan Failed",
-          description: result.message || result.error || "Failed to record attendance",
-          variant: "destructive",
-        });
       }
+      // Don't show a toast for failures — the inline scan result alert already displays the error
     } catch (error) {
       console.error('Error processing QR scan:', error);
       setScanResult({
