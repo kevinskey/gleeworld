@@ -29983,6 +29983,15 @@ export type Database = {
         | { Args: { p_qr_token: string; p_user_id: string }; Returns: Json }
         | {
             Args: {
+              p_qr_token: string
+              p_scan_location?: string
+              p_user_agent?: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
               ip_address_param?: string
               qr_token_param: string
               scan_location_param?: Json
