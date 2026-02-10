@@ -73,7 +73,6 @@ const AttendanceScanPage = () => {
       const { data, error } = await supabase.rpc('process_qr_attendance_scan', {
         p_qr_token: token,
         p_user_id: user.id,
-        p_scan_location: null,
         p_user_agent: navigator.userAgent,
       });
 
