@@ -67,7 +67,7 @@ export const useRoomAssignments = () => {
     const { data, error } = await supabase
       .from('gw_profiles')
       .select('user_id, full_name, voice_part, avatar_url')
-      .eq('role', 'member')
+      .in('role', ['member', 'student', 'executive'])
       .order('full_name');
     if (!error && data) setMembers(data);
   }, []);
