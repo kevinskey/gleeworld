@@ -235,7 +235,7 @@ const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign,
             </span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-48 p-3" side="right">
+        <PopoverContent className="w-48 p-3 bg-card border border-border shadow-lg z-50" side="right">
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">{seat.profile?.full_name}</p>
             <p className="text-xs text-muted-foreground">
@@ -274,7 +274,7 @@ const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign,
           <UserPlus className="h-3 w-3 text-muted-foreground/40" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-3" side="right">
+      <PopoverContent className="w-56 p-3 bg-card border border-border shadow-lg z-50" side="right">
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground mb-1">
             Row {seat.row_number}, Seat {seat.seat_letter}
