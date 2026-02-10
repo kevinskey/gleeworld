@@ -305,7 +305,7 @@ export const QRCodeManagementModule = () => {
         <TabsList className="w-full h-auto p-1 rounded-xl mb-4 grid grid-cols-3 sm:grid-cols-5 gap-1" style={{ background: '#e2e8f0' }}>
           <TabsTrigger 
             value="generator" 
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-sm sm:text-base rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
             style={{ color: '#334155' }}
           >
             <QrCode className="h-4 w-4" />
@@ -314,7 +314,7 @@ export const QRCodeManagementModule = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="url-generator" 
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-sm sm:text-base rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
             style={{ color: '#334155' }}
           >
             <Link className="h-4 w-4" />
@@ -323,7 +323,7 @@ export const QRCodeManagementModule = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="active" 
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-sm sm:text-base rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
             style={{ color: '#334155' }}
           >
             <CheckCircle2 className="h-4 w-4" />
@@ -332,7 +332,7 @@ export const QRCodeManagementModule = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="history" 
-            className="hidden sm:flex flex-1 items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="hidden sm:flex flex-1 items-center justify-center gap-1.5 py-2.5 px-2 text-sm sm:text-base rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
             style={{ color: '#334155' }}
           >
             <History className="h-4 w-4" />
@@ -340,7 +340,7 @@ export const QRCodeManagementModule = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="settings" 
-            className="hidden sm:flex flex-1 items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="hidden sm:flex flex-1 items-center justify-center gap-1.5 py-2.5 px-2 text-sm sm:text-base rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
             style={{ color: '#334155' }}
           >
             <MapPin className="h-4 w-4" />
