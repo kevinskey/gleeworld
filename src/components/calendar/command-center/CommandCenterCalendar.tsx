@@ -16,6 +16,7 @@ import { AgendaView } from "./AgendaView";
 import { CreateEventDialog } from "../CreateEventDialog";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SuperAdminControlPanel } from "./SuperAdminControlPanel";
 
 // Eastern Time helpers
 const isSameDayET = (date1: Date, date2: Date): boolean => {
@@ -104,7 +105,7 @@ export const CommandCenterCalendar = () => {
   const { data: calendars, isLoading: calendarsLoading } = useCalendars();
   const calendarAccess = useUserCalendarAccess();
   const { user } = useAuth();
-  const { isAdmin, isExecutiveBoard, loading: roleLoading } = useUserRole();
+  const { isAdmin, isExecutiveBoard, isSuperAdmin, loading: roleLoading } = useUserRole();
   const canManageEvents = !roleLoading && (isAdmin() || isExecutiveBoard());
 
   // Initialize calendar filters when calendars load
@@ -274,6 +275,11 @@ export const CommandCenterCalendar = () => {
                   Book Office Hours
                 </Button>
               </div>
+
+              {/* Super Admin Control Panel */}
+              {!roleLoading && isSuperAdmin() && (
+                <SuperAdminControlPanel />
+              )}
               <DailyRunSheet
                 selectedDate={selectedDate}
                 events={selectedDateEvents}
