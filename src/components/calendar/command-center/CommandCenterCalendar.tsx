@@ -45,7 +45,7 @@ export const CATEGORY_CONFIGS: CategoryConfig[] = [
   { id: 'liturgy', label: 'Liturgy', color: '#6B4C9A', icon: 'church' },
   { id: 'performances', label: 'Performances', color: '#8B0000', icon: 'mic' },
   { id: 'leadership', label: 'Leadership', color: '#2F4F4F', icon: 'users' },
-  { id: 'tour', label: 'Tour', color: '#CD853F', icon: 'plane' },
+  { id: 'tour', label: 'Tour', color: '#4B9CD3', icon: 'plane' },
   { id: 'personal', label: 'Personal', color: '#708090', icon: 'user' },
 ];
 
