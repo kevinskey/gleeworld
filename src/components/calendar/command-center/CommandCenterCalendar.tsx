@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { format, isSameDay, addMonths, subMonths, addDays, subDays } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { useGleeWorldEvents, GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
@@ -13,6 +14,8 @@ import { CommandCenterGrid } from "./CommandCenterGrid";
 import { DailyRunSheet } from "./DailyRunSheet";
 import { AgendaView } from "./AgendaView";
 import { CreateEventDialog } from "../CreateEventDialog";
+import { CalendarDays } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Eastern Time helpers
 const isSameDayET = (date1: Date, date2: Date): boolean => {
@@ -84,6 +87,7 @@ const getCategoryForEvent = (event: GleeWorldEvent): CategoryFilter => {
 };
 
 export const CommandCenterCalendar = () => {
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<ViewMode>(isMobile ? 'agenda' : 'month');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -259,7 +263,17 @@ export const CommandCenterCalendar = () => {
 
           {/* Daily Run Sheet - Right panel on desktop, bottom on tablet */}
           {!isMobile && (
-            <div className="lg:w-96 xl:w-[420px] flex-shrink-0 border-l border-slate-300 bg-white">
+            <div className="lg:w-96 xl:w-[420px] flex-shrink-0 border-l border-slate-300 bg-white flex flex-col">
+              {/* Book Office Hours Button */}
+              <div className="p-4 border-b border-slate-200">
+                <Button
+                  onClick={() => navigate('/book-appointment')}
+                  className="w-full h-14 text-lg font-bold bg-[#003666] hover:bg-[#002a52] text-white rounded-xl shadow-md gap-2"
+                >
+                  <CalendarDays className="h-5 w-5" />
+                  Book Office Hours
+                </Button>
+              </div>
               <DailyRunSheet
                 selectedDate={selectedDate}
                 events={selectedDateEvents}
