@@ -301,15 +301,15 @@ export const TourRosterSection = () => {
       {/* Two Column Layout */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Tour Roster */}
-        <div className="bg-card border border-border rounded-lg">
-          <div className="p-4 border-b border-border">
+        <div className="bg-card border border-border rounded-lg flex flex-col" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+          <div className="p-4 border-b border-border flex-shrink-0">
             <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
               Tour Roster
               <Badge variant="secondary" className="ml-auto">{rosterMembers.length}</Badge>
             </h3>
           </div>
-          <div className="p-4 space-y-2 max-h-[500px] overflow-y-auto">
+          <div className="p-4 space-y-2 overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
             {rosterMembers.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 text-sm">
                 No members added to tour roster yet
@@ -367,8 +367,8 @@ export const TourRosterSection = () => {
         </div>
 
         {/* Available Members */}
-        <div className="bg-card border border-border rounded-lg">
-          <div className="p-4 border-b border-border space-y-3">
+        <div className="bg-card border border-border rounded-lg flex flex-col" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+          <div className="p-4 border-b border-border space-y-3 flex-shrink-0">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                 <UserPlus className="h-4 w-4 text-muted-foreground" />
@@ -391,7 +391,7 @@ export const TourRosterSection = () => {
               />
             </div>
           </div>
-          <div className="p-4 space-y-2 max-h-[600px] overflow-y-auto">
+          <div className="p-4 space-y-2 overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
             {availableMembers.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 text-sm">
                 {searchTerm ? 'No matching members found' : 'All members are on the roster'}
