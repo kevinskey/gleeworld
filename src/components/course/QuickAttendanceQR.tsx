@@ -110,7 +110,7 @@ export const QuickAttendanceQR: React.FC<QuickAttendanceQRProps> = ({
   const generateQRImage = async (token: string) => {
     try {
       const baseUrl = window.location.hostname.includes('lovable')
-        ? 'https://gleeworld.lovable.app'
+        ? 'https://gleeworld.org'
         : window.location.origin;
       const checkInUrl = `${baseUrl}/qr-scanner?token=${encodeURIComponent(token)}`;
       
