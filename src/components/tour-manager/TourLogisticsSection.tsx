@@ -252,7 +252,7 @@ export const TourLogisticsSection = () => {
 
           {/* Timeline Visual */}
           <Card>
-            <CardContent className="p-6 bg-primary-foreground border">
+            <CardContent className="p-6">
               <div className="relative">
                 {/* Vertical line */}
                 <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
@@ -266,7 +266,7 @@ export const TourLogisticsSection = () => {
                       
                       {/* Content */}
                       <div className="flex-1 bg-muted/30 rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                        <div className="flex flex-wrap items-start justify-between gap-2 bg-primary-foreground border">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
                           <div className="flex items-center gap-3">
                             <span className="text-lg font-bold text-primary">{slot.time}</span>
                             <h4 className="font-medium">{slot.label}</h4>
