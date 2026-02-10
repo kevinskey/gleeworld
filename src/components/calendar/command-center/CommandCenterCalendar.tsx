@@ -8,6 +8,7 @@ import { useUserCalendarAccess, isEventVisibleToUser } from "@/hooks/useUserCale
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCurrentProvider, useProviderAvailability, ProviderAvailability } from "@/hooks/useServiceProviders";
 import { CommandCenterHeader } from "./CommandCenterHeader";
 import { CommandCenterFilterRail } from "./CommandCenterFilterRail";
 import { CommandCenterGrid } from "./CommandCenterGrid";
@@ -107,6 +108,11 @@ export const CommandCenterCalendar = () => {
   const { user } = useAuth();
   const { isAdmin, isExecutiveBoard, isSuperAdmin, loading: roleLoading } = useUserRole();
   const canManageEvents = !roleLoading && (isAdmin() || isExecutiveBoard());
+
+  // Fetch provider availability for super admins to overlay on calendar
+  const isSA = !roleLoading && isSuperAdmin();
+  const { data: currentProvider } = useCurrentProvider();
+  const { data: providerAvailability = [] } = useProviderAvailability(isSA ? currentProvider?.id : undefined);
 
   // Initialize calendar filters when calendars load
   useEffect(() => {
@@ -266,6 +272,7 @@ export const CommandCenterCalendar = () => {
                 getCategoryForEvent={getCategoryForEvent}
                 categoryConfigs={CATEGORY_CONFIGS}
                 onEventDeleted={fetchEvents}
+                providerAvailability={isSA ? providerAvailability : []}
               />
             )}
           </div>
