@@ -55,16 +55,26 @@ export const RisersSection = () => {
           .eq('template_name', 'Default'),
         supabase
           .from('gw_tour_roster')
-          .select('user_id, gw_profiles(full_name, voice_part)')
+          .select('user_id')
           .eq('status', 'confirmed'),
       ]);
 
-      // Build roster list
-      const members: RosterMember[] = (rosterRes.data || []).map((r: any) => ({
-        user_id: r.user_id,
-        full_name: r.gw_profiles?.full_name || 'Unknown',
-        voice_part: r.gw_profiles?.voice_part || null,
-      }));
+      // Get user IDs from roster, then fetch profiles
+      const rosterUserIds = (rosterRes.data || []).map((r: any) => r.user_id);
+      let members: RosterMember[] = [];
+
+      if (rosterUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, voice_part')
+          .in('user_id', rosterUserIds);
+
+        members = (profiles || []).map(p => ({
+          user_id: p.user_id,
+          full_name: p.full_name || 'Unknown',
+          voice_part: p.voice_part || null,
+        }));
+      }
       setRoster(members);
 
       // Build grid with saved data
