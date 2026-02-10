@@ -18,23 +18,23 @@ export const SuperAdminControlPanel = () => {
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
-        <Button
-          variant="ghost"
+        <button
           className={cn(
-            "w-full justify-between px-4 py-3 h-auto rounded-none border-b border-slate-200 text-sm font-semibold",
-            isOpen ? "bg-slate-50" : "hover:bg-slate-50"
+            "w-full flex items-center justify-between px-4 py-3 border-b border-slate-200 text-sm font-semibold transition-colors",
+            isOpen ? "bg-slate-100" : "bg-white hover:bg-slate-50"
           )}
+          style={{ color: '#0f172a' }}
         >
           <span className="flex items-center gap-2">
-            <Settings2 className="h-4 w-4 text-slate-600" />
+            <Settings2 className="h-4 w-4" style={{ color: '#475569' }} />
             Availability & Services
           </span>
           {isOpen ? (
-            <ChevronUp className="h-4 w-4 text-slate-500" />
+            <ChevronUp className="h-4 w-4" style={{ color: '#475569' }} />
           ) : (
-            <ChevronDown className="h-4 w-4 text-slate-500" />
+            <ChevronDown className="h-4 w-4" style={{ color: '#475569' }} />
           )}
-        </Button>
+        </button>
       </CollapsibleTrigger>
 
       <CollapsibleContent>
