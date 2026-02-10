@@ -168,7 +168,7 @@ export default function BookAppointmentPage() {
       };
       if (result.success) {
         toast.success(result.message || 'Appointment booked successfully!');
-        
+
         // Send SMS notification to admin for approve/deny
         try {
           await supabase.functions.invoke('office-hours-notify', {
@@ -181,13 +181,12 @@ export default function BookAppointmentPage() {
               appointment_date: selectedDateStr,
               appointment_time: selectedTime,
               topic: topic,
-              notes: notes || undefined,
+              notes: notes || undefined
             }
           });
         } catch (smsError) {
           console.error('SMS notification failed (non-blocking):', smsError);
         }
-        
         setSelectedType('');
         setSelectedDateStr('');
         setSelectedTime('');
@@ -260,7 +259,10 @@ export default function BookAppointmentPage() {
       <div className="w-full py-6" style={{
       backgroundColor: '#003666'
     }}>
-        <h1 className="text-center tracking-wide text-white" style={{ fontSize: '42px', fontWeight: 700 }}>
+        <h1 className="text-center tracking-wide text-white text-xl" style={{
+        fontSize: '42px',
+        fontWeight: 700
+      }}>
           OFFICE HOURS with Dr. Johnson
         </h1>
       </div>
@@ -274,8 +276,15 @@ export default function BookAppointmentPage() {
               <img src={drJohnsonOffice} alt="Dr. Johnson's Office" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
               <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                <h2 style={{ fontSize: '18px', fontWeight: 500 }}>Dr. Kevin Johnson</h2>
-                <p className="flex items-center gap-2 mt-1" style={{ fontSize: '18px', fontWeight: 500, opacity: 0.95 }}>
+                <h2 style={{
+                fontSize: '18px',
+                fontWeight: 500
+              }}>Dr. Kevin Johnson</h2>
+                <p className="flex items-center gap-2 mt-1" style={{
+                fontSize: '18px',
+                fontWeight: 500,
+                opacity: 0.95
+              }}>
                   <MapPin className="h-4 w-4" /> Rockefeller Fine Arts Building 105
                 </p>
               </div>
@@ -283,16 +292,31 @@ export default function BookAppointmentPage() {
             <CardContent className="p-5">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="font-bold" style={{ fontSize: '18px', color: 'white' }}>{completedCount}</div>
-                  <div className="text-xs uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>Completed</div>
+                  <div className="font-bold" style={{
+                  fontSize: '18px',
+                  color: 'white'
+                }}>{completedCount}</div>
+                  <div className="text-xs uppercase tracking-wide mt-1" style={{
+                  color: 'rgba(255,255,255,0.75)'
+                }}>Completed</div>
                 </div>
                 <div>
-                  <div className="font-bold" style={{ fontSize: '18px', color: '#86efac' }}>{upcomingCount}</div>
-                  <div className="text-xs uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>Upcoming</div>
+                  <div className="font-bold" style={{
+                  fontSize: '18px',
+                  color: '#86efac'
+                }}>{upcomingCount}</div>
+                  <div className="text-xs uppercase tracking-wide mt-1" style={{
+                  color: 'rgba(255,255,255,0.75)'
+                }}>Upcoming</div>
                 </div>
                 <div>
-                  <div className="font-bold" style={{ fontSize: '18px', color: '#fcd34d' }}>{pendingCount}</div>
-                  <div className="text-xs uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>Pending</div>
+                  <div className="font-bold" style={{
+                  fontSize: '18px',
+                  color: '#fcd34d'
+                }}>{pendingCount}</div>
+                  <div className="text-xs uppercase tracking-wide mt-1" style={{
+                  color: 'rgba(255,255,255,0.75)'
+                }}>Pending</div>
                 </div>
               </div>
             </CardContent>
@@ -331,13 +355,22 @@ export default function BookAppointmentPage() {
             `}</style>
             <Tabs defaultValue="book">
               <TabsList className="grid w-full grid-cols-3 h-20 bg-gradient-to-b from-[#004080] to-[#003666] p-0 pb-0 rounded-t-xl rounded-b-none relative z-10 shadow-lg">
-                <TabsTrigger value="book" className="office-hours-tab gap-2 font-['Bebas_Neue'] tracking-wide py-4 rounded-none rounded-tl-xl h-full hover:bg-white/20 transition-all duration-200 border-r border-white/20" style={{ fontSize: '30px', fontWeight: 700 }}>
+                <TabsTrigger value="book" className="office-hours-tab gap-2 font-['Bebas_Neue'] tracking-wide py-4 rounded-none rounded-tl-xl h-full hover:bg-white/20 transition-all duration-200 border-r border-white/20" style={{
+                fontSize: '30px',
+                fontWeight: 700
+              }}>
                   <CalendarDays className="h-6 w-6" /> Book
                 </TabsTrigger>
-                <TabsTrigger value="history" className="office-hours-tab gap-2 font-['Bebas_Neue'] tracking-wide py-4 rounded-none h-full hover:bg-white/20 transition-all duration-200 border-r border-white/20" style={{ fontSize: '30px', fontWeight: 700 }}>
+                <TabsTrigger value="history" className="office-hours-tab gap-2 font-['Bebas_Neue'] tracking-wide py-4 rounded-none h-full hover:bg-white/20 transition-all duration-200 border-r border-white/20" style={{
+                fontSize: '30px',
+                fontWeight: 700
+              }}>
                   <History className="h-6 w-6" /> History
                 </TabsTrigger>
-                <TabsTrigger value="contact" className="office-hours-tab gap-2 font-['Bebas_Neue'] tracking-wide py-4 rounded-none rounded-tr-xl h-full hover:bg-white/20 transition-all duration-200" style={{ fontSize: '30px', fontWeight: 700 }}>
+                <TabsTrigger value="contact" className="office-hours-tab gap-2 font-['Bebas_Neue'] tracking-wide py-4 rounded-none rounded-tr-xl h-full hover:bg-white/20 transition-all duration-200" style={{
+                fontSize: '30px',
+                fontWeight: 700
+              }}>
                   <Mail className="h-6 w-6" /> Contact
                 </TabsTrigger>
               </TabsList>
@@ -349,16 +382,24 @@ export default function BookAppointmentPage() {
                   <CardContent className="p-5 space-y-5 bg-white">
                     {/* Service Selection */}
                     <div className="space-y-3">
-                      <Label className="text-xl font-semibold" style={{ color: '#0F172A' }}>Service Type *</Label>
+                      <Label className="text-xl font-semibold" style={{
+                      color: '#0F172A'
+                    }}>Service Type *</Label>
                       <Select value={selectedType} onValueChange={val => {
                       setSelectedType(val);
                       setSelectedTime('');
                     }}>
-                        <SelectTrigger className="h-14" style={{ fontSize: '16px', color: selectedType ? '#0F172A' : '#475569' }}>
+                        <SelectTrigger className="h-14" style={{
+                        fontSize: '16px',
+                        color: selectedType ? '#0F172A' : '#475569'
+                      }}>
                           <SelectValue placeholder="Select a service..." />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-slate-200 shadow-xl z-[100] max-h-[300px]">
-                          {appointmentTypes.map(type => <SelectItem key={type.id} value={type.id} className="py-4" style={{ fontSize: '16px', color: '#0F172A' }}>
+                          {appointmentTypes.map(type => <SelectItem key={type.id} value={type.id} className="py-4" style={{
+                          fontSize: '16px',
+                          color: '#0F172A'
+                        }}>
                               <div className="flex items-center justify-between w-full gap-4">
                                 <span>{type.name}</span>
                                 <Badge variant="secondary" className="ml-2 text-base">{type.duration} min</Badge>
@@ -370,53 +411,40 @@ export default function BookAppointmentPage() {
 
                     {/* Date & Time Row - Zoom-style pill design */}
                     <div className="space-y-3">
-                      <Label style={{ fontSize: '16px', color: '#0F172A', fontWeight: 500 }}>Date & Time *</Label>
+                      <Label style={{
+                      fontSize: '16px',
+                      color: '#0F172A',
+                      fontWeight: 500
+                    }}>Date & Time *</Label>
                       <div className="flex items-center gap-3 flex-wrap">
                         {/* Date Picker */}
                         <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={true}>
                           <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              disabled={!selectedType}
-                              className="oh-picker-btn w-[160px] justify-start text-left font-semibold h-12 rounded-lg transition-all"
-                              style={{ fontSize: '16px' }}
-                            >
+                            <Button variant="outline" disabled={!selectedType} className="oh-picker-btn w-[160px] justify-start text-left font-semibold h-12 rounded-lg transition-all" style={{
+                            fontSize: '16px'
+                          }}>
                               <CalendarIcon className="mr-2 h-5 w-5" />
                               <span>{selectedDate ? format(selectedDate, "MMM d") : "Date"}</span>
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent 
-                            className="w-auto p-0 bg-white border-2 border-slate-200 shadow-2xl z-[9999]" 
-                            align="start"
-                            side="bottom"
-                            sideOffset={8}
-                            avoidCollisions={true}
-                          >
-                            <Calendar
-                              mode="single"
-                              selected={selectedDate}
-                              onSelect={(date) => {
-                                setSelectedDate(date);
-                                if (date) {
-                                  setSelectedDateStr(format(date, 'yyyy-MM-dd'));
-                                }
-                                setSelectedTime('');
-                                setDatePickerOpen(false);
-                              }}
-                              disabled={(date) => date < new Date()}
-                              initialFocus
-                              className="p-3 pointer-events-auto bg-white text-slate-900"
-                              classNames={{
-                                caption_label: "text-lg font-medium text-slate-900",
-                                head_cell: "text-slate-500 rounded-md w-full font-normal text-sm sm:text-base flex-1 p-2 text-center",
-                                day: "h-12 w-full p-0 font-normal text-slate-800 hover:bg-slate-100 hover:text-slate-900 focus:bg-slate-100 focus:text-slate-900 aria-selected:opacity-100 text-sm sm:text-base",
-                                day_selected: "bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white",
-                                day_today: "bg-slate-100 text-slate-900 font-semibold",
-                                day_outside: "text-slate-300 opacity-50",
-                                day_disabled: "text-slate-300 opacity-50",
-                                nav_button: "h-9 w-9 bg-transparent p-0 text-slate-600 hover:text-slate-900 opacity-70 hover:opacity-100 border border-slate-200 rounded-md",
-                              }}
-                            />
+                          <PopoverContent className="w-auto p-0 bg-white border-2 border-slate-200 shadow-2xl z-[9999]" align="start" side="bottom" sideOffset={8} avoidCollisions={true}>
+                            <Calendar mode="single" selected={selectedDate} onSelect={date => {
+                            setSelectedDate(date);
+                            if (date) {
+                              setSelectedDateStr(format(date, 'yyyy-MM-dd'));
+                            }
+                            setSelectedTime('');
+                            setDatePickerOpen(false);
+                          }} disabled={date => date < new Date()} initialFocus className="p-3 pointer-events-auto bg-white text-slate-900" classNames={{
+                            caption_label: "text-lg font-medium text-slate-900",
+                            head_cell: "text-slate-500 rounded-md w-full font-normal text-sm sm:text-base flex-1 p-2 text-center",
+                            day: "h-12 w-full p-0 font-normal text-slate-800 hover:bg-slate-100 hover:text-slate-900 focus:bg-slate-100 focus:text-slate-900 aria-selected:opacity-100 text-sm sm:text-base",
+                            day_selected: "bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white",
+                            day_today: "bg-slate-100 text-slate-900 font-semibold",
+                            day_outside: "text-slate-300 opacity-50",
+                            day_disabled: "text-slate-300 opacity-50",
+                            nav_button: "h-9 w-9 bg-transparent p-0 text-slate-600 hover:text-slate-900 opacity-70 hover:opacity-100 border border-slate-200 rounded-md"
+                          }} />
                           </PopoverContent>
                         </Popover>
 
@@ -425,57 +453,30 @@ export default function BookAppointmentPage() {
                         {/* Time Picker */}
                         <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen} modal={true}>
                           <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              disabled={!selectedType || !selectedDateStr}
-                              className="oh-picker-btn w-[140px] justify-start text-left font-semibold h-12 rounded-lg transition-all"
-                              style={{ fontSize: '16px' }}
-                            >
+                            <Button variant="outline" disabled={!selectedType || !selectedDateStr} className="oh-picker-btn w-[140px] justify-start text-left font-semibold h-12 rounded-lg transition-all" style={{
+                            fontSize: '16px'
+                          }}>
                               <Clock className="mr-2 h-5 w-5" />
                               <span>{selectedTime || "Time"}</span>
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent 
-                            className="w-[200px] p-2 bg-white border-2 border-slate-200 shadow-2xl z-[9999]" 
-                            align="start" 
-                            side="bottom"
-                            sideOffset={8}
-                            avoidCollisions={true}
-                          >
-                            <div
-                              className="max-h-[280px] overflow-y-auto overscroll-contain pointer-events-auto"
-                              onWheelCapture={(e) => e.stopPropagation()}
-                              onTouchMove={(e) => e.stopPropagation()}
-                            >
-                              {slotsLoading ? (
-                                <div className="flex items-center justify-center py-8">
+                          <PopoverContent className="w-[200px] p-2 bg-white border-2 border-slate-200 shadow-2xl z-[9999]" align="start" side="bottom" sideOffset={8} avoidCollisions={true}>
+                            <div className="max-h-[280px] overflow-y-auto overscroll-contain pointer-events-auto" onWheelCapture={e => e.stopPropagation()} onTouchMove={e => e.stopPropagation()}>
+                              {slotsLoading ? <div className="flex items-center justify-center py-8">
                                   <Loader2 className="h-5 w-5 animate-spin" />
-                                </div>
-                              ) : timeSlots && timeSlots.length > 0 ? (
-                                <div className="p-2">
-                                  {timeSlots.map((slot: any) => (
-                                    <button
-                                      key={slot.start_time}
-                                      type="button"
-                                      className={cn(
-                                        "w-full flex items-center justify-between h-11 px-4 text-base font-normal rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors",
-                                        slot.start_time === selectedTime && "bg-primary/10 text-primary font-medium"
-                                      )}
-                                      onClick={() => {
-                                        setSelectedTime(slot.start_time);
-                                        setTimePickerOpen(false);
-                                      }}
-                                    >
+                                </div> : timeSlots && timeSlots.length > 0 ? <div className="p-2">
+                                  {timeSlots.map((slot: any) => <button key={slot.start_time} type="button" className={cn("w-full flex items-center justify-between h-11 px-4 text-base font-normal rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors", slot.start_time === selectedTime && "bg-primary/10 text-primary font-medium")} onClick={() => {
+                                setSelectedTime(slot.start_time);
+                                setTimePickerOpen(false);
+                              }}>
                                       <span>{slot.start_time} - {slot.end_time}</span>
                                       {slot.start_time === selectedTime && <Check className="h-5 w-5" />}
-                                    </button>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="text-center py-8" style={{ color: '#475569' }}>
+                                    </button>)}
+                                </div> : <div className="text-center py-8" style={{
+                              color: '#475569'
+                            }}>
                                   No available times
-                                </div>
-                              )}
+                                </div>}
                             </div>
                           </PopoverContent>
                         </Popover>
@@ -483,18 +484,32 @@ export default function BookAppointmentPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <Label style={{ fontSize: '16px', color: '#0F172A', fontWeight: 500 }}>Topic/Purpose *</Label>
-                      <Input value={topic} onChange={e => setTopic(e.target.value)} placeholder="What would you like to discuss?" className="h-14 bg-white border-slate-300 placeholder:text-[#475569]" style={{ fontSize: '16px', color: '#0F172A' }} />
+                      <Label style={{
+                      fontSize: '16px',
+                      color: '#0F172A',
+                      fontWeight: 500
+                    }}>Topic/Purpose *</Label>
+                      <Input value={topic} onChange={e => setTopic(e.target.value)} placeholder="What would you like to discuss?" className="h-14 bg-white border-slate-300 placeholder:text-[#475569]" style={{
+                      fontSize: '16px',
+                      color: '#0F172A'
+                    }} />
                     </div>
 
                     <div className="space-y-3">
-                      <Label style={{ fontSize: '16px', color: '#0F172A', fontWeight: 500 }}>Additional Notes</Label>
-                      <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional context..." rows={4} className="bg-white border-slate-300 placeholder:text-[#475569]" style={{ fontSize: '16px', color: '#0F172A' }} />
+                      <Label style={{
+                      fontSize: '16px',
+                      color: '#0F172A',
+                      fontWeight: 500
+                    }}>Additional Notes</Label>
+                      <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional context..." rows={4} className="bg-white border-slate-300 placeholder:text-[#475569]" style={{
+                      fontSize: '16px',
+                      color: '#0F172A'
+                    }} />
                     </div>
 
                     <Button onClick={handleBookAppointment} disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic} className="w-full h-16 text-2xl text-white shadow-lg hover:shadow-xl transition-all" style={{
                     backgroundColor: '#1D4ED8',
-                    fontWeight: 700,
+                    fontWeight: 700
                   }}>
                       {loading ? <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Booking...</> : <><CalendarDays className="h-5 w-5 mr-2" /> Book Appointment</>}
                     </Button>
@@ -559,48 +574,75 @@ export default function BookAppointmentPage() {
                     <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                       <Mail className="h-5 w-5 text-blue-600" />
                     </div>
-                    <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Email</span>
+                    <span className="text-xs font-medium" style={{
+                    color: '#0F172A'
+                  }}>Email</span>
                   </a>
 
                   <a href="tel:+14706221392" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-slate-50 transition-colors text-center">
                     <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
                       <Phone className="h-5 w-5 text-green-600" />
                     </div>
-                    <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Call</span>
+                    <span className="text-xs font-medium" style={{
+                    color: '#0F172A'
+                  }}>Call</span>
                   </a>
 
                   <a href="https://zoom.us/j/drjohnson" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-slate-50 transition-colors text-center">
                     <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                       <Video className="h-5 w-5 text-blue-600" />
                     </div>
-                    <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Zoom</span>
+                    <span className="text-xs font-medium" style={{
+                    color: '#0F172A'
+                  }}>Zoom</span>
                   </a>
 
                   <div className="flex flex-col items-center gap-2 p-4 rounded-lg border bg-slate-50 text-center">
                     <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
                       <MapPin className="h-5 w-5 text-amber-600" />
                     </div>
-                    <span className="text-xs font-medium" style={{ color: '#0F172A' }}>Room 105</span>
+                    <span className="text-xs font-medium" style={{
+                    color: '#0F172A'
+                  }}>Room 105</span>
                   </div>
                 </div>
 
                 {/* Send Message */}
                 <Card className="bg-white border-slate-200">
                   <CardHeader className="pb-3 bg-white border-b border-slate-200">
-                    <CardTitle style={{ fontSize: '18px', color: '#0F172A', fontWeight: 600 }}>Send a Message</CardTitle>
-                    <CardDescription style={{ fontSize: '14px', color: '#475569' }}>
+                    <CardTitle style={{
+                    fontSize: '18px',
+                    color: '#0F172A',
+                    fontWeight: 600
+                  }}>Send a Message</CardTitle>
+                    <CardDescription style={{
+                    fontSize: '14px',
+                    color: '#475569'
+                  }}>
                       Send Dr. Johnson a direct message
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3 bg-white pt-4">
                     <div className="space-y-2">
-                      <Label className="font-medium" style={{ fontSize: '16px', color: '#0F172A' }}>Subject</Label>
-                      <Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="What is this about?" className="h-10 bg-white border-slate-300 placeholder:text-[#475569]" style={{ fontSize: '16px', color: '#0F172A' }} />
+                      <Label className="font-medium" style={{
+                      fontSize: '16px',
+                      color: '#0F172A'
+                    }}>Subject</Label>
+                      <Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="What is this about?" className="h-10 bg-white border-slate-300 placeholder:text-[#475569]" style={{
+                      fontSize: '16px',
+                      color: '#0F172A'
+                    }} />
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="font-medium" style={{ fontSize: '16px', color: '#0F172A' }}>Message</Label>
-                      <Textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} placeholder="Type your message here..." rows={4} className="bg-white border-slate-300 placeholder:text-[#475569]" style={{ fontSize: '16px', color: '#0F172A' }} />
+                      <Label className="font-medium" style={{
+                      fontSize: '16px',
+                      color: '#0F172A'
+                    }}>Message</Label>
+                      <Textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} placeholder="Type your message here..." rows={4} className="bg-white border-slate-300 placeholder:text-[#475569]" style={{
+                      fontSize: '16px',
+                      color: '#0F172A'
+                    }} />
                     </div>
 
                     <div className="bg-slate-50 rounded-lg p-2.5 text-xs flex items-center gap-2">
@@ -612,7 +654,7 @@ export default function BookAppointmentPage() {
 
                     <Button onClick={handleSendEmail} disabled={sendingEmail || !emailSubject || !emailBody} className="w-full h-12 text-lg text-white shadow-lg hover:shadow-xl transition-all" style={{
                     backgroundColor: '#1D4ED8',
-                    fontWeight: 700,
+                    fontWeight: 700
                   }}>
                       {sendingEmail ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <><Send className="h-4 w-4 mr-2" /> Send Message</>}
                     </Button>
