@@ -1,0 +1,1 @@
+UPDATE gw_calendars SET color = '#4B9CD3' WHERE id = 'a387a4de-4a01-46e4-af1c-5c3b18423177';
