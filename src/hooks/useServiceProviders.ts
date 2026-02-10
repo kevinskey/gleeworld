@@ -21,12 +21,13 @@ export interface ServiceProvider {
 export interface ProviderAvailability {
   id: string;
   provider_id: string;
-  day_of_week: number; // 0 = Sunday, 1 = Monday, etc.
+  day_of_week: number | null; // 0 = Sunday, 1 = Monday, etc. Null for specific-date entries
   start_time: string;
   end_time: string;
   slot_duration_minutes: number;
   break_between_slots_minutes: number;
   is_available: boolean;
+  specific_date?: string | null; // YYYY-MM-DD, when set this is a one-off override
   created_at: string;
   updated_at: string;
 }
@@ -102,6 +103,7 @@ export const useProviderAvailability = (providerId?: string) => {
         .from('gw_provider_availability')
         .select('*')
         .eq('provider_id', providerId)
+        .order('specific_date', { ascending: true, nullsFirst: true })
         .order('day_of_week')
         .order('start_time');
 

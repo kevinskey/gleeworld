@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, Settings2, Clock, Briefcase, Plus, Edit, Trash2, Edit2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Settings2, Clock, Briefcase, Plus, Edit, Trash2, Edit2, CalendarDays } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { toast as sonnerToast } from "sonner";
 import { cn } from "@/lib/utils";
+import { format, parseISO } from "date-fns";
 
 type ActiveTab = "availability" | "services";
+type AvailMode = "weekly" | "specific";
 
 const DAYS_OF_WEEK = [
   { value: 0, label: 'Sun' },
@@ -36,30 +38,54 @@ const CompactAvailabilityPanel = () => {
   const deleteMutation = useDeleteProviderAvailability();
   const { toast } = useToast();
 
+  const [availMode, setAvailMode] = useState<AvailMode>("weekly");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<ProviderAvailability | null>(null);
   const [formData, setFormData] = useState({
-    day_of_week: 1,
+    day_of_week: 1 as number | null,
     start_time: '09:00',
     end_time: '17:00',
     slot_duration_minutes: 30,
     break_between_slots_minutes: 15,
     is_available: true,
+    specific_date: '' as string,
   });
 
-  const resetForm = () => {
-    setFormData({ day_of_week: 1, start_time: '09:00', end_time: '17:00', slot_duration_minutes: 30, break_between_slots_minutes: 15, is_available: true });
+  const resetForm = (mode?: AvailMode) => {
+    const m = mode ?? availMode;
+    setFormData({
+      day_of_week: m === 'weekly' ? 1 : null,
+      start_time: '09:00',
+      end_time: '17:00',
+      slot_duration_minutes: 30,
+      break_between_slots_minutes: 15,
+      is_available: true,
+      specific_date: '',
+    });
     setEditingSlot(null);
   };
 
   const handleSubmit = async () => {
     if (!provider) return;
     try {
-      await updateMutation.mutateAsync({
+      const isSpecific = availMode === 'specific' || !!formData.specific_date;
+      const payload: any = {
         ...(editingSlot?.id && { id: editingSlot.id }),
         provider_id: provider.id,
-        ...formData,
-      });
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        slot_duration_minutes: formData.slot_duration_minutes,
+        break_between_slots_minutes: formData.break_between_slots_minutes,
+        is_available: formData.is_available,
+      };
+      if (isSpecific) {
+        payload.specific_date = formData.specific_date || null;
+        payload.day_of_week = 0; // placeholder
+      } else {
+        payload.day_of_week = formData.day_of_week;
+        payload.specific_date = null;
+      }
+      await updateMutation.mutateAsync(payload);
       toast({ title: "Success", description: editingSlot ? "Updated" : "Added" });
       setIsDialogOpen(false);
       resetForm();
@@ -70,6 +96,9 @@ const CompactAvailabilityPanel = () => {
 
   const handleEdit = (slot: ProviderAvailability) => {
     setEditingSlot(slot);
+    const isSpecific = !!slot.specific_date;
+    if (isSpecific) setAvailMode('specific');
+    else setAvailMode('weekly');
     setFormData({
       day_of_week: slot.day_of_week,
       start_time: slot.start_time,
@@ -77,6 +106,7 @@ const CompactAvailabilityPanel = () => {
       slot_duration_minutes: slot.slot_duration_minutes,
       break_between_slots_minutes: slot.break_between_slots_minutes,
       is_available: slot.is_available,
+      specific_date: slot.specific_date || '',
     });
     setIsDialogOpen(true);
   };
@@ -94,80 +124,144 @@ const CompactAvailabilityPanel = () => {
   if (providerLoading) return <p className="text-xs py-3 text-center" style={{ color: '#64748b' }}>Loading...</p>;
   if (!provider) return <p className="text-xs py-3 text-center" style={{ color: '#64748b' }}>No provider profile found.</p>;
 
+  const recurringSlots = availability.filter(s => !s.specific_date);
+  const specificSlots = availability.filter(s => !!s.specific_date);
+
   const grouped = DAYS_OF_WEEK.map(day => ({
     ...day,
-    slots: availability.filter(s => s.day_of_week === day.value),
+    slots: recurringSlots.filter(s => s.day_of_week === day.value),
   })).filter(d => d.slots.length > 0);
 
+  const openAddDialog = (mode: AvailMode) => {
+    setAvailMode(mode);
+    resetForm(mode);
+    setIsDialogOpen(true);
+  };
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold" style={{ color: '#0f172a' }}>Weekly Schedule</span>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={resetForm}>
-              <Plus className="h-3 w-3" /> Add
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="w-[95vw] max-w-md">
-            <DialogHeader>
-              <DialogTitle style={{ color: '#0f172a' }}>{editingSlot ? 'Edit' : 'Add'} Availability</DialogTitle>
-              <DialogDescription>Set working hours for a day</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3">
+    <div className="space-y-3">
+      {/* Mode Tabs */}
+      <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+        <button
+          onClick={() => setAvailMode('weekly')}
+          className={cn("flex-1 text-xs font-medium py-1.5 transition-colors", availMode === 'weekly' ? "bg-[#003366] text-white" : "bg-white hover:bg-slate-50")}
+          style={availMode !== 'weekly' ? { color: '#64748b' } : undefined}
+        >
+          <Clock className="h-3 w-3 inline mr-1" />Weekly
+        </button>
+        <button
+          onClick={() => setAvailMode('specific')}
+          className={cn("flex-1 text-xs font-medium py-1.5 transition-colors", availMode === 'specific' ? "bg-[#003366] text-white" : "bg-white hover:bg-slate-50")}
+          style={availMode !== 'specific' ? { color: '#64748b' } : undefined}
+        >
+          <CalendarDays className="h-3 w-3 inline mr-1" />Specific Dates
+        </button>
+      </div>
+
+      {/* Add Button & Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold" style={{ color: '#0f172a' }}>
+            {availMode === 'weekly' ? 'Weekly Schedule' : 'Date-Specific Hours'}
+          </span>
+          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => openAddDialog(availMode)}>
+            <Plus className="h-3 w-3" /> Add
+          </Button>
+        </div>
+
+        <DialogContent className="w-[95vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle style={{ color: '#0f172a' }}>{editingSlot ? 'Edit' : 'Add'} Availability</DialogTitle>
+            <DialogDescription>
+              {availMode === 'weekly' ? 'Set recurring weekly hours' : 'Set hours for a specific date'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {availMode === 'weekly' ? (
               <div>
                 <Label className="text-xs">Day</Label>
-                <Select value={formData.day_of_week.toString()} onValueChange={v => setFormData(p => ({ ...p, day_of_week: parseInt(v) }))}>
+                <Select value={(formData.day_of_week ?? 1).toString()} onValueChange={v => setFormData(p => ({ ...p, day_of_week: parseInt(v) }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-white z-50">
                     {DAYS_OF_WEEK.map(d => <SelectItem key={d.value} value={d.value.toString()}>{d.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div><Label className="text-xs">Start</Label><Input type="time" value={formData.start_time} onChange={e => setFormData(p => ({ ...p, start_time: e.target.value }))} /></div>
-                <div><Label className="text-xs">End</Label><Input type="time" value={formData.end_time} onChange={e => setFormData(p => ({ ...p, end_time: e.target.value }))} /></div>
+            ) : (
+              <div>
+                <Label className="text-xs">Date</Label>
+                <Input type="date" value={formData.specific_date} onChange={e => setFormData(p => ({ ...p, specific_date: e.target.value }))} />
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div><Label className="text-xs">Slot (min)</Label><Input type="number" value={formData.slot_duration_minutes} onChange={e => setFormData(p => ({ ...p, slot_duration_minutes: parseInt(e.target.value) }))} /></div>
-                <div><Label className="text-xs">Break (min)</Label><Input type="number" value={formData.break_between_slots_minutes} onChange={e => setFormData(p => ({ ...p, break_between_slots_minutes: parseInt(e.target.value) }))} /></div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={formData.is_available} onCheckedChange={c => setFormData(p => ({ ...p, is_available: c }))} />
-                <Label className="text-xs">Available</Label>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" className="flex-1" onClick={handleSubmit} disabled={updateMutation.isPending}>{editingSlot ? 'Update' : 'Add'}</Button>
-                <Button size="sm" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <div><Label className="text-xs">Start</Label><Input type="time" value={formData.start_time} onChange={e => setFormData(p => ({ ...p, start_time: e.target.value }))} /></div>
+              <div><Label className="text-xs">End</Label><Input type="time" value={formData.end_time} onChange={e => setFormData(p => ({ ...p, end_time: e.target.value }))} /></div>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><Label className="text-xs">Slot (min)</Label><Input type="number" value={formData.slot_duration_minutes} onChange={e => setFormData(p => ({ ...p, slot_duration_minutes: parseInt(e.target.value) }))} /></div>
+              <div><Label className="text-xs">Break (min)</Label><Input type="number" value={formData.break_between_slots_minutes} onChange={e => setFormData(p => ({ ...p, break_between_slots_minutes: parseInt(e.target.value) }))} /></div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={formData.is_available} onCheckedChange={c => setFormData(p => ({ ...p, is_available: c }))} />
+              <Label className="text-xs">Available</Label>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" className="flex-1" onClick={handleSubmit} disabled={updateMutation.isPending}>{editingSlot ? 'Update' : 'Add'}</Button>
+              <Button size="sm" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      {grouped.length === 0 ? (
-        <p className="text-xs py-2 text-center" style={{ color: '#64748b' }}>No availability set</p>
+      {/* Content */}
+      {availMode === 'weekly' ? (
+        grouped.length === 0 ? (
+          <p className="text-xs py-2 text-center" style={{ color: '#64748b' }}>No weekly availability set</p>
+        ) : (
+          <div className="space-y-1.5">
+            {grouped.map(day => (
+              <div key={day.value} className="rounded-lg border border-slate-200 bg-white p-2">
+                <div className="text-xs font-semibold mb-1" style={{ color: '#0f172a' }}>{day.label}</div>
+                {day.slots.map(slot => (
+                  <div key={slot.id} className="flex items-center justify-between text-xs py-1">
+                    <div className="flex items-center gap-2">
+                      <div className={cn("w-2 h-2 rounded-full", slot.is_available ? "bg-green-500" : "bg-red-500")} />
+                      <span style={{ color: '#334155' }}>{slot.start_time} – {slot.end_time}</span>
+                      <span style={{ color: '#94a3b8' }}>{slot.slot_duration_minutes}m</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <button onClick={() => handleEdit(slot)} className="p-1 rounded hover:bg-slate-100"><Edit2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
+                      <button onClick={() => handleDelete(slot.id)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )
       ) : (
-        <div className="space-y-1.5">
-          {grouped.map(day => (
-            <div key={day.value} className="rounded-lg border border-slate-200 bg-white p-2">
-              <div className="text-xs font-semibold mb-1" style={{ color: '#0f172a' }}>{day.label}</div>
-              {day.slots.map(slot => (
-                <div key={slot.id} className="flex items-center justify-between text-xs py-1">
-                  <div className="flex items-center gap-2">
-                    <div className={cn("w-2 h-2 rounded-full", slot.is_available ? "bg-green-500" : "bg-red-500")} />
-                    <span style={{ color: '#334155' }}>{slot.start_time} – {slot.end_time}</span>
-                    <span style={{ color: '#94a3b8' }}>{slot.slot_duration_minutes}m</span>
-                  </div>
-                  <div className="flex gap-1">
-                    <button onClick={() => handleEdit(slot)} className="p-1 rounded hover:bg-slate-100"><Edit2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
-                    <button onClick={() => handleDelete(slot.id)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
-                  </div>
+        specificSlots.length === 0 ? (
+          <p className="text-xs py-2 text-center" style={{ color: '#64748b' }}>No date-specific hours set</p>
+        ) : (
+          <div className="space-y-1.5">
+            {specificSlots.map(slot => (
+              <div key={slot.id} className="rounded-lg border border-slate-200 bg-white p-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={cn("w-2 h-2 rounded-full", slot.is_available ? "bg-green-500" : "bg-red-500")} />
+                  <span className="text-xs font-semibold" style={{ color: '#0f172a' }}>
+                    {slot.specific_date ? format(parseISO(slot.specific_date), 'EEE, MMM d') : '—'}
+                  </span>
+                  <span className="text-xs" style={{ color: '#334155' }}>{slot.start_time} – {slot.end_time}</span>
+                  <span className="text-xs" style={{ color: '#94a3b8' }}>{slot.slot_duration_minutes}m</span>
                 </div>
-              ))}
-            </div>
-          ))}
-        </div>
+                <div className="flex gap-1">
+                  <button onClick={() => handleEdit(slot)} className="p-1 rounded hover:bg-slate-100"><Edit2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
+                  <button onClick={() => handleDelete(slot.id)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       )}
     </div>
   );

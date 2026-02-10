@@ -15026,36 +15026,39 @@ export type Database = {
         Row: {
           break_between_slots_minutes: number
           created_at: string
-          day_of_week: number
+          day_of_week: number | null
           end_time: string
           id: string
           is_available: boolean
           provider_id: string
           slot_duration_minutes: number
+          specific_date: string | null
           start_time: string
           updated_at: string
         }
         Insert: {
           break_between_slots_minutes?: number
           created_at?: string
-          day_of_week: number
+          day_of_week?: number | null
           end_time: string
           id?: string
           is_available?: boolean
           provider_id: string
           slot_duration_minutes?: number
+          specific_date?: string | null
           start_time: string
           updated_at?: string
         }
         Update: {
           break_between_slots_minutes?: number
           created_at?: string
-          day_of_week?: number
+          day_of_week?: number | null
           end_time?: string
           id?: string
           is_available?: boolean
           provider_id?: string
           slot_duration_minutes?: number
+          specific_date?: string | null
           start_time?: string
           updated_at?: string
         }
