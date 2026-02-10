@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import officeHoursBadge from '@/assets/office-hours-badge.png';
-
 interface CourseBadge {
   id: string;
   course_code: string;
@@ -21,11 +20,14 @@ interface CourseBadge {
   display_order: number;
   is_active: boolean;
 }
-
 export const GleeAcademyDashboardCard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { profile } = useUserRole();
+  const {
+    user
+  } = useAuth();
+  const {
+    profile
+  } = useUserRole();
   const isAdmin = profile?.is_admin || profile?.is_super_admin;
   const {
     selectedCourseId,
@@ -33,7 +35,6 @@ export const GleeAcademyDashboardCard = () => {
     clearCourseSelection,
     isDefaultCourse
   } = useCourseContext();
-
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(true);
   const [badges, setBadges] = useState<CourseBadge[]>([]);
@@ -43,12 +44,12 @@ export const GleeAcademyDashboardCard = () => {
   useEffect(() => {
     const fetchBadges = async () => {
       try {
-        const { data, error } = await supabase
-          .from('academy_course_badges')
-          .select('*')
-          .eq('is_active', true)
-          .order('display_order', { ascending: true });
-
+        const {
+          data,
+          error
+        } = await supabase.from('academy_course_badges').select('*').eq('is_active', true).order('display_order', {
+          ascending: true
+        });
         if (error) throw error;
         setBadges(data || []);
       } catch (error) {
@@ -69,7 +70,6 @@ export const GleeAcademyDashboardCard = () => {
   useEffect(() => {
     if (sliderRef.current) sliderRef.current.scrollLeft = 0;
   }, [isOpen]);
-
   const handleCourseClick = (course: typeof ACADEMY_COURSES[0]) => {
     if (!user) {
       toast.error('Please log in to access courses');
@@ -78,7 +78,6 @@ export const GleeAcademyDashboardCard = () => {
     // Navigate directly to the course home page
     navigate(course.route);
   };
-
   const scrollSlider = (direction: 'left' | 'right') => {
     if (sliderRef.current) {
       const scrollAmount = 300;
@@ -88,70 +87,36 @@ export const GleeAcademyDashboardCard = () => {
       });
     }
   };
-
-  return (
-    <div className="w-full bg-[#1a3a5c] relative">
+  return <div className="w-full bg-[#1a3a5c] relative">
       {/* Navigation arrows - hidden on mobile */}
-      <button 
-        onClick={() => scrollSlider('left')}
-        className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-2 transition-colors"
-      >
+      <button onClick={() => scrollSlider('left')} className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-2 transition-colors">
         <ChevronLeft className="h-6 w-6 text-white" />
       </button>
-      <button 
-        onClick={() => scrollSlider('right')}
-        className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-2 transition-colors"
-      >
+      <button onClick={() => scrollSlider('right')} className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full p-2 transition-colors">
         <ChevronRight className="h-6 w-6 text-white" />
       </button>
 
       {/* Photo Slider - Database badges */}
-      <div 
-        ref={sliderRef} 
-        className="flex gap-4 sm:gap-6 overflow-x-auto py-6 px-4 sm:px-12 snap-x snap-mandatory scroll-smooth"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
-      >
-        {loadingBadges ? (
-          <div className="flex gap-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-28 sm:h-44 md:h-52 w-36 sm:w-48 bg-white/10 animate-pulse rounded-xl" />
-            ))}
-          </div>
-        ) : badges.length > 0 ? (
-          badges.map(badge => {
-            // Resolve image URL - use local import for office hours badge
-            const imgSrc = badge.badge_image_url?.includes('office-hours-badge') 
-              ? officeHoursBadge 
-              : badge.badge_image_url;
-            
-            return (
-              <div 
-                key={badge.id} 
-                onClick={() => badge.link_url ? navigate(badge.link_url) : null}
-                className="flex-shrink-0 snap-center cursor-pointer transition-all duration-300 hover:scale-105"
-              >
-                {imgSrc ? (
-                  <img 
-                    src={imgSrc} 
-                    alt={`${badge.course_code} - ${badge.course_title}`}
-                    className="h-36 sm:h-52 md:h-60 w-auto object-contain drop-shadow-2xl hover:brightness-110 rounded-2xl"
-                  />
-                ) : (
-                  <div className="h-36 sm:h-52 md:h-60 w-36 sm:w-52 md:w-60 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
+      <div ref={sliderRef} className="flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-12 snap-x snap-mandatory scroll-smooth py-[2px]" style={{
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none',
+      WebkitOverflowScrolling: 'touch'
+    }}>
+        {loadingBadges ? <div className="flex gap-4">
+            {[1, 2, 3].map(i => <div key={i} className="h-28 sm:h-44 md:h-52 w-36 sm:w-48 bg-white/10 animate-pulse rounded-xl" />)}
+          </div> : badges.length > 0 ? badges.map(badge => {
+        // Resolve image URL - use local import for office hours badge
+        const imgSrc = badge.badge_image_url?.includes('office-hours-badge') ? officeHoursBadge : badge.badge_image_url;
+        return <div key={badge.id} onClick={() => badge.link_url ? navigate(badge.link_url) : null} className="flex-shrink-0 snap-center cursor-pointer transition-all duration-300 hover:scale-105">
+                {imgSrc ? <img src={imgSrc} alt={`${badge.course_code} - ${badge.course_title}`} className="h-36 sm:h-52 md:h-60 w-auto object-contain drop-shadow-2xl hover:brightness-110 rounded-2xl" /> : <div className="h-36 sm:h-52 md:h-60 w-36 sm:w-52 md:w-60 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
                     <span className="text-white font-bold text-lg sm:text-xl">{badge.course_code}</span>
                     <span className="text-white/80 text-xs sm:text-sm text-center mt-2 line-clamp-2">{badge.course_title}</span>
                     <span className="text-amber-400 text-xs mt-3 font-medium">Enter Course →</span>
-                  </div>
-                )}
-              </div>
-            );
-          })
-        ) : (
-          <div className="text-white/60 text-center py-8 w-full">
+                  </div>}
+              </div>;
+      }) : <div className="text-white/60 text-center py-8 w-full">
             No course badges configured. Add them in Hero Manager → Academy Slider.
-          </div>
-        )}
+          </div>}
       </div>
-    </div>
-  );
+    </div>;
 };

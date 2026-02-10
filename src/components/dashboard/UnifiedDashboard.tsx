@@ -343,7 +343,7 @@ export const UnifiedDashboard = () => {
       </div>
 
       {/* Glee Academy Header */}
-      <div className="h-[12px] w-full bg-primary-foreground" />
+      
       <button onClick={() => navigate('/glee-academy')} style={{
       fontFamily: "'Cinzel', serif"
     }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] text-white flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 hover:brightness-110 pt-[10px] pb-[10px] pl-[20px]">
@@ -357,11 +357,9 @@ export const UnifiedDashboard = () => {
       </Suspense>
 
       {/* Office Hours Widget - visible to super admin only, right after academy */}
-      {(profile?.is_super_admin || profile?.is_admin) && (
-        <div className="px-4 pt-4">
+      {(profile?.is_super_admin || profile?.is_admin) && <div className="px-4 pt-4">
           <OfficeHoursWidget />
-        </div>
-      )}
+        </div>}
 
       {/* Modern Store Section */}
       <DashboardStoreSection />
@@ -370,18 +368,16 @@ export const UnifiedDashboard = () => {
       <YouTubeChannelSlider />
 
       {/* My Modules - Bottom of Dashboard */}
-      {user && (
-        <div className="px-4 py-6 bg-background">
+      {user && <div className="px-4 py-6 bg-background">
           <MyModules userProfile={{
-            user_id: user.id,
-            role: profile?.role,
-            exec_board_role: profile?.exec_board_role,
-            is_exec_board: profile?.is_exec_board,
-            is_admin: profile?.is_admin,
-            is_super_admin: profile?.is_super_admin
-          }} />
-        </div>
-      )}
+        user_id: user.id,
+        role: profile?.role,
+        exec_board_role: profile?.exec_board_role,
+        is_exec_board: profile?.is_exec_board,
+        is_admin: profile?.is_admin,
+        is_super_admin: profile?.is_super_admin
+      }} />
+        </div>}
       
       {/* Messages Panel Overlay */}
       {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
