@@ -176,20 +176,19 @@ export const QRAttendanceScanner = () => {
       }
 
       console.log('Calling process_qr_attendance_scan with params:', {
-        qr_token_param: qrToken,
-        user_id_param: user.id,
-        scan_location_param: null,
-        user_agent_param: navigator.userAgent,
+        p_qr_token: qrToken,
+        p_user_id: user.id,
+        p_scan_location: null,
+        p_user_agent: navigator.userAgent,
         ip_address_param: null,
       });
 
       // Timeout protects against "nothing happened" hangs
       const rpcPromise = supabase.rpc('process_qr_attendance_scan', {
-        qr_token_param: qrToken,
-        user_id_param: user.id,
-        scan_location_param: null, // Could add geolocation here
-        user_agent_param: navigator.userAgent,
-        ip_address_param: null, // Would need server-side to get real IP
+        p_qr_token: qrToken,
+        p_user_id: user.id,
+        p_scan_location: null,
+        p_user_agent: navigator.userAgent,
       });
 
       const timeoutMs = 15000;

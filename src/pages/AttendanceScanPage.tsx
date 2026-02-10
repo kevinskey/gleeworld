@@ -71,11 +71,10 @@ const AttendanceScanPage = () => {
 
       // Call the secure scanning function
       const { data, error } = await supabase.rpc('process_qr_attendance_scan', {
-        qr_token_param: token,
-        user_id_param: user.id,
-        scan_location_param: null,
-        user_agent_param: navigator.userAgent,
-        ip_address_param: null
+        p_qr_token: token,
+        p_user_id: user.id,
+        p_scan_location: null,
+        p_user_agent: navigator.userAgent,
       });
 
       if (error) throw error;
