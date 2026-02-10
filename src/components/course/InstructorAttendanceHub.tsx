@@ -17,14 +17,15 @@ import {
   ChevronUp,
   MapPin,
   BarChart3,
+  Zap,
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { AttendanceFullScreenModal } from './AttendanceFullScreenModal';
 import { CourseAttendanceGrid } from './CourseAttendanceGrid';
-import { cn } from '@/lib/utils';
 
 interface CourseSession {
   id: string;
@@ -52,11 +53,13 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
   const [session, setSession] = useState<CourseSession | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const [enrolledCount, setEnrolledCount] = useState(0);
   const [checkedInCount, setCheckedInCount] = useState(0);
   const [showFullScreen, setShowFullScreen] = useState(false);
   const [attendanceSessionId, setAttendanceSessionId] = useState<string | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   // Fetch today's or next upcoming session
@@ -111,6 +114,71 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
       setQrDataUrl(dataUrl);
     } catch (error) {
       console.error('Error generating QR image:', error);
+    }
+  };
+
+  // One-click: create today's session + QR code
+  const generateQuickQR = async () => {
+    if (!user) return;
+    setGenerating(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const startTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const endHour = now.getHours() + 1;
+      const endTime = `${String(endHour > 23 ? 23 : endHour).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      // 1. Create a class session for today
+      const { data: newSession, error: sessionError } = await supabase
+        .from('gw_course_class_sessions')
+        .insert({
+          course_id: courseId,
+          title: `${courseCode} Class`,
+          session_date: today,
+          start_time: startTime,
+          end_time: endTime,
+          session_type: 'class',
+          attendance_required: true,
+          created_by: user.id,
+        })
+        .select('id, title, session_date, start_time, end_time, location, qr_code_id')
+        .single();
+
+      if (sessionError) throw sessionError;
+
+      // 2. Generate QR code for the session via RPC
+      const { data: qrResult, error: qrError } = await supabase.rpc('generate_session_qr_code', {
+        p_session_id: newSession.id,
+        p_generated_by: user.id,
+        p_expires_in_minutes: 480, // 8 hours
+      });
+
+      if (qrError) throw qrError;
+
+      // 3. Parse the result and generate QR image
+      const qrData = typeof qrResult === 'string' ? JSON.parse(qrResult) : qrResult;
+      if (qrData?.qr_token) {
+        await generateQRImage(qrData.qr_token);
+        setAttendanceSessionId(qrData.attendance_session_id || null);
+      }
+
+      // 4. Refresh session
+      setSession(newSession);
+      setQrOpen(true);
+
+      toast({
+        title: 'QR Code Ready!',
+        description: 'Students can now scan to check in.',
+      });
+    } catch (error: any) {
+      console.error('Error generating quick QR:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate QR code',
+        variant: 'destructive',
+      });
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -219,7 +287,7 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
         </Card>
       </div>
 
-      {/* QR Quick-Start — Collapsible */}
+      {/* QR Quick-Start — Collapsible (when session exists) */}
       {session && (
         <Collapsible open={qrOpen} onOpenChange={setQrOpen}>
           <Card className="bg-card">
@@ -346,13 +414,30 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
         </Collapsible>
       )}
 
+      {/* No session — show one-click generate button */}
       {!session && !loading && (
         <Card className="bg-card">
-          <CardContent className="py-6 text-center">
-            <AlertCircle className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">
-              No upcoming sessions. Create class sessions in the Calendar tab.
-            </p>
+          <CardContent className="py-8 text-center space-y-4">
+            <QrCode className="h-12 w-12 mx-auto text-primary/60" />
+            <div>
+              <p className="font-medium text-foreground">No upcoming sessions</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Generate a QR code for today's class with one click
+              </p>
+            </div>
+            <Button
+              size="lg"
+              onClick={generateQuickQR}
+              disabled={generating}
+              className="gap-2"
+            >
+              {generating ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Zap className="h-4 w-4" />
+              )}
+              {generating ? 'Generating...' : 'Generate QR for Today'}
+            </Button>
           </CardContent>
         </Card>
       )}
