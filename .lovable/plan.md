@@ -1,45 +1,25 @@
 
+# White Background Behind Academy, Shop, and YouTube Sections
 
-## Add Office Hours Booking Card to Student Dashboard
+## What Will Change
+The Glee Academy badge slider, Shop section, and YouTube Channel slider on `/dashboard` will each be wrapped in a white background container with consistent padding, so white space is visible around and between them.
 
-### Approach
-Add a compact, mobile-first "Office Hours" card directly to the student dashboard landing area. This gives students immediate visibility of appointment availability without cluttering the screen.
+## Steps
 
-### What Students Will See
-- A clean card titled "OFFICE HOURS with Dr. Johnson"
-- Location info (Rockefeller Fine Arts Building 105)
-- Next available time slot (if any)
-- A prominent "Book Appointment" button that navigates to `/book-appointment`
-- Current upcoming appointment status (if they already have one booked)
+1. **Wrap the Glee Academy section** (header button + badge slider, lines 346-357 in `UnifiedDashboard.tsx`) in a `div` with `bg-white` (or `bg-background`) and some padding (e.g., `p-4` or `px-4 py-2`) so white shows around the navy slider.
 
-### Why This Is Best for Mobile
-- Minimal screen real estate -- just a summary card, not a full form
-- One-tap action to book (no scrolling through embedded forms)
-- The full booking flow at `/book-appointment` is already optimized for mobile
-- Avoids duplicating complex form logic on two pages
+2. **Wrap the DashboardStoreSection** (line 365) in a similar `bg-white` container with padding. The store section already uses `bg-background` internally, but adding an outer white wrapper ensures consistency and visible white margins.
 
-### Technical Steps
+3. **Wrap the YouTubeChannelSlider** (line 368) in a `bg-white` container with padding so white is visible around the dark gradient video slider.
 
-1. **Create `src/components/appointments/OfficeHoursCard.tsx`**
-   - Compact Card component showing Dr. Johnson's office hours info
-   - Query `gw_services` for next available slot
-   - Query `gw_appointments` for user's upcoming appointment (if any)
-   - "Book Appointment" button routes to `/book-appointment`
-   - Shows appointment status badge if one exists (Confirmed/Pending)
+## Technical Details
 
-2. **Integrate into the student dashboard**
-   - Add the `OfficeHoursCard` to the main dashboard grid layout
-   - Position it prominently (top area on mobile, sidebar area on desktop)
-   - Uses the existing `grid-cols-1 lg:grid-cols-12` layout pattern
+All changes are in `src/components/dashboard/UnifiedDashboard.tsx`. Each of the three sections will get a parent `div` like:
 
-3. **Styling**
-   - Follow the high-contrast design system (dark text on white card)
-   - Navy accent for the "Book" button (matches Spelman branding)
-   - Mobile: full-width stacked card
-   - Desktop: fits within the dashboard grid alongside other modules
+```tsx
+<div className="bg-white px-4 py-2">
+  {/* existing component */}
+</div>
+```
 
-### No Changes Needed
-- The existing `/book-appointment` page stays as-is (it's already mobile-optimized)
-- No database changes required
-- No new dependencies
-
+This keeps the internal dark-themed styling of each component intact while ensuring a clean white background is visible behind and between them.
