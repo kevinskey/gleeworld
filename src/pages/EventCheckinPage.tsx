@@ -84,9 +84,8 @@ const EventCheckinPage = () => {
       const { error: insertError } = await supabase.from("gw_event_attendance").insert({
         event_id: event.id,
         user_id: user.id,
-        status: "present",
+        attendance_status: "present",
         check_in_time: new Date().toISOString(),
-        check_in_method: "qr_code",
       });
 
       if (insertError) {
