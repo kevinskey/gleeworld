@@ -356,8 +356,8 @@ export const UnifiedDashboard = () => {
         <GleeAcademyDashboardCard />
       </Suspense>
 
-      {/* Office Hours Widget - visible to super admin only, right after academy */}
-      {(profile?.is_super_admin || profile?.is_admin) && <div className="px-4 pt-4">
+      {/* Office Hours Widget - visible to students, admins, and super admins */}
+      {(profile?.is_super_admin || profile?.is_admin || profile?.role === 'student') && <div className="px-4 pt-4">
           <OfficeHoursWidget />
         </div>}
 
