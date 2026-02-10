@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, startOfWeek, endOfWeek } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
+import { ProviderAvailability } from "@/hooks/useServiceProviders";
 import { cn } from "@/lib/utils";
 import { CategoryConfig, CategoryFilter, ViewMode } from "./CommandCenterCalendar";
 import { CommandCenterEventCard } from "./CommandCenterEventCard";
@@ -15,6 +16,13 @@ const isSameDayET = (date1: Date, date2: Date): boolean => {
          d1.getDate() === d2.getDate();
 };
 
+const formatAvailTime = (time: string) => {
+  const [h, m] = time.split(':').map(Number);
+  const ampm = h >= 12 ? 'p' : 'a';
+  const hr = h % 12 || 12;
+  return m === 0 ? `${hr}${ampm}` : `${hr}:${m.toString().padStart(2, '0')}${ampm}`;
+};
+
 interface CommandCenterGridProps {
   events: GleeWorldEvent[];
   currentDate: Date;
@@ -24,6 +32,7 @@ interface CommandCenterGridProps {
   getCategoryForEvent: (event: GleeWorldEvent) => CategoryFilter;
   categoryConfigs: CategoryConfig[];
   onEventDeleted?: () => void;
+  providerAvailability?: ProviderAvailability[];
 }
 
 export const CommandCenterGrid = ({
@@ -35,6 +44,7 @@ export const CommandCenterGrid = ({
   getCategoryForEvent,
   categoryConfigs,
   onEventDeleted,
+  providerAvailability = [],
 }: CommandCenterGridProps) => {
   const days = useMemo(() => {
     if (viewMode === 'week') {
@@ -51,6 +61,20 @@ export const CommandCenterGrid = ({
 
   const getEventsForDate = (date: Date) => {
     return events.filter(event => isSameDayET(new Date(event.start_date), date));
+  };
+
+  const getAvailabilityForDate = (date: Date) => {
+    const tz = 'America/New_York';
+    const zonedDate = toZonedTime(date, tz);
+    const dayOfWeek = zonedDate.getDay();
+    const dateStr = format(zonedDate, 'yyyy-MM-dd');
+
+    return providerAvailability.filter(slot => {
+      if (slot.specific_date) {
+        return slot.specific_date === dateStr;
+      }
+      return slot.day_of_week === dayOfWeek;
+    });
   };
 
   const getCategoryConfig = (category: CategoryFilter) => {
@@ -78,10 +102,12 @@ export const CommandCenterGrid = ({
       )}>
         {days.map((day, idx) => {
           const dayEvents = getEventsForDate(day);
+          const dayAvailability = getAvailabilityForDate(day);
           const isCurrentMonth = isSameMonth(day, currentDate);
           const isToday = isSameDayET(day, new Date());
           const isSelected = isSameDayET(day, selectedDate);
           const hasEvents = dayEvents.length > 0;
+          const hasAvailability = dayAvailability.length > 0;
 
           return (
             <div
@@ -112,6 +138,25 @@ export const CommandCenterGrid = ({
                   </span>
                 )}
               </div>
+
+              {/* Availability blocks at 50% opacity */}
+              {hasAvailability && (
+                <div className="flex flex-col gap-0.5 mb-1">
+                  {dayAvailability.filter(s => s.is_available).map(slot => (
+                    <div
+                      key={slot.id}
+                      className="rounded px-1 py-0.5 text-[10px] leading-tight truncate"
+                      style={{
+                        backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                        color: 'rgba(6, 125, 150, 0.7)',
+                        border: '1px solid rgba(6, 182, 212, 0.25)',
+                      }}
+                    >
+                      {formatAvailTime(slot.start_time)}–{formatAvailTime(slot.end_time)}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Event Cards - Stacked strips */}
               {hasEvents && (
