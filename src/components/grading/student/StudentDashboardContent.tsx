@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
+import { OfficeHoursCard } from '@/components/appointments/OfficeHoursCard';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { StudentGradesOverview } from './StudentGradesOverview';
 import { StudentTestsSection } from './StudentTestsSection';
@@ -56,6 +57,12 @@ export const StudentDashboardContent: React.FC = () => {
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">Student Dashboard</h1>
         <p className="text-sm sm:text-base text-muted-foreground">View your courses, assignments, and grades</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-4">
+          <OfficeHoursCard />
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'courses' | 'tests' | 'grades')}>
