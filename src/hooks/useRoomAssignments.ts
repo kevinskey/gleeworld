@@ -64,10 +64,23 @@ export const useRoomAssignments = () => {
   }, []);
 
   const fetchMembers = useCallback(async () => {
+    // Only fetch members who are on the tour roster
+    const { data: rosterData, error: rosterError } = await supabase
+      .from('gw_tour_roster')
+      .select('user_id')
+      .in('status', ['confirmed', 'pending']);
+    
+    if (rosterError || !rosterData || rosterData.length === 0) {
+      setMembers([]);
+      return;
+    }
+
+    const rosterUserIds = rosterData.map(r => r.user_id);
+    
     const { data, error } = await supabase
       .from('gw_profiles')
       .select('user_id, full_name, voice_part, avatar_url')
-      .in('role', ['member', 'student', 'executive'])
+      .in('user_id', rosterUserIds)
       .order('full_name');
     if (!error && data) setMembers(data);
   }, []);
