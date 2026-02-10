@@ -19801,6 +19801,39 @@ export type Database = {
           },
         ]
       }
+      gw_tour_risers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          position: number
+          row_number: number
+          template_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          position: number
+          row_number: number
+          template_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          position?: number
+          row_number?: number
+          template_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       gw_tour_roster: {
         Row: {
           added_by: string | null

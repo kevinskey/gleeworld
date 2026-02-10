@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2 } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -25,6 +25,7 @@ import { BusInfoSection } from '@/components/tour/BusInfoSection';
 import { HotelManagement } from './HotelManagement';
 import { TourBudgetManager } from './TourBudgetManager';
 import { TourMilestones } from './TourMilestones';
+import { RisersSection } from '@/components/tour/RisersSection';
 import { supabase } from '@/integrations/supabase/client';
 interface TourManagerDashboardProps {
   user?: {
@@ -65,6 +66,10 @@ const navItems = [{
   value: 'roster',
   label: 'Roster',
   icon: UserCheck
+}, {
+  value: 'risers',
+  label: 'Risers',
+  icon: LayoutGrid
 }, {
   value: 'route-planning',
   label: 'Routes',
@@ -129,6 +134,10 @@ const contentConfig: Record<string, {
   'roster': {
     title: 'Roster',
     description: 'Manage which members are going on tour'
+  },
+  'risers': {
+    title: 'Risers',
+    description: 'Assign singer positions on the risers for performances'
   },
   'route-planning': {
     title: 'Routes',
@@ -239,6 +248,8 @@ export const TourManagerDashboard = ({
         return <TourDatesSection onGenerateContract={handleGenerateContract} />;
       case 'roster':
         return <TourRosterSection />;
+      case 'risers':
+        return <RisersSection />;
       case 'route-planning':
         return <AIRoutePlanner user={user} />;
       case 'rooming':
