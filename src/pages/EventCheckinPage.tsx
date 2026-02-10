@@ -53,7 +53,7 @@ const EventCheckinPage = () => {
         // Check if user already checked in
         if (user) {
           const { data: existingAttendance } = await supabase
-            .from("attendance")
+            .from("gw_event_attendance")
             .select("id")
             .eq("event_id", data.id)
             .eq("user_id", user.id)
@@ -81,11 +81,12 @@ const EventCheckinPage = () => {
 
     setCheckingIn(true);
     try {
-      const { error: insertError } = await supabase.from("attendance").insert({
+      const { error: insertError } = await supabase.from("gw_event_attendance").insert({
         event_id: event.id,
         user_id: user.id,
         status: "present",
-        recorded_at: new Date().toISOString(),
+        check_in_time: new Date().toISOString(),
+        check_in_method: "qr_code",
       });
 
       if (insertError) {
