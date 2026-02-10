@@ -1,43 +1,45 @@
 
 
-## Fix: "Due This Week" Assignment Cards Getting Cut Off
+## Add Office Hours Booking Card to Student Dashboard
 
-The assignment cards in the "Due This Week" section use a single-row flex layout that forces the title, status badge ("Overdue"), and action button ("Start"/"Discuss") onto one line. On narrower screens (including the main content area squeezed by the sidebar), the badges and buttons overflow and get clipped.
+### Approach
+Add a compact, mobile-first "Office Hours" card directly to the student dashboard landing area. This gives students immediate visibility of appointment availability without cluttering the screen.
 
-### Proposed Redesign
+### What Students Will See
+- A clean card titled "OFFICE HOURS with Dr. Johnson"
+- Location info (Rockefeller Fine Arts Building 105)
+- Next available time slot (if any)
+- A prominent "Book Appointment" button that navigates to `/book-appointment`
+- Current upcoming appointment status (if they already have one booked)
 
-Switch from a single-row layout to a **stacked two-row card** layout:
+### Why This Is Best for Mobile
+- Minimal screen real estate -- just a summary card, not a full form
+- One-tap action to book (no scrolling through embedded forms)
+- The full booking flow at `/book-appointment` is already optimized for mobile
+- Avoids duplicating complex form logic on two pages
 
-- **Row 1**: Assignment title (full width, no truncation) and due date/points info
-- **Row 2**: Status badge (left-aligned) and action button (right-aligned)
+### Technical Steps
 
-This ensures nothing gets clipped regardless of title length or viewport width.
+1. **Create `src/components/appointments/OfficeHoursCard.tsx`**
+   - Compact Card component showing Dr. Johnson's office hours info
+   - Query `gw_services` for next available slot
+   - Query `gw_appointments` for user's upcoming appointment (if any)
+   - "Book Appointment" button routes to `/book-appointment`
+   - Shows appointment status badge if one exists (Confirmed/Pending)
 
----
+2. **Integrate into the student dashboard**
+   - Add the `OfficeHoursCard` to the main dashboard grid layout
+   - Position it prominently (top area on mobile, sidebar area on desktop)
+   - Uses the existing `grid-cols-1 lg:grid-cols-12` layout pattern
 
-### Technical Details
+3. **Styling**
+   - Follow the high-contrast design system (dark text on white card)
+   - Navy accent for the "Book" button (matches Spelman branding)
+   - Mobile: full-width stacked card
+   - Desktop: fits within the dashboard grid alongside other modules
 
-**File**: `src/components/academy/TeachingFirstHome.tsx` (lines ~894-935)
-
-**Current layout**:
-```text
-[Title + due date] ---- [Overdue badge] [Start button]
-```
-All in one `flex` row with `justify-between`, causing overflow.
-
-**New layout**:
-```text
-[Title (full width)]
-[Due date / points]
-[Overdue badge]              [Start button -->]
-```
-
-Changes:
-1. Replace the outer `flex items-center justify-between` with a vertical `space-y-2` stack
-2. Move title and metadata to the top, full-width
-3. Place the badge and button in a separate `flex items-center justify-between` row at the bottom
-4. Remove `truncate` from the title so long names wrap naturally
-5. Keep existing color logic (red tint for overdue, neutral for upcoming)
-
-This is a single-file change affecting only the card markup within the "Due This Week" section.
+### No Changes Needed
+- The existing `/book-appointment` page stays as-is (it's already mobile-optimized)
+- No database changes required
+- No new dependencies
 
