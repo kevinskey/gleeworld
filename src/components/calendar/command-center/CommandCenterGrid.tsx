@@ -74,7 +74,7 @@ export const CommandCenterGrid = ({
         return slot.specific_date === dateStr;
       }
       return slot.day_of_week === dayOfWeek;
-    });
+    }).sort((a, b) => a.start_time.localeCompare(b.start_time));
   };
 
   const getCategoryConfig = (category: CategoryFilter) => {
