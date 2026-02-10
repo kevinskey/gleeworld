@@ -368,7 +368,7 @@ export const UnifiedDashboard = () => {
       <YouTubeChannelSlider />
 
       {/* My Modules - Bottom of Dashboard */}
-      {user && <div className="px-4 py-6 bg-background">
+      {user && <div className="px-4 py-6 bg-primary-foreground">
           <MyModules userProfile={{
         user_id: user.id,
         role: profile?.role,

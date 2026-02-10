@@ -5,7 +5,6 @@ import { PublicHeader } from "./PublicHeader";
 import { UniversalFooter } from "./UniversalFooter";
 import { PageContainer } from "./PageContainer";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
-
 interface UniversalLayoutProps {
   children: ReactNode;
   showHeader?: boolean;
@@ -16,7 +15,6 @@ interface UniversalLayoutProps {
   viewMode?: 'admin' | 'member';
   onViewModeChange?: (mode: 'admin' | 'member') => void;
 }
-
 export const UniversalLayout = ({
   children,
   showHeader = true,
@@ -36,36 +34,24 @@ export const UniversalLayout = ({
   // Full-bleed shell background for wide screens on dashboards
   const isDashboardShell = location.pathname.startsWith('/dashboard');
   const shellBg = isDashboardShell ? 'bg-muted' : 'bg-background';
-  
-  return (
-    <div className={`min-h-dvh w-full ${shellBg}`}>
+  return <div className={`min-h-dvh w-full ${shellBg}`}>
       {/* Fixed Header */}
-      {showHeader && (
-        shouldUsePublicHeader 
-          ? <PublicHeader className="bg-card" /> 
-          : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />
-      )}
+      {showHeader && (shouldUsePublicHeader ? <PublicHeader className="bg-card" /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
       
       {/* Main Content - padded by header height only when header is shown */}
-      <main 
-        className={`w-full ${showHeader ? 'pt-[calc(var(--gw-header-h,4rem)+var(--gw-radio-bar-height,0px))]' : ''} ${shellBg} text-foreground ${className}`}
-        style={{ 
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          paddingLeft: 'env(safe-area-inset-left)',
-          paddingRight: 'env(safe-area-inset-right)'
-        }}
-      >
-        {containerized ? (
-        <PageContainer maxWidth="full" padded={false} className="!p-0 !m-0">
+      <main className={`w-full ${showHeader ? 'pt-[calc(var(--gw-header-h,4rem)+var(--gw-radio-bar-height,0px))]' : ''} ${shellBg} text-foreground ${className}`} style={{
+      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      paddingLeft: 'env(safe-area-inset-left)',
+      paddingRight: 'env(safe-area-inset-right)'
+    }}>
+        {containerized ? <PageContainer maxWidth="full" padded={false} className="!p-0 !m-0 bg-primary-foreground">
           {children}
-        </PageContainer>
-        ) : children}
+        </PageContainer> : children}
       </main>
       
       {showFooter && <UniversalFooter />}
       
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
-    </div>
-  );
+    </div>;
 };
