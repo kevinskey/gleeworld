@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, UserPlus, X, RotateCcw, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,27 +24,68 @@ interface RiserSpot {
   memberName: string | null;
 }
 
-const ROWS = 3;
-const POSITIONS_PER_ROW = 16;
-const ROW_LABELS = ['Row 3 (Back)', 'Row 2 (Middle)', 'Row 1 (Front)'];
+interface RiserConfig {
+  rows: number;
+  positionsPerRow: number;
+  templateName: string;
+  rowLabels: string[];
+  gridCols: string;
+}
+
+const CONFIGS: Record<string, RiserConfig> = {
+  '3-tier': {
+    rows: 3,
+    positionsPerRow: 16,
+    templateName: '3-Tier',
+    rowLabels: ['Row 3 (Back)', 'Row 2 (Middle)', 'Row 1 (Front)'],
+    gridCols: 'repeat(16, minmax(60px, 1fr))',
+  },
+  '4-tier': {
+    rows: 4,
+    positionsPerRow: 12,
+    templateName: '4-Tier',
+    rowLabels: ['Row 4 (Back)', 'Row 3', 'Row 2', 'Row 1 (Front)'],
+    gridCols: 'repeat(12, minmax(70px, 1fr))',
+  },
+};
 
 export const RisersSection = () => {
+  const [activeTab, setActiveTab] = useState<string>('3-tier');
+
+  return (
+    <div className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="3-tier">3-Tier (16 per row)</TabsTrigger>
+          <TabsTrigger value="4-tier">4-Tier (12 per row)</TabsTrigger>
+        </TabsList>
+        <TabsContent value="3-tier">
+          <RiserGrid config={CONFIGS['3-tier']} />
+        </TabsContent>
+        <TabsContent value="4-tier">
+          <RiserGrid config={CONFIGS['4-tier']} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+const RiserGrid = ({ config }: { config: RiserConfig }) => {
   const [spots, setSpots] = useState<RiserSpot[]>([]);
   const [roster, setRoster] = useState<RosterMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  // Initialize empty grid
   const initEmptyGrid = useCallback((): RiserSpot[] => {
     const grid: RiserSpot[] = [];
-    for (let r = 1; r <= ROWS; r++) {
-      for (let p = 1; p <= POSITIONS_PER_ROW; p++) {
+    for (let r = 1; r <= config.rows; r++) {
+      for (let p = 1; p <= config.positionsPerRow; p++) {
         grid.push({ row: r, position: p, userId: null, memberName: null });
       }
     }
     return grid;
-  }, []);
+  }, [config.rows, config.positionsPerRow]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -52,14 +94,13 @@ export const RisersSection = () => {
         supabase
           .from('gw_tour_risers')
           .select('row_number, position, user_id')
-          .eq('template_name', 'Default'),
+          .eq('template_name', config.templateName),
         supabase
           .from('gw_tour_roster')
           .select('user_id')
           .eq('status', 'confirmed'),
       ]);
 
-      // Get user IDs from roster, then fetch profiles
       const rosterUserIds = (rosterRes.data || []).map((r: any) => r.user_id);
       let members: RosterMember[] = [];
 
@@ -77,7 +118,6 @@ export const RisersSection = () => {
       }
       setRoster(members);
 
-      // Build grid with saved data
       const grid = initEmptyGrid();
       const saved = riserRes.data || [];
       for (const s of saved) {
@@ -94,7 +134,7 @@ export const RisersSection = () => {
     } finally {
       setLoading(false);
     }
-  }, [initEmptyGrid]);
+  }, [initEmptyGrid, config.templateName]);
 
   useEffect(() => {
     fetchData();
@@ -124,9 +164,7 @@ export const RisersSection = () => {
     );
   };
 
-  const handleReset = () => {
-    setSpots(initEmptyGrid());
-  };
+  const handleReset = () => setSpots(initEmptyGrid());
 
   const handleSave = async () => {
     setSaving(true);
@@ -134,13 +172,12 @@ export const RisersSection = () => {
       const { data: session } = await supabase.auth.getSession();
       const uid = session?.session?.user?.id || null;
 
-      // Delete existing then insert
-      await supabase.from('gw_tour_risers').delete().eq('template_name', 'Default');
+      await supabase.from('gw_tour_risers').delete().eq('template_name', config.templateName);
 
       const rows = spots
         .filter(s => s.userId)
         .map(s => ({
-          template_name: 'Default',
+          template_name: config.templateName,
           row_number: s.row,
           position: s.position,
           user_id: s.userId,
@@ -169,6 +206,9 @@ export const RisersSection = () => {
     );
   }
 
+  const totalSpots = config.rows * config.positionsPerRow;
+  const rowNums = Array.from({ length: config.rows }, (_, i) => config.rows - i);
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -176,7 +216,7 @@ export const RisersSection = () => {
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            Riser Positions
+            {config.rows}-Tier Risers ({totalSpots} spots)
           </h2>
           <p className="text-sm text-muted-foreground">
             {assignedCount} of {roster.length} roster members placed
@@ -199,30 +239,30 @@ export const RisersSection = () => {
           <p className="text-xs text-muted-foreground">Tour Roster</p>
         </Card>
         <Card className="p-3 text-center">
-          <p className="text-2xl font-bold text-green-600">{assignedCount}</p>
+          <p className="text-2xl font-bold" style={{ color: '#16a34a' }}>{assignedCount}</p>
           <p className="text-xs text-muted-foreground">Placed</p>
         </Card>
         <Card className="p-3 text-center">
-          <p className="text-2xl font-bold text-amber-600">{availableMembers.length}</p>
+          <p className="text-2xl font-bold" style={{ color: '#d97706' }}>{availableMembers.length}</p>
           <p className="text-xs text-muted-foreground">Unplaced</p>
         </Card>
       </div>
 
-      {/* Riser Grid - rendered back row (4) to front row (1) */}
+      {/* Riser Grid */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base text-center">🎤 Stage View (Audience Perspective)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 overflow-x-auto">
-          {[3, 2, 1].map(rowNum => {
+          {rowNums.map(rowNum => {
             const rowSpots = spots.filter(s => s.row === rowNum);
-            const label = ROW_LABELS[3 - rowNum];
+            const label = config.rowLabels[config.rows - rowNum];
             return (
               <div key={rowNum} className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground">{label}</p>
                 <div
                   className="grid gap-1.5"
-                  style={{ gridTemplateColumns: 'repeat(16, minmax(60px, 1fr))' }}
+                  style={{ gridTemplateColumns: config.gridCols }}
                 >
                   {rowSpots.map(spot => (
                     <RiserSpotCell
@@ -237,7 +277,6 @@ export const RisersSection = () => {
               </div>
             );
           })}
-          {/* Stage indicator */}
           <div className="mt-4 border-t-4 border-primary/30 pt-2 text-center">
             <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">
               Stage Front / Audience
@@ -320,7 +359,7 @@ const RiserSpotCell = ({
           <span className="text-[9px] text-muted-foreground/50 mt-0.5">{spot.position}</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-2" align="center">
+      <PopoverContent className="w-56 p-2 bg-card border border-border shadow-lg z-50" align="center">
         <Input
           placeholder="Search roster..."
           value={search}
