@@ -109,22 +109,21 @@ export const CommandCenterHeader = ({
           </div>
         )}
 
-        {/* Right: Search & Add */}
+        {/* Right: Add Event + Search (desktop) */}
         <div className="flex items-center gap-2">
-          {/* Search - Expandable on mobile */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              type="text"
-              placeholder="Search events..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className={cn(
-                "pl-9 h-8 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white focus:text-slate-900 focus:placeholder:text-slate-400 transition-all",
-                isMobile ? "w-32" : "w-48 md:w-64"
-              )}
-            />
-          </div>
+          {/* Search - Desktop only in header row */}
+          {!isMobile && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                type="text"
+                placeholder="Search events..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="pl-9 h-8 w-48 md:w-64 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white focus:text-slate-900 focus:placeholder:text-slate-400 transition-all"
+              />
+            </div>
+          )}
 
           {/* Add Event */}
           {canManageEvents && (
@@ -138,6 +137,20 @@ export const CommandCenterHeader = ({
           )}
         </div>
       </div>
+
+      {/* Mobile: Search on its own line */}
+      {isMobile && (
+        <div className="relative mt-2">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            type="text"
+            placeholder="Search events..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-9 h-9 w-full bg-white/10 border-white/20 text-white text-base placeholder:text-white/50 focus:bg-white focus:text-slate-900 focus:placeholder:text-slate-400 transition-all"
+          />
+        </div>
+      )}
     </div>
   );
 };
