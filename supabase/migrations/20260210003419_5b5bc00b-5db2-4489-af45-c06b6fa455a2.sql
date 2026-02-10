@@ -1,0 +1,1 @@
+UPDATE public.gw_profiles SET is_admin = true WHERE user_id = '3026ed33-0448-4e1d-be59-d9bfdaff2f13';
