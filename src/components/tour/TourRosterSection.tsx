@@ -373,6 +373,7 @@ export const TourRosterSection = () => {
               <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                 <UserPlus className="h-4 w-4 text-muted-foreground" />
                 Add Members
+                <Badge variant="secondary" className="ml-1">{availableMembers.length} available</Badge>
               </h3>
               {selectedMembers.size > 0 && (
                 <Button size="sm" onClick={addSelectedToRoster}>
@@ -390,7 +391,7 @@ export const TourRosterSection = () => {
               />
             </div>
           </div>
-          <div className="p-4 space-y-2 max-h-[400px] overflow-y-auto">
+          <div className="p-4 space-y-2 max-h-[600px] overflow-y-auto">
             {availableMembers.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 text-sm">
                 {searchTerm ? 'No matching members found' : 'All members are on the roster'}
