@@ -184,7 +184,7 @@ export const DashboardStoreSection = () => {
               Visit Shop
             </Button>
           </div>}
-        <div className="h-[25px] w-full bg-primary-foreground" />
+        
       </div>
 
     </div>;
