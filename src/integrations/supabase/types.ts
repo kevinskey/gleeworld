@@ -7176,6 +7176,62 @@ export type Database = {
           },
         ]
       }
+      gw_attendance_scan_logs: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          id: string
+          ip_address: string | null
+          qr_code_id: string | null
+          qr_token_used: string | null
+          scan_location: string | null
+          scan_message: string | null
+          scan_result: string
+          scanned_at: string
+          scanned_by: string | null
+          session_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          ip_address?: string | null
+          qr_code_id?: string | null
+          qr_token_used?: string | null
+          scan_location?: string | null
+          scan_message?: string | null
+          scan_result: string
+          scanned_at?: string
+          scanned_by?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          ip_address?: string | null
+          qr_code_id?: string | null
+          qr_token_used?: string | null
+          scan_location?: string | null
+          scan_message?: string | null
+          scan_result?: string
+          scanned_at?: string
+          scanned_by?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_attendance_scan_logs_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "gw_attendance_qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_attendance_sessions: {
         Row: {
           allow_late_checkin: boolean
