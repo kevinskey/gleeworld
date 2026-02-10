@@ -7764,6 +7764,50 @@ export type Database = {
           },
         ]
       }
+      gw_bus_seats: {
+        Row: {
+          created_at: string
+          id: string
+          is_double_seat: boolean
+          notes: string | null
+          paired_with_seat_id: string | null
+          row_number: number
+          seat_letter: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_double_seat?: boolean
+          notes?: string | null
+          paired_with_seat_id?: string | null
+          row_number: number
+          seat_letter: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_double_seat?: boolean
+          notes?: string | null
+          paired_with_seat_id?: string | null
+          row_number?: number
+          seat_letter?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_bus_seats_paired_with_seat_id_fkey"
+            columns: ["paired_with_seat_id"]
+            isOneToOne: false
+            referencedRelation: "gw_bus_seats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_calendar_auto_sync: {
         Row: {
           calendar_id: string
