@@ -33,7 +33,7 @@ export const UniversalLayout = ({
 
   // Full-bleed shell background for wide screens on dashboards
   const isDashboardShell = location.pathname.startsWith('/dashboard');
-  const shellBg = isDashboardShell ? 'bg-muted' : 'bg-background';
+  const shellBg = isDashboardShell ? 'bg-background' : 'bg-background';
   return <div className={`min-h-dvh w-full ${shellBg}`}>
       {/* Fixed Header */}
       {showHeader && (shouldUsePublicHeader ? <PublicHeader className="bg-card" /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
