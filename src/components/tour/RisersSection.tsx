@@ -23,9 +23,9 @@ interface RiserSpot {
   memberName: string | null;
 }
 
-const ROWS = 4;
-const POSITIONS_PER_ROW = 12;
-const ROW_LABELS = ['Row 4 (Back)', 'Row 3', 'Row 2', 'Row 1 (Front)'];
+const ROWS = 3;
+const POSITIONS_PER_ROW = 16;
+const ROW_LABELS = ['Row 3 (Back)', 'Row 2 (Middle)', 'Row 1 (Front)'];
 
 export const RisersSection = () => {
   const [spots, setSpots] = useState<RiserSpot[]>([]);
@@ -214,15 +214,15 @@ export const RisersSection = () => {
           <CardTitle className="text-base text-center">🎤 Stage View (Audience Perspective)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 overflow-x-auto">
-          {[4, 3, 2, 1].map(rowNum => {
+          {[3, 2, 1].map(rowNum => {
             const rowSpots = spots.filter(s => s.row === rowNum);
-            const label = ROW_LABELS[4 - rowNum];
+            const label = ROW_LABELS[3 - rowNum];
             return (
               <div key={rowNum} className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground">{label}</p>
                 <div
                   className="grid gap-1.5"
-                  style={{ gridTemplateColumns: 'repeat(12, minmax(70px, 1fr))' }}
+                  style={{ gridTemplateColumns: 'repeat(16, minmax(60px, 1fr))' }}
                 >
                   {rowSpots.map(spot => (
                     <RiserSpotCell
