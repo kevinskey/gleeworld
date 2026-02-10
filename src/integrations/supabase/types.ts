@@ -29979,24 +29979,10 @@ export type Database = {
         }
         Returns: Json
       }
-      process_qr_attendance_scan:
-        | {
-            Args: {
-              p_qr_token: string
-              p_scan_location?: string
-              p_user_agent?: string
-              p_user_id: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_qr_token: string
-              p_user_agent?: string
-              p_user_id: string
-            }
-            Returns: Json
-          }
+      process_qr_attendance_scan: {
+        Args: { p_qr_token: string; p_user_agent?: string; p_user_id: string }
+        Returns: Json
+      }
       promote_auditioner_to_member: {
         Args: { audition_application_id: string; auditioner_user_id: string }
         Returns: boolean
