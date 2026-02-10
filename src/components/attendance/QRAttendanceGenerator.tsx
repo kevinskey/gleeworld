@@ -272,10 +272,10 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
 
   if (!hasPermission) {
     return (
-      <Card>
+      <Card style={{ background: '#ffffff', borderColor: '#e2e8f0' }}>
         <CardContent className="pt-6">
-          <div className="text-center text-muted-foreground">
-            <QrCode className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+          <div className="text-center" style={{ color: '#64748b' }}>
+            <QrCode className="h-12 w-12 mx-auto mb-4" style={{ color: '#94a3b8' }} />
             <p>You don't have permission to generate attendance QR codes.</p>
           </div>
         </CardContent>
@@ -286,27 +286,27 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
   const selectedEventData = events.find(e => e.id === selectedEvent);
 
   return (
-    <Card className="w-full">
+    <Card className="w-full" style={{ background: '#ffffff', borderColor: '#e2e8f0' }}>
       <CardHeader className="pb-4 sm:pb-6">
-        <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl lg:text-2xl">
-          <QrCode className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
+        <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl lg:text-2xl" style={{ color: '#0f172a' }}>
+          <QrCode className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-primary" />
           Attendance QR Generator
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 sm:space-y-8">
         {/* Event Selection */}
         <div className="space-y-2 sm:space-y-3">
-          <Label htmlFor="event-select" className="text-base sm:text-lg font-medium">Select Event/Class</Label>
+          <Label htmlFor="event-select" className="text-base sm:text-lg font-medium" style={{ color: '#0f172a' }}>Select Event/Class</Label>
           <Select value={selectedEvent} onValueChange={setSelectedEvent}>
-            <SelectTrigger className="h-11 sm:h-12 text-sm sm:text-base">
+            <SelectTrigger className="h-11 sm:h-12 text-sm sm:text-base" style={{ background: '#ffffff', color: '#0f172a', borderColor: '#cbd5e1' }}>
               <SelectValue placeholder="Choose an event to generate QR code for..." />
             </SelectTrigger>
             <SelectContent>
               {events.map((event) => (
                 <SelectItem key={event.id} value={event.id}>
                   <div className="flex flex-col py-1">
-                    <span className="font-medium text-sm sm:text-base">{event.title}</span>
-                    <span className="text-xs sm:text-sm text-muted-foreground">
+                    <span className="font-medium text-sm sm:text-base" style={{ color: '#0f172a' }}>{event.title}</span>
+                    <span className="text-xs sm:text-sm" style={{ color: '#64748b' }}>
                       {format(new Date(event.start_date), 'MMM dd, yyyy h:mm a')} • {event.event_type}
                     </span>
                   </div>
@@ -319,7 +319,7 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
         {/* Expiration Setting */}
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-2 sm:space-y-3">
-            <Label htmlFor="expiration" className="text-base sm:text-lg font-medium">QR Code Expires (minutes)</Label>
+            <Label htmlFor="expiration" className="text-base sm:text-lg font-medium" style={{ color: '#0f172a' }}>QR Code Expires (minutes)</Label>
             <Input
               id="expiration"
               type="number"
@@ -328,6 +328,7 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
               value={expirationMinutes}
               onChange={(e) => setExpirationMinutes(parseInt(e.target.value) || 30)}
               className="h-11 sm:h-12 text-sm sm:text-base"
+              style={{ background: '#ffffff', color: '#0f172a', borderColor: '#cbd5e1' }}
             />
           </div>
           <div className="flex items-end">
@@ -336,6 +337,7 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
               disabled={!selectedEvent || loading}
               variant="outline"
               className="w-full h-11 sm:h-12 text-sm sm:text-base"
+              style={{ background: '#ffffff', color: 'hsl(var(--primary))', borderColor: 'hsl(var(--primary))' }}
             >
               <QrCode className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Regenerate
@@ -345,20 +347,20 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
 
         {/* Event Info */}
         {selectedEventData && (
-          <Card className="bg-muted/50">
+          <Card style={{ background: '#f8f9fb', borderColor: '#e2e8f0' }}>
             <CardContent className="pt-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span className="font-medium">{selectedEventData.title}</span>
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <span className="font-medium" style={{ color: '#0f172a' }}>{selectedEventData.title}</span>
                   <Badge variant="outline">{selectedEventData.event_type}</Badge>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm" style={{ color: '#64748b' }}>
                   <Clock className="h-4 w-4" />
                   {format(new Date(selectedEventData.start_date), 'EEEE, MMMM dd, yyyy h:mm a')}
                 </div>
                 {selectedEventData.location && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 text-sm" style={{ color: '#64748b' }}>
                     <Users className="h-4 w-4" />
                     {selectedEventData.location}
                   </div>
@@ -372,7 +374,7 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
         {qrCodeUrl && selectedEventData && (
           <div className="space-y-4">
             <div className="flex justify-center">
-              <div className="p-6 bg-white rounded-lg shadow-sm border">
+              <div className="p-6 bg-white rounded-lg shadow-md border" style={{ borderColor: '#e2e8f0' }}>
                 <img 
                   src={qrCodeUrl} 
                   alt="Attendance QR Code" 
@@ -382,12 +384,12 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
             </div>
             
             <div className="text-center space-y-2">
-              <p className="text-sm font-medium">Scan for Attendance</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm font-medium" style={{ color: '#0f172a' }}>Scan for Attendance</p>
+              <p className="text-xs" style={{ color: '#64748b' }}>
                 Token expires in {expirationMinutes} minutes
               </p>
               {qrToken && (
-                <p className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                <p className="text-xs font-mono px-2 py-1 rounded" style={{ background: '#f1f5f9', color: '#334155' }}>
                   Token: {qrToken.substring(0, 8)}...
                 </p>
               )}
@@ -436,8 +438,8 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
         )}
 
         {!selectedEvent && (
-          <div className="text-center text-muted-foreground py-8">
-            <QrCode className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+          <div className="text-center py-8" style={{ color: '#64748b' }}>
+            <QrCode className="h-12 w-12 mx-auto mb-4" style={{ color: '#94a3b8' }} />
             <p>Select an event to generate an attendance QR code</p>
           </div>
         )}

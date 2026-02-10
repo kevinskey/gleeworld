@@ -208,14 +208,14 @@ export const QRCodeManagementModule = () => {
     const isActive = token.is_active && !isExpired;
 
     return (
-      <div className="bg-card border border-border rounded-xl p-4 mb-3 active:scale-[0.98] transition-transform">
+      <div className="rounded-xl p-4 mb-3 active:scale-[0.98] transition-transform" style={{ background: '#ffffff', border: '1px solid #e2e8f0' }}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-sm line-clamp-1">{token.event?.title || 'Unknown Event'}</h4>
+            <h4 className="font-semibold text-sm line-clamp-1" style={{ color: '#0f172a' }}>{token.event?.title || 'Unknown Event'}</h4>
             <div className="flex items-center gap-2 mt-1.5">
               <Badge 
                 variant={isActive ? "default" : "secondary"}
-                className={`text-xs ${isActive ? 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30' : ''}`}
+                className={`text-xs ${isActive ? 'bg-green-500/20 text-green-700 border-green-500/30' : ''}`}
               >
                 {isActive ? (
                   <><CheckCircle2 className="h-3 w-3 mr-1" />Active</>
@@ -223,17 +223,17 @@ export const QRCodeManagementModule = () => {
                   <><Clock className="h-3 w-3 mr-1" />Expired</>
                 ) : 'Inactive'}
               </Badge>
-              <span className="text-xs text-muted-foreground">{token.event?.event_type}</span>
+              <span className="text-xs" style={{ color: '#64748b' }}>{token.event?.event_type}</span>
             </div>
           </div>
           <div className="text-right shrink-0">
             <div className="text-2xl font-bold text-primary">{token.scan_count}</div>
-            <div className="text-xs text-muted-foreground">scans</div>
+            <div className="text-xs" style={{ color: '#64748b' }}>scans</div>
           </div>
         </div>
         
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: '1px solid #f1f5f9' }}>
+          <div className="flex items-center gap-4 text-xs" style={{ color: '#64748b' }}>
             <span>Created {format(new Date(token.created_at), 'MMM d, h:mm a')}</span>
           </div>
           {showActions && isActive && (
@@ -251,46 +251,46 @@ export const QRCodeManagementModule = () => {
     );
   };
 
-  // Compact Stats Bar - minimal footprint
+  // Compact Stats Bar
   const CompactStats = () => (
-    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 p-2 bg-muted/30 rounded-lg border">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 p-3 rounded-lg border" style={{ background: '#ffffff', borderColor: '#e2e8f0' }}>
       <div className="flex items-center gap-1.5">
         <QrCode className="h-3.5 w-3.5 text-primary" />
-        <span className="text-xs text-muted-foreground">Generated:</span>
-        <span className="text-xs font-semibold">{stats.totalGenerated}</span>
+        <span className="text-xs" style={{ color: '#64748b' }}>Generated:</span>
+        <span className="text-xs font-semibold" style={{ color: '#0f172a' }}>{stats.totalGenerated}</span>
       </div>
-      <div className="hidden sm:block w-px h-4 bg-border" />
+      <div className="hidden sm:block w-px h-4" style={{ background: '#e2e8f0' }} />
       <div className="flex items-center gap-1.5">
-        <Scan className="h-3.5 w-3.5 text-blue-500" />
-        <span className="text-xs text-muted-foreground">Scans:</span>
-        <span className="text-xs font-semibold">{stats.totalScans}</span>
+        <Scan className="h-3.5 w-3.5 text-primary" />
+        <span className="text-xs" style={{ color: '#64748b' }}>Scans:</span>
+        <span className="text-xs font-semibold" style={{ color: '#0f172a' }}>{stats.totalScans}</span>
       </div>
-      <div className="hidden sm:block w-px h-4 bg-border" />
+      <div className="hidden sm:block w-px h-4" style={{ background: '#e2e8f0' }} />
       <div className="flex items-center gap-1.5">
         <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
-        <span className="text-xs text-muted-foreground">Active:</span>
+        <span className="text-xs" style={{ color: '#64748b' }}>Active:</span>
         <span className="text-xs font-semibold text-green-600">{stats.activeTokens}</span>
       </div>
-      <div className="hidden sm:block w-px h-4 bg-border" />
+      <div className="hidden sm:block w-px h-4" style={{ background: '#e2e8f0' }} />
       <div className="flex items-center gap-1.5">
         <Clock className="h-3.5 w-3.5 text-orange-500" />
-        <span className="text-xs text-muted-foreground">Expired:</span>
+        <span className="text-xs" style={{ color: '#64748b' }}>Expired:</span>
         <span className="text-xs font-semibold text-orange-600">{stats.expiredTokens}</span>
       </div>
     </div>
   );
 
   return (
-    <div className="h-full p-4 sm:p-6">
-      {/* Mobile Header */}
+    <div className="h-full p-4 sm:p-6 academy-neutral" style={{ background: '#f8f9fb' }}>
+      {/* Header */}
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-            <QrCode className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+            <QrCode className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">QR Management</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: '#0f172a' }}>QR Management</h1>
+            <p className="text-xs sm:text-sm" style={{ color: '#64748b' }}>
               Generate & track attendance codes
             </p>
           </div>
@@ -302,10 +302,11 @@ export const QRCodeManagementModule = () => {
 
       {/* Mobile-First Tabs */}
       <Tabs defaultValue="generator" className="w-full">
-        <TabsList className="w-full h-auto p-1 bg-muted/50 rounded-xl mb-4 grid grid-cols-3 sm:grid-cols-5 gap-1">
+        <TabsList className="w-full h-auto p-1 rounded-xl mb-4 grid grid-cols-3 sm:grid-cols-5 gap-1" style={{ background: '#e2e8f0' }}>
           <TabsTrigger 
             value="generator" 
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            style={{ color: '#334155' }}
           >
             <QrCode className="h-4 w-4" />
             <span className="hidden sm:inline">Attendance</span>
@@ -313,7 +314,8 @@ export const QRCodeManagementModule = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="url-generator" 
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            style={{ color: '#334155' }}
           >
             <Link className="h-4 w-4" />
             <span className="hidden sm:inline">URL Code</span>
@@ -321,7 +323,8 @@ export const QRCodeManagementModule = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="active" 
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            style={{ color: '#334155' }}
           >
             <CheckCircle2 className="h-4 w-4" />
             <span className="hidden xs:inline">Active</span>
@@ -329,14 +332,16 @@ export const QRCodeManagementModule = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="history" 
-            className="hidden sm:flex flex-1 items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            className="hidden sm:flex flex-1 items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            style={{ color: '#334155' }}
           >
             <History className="h-4 w-4" />
             <span>History</span>
           </TabsTrigger>
           <TabsTrigger 
             value="settings" 
-            className="hidden sm:flex flex-1 items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            className="hidden sm:flex flex-1 items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            style={{ color: '#334155' }}
           >
             <MapPin className="h-4 w-4" />
             <span>Security</span>
