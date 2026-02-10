@@ -16338,6 +16338,82 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_room_assignments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          floor: string | null
+          hotel_id: string | null
+          id: string
+          max_occupants: number | null
+          notes: string | null
+          room_number: string
+          room_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          floor?: string | null
+          hotel_id?: string | null
+          id?: string
+          max_occupants?: number | null
+          notes?: string | null
+          room_number: string
+          room_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          floor?: string | null
+          hotel_id?: string | null
+          id?: string
+          max_occupants?: number | null
+          notes?: string | null
+          room_number?: string
+          room_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_room_assignments_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_room_occupants: {
+        Row: {
+          created_at: string
+          id: string
+          room_assignment_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          room_assignment_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          room_assignment_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_room_occupants_room_assignment_id_fkey"
+            columns: ["room_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "gw_room_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_rubric_criteria: {
         Row: {
           created_at: string | null
