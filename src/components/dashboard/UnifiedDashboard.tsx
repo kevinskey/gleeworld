@@ -342,30 +342,35 @@ export const UnifiedDashboard = () => {
         </div>
       </div>
 
-      {/* Glee Academy Header */}
-      
-      <button onClick={() => navigate('/glee-academy')} style={{
-      fontFamily: "'Cinzel', serif"
-    }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] text-white flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 hover:brightness-110 pt-[10px] pb-[10px] pl-[20px] my-[5px]">
-        <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
-        Glee Academy
-      </button>
+      {/* Glee Academy Section - white background wrapper */}
+      <div className="bg-background px-4 py-2">
+        <button onClick={() => navigate('/glee-academy')} style={{
+          fontFamily: "'Cinzel', serif"
+        }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] text-white flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 hover:brightness-110 pt-[10px] pb-[10px] pl-[20px] my-[5px]">
+          <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
+          Glee Academy
+        </button>
 
-      {/* Glee Academy Card - Course badge slider */}
-      <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
-        <GleeAcademyDashboardCard />
-      </Suspense>
+        {/* Glee Academy Card - Course badge slider */}
+        <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
+          <GleeAcademyDashboardCard />
+        </Suspense>
+      </div>
 
       {/* Office Hours Widget - visible to students, admins, and super admins */}
       {(profile?.is_super_admin || profile?.is_admin || profile?.role === 'student') && <div className="px-4 pt-4">
           <OfficeHoursWidget />
         </div>}
 
-      {/* Modern Store Section */}
-      <DashboardStoreSection />
+      {/* Modern Store Section - white background wrapper */}
+      <div className="bg-background px-4 py-2">
+        <DashboardStoreSection />
+      </div>
 
-      {/* YouTube Channel Slider */}
-      <YouTubeChannelSlider />
+      {/* YouTube Channel Slider - white background wrapper */}
+      <div className="bg-background px-4 py-2">
+        <YouTubeChannelSlider />
+      </div>
 
       {/* My Modules - Bottom of Dashboard */}
       {user && <div className="px-4 py-6 bg-primary-foreground">
