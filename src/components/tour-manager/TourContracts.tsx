@@ -120,61 +120,61 @@ export const TourContracts = () => {
     <div className="space-y-6">
       {/* Header with Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
+        <Card className="bg-white dark:bg-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">Total Contracts</p>
-                <p className="text-2xl font-bold">{contractStats.total}</p>
+                <p className="text-2xl font-bold" style={{ color: '#0f172a' }}>{contractStats.total}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white dark:bg-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-yellow-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Draft</p>
-                <p className="text-2xl font-bold">{contractStats.draft}</p>
+                <p className="text-2xl font-bold" style={{ color: '#0f172a' }}>{contractStats.draft}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white dark:bg-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-blue-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Sent</p>
-                <p className="text-2xl font-bold">{contractStats.sent}</p>
+                <p className="text-2xl font-bold" style={{ color: '#0f172a' }}>{contractStats.sent}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white dark:bg-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Signed</p>
-                <p className="text-2xl font-bold">{contractStats.signed}</p>
+                <p className="text-2xl font-bold" style={{ color: '#0f172a' }}>{contractStats.signed}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white dark:bg-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-green-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Total Stipends</p>
-                <p className="text-2xl font-bold">${contractStats.totalStipends.toLocaleString()}</p>
+                <p className="text-2xl font-bold" style={{ color: '#0f172a' }}>${contractStats.totalStipends.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -192,9 +192,9 @@ export const TourContracts = () => {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-white dark:bg-card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2" style={{ color: '#0f172a' }}>
                   <Calendar className="h-5 w-5" />
                   Recent Contract Activity
                 </CardTitle>
@@ -203,7 +203,7 @@ export const TourContracts = () => {
                 {tourManagerContracts.slice(0, 5).map(contract => (
                   <div key={contract.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
                     <div className="flex-1 min-w-0 mr-2">
-                      <p className="font-medium text-sm sm:text-base truncate">
+                      <p className="font-medium text-sm sm:text-base truncate" style={{ color: '#0f172a' }}>
                         {formatContractDisplayName(contract.title)}
                       </p>
                       <p className="text-xs sm:text-sm text-muted-foreground">
@@ -224,15 +224,15 @@ export const TourContracts = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white dark:bg-card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2" style={{ color: '#0f172a' }}>
                   <DollarSign className="h-5 w-5" />
                   Financial Summary
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-3" style={{ color: '#0f172a' }}>
                   <div className="flex justify-between">
                     <span>Pending Payments:</span>
                     <span className="font-medium">
@@ -298,7 +298,7 @@ export const TourContracts = () => {
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                        <h3 className="font-semibold text-sm sm:text-base truncate">
+                        <h3 className="font-semibold text-sm sm:text-base truncate" style={{ color: '#0f172a' }}>
                           {formatContractDisplayName(contract.title)}
                         </h3>
                         <Badge className={`${getStatusColor(contract.status)} text-xs flex-shrink-0 w-fit`}>
