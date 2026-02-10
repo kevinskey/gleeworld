@@ -238,37 +238,28 @@
     color: hsl(0 0% 100%) !important;
   }
   
-  /* Force white text on gradient buttons with dark blue */
-  [class*="from-[#002244]"] *,
-  [class*="from-[#003666]"] *,
-  [class*="bg-gradient"][class*="002244"] *,
-  [class*="bg-gradient"][class*="003666"] * {
-    color: hsl(0 0% 100%) !important;
-  }
-  
-  /* Ensure nested elements in SOLID primary/secondary backgrounds get white text */
-  .bg-primary:not([class*="bg-primary/"]) *,
-  .bg-secondary:not([class*="bg-secondary/"]) *,
-  .bg-spelman-blue-dark *,
-  .bg-spelman-blue-light *,
-  .bg-brand-600 *,
-  .bg-brand-700 *,
-  .bg-brand-800 *,
-  .bg-brand-900 * {
-    --tw-text-opacity: 1;
-  }
-  
-  .bg-primary:not([class*="bg-primary/"]) h1, .bg-primary:not([class*="bg-primary/"]) h2, .bg-primary:not([class*="bg-primary/"]) h3, .bg-primary:not([class*="bg-primary/"]) h4, .bg-primary:not([class*="bg-primary/"]) h5, .bg-primary:not([class*="bg-primary/"]) h6,
-  .bg-primary:not([class*="bg-primary/"]) p, .bg-primary:not([class*="bg-primary/"]) span, .bg-primary:not([class*="bg-primary/"]) label, .bg-primary:not([class*="bg-primary/"]) a, .bg-primary:not([class*="bg-primary/"]) button,
-  .bg-secondary:not([class*="bg-secondary/"]) h1, .bg-secondary:not([class*="bg-secondary/"]) h2, .bg-secondary:not([class*="bg-secondary/"]) h3, .bg-secondary:not([class*="bg-secondary/"]) h4, .bg-secondary:not([class*="bg-secondary/"]) h5, .bg-secondary:not([class*="bg-secondary/"]) h6,
-  .bg-secondary:not([class*="bg-secondary/"]) p, .bg-secondary:not([class*="bg-secondary/"]) span, .bg-secondary:not([class*="bg-secondary/"]) label, .bg-secondary:not([class*="bg-secondary/"]) a, .bg-secondary:not([class*="bg-secondary/"]) button {
+  /* Force white text on gradient buttons with dark blue — DIRECT children only
+     to prevent bleeding into nested light-background containers */
+  [class*="from-[#002244]"] > *,
+  [class*="from-[#003666]"] > *,
+  [class*="bg-gradient"][class*="002244"] > *,
+  [class*="bg-gradient"][class*="003666"] > * {
     color: hsl(0 0% 100%) !important;
   }
   
   /* Ensure buttons with solid bg-primary always have white text and icons */
   button.bg-primary:not([class*="bg-primary/"]),
-  .bg-primary:not([class*="bg-primary/"]) svg,
-  .bg-secondary:not([class*="bg-secondary/"]) svg {
+  .bg-primary:not([class*="bg-primary/"]) > svg,
+  .bg-secondary:not([class*="bg-secondary/"]) > svg {
+    color: hsl(0 0% 100%) !important;
+  }
+  
+  /* Direct child text elements of solid dark backgrounds get white text.
+     Using > combinator prevents white text from leaking into nested cards/popovers. */
+  .bg-primary:not([class*="bg-primary/"]) > h1, .bg-primary:not([class*="bg-primary/"]) > h2, .bg-primary:not([class*="bg-primary/"]) > h3,
+  .bg-primary:not([class*="bg-primary/"]) > p, .bg-primary:not([class*="bg-primary/"]) > span, .bg-primary:not([class*="bg-primary/"]) > label, .bg-primary:not([class*="bg-primary/"]) > a, .bg-primary:not([class*="bg-primary/"]) > button,
+  .bg-secondary:not([class*="bg-secondary/"]) > h1, .bg-secondary:not([class*="bg-secondary/"]) > h2, .bg-secondary:not([class*="bg-secondary/"]) > h3,
+  .bg-secondary:not([class*="bg-secondary/"]) > p, .bg-secondary:not([class*="bg-secondary/"]) > span, .bg-secondary:not([class*="bg-secondary/"]) > label, .bg-secondary:not([class*="bg-secondary/"]) > a, .bg-secondary:not([class*="bg-secondary/"]) > button {
     color: hsl(0 0% 100%) !important;
   }
   
@@ -282,8 +273,8 @@
     color: hsl(0 0% 100%) !important;
   }
   
-  .bg-destructive:not([class*="bg-destructive/"]) h1, .bg-destructive:not([class*="bg-destructive/"]) h2, .bg-destructive:not([class*="bg-destructive/"]) h3, .bg-destructive:not([class*="bg-destructive/"]) h4, .bg-destructive:not([class*="bg-destructive/"]) h5, .bg-destructive:not([class*="bg-destructive/"]) h6,
-  .bg-destructive:not([class*="bg-destructive/"]) p, .bg-destructive:not([class*="bg-destructive/"]) span, .bg-destructive:not([class*="bg-destructive/"]) label, .bg-destructive:not([class*="bg-destructive/"]) a {
+  .bg-destructive:not([class*="bg-destructive/"]) > h1, .bg-destructive:not([class*="bg-destructive/"]) > h2, .bg-destructive:not([class*="bg-destructive/"]) > h3,
+  .bg-destructive:not([class*="bg-destructive/"]) > p, .bg-destructive:not([class*="bg-destructive/"]) > span, .bg-destructive:not([class*="bg-destructive/"]) > label, .bg-destructive:not([class*="bg-destructive/"]) > a {
     color: hsl(0 0% 100%) !important;
   }
   
