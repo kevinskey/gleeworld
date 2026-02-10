@@ -124,13 +124,12 @@ export const DashboardStoreSection = () => {
 
       {/* Shop Section Header - Edge to Edge */}
       
-      <h2 style={{
-      fontFamily: "'Cinzel', serif",
-      color: 'white'
-    }} className="relative z-10 h-12 text-sm sm:text-xl bg-gradient-to-b from-[#002244] via-[#003666] to-[#0B5A8B] px-3 sm:px-6 lg:px-8 w-full flex items-center justify-start gap-2 shadow-lg border-t border-t-white/20 [&_svg]:text-white pl-[25px] py-[5px] my-[5px]">
-        <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 pl-px" />
+      <div style={{
+      fontFamily: "'Cinzel', serif"
+    }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] text-primary-foreground flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 my-[5px]">
+        <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
         Shop
-      </h2>
+      </div>
       
       <div className="w-full">
         {/* Product Horizontal Scroll */}
