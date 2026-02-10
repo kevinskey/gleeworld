@@ -267,7 +267,7 @@ export default function BookAppointmentPage() {
         </h1>
       </div>
       
-      <div className="w-full px-4 md:px-8 py-8 space-y-8">
+      <div className="w-full md:px-8 py-8 space-y-8 px-[5px] pl-[5px] pr-[5px] pt-[5px] pb-[5px]">
         {/* Hero Section */}
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Office Card */}
@@ -379,7 +379,7 @@ export default function BookAppointmentPage() {
               <TabsContent value="book" className="mt-0 space-y-4 bg-gradient-to-b from-white to-gray-50 border border-t-0 border-border rounded-b-xl p-6 relative shadow-xl">
                 {/* Booking Form */}
                 <Card>
-                  <CardContent className="p-5 space-y-5 bg-white">
+                  <CardContent className="p-5 space-y-5 bg-white px-[5px]">
                     {/* Service Selection */}
                     <div className="space-y-3">
                       <Label className="text-xl font-semibold" style={{
