@@ -40,7 +40,7 @@ export const TourRosterSection = () => {
       const { data: members, error: membersError } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email, voice_part, avatar_url, role')
-        .in('role', ['member', 'admin', 'super-admin'])
+        .in('role', ['member', 'student', 'executive', 'admin', 'super-admin'])
         .order('full_name');
 
       if (membersError) throw membersError;
