@@ -66,6 +66,11 @@ const getCategoryForEvent = (event: GleeWorldEvent): CategoryFilter => {
     return 'academic';
   }
   
+  // Check tour BEFORE performance/leadership so tour events with those types stay categorized as tour
+  if (calendarName.includes('tour') || title.includes('tour')) {
+    return 'tour';
+  }
+  
   // Check for specific keywords
   if (calendarName.includes('glee') || calendarName.includes('scgc') || title.includes('glee')) {
     return 'glee';
@@ -81,9 +86,6 @@ const getCategoryForEvent = (event: GleeWorldEvent): CategoryFilter => {
   }
   if (calendarName.includes('executive') || calendarName.includes('leadership') || eventType === 'meeting') {
     return 'leadership';
-  }
-  if (calendarName.includes('tour') || title.includes('tour')) {
-    return 'tour';
   }
   return 'personal';
 };
