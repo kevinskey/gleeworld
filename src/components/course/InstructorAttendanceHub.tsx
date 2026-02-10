@@ -103,7 +103,7 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
   const generateQRImage = async (token: string) => {
     try {
       const baseUrl = window.location.hostname.includes('lovable')
-        ? 'https://gleeworld.lovable.app'
+        ? 'https://gleeworld.org'
         : window.location.origin;
       const checkInUrl = `${baseUrl}/qr-scanner?token=${encodeURIComponent(token)}`;
       const dataUrl = await QRCode.toDataURL(checkInUrl, {

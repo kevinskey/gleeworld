@@ -712,7 +712,7 @@ export const GleeAssistant = () => {
     try {
       // Generate QR code URL
       const baseUrl = window.location.hostname.includes('lovable') 
-        ? 'https://gleeworld.lovable.app' 
+        ? 'https://gleeworld.org' 
         : window.location.origin;
       const checkInUrl = `${baseUrl}/qr-scanner?token=${encodeURIComponent(action.qr_token)}`;
       

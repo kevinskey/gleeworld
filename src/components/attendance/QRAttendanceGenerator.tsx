@@ -126,7 +126,7 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
 
       // Use production domain for QR codes so students scan to the published site
       const baseUrl = window.location.hostname.includes('lovable') 
-        ? 'https://gleeworld.lovable.app' 
+        ? 'https://gleeworld.org' 
         : window.location.origin;
       const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(token)}`;
       
@@ -234,7 +234,7 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       // Fallback: Share just the URL if file sharing isn't supported
       if (navigator.share) {
         const baseUrl = window.location.hostname.includes('lovable') 
-          ? 'https://gleeworld.lovable.app' 
+          ? 'https://gleeworld.org' 
           : window.location.origin;
         const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(qrToken)}`;
         await navigator.share({
@@ -245,7 +245,7 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       } else {
         // Final fallback: Copy to clipboard
         const baseUrl = window.location.hostname.includes('lovable') 
-          ? 'https://gleeworld.lovable.app' 
+          ? 'https://gleeworld.org' 
           : window.location.origin;
         const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(qrToken)}`;
         await navigator.clipboard.writeText(`${title}\n${text}\n${scanUrl}`);

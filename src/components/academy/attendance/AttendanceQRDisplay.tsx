@@ -49,7 +49,7 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
         
         // Use production domain for QR codes
         const baseUrl = window.location.hostname.includes('lovable') 
-          ? 'https://gleeworld.lovable.app' 
+          ? 'https://gleeworld.org' 
           : window.location.origin;
         const checkInUrl = `${baseUrl}/qr-scanner?token=${encodeURIComponent(result.qr_token)}`;
         const dataUrl = await QRCode.toDataURL(checkInUrl, {
@@ -66,7 +66,7 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
           setExpiresAt(new Date(legacyResult.expires_at));
           
           const baseUrl = window.location.hostname.includes('lovable') 
-            ? 'https://gleeworld.lovable.app' 
+            ? 'https://gleeworld.org' 
             : window.location.origin;
           const checkInUrl = `${baseUrl}/attendance/check-in?token=${legacyResult.qr_token}&session=${sessionId}`;
           const dataUrl = await QRCode.toDataURL(checkInUrl, {
