@@ -465,7 +465,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   // Full-screen mode when onClose is provided
   const pianoContent = <div className={isFullScreen ? "w-full h-full bg-background flex flex-col overflow-hidden" : `w-full flex flex-col ${className}`}>
       {/* Header Bar - Compact on mobile */}
-      <div className="relative z-10 flex items-center justify-between px-2 sm:px-4 py-1.5 sm:py-3 border-b border-border bg-card backdrop-blur-sm shrink-0 cursor-move gap-1 sm:gap-2 min-w-0">
+      <div className="piano-drag-handle relative z-10 flex items-center justify-between px-2 sm:px-4 py-1.5 sm:py-3 border-b border-border bg-card backdrop-blur-sm shrink-0 cursor-move gap-1 sm:gap-2 min-w-0">
         <div className="flex items-center gap-1 sm:gap-3 min-w-0 flex-1 overflow-x-auto">
           <h2 className="text-sm sm:text-lg font-semibold hidden sm:block flex-shrink-0">Piano</h2>
           <Select value={startOctave.toString()} onValueChange={value => setStartOctave(parseInt(value, 10))}>
@@ -665,24 +665,36 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       );
     }
     
-    // Desktop: Full width piano with proper key proportions
-    const fullWidth = window.innerWidth - 32;
-    const fullHeight = Math.min(700, window.innerHeight - 80); // Taller for proper key length
-    
+    // Desktop: Draggable & Resizable piano window
     return createPortal(
-      <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4" onClick={(e) => {
-        // Close when clicking overlay background
-        if (e.target === e.currentTarget && onClose) {
-          onClose();
-        }
-      }}>
-        <div 
-          className="bg-background rounded-lg shadow-2xl overflow-hidden"
-          style={{ width: fullWidth, height: fullHeight }}
-          onClick={(e) => e.stopPropagation()}
+      <div className="fixed inset-0 z-[9999] pointer-events-none">
+        <Rnd
+          size={{ width: pianoSize.width, height: pianoSize.height }}
+          position={{ x: pianoPosition.x, y: pianoPosition.y }}
+          onDragStop={(e, d) => setPianoPosition({ x: d.x, y: d.y })}
+          onResizeStop={(e, direction, ref, delta, position) => {
+            setPianoSize({ width: ref.offsetWidth, height: ref.offsetHeight });
+            setPianoPosition(position);
+          }}
+          minWidth={500}
+          minHeight={350}
+          maxWidth={Math.min(1600, window.innerWidth - 20)}
+          maxHeight={Math.min(900, window.innerHeight - 40)}
+          bounds="window"
+          dragHandleClassName="piano-drag-handle"
+          className="pointer-events-auto"
         >
-          {pianoContent}
-        </div>
+          <div className="relative w-full h-full bg-background border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            {pianoContent}
+
+            {/* Resize indicator */}
+            <div className="absolute bottom-1 right-1 z-10 w-5 h-5 text-muted-foreground cursor-se-resize">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 21L12 21M21 21L21 12M21 21L9 9" />
+              </svg>
+            </div>
+          </div>
+        </Rnd>
       </div>,
       document.body
     );
