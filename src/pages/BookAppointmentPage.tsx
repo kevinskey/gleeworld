@@ -8,9 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Calendar as CalendarIcon, CalendarDays, Clock, User, MessageSquare, Mail, Phone, Video, Loader2, MapPin, History, CheckCircle2, XCircle, AlertCircle, Send, BookOpen, GraduationCap, Music, Check, ArrowRight } from 'lucide-react';
+import {
+  Calendar as CalendarIcon, CalendarDays, Clock, User, Mail, Phone, Video,
+  Loader2, MapPin, History, CheckCircle2, XCircle, AlertCircle, Send,
+  BookOpen, Check, ArrowRight
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useServices } from '@/hooks/useServices';
@@ -20,52 +23,27 @@ import { toast } from 'sonner';
 import { format, addDays } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { PageContainer } from '@/components/layout/PageContainer';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import drJohnsonOffice from '@/assets/dr-johnson-office.jpg';
 import { AmazonProductSlider } from '@/components/shared/AmazonProductSlider';
 
-// Appointment types students can book
-const appointmentTypes = [{
-  id: 'office-hours',
-  name: 'Office Hours',
-  duration: 15
-}, {
-  id: 'voice-lesson',
-  name: 'Voice Lesson',
-  duration: 30
-}, {
-  id: 'tutoring',
-  name: 'Tutoring',
-  duration: 30
-}, {
-  id: 'solo-audition',
-  name: 'Solo Audition',
-  duration: 15
-}, {
-  id: 'general-meeting-15',
-  name: 'General Meeting (15 min)',
-  duration: 15
-}, {
-  id: 'general-meeting-30',
-  name: 'General Meeting (30 min)',
-  duration: 30
-}];
+const appointmentTypes = [
+  { id: 'office-hours', name: 'Office Hours', duration: 15 },
+  { id: 'voice-lesson', name: 'Voice Lesson', duration: 30 },
+  { id: 'tutoring', name: 'Tutoring', duration: 30 },
+  { id: 'solo-audition', name: 'Solo Audition', duration: 15 },
+  { id: 'general-meeting-15', name: 'General Meeting (15 min)', duration: 15 },
+  { id: 'general-meeting-30', name: 'General Meeting (30 min)', duration: 30 },
+];
+
 export default function BookAppointmentPage() {
   const navigate = useNavigate();
-  const {
-    user
-  } = useAuth();
-  const {
-    profile
-  } = useProfile();
-  const {
-    data: services
-  } = useServices();
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const { data: services } = useServices();
 
-  // Form state
   const [selectedType, setSelectedType] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedDateStr, setSelectedDateStr] = useState('');
@@ -76,64 +54,40 @@ export default function BookAppointmentPage() {
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
 
-  // Communication state
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
   const selectedTypeData = appointmentTypes.find(t => t.id === selectedType);
 
-  // Map selected appointment type to a real service
   const getServiceIdForType = (typeId: string): string | null => {
     if (!typeId) return null;
-    const matchingService = services?.find(s => typeId === 'office-hours' && s.name?.toLowerCase().includes('office') || typeId === 'lesson' && (s.category?.toLowerCase().includes('coaching') || s.name?.toLowerCase().includes('lesson') || s.name?.toLowerCase().includes('teaching')) || typeId === 'general-meeting' && s.category?.toLowerCase().includes('general'));
+    const matchingService = services?.find(s =>
+      (typeId === 'office-hours' && s.name?.toLowerCase().includes('office')) ||
+      (typeId === 'lesson' && (s.category?.toLowerCase().includes('coaching') || s.name?.toLowerCase().includes('lesson') || s.name?.toLowerCase().includes('teaching'))) ||
+      (typeId === 'general-meeting' && s.category?.toLowerCase().includes('general'))
+    );
     return matchingService?.id || services?.[0]?.id || null;
   };
   const resolvedServiceId = getServiceIdForType(selectedType) || '';
 
-  // Fetch available time slots
-  const {
-    data: timeSlots,
-    isLoading: slotsLoading
-  } = useAvailableTimeSlots(resolvedServiceId, selectedDateStr);
+  const { data: timeSlots, isLoading: slotsLoading } = useAvailableTimeSlots(resolvedServiceId, selectedDateStr);
 
-  // Fetch user's appointment history
-  const {
-    data: appointmentHistory = [],
-    isLoading: historyLoading
-  } = useQuery({
+  const { data: appointmentHistory = [], isLoading: historyLoading } = useQuery({
     queryKey: ['user-appointment-history', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const {
-        data,
-        error
-      } = await supabase.from('gw_appointments').select('*').or(`customer_email.eq.${user.email},user_id.eq.${user.id}`).order('appointment_date', {
-        ascending: false
-      }).limit(20);
-      if (error) {
-        console.error('Error fetching appointment history:', error);
-        return [];
-      }
+      const { data, error } = await supabase
+        .from('gw_appointments')
+        .select('*')
+        .or(`customer_email.eq.${user.email},user_id.eq.${user.id}`)
+        .order('appointment_date', { ascending: false })
+        .limit(20);
+      if (error) { console.error('Error fetching appointment history:', error); return []; }
       return data || [];
     },
     enabled: !!user?.id
   });
 
-  // Generate next 14 weekdays
-  const availableDates = Array.from({
-    length: 21
-  }, (_, i) => {
-    const date = addDays(new Date(), i + 1);
-    const dayOfWeek = date.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) return null;
-    return {
-      value: format(date, 'yyyy-MM-dd'),
-      label: format(date, 'EEEE, MMMM do')
-    };
-  }).filter(Boolean) as {
-    value: string;
-    label: string;
-  }[];
   const handleBookAppointment = async () => {
     if (!selectedType || !selectedDateStr || !selectedTime || !topic) {
       toast.error('Please fill in all required fields');
@@ -146,10 +100,7 @@ export default function BookAppointmentPage() {
     }
     setLoading(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.rpc('book_appointment', {
+      const { data, error } = await supabase.rpc('book_appointment', {
         p_service_id: serviceId,
         p_appointment_date: selectedDateStr,
         p_start_time: selectedTime,
@@ -160,16 +111,9 @@ export default function BookAppointmentPage() {
         p_special_requests: `Type: ${selectedTypeData?.name}\nTopic: ${topic}${notes ? `\n\nNotes: ${notes}` : ''}`
       });
       if (error) throw error;
-      const result = data as {
-        success: boolean;
-        appointment_id?: string;
-        message?: string;
-        error?: string;
-      };
+      const result = data as { success: boolean; appointment_id?: string; message?: string; error?: string; };
       if (result.success) {
         toast.success(result.message || 'Appointment booked successfully!');
-
-        // Send SMS notification to admin for approve/deny
         try {
           await supabase.functions.invoke('office-hours-notify', {
             body: {
@@ -202,6 +146,7 @@ export default function BookAppointmentPage() {
       setLoading(false);
     }
   };
+
   const handleSendEmail = async () => {
     if (!emailSubject || !emailBody) {
       toast.error('Please enter subject and message');
@@ -209,9 +154,7 @@ export default function BookAppointmentPage() {
     }
     setSendingEmail(true);
     try {
-      const {
-        error
-      } = await supabase.functions.invoke('gw-send-email', {
+      const { error } = await supabase.functions.invoke('gw-send-email', {
         body: {
           to: 'docjohnson@spelman.edu',
           subject: `[Student Message] ${emailSubject}`,
@@ -237,6 +180,7 @@ export default function BookAppointmentPage() {
       setSendingEmail(false);
     }
   };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -251,424 +195,396 @@ export default function BookAppointmentPage() {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
   const completedCount = appointmentHistory.filter(a => a.status === 'completed').length;
   const upcomingCount = appointmentHistory.filter(a => a.status === 'confirmed').length;
   const pendingCount = appointmentHistory.filter(a => a.status === 'pending').length;
-  return <UniversalLayout>
-      {/* Header Banner */}
-      <div className="w-full py-6" style={{
-      backgroundColor: '#003666'
-    }}>
-        <h1 className="text-center tracking-wide text-white text-xl" style={{
-        fontSize: '42px',
-        fontWeight: 700
-      }}>
-          OFFICE HOURS with Dr. Johnson
-        </h1>
-      </div>
-      
-      <div className="w-full md:px-8 py-8 space-y-8 px-[5px] pl-[5px] pr-[5px] pt-[5px] pb-[5px]">
-        {/* Hero Section */}
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Office Card */}
-          <Card className="lg:col-span-1 overflow-hidden">
-            <div className="relative aspect-[4/3] bg-muted">
-              <img src={drJohnsonOffice} alt="Dr. Johnson's Office" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
-              <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                <h2 style={{
-                fontSize: '18px',
-                fontWeight: 500
-              }}>Dr. Kevin Johnson</h2>
-                <p className="flex items-center gap-2 mt-1" style={{
-                fontSize: '18px',
-                fontWeight: 500,
-                opacity: 0.95
-              }}>
-                  <MapPin className="h-4 w-4" /> Rockefeller Fine Arts Building 105
-                </p>
-              </div>
-            </div>
-            <CardContent className="p-5">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="font-bold" style={{
-                  fontSize: '18px',
-                  color: 'white'
-                }}>{completedCount}</div>
-                  <div className="text-xs uppercase tracking-wide mt-1" style={{
-                  color: 'rgba(255,255,255,0.75)'
-                }}>Completed</div>
-                </div>
-                <div>
-                  <div className="font-bold" style={{
-                  fontSize: '18px',
-                  color: '#86efac'
-                }}>{upcomingCount}</div>
-                  <div className="text-xs uppercase tracking-wide mt-1" style={{
-                  color: 'rgba(255,255,255,0.75)'
-                }}>Upcoming</div>
-                </div>
-                <div>
-                  <div className="font-bold" style={{
-                  fontSize: '18px',
-                  color: '#fcd34d'
-                }}>{pendingCount}</div>
-                  <div className="text-xs uppercase tracking-wide mt-1" style={{
-                  color: 'rgba(255,255,255,0.75)'
-                }}>Pending</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <style>{`
-              .office-hours-tab[data-state="active"] {
-                background-color: white !important;
-                color: #003666 !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-              }
-              .office-hours-tab[data-state="inactive"] {
-                background-color: #004080 !important;
-                color: white !important;
-              }
-              .oh-picker-btn {
-                background-color: white !important;
-                color: #0F172A !important;
-                border: 2px solid #cbd5e1 !important;
-              }
-              .oh-picker-btn:hover {
-                background-color: #f8fafc !important;
-                border-color: #3b82f6 !important;
-              }
-              .oh-picker-btn:disabled {
-                background-color: #f1f5f9 !important;
-                color: #64748b !important;
-                border-color: #e2e8f0 !important;
-                opacity: 1 !important;
-              }
-              .oh-picker-btn svg {
-                color: #334155 !important;
-              }
-            `}</style>
-            <Tabs defaultValue="book">
-              <TabsList className="grid w-full grid-cols-3 h-20 bg-gradient-to-b from-[#004080] to-[#003666] p-0 pb-0 rounded-t-xl rounded-b-none relative z-10 shadow-lg">
-                <TabsTrigger value="book" className="office-hours-tab gap-2 font-['Bebas_Neue'] tracking-wide py-4 rounded-none rounded-tl-xl h-full hover:bg-white/20 transition-all duration-200 border-r border-white/20" style={{
-                fontSize: '30px',
-                fontWeight: 700
-              }}>
-                  <CalendarDays className="h-6 w-6" /> Book
-                </TabsTrigger>
-                <TabsTrigger value="history" className="office-hours-tab gap-2 font-['Bebas_Neue'] tracking-wide py-4 rounded-none h-full hover:bg-white/20 transition-all duration-200 border-r border-white/20" style={{
-                fontSize: '30px',
-                fontWeight: 700
-              }}>
-                  <History className="h-6 w-6" /> History
-                </TabsTrigger>
-                <TabsTrigger value="contact" className="office-hours-tab gap-2 font-['Bebas_Neue'] tracking-wide py-4 rounded-none rounded-tr-xl h-full hover:bg-white/20 transition-all duration-200" style={{
-                fontSize: '30px',
-                fontWeight: 700
-              }}>
-                  <Mail className="h-6 w-6" /> Contact
-                </TabsTrigger>
+  return (
+    <UniversalLayout>
+      {/* Header Banner */}
+      <div className="w-full py-5 sm:py-8" style={{ backgroundColor: '#003666' }}>
+        <div className="px-4 sm:px-8">
+          <h1 className="text-center tracking-wide text-white text-2xl sm:text-4xl md:text-5xl font-bold font-['Bebas_Neue']">
+            OFFICE HOURS
+          </h1>
+          <p className="text-center text-white/70 text-sm sm:text-base mt-1">with Dr. Kevin Johnson</p>
+        </div>
+      </div>
+
+      <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-8">
+        {/* Instructor Card — full width on mobile, side card on desktop */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Instructor Card */}
+          <div className="w-full lg:w-80 lg:flex-shrink-0">
+            <Card className="overflow-hidden border-border">
+              <div className="relative aspect-[16/9] sm:aspect-[4/3] bg-muted">
+                <img src={drJohnsonOffice} alt="Dr. Johnson's Office" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  <h2 className="text-base sm:text-lg font-semibold">Dr. Kevin Johnson</h2>
+                  <p className="flex items-center gap-1.5 mt-1 text-sm text-white/90">
+                    <MapPin className="h-3.5 w-3.5" /> Fine Arts Building 105
+                  </p>
+                </div>
+              </div>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  {[
+                    { label: 'Completed', value: completedCount, color: 'text-foreground' },
+                    { label: 'Upcoming', value: upcomingCount, color: 'text-green-400' },
+                    { label: 'Pending', value: pendingCount, color: 'text-amber-400' },
+                  ].map(stat => (
+                    <div key={stat.label}>
+                      <div className={cn("text-xl font-bold", stat.color)}>{stat.value}</div>
+                      <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-0.5">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Contact — visible on mobile, hidden on desktop (shown in contact tab) */}
+            <div className="grid grid-cols-4 gap-2 mt-4 lg:hidden">
+              {[
+                { href: 'mailto:docjohnson@spelman.edu', icon: Mail, label: 'Email', bg: 'bg-blue-100', fg: 'text-blue-600' },
+                { href: 'tel:+14706221392', icon: Phone, label: 'Call', bg: 'bg-green-100', fg: 'text-green-600' },
+                { href: 'https://zoom.us/j/drjohnson', icon: Video, label: 'Zoom', bg: 'bg-blue-100', fg: 'text-blue-600' },
+                { href: undefined, icon: MapPin, label: 'Rm 105', bg: 'bg-amber-100', fg: 'text-amber-600' },
+              ].map(item => {
+                const Wrapper = item.href ? 'a' : 'div';
+                return (
+                  <Wrapper
+                    key={item.label}
+                    {...(item.href ? { href: item.href, ...(item.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {}) } : {})}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border bg-card hover:bg-muted transition-colors"
+                  >
+                    <div className={cn("h-9 w-9 rounded-full flex items-center justify-center", item.bg)}>
+                      <item.icon className={cn("h-4 w-4", item.fg)} />
+                    </div>
+                    <span className="text-[11px] font-medium text-foreground">{item.label}</span>
+                  </Wrapper>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Main Content Tabs */}
+          <div className="flex-1 min-w-0">
+            <Tabs defaultValue="book" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 h-14 sm:h-16 bg-gradient-to-b from-[#004080] to-[#003666] p-0 rounded-t-xl rounded-b-none shadow-lg">
+                {[
+                  { value: 'book', icon: CalendarDays, label: 'Book' },
+                  { value: 'history', icon: History, label: 'History' },
+                  { value: 'contact', icon: Mail, label: 'Contact' },
+                ].map((tab, i) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className={cn(
+                      "gap-1.5 sm:gap-2 font-['Bebas_Neue'] tracking-wide py-3 h-full hover:bg-white/20 transition-all duration-200 rounded-none text-white data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-md",
+                      i === 0 && "rounded-tl-xl",
+                      i === 2 && "rounded-tr-xl",
+                      i < 2 && "border-r border-white/20"
+                    )}
+                  >
+                    <tab.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-lg sm:text-2xl">{tab.label}</span>
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
-              {/* Book Appointment Tab */}
-              <TabsContent value="book" className="mt-0 space-y-4 bg-gradient-to-b from-white to-gray-50 border border-t-0 border-border rounded-b-xl p-6 relative shadow-xl">
-                {/* Booking Form */}
-                <Card>
-                  <CardContent className="p-5 space-y-5 bg-white px-[5px]">
-                    {/* Service Selection */}
-                    <div className="space-y-3">
-                      <Label className="text-xl font-semibold" style={{
-                      color: '#0F172A'
-                    }}>Service Type *</Label>
-                      <Select value={selectedType} onValueChange={val => {
-                      setSelectedType(val);
-                      setSelectedTime('');
-                    }}>
-                        <SelectTrigger className="h-14" style={{
-                        fontSize: '16px',
-                        color: selectedType ? '#0F172A' : '#475569'
-                      }}>
-                          <SelectValue placeholder="Select a service..." />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border border-slate-200 shadow-xl z-[100] max-h-[300px]">
-                          {appointmentTypes.map(type => <SelectItem key={type.id} value={type.id} className="py-4" style={{
-                          fontSize: '16px',
-                          color: '#0F172A'
-                        }}>
-                              <div className="flex items-center justify-between w-full gap-4">
-                                <span>{type.name}</span>
-                                <Badge variant="secondary" className="ml-2 text-base">{type.duration} min</Badge>
-                              </div>
-                            </SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Date & Time Row - Zoom-style pill design */}
-                    <div className="space-y-3">
-                      <Label style={{
-                      fontSize: '16px',
-                      color: '#0F172A',
-                      fontWeight: 500
-                    }}>Date & Time *</Label>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {/* Date Picker */}
-                        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={true}>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" disabled={!selectedType} className="oh-picker-btn w-[160px] justify-start text-left font-semibold h-12 rounded-lg transition-all" style={{
-                            fontSize: '16px'
-                          }}>
-                              <CalendarIcon className="mr-2 h-5 w-5" />
-                              <span>{selectedDate ? format(selectedDate, "MMM d") : "Date"}</span>
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-white border-2 border-slate-200 shadow-2xl z-[9999]" align="start" side="bottom" sideOffset={8} avoidCollisions={true}>
-                            <Calendar mode="single" selected={selectedDate} onSelect={date => {
-                            setSelectedDate(date);
-                            if (date) {
-                              setSelectedDateStr(format(date, 'yyyy-MM-dd'));
-                            }
-                            setSelectedTime('');
-                            setDatePickerOpen(false);
-                          }} disabled={date => date < new Date()} initialFocus className="p-3 pointer-events-auto bg-white text-slate-900" classNames={{
-                            caption_label: "text-lg font-medium text-slate-900",
-                            head_cell: "text-slate-500 rounded-md w-full font-normal text-sm sm:text-base flex-1 p-2 text-center",
-                            day: "h-12 w-full p-0 font-normal text-slate-800 hover:bg-slate-100 hover:text-slate-900 focus:bg-slate-100 focus:text-slate-900 aria-selected:opacity-100 text-sm sm:text-base",
-                            day_selected: "bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white",
-                            day_today: "bg-slate-100 text-slate-900 font-semibold",
-                            day_outside: "text-slate-300 opacity-50",
-                            day_disabled: "text-slate-300 opacity-50",
-                            nav_button: "h-9 w-9 bg-transparent p-0 text-slate-600 hover:text-slate-900 opacity-70 hover:opacity-100 border border-slate-200 rounded-md"
-                          }} />
-                          </PopoverContent>
-                        </Popover>
-
-                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
-
-                        {/* Time Picker */}
-                        <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen} modal={true}>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" disabled={!selectedType || !selectedDateStr} className="oh-picker-btn w-[140px] justify-start text-left font-semibold h-12 rounded-lg transition-all" style={{
-                            fontSize: '16px'
-                          }}>
-                              <Clock className="mr-2 h-5 w-5" />
-                              <span>{selectedTime || "Time"}</span>
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[200px] p-2 bg-white border-2 border-slate-200 shadow-2xl z-[9999]" align="start" side="bottom" sideOffset={8} avoidCollisions={true}>
-                            <div className="max-h-[280px] overflow-y-auto overscroll-contain pointer-events-auto" onWheelCapture={e => e.stopPropagation()} onTouchMove={e => e.stopPropagation()}>
-                              {slotsLoading ? <div className="flex items-center justify-center py-8">
-                                  <Loader2 className="h-5 w-5 animate-spin" />
-                                </div> : timeSlots && timeSlots.length > 0 ? <div className="p-2">
-                                  {timeSlots.map((slot: any) => <button key={slot.start_time} type="button" className={cn("w-full flex items-center justify-between h-11 px-4 text-base font-normal rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors", slot.start_time === selectedTime && "bg-primary/10 text-primary font-medium")} onClick={() => {
-                                setSelectedTime(slot.start_time);
-                                setTimePickerOpen(false);
-                              }}>
-                                      <span>{slot.start_time} - {slot.end_time}</span>
-                                      {slot.start_time === selectedTime && <Check className="h-5 w-5" />}
-                                    </button>)}
-                                </div> : <div className="text-center py-8" style={{
-                              color: '#475569'
-                            }}>
-                                  No available times
-                                </div>}
+              {/* ── Book Tab ── */}
+              <TabsContent value="book" className="mt-0 bg-card border border-t-0 border-border rounded-b-xl shadow-lg">
+                <div className="p-4 sm:p-6 space-y-5">
+                  {/* Service Type */}
+                  <div className="space-y-2">
+                    <Label className="text-base font-semibold text-foreground">Service Type *</Label>
+                    <Select value={selectedType} onValueChange={val => { setSelectedType(val); setSelectedTime(''); }}>
+                      <SelectTrigger className="h-12 sm:h-14 text-base bg-background border-border">
+                        <SelectValue placeholder="Select a service..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
+                        {appointmentTypes.map(type => (
+                          <SelectItem key={type.id} value={type.id} className="py-3 text-base text-popover-foreground">
+                            <div className="flex items-center gap-3">
+                              <span>{type.name}</span>
+                              <Badge variant="secondary" className="text-xs">{type.duration} min</Badge>
                             </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label style={{
-                      fontSize: '16px',
-                      color: '#0F172A',
-                      fontWeight: 500
-                    }}>Topic/Purpose *</Label>
-                      <Input value={topic} onChange={e => setTopic(e.target.value)} placeholder="What would you like to discuss?" className="h-14 bg-white border-slate-300 placeholder:text-[#475569]" style={{
-                      fontSize: '16px',
-                      color: '#0F172A'
-                    }} />
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label style={{
-                      fontSize: '16px',
-                      color: '#0F172A',
-                      fontWeight: 500
-                    }}>Additional Notes</Label>
-                      <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional context..." rows={4} className="bg-white border-slate-300 placeholder:text-[#475569]" style={{
-                      fontSize: '16px',
-                      color: '#0F172A'
-                    }} />
-                    </div>
-
-                    <Button onClick={handleBookAppointment} disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic} className="w-full h-16 text-2xl text-white shadow-lg hover:shadow-xl transition-all" style={{
-                    backgroundColor: '#1D4ED8',
-                    fontWeight: 700
-                  }}>
-                      {loading ? <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Booking...</> : <><CalendarDays className="h-5 w-5 mr-2" /> Book Appointment</>}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* History Tab */}
-              <TabsContent value="history" className="mt-0 bg-gradient-to-b from-white to-gray-50 border border-t-0 border-border rounded-b-xl p-6 relative shadow-xl">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <BookOpen className="h-4 w-4" /> Meeting History
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {historyLoading ? <div className="flex items-center justify-center py-12">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      </div> : appointmentHistory.length === 0 ? <div className="text-center py-12">
-                        <History className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-                        <p className="text-muted-foreground text-sm">No appointment history yet.</p>
-                        <p className="text-xs text-muted-foreground mt-1">Book your first session to get started!</p>
-                      </div> : <ScrollArea className="h-[400px]">
-                        <div className="space-y-3 pr-4">
-                          {appointmentHistory.map((apt: any) => <div key={apt.id} className="p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    {getStatusBadge(apt.status)}
-                                    <span className="text-xs text-muted-foreground">
-                                      {format(new Date(apt.appointment_date), 'MMM d, yyyy')}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-3 text-xs mt-2 text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <Clock className="h-3 w-3" />
-                                      {apt.start_time}
-                                    </span>
-                                    <span>{apt.duration_minutes} min</span>
-                                  </div>
-                                  {apt.special_requests && <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
-                                      {apt.special_requests}
-                                    </p>}
-                                  {apt.notes && <div className="mt-2 p-2 rounded bg-muted/50 text-xs">
-                                      <strong className="text-muted-foreground">Notes:</strong>
-                                      <p className="mt-0.5">{apt.notes}</p>
-                                    </div>}
-                                </div>
-                              </div>
-                            </div>)}
-                        </div>
-                      </ScrollArea>}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Contact Tab */}
-              <TabsContent value="contact" className="mt-0 space-y-4 bg-white border border-t-0 border-border rounded-b-xl p-6 relative shadow-xl">
-                {/* Quick Contact Links */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <a href="mailto:docjohnson@spelman.edu" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-slate-50 transition-colors text-center">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <Mail className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <span className="text-xs font-medium" style={{
-                    color: '#0F172A'
-                  }}>Email</span>
-                  </a>
-
-                  <a href="tel:+14706221392" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-slate-50 transition-colors text-center">
-                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <Phone className="h-5 w-5 text-green-600" />
-                    </div>
-                    <span className="text-xs font-medium" style={{
-                    color: '#0F172A'
-                  }}>Call</span>
-                  </a>
-
-                  <a href="https://zoom.us/j/drjohnson" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-slate-50 transition-colors text-center">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <Video className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <span className="text-xs font-medium" style={{
-                    color: '#0F172A'
-                  }}>Zoom</span>
-                  </a>
-
-                  <div className="flex flex-col items-center gap-2 p-4 rounded-lg border bg-slate-50 text-center">
-                    <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                      <MapPin className="h-5 w-5 text-amber-600" />
-                    </div>
-                    <span className="text-xs font-medium" style={{
-                    color: '#0F172A'
-                  }}>Room 105</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+
+                  {/* Date & Time — stacked on mobile, inline on desktop */}
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium text-foreground">Date & Time *</Label>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                      {/* Date Picker */}
+                      <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            disabled={!selectedType}
+                            className="w-full sm:w-auto justify-start text-left font-semibold h-12 rounded-lg bg-background border-border text-foreground text-base"
+                          >
+                            <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
+                            <span>{selectedDate ? format(selectedDate, "EEEE, MMM d") : "Select date"}</span>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-auto p-0 bg-popover border border-border shadow-2xl z-[9999]"
+                          align="start" side="bottom" sideOffset={8} avoidCollisions
+                        >
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={date => {
+                              setSelectedDate(date);
+                              if (date) setSelectedDateStr(format(date, 'yyyy-MM-dd'));
+                              setSelectedTime('');
+                              setDatePickerOpen(false);
+                            }}
+                            disabled={date => date < new Date()}
+                            initialFocus
+                            className="p-3 pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+
+                      <ArrowRight className="h-5 w-5 text-muted-foreground hidden sm:block" />
+
+                      {/* Time Picker */}
+                      <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen} modal>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            disabled={!selectedType || !selectedDateStr}
+                            className="w-full sm:w-auto justify-start text-left font-semibold h-12 rounded-lg bg-background border-border text-foreground text-base"
+                          >
+                            <Clock className="mr-2 h-5 w-5 text-muted-foreground" />
+                            <span>{selectedTime || "Select time"}</span>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-[220px] p-2 bg-popover border border-border shadow-2xl z-[9999]"
+                          align="start" side="bottom" sideOffset={8} avoidCollisions
+                        >
+                          <div className="max-h-[280px] overflow-y-auto overscroll-contain pointer-events-auto">
+                            {slotsLoading ? (
+                              <div className="flex items-center justify-center py-8">
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                              </div>
+                            ) : timeSlots && timeSlots.length > 0 ? (
+                              <div className="space-y-1 p-1">
+                                {timeSlots.map((slot: any) => (
+                                  <button
+                                    key={slot.start_time}
+                                    type="button"
+                                    className={cn(
+                                      "w-full flex items-center justify-between h-11 px-4 text-base font-normal rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors text-popover-foreground",
+                                      slot.start_time === selectedTime && "bg-primary/10 text-primary font-medium"
+                                    )}
+                                    onClick={() => { setSelectedTime(slot.start_time); setTimePickerOpen(false); }}
+                                  >
+                                    <span>{slot.start_time} - {slot.end_time}</span>
+                                    {slot.start_time === selectedTime && <Check className="h-5 w-5" />}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center py-8 text-muted-foreground text-sm">
+                                No available times
+                              </div>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+
+                  {/* Topic */}
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium text-foreground">Topic / Purpose *</Label>
+                    <Input
+                      value={topic}
+                      onChange={e => setTopic(e.target.value)}
+                      placeholder="What would you like to discuss?"
+                      className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground text-base"
+                    />
+                  </div>
+
+                  {/* Notes */}
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium text-foreground">Additional Notes</Label>
+                    <Textarea
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      placeholder="Any additional context..."
+                      rows={3}
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground text-base"
+                    />
+                  </div>
+
+                  {/* Submit */}
+                  <Button
+                    onClick={handleBookAppointment}
+                    disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic}
+                    className="w-full h-14 text-lg sm:text-xl text-white shadow-lg hover:shadow-xl transition-all font-bold"
+                    style={{ backgroundColor: '#1D4ED8' }}
+                  >
+                    {loading ? (
+                      <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Booking...</>
+                    ) : (
+                      <><CalendarDays className="h-5 w-5 mr-2" /> Book Appointment</>
+                    )}
+                  </Button>
                 </div>
+              </TabsContent>
 
-                {/* Send Message */}
-                <Card className="bg-white border-slate-200">
-                  <CardHeader className="pb-3 bg-white border-b border-slate-200">
-                    <CardTitle style={{
-                    fontSize: '18px',
-                    color: '#0F172A',
-                    fontWeight: 600
-                  }}>Send a Message</CardTitle>
-                    <CardDescription style={{
-                    fontSize: '14px',
-                    color: '#475569'
-                  }}>
-                      Send Dr. Johnson a direct message
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3 bg-white pt-4">
-                    <div className="space-y-2">
-                      <Label className="font-medium" style={{
-                      fontSize: '16px',
-                      color: '#0F172A'
-                    }}>Subject</Label>
-                      <Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="What is this about?" className="h-10 bg-white border-slate-300 placeholder:text-[#475569]" style={{
-                      fontSize: '16px',
-                      color: '#0F172A'
-                    }} />
+              {/* ── History Tab ── */}
+              <TabsContent value="history" className="mt-0 bg-card border border-t-0 border-border rounded-b-xl shadow-lg">
+                <div className="p-4 sm:p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <BookOpen className="h-5 w-5 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold text-foreground">Meeting History</h3>
+                  </div>
+
+                  {historyLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
-
-                    <div className="space-y-2">
-                      <Label className="font-medium" style={{
-                      fontSize: '16px',
-                      color: '#0F172A'
-                    }}>Message</Label>
-                      <Textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} placeholder="Type your message here..." rows={4} className="bg-white border-slate-300 placeholder:text-[#475569]" style={{
-                      fontSize: '16px',
-                      color: '#0F172A'
-                    }} />
+                  ) : appointmentHistory.length === 0 ? (
+                    <div className="text-center py-12">
+                      <History className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+                      <p className="text-muted-foreground text-sm">No appointment history yet.</p>
+                      <p className="text-xs text-muted-foreground mt-1">Book your first session to get started!</p>
                     </div>
+                  ) : (
+                    <ScrollArea className="h-[400px] sm:h-[500px]">
+                      <div className="space-y-3 pr-2">
+                        {appointmentHistory.map((apt: any) => (
+                          <div key={apt.id} className="p-4 rounded-xl border border-border bg-card hover:bg-accent/30 transition-colors">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {getStatusBadge(apt.status)}
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(apt.appointment_date), 'MMM d, yyyy')}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs mt-2 text-muted-foreground">
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" /> {apt.start_time}
+                                  </span>
+                                  <span>{apt.duration_minutes} min</span>
+                                </div>
+                                {apt.special_requests && (
+                                  <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{apt.special_requests}</p>
+                                )}
+                                {apt.notes && (
+                                  <div className="mt-2 p-2.5 rounded-lg bg-muted/50 text-xs">
+                                    <strong className="text-muted-foreground">Notes:</strong>
+                                    <p className="mt-0.5 text-foreground">{apt.notes}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </div>
+              </TabsContent>
 
-                    <div className="bg-slate-50 rounded-lg p-2.5 text-xs flex items-center gap-2">
-                      <User className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="text-slate-600">
-                        From: <strong className="text-slate-900">{profile?.full_name || user?.email}</strong>
-                      </span>
-                    </div>
+              {/* ── Contact Tab ── */}
+              <TabsContent value="contact" className="mt-0 bg-card border border-t-0 border-border rounded-b-xl shadow-lg">
+                <div className="p-4 sm:p-6 space-y-5">
+                  {/* Quick Contact Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { href: 'mailto:docjohnson@spelman.edu', icon: Mail, label: 'Email', bg: 'bg-blue-100', fg: 'text-blue-600' },
+                      { href: 'tel:+14706221392', icon: Phone, label: 'Call', bg: 'bg-green-100', fg: 'text-green-600' },
+                      { href: 'https://zoom.us/j/drjohnson', icon: Video, label: 'Zoom', bg: 'bg-blue-100', fg: 'text-blue-600', external: true },
+                      { href: undefined, icon: MapPin, label: 'Room 105', bg: 'bg-amber-100', fg: 'text-amber-600' },
+                    ].map(item => {
+                      const Wrapper = item.href ? 'a' : 'div';
+                      return (
+                        <Wrapper
+                          key={item.label}
+                          {...(item.href ? { href: item.href, ...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {}) } : {})}
+                          className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-center"
+                        >
+                          <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", item.bg)}>
+                            <item.icon className={cn("h-5 w-5", item.fg)} />
+                          </div>
+                          <span className="text-xs font-medium text-foreground">{item.label}</span>
+                        </Wrapper>
+                      );
+                    })}
+                  </div>
 
-                    <Button onClick={handleSendEmail} disabled={sendingEmail || !emailSubject || !emailBody} className="w-full h-12 text-lg text-white shadow-lg hover:shadow-xl transition-all" style={{
-                    backgroundColor: '#1D4ED8',
-                    fontWeight: 700
-                  }}>
-                      {sendingEmail ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <><Send className="h-4 w-4 mr-2" /> Send Message</>}
-                    </Button>
-                  </CardContent>
-                </Card>
+                  {/* Send Message Form */}
+                  <Card className="border-border">
+                    <CardHeader className="pb-3 border-b border-border">
+                      <CardTitle className="text-lg text-foreground">Send a Message</CardTitle>
+                      <CardDescription className="text-sm text-muted-foreground">
+                        Send Dr. Johnson a direct message
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label className="font-medium text-base text-foreground">Subject</Label>
+                        <Input
+                          value={emailSubject}
+                          onChange={e => setEmailSubject(e.target.value)}
+                          placeholder="What is this about?"
+                          className="h-11 bg-background border-border text-foreground placeholder:text-muted-foreground text-base"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-medium text-base text-foreground">Message</Label>
+                        <Textarea
+                          value={emailBody}
+                          onChange={e => setEmailBody(e.target.value)}
+                          placeholder="Type your message here..."
+                          rows={4}
+                          className="bg-background border-border text-foreground placeholder:text-muted-foreground text-base"
+                        />
+                      </div>
+                      <div className="bg-muted rounded-lg p-3 text-xs flex items-center gap-2">
+                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">
+                          From: <strong className="text-foreground">{profile?.full_name || user?.email}</strong>
+                        </span>
+                      </div>
+                      <Button
+                        onClick={handleSendEmail}
+                        disabled={sendingEmail || !emailSubject || !emailBody}
+                        className="w-full h-12 text-base sm:text-lg text-white shadow-lg hover:shadow-xl transition-all font-bold"
+                        style={{ backgroundColor: '#1D4ED8' }}
+                      >
+                        {sendingEmail ? (
+                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
+                        ) : (
+                          <><Send className="h-4 w-4 mr-2" /> Send Message</>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
             </Tabs>
           </div>
         </div>
-        
+
         {/* Amazon Product Slider */}
         <div className="mt-8">
           <AmazonProductSlider />
         </div>
       </div>
-    </UniversalLayout>;
+    </UniversalLayout>
+  );
 }
