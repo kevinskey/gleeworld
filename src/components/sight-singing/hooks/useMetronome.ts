@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio, getSharedAudioContext } from '@/utils/mobileAudioUnlock';
+import { setupMobileAudioUnlock, forceUnlockAudio, getSharedAudioContext } from '@/utils/mobileAudioUnlock';
 
 export type MetronomeSoundType = 'pitch' | 'click';
 
@@ -9,9 +9,18 @@ export const useMetronome = () => {
   const [tempo, setTempo] = useState(120);
   const [soundType, setSoundType] = useState<MetronomeSoundType>('click');
   const audioContextRef = useRef<AudioContext | null>(null);
-  const intervalRef = useRef<number | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const nextNoteTimeRef = useRef(0);
+  const isPlayingRef = useRef(false);
+  const tempoRef = useRef(120);
+  const volumeRef = useRef(0.8);
+  const soundTypeRef = useRef<MetronomeSoundType>('click');
 
-  // Setup mobile audio unlock on mount
+  // Keep refs in sync
+  useEffect(() => { tempoRef.current = tempo; }, [tempo]);
+  useEffect(() => { volumeRef.current = volume; }, [volume]);
+  useEffect(() => { soundTypeRef.current = soundType; }, [soundType]);
+
   useEffect(() => {
     const cleanup = setupMobileAudioUnlock();
     return cleanup;
@@ -19,18 +28,12 @@ export const useMetronome = () => {
 
   const getAudioContext = useCallback((): AudioContext | null => {
     try {
-      // Force unlock synchronously (critical for iOS)
       forceUnlockAudio();
-      
-      // Get shared audio context
       const ctx = getSharedAudioContext();
       audioContextRef.current = ctx;
-      
-      // Resume if suspended (fire and forget)
       if (ctx.state === 'suspended') {
         ctx.resume();
       }
-      
       return ctx;
     } catch (error) {
       console.error('Failed to get audio context:', error);
@@ -38,99 +41,95 @@ export const useMetronome = () => {
     }
   }, []);
 
-  const playClick = useCallback(() => {
-    // Always try to unlock and get context
-    forceUnlockAudio();
-    
-    let ctx = audioContextRef.current;
-    if (!ctx || ctx.state === 'closed') {
-      ctx = getSharedAudioContext();
-      audioContextRef.current = ctx;
-    }
-    
-    // Resume if suspended (fire and forget)
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
-    
-    // Play sound
+  const scheduleClick = useCallback((ctx: AudioContext, time: number) => {
     try {
-      const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      
-      osc.frequency.value = soundType === 'click' ? 1000 : 800;
-      osc.type = soundType === 'click' ? 'square' : 'sine';
-      
-      gain.gain.setValueAtTime(volume * 0.5, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
-      
+
+      const st = soundTypeRef.current;
+      osc.frequency.value = st === 'click' ? 1000 : 800;
+      osc.type = st === 'click' ? 'square' : 'sine';
+
+      const vol = volumeRef.current;
+      // Longer envelope for audibility: 80ms total
+      gain.gain.setValueAtTime(vol * 0.6, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+
       osc.connect(gain);
       gain.connect(ctx.destination);
-      
-      osc.start(now);
-      osc.stop(now + 0.03);
-      
-      console.log('🎵 Metronome click played, ctx state:', ctx.state);
+
+      osc.start(time);
+      osc.stop(time + 0.08);
     } catch (e) {
-      console.warn('🎵 Metronome: Failed to play click:', e);
+      console.warn('🎵 Metronome: Failed to schedule click:', e);
     }
-  }, [volume, soundType]);
+  }, []);
+
+  const scheduler = useCallback(() => {
+    const ctx = audioContextRef.current;
+    if (!ctx || !isPlayingRef.current) return;
+
+    // Schedule notes up to 100ms ahead (lookahead window)
+    const scheduleAheadTime = 0.1;
+
+    while (nextNoteTimeRef.current < ctx.currentTime + scheduleAheadTime) {
+      scheduleClick(ctx, nextNoteTimeRef.current);
+      const secondsPerBeat = 60.0 / tempoRef.current;
+      nextNoteTimeRef.current += secondsPerBeat;
+    }
+
+    // Call scheduler again in ~25ms
+    timerRef.current = window.setTimeout(scheduler, 25);
+  }, [scheduleClick]);
 
   const stopMetronome = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+    isPlayingRef.current = false;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
     }
     setIsPlaying(false);
   }, []);
 
   const startMetronome = useCallback((bpm: number = tempo) => {
-    if (intervalRef.current) {
+    if (isPlayingRef.current) {
       stopMetronome();
     }
-    
-    // Force unlock audio on iOS - synchronous call within user gesture
+
     forceUnlockAudio();
-    
+
     const ctx = getAudioContext();
     if (!ctx) {
       console.warn('🎵 Metronome: Failed to get audio context');
       return;
     }
-    
-    // Store reference for playClick to use
+
     audioContextRef.current = ctx;
-    
-    // Resume if needed (fire and forget)
+
     if (ctx.state !== 'running') {
       ctx.resume();
     }
-    
-    setIsPlaying(true);
+
     setTempo(bpm);
-    
-    const intervalMs = 60000 / bpm;
-    
-    // Play first click immediately
-    playClick();
-    
-    intervalRef.current = window.setInterval(() => {
-      playClick();
-    }, intervalMs);
-  }, [tempo, playClick, stopMetronome, getAudioContext]);
+    tempoRef.current = bpm;
+    isPlayingRef.current = true;
+    setIsPlaying(true);
+
+    // Start scheduling from now
+    nextNoteTimeRef.current = ctx.currentTime;
+    scheduler();
+  }, [tempo, stopMetronome, getAudioContext, scheduler]);
 
   const updateTempo = useCallback((newTempo: number) => {
     setTempo(newTempo);
-    if (isPlaying) {
-      startMetronome(newTempo);
-    }
-  }, [isPlaying, startMetronome]);
+    tempoRef.current = newTempo;
+    // No need to restart — scheduler reads tempoRef on each iteration
+  }, []);
 
   useEffect(() => {
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      // Don't close the shared audio context
+      isPlayingRef.current = false;
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
 
