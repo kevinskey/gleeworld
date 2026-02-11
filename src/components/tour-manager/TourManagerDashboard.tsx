@@ -213,13 +213,22 @@ export const TourManagerDashboard = ({
           count: 'exact',
           head: true
         });
+
+        // Fetch active routes count
+        const {
+          count: routesCount
+        } = await supabase.from('gw_tours').select('*', {
+          count: 'exact',
+          head: true
+        });
+
         setStats({
           upcomingDates: datesCount || 0,
-          activeRoutes: 1,
+          activeRoutes: routesCount || 0,
           contacts: requestsCount || 0,
           pendingContracts: contractsCount || 0,
           rosterCount: rosterCount || 0,
-          pendingDocs: 3
+          pendingDocs: 0
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
