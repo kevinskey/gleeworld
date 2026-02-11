@@ -1,7 +1,7 @@
 // Service Worker for GleeWorld PWA
-// Version: 7.6 - January 2026
-// NOTE: v7.6 - Fixed notification sounds and all audio playback in PWA
-const CACHE_VERSION = 'v7.6';
+// Version: 8.0 - February 2026
+// NOTE: v8.0 - Force cache reset, all caches cleared on activate
+const CACHE_VERSION = 'v8.0';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
