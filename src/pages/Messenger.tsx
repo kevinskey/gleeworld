@@ -728,7 +728,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           <div className="bg-card p-4 lg:p-6 space-y-4">
                             {/* Recipients */}
                             <div className="space-y-1">
-                              <Label className="text-sm font-medium text-foreground">To:</Label>
+                              <Label className="text-base font-semibold text-foreground">To:</Label>
                               <div className="border border-border rounded-lg bg-background">
                                 {/* Collapsible recipients when there are many */}
                                 {recipients.length > 3 ? (
@@ -768,7 +768,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                     if (e.key === 'Enter' && searchQuery.includes('@')) {
                                       addRecipient(searchQuery);
                                     }
-                                  }} placeholder="Search or type email..." className="h-8 bg-transparent text-foreground placeholder:text-muted-foreground" />
+                                  }} placeholder="Search or type email..." className="h-8 bg-transparent text-foreground text-base placeholder:text-foreground/50" />
                                   {filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                       {filteredContacts.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
                                           <span className="font-medium">{result.full_name}</span>
@@ -781,13 +781,13 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
 
                             {/* Subject */}
                             <div className="space-y-1">
-                              <Label className="text-sm font-medium text-foreground">Subject:</Label>
-                              <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject line..." className="h-10 bg-background border-border text-foreground placeholder:text-muted-foreground" />
+                              <Label className="text-base font-semibold text-foreground">Subject:</Label>
+                              <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject line..." className="h-10 bg-background border-border text-foreground text-base placeholder:text-foreground/50" />
                             </div>
 
                             {/* Content - Rich text editor with good height */}
                             <div className="space-y-1">
-                              <Label className="text-sm font-medium text-foreground">Message:</Label>
+                              <Label className="text-base font-semibold text-foreground">Message:</Label>
                               <div className="border border-border rounded-lg overflow-hidden bg-background">
                                 <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="300px" />
                               </div>
