@@ -78,14 +78,15 @@ export const useUserAppointments = () => {
   });
 };
 
-export const useAvailableTimeSlots = (serviceId: string, date: string) => {
+export const useAvailableTimeSlots = (serviceId: string, date: string, durationOverride?: number) => {
   return useQuery({
-    queryKey: ['time-slots', serviceId, date],
+    queryKey: ['time-slots', serviceId, date, durationOverride],
     queryFn: async () => {
       const { data, error } = await supabase
         .rpc('get_available_time_slots', {
           p_service_id: serviceId,
-          p_date: date
+          p_date: date,
+          p_duration_override: durationOverride || null
         });
 
       if (error) throw error;

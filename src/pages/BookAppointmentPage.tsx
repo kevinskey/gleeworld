@@ -75,7 +75,7 @@ export default function BookAppointmentPage() {
   };
   const resolvedServiceId = getServiceIdForType(selectedType) || '';
 
-  const { data: timeSlots, isLoading: slotsLoading } = useAvailableTimeSlots(resolvedServiceId, selectedDateStr);
+  const { data: timeSlots, isLoading: slotsLoading } = useAvailableTimeSlots(resolvedServiceId, selectedDateStr, selectedTypeData?.duration);
 
   const { data: appointmentHistory = [], isLoading: historyLoading } = useQuery({
     queryKey: ['user-appointment-history', user?.id],
