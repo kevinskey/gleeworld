@@ -111,7 +111,7 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Inbox className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Communication History</h3>
+            <h3 className="font-semibold text-lg text-foreground">Communication History</h3>
           </div>
           <Button variant="ghost" size="sm" onClick={() => refetch()} className="gap-2">
             <RefreshCw className="h-4 w-4" />
@@ -122,20 +122,20 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
         {/* Quick Stats */}
         <div className="grid grid-cols-4 gap-2 text-center">
           <div className="p-2 rounded-lg bg-muted border border-border">
-            <div className="text-lg font-bold text-foreground">{stats.total}</div>
-            <div className="text-xs text-muted-foreground">Total</div>
+            <div className="text-xl font-bold text-foreground">{stats.total}</div>
+            <div className="text-sm text-muted-foreground">Total</div>
           </div>
           <div className="p-2 rounded-lg bg-muted border border-border">
-            <div className="text-lg font-bold text-primary">{stats.emails}</div>
-            <div className="text-xs text-muted-foreground">Emails</div>
+            <div className="text-xl font-bold text-primary">{stats.emails}</div>
+            <div className="text-sm text-muted-foreground">Emails</div>
           </div>
           <div className="p-2 rounded-lg bg-muted border border-border">
-            <div className="text-lg font-bold text-accent-foreground">{stats.sms}</div>
-            <div className="text-xs text-muted-foreground">SMS</div>
+            <div className="text-xl font-bold text-accent-foreground">{stats.sms}</div>
+            <div className="text-sm text-muted-foreground">SMS</div>
           </div>
           <div className="p-2 rounded-lg bg-muted border border-border">
-            <div className="text-lg font-bold text-destructive">{stats.failed}</div>
-            <div className="text-xs text-muted-foreground">Failed</div>
+            <div className="text-xl font-bold text-destructive">{stats.failed}</div>
+            <div className="text-sm text-muted-foreground">Failed</div>
           </div>
         </div>
 
@@ -147,7 +147,7 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
               placeholder="Search messages..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9"
+              className="pl-9 h-11 text-base"
             />
           </div>
           {!initialChannelFilter && (
@@ -203,8 +203,8 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
                     className="w-full justify-between px-3 py-2 h-auto hover:bg-muted"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm">{label}</span>
-                      <Badge variant="outline" className="text-xs">
+                      <span className="font-semibold text-base">{label}</span>
+                      <Badge variant="outline" className="text-sm">
                         {messages.length}
                       </Badge>
                     </div>
@@ -244,14 +244,14 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
                             ) : (
                               <Inbox className="h-3 w-3 text-muted-foreground" />
                             )}
-                            <span className="text-xs text-muted-foreground capitalize">
+                            <span className="text-sm text-muted-foreground capitalize">
                               {msg.direction}
                             </span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           {getStatusIcon(msg.status)}
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-sm text-muted-foreground">
                             {format(parseISO(msg.created_at), 'h:mm a')}
                           </span>
                         </div>
@@ -259,20 +259,20 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
 
                       {/* Subject (for email) */}
                       {msg.subject && (
-                        <p className="font-medium text-sm text-foreground truncate mb-1">
+                        <p className="font-semibold text-base text-foreground truncate mb-1">
                           {msg.subject}
                         </p>
                       )}
 
                       {/* Content Preview */}
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-foreground/80 line-clamp-2">
                         {msg.content.replace(/<[^>]*>/g, '').slice(0, 150)}
                         {msg.content.length > 150 ? '...' : ''}
                       </p>
 
                       {/* Recipients */}
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-sm text-muted-foreground">
                           To: {getRecipientDisplay(msg)}
                         </span>
                         <Badge
@@ -283,7 +283,7 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
                               ? 'destructive'
                               : 'secondary'
                           }
-                          className="text-xs"
+                          className="text-sm"
                         >
                           {msg.status}
                         </Badge>
