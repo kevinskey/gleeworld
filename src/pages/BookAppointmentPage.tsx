@@ -63,8 +63,10 @@ export default function BookAppointmentPage() {
     if (!typeId) return null;
     const matchingService = services?.find(s =>
       (typeId === 'office-hours' && s.name?.toLowerCase().includes('office')) ||
-      (typeId === 'lesson' && (s.category?.toLowerCase().includes('coaching') || s.name?.toLowerCase().includes('lesson') || s.name?.toLowerCase().includes('teaching'))) ||
-      (typeId === 'general-meeting' && s.category?.toLowerCase().includes('general'))
+      (typeId.startsWith('voice-lesson') && (s.category?.toLowerCase().includes('coaching') || s.name?.toLowerCase().includes('lesson') || s.name?.toLowerCase().includes('teaching'))) ||
+      (typeId.startsWith('general-meeting') && (s.category?.toLowerCase().includes('general') || s.name?.toLowerCase().includes('office'))) ||
+      (typeId === 'tutoring' && (s.name?.toLowerCase().includes('tutor') || s.name?.toLowerCase().includes('theory'))) ||
+      (typeId === 'solo-audition' && s.name?.toLowerCase().includes('audition'))
     );
     return matchingService?.id || services?.[0]?.id || null;
   };
