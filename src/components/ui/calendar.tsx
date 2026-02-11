@@ -38,15 +38,15 @@ function Calendar({
         cell: "relative w-full flex-1 p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-12 w-full p-0 font-normal aria-selected:opacity-100 text-sm sm:text-base hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          "h-12 w-full p-0 font-normal aria-selected:opacity-100 text-sm sm:text-base hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground touch-manipulation"
         ),
         day_range_end: "day-range-end",
         day_selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-accent text-accent-foreground font-semibold",
         day_outside:
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-        day_disabled: "text-muted-foreground opacity-50",
+          "day-outside text-muted-foreground/70 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+        day_disabled: "text-muted-foreground/70",
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",

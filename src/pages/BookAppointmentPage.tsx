@@ -334,7 +334,7 @@ export default function BookAppointmentPage() {
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent
-                          className="w-auto p-0 bg-popover border border-border shadow-2xl z-[9999]"
+                          className="w-auto p-0 bg-popover border border-border shadow-2xl z-[9999] max-h-[70vh] overflow-y-auto overscroll-contain touch-pan-y"
                           align="start" side="bottom" sideOffset={8} avoidCollisions
                         >
                           <Calendar
@@ -348,7 +348,7 @@ export default function BookAppointmentPage() {
                             }}
                             disabled={date => date < new Date()}
                             initialFocus
-                            className="p-3 pointer-events-auto"
+                            className="p-3 pointer-events-auto touch-manipulation"
                           />
                         </PopoverContent>
                       </Popover>
