@@ -29748,14 +29748,27 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_available_time_slots: {
-        Args: { p_date: string; p_service_id: string }
-        Returns: {
-          available: boolean
-          end_time: string
-          start_time: string
-        }[]
-      }
+      get_available_time_slots:
+        | {
+            Args: { p_date: string; p_service_id: string }
+            Returns: {
+              available: boolean
+              end_time: string
+              start_time: string
+            }[]
+          }
+        | {
+            Args: {
+              p_date: string
+              p_duration_override?: number
+              p_service_id: string
+            }
+            Returns: {
+              available: boolean
+              end_time: string
+              start_time: string
+            }[]
+          }
       get_avatar_url: { Args: { user_id_param: string }; Returns: string }
       get_blocked_dates: {
         Args: never
