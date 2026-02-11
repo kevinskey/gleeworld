@@ -346,7 +346,7 @@ export default function BookAppointmentPage() {
                               setSelectedTime('');
                               setDatePickerOpen(false);
                             }}
-                            disabled={date => date < new Date()}
+                            disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
                             initialFocus
                             className="p-3 pointer-events-auto touch-manipulation"
                           />
