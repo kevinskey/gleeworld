@@ -1,0 +1,2 @@
+ALTER TABLE public.gw_tour_risers DROP CONSTRAINT gw_tour_risers_position_check;
+ALTER TABLE public.gw_tour_risers ADD CONSTRAINT gw_tour_risers_position_check CHECK (position >= 1 AND position <= 16);
