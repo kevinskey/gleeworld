@@ -11,7 +11,8 @@ import {
   Trash2, 
   GripVertical,
   CheckCircle,
-  XCircle
+  XCircle,
+  Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -155,6 +156,14 @@ export const PollEditor: React.FC<PollEditorProps> = ({ pollId, onClose, onSave 
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
+  const duplicateQuestion = (index: number) => {
+    const clone = JSON.parse(JSON.stringify(questions[index]));
+    const newQuestions = [...questions];
+    newQuestions.splice(index + 1, 0, clone);
+    setQuestions(newQuestions);
+    toast.success('Question duplicated');
+  };
+
   const updateQuestion = (index: number, field: keyof Question, value: any) => {
     const newQuestions = [...questions];
     newQuestions[index] = { ...newQuestions[index], [field]: value };
@@ -254,14 +263,25 @@ export const PollEditor: React.FC<PollEditorProps> = ({ pollId, onClose, onSave 
                     <GripVertical className="h-5 w-5 text-gray-400" />
                     <Badge className="bg-blue-600">Question {qIndex + 1}</Badge>
                   </div>
-                  <Button
-                    onClick={() => removeQuestion(qIndex)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      onClick={() => duplicateQuestion(qIndex)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      title="Duplicate question"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={() => removeQuestion(qIndex)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-4">
