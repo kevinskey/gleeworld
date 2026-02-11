@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, CheckCircle, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AcademyPoll, PollQuestion } from './AcademyPollSystem';
@@ -29,6 +29,14 @@ export const PollEditor: React.FC<PollEditorProps> = ({ poll, onClose }) => {
 
   const removeQuestion = (index: number) => {
     setQuestions(questions.filter((_, i) => i !== index));
+  };
+
+  const duplicateQuestion = (index: number) => {
+    const clone = JSON.parse(JSON.stringify(questions[index]));
+    const newQuestions = [...questions];
+    newQuestions.splice(index + 1, 0, clone);
+    setQuestions(newQuestions);
+    toast.success('Question duplicated');
   };
 
   const updateQuestion = (index: number, field: keyof PollQuestion, value: any) => {
@@ -175,14 +183,25 @@ export const PollEditor: React.FC<PollEditorProps> = ({ poll, onClose }) => {
                       rows={2}
                     />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeQuestion(qIdx)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => duplicateQuestion(qIdx)}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      title="Duplicate question"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeQuestion(qIdx)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-2 ml-4">
