@@ -35,9 +35,10 @@ export const EventContextMenu: React.FC<EventContextMenuProps> = ({
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const {
-        error
-      } = await supabase.from('gw_events').delete().eq('id', event.id);
+      const table = (event as any).source === 'appointment' || (event as any).is_appointment
+        ? 'gw_appointments'
+        : 'gw_events';
+      const { error } = await supabase.from(table).delete().eq('id', event.id);
       if (error) throw error;
       toast.success(`"${event.title}" deleted`);
       onDeleted?.();
