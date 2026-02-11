@@ -155,9 +155,30 @@ export const QuickAttendanceQR: React.FC<QuickAttendanceQRProps> = ({
 
       if (sessionError) throw sessionError;
 
-      // Generate QR code via RPC
+      // Create an attendance session (required by generate_session_qr_code RPC)
+      const opensAt = new Date();
+      const closesAt = new Date(opensAt.getTime() + 60 * 60 * 1000); // 1 hour window
+
+      const { data: attSession, error: attError } = await supabase
+        .from('gw_attendance_sessions')
+        .insert({
+          course_id: courseId,
+          title: `${courseCode} Class`,
+          opens_at: opensAt.toISOString(),
+          closes_at: closesAt.toISOString(),
+          status: 'open',
+          mode: 'qr',
+          roster_scope: 'course',
+          created_by: user.id,
+        })
+        .select('id')
+        .single();
+
+      if (attError) throw attError;
+
+      // Generate QR code via RPC using the attendance session ID
       const { data: qrResult, error: qrError } = await supabase.rpc('generate_session_qr_code', {
-        p_session_id: newSession.id,
+        p_session_id: attSession.id,
         p_generated_by: user.id,
         p_expires_in_minutes: 480,
       });
@@ -165,10 +186,18 @@ export const QuickAttendanceQR: React.FC<QuickAttendanceQRProps> = ({
       if (qrError) throw qrError;
 
       const qrData = typeof qrResult === 'string' ? JSON.parse(qrResult) : qrResult;
-      if (qrData?.qr_token) {
-        setQrCode({ id: qrData.id || '', qr_token: qrData.qr_token });
+      if (qrData?.success && qrData?.qr_token) {
+        setQrCode({ id: qrData.qr_id || '', qr_token: qrData.qr_token });
         await generateQRImage(qrData.qr_token);
-        setAttendanceSessionId(qrData.attendance_session_id || null);
+        setAttendanceSessionId(attSession.id);
+
+        // Link the QR code to the class session
+        await supabase
+          .from('gw_course_class_sessions')
+          .update({ qr_code_id: qrData.qr_id })
+          .eq('id', newSession.id);
+      } else {
+        throw new Error(qrData?.error || 'QR generation failed');
       }
 
       setSession(newSession);
