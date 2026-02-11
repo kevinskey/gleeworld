@@ -46,7 +46,7 @@ export const Metronome: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <div className="h-4 w-4 bg-primary rounded-full" />
