@@ -69,7 +69,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       const isMobileSize = screenWidth < 400;
-      const initialSize = isMobileSize ? Math.min(screenWidth - 40, 260) : 280;
+      const initialSize = isMobileSize ? Math.min(screenWidth - 40, 380) : 420;
       setPitchPipeSize({ width: initialSize, height: initialSize });
       const centerX = (screenWidth - initialSize) / 2;
       const centerY = (screenHeight - initialSize) / 2;

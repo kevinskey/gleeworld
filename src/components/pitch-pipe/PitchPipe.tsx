@@ -177,21 +177,21 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
     <div className={`flex items-center justify-center ${className}`}>
       {/* Circular Pitch Pipe - fixed size, parent handles scaling */}
       <div 
-        className="relative w-64 h-64 rounded-full shadow-2xl select-none flex-shrink-0"
+        className="relative w-96 h-96 rounded-full shadow-2xl select-none flex-shrink-0"
         style={{
           background: 'radial-gradient(circle at 30% 30%, #3a3a3a 0%, #1a1a1a 50%, #0f0f0f 100%)',
           boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.5), 0 8px 32px rgba(0,0,0,0.4), 0 0 0 4px #2a2a2a',
         }}
       >
         {/* Center area with controls */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full flex flex-col items-center justify-center"
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full flex flex-col items-center justify-center"
           style={{
             background: 'radial-gradient(circle at 40% 40%, #3a3a3a 0%, #1a1a1a 100%)',
             boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.6), 0 1px 2px rgba(255,255,255,0.1)',
           }}
         >
-          <div className="text-[8px] text-gray-400 font-medium tracking-wider">CHROMATIC</div>
-          <div className="text-[8px] text-gray-400 font-medium tracking-wider mb-1">PITCH PIPE</div>
+          <div className="text-[11px] text-gray-400 font-medium tracking-wider">CHROMATIC</div>
+          <div className="text-[11px] text-gray-400 font-medium tracking-wider mb-1">PITCH PIPE</div>
           
           {/* Volume control in center */}
           <div className="flex items-center gap-1">
@@ -199,7 +199,7 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
               onClick={toggleMute}
               className="p-0.5 hover:bg-white/10 rounded-full transition-colors"
             >
-              {isMuted ? <VolumeX className="h-3 w-3 text-gray-500" /> : <Volume2 className="h-3 w-3 text-gray-400" />}
+              {isMuted ? <VolumeX className="h-4 w-4 text-gray-500" /> : <Volume2 className="h-4 w-4 text-gray-400" />}
             </button>
             <Slider
               value={volume}
@@ -207,16 +207,16 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
               max={1}
               min={0}
               step={0.1}
-              className="w-10 [&_[role=slider]]:h-2 [&_[role=slider]]:w-2 [&_.bg-primary]:bg-gray-500"
+              className="w-14 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_.bg-primary]:bg-gray-500"
             />
           </div>
           
-          <div className="text-lg text-gray-300 mt-0.5">𝄞</div>
+          <div className="text-2xl text-gray-300 mt-1">𝄞</div>
         </div>
 
         {/* Center bolt */}
         <div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-6 w-4 h-4 rounded-full z-10"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-9 w-5 h-5 rounded-full z-10"
           style={{
             background: 'linear-gradient(145deg, #4a4a4a, #2a2a2a)',
             boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.5)',
@@ -247,7 +247,7 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
             >
               <span
                 className={`font-bold transition-all duration-75 ${
-                  note.isSharp ? 'text-[10px]' : 'text-lg'
+                  note.isSharp ? 'text-sm' : 'text-2xl'
                 } ${
                   isActive 
                     ? 'text-amber-400 scale-125 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' 
@@ -263,7 +263,7 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
               </span>
               {/* Show octave number for C notes */}
               {isC && (
-                <span className={`text-[8px] -mt-1 ${isActive ? 'text-amber-400' : 'text-gray-400'}`}>
+                <span className={`text-[10px] -mt-1 ${isActive ? 'text-amber-400' : 'text-gray-400'}`}>
                   {note.note === 'C4' ? '4' : '5'}
                 </span>
               )}
@@ -273,13 +273,13 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
 
         {/* Decorative rings */}
         <div 
-          className="absolute inset-4 rounded-full pointer-events-none"
+          className="absolute inset-5 rounded-full pointer-events-none"
           style={{
             border: '1px solid rgba(255,255,255,0.08)',
           }}
         />
         <div 
-          className="absolute inset-[4.5rem] rounded-full pointer-events-none"
+          className="absolute inset-[6.5rem] rounded-full pointer-events-none"
           style={{
             border: '1px solid rgba(255,255,255,0.05)',
           }}
