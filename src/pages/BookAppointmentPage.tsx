@@ -209,7 +209,7 @@ export default function BookAppointmentPage() {
     <UniversalLayout>
       {/* Header Banner */}
       <div className="w-full py-5 sm:py-8" style={{ backgroundColor: '#003666' }}>
-        <div className="px-4 sm:px-8">
+        <div className="px-4 sm:px-8 flex flex-col items-center">
           <h1 className="text-center tracking-wide text-white text-2xl sm:text-4xl md:text-5xl font-bold font-['Bebas_Neue']">
             OFFICE HOURS
           </h1>
