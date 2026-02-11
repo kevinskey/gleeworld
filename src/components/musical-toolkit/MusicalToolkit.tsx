@@ -22,6 +22,9 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
   const [pitchPipeSize, setPitchPipeSize] = useState({ width: 280, height: 280 });
   const [pitchPipePosition, setPitchPipePosition] = useState({ x: 20, y: 80 });
 
+  const [metronomeSize, setMetronomeSize] = useState({ width: 480, height: 620 });
+  const [metronomePosition, setMetronomePosition] = useState({ x: 100, y: 100 });
+
   const [tempo, setTempo] = useState(96);
   const [isMetroPlaying, setIsMetroPlaying] = useState(false);
   const { themeName } = useTheme();
@@ -74,6 +77,22 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
     }
   }, [open.pitch]);
 
+  // Center metronome on open, bigger on desktop
+  useEffect(() => {
+    if (open.metronome) {
+      const sw = window.innerWidth;
+      const sh = window.innerHeight;
+      const isMobileSize = sw < 640;
+      const w = isMobileSize ? Math.min(sw - 32, 360) : 480;
+      const h = isMobileSize ? Math.min(sh - 100, 520) : 620;
+      setMetronomeSize({ width: w, height: h });
+      setMetronomePosition({
+        x: Math.max(10, (sw - w) / 2),
+        y: Math.max(10, (sh - h) / 2),
+      });
+    }
+  }, [open.metronome]);
+
   // Pre-unlock audio when dropdown is opened (user gesture)
   const handleDropdownClick = () => {
     forceUnlockAudio();
@@ -116,15 +135,58 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Metronome */}
-      <Dialog open={open.metronome} onOpenChange={(v) => setOpen((o) => ({ ...o, metronome: v }))}>
-        <DialogContent className="sm:max-w-md bg-background border border-border top-[15%] translate-y-0 sm:top-[20%]">
-          <DialogHeader>
-            <DialogTitle className="text-base">Metronome</DialogTitle>
-          </DialogHeader>
-          <Metronome />
-        </DialogContent>
-      </Dialog>
+      {/* Metronome - Draggable and Resizable */}
+      {open.metronome && (
+        <div className="fixed inset-0 z-[9999] pointer-events-none">
+          <Rnd
+            size={{ width: metronomeSize.width, height: metronomeSize.height }}
+            position={{ x: metronomePosition.x, y: metronomePosition.y }}
+            onDragStop={(e, d) => setMetronomePosition({ x: d.x, y: d.y })}
+            onResizeStop={(e, direction, ref, delta, position) => {
+              setMetronomeSize({ width: ref.offsetWidth, height: ref.offsetHeight });
+              setMetronomePosition(position);
+            }}
+            minWidth={280}
+            minHeight={400}
+            maxWidth={Math.min(700, window.innerWidth - 20)}
+            maxHeight={Math.min(800, window.innerHeight - 40)}
+            bounds="window"
+            dragHandleClassName="metronome-drag-handle"
+            className="pointer-events-auto"
+          >
+            <div className="relative w-full h-full bg-background border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
+              {/* Close button */}
+              <button
+                onClick={() => setOpen((o) => ({ ...o, metronome: false }))}
+                className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 text-foreground flex items-center justify-center shadow transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              {/* Drag handle */}
+              <div className="metronome-drag-handle flex items-center justify-center gap-2 py-2 cursor-move bg-muted/50 border-b border-border select-none">
+                <GripHorizontal className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-semibold text-foreground">Metronome</span>
+                <GripHorizontal className="h-4 w-4 text-muted-foreground" />
+              </div>
+
+              {/* Resize indicator */}
+              <div className="absolute bottom-1 right-1 z-10 w-5 h-5 text-muted-foreground cursor-se-resize">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 21L12 21M21 21L21 12M21 21L9 9" />
+                </svg>
+              </div>
+
+              {/* Metronome content - scaled to fill */}
+              <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
+                <div className="w-full max-w-lg">
+                  <Metronome />
+                </div>
+              </div>
+            </div>
+          </Rnd>
+        </div>
+      )}
 
       {/* Pitch Pipe - Draggable and Resizable */}
       {open.pitch && (
