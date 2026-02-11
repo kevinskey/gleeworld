@@ -60,15 +60,18 @@ export default function BookAppointmentPage() {
   const selectedTypeData = appointmentTypes.find(t => t.id === selectedType);
 
   const getServiceIdForType = (typeId: string): string | null => {
-    if (!typeId) return null;
-    const matchingService = services?.find(s =>
-      (typeId === 'office-hours' && s.name?.toLowerCase().includes('office')) ||
-      (typeId.startsWith('voice-lesson') && (s.category?.toLowerCase().includes('coaching') || s.name?.toLowerCase().includes('lesson') || s.name?.toLowerCase().includes('teaching'))) ||
-      (typeId.startsWith('general-meeting') && (s.category?.toLowerCase().includes('general') || s.name?.toLowerCase().includes('office'))) ||
-      (typeId === 'tutoring' && (s.name?.toLowerCase().includes('tutor') || s.name?.toLowerCase().includes('theory'))) ||
-      (typeId === 'solo-audition' && s.name?.toLowerCase().includes('audition'))
-    );
-    return matchingService?.id || services?.[0]?.id || null;
+    if (!typeId || !services?.length) return null;
+    const matchingService = services.find(s => {
+      const name = s.name?.toLowerCase() || '';
+      const cat = s.category?.toLowerCase() || '';
+      if (typeId === 'office-hours') return name.includes('office');
+      if (typeId.startsWith('general-meeting')) return name.includes('office') || cat === 'general';
+      if (typeId === 'voice-lesson') return name.includes('teaching') || name.includes('lesson') || name.includes('coaching');
+      if (typeId === 'tutoring') return name.includes('theory') || name.includes('tutor');
+      if (typeId === 'solo-audition') return name.includes('audition');
+      return false;
+    });
+    return matchingService?.id || null;
   };
   const resolvedServiceId = getServiceIdForType(selectedType) || '';
 
