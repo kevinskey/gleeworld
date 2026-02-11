@@ -29,8 +29,11 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
   const handleDeleteEvent = async (event: GleeWorldEvent) => {
     setDeleteLoading(event.id);
     try {
+      const table = (event as any).source === 'appointment' || (event as any).is_appointment
+        ? 'gw_appointments'
+        : 'gw_events';
       const { error } = await supabase
-        .from('gw_events')
+        .from(table)
         .delete()
         .eq('id', event.id);
 
@@ -38,7 +41,7 @@ export const EventsList = ({ events, onEventUpdated }: EventsListProps) => {
 
       toast({
         title: "Success",
-        description: "Event deleted successfully!",
+        description: `${table === 'gw_appointments' ? 'Appointment' : 'Event'} deleted successfully!`,
       });
 
       onEventUpdated?.();
