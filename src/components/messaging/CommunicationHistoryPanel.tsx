@@ -123,19 +123,19 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
         <div className="grid grid-cols-4 gap-2 text-center">
           <div className="p-2 rounded-lg bg-muted border border-border">
             <div className="text-xl font-bold text-foreground">{stats.total}</div>
-            <div className="text-sm text-muted-foreground">Total</div>
+            <div className="text-sm font-medium text-foreground">Total</div>
           </div>
           <div className="p-2 rounded-lg bg-muted border border-border">
             <div className="text-xl font-bold text-primary">{stats.emails}</div>
-            <div className="text-sm text-muted-foreground">Emails</div>
+            <div className="text-sm font-medium text-foreground">Emails</div>
           </div>
           <div className="p-2 rounded-lg bg-muted border border-border">
             <div className="text-xl font-bold text-accent-foreground">{stats.sms}</div>
-            <div className="text-sm text-muted-foreground">SMS</div>
+            <div className="text-sm font-medium text-foreground">SMS</div>
           </div>
           <div className="p-2 rounded-lg bg-muted border border-border">
             <div className="text-xl font-bold text-destructive">{stats.failed}</div>
-            <div className="text-sm text-muted-foreground">Failed</div>
+            <div className="text-sm font-medium text-foreground">Failed</div>
           </div>
         </div>
 
@@ -182,8 +182,8 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
             <div className="rounded-full bg-muted p-4 mb-4">
               <Inbox className="h-10 w-10 text-muted-foreground" />
             </div>
-            <p className="text-muted-foreground font-medium">No messages found</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-foreground font-medium">No messages found</p>
+            <p className="text-sm text-foreground/70 mt-1">
               {stats.total === 0
                 ? 'Your sent emails and SMS will appear here'
                 : 'Try adjusting your filters'}
@@ -240,18 +240,18 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
                           </div>
                           <div className="flex items-center gap-1.5">
                             {msg.direction === 'sent' ? (
-                              <Send className="h-3 w-3 text-muted-foreground" />
+                              <Send className="h-3 w-3 text-foreground/70" />
                             ) : (
-                              <Inbox className="h-3 w-3 text-muted-foreground" />
+                              <Inbox className="h-3 w-3 text-foreground/70" />
                             )}
-                            <span className="text-sm text-muted-foreground capitalize">
+                            <span className="text-sm text-foreground/70 capitalize">
                               {msg.direction}
                             </span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           {getStatusIcon(msg.status)}
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-sm text-foreground/70">
                             {format(parseISO(msg.created_at), 'h:mm a')}
                           </span>
                         </div>
@@ -265,14 +265,14 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
                       )}
 
                       {/* Content Preview */}
-                      <p className="text-sm text-foreground/80 line-clamp-2">
+                      <p className="text-sm text-foreground line-clamp-2">
                         {msg.content.replace(/<[^>]*>/g, '').slice(0, 150)}
                         {msg.content.length > 150 ? '...' : ''}
                       </p>
 
                       {/* Recipients */}
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-foreground/70">
                           To: {getRecipientDisplay(msg)}
                         </span>
                         <Badge
