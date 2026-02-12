@@ -14789,6 +14789,7 @@ export type Database = {
           can_dance: boolean | null
           chest_measurement: number | null
           class_year: number | null
+          classification: string | null
           created_at: string | null
           current_cart_id: string | null
           dashboard_background_url: string | null
@@ -14804,6 +14805,7 @@ export type Database = {
           email: string | null
           emergency_contact: string | null
           exec_board_role: string | null
+          facebook: string | null
           first_name: string | null
           formal_dress_size: string | null
           full_name: string | null
@@ -14817,6 +14819,7 @@ export type Database = {
           home_address: string | null
           id: string
           inseam_measurement: number | null
+          instagram: string | null
           instruments_played: string[] | null
           is_admin: boolean | null
           is_exec_board: boolean | null
@@ -14861,6 +14864,7 @@ export type Database = {
           theme_preference: string | null
           title: string | null
           tshirt_size: string | null
+          twitter: string | null
           updated_at: string | null
           user_id: string | null
           verified: boolean | null
@@ -14871,6 +14875,7 @@ export type Database = {
           wardrobe_assignments: Json | null
           website_url: string | null
           workplace: string | null
+          youtube: string | null
         }
         Insert: {
           academic_major?: string | null
@@ -14885,6 +14890,7 @@ export type Database = {
           can_dance?: boolean | null
           chest_measurement?: number | null
           class_year?: number | null
+          classification?: string | null
           created_at?: string | null
           current_cart_id?: string | null
           dashboard_background_url?: string | null
@@ -14900,6 +14906,7 @@ export type Database = {
           email?: string | null
           emergency_contact?: string | null
           exec_board_role?: string | null
+          facebook?: string | null
           first_name?: string | null
           formal_dress_size?: string | null
           full_name?: string | null
@@ -14913,6 +14920,7 @@ export type Database = {
           home_address?: string | null
           id?: string
           inseam_measurement?: number | null
+          instagram?: string | null
           instruments_played?: string[] | null
           is_admin?: boolean | null
           is_exec_board?: boolean | null
@@ -14957,6 +14965,7 @@ export type Database = {
           theme_preference?: string | null
           title?: string | null
           tshirt_size?: string | null
+          twitter?: string | null
           updated_at?: string | null
           user_id?: string | null
           verified?: boolean | null
@@ -14967,6 +14976,7 @@ export type Database = {
           wardrobe_assignments?: Json | null
           website_url?: string | null
           workplace?: string | null
+          youtube?: string | null
         }
         Update: {
           academic_major?: string | null
@@ -14981,6 +14991,7 @@ export type Database = {
           can_dance?: boolean | null
           chest_measurement?: number | null
           class_year?: number | null
+          classification?: string | null
           created_at?: string | null
           current_cart_id?: string | null
           dashboard_background_url?: string | null
@@ -14996,6 +15007,7 @@ export type Database = {
           email?: string | null
           emergency_contact?: string | null
           exec_board_role?: string | null
+          facebook?: string | null
           first_name?: string | null
           formal_dress_size?: string | null
           full_name?: string | null
@@ -15009,6 +15021,7 @@ export type Database = {
           home_address?: string | null
           id?: string
           inseam_measurement?: number | null
+          instagram?: string | null
           instruments_played?: string[] | null
           is_admin?: boolean | null
           is_exec_board?: boolean | null
@@ -15053,6 +15066,7 @@ export type Database = {
           theme_preference?: string | null
           title?: string | null
           tshirt_size?: string | null
+          twitter?: string | null
           updated_at?: string | null
           user_id?: string | null
           verified?: boolean | null
@@ -15063,6 +15077,7 @@ export type Database = {
           wardrobe_assignments?: Json | null
           website_url?: string | null
           workplace?: string | null
+          youtube?: string | null
         }
         Relationships: []
       }
