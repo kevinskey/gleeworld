@@ -140,12 +140,12 @@ export const AIFeedbackRevisionCard: React.FC<AIFeedbackRevisionCardProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* AI Grade Summary */}
+      {/* Rubric Grade Summary */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="h-5 w-5 text-primary" />
-            AI Feedback
+            Rubric Grading Feedback
             {canRevise && (
               <Badge variant="outline" className="ml-auto bg-amber-50 text-amber-800 border-amber-300">
                 1 Revision Available
@@ -170,7 +170,7 @@ export const AIFeedbackRevisionCard: React.FC<AIFeedbackRevisionCardProps> = ({
                 {aiFeedback.totalScore} / {aiFeedback.maxPoints}
               </p>
               <p className="text-sm text-muted-foreground">
-                {aiFeedback.percentage}% — AI Preliminary Score
+                {aiFeedback.percentage}% — Preliminary Rubric Score
               </p>
               <Progress value={aiFeedback.percentage} className="h-2 mt-1" />
             </div>
@@ -227,7 +227,7 @@ export const AIFeedbackRevisionCard: React.FC<AIFeedbackRevisionCardProps> = ({
             <Alert className="border-amber-200 bg-amber-50">
               <AlertCircle className="h-4 w-4 text-amber-700" />
               <AlertDescription className="text-amber-900">
-                You have <strong>one opportunity</strong> to revise your work based on the AI feedback above.
+                You have <strong>one opportunity</strong> to revise your work based on the rubric feedback above.
                 After submitting your revision, your instructor will grade the updated version.
               </AlertDescription>
             </Alert>

@@ -195,7 +195,7 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
                   undefined
                 }
               >
-                {submission.status === 'ai_graded' ? 'AI Graded — Revision Available' :
+                {submission.status === 'ai_graded' ? 'Graded — Revision Available' :
                  submission.status === 'revision_submitted' ? 'Revision Submitted' :
                  submission.status}
               </Badge>
