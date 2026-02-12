@@ -31,19 +31,41 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch submission
-    const { data: submission, error: subError } = await supabase
+    // Try gw_assignment_submissions first, then gw_course_submissions
+    let submission: any = null;
+    let submissionTable = 'gw_assignment_submissions';
+
+    const { data: asSub } = await supabase
       .from('gw_assignment_submissions')
       .select('*')
       .eq('id', submissionId)
-      .single();
+      .maybeSingle();
 
-    if (subError) {
-      console.error('[grade-submission-ai] Error fetching submission:', subError);
-      throw subError;
+    if (asSub) {
+      submission = asSub;
+    } else {
+      const { data: csSub, error: csErr } = await supabase
+        .from('gw_course_submissions')
+        .select('*')
+        .eq('id', submissionId)
+        .maybeSingle();
+
+      if (csErr) {
+        console.error('[grade-submission-ai] Error fetching from gw_course_submissions:', csErr);
+        throw csErr;
+      }
+      if (!csSub) {
+        throw new Error(`Submission ${submissionId} not found in any table`);
+      }
+      submission = {
+        ...csSub,
+        user_id: csSub.student_id,
+        notes: csSub.content,
+      };
+      submissionTable = 'gw_course_submissions';
     }
 
-    // Fetch assignment details separately (no FK relationship)
+    // Fetch assignment details separately
     let assignmentData: any = null;
     if (submission.assignment_id) {
       const { data: aData } = await supabase
@@ -269,29 +291,48 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
       aiDetected: gradingResult.ai_detection.is_flagged
     });
 
-    // Save grade to gw_assignment_submissions with AI detection flag
-    const { error: updateError } = await supabase
-      .from('gw_assignment_submissions')
-      .update({
-        score_value: totalScore,
-        ai_feedback: JSON.stringify({
-          totalScore,
-          maxPoints: totalMaxPoints,
-          percentage: Math.round(percentage * 10) / 10,
-          letterGrade,
-          criteriaScores: gradingResult.criteria_scores,
-          overallStrengths: gradingResult.overall_strengths,
-          areasForImprovement: gradingResult.areas_for_improvement,
-          overallFeedback: gradingResult.overall_feedback,
-          aiDetection: gradingResult.ai_detection,
-          rubricName: rubricFromDb?.name || 'Default Rubric',
-          rubricId: submission.gw_course_assignments?.rubric_id || null,
-          gradedAt: new Date().toISOString()
-        }),
-        graded_at: new Date().toISOString(),
-        status: gradingResult.ai_detection.is_flagged ? 'flagged' : 'ai_graded'
-      })
-      .eq('id', submissionId);
+    // Save grade to the correct table
+    const gradePayload = JSON.stringify({
+      totalScore,
+      maxPoints: totalMaxPoints,
+      percentage: Math.round(percentage * 10) / 10,
+      letterGrade,
+      criteriaScores: gradingResult.criteria_scores,
+      overallStrengths: gradingResult.overall_strengths,
+      areasForImprovement: gradingResult.areas_for_improvement,
+      overallFeedback: gradingResult.overall_feedback,
+      aiDetection: gradingResult.ai_detection,
+      rubricName: rubricFromDb?.name || 'Default Rubric',
+      rubricId: submission.gw_course_assignments?.rubric_id || null,
+      gradedAt: new Date().toISOString()
+    });
+
+    let updateError: any = null;
+    if (submissionTable === 'gw_course_submissions') {
+      const { error } = await supabase
+        .from('gw_course_submissions')
+        .update({
+          ai_feedback: gradePayload,
+          ai_score: totalScore,
+          points_earned: totalScore,
+          grade: Math.round(percentage * 10) / 10,
+          graded_at: new Date().toISOString(),
+          status: gradingResult.ai_detection.is_flagged ? 'flagged' : 'ai_graded'
+        })
+        .eq('id', submissionId);
+      updateError = error;
+    } else {
+      const { error } = await supabase
+        .from('gw_assignment_submissions')
+        .update({
+          score_value: totalScore,
+          ai_feedback: gradePayload,
+          graded_at: new Date().toISOString(),
+          status: gradingResult.ai_detection.is_flagged ? 'flagged' : 'ai_graded'
+        })
+        .eq('id', submissionId);
+      updateError = error;
+    }
 
     if (updateError) {
       console.error('[grade-submission-ai] Error updating submission:', updateError);
