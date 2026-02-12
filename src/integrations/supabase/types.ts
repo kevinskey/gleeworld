@@ -30005,6 +30005,10 @@ export type Database = {
       is_current_user_super_admin_safe: { Args: never; Returns: boolean }
       is_current_user_tour_manager: { Args: never; Returns: boolean }
       is_current_user_treasurer: { Args: never; Returns: boolean }
+      is_enrolled_in_course: {
+        Args: { p_course_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_enrolled_in_mus240: {
         Args: { user_id_param?: string }
         Returns: boolean
