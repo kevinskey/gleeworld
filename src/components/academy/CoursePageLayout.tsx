@@ -11,6 +11,7 @@ import { CourseResourcesList } from './CourseResourcesList';
 import { MusicLibrary } from '@/components/music-library/MusicLibrary';
 import { CoursePlaylistDisplay } from '@/components/public/CoursePlaylistDisplay';
 import { CourseAttendanceGrid } from '@/components/course/CourseAttendanceGrid';
+import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
 interface CoursePageLayoutProps {
   courseId: string;
   courseSemester: string;
@@ -300,12 +301,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
             )}
 
             {activeSection === 'rubrics' && (
-              <Card className="bg-card/50 border-border">
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-bold text-foreground mb-4">Rubrics</h2>
-                  <p className="text-muted-foreground">Assignment and assessment rubrics will be available here.</p>
-                </CardContent>
-              </Card>
+              <RubricManager />
             )}
 
             {activeSection === 'notebook' && (
