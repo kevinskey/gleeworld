@@ -20,20 +20,29 @@ interface WardrobeAppointment {
 
 export const UpcomingAppointmentsCard = () => {
   const navigate = useNavigate();
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user-id'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
   const { data: appointments, isLoading } = useQuery({
-    queryKey: ['wardrobe-appointments'],
+    queryKey: ['wardrobe-appointments', currentUser?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_appointments')
         .select('*')
         .eq('status', 'confirmed')
+        .eq('created_by', currentUser!.id)
         .gte('appointment_date', new Date().toISOString())
         .order('appointment_date', { ascending: true })
         .limit(5);
       
       if (error) throw error;
       return data as WardrobeAppointment[];
-    }
+    },
+    enabled: !!currentUser,
   });
 
   const formatDate = (dateStr: string) => {

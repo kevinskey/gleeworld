@@ -67,9 +67,12 @@ export const useUserAppointments = () => {
   return useQuery({
     queryKey: ['user-appointments'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
       const { data, error } = await supabase
         .from('gw_appointments')
         .select('*, gw_services(name, location)')
+        .eq('created_by', user.id)
         .order('appointment_date', { ascending: true });
 
       if (error) throw error;
