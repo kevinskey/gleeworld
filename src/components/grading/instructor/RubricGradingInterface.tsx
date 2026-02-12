@@ -151,13 +151,13 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
   return (
     <div className="space-y-6">
       {/* AI Grading Section */}
-      <Card>
+      <Card className="bg-white dark:bg-card border shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <Sparkles className="h-5 w-5 text-primary" />
-                AI-Assisted Grading
+                Rubric-Based Grading
               </CardTitle>
               <CardDescription>
                 Get instant feedback and suggested scores based on rubric criteria
@@ -216,18 +216,18 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
               <CheckCircle className="h-8 w-8 text-green-500" />
               <div className="flex-1">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold">{aiGrade.letterGrade}</span>
+                  <span className="text-3xl font-bold text-foreground">{aiGrade.letterGrade}</span>
                   <span className="text-muted-foreground">
                     {aiGrade.totalScore}/{aiGrade.maxPoints} ({aiGrade.percentage}%)
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground">AI-suggested grade</p>
+                <p className="text-sm text-muted-foreground">Suggested rubric grade</p>
               </div>
             </div>
 
             {/* Criteria Breakdown */}
             <div className="space-y-3">
-              <h4 className="font-semibold">Criteria Scores</h4>
+              <h4 className="font-semibold text-foreground">Criteria Scores</h4>
               {aiGrade.criteriaScores.map((criterion, idx) => {
               const hasOverride = manualScores[criterion.criterion_name] !== undefined;
               const displayScore = hasOverride ?
@@ -235,11 +235,11 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
               criterion.points_earned;
 
               return (
-                <Card key={idx}>
+                <Card key={idx} className="bg-white dark:bg-card border shadow-sm">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <CardTitle className="text-lg">{criterion.criterion_name}</CardTitle>
+                          <CardTitle className="text-lg text-foreground">{criterion.criterion_name}</CardTitle>
                           <CardDescription className="mt-1">
                             AI Score: {criterion.points_earned}/{criterion.max_points}
                           </CardDescription>
@@ -264,11 +264,11 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
                     <CardContent className="space-y-2">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Evidence:</p>
-                        <p className="text-sm mt-1">{criterion.evidence}</p>
+                        <p className="text-sm mt-1 text-foreground">{criterion.evidence}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Feedback:</p>
-                        <p className="text-sm mt-1">{criterion.feedback}</p>
+                        <p className="text-sm mt-1 text-foreground">{criterion.feedback}</p>
                       </div>
                     </CardContent>
                   </Card>);
@@ -298,18 +298,18 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
       </Card>
 
       {/* Final Grade Submission */}
-      <Card>
+      <Card className="bg-white dark:bg-card border shadow-sm">
         <CardHeader>
-          <CardTitle>Finalize Grade</CardTitle>
+          <CardTitle className="text-foreground">Finalize Grade</CardTitle>
           <CardDescription>
-            Review AI suggestions, make adjustments, and submit the final grade
+            Review suggestions, make adjustments, and submit the final grade
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Final Score</Label>
+            <Label className="text-foreground">Final Score</Label>
             <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-4xl font-bold">{calculateFinalScore()}</span>
+              <span className="text-4xl font-bold text-foreground">{calculateFinalScore()}</span>
               <span className="text-xl text-muted-foreground">
                 / {aiGrade?.maxPoints || 100}
               </span>
@@ -317,7 +317,7 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="instructor-feedback">Additional Feedback (Optional)</Label>
+            <Label htmlFor="instructor-feedback" className="text-foreground">Additional Feedback (Optional)</Label>
             <Textarea
               id="instructor-feedback"
               value={instructorFeedback}
