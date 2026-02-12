@@ -1,132 +1,200 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, Edit } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Search, ChevronDown, ChevronUp, Ruler, SortAsc } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { RubricEditor } from './RubricEditor';
-interface Criterion {
+import { useQuery } from '@tanstack/react-query';
+
+interface RubricCriterion {
   id: string;
-  criterion_name: string;
+  name: string;
   description: string;
   max_points: number;
-  weight_percentage: number;
   display_order: number;
 }
-interface RubricGroup {
-  assignment_type_id: string;
-  assignment_type: string;
-  criteria: Criterion[];
-}
-export const RubricManager = () => {
-  const [rubricGroups, setRubricGroups] = useState<RubricGroup[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    fetchRubrics();
-  }, []);
-  const fetchRubrics = async () => {
-    try {
-      const {
-        data,
-        error
-      } = await supabase.from('mus240_rubric_criteria').select('*').order('assignment_type_id').order('display_order', {
-        ascending: true
-      });
-      if (error) throw error;
 
-      // Group criteria by assignment type
-      const groups: Record<string, RubricGroup> = {};
-      (data || []).forEach(criterion => {
-        if (!groups[criterion.assignment_type_id]) {
-          groups[criterion.assignment_type_id] = {
-            assignment_type_id: criterion.assignment_type_id,
-            assignment_type: 'Assignment Type',
-            criteria: []
-          };
-        }
-        groups[criterion.assignment_type_id].criteria.push(criterion);
-      });
-      setRubricGroups(Object.values(groups));
-    } catch (error) {
-      console.error('Error fetching rubrics:', error);
-      toast.error('Failed to load rubrics');
-    } finally {
-      setLoading(false);
-    }
+interface UniversalRubric {
+  id: string;
+  name: string;
+  description: string | null;
+  total_points: number;
+  course_id: string | null;
+  criteria: RubricCriterion[];
+  created_at: string;
+}
+
+export const RubricManager = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'points' | 'criteria'>('name');
+  const [expandedRubrics, setExpandedRubrics] = useState<Set<string>>(new Set());
+
+  const { data: rubrics = [], isLoading } = useQuery({
+    queryKey: ['universal-rubrics-manager'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_universal_rubrics')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      return (data || []).map((r: any) => ({
+        ...r,
+        criteria: Array.isArray(r.criteria) ? r.criteria : [],
+      })) as UniversalRubric[];
+    },
+  });
+
+  const toggleExpand = (id: string) => {
+    setExpandedRubrics(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
   };
-  if (loading) {
-    return <div className="p-6">Loading rubrics...</div>;
+
+  const filtered = rubrics
+    .filter(r => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return r.name.toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      if (sortBy === 'points') return b.total_points - a.total_points;
+      if (sortBy === 'criteria') return (b.criteria?.length || 0) - (a.criteria?.length || 0);
+      return 0;
+    });
+
+  if (isLoading) {
+    return <div className="p-6 text-muted-foreground">Loading rubrics...</div>;
   }
-  return <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Assignment Rubrics</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Define criteria and point values for consistent grading
-          </p>
-        </div>
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div>
+        <h3 className="text-lg font-semibold text-foreground">Assignment Rubrics</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Define criteria and point values for consistent grading · {rubrics.length} rubric{rubrics.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
-      <div className="grid gap-6">
-        {rubricGroups.map(group => {
-        const totalPoints = group.criteria.reduce((sum, c) => sum + c.max_points, 0);
-        const groupTitle = group.criteria.length > 0 ? getGroupTitle(group.assignment_type_id) : 'Unknown Assignment Type';
-        return <Card key={group.assignment_type_id} className="border-2">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-xl">{groupTitle}</CardTitle>
-                    <p className="text-sm mt-1 text-primary-foreground">
-                      {group.criteria.length} criteria · {totalPoints} total points
-                    </p>
+      {/* Search & Sort Controls */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search rubrics by name or description..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 bg-background"
+          />
+        </div>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+          <SelectTrigger className="w-[180px] bg-background">
+            <SortAsc className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">Name (A–Z)</SelectItem>
+            <SelectItem value="points">Total Points</SelectItem>
+            <SelectItem value="criteria">Most Criteria</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Rubric Cards */}
+      <div className="grid gap-4">
+        {filtered.map((rubric) => {
+          const isExpanded = expandedRubrics.has(rubric.id);
+          const criteriaCount = rubric.criteria?.length || 0;
+
+          return (
+            <Card
+              key={rubric.id}
+              className="border hover:border-primary/30 transition-colors cursor-pointer"
+              onClick={() => toggleExpand(rubric.id)}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                      <Ruler className="h-4 w-4 text-primary shrink-0" />
+                      <span className="truncate">{rubric.name}</span>
+                    </CardTitle>
+                    {rubric.description && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        {rubric.description}
+                      </p>
+                    )}
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="secondary" className="text-xs">
+                      {rubric.total_points} pts
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {criteriaCount} criteria
+                    </Badge>
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent className="bg-primary-foreground py-[10px]">
-                <div className="space-y-3">
-                  <div className="grid grid-cols-4 gap-4 text-sm font-medium border-b pb-2">
-                    <div>Criteria</div>
-                    <div>Description</div>
-                    <div className="text-right">Weight</div>
-                    <div className="text-right pb-0">Max Points</div>
+
+              {isExpanded && criteriaCount > 0 && (
+                <CardContent className="pt-0 pb-4">
+                  <div className="border rounded-lg overflow-hidden mt-2">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-[1fr_2fr_80px] gap-2 px-4 py-2 bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      <div>Criteria</div>
+                      <div>Description</div>
+                      <div className="text-right">Points</div>
+                    </div>
+                    {/* Criteria Rows */}
+                    {rubric.criteria
+                      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                      .map((criterion, idx) => (
+                        <div
+                          key={criterion.id || idx}
+                          className="grid grid-cols-[1fr_2fr_80px] gap-2 px-4 py-3 text-sm border-t"
+                        >
+                          <div className="font-medium text-foreground">{criterion.name}</div>
+                          <div className="text-muted-foreground text-xs leading-relaxed line-clamp-3">
+                            {criterion.description}
+                          </div>
+                          <div className="text-right font-semibold text-foreground">
+                            {criterion.max_points}
+                          </div>
+                        </div>
+                      ))}
+                    {/* Total Row */}
+                    <div className="grid grid-cols-[1fr_2fr_80px] gap-2 px-4 py-2 border-t bg-muted/30 text-sm font-bold">
+                      <div className="text-foreground">Total</div>
+                      <div></div>
+                      <div className="text-right text-foreground">{rubric.total_points}</div>
+                    </div>
                   </div>
-                  {group.criteria.map(criterion => <div key={criterion.id} className="grid grid-cols-4 gap-4 text-sm py-2 border-b last:border-0">
-                      <div className="font-medium">{criterion.criterion_name}</div>
-                      <div className="text-muted-foreground">{criterion.description}</div>
-                      <div className="text-right">{criterion.weight_percentage}%</div>
-                      <div className="text-right font-semibold pr-[10px]">{criterion.max_points}</div>
-                    </div>)}
-                  <div className="grid grid-cols-4 gap-4 text-sm font-semibold pt-2 border-t">
-                    <div>Total</div>
-                    <div></div>
-                    <div className="text-right">100%</div>
-                    <div className="text-right">{totalPoints}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>;
-      })}
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
       </div>
 
-      {rubricGroups.length === 0 && <Card className="border-dashed">
+      {filtered.length === 0 && (
+        <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground mb-4">No rubrics found</p>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create First Rubric
-            </Button>
+            <Ruler className="h-8 w-8 text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">
+              {searchQuery ? `No rubrics matching "${searchQuery}"` : 'No rubrics found'}
+            </p>
           </CardContent>
-        </Card>}
-    </div>;
+        </Card>
+      )}
+    </div>
+  );
 };
-function getGroupTitle(assignmentTypeId: string): string {
-  const titleMap: Record<string, string> = {
-    '5c84ffe6-ee05-474d-83c2-60f648fd346d': 'Listening Journal Rubric',
-    'acb6cd00-a2b1-44fc-99a6-7ade2b9d0d45': 'Essay Rubric'
-  };
-  return titleMap[assignmentTypeId] || 'Assignment Rubric';
-}
