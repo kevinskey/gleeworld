@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,25 @@ import { CoursePlaylistManager } from '@/components/modules/CoursePlaylistManage
 import { InstructorAttendanceHub } from '@/components/course/InstructorAttendanceHub';
 import { CourseVisibilitySettings } from '@/components/course/CourseVisibilitySettings';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
+import { DiscussionGradingPanel } from '@/components/instructor/DiscussionGradingPanel';
+
+// Wrapper for instructor discussions with grading sub-tab
+const InstructorDiscussionsWrapper: React.FC<{ courseId: string }> = ({ courseId }) => {
+  return (
+    <Tabs defaultValue="forum" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="forum">Discussion Forum</TabsTrigger>
+        <TabsTrigger value="grading">Grade Participation</TabsTrigger>
+      </TabsList>
+      <TabsContent value="forum">
+        <DiscussionsSection courseId={courseId} />
+      </TabsContent>
+      <TabsContent value="grading">
+        <DiscussionGradingPanel courseId={courseId} />
+      </TabsContent>
+    </Tabs>
+  );
+};
 
 // Map DB term codes (e.g., 202601) to human semester labels used in enrollments (e.g., "Spring 2026").
 const termToSemesterLabel = (term: string | null | undefined): string => {
@@ -274,7 +294,9 @@ export const CourseInstructorConsole = () => {
             {activeTab === 'sight-reading' && <SightReadingAssignmentManager />}
             {activeTab === 'tests' && dbCourse && <TestBuilder courseId={dbCourse.id} courseName={course.title} />}
             {activeTab === 'polls' && dbCourse && <CoursePollManager courseId={dbCourse.id} courseName={course.title} />}
-            {activeTab === 'discussions' && dbCourse && <DiscussionsSection courseId={dbCourse.id} />}
+            {activeTab === 'discussions' && dbCourse && (
+              <InstructorDiscussionsWrapper courseId={dbCourse.id} />
+            )}
             {activeTab === 'rubrics' && <RubricManager />}
             {activeTab === 'grades' && dbCourse && (
               <CourseGradesAdmin 
