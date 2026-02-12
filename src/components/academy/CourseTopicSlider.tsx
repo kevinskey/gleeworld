@@ -38,8 +38,8 @@ export const CourseTopicSlider: React.FC<CourseTopicSliderProps> = ({
   }
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ height: 'auto', minHeight: '220px' }}>
-      <div className="aspect-[16/7] w-full">
+    <div className="relative w-full overflow-hidden" style={{ height: 'auto', minHeight: '420px' }}>
+      <div className="aspect-[16/5] w-full">
         <UniversalSlider 
           placementKey={placementKey} 
           className="rounded-none w-full h-full"
