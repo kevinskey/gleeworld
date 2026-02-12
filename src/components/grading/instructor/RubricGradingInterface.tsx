@@ -268,19 +268,19 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
 
             {/* Overall Feedback */}
             <div className="space-y-3">
-              <div className="p-3 rounded-lg border border-green-200 dark:border-green-800 bg-primary-foreground text-black">
-                <p className="text-sm font-medium text-green-900 dark:text-green-100 mb-1">Strengths:</p>
-                <p className="text-sm text-black">{aiGrade.overallStrengths}</p>
+              <div className="p-3 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950">
+                <p className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">Strengths:</p>
+                <p className="text-sm text-green-900 dark:text-green-100">{aiGrade.overallStrengths}</p>
               </div>
               
-              <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-black">
-                <p className="text-sm font-medium mb-1 text-primary-foreground">Areas for Improvement:</p>
-                <p className="text-sm text-white">{aiGrade.areasForImprovement}</p>
+              <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950">
+                <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-1">Areas for Improvement:</p>
+                <p className="text-sm text-amber-900 dark:text-amber-100">{aiGrade.areasForImprovement}</p>
               </div>
 
-              <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-sm font-medium mb-1 text-black">Overall Feedback:</p>
-                <p className="text-sm text-black">{aiGrade.overallFeedback}</p>
+              <div className="p-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950">
+                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">Overall Feedback:</p>
+                <p className="text-sm text-blue-900 dark:text-blue-100">{aiGrade.overallFeedback}</p>
               </div>
             </div>
           </CardContent>
