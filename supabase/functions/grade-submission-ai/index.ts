@@ -31,20 +31,10 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch submission with assignment details and linked rubric
+    // Fetch submission
     const { data: submission, error: subError } = await supabase
       .from('gw_assignment_submissions')
-      .select(`
-        *,
-        gw_course_assignments(
-          id,
-          title,
-          description,
-          points,
-          assignment_type,
-          rubric_id
-        )
-      `)
+      .select('*')
       .eq('id', submissionId)
       .single();
 
@@ -52,6 +42,20 @@ serve(async (req) => {
       console.error('[grade-submission-ai] Error fetching submission:', subError);
       throw subError;
     }
+
+    // Fetch assignment details separately (no FK relationship)
+    let assignmentData: any = null;
+    if (submission.assignment_id) {
+      const { data: aData } = await supabase
+        .from('gw_course_assignments')
+        .select('id, title, description, points, assignment_type, rubric_id')
+        .eq('id', submission.assignment_id)
+        .maybeSingle();
+      assignmentData = aData;
+    }
+
+    // Attach for downstream compatibility
+    submission.gw_course_assignments = assignmentData;
 
     console.log('[grade-submission-ai] Submission found:', {
       id: submission.id,
