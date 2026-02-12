@@ -11,6 +11,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { VideoRecordingSubmission } from '@/components/course/VideoRecordingSubmission';
+import { AIFeedbackRevisionCard } from './AIFeedbackRevisionCard';
 
 interface AssignmentData {
   id: string;
@@ -186,8 +187,17 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
           <CardTitle className="flex items-center justify-between">
             <span>Assignment Details</span>
             {submission && (
-              <Badge variant={submission.status === 'graded' ? 'default' : 'secondary'}>
-                {submission.status}
+              <Badge 
+                variant={submission.status === 'graded' ? 'default' : 'secondary'}
+                className={
+                  submission.status === 'ai_graded' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                  submission.status === 'revision_submitted' ? 'bg-green-100 text-green-800 border-green-300' :
+                  undefined
+                }
+              >
+                {submission.status === 'ai_graded' ? 'AI Graded — Revision Available' :
+                 submission.status === 'revision_submitted' ? 'Revision Submitted' :
+                 submission.status}
               </Badge>
             )}
           </CardTitle>
@@ -223,9 +233,11 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold">Your Notes (optional):</h3>
-                <Button size="sm" variant="outline" onClick={() => setIsEditing(!isEditing)}>
-                  {isEditing ? 'Cancel' : 'Edit'}
-                </Button>
+                {submission.status !== 'ai_graded' && submission.status !== 'revision_submitted' && (
+                  <Button size="sm" variant="outline" onClick={() => setIsEditing(!isEditing)}>
+                    {isEditing ? 'Cancel' : 'Edit'}
+                  </Button>
+                )}
               </div>
               
               {submission.recording_url && (
@@ -288,6 +300,17 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
           )}
         </CardContent>
       </Card>
+
+      {/* AI Feedback & Revision */}
+      {submission?.ai_feedback && (
+        <AIFeedbackRevisionCard
+          submission={submission}
+          assignmentId={assignmentId}
+          userId={user?.id || ''}
+          submissionTable={submissionTable as 'gw_assignment_submissions' | 'gw_course_submissions'}
+          isVideoType={isVideoAssignmentType}
+        />
+      )}
     </div>
   );
 };

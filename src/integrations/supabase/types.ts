@@ -6765,6 +6765,8 @@ export type Database = {
       }
       gw_assignment_submissions: {
         Row: {
+          ai_feedback: string | null
+          ai_score: number | null
           assignment_id: string
           created_at: string
           feedback: string | null
@@ -6776,6 +6778,11 @@ export type Database = {
           pitch_accuracy: number | null
           recording_id: string | null
           recording_url: string | null
+          revised_at: string | null
+          revision_content: string | null
+          revision_count: number
+          revision_notes: string | null
+          revision_recording_url: string | null
           rhythm_accuracy: number | null
           score_value: number | null
           status: Database["public"]["Enums"]["assignment_status"]
@@ -6784,6 +6791,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_feedback?: string | null
+          ai_score?: number | null
           assignment_id: string
           created_at?: string
           feedback?: string | null
@@ -6795,6 +6804,11 @@ export type Database = {
           pitch_accuracy?: number | null
           recording_id?: string | null
           recording_url?: string | null
+          revised_at?: string | null
+          revision_content?: string | null
+          revision_count?: number
+          revision_notes?: string | null
+          revision_recording_url?: string | null
           rhythm_accuracy?: number | null
           score_value?: number | null
           status?: Database["public"]["Enums"]["assignment_status"]
@@ -6803,6 +6817,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_feedback?: string | null
+          ai_score?: number | null
           assignment_id?: string
           created_at?: string
           feedback?: string | null
@@ -6814,6 +6830,11 @@ export type Database = {
           pitch_accuracy?: number | null
           recording_id?: string | null
           recording_url?: string | null
+          revised_at?: string | null
+          revision_content?: string | null
+          revision_count?: number
+          revision_notes?: string | null
+          revision_recording_url?: string | null
           rhythm_accuracy?: number | null
           score_value?: number | null
           status?: Database["public"]["Enums"]["assignment_status"]
@@ -9587,7 +9608,11 @@ export type Database = {
           graded_by: string | null
           id: string
           is_late: boolean | null
+          original_content: string | null
           points_earned: number | null
+          revised_at: string | null
+          revision_content: string | null
+          revision_count: number
           status: string | null
           student_id: string | null
           submitted_at: string | null
@@ -9608,7 +9633,11 @@ export type Database = {
           graded_by?: string | null
           id?: string
           is_late?: boolean | null
+          original_content?: string | null
           points_earned?: number | null
+          revised_at?: string | null
+          revision_content?: string | null
+          revision_count?: number
           status?: string | null
           student_id?: string | null
           submitted_at?: string | null
@@ -9629,7 +9658,11 @@ export type Database = {
           graded_by?: string | null
           id?: string
           is_late?: boolean | null
+          original_content?: string | null
           points_earned?: number | null
+          revised_at?: string | null
+          revision_content?: string | null
+          revision_count?: number
           status?: string | null
           student_id?: string | null
           submitted_at?: string | null
@@ -30463,6 +30496,8 @@ export type Database = {
         | "submitted"
         | "graded"
         | "overdue"
+        | "ai_graded"
+        | "revision_submitted"
       assignment_type:
         | "sight_reading"
         | "practice_exercise"
@@ -30692,6 +30727,8 @@ export const Constants = {
         "submitted",
         "graded",
         "overdue",
+        "ai_graded",
+        "revision_submitted",
       ],
       assignment_type: [
         "sight_reading",
