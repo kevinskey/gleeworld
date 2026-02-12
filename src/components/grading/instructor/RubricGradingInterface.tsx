@@ -155,11 +155,11 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2 text-foreground">
+              <CardTitle className="flex items-center gap-2" style={{ color: '#0f172a' }}>
                 <Sparkles className="h-5 w-5 text-primary" />
                 Rubric-Based Grading
               </CardTitle>
-              <CardDescription>
+              <CardDescription style={{ color: '#334155' }}>
                 Get instant feedback and suggested scores based on rubric criteria
               </CardDescription>
             </div>
@@ -211,23 +211,23 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
               </Alert>
           }
 
-            {/* AI Grade Summary */}
-            <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+      {/* AI Grade Summary */}
+            <div className="flex items-center gap-4 p-4 bg-muted rounded-lg" style={{ color: '#0f172a' }}>
               <CheckCircle className="h-8 w-8 text-green-500" />
               <div className="flex-1">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-foreground">{aiGrade.letterGrade}</span>
-                  <span className="text-muted-foreground">
+                  <span className="text-3xl font-bold" style={{ color: '#0f172a' }}>{aiGrade.letterGrade}</span>
+                  <span style={{ color: '#334155' }}>
                     {aiGrade.totalScore}/{aiGrade.maxPoints} ({aiGrade.percentage}%)
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground">Suggested rubric grade</p>
+                <p className="text-sm" style={{ color: '#334155' }}>Suggested rubric grade</p>
               </div>
             </div>
 
             {/* Criteria Breakdown */}
             <div className="space-y-3">
-              <h4 className="font-semibold text-foreground">Criteria Scores</h4>
+              <h4 className="font-semibold" style={{ color: '#0f172a' }}>Criteria Scores</h4>
               {aiGrade.criteriaScores.map((criterion, idx) => {
               const hasOverride = manualScores[criterion.criterion_name] !== undefined;
               const displayScore = hasOverride ?
@@ -239,8 +239,8 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <CardTitle className="text-lg text-foreground">{criterion.criterion_name}</CardTitle>
-                          <CardDescription className="mt-1">
+                          <CardTitle className="text-lg" style={{ color: '#0f172a' }}>{criterion.criterion_name}</CardTitle>
+                          <CardDescription className="mt-1" style={{ color: '#334155' }}>
                             AI Score: {criterion.points_earned}/{criterion.max_points}
                           </CardDescription>
                         </div>
@@ -256,19 +256,19 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
                           )}
                           className="w-20 text-center" />
 
-                          <span className="text-muted-foreground">/ {criterion.max_points}</span>
+                          <span style={{ color: '#334155' }}>/ {criterion.max_points}</span>
                           {hasOverride && <Badge variant="secondary">Override</Badge>}
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Evidence:</p>
-                        <p className="text-sm mt-1 text-foreground">{criterion.evidence}</p>
+                        <p className="text-sm font-medium" style={{ color: '#64748b' }}>Evidence:</p>
+                        <p className="text-sm mt-1" style={{ color: '#0f172a' }}>{criterion.evidence}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Feedback:</p>
-                        <p className="text-sm mt-1 text-foreground">{criterion.feedback}</p>
+                        <p className="text-sm font-medium" style={{ color: '#64748b' }}>Feedback:</p>
+                        <p className="text-sm mt-1" style={{ color: '#0f172a' }}>{criterion.feedback}</p>
                       </div>
                     </CardContent>
                   </Card>);
@@ -300,24 +300,24 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
       {/* Final Grade Submission */}
       <Card className="bg-white dark:bg-card border shadow-sm">
         <CardHeader>
-          <CardTitle className="text-foreground">Finalize Grade</CardTitle>
-          <CardDescription>
+          <CardTitle style={{ color: '#0f172a' }}>Finalize Grade</CardTitle>
+          <CardDescription style={{ color: '#334155' }}>
             Review suggestions, make adjustments, and submit the final grade
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label className="text-foreground">Final Score</Label>
+            <Label style={{ color: '#0f172a' }}>Final Score</Label>
             <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-4xl font-bold text-foreground">{calculateFinalScore()}</span>
-              <span className="text-xl text-muted-foreground">
+              <span className="text-4xl font-bold" style={{ color: '#0f172a' }}>{calculateFinalScore()}</span>
+              <span className="text-xl" style={{ color: '#334155' }}>
                 / {aiGrade?.maxPoints || 100}
               </span>
             </div>
           </div>
 
           <div>
-            <Label htmlFor="instructor-feedback" className="text-foreground">Additional Feedback (Optional)</Label>
+            <Label htmlFor="instructor-feedback" style={{ color: '#0f172a' }}>Additional Feedback (Optional)</Label>
             <Textarea
               id="instructor-feedback"
               value={instructorFeedback}
