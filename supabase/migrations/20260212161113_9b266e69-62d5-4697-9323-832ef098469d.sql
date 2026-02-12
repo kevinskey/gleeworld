@@ -1,0 +1,1 @@
+UPDATE gw_universal_rubrics SET name = '10 Minute Glee World Radio Segment Rubric' WHERE id = 'b2000000-0000-0000-0000-000000000001';
