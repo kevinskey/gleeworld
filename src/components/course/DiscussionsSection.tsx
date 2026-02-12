@@ -44,12 +44,12 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
   const { data: discussions, isLoading } = useQuery({
     queryKey: ['course-discussions', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('course_discussions')
-        .select('*')
-        .eq('course_id', courseId)
-        .order('due_date', { ascending: true, nullsFirst: false });
-      
+      const { data, error } = await supabase.
+      from('course_discussions').
+      select('*').
+      eq('course_id', courseId).
+      order('due_date', { ascending: true, nullsFirst: false });
+
       if (error) throw error;
       return data as Discussion[];
     }
@@ -62,7 +62,7 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
   // Sort discussions: current week first, then by due_date
   const sortedDiscussions = useMemo(() => {
     if (!discussions) return [];
-    
+
     // Extract week number from title (e.g., "Week 5: ..." → 5)
     const getWeek = (title: string): number | null => {
       const match = title.match(/^Week\s+(\d+)/i);
@@ -74,11 +74,11 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
       const weekB = getWeek(b.title);
       const isCurrentA = weekA === currentWeekNumber;
       const isCurrentB = weekB === currentWeekNumber;
-      
+
       // Current week pinned to top
       if (isCurrentA && !isCurrentB) return -1;
       if (!isCurrentA && isCurrentB) return 1;
-      
+
       // Then by due_date ascending
       const dateA = a.due_date ? new Date(a.due_date).getTime() : Infinity;
       const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
@@ -89,7 +89,7 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
   // Auto-select discussion when discussionId is provided
   useEffect(() => {
     if (discussionId && discussions && discussions.length > 0) {
-      const targetDiscussion = discussions.find(d => d.id === discussionId);
+      const targetDiscussion = discussions.find((d) => d.id === discussionId);
       if (targetDiscussion) {
         setSelectedDiscussion(targetDiscussion);
       }
@@ -98,34 +98,34 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
 
   const getDueDateBadge = (dueDate: string | null) => {
     if (!dueDate) return null;
-    
+
     const due = new Date(dueDate);
     const hoursUntilDue = differenceInHours(due, new Date());
-    
+
     if (isPast(due)) {
       return (
         <Badge variant="destructive" className="flex items-center gap-1">
           <AlertCircle className="h-3 w-3" />
           Past Due
-        </Badge>
-      );
+        </Badge>);
+
     }
-    
+
     if (hoursUntilDue <= 24) {
       return (
         <Badge variant="default" className="flex items-center gap-1 bg-orange-500">
           <Calendar className="h-3 w-3" />
           Due Soon
-        </Badge>
-      );
+        </Badge>);
+
     }
-    
+
     return (
       <Badge variant="outline" className="flex items-center gap-1">
         <Calendar className="h-3 w-3" />
         Due {format(due, 'MMM d')}
-      </Badge>
-    );
+      </Badge>);
+
   };
 
   const handleEditClick = (e: React.MouseEvent, discussion: Discussion) => {
@@ -146,9 +146,9 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
       <DiscussionThread
         discussion={selectedDiscussion}
         onBack={() => setSelectedDiscussion(null)}
-        courseId={courseId}
-      />
-    );
+        courseId={courseId} />);
+
+
   }
 
   if (isLoading) {
@@ -159,31 +159,31 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Discussion Forum</h2>
+          <h2 className="text-2xl font-bold text-black">Discussion Forum</h2>
           <p className="text-muted-foreground text-sm">
             Engage with your classmates and instructor
           </p>
         </div>
-        {canCreateDiscussion && (
-          <Button onClick={() => setCreateDialogOpen(true)}>
+        {canCreateDiscussion &&
+        <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New Discussion
           </Button>
-        )}
+        }
       </div>
 
       <div className="space-y-3">
-        {sortedDiscussions.length > 0 ? (
-          sortedDiscussions.map((discussion) => {
-            const weekMatch = discussion.title.match(/^Week\s+(\d+)/i);
-            const isCurrentWeek = weekMatch ? parseInt(weekMatch[1], 10) === currentWeekNumber : false;
-            
-            return (
-            <Card 
-              key={discussion.id} 
+        {sortedDiscussions.length > 0 ?
+        sortedDiscussions.map((discussion) => {
+          const weekMatch = discussion.title.match(/^Week\s+(\d+)/i);
+          const isCurrentWeek = weekMatch ? parseInt(weekMatch[1], 10) === currentWeekNumber : false;
+
+          return (
+            <Card
+              key={discussion.id}
               className={`hover:shadow-md transition-shadow cursor-pointer ${isCurrentWeek ? 'ring-2 ring-primary border-primary' : ''}`}
-              onClick={() => setSelectedDiscussion(discussion)}
-            >
+              onClick={() => setSelectedDiscussion(discussion)}>
+
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3 flex-1">
@@ -191,41 +191,41 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <span className="truncate">{discussion.title}</span>
-                        {isCurrentWeek && (
-                          <Badge className="bg-primary text-primary-foreground flex items-center gap-1 flex-shrink-0">
+                        {isCurrentWeek &&
+                        <Badge className="bg-primary text-primary-foreground flex items-center gap-1 flex-shrink-0">
                             <Star className="h-3 w-3" />
                             This Week
                           </Badge>
-                        )}
-                        {discussion.is_locked && (
-                          <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        )}
+                        }
+                        {discussion.is_locked &&
+                        <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        }
                       </CardTitle>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <p className="text-sm text-muted-foreground">
                           {format(new Date(discussion.created_at), 'MMM d, yyyy h:mm a')}
                         </p>
-                        {discussion.is_graded && (
-                          <Badge variant="secondary" className="flex items-center gap-1">
+                        {discussion.is_graded &&
+                        <Badge variant="secondary" className="flex items-center gap-1">
                             <Award className="h-3 w-3" />
                             {discussion.max_points} pts
                           </Badge>
-                        )}
+                        }
                         {getDueDateBadge(discussion.due_date)}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {canCreateDiscussion && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={(e) => handleEditClick(e, discussion)}
-                      >
+                    {canCreateDiscussion &&
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => handleEditClick(e, discussion)}>
+
                         <Edit className="h-4 w-4" />
                       </Button>
-                    )}
+                    }
                     <Badge variant="secondary" className="flex items-center gap-1">
                       <MessageCircle className="h-3 w-3" />
                       {discussion.reply_count || 0}
@@ -236,36 +236,36 @@ export const DiscussionsSection: React.FC<DiscussionsSectionProps> = ({ courseId
               <CardContent>
                 <p className="text-foreground/80 line-clamp-2">{discussion.content}</p>
               </CardContent>
-            </Card>
-            );
-          })
-        ) : (
-          <Card>
+            </Card>);
+
+        }) :
+
+        <Card>
             <CardContent className="py-12 text-center">
               <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="font-medium text-lg mb-2">No discussions yet</h3>
               <p className="text-muted-foreground mb-4">
-                {canCreateDiscussion 
-                  ? "Start a conversation with your students!"
-                  : "Check back later for discussions from your instructor."}
+                {canCreateDiscussion ?
+              "Start a conversation with your students!" :
+              "Check back later for discussions from your instructor."}
               </p>
-              {canCreateDiscussion && (
-                <Button onClick={() => setCreateDialogOpen(true)}>
+              {canCreateDiscussion &&
+            <Button onClick={() => setCreateDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Start First Discussion
                 </Button>
-              )}
+            }
             </CardContent>
           </Card>
-        )}
+        }
       </div>
 
       <CreateDiscussionDialog
         open={createDialogOpen}
         onOpenChange={handleDialogClose}
         courseId={courseId}
-        editingDiscussion={editingDiscussion}
-      />
-    </div>
-  );
+        editingDiscussion={editingDiscussion} />
+
+    </div>);
+
 };
