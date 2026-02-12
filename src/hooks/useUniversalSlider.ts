@@ -166,6 +166,7 @@ export function useUpdateSlide() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['universal-sliders-admin'] });
+      queryClient.invalidateQueries({ queryKey: ['universal-slider'] });
     },
   });
 }
