@@ -328,9 +328,11 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                       <Label className="text-sm font-medium">Slide Type</Label>
                       <Select
                         value={slide.slide_type}
-                        onValueChange={(value: 'image' | 'youtube' | 'video') => 
-                          updateSlide.mutate({ id: slide.id, slide_type: value })
-                        }
+                        onValueChange={(value: 'image' | 'youtube' | 'video') => {
+                          updateSlide.mutate({ id: slide.id, slide_type: value }, {
+                            onSuccess: () => refetch()
+                          });
+                        }}
                       >
                         <SelectTrigger className="mt-1 w-full">
                           <SelectValue placeholder="Select slide type" />
