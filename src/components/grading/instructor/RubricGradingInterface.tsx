@@ -278,19 +278,19 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
 
             {/* Overall Feedback */}
             <div className="space-y-3">
-              <div className="p-3 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950">
-                <p className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">Strengths:</p>
-                <p className="text-sm text-green-900 dark:text-green-100">{aiGrade.overallStrengths}</p>
+              <div className="p-3 rounded-lg border border-green-200 bg-green-50" style={{ backgroundColor: '#f0fdf4' }}>
+                <p className="text-sm font-semibold mb-1" style={{ color: '#14532d' }}>Strengths:</p>
+                <p className="text-sm" style={{ color: '#166534' }}>{aiGrade.overallStrengths}</p>
               </div>
               
-              <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950">
-                <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-1">Areas for Improvement:</p>
-                <p className="text-sm text-amber-900 dark:text-amber-100">{aiGrade.areasForImprovement}</p>
+              <div className="p-3 rounded-lg border border-amber-200 bg-amber-50" style={{ backgroundColor: '#fffbeb' }}>
+                <p className="text-sm font-semibold mb-1" style={{ color: '#78350f' }}>Areas for Improvement:</p>
+                <p className="text-sm" style={{ color: '#92400e' }}>{aiGrade.areasForImprovement}</p>
               </div>
 
-              <div className="p-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950">
-                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">Overall Feedback:</p>
-                <p className="text-sm text-blue-900 dark:text-blue-100">{aiGrade.overallFeedback}</p>
+              <div className="p-3 rounded-lg border border-blue-200 bg-blue-50" style={{ backgroundColor: '#eff6ff' }}>
+                <p className="text-sm font-semibold mb-1" style={{ color: '#1e3a5f' }}>Overall Feedback:</p>
+                <p className="text-sm" style={{ color: '#1e40af' }}>{aiGrade.overallFeedback}</p>
               </div>
             </div>
           </CardContent>
