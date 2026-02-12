@@ -1,25 +1,36 @@
 
-# White Background Behind Academy, Shop, and YouTube Sections
 
-## What Will Change
-The Glee Academy badge slider, Shop section, and YouTube Channel slider on `/dashboard` will each be wrapped in a white background container with consistent padding, so white space is visible around and between them.
+## Create Blues Album Review Rubric
 
-## Steps
+### What will happen
 
-1. **Wrap the Glee Academy section** (header button + badge slider, lines 346-357 in `UnifiedDashboard.tsx`) in a `div` with `bg-white` (or `bg-background`) and some padding (e.g., `p-4` or `px-4 py-2`) so white shows around the navy slider.
+A new custom rubric will be created specifically for the "Review a Blues Album" assignment, replacing the current generic Writing Assignment Rubric. The rubric will have 5 categories totaling 100 points, matching your specifications exactly.
 
-2. **Wrap the DashboardStoreSection** (line 365) in a similar `bg-white` container with padding. The store section already uses `bg-background` internally, but adding an outer white wrapper ensures consistency and visible white margins.
+### Rubric Structure
 
-3. **Wrap the YouTubeChannelSlider** (line 368) in a `bg-white` container with padding so white is visible around the dark gradient video slider.
+| Category | Max Points |
+|----------|-----------|
+| Musical Listening & Description | 40 |
+| Use of Musical Examples | 20 |
+| Organization & Structure | 15 |
+| Cultural Context | 15 |
+| Technical Quality & Timing | 10 |
+| **Total** | **100** |
 
-## Technical Details
+Each criterion will include the full A/B/C/D-F grade-level descriptions you provided, stored in the criterion description field so the grading system can reference them.
 
-All changes are in `src/components/dashboard/UnifiedDashboard.tsx`. Each of the three sections will get a parent `div` like:
+### Technical Steps
 
-```tsx
-<div className="bg-white px-4 py-2">
-  {/* existing component */}
-</div>
-```
+1. **Insert new rubric** into `gw_universal_rubrics` with:
+   - Name: "Blues Album Review Rubric"
+   - Course: MUS 240
+   - Total points: 100
+   - 5 criteria with detailed descriptions including grade-level expectations
+   - Visibility enabled before submission and after grading
 
-This keeps the internal dark-themed styling of each component intact while ensuring a clean white background is visible behind and between them.
+2. **Update the assignment** (`ebc6c16b-309c-4054-aca3-fde186db3bf4`) to point to the new rubric ID
+
+3. The bonus (+5 creative framing) will be noted in the rubric description since the rubric system uses fixed max points per criterion
+
+No code changes are needed -- this is purely a database operation using the existing rubric infrastructure.
+
