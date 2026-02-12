@@ -186,6 +186,7 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
       {/* AI Grading Interface */}
       <RubricGradingInterface
         submissionId={submissionId}
+        assignmentId={submission?.assignment_id}
         assignmentTitle={submission?.gw_course_assignments?.title || 'Assignment'}
         studentName={submission?.gw_profiles?.full_name || submission?.gw_profiles?.email || 'Student'}
         content={submission?.content || submission?.notes || ''}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +47,7 @@ interface AIGrade {
 
 interface RubricGradingInterfaceProps {
   submissionId: string;
+  assignmentId?: string;
   assignmentTitle: string;
   studentName: string;
   content: string;
@@ -55,12 +57,14 @@ interface RubricGradingInterfaceProps {
 
 export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
   submissionId,
+  assignmentId,
   assignmentTitle,
   studentName,
   content,
   existingGrade,
   onGradeUpdate
 }) => {
+  const navigate = useNavigate();
   const [isGrading, setIsGrading] = useState(false);
   const [aiGrade, setAiGrade] = useState<AIGrade | null>(
     existingGrade?.ai_feedback ? JSON.parse(existingGrade.ai_feedback) : null
@@ -132,6 +136,12 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
 
       toast.success('Grade submitted successfully!');
       onGradeUpdate?.();
+      // Navigate back to assignment submissions list
+      if (assignmentId) {
+        setTimeout(() => {
+          navigate(`/grading/instructor/assignment/${assignmentId}/submissions`);
+        }, 500);
+      }
     } catch (error) {
       console.error('Submit grade error:', error);
       toast.error('Failed to submit grade');
