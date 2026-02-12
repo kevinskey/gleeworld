@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Filter, Search, FileCheck, Clock, CheckCircle, BookOpen, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, ArrowUpDown, ArrowUp, ArrowDown, Filter, Search, FileCheck, Clock, CheckCircle, BookOpen, Eye, EyeOff, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -76,6 +77,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
   courseId,
   courseName
 }) => {
+  const navigate = useNavigate();
   const NO_RUBRIC_VALUE = '__no_rubric__';
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -651,6 +653,21 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 </div>
               </div>
               <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9" 
+                        onClick={() => navigate(`/grading/instructor/assignment/${assignment.id}/submissions`)}
+                      >
+                        <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>View & Grade Submissions</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
