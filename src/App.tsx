@@ -357,7 +357,7 @@ const App = () => {
                   <Toaster />
                   <Sonner />
                   
-                  <GleeAssistant />
+                  {/* <GleeAssistant /> */}
                   <MessengerModal />
                   <DesignSystemEnforcer />
                   <GlobalMiniPlayer />
