@@ -4,7 +4,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -23,24 +23,31 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Check if this is a MUS240 journal assignment
-    const { data: assignment } = await supabase
+    // Check assignment type from gw_course_assignments first
+    const { data: courseAssignment } = await supabase
+      .from('gw_course_assignments')
+      .select('id, title, assignment_type')
+      .eq('id', assignmentId)
+      .maybeSingle();
+
+    // Also check gw_assignments for legacy MUS240 journals
+    const { data: gwAssignment } = await supabase
       .from('gw_assignments')
       .select('legacy_source, legacy_id, assignment_type, title')
       .eq('id', assignmentId)
-      .single();
+      .maybeSingle();
 
-    const isMus240Journal = assignment?.legacy_source === 'mus240_assignments' || assignment?.assignment_type === 'listening_journal';
+    const isMus240Journal = gwAssignment?.legacy_source === 'mus240_assignments' || gwAssignment?.assignment_type === 'listening_journal';
     
     let submissions: any[] = [];
     let fetchError: any = null;
+    let submissionTable = '';
 
     if (isMus240Journal) {
       // Get legacy ID for MUS240 journals
-      let legacyIdToUse = assignment?.legacy_id;
-      if (assignment?.legacy_source !== 'mus240_assignments') {
-        // Derive from title like "Listening Journal 1" -> "lj1"
-        const match = (assignment?.title || '').match(/Listening\s*Journal\s*(\d+)/i);
+      let legacyIdToUse = gwAssignment?.legacy_id;
+      if (gwAssignment?.legacy_source !== 'mus240_assignments') {
+        const match = (gwAssignment?.title || '').match(/Listening\s*Journal\s*(\d+)/i);
         if (match?.[1]) {
           legacyIdToUse = `lj${match[1]}`;
         }
@@ -54,19 +61,49 @@ serve(async (req) => {
       
       submissions = data || [];
       fetchError = error;
+      submissionTable = 'mus240_journal_entries';
     } else {
-      // Standard assignment submissions
-      const { data, error } = await supabase
-        .from('assignment_submissions')
+      // Try gw_course_submissions first (essay submissions)
+      const { data: courseSubmissions, error: courseError } = await supabase
+        .from('gw_course_submissions')
         .select('id, student_id')
         .eq('assignment_id', assignmentId)
-        .in('status', ['submitted', 'ai_graded', 'flagged']);
+        .in('status', ['submitted', 'ai_graded', 'flagged', 'pending']);
       
-      submissions = data || [];
-      fetchError = error;
+      if (courseSubmissions && courseSubmissions.length > 0) {
+        submissions = courseSubmissions;
+        fetchError = courseError;
+        submissionTable = 'gw_course_submissions';
+      } else {
+        // Try gw_assignment_submissions (recording/video submissions)
+        const { data: assignmentSubmissions, error: assignmentError } = await supabase
+          .from('gw_assignment_submissions')
+          .select('id, user_id')
+          .eq('assignment_id', assignmentId)
+          .in('status', ['submitted', 'ai_graded', 'flagged', 'pending']);
+        
+        submissions = assignmentSubmissions || [];
+        fetchError = assignmentError;
+        submissionTable = 'gw_assignment_submissions';
+
+        // If still empty, also check the legacy assignment_submissions table
+        if (submissions.length === 0) {
+          const { data: legacySubmissions, error: legacyError } = await supabase
+            .from('assignment_submissions')
+            .select('id, student_id')
+            .eq('assignment_id', assignmentId)
+            .in('status', ['submitted', 'ai_graded', 'flagged']);
+          
+          submissions = legacySubmissions || [];
+          fetchError = legacyError;
+          submissionTable = 'assignment_submissions';
+        }
+      }
     }
 
     if (fetchError) throw fetchError;
+
+    console.log(`Found ${submissions.length} submissions in ${submissionTable} for assignment ${assignmentId}`);
 
     if (!submissions || submissions.length === 0) {
       return new Response(
@@ -83,8 +120,8 @@ serve(async (req) => {
       errors: [] as string[]
     };
 
-    // Process submissions in parallel batches to speed up grading
-    const BATCH_SIZE = 5; // Process 5 submissions at a time
+    // Process submissions in parallel batches
+    const BATCH_SIZE = 5;
     
     for (let i = 0; i < submissions.length; i += BATCH_SIZE) {
       const batch = submissions.slice(i, i + BATCH_SIZE);
@@ -93,7 +130,6 @@ serve(async (req) => {
       
       console.log(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} submissions)`);
       
-      // Process all submissions in this batch in parallel
       const batchResults = await Promise.allSettled(
         batch.map(async (submission) => {
           try {
@@ -101,7 +137,6 @@ serve(async (req) => {
             let gradeError: any;
 
             if (isMus240Journal) {
-              // Call the MUS240 journal grading function
               const result = await supabase.functions.invoke(
                 'grade-mus240-journal',
                 { body: { journalId: submission.id } }
@@ -109,10 +144,10 @@ serve(async (req) => {
               gradeData = result.data;
               gradeError = result.error;
             } else {
-              // Call the standard assignment grading function
+              // Pass submissionTable so the grading function knows where to look
               const result = await supabase.functions.invoke(
                 'grade-submission-ai',
-                { body: { submissionId: submission.id } }
+                { body: { submissionId: submission.id, submissionTable } }
               );
               gradeData = result.data;
               gradeError = result.error;
@@ -135,24 +170,23 @@ serve(async (req) => {
         })
       );
 
-      // Process results from this batch
       batchResults.forEach((result, index) => {
         const submission = batch[index];
         
         if (result.status === 'fulfilled' && result.value.success) {
           results.success++;
-          console.log(`✓ Successfully graded ${isMus240Journal ? 'journal' : 'submission'} ${submission.id}`);
+          console.log(`✓ Successfully graded submission ${submission.id}`);
         } else {
           results.failed++;
           const errorMsg = result.status === 'fulfilled' 
             ? result.value.error 
             : result.reason?.message || 'Unknown error';
-          results.errors.push(`${isMus240Journal ? 'Journal' : 'Submission'} ${submission.id}: ${errorMsg}`);
+          results.errors.push(`Submission ${submission.id}: ${errorMsg}`);
           console.error(`✗ Failed to grade ${submission.id}:`, errorMsg);
         }
       });
 
-      // Small delay between batches to avoid overwhelming the system
+      // Small delay between batches
       if (i + BATCH_SIZE < submissions.length) {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
