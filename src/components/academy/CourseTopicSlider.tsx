@@ -43,7 +43,7 @@ export const CourseTopicSlider: React.FC<CourseTopicSliderProps> = ({
         <UniversalSlider 
           placementKey={placementKey} 
           className="rounded-none w-full h-full"
-          objectFit="contain"
+          objectFit="cover"
           enableLightbox
           autoPlay={false}
           showNavigation={slider && slider.slides.length > 1}
