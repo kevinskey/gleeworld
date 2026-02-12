@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, User, Calendar } from 'lucide-react';
+import { ArrowLeft, User, Calendar, RefreshCw } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { RubricGradingInterface } from './RubricGradingInterface';
 import { format } from 'date-fns';
@@ -129,6 +129,21 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
               </span>
             )}
           </div>
+
+          {/* Revision Notice */}
+          {submission?.revision_count > 0 && (
+            <div className="p-3 rounded-lg border border-blue-200 bg-blue-50">
+              <div className="flex items-center gap-2 mb-1">
+                <RefreshCw className="h-4 w-4 text-blue-700" />
+                <p className="text-sm font-semibold text-blue-900">Student Revised This Submission</p>
+              </div>
+              <p className="text-sm text-blue-800">
+                Revised on {submission.revised_at ? new Date(submission.revised_at).toLocaleString() : 'unknown'}.
+                The content below reflects the student's revised work.
+              </p>
+            </div>
+          )}
+
           <div className="p-4 bg-muted rounded-lg">
             {submission?.content || submission?.notes || submission?.recording_url ? (
               <div className="space-y-2">
@@ -153,6 +168,18 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
               <p className="text-muted-foreground">No content submitted</p>
             )}
           </div>
+
+          {/* Show original content if revised */}
+          {submission?.original_content && submission?.revision_count > 0 && (
+            <details className="mt-2">
+              <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
+                View Original Submission
+              </summary>
+              <div className="p-4 bg-muted/50 rounded-lg mt-2 border border-dashed">
+                <pre className="whitespace-pre-wrap font-sans text-sm">{submission.original_content}</pre>
+              </div>
+            </details>
+          )}
         </CardContent>
       </Card>
 
