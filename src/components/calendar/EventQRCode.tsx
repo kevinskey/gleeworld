@@ -19,6 +19,7 @@ interface EventQRCodeProps {
 export const EventQRCode = ({ eventId, eventTitle }: EventQRCodeProps) => {
   const [open, setOpen] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [encodedUrl, setEncodedUrl] = useState('');
   const [pinCode, setPinCode] = useState('');
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(0);
@@ -84,6 +85,9 @@ export const EventQRCode = ({ eventId, eventTitle }: EventQRCodeProps) => {
         ? 'https://gleeworld.org' 
         : window.location.origin;
       const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(tokenValue)}`;
+      
+      console.log('QR attendance URL:', attendanceUrl);
+      setEncodedUrl(attendanceUrl);
       
       const qrDataUrl = await QRCode.toDataURL(attendanceUrl, {
         width: 400,
@@ -376,6 +380,11 @@ export const EventQRCode = ({ eventId, eventTitle }: EventQRCodeProps) => {
           <p className="text-xs text-muted-foreground text-center">
             This QR code links to the secure attendance system with PIN backup.
           </p>
+          {encodedUrl && (
+            <p className="text-[10px] text-muted-foreground text-center break-all px-2 max-h-12 overflow-auto">
+              Debug URL: {encodedUrl.substring(0, 80)}...
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
