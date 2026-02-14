@@ -5,3 +5,4 @@ export { CommandCenterGrid } from './CommandCenterGrid';
 export { CommandCenterEventCard } from './CommandCenterEventCard';
 export { DailyRunSheet } from './DailyRunSheet';
 export { AgendaView } from './AgendaView';
+export { EventAttendanceDialog } from './EventAttendanceDialog';
