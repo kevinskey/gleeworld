@@ -1,9 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, startOfWeek, endOfWeek } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import { QrCode } from "lucide-react";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
 import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
+import { EventQRCode } from "../EventQRCode";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const isSameDayET = (date1: Date, date2: Date): boolean => {
   const tz = 'America/New_York';
@@ -31,6 +35,26 @@ export const MobileMonthGrid = ({
   getCategoryForEvent,
   categoryConfigs,
 }: MobileMonthGridProps) => {
+  const { user } = useAuth();
+  const [canManageAttendance, setCanManageAttendance] = useState(false);
+
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin, is_exec_board, role')
+        .eq('user_id', user.id)
+        .single();
+      if (data) {
+        setCanManageAttendance(
+          data.is_admin || data.is_super_admin || data.is_exec_board ||
+          data.role === 'admin' || data.role === 'super-admin'
+        );
+      }
+    };
+    checkPermissions();
+  }, [user]);
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
@@ -136,10 +160,10 @@ export const MobileMonthGrid = ({
               return (
                 <div
                   key={event.id}
-                  className="flex items-start gap-2.5 p-2.5 rounded-lg bg-white border border-slate-100 shadow-sm"
+                  className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-slate-100 shadow-sm"
                 >
                   <div
-                    className="w-1 h-full min-h-[36px] rounded-full flex-shrink-0 mt-0.5"
+                    className="w-1 self-stretch min-h-[36px] rounded-full flex-shrink-0"
                     style={{ backgroundColor: config?.color || '#708090' }}
                   />
                   <div className="flex-1 min-w-0">
@@ -151,6 +175,11 @@ export const MobileMonthGrid = ({
                       {event.location && ` • ${event.location}`}
                     </p>
                   </div>
+                  {canManageAttendance && (
+                    <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <EventQRCode eventId={event.id} eventTitle={event.title} />
+                    </div>
+                  )}
                 </div>
               );
             })
