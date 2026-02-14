@@ -61,7 +61,20 @@ export const EventQRCode = ({ eventId, eventTitle }: EventQRCodeProps) => {
 
       if (error) throw error;
 
-      const result = data as { qr_token: string; pin_code: string; qr_id: string; expires_at: string };
+      console.log('generate_rotating_qr_code raw response:', JSON.stringify(data));
+      
+      // The RPC returns a JSON object with qr_token, pin_code, qr_id, expires_at
+      const result = (typeof data === 'string' ? JSON.parse(data) : data) as { qr_token: string; pin_code: string; qr_id: string; expires_at: string; token?: string };
+      
+      // Support both field names for safety
+      const tokenValue = result.qr_token || result.token;
+      
+      if (!tokenValue) {
+        console.error('No token found in QR generation response:', result);
+        throw new Error('QR token generation failed - no token in response');
+      }
+      
+      console.log('QR token extracted:', tokenValue.substring(0, 20) + '...');
       
       setPinCode(result.pin_code);
       setExpiresAt(new Date(result.expires_at));
@@ -70,7 +83,7 @@ export const EventQRCode = ({ eventId, eventTitle }: EventQRCodeProps) => {
       const baseUrl = window.location.hostname.includes('lovable') 
         ? 'https://gleeworld.org' 
         : window.location.origin;
-      const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(result.qr_token)}`;
+      const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(tokenValue)}`;
       
       const qrDataUrl = await QRCode.toDataURL(attendanceUrl, {
         width: 400,
