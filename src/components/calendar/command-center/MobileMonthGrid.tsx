@@ -1,0 +1,162 @@
+import { useMemo } from "react";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, startOfWeek, endOfWeek } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
+import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
+import { cn } from "@/lib/utils";
+import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
+
+const isSameDayET = (date1: Date, date2: Date): boolean => {
+  const tz = 'America/New_York';
+  const d1 = toZonedTime(date1, tz);
+  const d2 = toZonedTime(date2, tz);
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate();
+};
+
+interface MobileMonthGridProps {
+  events: GleeWorldEvent[];
+  currentDate: Date;
+  selectedDate: Date;
+  onDateSelect: (date: Date) => void;
+  getCategoryForEvent: (event: GleeWorldEvent) => CategoryFilter;
+  categoryConfigs: CategoryConfig[];
+}
+
+export const MobileMonthGrid = ({
+  events,
+  currentDate,
+  selectedDate,
+  onDateSelect,
+  getCategoryForEvent,
+  categoryConfigs,
+}: MobileMonthGridProps) => {
+  const days = useMemo(() => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+    return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  }, [currentDate]);
+
+  const getEventsForDate = (date: Date) => {
+    return events.filter(event => isSameDayET(new Date(event.start_date), date));
+  };
+
+  const getCategoryConfig = (category: CategoryFilter) => {
+    return categoryConfigs.find(c => c.id === category);
+  };
+
+  // Get selected day events for the bottom panel
+  const selectedDayEvents = useMemo(() => {
+    return events
+      .filter(event => isSameDayET(new Date(event.start_date), selectedDate))
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+  }, [events, selectedDate]);
+
+  return (
+    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      {/* Day Headers */}
+      <div className="grid grid-cols-7 bg-[#003366] text-white flex-shrink-0">
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+          <div key={idx} className="py-2 text-center text-xs font-semibold tracking-wide">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Compact Month Grid */}
+      <div className="grid grid-cols-7 flex-shrink-0">
+        {days.map((day) => {
+          const dayEvents = getEventsForDate(day);
+          const isCurrentMonth = isSameMonth(day, currentDate);
+          const isToday = isSameDayET(day, new Date());
+          const isSelected = isSameDayET(day, selectedDate);
+          const hasEvents = dayEvents.length > 0;
+
+          // Get unique category colors for dot indicators (max 3)
+          const categoryColors = hasEvents
+            ? [...new Set(dayEvents.map(e => getCategoryConfig(getCategoryForEvent(e))?.color || '#708090'))].slice(0, 3)
+            : [];
+
+          return (
+            <button
+              key={day.toString()}
+              onClick={() => onDateSelect(day)}
+              className={cn(
+                "flex flex-col items-center py-2 min-h-[48px] touch-manipulation transition-colors border-b border-r border-slate-100",
+                !isCurrentMonth && "opacity-30",
+                isSelected && "bg-blue-50",
+                isToday && !isSelected && "bg-amber-50",
+              )}
+            >
+              <span className={cn(
+                "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold",
+                isToday && "bg-[#003366] text-white",
+                isSelected && !isToday && "bg-[#B8860B] text-white",
+                !isToday && !isSelected && isCurrentMonth && "text-slate-800",
+              )}>
+                {format(day, 'd')}
+              </span>
+              {hasEvents && (
+                <div className="flex gap-0.5 mt-1">
+                  {categoryColors.map((color, idx) => (
+                    <div
+                      key={idx}
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Selected Day Events Panel */}
+      <div className="flex-1 min-h-0 overflow-auto border-t border-slate-200">
+        <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between sticky top-0">
+          <h3 className="text-sm font-bold" style={{ color: '#0f172a' }}>
+            {format(selectedDate, 'EEEE, MMMM d')}
+          </h3>
+          <span className="text-xs font-medium text-slate-500">
+            {selectedDayEvents.length} event{selectedDayEvents.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <div className="p-3 space-y-2">
+          {selectedDayEvents.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-sm text-slate-400">No events scheduled</p>
+            </div>
+          ) : (
+            selectedDayEvents.map((event) => {
+              const category = getCategoryForEvent(event);
+              const config = getCategoryConfig(category);
+              return (
+                <div
+                  key={event.id}
+                  className="flex items-start gap-2.5 p-2.5 rounded-lg bg-white border border-slate-100 shadow-sm"
+                >
+                  <div
+                    className="w-1 h-full min-h-[36px] rounded-full flex-shrink-0 mt-0.5"
+                    style={{ backgroundColor: config?.color || '#708090' }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: '#0f172a' }}>
+                      {event.title}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {format(new Date(event.start_date), 'h:mm a')}
+                      {event.location && ` • ${event.location}`}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

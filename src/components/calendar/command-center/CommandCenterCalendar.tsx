@@ -14,6 +14,7 @@ import { CommandCenterFilterRail } from "./CommandCenterFilterRail";
 import { CommandCenterGrid } from "./CommandCenterGrid";
 import { DailyRunSheet } from "./DailyRunSheet";
 import { AgendaView } from "./AgendaView";
+import { MobileMonthGrid } from "./MobileMonthGrid";
 import { CreateEventDialog } from "../CreateEventDialog";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -123,12 +124,7 @@ export const CommandCenterCalendar = () => {
     }
   }, [calendars]);
 
-  // Update view mode when mobile status changes
-  useEffect(() => {
-    if (isMobile && viewMode !== 'agenda') {
-      setViewMode('agenda');
-    }
-  }, [isMobile]);
+  // No longer force agenda on mobile - let users choose
 
   // Filter events by role-based access, category AND calendar
   const filteredEvents = useMemo(() => {
@@ -245,7 +241,16 @@ export const CommandCenterCalendar = () => {
         <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
           {/* Calendar Grid or Agenda */}
           <div className="flex-1 min-h-0 overflow-auto p-2 lg:p-4">
-            {viewMode === 'agenda' || isMobile ? (
+            {isMobile && viewMode === 'month' ? (
+              <MobileMonthGrid
+                events={filteredEvents}
+                currentDate={currentDate}
+                selectedDate={selectedDate}
+                onDateSelect={setSelectedDate}
+                getCategoryForEvent={getCategoryForEvent}
+                categoryConfigs={CATEGORY_CONFIGS}
+              />
+            ) : viewMode === 'agenda' || isMobile ? (
               <>
                 {/* Mobile Book Office Hours Button */}
                 {isMobile && (

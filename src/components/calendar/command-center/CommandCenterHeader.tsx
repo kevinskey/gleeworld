@@ -67,21 +67,24 @@ export const CommandCenterHeader = ({
           </button>
         </div>
 
-        {/* Center: View Toggle - Hidden on mobile */}
-        {!isMobile && (
-          <div className="flex items-center bg-white/10 rounded-lg p-1">
-            <button
-              onClick={() => onViewModeChange('month')}
-              className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                viewMode === 'month' 
-                  ? "bg-white text-[#003366]" 
-                  : "text-white/80 hover:text-white hover:bg-white/10"
-              )}
-            >
-              <LayoutGrid className="h-4 w-4" />
-              <span className="hidden md:inline">Month</span>
-            </button>
+        {/* Center: View Toggle */}
+        <div className={cn(
+          "flex items-center bg-white/10 rounded-lg p-1",
+          isMobile && "order-last"
+        )}>
+          <button
+            onClick={() => onViewModeChange('month')}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+              viewMode === 'month' 
+                ? "bg-white text-[#003366]" 
+                : "text-white/80 hover:text-white hover:bg-white/10"
+            )}
+          >
+            <LayoutGrid className="h-4 w-4" />
+            <span className="hidden md:inline">Month</span>
+          </button>
+          {!isMobile && (
             <button
               onClick={() => onViewModeChange('week')}
               className={cn(
@@ -94,20 +97,20 @@ export const CommandCenterHeader = ({
               <Calendar className="h-4 w-4" />
               <span className="hidden md:inline">Week</span>
             </button>
-            <button
-              onClick={() => onViewModeChange('agenda')}
-              className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                viewMode === 'agenda' 
-                  ? "bg-white text-[#003366]" 
-                  : "text-white/80 hover:text-white hover:bg-white/10"
-              )}
-            >
-              <List className="h-4 w-4" />
-              <span className="hidden md:inline">Agenda</span>
-            </button>
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => onViewModeChange('agenda')}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+              viewMode === 'agenda' 
+                ? "bg-white text-[#003366]" 
+                : "text-white/80 hover:text-white hover:bg-white/10"
+            )}
+          >
+            <List className="h-4 w-4" />
+            <span className="hidden md:inline">Agenda</span>
+          </button>
+        </div>
 
         {/* Right: Add Event + Search (desktop) */}
         <div className="flex items-center gap-2">
