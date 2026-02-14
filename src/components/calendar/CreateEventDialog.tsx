@@ -543,7 +543,7 @@ export const CreateEventDialog = ({
       <DialogTrigger asChild>
         <></>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 z-[100000]">
         {/* Header */}
         <div className="flex items-center justify-end gap-2 p-3 pb-0">
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
@@ -1206,7 +1206,7 @@ export const CreateEventDialog = ({
         </form>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t bg-background">
+        <div className="flex items-center justify-end gap-3 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t bg-background">
           <Button 
             type="button" 
             variant="ghost" 
