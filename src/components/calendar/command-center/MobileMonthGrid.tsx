@@ -81,7 +81,7 @@ export const MobileMonthGrid = ({
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Booking Button */}
-      <div className="px-2 py-1.5 bg-[#003366] flex-shrink-0">
+      <div className="bg-[#003366] flex-shrink-0 px-3 py-2">
         <OfficeHoursBooking />
       </div>
       {/* Day Headers */}
