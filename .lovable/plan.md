@@ -1,36 +1,50 @@
 
 
-## Create Blues Album Review Rubric
+## Attendance Viewer in the Command Center
 
-### What will happen
+### What We're Building
 
-A new custom rubric will be created specifically for the "Review a Blues Album" assignment, replacing the current generic Writing Assignment Rubric. The rubric will have 5 categories totaling 100 points, matching your specifications exactly.
+Add an "Attendance" feature to the Attendance Command Center so that when you select an event, you can view who attended, their status, and quick stats -- all without leaving the Command Center.
 
-### Rubric Structure
+### How It Works
 
-| Category | Max Points |
-|----------|-----------|
-| Musical Listening & Description | 40 |
-| Use of Musical Examples | 20 |
-| Organization & Structure | 15 |
-| Cultural Context | 15 |
-| Technical Quality & Timing | 10 |
-| **Total** | **100** |
+1. **New "View Attendance" option on event cards**: Add a context menu item (and a button on mobile) to `CommandCenterEventCard` that opens an attendance viewer dialog for that event.
 
-Each criterion will include the full A/B/C/D-F grade-level descriptions you provided, stored in the criterion description field so the grading system can reference them.
+2. **New `EventAttendanceDialog` component**: A modal dialog showing:
+   - Event name, date, and location in a branded navy header
+   - Summary stats bar (Present / Absent / Excused / Late counts with color-coded badges)
+   - A sortable, scrollable table of attendees with columns: Name, Status (color-coded badge), Check-in Time, Notes
+   - Data pulled from both `gw_event_attendance` and legacy `attendance` tables, joined with `gw_profiles` for member names
+   - Empty state when no attendance has been recorded yet
 
-### Technical Steps
+3. **Integration into Daily Run Sheet**: Add a small attendance indicator on each event card in the run sheet showing how many people checked in (e.g., "5 checked in") as a quick-glance metric.
 
-1. **Insert new rubric** into `gw_universal_rubrics` with:
-   - Name: "Blues Album Review Rubric"
-   - Course: MUS 240
-   - Total points: 100
-   - 5 criteria with detailed descriptions including grade-level expectations
-   - Visibility enabled before submission and after grading
+### Technical Details
 
-2. **Update the assignment** (`ebc6c16b-309c-4054-aca3-fde186db3bf4`) to point to the new rubric ID
+**New file: `src/components/calendar/command-center/EventAttendanceDialog.tsx`**
+- Accepts `event: GleeWorldEvent | null`, `open`, `onOpenChange` props
+- Queries `gw_event_attendance` joined with `gw_profiles` for the given `event.id`
+- Also queries legacy `attendance` table and merges results
+- Displays results in a table with status badges using the existing `CHART_COLORS` pattern
+- Uses Spelman Navy header styling consistent with the Command Center aesthetic
 
-3. The bonus (+5 creative framing) will be noted in the rubric description since the rubric system uses fixed max points per criterion
+**Modified file: `src/components/calendar/command-center/CommandCenterEventCard.tsx`**
+- Add state: `showAttendanceDialog`
+- Add context menu item: "View Attendance" with `ClipboardCheck` icon (visible to admins/exec board)
+- Add mobile button for attendance viewing
+- Render the new `EventAttendanceDialog` component
 
-No code changes are needed -- this is purely a database operation using the existing rubric infrastructure.
+**Modified file: `src/components/calendar/command-center/DailyRunSheet.tsx`**
+- For each event card, fetch a quick count of attendance records and display as a subtle badge (e.g., "3 present") below the event details
+
+**Modified file: `src/components/calendar/command-center/index.ts`**
+- Export the new `EventAttendanceDialog` component
+
+### User Flow
+
+1. User opens the Command Center calendar
+2. Clicks on or right-clicks an event
+3. Selects "View Attendance" from the context menu (or taps the attendance button on mobile)
+4. A dialog opens showing the full attendance roster for that event with status breakdown
+5. On the Daily Run Sheet, each event shows a quick attendance count at a glance
 
