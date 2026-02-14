@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -8,7 +9,8 @@ import {
   Church, 
   Calendar, 
   ChevronRight,
-  ExternalLink 
+  ExternalLink,
+  Users
 } from "lucide-react";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
 import { CommandCenterEventCard } from "./CommandCenterEventCard";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QuickAction {
   id: string;
@@ -49,6 +52,30 @@ export const DailyRunSheet = ({
   onEventDeleted,
 }: DailyRunSheetProps) => {
   const navigate = useNavigate();
+  const [attendanceCounts, setAttendanceCounts] = useState<Record<string, number>>({});
+
+  // Fetch quick attendance counts for all events on this day
+  useEffect(() => {
+    const fetchCounts = async () => {
+      if (events.length === 0) {
+        setAttendanceCounts({});
+        return;
+      }
+      const eventIds = events.map((e) => e.id);
+      const { data } = await supabase
+        .from("gw_event_attendance")
+        .select("event_id")
+        .in("event_id", eventIds)
+        .in("attendance_status", ["present", "checked_in"]);
+
+      const counts: Record<string, number> = {};
+      for (const row of data || []) {
+        counts[row.event_id] = (counts[row.event_id] || 0) + 1;
+      }
+      setAttendanceCounts(counts);
+    };
+    fetchCounts();
+  }, [events]);
 
   const getCategoryConfig = (category: CategoryFilter) => {
     return categoryConfigs.find(c => c.id === category);
@@ -99,24 +126,30 @@ export const DailyRunSheet = ({
                 const category = getCategoryForEvent(event);
                 const config = getCategoryConfig(category);
                 return (
-                  <CommandCenterEventCard
-                    key={event.id}
-                    event={event}
-                    categoryColor={config?.color || '#708090'}
-                    categoryIcon={config?.icon || 'calendar'}
-                    compact={false}
-                    onEventDeleted={onEventDeleted}
-                    onClick={() => {
-                      // Deep link based on event type
-                      if (event.course_id) {
-                        navigate(`/academy/course/${event.course_id}`);
-                      } else if (category === 'liturgy') {
-                        navigate('/liturgy');
-                      } else if (category === 'tour') {
-                        navigate('/tour');
-                      }
-                    }}
-                  />
+                  <div key={event.id}>
+                    <CommandCenterEventCard
+                      event={event}
+                      categoryColor={config?.color || '#708090'}
+                      categoryIcon={config?.icon || 'calendar'}
+                      compact={false}
+                      onEventDeleted={onEventDeleted}
+                      onClick={() => {
+                        if (event.course_id) {
+                          navigate(`/academy/course/${event.course_id}`);
+                        } else if (category === 'liturgy') {
+                          navigate('/liturgy');
+                        } else if (category === 'tour') {
+                          navigate('/tour');
+                        }
+                      }}
+                    />
+                    {attendanceCounts[event.id] > 0 && (
+                      <div className="flex items-center gap-1 mt-1 ml-11 text-[11px] text-slate-500">
+                        <Users className="h-3 w-3" />
+                        <span>{attendanceCounts[event.id]} checked in</span>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </>

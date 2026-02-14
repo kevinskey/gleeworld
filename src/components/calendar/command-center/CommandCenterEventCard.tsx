@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock, Trash2, ClipboardList, Edit, Eye, QrCode } from "lucide-react";
+import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock, Trash2, ClipboardList, Edit, Eye, QrCode, ClipboardCheck } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EventQRCode } from "../EventQRCode";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { EditEventDialog } from "../EditEventDialog";
 import { EventDetailDialog } from "../EventDetailDialog";
+import { EventAttendanceDialog } from "./EventAttendanceDialog";
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   music: Music,
@@ -61,6 +62,7 @@ export const CommandCenterEventCard = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [userPermissions, setUserPermissions] = useState<{isAdmin: boolean, isSuperAdmin: boolean, isExecBoard: boolean} | null>(null);
   
@@ -196,8 +198,15 @@ export const CommandCenterEventCard = ({
           </div>
         )}
         {isMobile && canEdit && (
-          <div className="pt-1" onClick={(e) => e.stopPropagation()}>
+          <div className="pt-1 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <EventQRCode eventId={event.id} eventTitle={event.title} />
+            <button
+              onClick={() => setShowAttendanceDialog(true)}
+              className="flex items-center gap-1 text-[11px] font-medium text-[#003366] hover:underline"
+            >
+              <ClipboardCheck className="h-3.5 w-3.5" />
+              Attendance
+            </button>
           </div>
         )}
       </div>
@@ -231,6 +240,17 @@ export const CommandCenterEventCard = ({
             <Eye className="h-4 w-4" />
             View Details
           </ContextMenuItem>
+
+          {/* View Attendance - admins/exec board */}
+          {canEdit && (
+            <ContextMenuItem
+              onClick={() => setShowAttendanceDialog(true)}
+              className="gap-2"
+            >
+              <ClipboardCheck className="h-4 w-4" />
+              View Attendance
+            </ContextMenuItem>
+          )}
           
           {/* Edit Event - only if user has permission */}
           {canEdit && (
@@ -298,6 +318,13 @@ export const CommandCenterEventCard = ({
         open={showViewDialog}
         onOpenChange={setShowViewDialog}
         onEventUpdated={onEventDeleted}
+      />
+
+      {/* Attendance Dialog */}
+      <EventAttendanceDialog
+        event={showAttendanceDialog ? event : null}
+        open={showAttendanceDialog}
+        onOpenChange={setShowAttendanceDialog}
       />
     </>
   );
