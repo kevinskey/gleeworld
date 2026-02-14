@@ -353,7 +353,7 @@ export default function BookAppointmentPage() {
                             }}
                             disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
                             initialFocus
-                            className="p-3 pointer-events-auto touch-manipulation"
+                            className="p-3 pointer-events-auto touch-manipulation [&_button]:text-foreground [&_.rdp-day_button]:text-foreground [&_.day-today]:font-bold"
                           />
                         </PopoverContent>
                       </Popover>
