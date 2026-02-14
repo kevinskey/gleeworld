@@ -61,7 +61,7 @@ export const EventQRCode = ({ eventId, eventTitle }: EventQRCodeProps) => {
 
       if (error) throw error;
 
-      const result = data as { token: string; pin_code: string; token_id: string; expires_at: string };
+      const result = data as { qr_token: string; pin_code: string; qr_id: string; expires_at: string };
       
       setPinCode(result.pin_code);
       setExpiresAt(new Date(result.expires_at));
@@ -70,7 +70,7 @@ export const EventQRCode = ({ eventId, eventTitle }: EventQRCodeProps) => {
       const baseUrl = window.location.hostname.includes('lovable') 
         ? 'https://gleeworld.org' 
         : window.location.origin;
-      const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(result.token)}`;
+      const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(result.qr_token)}`;
       
       const qrDataUrl = await QRCode.toDataURL(attendanceUrl, {
         width: 400,
