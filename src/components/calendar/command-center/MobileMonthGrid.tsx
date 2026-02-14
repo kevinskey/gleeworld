@@ -79,7 +79,7 @@ export const MobileMonthGrid = ({
   }, [events, selectedDate]);
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-auto">
       {/* Booking Button */}
       <div className="bg-[#003366] flex-shrink-0 px-3 py-2">
         <OfficeHoursBooking />
@@ -143,7 +143,7 @@ export const MobileMonthGrid = ({
       </div>
 
       {/* Selected Day Events Panel */}
-      <div className="flex-1 min-h-0 overflow-auto border-t border-slate-200">
+      <div className="border-t border-slate-200">
         <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between sticky top-0">
           <h3 className="text-sm font-bold" style={{ color: '#0f172a' }}>
             {format(selectedDate, 'EEEE, MMMM d')}
