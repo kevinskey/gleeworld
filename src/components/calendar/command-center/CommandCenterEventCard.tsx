@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock, Trash2, ClipboardList, Edit, Eye } from "lucide-react";
+import { Music, BookOpen, Church, Mic, Users, Plane, User, MapPin, Clock, Trash2, ClipboardList, Edit, Eye, QrCode } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { EventQRCode } from "../EventQRCode";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
 import { EventHoverCard } from "../EventHoverCard";
@@ -62,6 +64,7 @@ export const CommandCenterEventCard = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [userPermissions, setUserPermissions] = useState<{isAdmin: boolean, isSuperAdmin: boolean, isExecBoard: boolean} | null>(null);
   
+  const isMobile = useIsMobile();
   const Icon = CATEGORY_ICONS[categoryIcon] || Music;
   const startTime = format(new Date(event.start_date), 'h:mm a');
 
@@ -190,6 +193,11 @@ export const CommandCenterEventCard = ({
           <div className="flex items-center gap-2 text-slate-600">
             <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
             <span className="text-xs truncate">{event.location}</span>
+          </div>
+        )}
+        {isMobile && canEdit && (
+          <div className="pt-1" onClick={(e) => e.stopPropagation()}>
+            <EventQRCode eventId={event.id} eventTitle={event.title} />
           </div>
         )}
       </div>
