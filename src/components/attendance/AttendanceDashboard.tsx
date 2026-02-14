@@ -101,50 +101,58 @@ export const AttendanceDashboard = () => {
     try {
       setStatsLoading(true);
       
-      // Get real attendance data from the database
-      const { data: attendanceData, error: attendanceError } = await supabase
-        .from('attendance')
-        .select('status, user_id, event_id')
-        .eq('user_id', user.id);
+      // Get attendance data from BOTH legacy and new tables
+      const [legacyResult, gwResult] = await Promise.all([
+        supabase
+          .from('attendance')
+          .select('status, user_id, event_id')
+          .eq('user_id', user.id),
+        supabase
+          .from('gw_event_attendance')
+          .select('attendance_status, user_id, event_id')
+          .eq('user_id', user.id)
+      ]);
 
-      if (attendanceError) throw attendanceError;
+      const legacyData = legacyResult.data || [];
+      const gwData = gwResult.data || [];
 
-      // Calculate stats from real data
-      const myAttendanceCount = attendanceData?.filter(a => a.status === 'present').length || 0;
-      const totalUserEvents = attendanceData?.length || 0;
+      // Combine: normalize gw_event_attendance to same shape
+      const combinedUserData = [
+        ...legacyData.map(a => ({ status: a.status, user_id: a.user_id, event_id: a.event_id })),
+        ...gwData.map(a => ({ status: a.attendance_status, user_id: a.user_id, event_id: a.event_id }))
+      ];
+
+      const myAttendanceCount = combinedUserData.filter(a => a.status === 'present').length;
+      const totalUserEvents = combinedUserData.length;
       const myAttendanceRate = totalUserEvents > 0 ? Math.round((myAttendanceCount / totalUserEvents) * 100) : 0;
 
       // Get overall statistics for admins
       if (isAdmin) {
-        const { data: allAttendance, error: allAttendanceError } = await supabase
-          .from('attendance')
-          .select('status, user_id, event_id');
+        const [allLegacy, allGw] = await Promise.all([
+          supabase.from('attendance').select('status, user_id, event_id'),
+          supabase.from('gw_event_attendance').select('attendance_status, user_id, event_id')
+        ]);
 
-        if (!allAttendanceError && allAttendance) {
-          const totalEvents = [...new Set(allAttendance.map(a => a.event_id))].length;
-          const totalMembers = [...new Set(allAttendance.map(a => a.user_id))].length;
-          const presentRecords = allAttendance.filter(a => a.status === 'present').length;
-          const averageAttendance = allAttendance.length > 0 ? Math.round((presentRecords / allAttendance.length) * 100) : 0;
+        const allCombined = [
+          ...(allLegacy.data || []).map(a => ({ status: a.status, user_id: a.user_id, event_id: a.event_id })),
+          ...(allGw.data || []).map(a => ({ status: a.attendance_status, user_id: a.user_id, event_id: a.event_id }))
+        ];
 
-          setStats({
-            myAttendance: myAttendanceRate,
-            eventsThisWeek: 0, // TODO: Calculate based on current week
-            pendingExcuses: 0, // TODO: Get from excuse requests
-            sectionAverage: averageAttendance,
-            totalEvents,
-            averageAttendance,
-            totalMembers,
-            perfectAttendees: 0 // TODO: Calculate perfect attendance
-          });
-        } else {
-          setStats(prev => ({
-            ...prev,
-            myAttendance: myAttendanceRate,
-            eventsThisWeek: 0,
-            pendingExcuses: 0,
-            sectionAverage: 0
-          }));
-        }
+        const totalEvents = [...new Set(allCombined.map(a => a.event_id))].length;
+        const totalMembers = [...new Set(allCombined.map(a => a.user_id))].length;
+        const presentRecords = allCombined.filter(a => a.status === 'present').length;
+        const averageAttendance = allCombined.length > 0 ? Math.round((presentRecords / allCombined.length) * 100) : 0;
+
+        setStats({
+          myAttendance: myAttendanceRate,
+          eventsThisWeek: 0,
+          pendingExcuses: 0,
+          sectionAverage: averageAttendance,
+          totalEvents,
+          averageAttendance,
+          totalMembers,
+          perfectAttendees: 0
+        });
       } else {
         setStats(prev => ({
           ...prev,
