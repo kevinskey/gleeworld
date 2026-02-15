@@ -873,31 +873,37 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
   }
   return <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">Class Calendar</h2>
-          <p className="text-muted-foreground">
-            {activeSemester ? `${activeSemester.name} • ` : ''}Manage class sessions with attendance tracking
-          </p>
-        </div>
-        {isInstructor && <div className="flex items-center gap-2">
-            {/* Show Sync Schedule if no meeting patterns exist but we have a confirmed schedule */}
-            {activeSemester && !courseInfo?.meeting_patterns && CONFIRMED_SCHEDULES[courseCode?.replace('-', ' ') || ''] && (
-              <Button variant="outline" onClick={syncMeetingPattern} disabled={syncingSchedule}>
-                {syncingSchedule ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Settings2 className="h-4 w-4 mr-2" />}
-                Sync Schedule
-              </Button>
-            )}
-            {activeSemester && courseInfo?.meeting_patterns && <Button variant="outline" onClick={generateSemesterSessions} disabled={generatingSessions}>
-                {generatingSessions ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                Generate Semester
-              </Button>}
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-[#003666]">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Session
-                </Button>
+      <div className="rounded-xl overflow-hidden border border-border shadow-sm">
+        <div className="px-5 py-4" style={{ backgroundColor: '#003366' }}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+                <CalendarIcon className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Cinzel, serif' }}>Class Calendar</h2>
+                <p className="text-sm text-white/70">
+                  {activeSemester ? `${activeSemester.name} · ` : ''}{sessions.length} sessions · {courseCode}
+                </p>
+              </div>
+            </div>
+            {isInstructor && <div className="flex items-center gap-2 flex-wrap">
+                {activeSemester && !courseInfo?.meeting_patterns && CONFIRMED_SCHEDULES[courseCode?.replace('-', ' ') || ''] && (
+                  <Button variant="outline" onClick={syncMeetingPattern} disabled={syncingSchedule} className="border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent">
+                    {syncingSchedule ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Settings2 className="h-4 w-4 mr-2" />}
+                    Sync Schedule
+                  </Button>
+                )}
+                {activeSemester && courseInfo?.meeting_patterns && <Button variant="outline" onClick={generateSemesterSessions} disabled={generatingSessions} className="border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent">
+                    {generatingSessions ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                    Generate Semester
+                  </Button>}
+                <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-white/20 text-white hover:bg-white/30 border border-white/30">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Session
+                    </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
@@ -1045,6 +1051,8 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               </DialogContent>
             </Dialog>
           </div>}
+          </div>
+        </div>
       </div>
 
       {/* Tabs for Class Calendar vs Full Calendar */}
@@ -1233,7 +1241,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                             );
                           })}
                           {daySessions.length === 0 && daySpelmanEvents.length === 0 && !isHoliday && (
-                            <div className="text-[10px] text-muted-foreground text-center py-2">No sessions</div>
+                            <div className="text-[10px] text-center py-2" style={{ color: '#64748b' }}>No sessions</div>
                           )}
                           {daySessions.length + daySpelmanEvents.length > 3 && (
                             <div className="text-[9px] text-muted-foreground font-medium px-1">
@@ -1263,18 +1271,18 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                             </div>}
                           
                           {daySpelmanEvents.length > 0 && <div className="space-y-2">
-                              <h4 className="font-medium text-sm text-muted-foreground">Spelman Events</h4>
+                              <h4 className="font-medium text-sm" style={{ color: '#334155' }}>Spelman Events</h4>
                               {daySpelmanEvents.map(event => <div key={event.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                  <div className="font-medium">{event.title}</div>
-                                  {event.location && <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="h-3 w-3" />{event.location}</div>}
+                                  <div className="font-medium" style={{ color: '#0f172a' }}>{event.title}</div>
+                                  {event.location && <div className="text-sm flex items-center gap-1 mt-1" style={{ color: '#475569' }}><MapPin className="h-3 w-3" />{event.location}</div>}
                                 </div>)}
                             </div>}
                           
                           <div className="space-y-2">
-                            <h4 className="font-medium text-sm text-muted-foreground">Class Sessions ({daySessions.length})</h4>
-                            {daySessions.length === 0 ? <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-                                <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                                <p>No classes scheduled for this day</p>
+                            <h4 className="font-medium text-sm" style={{ color: '#334155' }}>Class Sessions ({daySessions.length})</h4>
+                            {daySessions.length === 0 ? <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                                <CalendarIcon className="h-10 w-10 mx-auto mb-2" style={{ color: '#94a3b8' }} />
+                                <p style={{ color: '#0f172a' }}>No classes scheduled for this day</p>
                                 {isInstructor && <Button size="sm" variant="outline" className="mt-3" onClick={() => {
                           setNewSession(prev => ({
                             ...prev,
@@ -1304,8 +1312,8 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                               Attendance
                                             </Badge>}
                                         </div>
-                                        {session.description && <p className="text-sm text-muted-foreground">{session.description}</p>}
-                                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                        {session.description && <p className="text-sm" style={{ color: '#475569' }}>{session.description}</p>}
+                                        <div className="flex items-center gap-4 text-sm" style={{ color: '#475569' }}>
                                           <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{session.start_time} - {session.end_time}</span>
                                           {session.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{session.location}</span>}
                                         </div>
@@ -1330,17 +1338,18 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
             </Card>
 
         {/* Selected Date Sessions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
+        <Card className="border-border">
+          <CardHeader className="pb-3" style={{ backgroundColor: '#003366', borderRadius: '0.5rem 0.5rem 0 0' }}>
+            <CardTitle className="text-lg text-white flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4" />
               {selectedDate ? format(selectedDate, 'EEEE, MMMM d') : 'Select a Date'}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {selectedDate ? <ScrollArea className="h-[400px]">
-                {selectedDateSessions.length === 0 && selectedDateCourseEvents.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-                    <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>No classes scheduled</p>
+                {selectedDateSessions.length === 0 && selectedDateCourseEvents.length === 0 ? <div className="text-center py-8">
+                    <CalendarIcon className="h-12 w-12 mx-auto mb-2" style={{ color: '#94a3b8' }} />
+                    <p style={{ color: '#0f172a' }} className="font-medium">No classes scheduled</p>
                     {isInstructor && <Button size="sm" variant="outline" className="mt-4" onClick={() => {
                     setNewSession(prev => ({
                       ...prev,
@@ -1362,15 +1371,15 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                 <CalendarIcon className="h-3 w-3 mr-1" />
                                 Class
                               </Badge>
-                              <h4 className="font-semibold">{event.title}</h4>
+                              <h4 className="font-semibold" style={{ color: '#0f172a' }}>{event.title}</h4>
                             </div>
                             {event.attendance_required && <Badge className="bg-green-500/10 text-green-600">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Attendance
                               </Badge>}
                           </div>
-                          {event.description && <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>}
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          {event.description && <p className="text-sm line-clamp-2" style={{ color: '#475569' }}>{event.description}</p>}
+                          <div className="flex items-center gap-4 text-sm" style={{ color: '#475569' }}>
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {format(parseISO(event.start_date), 'h:mm a')} - {event.end_date ? format(parseISO(event.end_date), 'h:mm a') : ''}
@@ -1395,15 +1404,15 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                   <typeConfig.icon className="h-3 w-3 mr-1" />
                                   {typeConfig.label}
                                 </Badge>
-                                <h4 className="font-semibold">{session.title}</h4>
+                                <h4 className="font-semibold" style={{ color: '#0f172a' }}>{session.title}</h4>
                               </div>
                               {session.attendance_required && <Badge className="bg-green-500/10 text-green-600">
                                   <CheckCircle className="h-3 w-3 mr-1" />
                                   Attendance
                                 </Badge>}
                             </div>
-                            {session.description && <p className="text-sm text-muted-foreground line-clamp-2">{session.description}</p>}
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            {session.description && <p className="text-sm line-clamp-2" style={{ color: '#475569' }}>{session.description}</p>}
+                            <div className="flex items-center gap-4 text-sm" style={{ color: '#475569' }}>
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {session.start_time} - {session.end_time}
@@ -1426,9 +1435,9 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                         </div>;
                   })}
                   </div>}
-              </ScrollArea> : <div className="text-center py-8 text-muted-foreground">
-                <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p className="text-muted-foreground">Click a date to view sessions</p>
+              </ScrollArea> : <div className="text-center py-8">
+                <CalendarIcon className="h-12 w-12 mx-auto mb-2" style={{ color: '#94a3b8' }} />
+                <p style={{ color: '#0f172a' }} className="font-medium">Click a date to view sessions</p>
               </div>}
           </CardContent>
         </Card>
