@@ -39,6 +39,25 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 const getStatusConfig = (status: string) =>
   STATUS_CONFIG[status?.toLowerCase()] || { label: status || "Unknown", color: "#64748b", bg: "#f8fafc" };
 
+/** Derive a display name from a profile record, falling back to email parsing */
+const resolveDisplayName = (profile: any): string => {
+  if (profile?.display_name) return profile.display_name;
+  const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ");
+  if (fullName) return fullName;
+  if (profile?.email) {
+    // Parse "firstnamelastname@spelman.edu" → "Firstname Lastname" (best-effort)
+    const local = profile.email.split("@")[0];
+    // Try splitting camelCase or just capitalize
+    return local
+      .replace(/([a-z])([A-Z])/g, "$1 $2") // camelCase split
+      .replace(/[._-]/g, " ") // delimiter split
+      .split(" ")
+      .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
+  }
+  return "Unknown Member";
+};
+
 export const EventAttendanceDialog = ({
   event,
   open,
@@ -66,14 +85,14 @@ export const EventAttendanceDialog = ({
           .from("gw_event_attendance")
           .select(`
             id, user_id, attendance_status, check_in_time, notes,
-            gw_profiles!gw_event_attendance_user_id_fkey(display_name, first_name, last_name)
+            gw_profiles!gw_event_attendance_user_id_fkey(display_name, first_name, last_name, email)
           `)
           .eq("event_id", event.id),
         supabase
           .from("attendance")
           .select(`
             id, user_id, status, recorded_at, notes,
-            gw_profiles!attendance_user_id_fkey(display_name, first_name, last_name)
+            gw_profiles!attendance_user_id_fkey(display_name, first_name, last_name, email)
           `)
           .eq("event_id", event.id),
       ]);
@@ -92,10 +111,7 @@ export const EventAttendanceDialog = ({
           status: r.attendance_status,
           check_in_time: r.check_in_time,
           notes: r.notes,
-          display_name:
-            profile?.display_name ||
-            [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
-            "Unknown Member",
+          display_name: resolveDisplayName(profile),
         });
       }
 
@@ -110,10 +126,7 @@ export const EventAttendanceDialog = ({
           status: r.status,
           check_in_time: r.recorded_at,
           notes: r.notes,
-          display_name:
-            profile?.display_name ||
-            [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
-            "Unknown Member",
+          display_name: resolveDisplayName(profile),
         });
       }
 
