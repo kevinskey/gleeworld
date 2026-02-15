@@ -183,7 +183,7 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
       const baseUrl = window.location.hostname.includes('lovable')
         ? 'https://gleeworld.org'
         : window.location.origin;
-      const checkInUrl = `${baseUrl}/qr-scanner?token=${encodeURIComponent(token)}`;
+      const checkInUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(token)}`;
       const dataUrl = await QRCode.toDataURL(checkInUrl, {
         width: 300,
         margin: 2,
