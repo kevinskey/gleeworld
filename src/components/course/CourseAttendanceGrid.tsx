@@ -123,10 +123,12 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
       }));
 
       // Also fetch event-based attendance for events linked to this course
+      // Filter to current semester to avoid loading old events
       const { data: courseEvents } = await supabase
         .from('gw_events')
         .select('id, title, start_date')
         .eq('course_id', courseId)
+        .gte('start_date', SEMESTER_START.toISOString())
         .order('start_date', { ascending: true });
 
       // Add course events as additional "sessions" in the grid (using event_id prefixed to avoid collision)
