@@ -156,7 +156,7 @@ export const CommandCenterEventCard = ({
     // Full view for agenda/run sheet
     <div
       onClick={handleCardClick}
-      className="group flex flex-col rounded-lg border-l-4 bg-white shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
+      className="group flex flex-col rounded-lg border-l-4 bg-white shadow-sm hover:shadow-md transition-all cursor-pointer"
       style={{ borderLeftColor: categoryColor }}
     >
       {/* Header with icon and title */}
