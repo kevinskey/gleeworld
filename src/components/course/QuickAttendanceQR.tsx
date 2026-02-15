@@ -112,7 +112,7 @@ export const QuickAttendanceQR: React.FC<QuickAttendanceQRProps> = ({
       const baseUrl = window.location.hostname.includes('lovable')
         ? 'https://gleeworld.org'
         : window.location.origin;
-      const checkInUrl = `${baseUrl}/qr-scanner?token=${encodeURIComponent(token)}`;
+      const checkInUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(token)}`;
       
       const dataUrl = await QRCode.toDataURL(checkInUrl, {
         width: 300,
