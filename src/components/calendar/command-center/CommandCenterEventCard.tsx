@@ -5,6 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { EventQRCode } from "../EventQRCode";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { EventHoverCard } from "../EventHoverCard";
 import {
   ContextMenu,
@@ -198,16 +199,16 @@ export const CommandCenterEventCard = ({
           </div>
         )}
         {isMobile && canEdit && (
-          <div className="pt-2 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="pt-2 flex flex-wrap items-stretch gap-2" onClick={(e) => e.stopPropagation()}>
             <EventQRCode eventId={event.id} eventTitle={event.title} />
-            <button
+            <Button
+              variant="outline"
               onClick={() => setShowAttendanceDialog(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white shadow-sm"
-              style={{ backgroundColor: '#003366' }}
+              className="h-auto py-4 flex-col gap-2 hover:bg-secondary/80"
             >
-              <ClipboardCheck className="h-3.5 w-3.5" />
-              Attendance
-            </button>
+              <ClipboardCheck className="h-5 w-5 text-muted-foreground" />
+              <span className="font-medium">Attendance</span>
+            </Button>
           </div>
         )}
       </div>
