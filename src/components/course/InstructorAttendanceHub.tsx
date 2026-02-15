@@ -341,7 +341,7 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
           generated_by: user.id,
           expires_at: expiresAt,
           is_active: true,
-          context_type: eventId ? 'event_attendance' : 'session_attendance',
+          context_type: eventId ? 'event' : 'session_attendance',
           event_id: eventId || null,
         })
         .select('id, qr_token, attendance_session_id')
