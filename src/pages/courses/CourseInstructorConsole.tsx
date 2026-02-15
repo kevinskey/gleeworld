@@ -230,22 +230,24 @@ export const CourseInstructorConsole = () => {
 
   return <UniversalLayout containerized={false}>
       <div className="min-h-screen academy-neutral" style={{ backgroundColor: '#F7F9FC' }}>
-        {/* Top Bar — clean, minimal */}
+        {/* Top Bar */}
         <div className="border-b bg-white">
           <div className="max-w-[1800px] mx-auto px-3 sm:px-5 md:px-8 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
+                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="h-9 px-2.5 hover:bg-muted/60" style={{ color: '#0F172A' }}>
+                  <Menu className="h-5 w-5" />
+                </Button>
                 <Badge className="bg-primary text-white border-0 font-semibold text-xs tracking-wide">
                   <GraduationCap className="h-3.5 w-3.5 mr-1.5" />
                   Instructor Console
                 </Badge>
+                <span className="hidden sm:inline text-sm font-medium" style={{ color: '#334155' }}>
+                  {course.courseCode} — {course.title}
+                </span>
               </div>
               
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden h-8 hover:text-foreground" style={{ color: '#0F172A' }}>
-                  <Menu className="h-4 w-4" />
-                  <span className="ml-1.5 text-xs">Menu</span>
-                </Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/academy/${courseSlug}`)} className="hidden sm:flex items-center gap-1.5 h-8 text-xs hover:text-primary" style={{ color: '#334155' }}>
                   <Eye className="h-3.5 w-3.5" />
                   <span>Student View</span>
@@ -259,33 +261,24 @@ export const CourseInstructorConsole = () => {
           </div>
         </div>
 
-        {/* Main Layout */}
-        <div className="flex max-w-[1800px] mx-auto min-h-0">
-          {/* Desktop Sidebar — white, clean */}
-          <aside className="hidden lg:block w-[250px] xl:w-[260px] border-r border-border/60 bg-white sticky top-[132px] self-start max-h-[calc(100vh-132px)] overflow-y-auto">
-            <div className="p-5 xl:p-6">
+        {/* Flyout Sidebar */}
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="w-72 sm:w-80 p-0 bg-white">
+            <div className="p-5 pt-6">
               <div className="mb-6 pb-5 border-b border-border/50">
-                <InstructorCourseSwitcher currentCourse={course} />
-              </div>
-              <SidebarNav />
-            </div>
-          </aside>
-
-          {/* Mobile Sidebar */}
-          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetContent side="left" className="w-64 sm:w-72 p-4 sm:p-6 bg-white">
-              <div className="mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-border/50">
                 <InstructorCourseSwitcher 
                   currentCourse={course} 
                   onClose={() => setSidebarOpen(false)}
                 />
               </div>
               <SidebarNav isMobile />
-            </SheetContent>
-          </Sheet>
+            </div>
+          </SheetContent>
+        </Sheet>
 
-          {/* Main Content — spacious, light canvas */}
-          <main className="flex-1 p-5 sm:p-7 lg:p-10 pb-24">
+        {/* Main Content — full width */}
+        <div className="max-w-[1800px] mx-auto">
+          <main className="p-5 sm:p-7 lg:p-10 pb-24">
             {activeTab === 'syllabus' && dbCourse && <SyllabusTemplateEditor courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} instructorName={course.instructor?.name} instructorEmail={course.instructor?.email} />}
             {activeTab === 'modules' && dbCourse && <ModulesSection courseId={dbCourse.id} />}
             {activeTab === 'class-notes' && dbCourse && <ClassNotesManager courseId={dbCourse.id} isInstructor={true} />}
@@ -338,7 +331,6 @@ export const CourseInstructorConsole = () => {
               </div>
             )}
           </main>
-          
         </div>
       </div>
     </UniversalLayout>;
