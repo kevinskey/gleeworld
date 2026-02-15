@@ -456,6 +456,16 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
     return getSessionsForDate(selectedDate);
   }, [selectedDate, sessions]);
 
+  // Also get course-linked GleeWorld events for the selected date
+  const selectedDateCourseEvents = useMemo(() => {
+    if (!selectedDate) return [];
+    return spelmanEvents.filter(e => {
+      if (e.course_id !== courseId) return false;
+      const eventDate = parseISO(e.start_date);
+      return isSameDay(eventDate, selectedDate);
+    });
+  }, [selectedDate, spelmanEvents, courseId]);
+
   // Create session (with optional recurrence)
   const handleCreateSession = async () => {
     if (!newSession.title || !newSession.session_date) {
@@ -1328,7 +1338,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
           </CardHeader>
           <CardContent>
             {selectedDate ? <ScrollArea className="h-[400px]">
-                {selectedDateSessions.length === 0 ? <div className="text-center py-8 text-muted-foreground">
+                {selectedDateSessions.length === 0 && selectedDateCourseEvents.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                     <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
                     <p>No classes scheduled</p>
                     {isInstructor && <Button size="sm" variant="outline" className="mt-4" onClick={() => {
@@ -1342,6 +1352,38 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                         Add Session
                       </Button>}
                   </div> : <div className="space-y-4">
+                    {/* Course-linked GleeWorld events */}
+                    {selectedDateCourseEvents.map(event => (
+                      <div key={event.id} className="border rounded-lg overflow-hidden">
+                        <div className="p-3 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <Badge variant="outline" className="mb-1">
+                                <CalendarIcon className="h-3 w-3 mr-1" />
+                                Class
+                              </Badge>
+                              <h4 className="font-semibold">{event.title}</h4>
+                            </div>
+                            {event.attendance_required && <Badge className="bg-green-500/10 text-green-600">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Attendance
+                              </Badge>}
+                          </div>
+                          {event.description && <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>}
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {format(parseISO(event.start_date), 'h:mm a')} - {event.end_date ? format(parseISO(event.end_date), 'h:mm a') : ''}
+                            </span>
+                            {event.location && <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {event.location}
+                              </span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {/* Class sessions from gw_course_class_sessions */}
                     {selectedDateSessions.map(session => {
                     const typeConfig = getSessionTypeConfig(session.session_type);
                     return <div key={session.id} className="border rounded-lg overflow-hidden">
@@ -1360,11 +1402,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                   Attendance
                                 </Badge>}
                             </div>
-                            
-                            {session.description && <p className="text-sm text-muted-foreground line-clamp-2">
-                                {session.description}
-                              </p>}
-                            
+                            {session.description && <p className="text-sm text-muted-foreground line-clamp-2">{session.description}</p>}
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
@@ -1375,7 +1413,6 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                   {session.location}
                                 </span>}
                             </div>
-                            
                             {isInstructor && <div className="flex items-center gap-2 pt-2 border-t">
                                 <Button size="sm" variant="outline" onClick={() => generateQRCode(session)} className="flex-1">
                                   <QrCode className="h-4 w-4 mr-2" />
