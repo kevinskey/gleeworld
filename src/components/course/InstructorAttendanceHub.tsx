@@ -122,53 +122,86 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
     if (!user) return;
     setGenerating(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
       const now = new Date();
-      const startTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const endHour = now.getHours() + 1;
-      const endTime = `${String(endHour > 23 ? 23 : endHour).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const opensAt = now.toISOString();
+      // Session closes 2 hours from now
+      const closesAt = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
 
-      // 1. Create a class session for today
+      // 1. Create a gw_attendance_sessions record (this is what the attendance grid reads)
       const { data: newSession, error: sessionError } = await supabase
-        .from('gw_course_class_sessions')
+        .from('gw_attendance_sessions')
         .insert({
           course_id: courseId,
           title: `${courseCode} Class`,
-          session_date: today,
-          start_time: startTime,
-          end_time: endTime,
-          session_type: 'class',
-          attendance_required: true,
+          opens_at: opensAt,
+          closes_at: closesAt,
+          status: 'open',
+          mode: 'qr',
+          roster_scope: 'course',
+          allow_late_checkin: true,
+          late_threshold_minutes: 15,
+          requires_grading: false,
           created_by: user.id,
         })
-        .select('id, title, session_date, start_time, end_time, location, qr_code_id')
+        .select('id, title, opens_at, closes_at')
         .single();
 
       if (sessionError) throw sessionError;
 
-      // 2. Generate QR code for the session via RPC
-      const { data: qrResult, error: qrError } = await supabase.rpc('generate_session_qr_code', {
-        p_session_id: newSession.id,
-        p_generated_by: user.id,
-        p_expires_in_minutes: 480, // 8 hours
+      // 2. Generate QR code linked to the attendance session
+      const qrToken = crypto.randomUUID() + '-' + Date.now();
+      const expiresAt = new Date(now.getTime() + 8 * 60 * 60 * 1000).toISOString();
+
+      const { data: qrInsert, error: qrInsertError } = await supabase
+        .from('gw_attendance_qr_codes')
+        .insert({
+          qr_token: qrToken,
+          attendance_session_id: newSession.id,
+          course_id: courseId,
+          generated_by: user.id,
+          expires_at: expiresAt,
+          is_active: true,
+          context_type: 'session_attendance',
+        })
+        .select('id, qr_token, attendance_session_id')
+        .single();
+
+      if (qrInsertError) throw qrInsertError;
+
+      // 3. Generate QR image
+      await generateQRImage(qrInsert.qr_token);
+      setAttendanceSessionId(qrInsert.attendance_session_id);
+
+      // 4. Also create a gw_course_class_sessions record for the calendar
+      await supabase
+        .from('gw_course_class_sessions')
+        .insert({
+          course_id: courseId,
+          title: `${courseCode} Class`,
+          session_date: now.toISOString().split('T')[0],
+          start_time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+          end_time: `${String(Math.min(now.getHours() + 1, 23)).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+          session_type: 'class',
+          attendance_required: true,
+          created_by: user.id,
+          qr_code_id: qrInsert.id,
+        });
+
+      // 5. Update UI
+      setSession({
+        id: newSession.id,
+        title: newSession.title,
+        session_date: now.toISOString().split('T')[0],
+        start_time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        end_time: `${String(Math.min(now.getHours() + 1, 23)).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        location: null,
+        qr_code_id: qrInsert.id,
       });
-
-      if (qrError) throw qrError;
-
-      // 3. Parse the result and generate QR image
-      const qrData = typeof qrResult === 'string' ? JSON.parse(qrResult) : qrResult;
-      if (qrData?.qr_token) {
-        await generateQRImage(qrData.qr_token);
-        setAttendanceSessionId(qrData.attendance_session_id || null);
-      }
-
-      // 4. Refresh session
-      setSession(newSession);
       setQrOpen(true);
 
       toast({
         title: 'QR Code Ready!',
-        description: 'Students can now scan to check in.',
+        description: 'Students can now scan to check in. Attendance will appear in the grid.',
       });
     } catch (error: any) {
       console.error('Error generating quick QR:', error);
