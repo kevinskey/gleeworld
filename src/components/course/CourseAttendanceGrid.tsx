@@ -106,7 +106,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
     
     setLoading(true);
     try {
-      // Fetch class sessions for this course
+      // Fetch session-based attendance sessions
       const { data: sessionData, error: sessionError } = await supabase
         .from('gw_attendance_sessions')
         .select('id, title, opens_at')
@@ -121,7 +121,33 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
         title: s.title || 'Class',
         week_number: getWeekNumber(s.opens_at)
       }));
-      setSessions(sessionList);
+
+      // Also fetch event-based attendance for events linked to this course
+      const { data: courseEvents } = await supabase
+        .from('gw_events')
+        .select('id, title, start_date')
+        .eq('course_id', courseId)
+        .order('start_date', { ascending: true });
+
+      // Add course events as additional "sessions" in the grid (using event_id prefixed to avoid collision)
+      const eventSessionList: ClassSession[] = (courseEvents || []).map(e => ({
+        id: `event::${e.id}`,
+        date: e.start_date,
+        title: e.title || 'Event',
+        week_number: getWeekNumber(e.start_date)
+      }));
+
+      // Merge and deduplicate by date+title, preferring session-based records
+      const allSessionDates = new Set(sessionList.map(s => s.date.split('T')[0] + '::' + s.title));
+      const uniqueEventSessions = eventSessionList.filter(e => {
+        const key = e.date.split('T')[0] + '::' + e.title;
+        return !allSessionDates.has(key);
+      });
+      
+      const combinedSessions = [...sessionList, ...uniqueEventSessions].sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+      setSessions(combinedSessions);
 
       // Use profile_ids (gw_profiles.id) — the attendance records key
       const profileIdsList = enrolledProfileIdsKey.split(',').filter(Boolean);
@@ -133,7 +159,6 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
         if (myProfileId) {
           filteredProfileIds = [myProfileId];
         } else {
-          // Fallback: maybe targetStudentId IS the profile_id
           filteredProfileIds = profileIdsList.filter(id => id === targetStudentId);
         }
       }
@@ -146,26 +171,55 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
 
       // Create profile map from enrolled students (profile_id → full_name)
       const profileMap = new Map(enrolledStudents.map(s => [s.profile_id, s.full_name]));
+      // Map: user_id → profile_id for event attendance lookup
+      const userIdToProfileId = new Map(enrolledStudents.map(s => [s.user_id, s.profile_id]));
 
-      // Fetch attendance records if sessions exist
+      // Fetch session-based attendance records
       let gwAttendanceData: any[] = [];
-      if (sessionList.length > 0) {
-        const sessionIds = sessionList.map(s => s.id);
+      const realSessionIds = sessionList.map(s => s.id);
+      if (realSessionIds.length > 0) {
         const { data: gwRecords } = await supabase
           .from('gw_attendance_records')
           .select('student_profile_id, attendance_session_id, status')
-          .in('attendance_session_id', sessionIds)
+          .in('attendance_session_id', realSessionIds)
           .in('student_profile_id', filteredProfileIds);
         gwAttendanceData = gwRecords || [];
+      }
+
+      // Fetch event-based attendance (gw_event_attendance) for course events
+      let eventAttendanceData: any[] = [];
+      const eventIds = (courseEvents || []).map(e => e.id);
+      if (eventIds.length > 0) {
+        const { data: eventRecords } = await supabase
+          .from('gw_event_attendance')
+          .select('event_id, user_id, attendance_status')
+          .in('event_id', eventIds);
+        eventAttendanceData = eventRecords || [];
       }
 
       // Build student attendance data using profile_id as the key
       const studentAttendance: StudentAttendance[] = filteredProfileIds.map(profileId => {
         const records = new Map<string, 'present' | 'absent' | 'excused' | 'late' | null>();
         
+        // Session-based records
         gwAttendanceData.forEach(r => {
           if (r.student_profile_id === profileId) {
             records.set(r.attendance_session_id, r.status);
+          }
+        });
+
+        // Event-based records (map user_id → profile_id)
+        eventAttendanceData.forEach(r => {
+          const mappedProfileId = userIdToProfileId.get(r.user_id);
+          if (mappedProfileId === profileId) {
+            const eventSessionId = `event::${r.event_id}`;
+            // Map attendance_status to standard status
+            const status = r.attendance_status === 'present' ? 'present' 
+              : r.attendance_status === 'late' ? 'late'
+              : r.attendance_status === 'excused' ? 'excused'
+              : r.attendance_status === 'absent' ? 'absent'
+              : 'present'; // default QR check-ins to present
+            records.set(eventSessionId, status as any);
           }
         });
 
@@ -182,7 +236,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
         const rate = totalMarked > 0 ? Math.round(((present + excused) / totalMarked) * 100) : 100;
 
         return {
-          student_id: profileId, // Use profile_id as student_id throughout the grid
+          student_id: profileId,
           profile_id: profileId,
           student_name: profileMap.get(profileId) || 'Unknown',
           records,
@@ -269,10 +323,10 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
 
     setSaving(true);
     try {
-      const updates: { student_profile_id: string; attendance_session_id: string; status: string }[] = [];
+      const sessionUpdates: { student_profile_id: string; attendance_session_id: string; status: string }[] = [];
+      const eventUpdates: { profile_id: string; event_id: string; status: string }[] = [];
       
       dirtyRecords.forEach((status, key) => {
-        // Support both :: (new) and legacy - separator
         const separatorIdx = key.indexOf('::');
         let studentId: string;
         let sessionId: string;
@@ -281,35 +335,35 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
           studentId = key.substring(0, separatorIdx);
           sessionId = key.substring(separatorIdx + 2);
         } else {
-          // Fallback: try to split a UUID pair joined by - 
-          // UUIDs are 36 chars (8-4-4-4-12), so first UUID ends at index 36
           console.warn('Legacy separator detected in dirty record key:', key);
           studentId = key.substring(0, 36);
           sessionId = key.substring(37);
         }
 
-        if (!isValidUUID(studentId) || !isValidUUID(sessionId)) {
-          console.error('Invalid UUID detected — skipping:', { key, studentId, sessionId });
-          return;
-        }
+        if (status === 'null') return;
 
-        if (status !== 'null') {
-          updates.push({
-            student_profile_id: studentId,
-            attendance_session_id: sessionId,
-            status
-          });
+        // Check if this is an event-based session
+        if (sessionId.startsWith('event::')) {
+          const eventId = sessionId.substring(7); // Remove 'event::' prefix
+          if (isValidUUID(studentId) && isValidUUID(eventId)) {
+            eventUpdates.push({ profile_id: studentId, event_id: eventId, status });
+          }
+        } else {
+          if (isValidUUID(studentId) && isValidUUID(sessionId)) {
+            sessionUpdates.push({ student_profile_id: studentId, attendance_session_id: sessionId, status });
+          }
         }
       });
 
-      if (updates.length === 0) {
+      if (sessionUpdates.length === 0 && eventUpdates.length === 0) {
         toast.info('No valid changes to save');
         setDirtyRecords(new Map());
         setSaving(false);
         return;
       }
 
-      for (const update of updates) {
+      // Save session-based attendance
+      for (const update of sessionUpdates) {
         const { error } = await supabase
           .from('gw_attendance_records')
           .upsert({
@@ -322,7 +376,24 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
           }, {
             onConflict: 'attendance_session_id,student_profile_id'
           });
+        if (error) throw error;
+      }
 
+      // Save event-based attendance (profile_id → user_id lookup needed)
+      const profileIdToUserId = new Map(enrolledStudents.map(s => [s.profile_id, s.user_id]));
+      for (const update of eventUpdates) {
+        const userId = profileIdToUserId.get(update.profile_id);
+        if (!userId) continue;
+        const { error } = await supabase
+          .from('gw_event_attendance')
+          .upsert({
+            event_id: update.event_id,
+            user_id: userId,
+            attendance_status: update.status,
+            check_in_time: new Date().toISOString(),
+          }, {
+            onConflict: 'event_id,user_id'
+          });
         if (error) throw error;
       }
 

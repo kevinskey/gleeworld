@@ -217,11 +217,13 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
 
   const fetchEnrollmentCount = useCallback(async () => {
     try {
-      const query = supabase.from('gw_course_enrollments').select('id');
-      // @ts-ignore
-      const result = await query.eq('course_id', courseId).eq('status', 'enrolled');
-      if (!result.error && result.data) {
-        setEnrolledCount(result.data.length);
+      const { data, error } = await supabase
+        .from('gw_course_enrollments')
+        .select('id')
+        .eq('course_id', courseId)
+        .eq('enrollment_status', 'enrolled');
+      if (!error && data) {
+        setEnrolledCount(data.length);
       }
     } catch (error) {
       console.error('Error fetching enrollment count:', error);
