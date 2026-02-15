@@ -553,102 +553,138 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
               onSave={saveChanges}
             />
           ) : (
-            <ScrollArea className="w-full h-[60vh]">
-              <div className="min-w-max">
-                {/* Header Row */}
-                <div className="flex border-b bg-muted/50 sticky top-0 z-10">
-                  <div className="w-48 min-w-48 p-2 font-semibold text-xs border-r sticky left-0 bg-muted/50 z-20">
+            <div className="relative overflow-hidden">
+              {/* Fixed-column grid: frozen student names, scrollable dates */}
+              <div className="flex">
+                {/* ── Frozen left column: Student Names ── */}
+                <div className="flex-shrink-0 w-52 min-w-52 border-r-2 border-primary/20 z-20 bg-background">
+                  {/* Header cell */}
+                  <div className="h-12 flex items-center px-3 font-semibold text-xs border-b bg-[#003366] text-white">
+                    <Users className="h-3.5 w-3.5 mr-1.5 opacity-80" />
                     Student
                   </div>
-                  
-                  {sessions.map((session) => (
-                    <Tooltip key={session.id}>
-                      <TooltipTrigger asChild>
-                        <div className="w-9 min-w-9 p-1 text-center border-r text-[10px] cursor-help">
-                          <div className="font-bold">{format(toET(session.date), 'M/d')}</div>
-                          <div className="text-muted-foreground">W{session.week_number}</div>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p className="font-medium">{session.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(toET(session.date), 'EEEE, MMMM d, yyyy')}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
+                  {/* Student name rows */}
+                  {filteredStudents.map((student, rowIdx) => (
+                    <div
+                      key={student.student_id}
+                      className={cn(
+                        "h-10 flex items-center px-3 border-b",
+                        rowIdx % 2 === 0 ? "bg-background" : "bg-muted/10"
+                      )}
+                    >
+                      <span className="font-medium text-sm text-foreground truncate">{student.student_name}</span>
+                    </div>
                   ))}
-
-                  <div className="flex bg-muted/70 sticky right-0 z-10 border-l-2 border-primary/20">
-                    <div className="w-8 p-1 text-center text-[9px] font-semibold border-r" title="Present">P</div>
-                    <div className="w-8 p-1 text-center text-[9px] font-semibold border-r" title="Absent">A</div>
-                    <div className="w-8 p-1 text-center text-[9px] font-semibold border-r" title="Excused">E</div>
-                    <div className="w-8 p-1 text-center text-[9px] font-semibold border-r" title="Late">L</div>
-                    <div className="w-12 p-1 text-center text-[9px] font-semibold" title="Attendance Rate">Rate</div>
-                  </div>
                 </div>
 
-                {filteredStudents.map((student, rowIdx) => (
-                  <div 
-                    key={student.student_id} 
-                    className={cn(
-                      "flex border-b hover:bg-muted/30 transition-colors",
-                      rowIdx % 2 === 0 ? "bg-background" : "bg-muted/10"
-                    )}
-                  >
-                    <div className="w-48 min-w-48 p-2 border-r sticky left-0 bg-inherit z-10">
-                      <div className="font-medium text-sm truncate">{student.student_name}</div>
+                {/* ── Scrollable center: Date columns ── */}
+                <ScrollArea className="flex-1">
+                  <div className="min-w-max">
+                    {/* Date header row */}
+                    <div className="flex h-12 border-b bg-[#003366]">
+                      {sessions.map((session) => (
+                        <Tooltip key={session.id}>
+                          <TooltipTrigger asChild>
+                            <div className="w-10 min-w-10 flex flex-col items-center justify-center border-r border-white/10 cursor-help">
+                              <span className="text-[11px] font-bold text-white leading-tight">
+                                {format(toET(session.date), 'M/d')}
+                              </span>
+                              <span className="text-[9px] text-white/60 leading-tight">
+                                {session.title.length > 6 ? session.title.substring(0, 5) + '…' : session.title}
+                              </span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p className="font-medium">{session.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {format(toET(session.date), 'EEEE, MMMM d, yyyy')}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Week {session.week_number}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ))}
                     </div>
 
-                    {sessions.map(session => {
-                      const status = student.records.get(session.id) || null;
-                      return (
-                        <div 
-                          key={session.id}
-                          className="w-9 min-w-9 p-0.5 border-r flex items-center justify-center"
-                        >
-                          <button
-                            onClick={() => isInstructor && cycleStatus(student.student_id, session.id, status)}
-                            disabled={!isInstructor}
-                            className={cn(
-                              "w-6 h-6 rounded text-xs font-bold flex items-center justify-center transition-all",
-                              getStatusStyle(status),
-                              isInstructor && "hover:ring-2 hover:ring-primary/50 cursor-pointer",
-                              dirtyRecords.has(`${student.student_id}::${session.id}`) && "ring-2 ring-yellow-500"
-                            )}
-                          >
-                            {getStatusLabel(status)}
-                          </button>
-                        </div>
-                      );
-                    })}
+                    {/* Student attendance rows */}
+                    {filteredStudents.map((student, rowIdx) => (
+                      <div
+                        key={student.student_id}
+                        className={cn(
+                          "flex h-10 border-b",
+                          rowIdx % 2 === 0 ? "bg-background" : "bg-muted/10"
+                        )}
+                      >
+                        {sessions.map(session => {
+                          const status = student.records.get(session.id) || null;
+                          return (
+                            <div
+                              key={session.id}
+                              className="w-10 min-w-10 flex items-center justify-center border-r"
+                            >
+                              <button
+                                onClick={() => isInstructor && cycleStatus(student.student_id, session.id, status)}
+                                disabled={!isInstructor}
+                                className={cn(
+                                  "w-7 h-7 rounded text-xs font-bold flex items-center justify-center transition-all",
+                                  getStatusStyle(status),
+                                  isInstructor && "hover:ring-2 hover:ring-primary/50 cursor-pointer",
+                                  dirtyRecords.has(`${student.student_id}::${session.id}`) && "ring-2 ring-yellow-500"
+                                )}
+                              >
+                                {getStatusLabel(status)}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
 
-                    <div className="flex bg-muted/30 sticky right-0 z-10 border-l-2 border-primary/20">
-                      <div className="w-8 p-1 text-center text-xs font-medium border-r text-green-600">
+                {/* ── Frozen right column: Totals ── */}
+                <div className="flex-shrink-0 border-l-2 border-primary/20 z-20 bg-background">
+                  {/* Totals header */}
+                  <div className="h-12 flex items-center bg-[#003366] text-white">
+                    <div className="w-8 text-center text-[9px] font-semibold border-r border-white/10">P</div>
+                    <div className="w-8 text-center text-[9px] font-semibold border-r border-white/10">A</div>
+                    <div className="w-8 text-center text-[9px] font-semibold border-r border-white/10">E</div>
+                    <div className="w-8 text-center text-[9px] font-semibold border-r border-white/10">L</div>
+                    <div className="w-12 text-center text-[9px] font-semibold">Rate</div>
+                  </div>
+                  {/* Totals rows */}
+                  {filteredStudents.map((student, rowIdx) => (
+                    <div
+                      key={student.student_id}
+                      className={cn(
+                        "flex h-10 items-center border-b",
+                        rowIdx % 2 === 0 ? "bg-background" : "bg-muted/10"
+                      )}
+                    >
+                      <div className="w-8 text-center text-xs font-medium border-r text-green-700 dark:text-green-400">
                         {student.totals.present}
                       </div>
-                      <div className="w-8 p-1 text-center text-xs font-medium border-r text-red-600">
+                      <div className="w-8 text-center text-xs font-medium border-r text-red-700 dark:text-red-400">
                         {student.totals.absent}
                       </div>
-                      <div className="w-8 p-1 text-center text-xs font-medium border-r text-blue-600">
+                      <div className="w-8 text-center text-xs font-medium border-r text-blue-700 dark:text-blue-400">
                         {student.totals.excused}
                       </div>
-                      <div className="w-8 p-1 text-center text-xs font-medium border-r text-amber-600">
+                      <div className="w-8 text-center text-xs font-medium border-r text-amber-700 dark:text-amber-400">
                         {student.totals.late}
                       </div>
                       <div className={cn(
-                        "w-12 p-1 text-center text-xs font-bold",
-                        student.totals.rate >= 90 ? "text-green-600" :
-                        student.totals.rate >= 75 ? "text-amber-600" : "text-red-600"
+                        "w-12 text-center text-xs font-bold",
+                        student.totals.rate >= 90 ? "text-green-700 dark:text-green-400" :
+                        student.totals.rate >= 75 ? "text-amber-700 dark:text-amber-400" : "text-red-700 dark:text-red-400"
                       )}>
                         {student.totals.rate}%
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-              <ScrollBar orientation="horizontal" />
-              <ScrollBar orientation="vertical" />
-            </ScrollArea>
+            </div>
           )}
         </CardContent>
       </Card>
