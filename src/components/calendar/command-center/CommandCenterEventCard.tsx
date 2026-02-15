@@ -198,11 +198,12 @@ export const CommandCenterEventCard = ({
           </div>
         )}
         {isMobile && canEdit && (
-          <div className="pt-1 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="pt-2 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <EventQRCode eventId={event.id} eventTitle={event.title} />
             <button
               onClick={() => setShowAttendanceDialog(true)}
-              className="flex items-center gap-1 text-[11px] font-medium text-[#003366] hover:underline"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white shadow-sm"
+              style={{ backgroundColor: '#003366' }}
             >
               <ClipboardCheck className="h-3.5 w-3.5" />
               Attendance
