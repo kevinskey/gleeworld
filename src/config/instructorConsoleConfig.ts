@@ -106,9 +106,6 @@ export const INSTRUCTOR_FEATURE_OVERRIDES: Record<string, Partial<typeof DEFAULT
   },
   // LH 100 - Bowman Scholars
   'a0000000-0000-0000-0000-000000000100': {
-    hasTests: false,
-    hasPolls: false,
-    hasDiscussions: false,
     hasSightReading: false,
   },
 };

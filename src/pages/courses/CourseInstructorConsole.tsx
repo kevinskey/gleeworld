@@ -195,7 +195,7 @@ export const CourseInstructorConsole = () => {
                     if (isMobile) setSidebarOpen(false);
                   }} 
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 rounded-md transition-all",
+                    "w-full flex items-center gap-2.5 px-2.5 rounded-md transition-all",
                     isActive 
                       ? "border" 
                       : "hover:bg-muted/50"
@@ -204,16 +204,16 @@ export const CourseInstructorConsole = () => {
                     color: isActive ? '#003666' : '#334155',
                     backgroundColor: isActive ? '#e0f2fe' : undefined,
                     borderColor: isActive ? '#bae6fd' : undefined,
-                    fontSize: '16px',
+                    fontSize: '13px',
                     fontWeight: isActive ? 600 : 500,
-                    height: '38px',
+                    height: '32px',
                   }}
                 >
                   <Icon 
                     className="flex-shrink-0"
                     style={{ 
-                      width: '22px', 
-                      height: '22px',
+                      width: '16px', 
+                      height: '16px',
                       color: isActive ? '#003666' : '#475569',
                     }} 
                   />
