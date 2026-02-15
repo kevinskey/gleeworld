@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { EventAttendanceDialog } from '@/components/calendar/command-center/EventAttendanceDialog';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
@@ -47,6 +48,8 @@ export const AttendanceDashboard = () => {
   const [canTakeAttendance, setCanTakeAttendance] = useState(false);
   const [qrExpanded, setQrExpanded] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [recentEvents, setRecentEvents] = useState<any[]>([]);
+  const [selectedAttendanceEvent, setSelectedAttendanceEvent] = useState<any | null>(null);
   const [gwProfile, setGwProfile] = useState<any>(null);
   const [stats, setStats] = useState({
     myAttendance: 0,
@@ -168,11 +171,39 @@ export const AttendanceDashboard = () => {
     }
   };
 
+  const loadRecentEvents = async () => {
+    try {
+      const now = new Date().toISOString();
+      const [pastResult, futureResult] = await Promise.all([
+        supabase
+          .from('gw_events')
+          .select('id, title, start_date, end_date, location')
+          .lte('start_date', now)
+          .order('start_date', { ascending: false })
+          .limit(15),
+        supabase
+          .from('gw_events')
+          .select('id, title, start_date, end_date, location')
+          .gt('start_date', now)
+          .order('start_date', { ascending: true })
+          .limit(5),
+      ]);
+      const combined = [
+        ...(futureResult.data || []).reverse(),
+        ...(pastResult.data || []),
+      ];
+      setRecentEvents(combined);
+    } catch (error) {
+      console.error('Error loading recent events:', error);
+    }
+  };
+
   useEffect(() => {
     checkAttendancePermissions();
     if (user) {
       loadDashboardStats();
       loadUpcomingEvents();
+      loadRecentEvents();
     }
   }, [checkAttendancePermissions, user]);
 
@@ -366,6 +397,55 @@ export const AttendanceDashboard = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* ── Event Attendance Viewer ── */}
+          {isAdmin && recentEvents.length > 0 && (
+            <Card className="border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <ClipboardCheck className="h-4 w-4 text-primary" />
+                  Event Attendance Viewer
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {recentEvents.map((evt) => {
+                    const evtDate = new Date(evt.start_date);
+                    const isPast = evtDate < new Date();
+                    return (
+                      <div key={evt.id} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-muted/50 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate" style={{ color: 'hsl(222, 47%, 11%)' }}>
+                            {evt.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {evtDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {evt.location && (
+                              <>
+                                <span>·</span>
+                                <span className="truncate">{evt.location}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={isPast ? "default" : "outline"}
+                          className="flex-shrink-0 gap-1.5 text-xs"
+                          style={isPast ? { backgroundColor: '#003366' } : {}}
+                          onClick={() => setSelectedAttendanceEvent(evt)}
+                        >
+                          <ClipboardCheck className="h-3.5 w-3.5" />
+                          View
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* ── QR Check-In Tab ── */}
@@ -469,6 +549,13 @@ export const AttendanceDashboard = () => {
           </TabsContent>
         )}
       </Tabs>
+
+      {/* Event Attendance Dialog */}
+      <EventAttendanceDialog
+        event={selectedAttendanceEvent}
+        open={!!selectedAttendanceEvent}
+        onOpenChange={(open) => { if (!open) setSelectedAttendanceEvent(null); }}
+      />
     </div>
   );
 };
