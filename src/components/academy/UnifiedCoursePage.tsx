@@ -389,7 +389,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                   <TabsList className="inline-flex w-max gap-1 h-auto bg-muted/50 p-1">
                     {course.courseCode === 'LH 100' ? <>
                         <TabsTrigger value="home" className="text-xs px-3 py-2"><Home className="h-3 w-3 mr-1" />Home</TabsTrigger>
-                        <TabsTrigger value="syllabus" className="text-xs px-3 py-2"><FileText className="h-3 w-3 mr-1" />Syllabus</TabsTrigger>
+                        <TabsTrigger value="modules" className="text-xs px-3 py-2"><FileText className="h-3 w-3 mr-1" />Modules</TabsTrigger>
                         <TabsTrigger value="planner" className="text-xs px-3 py-2"><BookMarked className="h-3 w-3 mr-1" />Planner</TabsTrigger>
                         <TabsTrigger value="photo-gallery" className="text-xs px-3 py-2"><Images className="h-3 w-3 mr-1" />Photos</TabsTrigger>
                         <TabsTrigger value="calendar" className="text-xs px-3 py-2"><Calendar className="h-3 w-3 mr-1" />Calendar</TabsTrigger>

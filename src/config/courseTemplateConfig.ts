@@ -205,7 +205,7 @@ export const COURSE_TEMPLATE_CONFIGS: Record<string, CourseTemplateConfig> = {
     courseId: 'a0000000-0000-0000-0000-000000000100',
     courseCode: 'LH 100',
     primaryNav: DEFAULT_PRIMARY_NAV.filter(item => 
-      ['home', 'syllabus', 'modules', 'assignments', 'journals', 'grades'].includes(item.tab)
+      ['home', 'modules', 'assignments', 'journals', 'grades'].includes(item.tab)
     ),
     courseCore: DEFAULT_COURSE_CORE,
     extensions: [
