@@ -34,6 +34,36 @@ export function useSliderByPlacement(placementKey: string) {
   });
 }
 
+// Admin version: fetches ALL slides regardless of is_active status
+export function useSliderByPlacementAdmin(placementKey: string) {
+  return useQuery({
+    queryKey: ['universal-slider', 'admin', placementKey],
+    queryFn: async (): Promise<SliderWithSlides | null> => {
+      const { data: slider, error: sliderError } = await supabase
+        .from('gw_universal_sliders')
+        .select('*')
+        .eq('placement_key', placementKey)
+        .single();
+
+      if (sliderError || !slider) return null;
+
+      const { data: slides, error: slidesError } = await supabase
+        .from('gw_universal_slider_slides')
+        .select('*')
+        .eq('slider_id', slider.id)
+        .order('display_order', { ascending: true });
+
+      if (slidesError) throw slidesError;
+
+      return {
+        ...slider,
+        slides: slides || [],
+      } as SliderWithSlides;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
 // Fetch all sliders for admin
 export function useAllSliders() {
   return useQuery({
@@ -167,6 +197,7 @@ export function useUpdateSlide() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['universal-sliders-admin'] });
       queryClient.invalidateQueries({ queryKey: ['universal-slider'] });
+      queryClient.invalidateQueries({ queryKey: ['universal-slider', 'admin'] });
     },
   });
 }

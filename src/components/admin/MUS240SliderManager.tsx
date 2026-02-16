@@ -8,13 +8,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Plus, Trash2, ChevronDown, Upload, Eye, EyeOff, Images, Settings, BookOpen, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useSliderByPlacement, useCreateSlider, useCreateSlide, useUpdateSlide, useDeleteSlide } from '@/hooks/useUniversalSlider';
+import { useSliderByPlacementAdmin, useCreateSlider, useCreateSlide, useUpdateSlide, useDeleteSlide } from '@/hooks/useUniversalSlider';
 import { cn } from '@/lib/utils';
 
 const PLACEMENT_KEY = 'mus240-topic-photos';
 
 export const MUS240SliderManager: React.FC = () => {
-  const { data: slider, isLoading, refetch } = useSliderByPlacement(PLACEMENT_KEY);
+  const { data: slider, isLoading, refetch } = useSliderByPlacementAdmin(PLACEMENT_KEY);
   const createSlider = useCreateSlider();
   const createSlide = useCreateSlide();
   const updateSlide = useUpdateSlide();

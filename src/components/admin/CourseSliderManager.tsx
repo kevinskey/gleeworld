@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Trash2, ChevronDown, Upload, Eye, EyeOff, Images, ExternalLink, Youtube, Image as ImageIcon, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useSliderByPlacement, useCreateSlider, useCreateSlide, useUpdateSlide, useDeleteSlide } from '@/hooks/useUniversalSlider';
+import { useSliderByPlacementAdmin, useCreateSlider, useCreateSlide, useUpdateSlide, useDeleteSlide } from '@/hooks/useUniversalSlider';
 import { cn } from '@/lib/utils';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
 
@@ -52,7 +52,7 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
   // Generate placement key from course code (e.g., "MUS 240" -> "mus240-topic-photos")
   const placementKey = `${courseCode.toLowerCase().replace(/\s+/g, '')}-topic-photos`;
   
-  const { data: slider, isLoading, refetch } = useSliderByPlacement(placementKey);
+  const { data: slider, isLoading, refetch } = useSliderByPlacementAdmin(placementKey);
   const createSlider = useCreateSlider();
   const createSlide = useCreateSlide();
   const updateSlide = useUpdateSlide();
