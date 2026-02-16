@@ -1,50 +1,30 @@
 
 
-## Attendance Viewer in the Command Center
+# Fix MUS 240 Hero Slider Active/Hidden Toggle
 
-### What We're Building
+## Problem
+Two issues prevent the Active toggle from working correctly in the Course Slider Manager:
 
-Add an "Attendance" feature to the Attendance Command Center so that when you select an event, you can view who attended, their status, and quick stats -- all without leaving the Command Center.
+1. **Admin view filters out hidden slides**: The `CourseSliderManager` uses `useSliderByPlacement()`, which applies `.eq('is_active', true)` on slides. Once a slide is deactivated, it disappears from the admin panel too, making it impossible to re-activate.
 
-### How It Works
+2. **Cache invalidation mismatch**: After toggling, `useUpdateSlide` invalidates query key `['universal-slider']` (no second segment), but the actual query uses `['universal-slider', placementKey]`. This means the UI may not refresh after changes.
 
-1. **New "View Attendance" option on event cards**: Add a context menu item (and a button on mobile) to `CommandCenterEventCard` that opens an attendance viewer dialog for that event.
+## Solution
 
-2. **New `EventAttendanceDialog` component**: A modal dialog showing:
-   - Event name, date, and location in a branded navy header
-   - Summary stats bar (Present / Absent / Excused / Late counts with color-coded badges)
-   - A sortable, scrollable table of attendees with columns: Name, Status (color-coded badge), Check-in Time, Notes
-   - Data pulled from both `gw_event_attendance` and legacy `attendance` tables, joined with `gw_profiles` for member names
-   - Empty state when no attendance has been recorded yet
+### Step 1: Create an admin-specific slider fetch hook
+Add a new hook `useSliderByPlacementAdmin` in `src/hooks/useUniversalSlider.ts` that fetches **all** slides regardless of `is_active` status. This will be used only in the admin manager.
 
-3. **Integration into Daily Run Sheet**: Add a small attendance indicator on each event card in the run sheet showing how many people checked in (e.g., "5 checked in") as a quick-glance metric.
+### Step 2: Fix cache invalidation in `useUpdateSlide`
+Update the `onSuccess` callback to invalidate all queries starting with `['universal-slider']` using a broader match, so both admin and student caches are refreshed.
 
-### Technical Details
+### Step 3: Update `CourseSliderManager` to use the admin hook
+Switch `src/components/admin/CourseSliderManager.tsx` from `useSliderByPlacement` to the new `useSliderByPlacementAdmin` hook, so hidden slides remain visible and toggleable in the admin interface.
 
-**New file: `src/components/calendar/command-center/EventAttendanceDialog.tsx`**
-- Accepts `event: GleeWorldEvent | null`, `open`, `onOpenChange` props
-- Queries `gw_event_attendance` joined with `gw_profiles` for the given `event.id`
-- Also queries legacy `attendance` table and merges results
-- Displays results in a table with status badges using the existing `CHART_COLORS` pattern
-- Uses Spelman Navy header styling consistent with the Command Center aesthetic
+### Step 4: Update `MUS240SliderManager` similarly
+Apply the same admin hook change to `src/components/admin/MUS240SliderManager.tsx` if it shares the same pattern.
 
-**Modified file: `src/components/calendar/command-center/CommandCenterEventCard.tsx`**
-- Add state: `showAttendanceDialog`
-- Add context menu item: "View Attendance" with `ClipboardCheck` icon (visible to admins/exec board)
-- Add mobile button for attendance viewing
-- Render the new `EventAttendanceDialog` component
-
-**Modified file: `src/components/calendar/command-center/DailyRunSheet.tsx`**
-- For each event card, fetch a quick count of attendance records and display as a subtle badge (e.g., "3 present") below the event details
-
-**Modified file: `src/components/calendar/command-center/index.ts`**
-- Export the new `EventAttendanceDialog` component
-
-### User Flow
-
-1. User opens the Command Center calendar
-2. Clicks on or right-clicks an event
-3. Selects "View Attendance" from the context menu (or taps the attendance button on mobile)
-4. A dialog opens showing the full attendance roster for that event with status breakdown
-5. On the Daily Run Sheet, each event shows a quick attendance count at a glance
+## Files to Modify
+- `src/hooks/useUniversalSlider.ts` -- add admin hook, fix invalidation
+- `src/components/admin/CourseSliderManager.tsx` -- use admin hook
+- `src/components/admin/MUS240SliderManager.tsx` -- use admin hook (if applicable)
 
