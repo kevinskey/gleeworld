@@ -458,7 +458,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
 
             {/* Content Sections */}
-            {activeTab === 'home' && (course.courseCode === 'MUS 240' ? <TeachingFirstHome courseId={course.id} isAdmin={isAdmin} /> : course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'LH 100' ? <div className="space-y-6"><StudentDossierHome courseId={course.id} isAdmin={isAdmin} />{course.courseCode === 'LH 100' && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}><LiturgicalPlanner isAdmin={isAdmin} /></React.Suspense>}</div> : <div className="space-y-4">
+            {activeTab === 'home' && (course.courseCode === 'MUS 240' ? <TeachingFirstHome courseId={course.id} isAdmin={isAdmin} /> : course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'LH 100' ? <div className="space-y-6">{course.courseCode === 'LH 100' && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}><LiturgicalPlanner isAdmin={isAdmin} /></React.Suspense>}<StudentDossierHome courseId={course.id} isAdmin={isAdmin} /></div> : <div className="space-y-4">
                   {/* Enrollment Card */}
                   {!isEnrolled && !enrollmentLoading && <Card className="border-primary/50 bg-primary/5">
                       
