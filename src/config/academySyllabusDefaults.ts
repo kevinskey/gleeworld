@@ -269,51 +269,6 @@ export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
     ...STANDARD_POLICIES
   },
 
-  'LH 100': {
-    name: 'Bowman Scholars',
-    term: 'Spring 2026',
-    credits: 1,
-    class_time: 'By Appointment',
-    classroom: 'Fine Arts / Campus Chapel',
-    instructor_name: 'Dr. Kevin Johnson',
-    instructor_email: 'kjohns10@spelman.edu',
-    instructor_office: 'Fine Arts 105',
-    office_hours: 'By Appointment',
-    purpose: 'Named after Sister Thea Bowman, this program develops liturgical leaders through spiritual formation, music ministry, and worship planning. Scholars serve as cantors, choir directors, and worship leaders in campus and community settings, honoring the legacy of Black Catholic worship traditions.',
-    course_model: null,
-    course_badge: 'Liturgical Leadership',
-    course_phases: null,
-    grading_breakdown: [
-      { component: 'Cantoring & Worship Leadership', weight: 35 },
-      { component: 'Spiritual Formation Journals', weight: 25 },
-      { component: 'Liturgical Planning Project', weight: 20 },
-      { component: 'Sister Thea Bowman Research', weight: 10 },
-      { component: 'Community Service', weight: 10 }
-    ],
-    grading_scale: { 'A': '90-100', 'B': '80-89', 'C': '70-79', 'D': '60-69', 'F': 'Below 60' },
-    weekly_schedule: [
-      { week: 'Week 1', topics: 'Program Overview & Spiritual Formation Goals' },
-      { week: 'Week 2', topics: 'Sister Thea Bowman: Life, Legacy & Vision' },
-      { week: 'Week 3', topics: 'Liturgical Foundations: Structure of Worship' },
-      { week: 'Week 4', topics: 'Music in Worship: Selecting & Leading Song' },
-      { week: 'Week 5', topics: 'Cantoring Techniques & Congregational Leadership' },
-      { week: 'Week 6', topics: 'Scripture & Song: Integrating the Word' },
-      { week: 'Week 7', topics: 'The Liturgical Year & Seasonal Music' },
-      { week: 'Week 8', topics: 'Gospel Music in Catholic Worship' },
-      { week: 'Week 9', topics: 'Choral Direction for Liturgy' },
-      { week: 'Week 10', topics: 'Worship Planning Practicum I' },
-      { week: 'Week 11', topics: 'Worship Planning Practicum II' },
-      { week: 'Week 12', topics: 'Community Ministry: Service in Action' },
-      { week: 'Week 13', topics: 'Sister Thea Research Presentations' },
-      { week: 'Week 14', topics: 'Liturgical Planning Final Projects' },
-      { week: 'Week 15', topics: 'Reflection & Celebration' },
-      { week: 'Week 16', topics: 'Closing Worship Service' }
-    ],
-    attendance_policy: 'All scheduled sessions, chapel services, and ministry engagements are mandatory. Scholars are expected to model commitment and spiritual discipline.',
-    late_assignment_policy: 'Journals and projects accepted up to 3 days late with 10% penalty per day.',
-    ...STANDARD_POLICIES
-  },
-
   'GLEE 101': {
     name: 'Leadership Development',
     term: 'Spring 2026',
