@@ -33,7 +33,7 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
   });
 
   // Use unified assignments hook to get assignments from both systems
-  const { data: assignments, isLoading: assignmentsLoading, error: assignmentsError } = useUnifiedAssignments(course?.code || '');
+  const { data: assignments, isLoading: assignmentsLoading, error: assignmentsError } = useUnifiedAssignments(courseId);
 
   if (courseLoading || assignmentsLoading) {
     return <LoadingSpinner size="lg" text="Loading course..." />;
