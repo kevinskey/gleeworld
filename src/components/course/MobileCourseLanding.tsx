@@ -51,23 +51,21 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
     enabled: !!course.id,
   });
 
-  // Fetch upcoming assignments (max 3)
+  // Fetch ALL course assignments
   const { data: assignments = [] } = useQuery({
-    queryKey: ['course-assignments-due', course.id],
+    queryKey: ['course-all-assignments', course.id],
     queryFn: async () => {
-      const today = new Date().toISOString();
-      
       const { data, error } = await supabase
-        .from('module_items')
+        .from('gw_course_assignments')
         .select('*')
-        .eq('item_type', 'assignment')
-        .gte('due_date', today)
-        .order('due_date', { ascending: true })
-        .limit(3);
+        .eq('course_id', course.id)
+        .eq('is_published', true)
+        .order('due_date', { ascending: true });
 
       if (error) throw error;
       return data || [];
     },
+    enabled: !!course.id,
   });
 
   const formatDueDate = (dueDate: string) => {
@@ -88,7 +86,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       {/* Course Title Bar with Back, Title, and Grade */}
       <div className="bg-card border-b border-border px-3 py-3 flex items-center justify-between gap-2">
         {/* Left: Back Button + Course Badge */}
@@ -179,34 +177,37 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
           </Card>
         )}
 
-        {/* 4. Assignments Due Card */}
+        {/* 4. All Assignments */}
         {assignments.length > 0 && (
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-bold text-foreground">Assignments Due</CardTitle>
+              <CardTitle className="text-lg font-bold text-foreground">Assignments</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {assignments.map((assignment) => (
-                <div 
-                  key={assignment.id} 
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{assignment.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {assignment.due_date && formatDueDate(assignment.due_date)}
-                    </p>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(`/grading/student/assignment/${assignment.id}`)}
-                    className="text-primary border-primary hover:bg-primary/10 ml-3"
+            <CardContent className="space-y-2">
+              {assignments.map((assignment) => {
+                const isPast = assignment.due_date && new Date(assignment.due_date) < new Date();
+                return (
+                  <div
+                    key={assignment.id}
+                    className="flex items-center justify-between py-2.5 border-b border-border last:border-0"
                   >
-                    Open
-                  </Button>
-                </div>
-              ))}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground text-sm">{assignment.title}</p>
+                      <p className={`text-xs ${isPast ? 'text-muted-foreground' : 'text-primary font-medium'}`}>
+                        {assignment.due_date ? formatDueDate(assignment.due_date) : 'No due date'}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/academy/${courseSlug}?tab=assignments`)}
+                      className="text-primary border-primary hover:bg-primary/10 ml-3 text-xs"
+                    >
+                      View
+                    </Button>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         )}
