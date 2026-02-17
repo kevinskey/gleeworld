@@ -6,7 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, BarChart3, BookOpen, TrendingDown, Calendar, CheckCircle2, AlertCircle, GraduationCap, Target, Minus, Table2, Users, ShieldCheck, ShieldAlert } from 'lucide-react';
+import {
+  FileText, ArrowLeft, BarChart3, BookOpen, Calendar,
+  CheckCircle2, AlertCircle, GraduationCap, Users,
+  ShieldCheck, ShieldAlert, Minus
+} from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { StudentPollInterface } from '@/components/course/StudentPollInterface';
@@ -14,8 +18,7 @@ import { ACADEMY_COURSES } from '@/config/academyCourses';
 import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { StudentGradeSpreadsheet } from './StudentGradeSpreadsheet';
-import { Mus240GradeGrid } from '@/components/mus240/grades/Mus240GradeGrid';
+import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 
 interface StudentCourseViewProps {
   courseId: string;
@@ -24,17 +27,18 @@ interface StudentCourseViewProps {
 export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('spreadsheet');
+  const [activeTab, setActiveTab] = useState('grades');
 
-  // Use the deductive grade model hook
-  const { 
-    percentage, 
-    letterGrade, 
-    deductions, 
-    stats, 
+  const {
+    percentage,
+    letterGrade,
+    deductions,
+    stats,
     loading: gradeLoading,
     isAttendanceOnly,
   } = useCourseGrade(courseId);
+
+  const gradingConfig = getCourseGradingConfig(courseId);
 
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ['gw-course', courseId],
@@ -44,7 +48,6 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         .select('*')
         .eq('id', courseId)
         .single();
-
       if (error) throw error;
       return data as any;
     },
@@ -53,78 +56,23 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ['gw-student-assignments', courseId, user?.id],
     queryFn: async () => {
-      const { data: courseDataRaw, error: courseError } = await supabase
-        .from('gw_courses' as any)
-        .select('start_date, end_date, semester, term')
-        .eq('id', courseId)
-        .maybeSingle();
-
-      if (courseError) throw courseError;
-
-      const courseData = courseDataRaw as unknown as { start_date: string | null; end_date: string | null; semester: string | null; term: string | null } | null;
-
-      const getCourseWindow = () => {
-        const startFromDb = courseData?.start_date ? new Date(courseData.start_date) : null;
-        const endFromDb = courseData?.end_date ? new Date(courseData.end_date) : null;
-        if (startFromDb) return { start: startFromDb, end: endFromDb };
-
-        const semesterRaw = String(courseData?.semester ?? courseData?.term ?? '').toUpperCase();
-        const yearMatch = semesterRaw.match(/(20\d{2})/);
-        const year = yearMatch ? Number(yearMatch[1]) : null;
-
-        const month = semesterRaw.includes('SPRING')
-          ? 0
-          : semesterRaw.includes('SUMMER')
-            ? 5
-            : semesterRaw.includes('FALL')
-              ? 7
-              : null;
-
-        if (month === null && /^20\d{4,6}$/.test(String(courseData?.term ?? ''))) {
-          const termStr = String(courseData?.term);
-          const y = Number(termStr.slice(0, 4));
-          const m = Number(termStr.slice(4, 6) || '01') - 1;
-          return { start: new Date(y, Math.max(0, Math.min(11, m)), 1), end: null as Date | null };
-        }
-
-        if (year !== null && month !== null) {
-          return { start: new Date(year, month, 1), end: null as Date | null };
-        }
-
-        return { start: null as Date | null, end: null as Date | null };
-      };
-
-      const { start, end } = getCourseWindow();
-
-      const { data: assignmentsData, error: assignmentsError } = await supabase
+      const { data: assignmentsData, error } = await supabase
         .from('gw_course_assignments')
         .select('*')
         .eq('course_id', courseId)
         .eq('is_published', true)
         .order('due_date', { ascending: true });
 
-      if (assignmentsError) throw assignmentsError;
+      if (error) throw error;
 
-      const filteredAssignments = (assignmentsData as any[] | null | undefined)?.filter((a: any) => {
-        if (!start) return true;
-        if (!a?.due_date) return true;
-        const due = new Date(a.due_date);
-        if (Number.isNaN(due.getTime())) return true;
-        if (due < start) return false;
-        if (end && due > end) return false;
-        return true;
-      });
-
-      const { data: submissionsData, error: submissionsError } = await supabase
+      const { data: submissionsData } = await supabase
         .from('gw_assignment_submissions' as any)
         .select('assignment_id, status')
         .eq('user_id', user?.id);
 
-      if (submissionsError) throw submissionsError;
-
       const submissionsMap = new Map(submissionsData?.map((s: any) => [s.assignment_id, s.status]));
 
-      return (filteredAssignments as any[])?.map((assignment: any) => ({
+      return (assignmentsData as any[])?.map((assignment: any) => ({
         ...assignment,
         submissionStatus: submissionsMap.get(assignment.id) || 'not_submitted',
       }));
@@ -140,7 +88,6 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         .select('*, gw_course_assignments(points)')
         .eq('student_id', user?.id)
         .eq('released_to_student', true);
-      
       if (error) throw error;
       return data as any[];
     },
@@ -159,13 +106,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     return 'text-red-600 dark:text-red-400';
   };
 
-  const getGradeBg = (pct: number) => {
-    if (pct >= 90) return 'bg-green-500/10 border-green-500/20';
-    if (pct >= 80) return 'bg-blue-500/10 border-blue-500/20';
-    if (pct >= 70) return 'bg-yellow-500/10 border-yellow-500/20';
-    if (pct >= 60) return 'bg-orange-500/10 border-orange-500/20';
-    return 'bg-red-500/10 border-red-500/20';
-  };
+  const isMus240 = courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
 
   return (
     <div className="container mx-auto py-6 px-4 space-y-6 max-w-4xl">
@@ -183,335 +124,224 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         </div>
       </div>
 
-      {/* Main Grade Display */}
-      {isAttendanceOnly ? (
-        /* ═══ MUS 070 Attendance-Only Grade Card ═══ */
-        <div className="space-y-4">
-          {/* Navy header card */}
-          <div className="rounded-2xl overflow-hidden shadow-lg" style={{ background: 'linear-gradient(135deg, #003366 0%, #004d99 60%, #7cb9e8 100%)' }}>
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <Users className="h-6 w-6 text-white/80" />
-                <h2 className="text-white text-lg font-bold">Grade Calculation</h2>
-              </div>
-              <p className="text-white/70 text-sm">Based on attendance only</p>
+      {/* Grade Hero */}
+      <div className="rounded-2xl overflow-hidden shadow-lg" style={{ background: 'linear-gradient(135deg, #003366 0%, #004d99 60%, #7cb9e8 100%)' }}>
+        <div className="p-6 flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <GraduationCap className="h-5 w-5 text-white/80" />
+              <span className="text-white/80 text-sm font-medium">Current Grade</span>
             </div>
-          </div>
-
-          {/* Starting Grade */}
-          <div className="rounded-xl border-2 border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800 p-4 flex items-center justify-between">
-            <span className="font-semibold text-green-800 dark:text-green-300 text-lg">Starting Grade</span>
-            <span className="text-3xl font-black text-green-700 dark:text-green-400">100%</span>
-          </div>
-
-          {/* Attendance Status */}
-          <div className="rounded-xl border bg-card p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-foreground">Allowed Absences</span>
-              </div>
-              <span className="text-lg font-bold text-primary">{stats.allowedAbsences ?? 2}</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="h-5 w-5 text-destructive" />
-                <span className="font-semibold text-foreground">Your Unexcused Absences</span>
-              </div>
-              <span className={cn(
-                "text-lg font-bold",
-                (stats.excessAbsences ?? 0) > 0 ? "text-destructive" : "text-green-600"
-              )}>
-                {stats.absenceCount}
-              </span>
-            </div>
-
-            {(stats.excessAbsences ?? 0) > 0 && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>
-                  {stats.excessAbsences} absence{(stats.excessAbsences ?? 0) !== 1 ? 's' : ''} beyond the allowed {stats.allowedAbsences} — 
-                  grade dropped {stats.excessAbsences} letter grade{(stats.excessAbsences ?? 0) !== 1 ? 's' : ''}
-                </span>
-              </div>
+            <div className="text-white text-4xl font-black">{letterGrade}</div>
+            {!isAttendanceOnly && (
+              <div className="text-white/70 text-sm mt-1">{percentage}%</div>
             )}
           </div>
-
-          {/* Current Grade Result */}
-          <div className="rounded-xl border-2 border-primary/30 p-5 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, #003366 0%, #004d99 100%)' }}>
-            <div className="flex items-center gap-3">
-              <GraduationCap className="h-6 w-6 text-white" />
-              <span className="text-white font-semibold text-lg">Current Grade</span>
-            </div>
-            <span className="text-4xl font-black text-white">{letterGrade}</span>
+          <div className="text-right text-white/60 text-xs">
+            {isAttendanceOnly ? 'Attendance-based' : 'Deductive model'}
           </div>
-
-          {/* Policy Reference */}
-          <Card className="border-dashed">
-            <CardContent className="py-4">
-              <p className="text-xs text-muted-foreground text-center leading-relaxed">
-                <strong>Glee Club Handbook Policy:</strong> Grades are based entirely on attendance.
-                Each member is allowed <strong>2 unexcused absences</strong> per semester.
-                The 3rd unexcused absence changes the grade from A to B.
-                Each additional absence drops the grade by one full letter.
-              </p>
-            </CardContent>
-          </Card>
         </div>
-      ) : (
-        /* ═══ Standard Grade Card ═══ */
-        <Card className={cn("border-2", getGradeBg(percentage))}>
-          <CardContent className="pt-6 pb-6">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              {/* Grade Circle */}
-              <div className="relative flex-shrink-0">
-                <div className={cn(
-                  "h-32 w-32 rounded-full flex items-center justify-center border-4",
-                  getGradeBg(percentage)
-                )}>
-                  <div className="text-center">
-                    <div className={cn("text-4xl font-bold", getGradeColor(percentage))}>
-                      {letterGrade}
-                    </div>
-                    <div className={cn("text-lg font-semibold", getGradeColor(percentage))}>
-                      {percentage}%
-                    </div>
-                  </div>
-                </div>
-              </div>
+      </div>
 
-              {/* Grade Details */}
-              <div className="flex-1 space-y-4 w-full">
-                <div>
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5 text-primary" />
-                    Current Course Grade
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Based on the deductive grading model (starts at 100%)
-                  </p>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Grade Progress</span>
-                    <span className="font-medium">{percentage}%</span>
-                  </div>
-                  <Progress value={percentage} className="h-3" />
-                </div>
-
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="p-2 rounded-lg bg-muted/50">
-                    <div className="text-lg font-bold">{stats.assignmentCount}</div>
-                    <div className="text-xs text-muted-foreground">Assignments</div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-muted/50">
-                    <div className="text-lg font-bold">{stats.gradedCount}</div>
-                    <div className="text-xs text-muted-foreground">Graded</div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-muted/50">
-                    <div className="text-lg font-bold">{stats.absenceCount}</div>
-                    <div className="text-xs text-muted-foreground">Absences</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tabs */}
+      {/* Tabs — simplified */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 bg-slate-200 dark:bg-slate-800">
-          <TabsTrigger value="spreadsheet" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 data-[state=active]:bg-white data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-white">
-            <Table2 className="h-4 w-4" />
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="grades" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Grades</span>
           </TabsTrigger>
-          <TabsTrigger value="overview" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 data-[state=active]:bg-white data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-white">
-            <Target className="h-4 w-4" />
-            <span className="hidden sm:inline">Summary</span>
-          </TabsTrigger>
-          <TabsTrigger value="assignments" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 data-[state=active]:bg-white data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-white">
+          <TabsTrigger value="assignments" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Work</span>
           </TabsTrigger>
-          <TabsTrigger value="polls" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 data-[state=active]:bg-white data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-white">
+          <TabsTrigger value="polls" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Polls</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Spreadsheet Tab - New default */}
-        <TabsContent value="spreadsheet" className="mt-6">
-          {courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37' ? (
-            <Mus240GradeGrid />
+        {/* ═══ Grades Tab ═══ */}
+        <TabsContent value="grades" className="mt-6 space-y-4">
+          {isAttendanceOnly ? (
+            /* ── Attendance-Only Model (MUS 070) ── */
+            <div className="space-y-4">
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-5 w-5 text-primary" />
+                      <span className="font-semibold">Allowed Absences</span>
+                    </div>
+                    <span className="text-lg font-bold text-primary">{stats.allowedAbsences ?? 2}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="h-5 w-5 text-destructive" />
+                      <span className="font-semibold">Your Unexcused Absences</span>
+                    </div>
+                    <span className={cn(
+                      "text-lg font-bold",
+                      (stats.excessAbsences ?? 0) > 0 ? "text-destructive" : "text-green-600"
+                    )}>
+                      {stats.absenceCount}
+                    </span>
+                  </div>
+
+                  {(stats.excessAbsences ?? 0) > 0 && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>
+                        {stats.excessAbsences} absence{(stats.excessAbsences ?? 0) !== 1 ? 's' : ''} beyond the allowed {stats.allowedAbsences} —
+                        grade dropped {stats.excessAbsences} letter grade{(stats.excessAbsences ?? 0) !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="border-dashed">
+                <CardContent className="py-4">
+                  <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                    <strong>Grading Policy:</strong> Grades are based entirely on attendance.
+                    Each member is allowed <strong>{stats.allowedAbsences ?? 2} unexcused absences</strong> per semester.
+                    Each additional absence drops the grade by one full letter.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           ) : (
-            <StudentGradeSpreadsheet courseId={courseId} />
+            /* ── Standard Deductive Model ── */
+            <div className="space-y-4">
+              {/* Syllabus Breakdown */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">
+                    {gradingConfig.courseCode} Syllabus Weights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {gradingConfig.components.map((comp, i) => (
+                    <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{comp.component}</div>
+                        {comp.description && (
+                          <div className="text-xs text-muted-foreground mt-0.5">{comp.description}</div>
+                        )}
+                      </div>
+                      <Badge variant="outline" className="ml-3 shrink-0">{comp.weight}%</Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Deductions Summary */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Minus className="h-4 w-4 text-destructive" />
+                    Deductions from 100%
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Assignment Deductions</span>
+                    <span className={cn("font-semibold", deductions.assignments > 0 ? "text-destructive" : "text-muted-foreground")}>
+                      {deductions.assignments > 0 ? `-${deductions.assignments}%` : '0%'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm">Attendance Deductions</span>
+                      <span className="text-xs text-muted-foreground ml-1">
+                        ({stats.absenceCount} absence{stats.absenceCount !== 1 ? 's' : ''} × 2%)
+                      </span>
+                    </div>
+                    <span className={cn("font-semibold", deductions.attendance > 0 ? "text-destructive" : "text-muted-foreground")}>
+                      {deductions.attendance > 0 ? `-${deductions.attendance}%` : '0%'}
+                    </span>
+                  </div>
+                  <div className="border-t pt-3 flex items-center justify-between">
+                    <span className="font-semibold">Current Grade</span>
+                    <span className={cn("text-xl font-bold", getGradeColor(percentage))}>
+                      {percentage}% ({letterGrade})
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <Card>
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <div className="text-2xl font-bold">{stats.assignmentCount}</div>
+                    <div className="text-xs text-muted-foreground">Assignments</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <div className="text-2xl font-bold">{stats.gradedCount}</div>
+                    <div className="text-xs text-muted-foreground">Graded</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <div className="text-2xl font-bold">{stats.absenceCount}</div>
+                    <div className="text-xs text-muted-foreground">Absences</div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           )}
         </TabsContent>
 
-        {/* Overview/Breakdown Tab */}
-        <TabsContent value="overview" className="mt-6 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <TrendingDown className="h-5 w-5 text-destructive" />
-                Grade Deductions
-              </CardTitle>
-              <CardDescription>
-                Your grade starts at 100% and deductions are applied based on performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Starting Point */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <span className="font-medium">Starting Grade</span>
-                </div>
-                <span className="text-lg font-bold text-green-600">100%</span>
-              </div>
-
-              {/* Assignment Deductions */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-3">
-                  <Minus className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <span className="font-medium">Assignment Deductions</span>
-                    <p className="text-xs text-muted-foreground">
-                      Based on {stats.gradedCount} graded assignment{stats.gradedCount !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                </div>
-                <span className={cn(
-                  "text-lg font-bold",
-                  deductions.assignments > 0 ? "text-destructive" : "text-muted-foreground"
-                )}>
-                  {deductions.assignments > 0 ? `-${deductions.assignments}%` : '0%'}
-                </span>
-              </div>
-
-              {/* Attendance Deductions */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-3">
-                  <Minus className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <span className="font-medium">Attendance Deductions</span>
-                    <p className="text-xs text-muted-foreground">
-                      {stats.absenceCount} unexcused absence{stats.absenceCount !== 1 ? 's' : ''} × 2%
-                    </p>
-                  </div>
-                </div>
-                <span className={cn(
-                  "text-lg font-bold",
-                  deductions.attendance > 0 ? "text-destructive" : "text-muted-foreground"
-                )}>
-                  {deductions.attendance > 0 ? `-${deductions.attendance}%` : '0%'}
-                </span>
-              </div>
-
-              {/* Divider */}
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between p-3 rounded-lg border-2 border-primary/20 bg-primary/5">
-                  <div className="flex items-center gap-3">
-                    <GraduationCap className="h-5 w-5 text-primary" />
-                    <span className="font-semibold">Current Grade</span>
-                  </div>
-                  <div className="text-right">
-                    <span className={cn("text-2xl font-bold", getGradeColor(percentage))}>
-                      {percentage}%
-                    </span>
-                    <span className={cn("ml-2 text-lg font-semibold", getGradeColor(percentage))}>
-                      ({letterGrade})
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Grade Scale Reference */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Grade Scale</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-5 gap-2 text-center text-sm">
-                {[
-                  { grade: 'A', range: '90-100', color: 'text-green-600' },
-                  { grade: 'B', range: '80-89', color: 'text-blue-600' },
-                  { grade: 'C', range: '70-79', color: 'text-yellow-600' },
-                  { grade: 'D', range: '60-69', color: 'text-orange-600' },
-                  { grade: 'F', range: '0-59', color: 'text-red-600' }
-                ].map((item) => (
-                  <div 
-                    key={item.grade} 
-                    className={cn(
-                      "p-3 rounded-lg bg-muted/50",
-                      letterGrade.startsWith(item.grade) && "ring-2 ring-primary bg-primary/10"
-                    )}
-                  >
-                    <div className={cn("text-xl font-bold", item.color)}>{item.grade}</div>
-                    <div className="text-xs text-muted-foreground">{item.range}</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Assignments Tab */}
+        {/* ═══ Assignments Tab ═══ */}
         <TabsContent value="assignments" className="mt-6">
-          <div className="grid gap-4">
-            {assignments?.map((assignment) => {
-              const assignmentGrade = grades?.find(g => g.assignment_id === assignment.id);
-              
+          <div className="grid gap-3">
+            {assignments?.map((assignment: any) => {
+              const assignmentGrade = grades?.find((g: any) => g.assignment_id === assignment.id);
+
               return (
-                <Card key={assignment.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center justify-between text-base">
-                      <span className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
+                <Card key={assignment.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="py-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
                         {assignment.title}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={
-                          assignment.submissionStatus === 'graded' ? 'default' : 
-                          assignment.submissionStatus === 'submitted' ? 'secondary' : 
-                          'outline'
-                        }>
-                          {assignment.submissionStatus}
-                        </Badge>
-                        <span className="text-sm font-normal text-muted-foreground">
-                          {assignment.points} pts
+                      <Badge variant={
+                        assignment.submissionStatus === 'graded' ? 'default' :
+                        assignment.submissionStatus === 'submitted' ? 'secondary' :
+                        'outline'
+                      }>
+                        {assignment.submissionStatus}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
+                      </span>
+                      {assignmentGrade ? (
+                        <span className="font-semibold text-foreground">
+                          {assignmentGrade.points_awarded} / {assignment.points} pts
                         </span>
-                      </div>
-                    </CardTitle>
-                    <CardDescription className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3 pt-0">
-                    {assignmentGrade && (
-                      <div className="p-3 bg-muted rounded-lg">
-                        <p className="text-sm font-semibold">
-                          Grade: {assignmentGrade.points_awarded} / {assignment.points} 
-                          ({((assignmentGrade.points_awarded / assignment.points) * 100).toFixed(1)}%)
-                        </p>
-                        {assignmentGrade.feedback && (
-                          <p className="text-sm text-muted-foreground mt-1">{assignmentGrade.feedback}</p>
-                        )}
-                      </div>
+                      ) : (
+                        <span>{assignment.points} pts</span>
+                      )}
+                    </div>
+                    {assignmentGrade?.feedback && (
+                      <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted rounded">
+                        {assignmentGrade.feedback}
+                      </p>
                     )}
                     <Button
                       size="sm"
+                      variant="outline"
+                      className="mt-2"
                       onClick={() => navigate(`/grading/student/assignment/${assignment.id}`)}
                     >
-                      View Assignment
+                      View
                     </Button>
                   </CardContent>
                 </Card>
@@ -529,7 +359,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
           </div>
         </TabsContent>
 
-        {/* Polls Tab */}
+        {/* ═══ Polls Tab ═══ */}
         <TabsContent value="polls" className="mt-6">
           <StudentPollInterface courseId={courseId} />
         </TabsContent>
