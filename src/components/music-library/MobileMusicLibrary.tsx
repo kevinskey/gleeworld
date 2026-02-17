@@ -22,7 +22,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +71,8 @@ export const MobileMusicLibrary = ({
   scrollContainerRef
 }: MobileMusicLibraryProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPath = (location.state as { from?: string })?.from;
   const [activeSection, setActiveSection] = useState("library");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -135,7 +137,7 @@ export const MobileMusicLibrary = ({
             variant="ghost" 
             size="icon" 
             className="h-9 w-9 flex-shrink-0"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(fromPath || '/dashboard')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
