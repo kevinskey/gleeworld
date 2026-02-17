@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Library } from 'lucide-react';
+import { Camera, Library, GraduationCap } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsPhone } from '@/hooks/use-mobile';
+import { useUserRole } from '@/hooks/useUserRole';
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from '@/components/quick-capture/QuickCaptureCategorySelector';
 import { CategorizedQuickCapture } from '@/components/quick-capture/CategorizedQuickCapture';
 import { MusicalToolkit } from '@/components/musical-toolkit/MusicalToolkit';
@@ -15,10 +16,13 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isPhone = useIsPhone();
+  const { profile } = useUserRole();
   const previousPath = useRef<string>('/');
   
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
+
+  const isInstructor = profile?.role === 'instructor' || profile?.is_admin || profile?.is_super_admin;
 
   // Track last non-library route (helps when arriving here via deep link)
   useEffect(() => {
@@ -58,6 +62,21 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
           <div className="flex items-center justify-center w-14 h-14 text-foreground">
             <MusicalToolkit className="!p-0 [&_svg]:!h-10 [&_svg]:!w-10" />
           </div>
+
+          {/* Instructor Console - only for instructors/admins */}
+          {isInstructor && (
+            <button
+              onClick={() => navigate('/grading/instructor/dashboard')}
+              className={cn(
+                "relative flex items-center justify-center w-14 h-14 rounded-full transition-all",
+                location.pathname.includes('/instructor')
+                  ? "text-primary bg-primary/10"
+                  : "text-foreground hover:bg-muted"
+              )}
+            >
+              <GraduationCap className="h-7 w-7" />
+            </button>
+          )}
 
           {/* Glee Cam - Highlighted Center with Navy Blue */}
           <button
