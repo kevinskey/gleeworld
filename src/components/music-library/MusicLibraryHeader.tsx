@@ -17,11 +17,11 @@ export const MusicLibraryHeader = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Dashboard</span>
+          <span>Back</span>
         </Button>
       </div>
     </div>
