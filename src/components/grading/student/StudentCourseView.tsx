@@ -145,15 +145,17 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
       {/* Tabs — simplified */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className={cn("grid w-full", isAttendanceOnly ? "grid-cols-2" : "grid-cols-3")}>
           <TabsTrigger value="grades" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Grades</span>
           </TabsTrigger>
-          <TabsTrigger value="assignments" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Work</span>
-          </TabsTrigger>
+          {!isAttendanceOnly && (
+            <TabsTrigger value="assignments" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Work</span>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="polls" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Polls</span>
@@ -296,68 +298,70 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         </TabsContent>
 
         {/* ═══ Assignments Tab ═══ */}
-        <TabsContent value="assignments" className="mt-6">
-          <div className="grid gap-3">
-            {assignments?.map((assignment: any) => {
-              const assignmentGrade = grades?.find((g: any) => g.assignment_id === assignment.id);
+        {!isAttendanceOnly && (
+          <TabsContent value="assignments" className="mt-6">
+            <div className="grid gap-3">
+              {assignments?.map((assignment: any) => {
+                const assignmentGrade = grades?.find((g: any) => g.assignment_id === assignment.id);
 
-              return (
-                <Card key={assignment.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="py-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        {assignment.title}
-                      </span>
-                      <Badge variant={
-                        assignment.submissionStatus === 'graded' ? 'default' :
-                        assignment.submissionStatus === 'submitted' ? 'secondary' :
-                        'outline'
-                      }>
-                        {assignment.submissionStatus}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
-                      </span>
-                      {assignmentGrade ? (
-                        <span className="font-semibold text-foreground">
-                          {assignmentGrade.points_awarded} / {assignment.points} pts
+                return (
+                  <Card key={assignment.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="py-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          {assignment.title}
                         </span>
-                      ) : (
-                        <span>{assignment.points} pts</span>
+                        <Badge variant={
+                          assignment.submissionStatus === 'graded' ? 'default' :
+                          assignment.submissionStatus === 'submitted' ? 'secondary' :
+                          'outline'
+                        }>
+                          {assignment.submissionStatus}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
+                        </span>
+                        {assignmentGrade ? (
+                          <span className="font-semibold text-foreground">
+                            {assignmentGrade.points_awarded} / {assignment.points} pts
+                          </span>
+                        ) : (
+                          <span>{assignment.points} pts</span>
+                        )}
+                      </div>
+                      {assignmentGrade?.feedback && (
+                        <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted rounded">
+                          {assignmentGrade.feedback}
+                        </p>
                       )}
-                    </div>
-                    {assignmentGrade?.feedback && (
-                      <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted rounded">
-                        {assignmentGrade.feedback}
-                      </p>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="mt-2"
-                      onClick={() => navigate(`/grading/student/assignment/${assignment.id}`)}
-                    >
-                      View
-                    </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => navigate(`/grading/student/assignment/${assignment.id}`)}
+                      >
+                        View
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              {!assignments || assignments.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center">
+                    <AlertCircle className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground">No assignments yet.</p>
                   </CardContent>
                 </Card>
-              );
-            })}
-
-            {!assignments || assignments.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <AlertCircle className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">No assignments yet.</p>
-                </CardContent>
-              </Card>
-            ) : null}
-          </div>
-        </TabsContent>
+              ) : null}
+            </div>
+          </TabsContent>
+        )}
 
         {/* ═══ Polls Tab ═══ */}
         <TabsContent value="polls" className="mt-6">
