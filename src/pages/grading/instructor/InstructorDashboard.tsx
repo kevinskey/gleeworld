@@ -33,42 +33,43 @@ const InstructorDashboard: React.FC = () => {
 
   return (
     <UniversalLayout>
-      <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6" style={{ background: '#f8f9fb' }}>
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">Instructor Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Select a course to manage</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1" style={{ color: '#0f172a' }}>Instructor Dashboard</h1>
+          <p className="text-sm" style={{ color: '#64748b' }}>Select a course to manage</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {activeCourses.map((course) => {
             const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
             return (
-              <Card
+              <div
                 key={course.id}
-                className="border border-border bg-card hover:shadow-lg transition-shadow cursor-pointer group"
+                className="rounded-xl border shadow-sm hover:shadow-lg transition-shadow cursor-pointer group p-0"
+                style={{ background: '#ffffff', borderColor: '#e2e8f0' }}
                 onClick={() => navigate(`/${courseSlug}/instructor/console`)}
               >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                <div className="p-5 pb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="inline-block text-xs font-medium px-2.5 py-0.5 rounded-full" style={{ background: '#e0f2fe', color: '#003366' }}>
                       {course.level}
-                    </Badge>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </span>
+                    <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" style={{ color: '#94a3b8' }} />
                   </div>
-                  <CardTitle className="flex items-center gap-2 text-xl mt-2 text-foreground">
-                    <GraduationCap className="h-5 w-5 text-primary" />
+                  <h3 className="flex items-center gap-2 text-xl font-bold mt-2" style={{ color: '#0f172a' }}>
+                    <GraduationCap className="h-5 w-5" style={{ color: '#003366' }} />
                     {course.courseCode}
-                  </CardTitle>
-                  <CardDescription className="text-muted-foreground">{course.title}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-3">{course.instructor?.name}</p>
-                  <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                    <BookOpen className="h-4 w-4 mr-2" />
+                  </h3>
+                  <p className="text-sm mt-1" style={{ color: '#475569' }}>{course.title}</p>
+                </div>
+                <div className="px-5 pb-5">
+                  <p className="text-sm mb-3" style={{ color: '#64748b' }}>{course.instructor?.name}</p>
+                  <button className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors" style={{ background: '#003366', color: '#ffffff' }}>
+                    <BookOpen className="h-4 w-4" />
                     Open Instructor Console
-                  </Button>
-                </CardContent>
-              </Card>
+                  </button>
+                </div>
+              </div>
             );
           })}
         </div>
