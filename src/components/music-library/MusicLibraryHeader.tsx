@@ -1,11 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Music } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Desktop-only header with blue strip
 // Hidden on mobile since MobileMusicLibrary handles its own navigation
 export const MusicLibraryHeader = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPath = (location.state as { from?: string })?.from;
 
   return (
     <div className="bg-primary text-primary-foreground">
@@ -17,7 +19,7 @@ export const MusicLibraryHeader = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(fromPath || '/dashboard')}
           className="flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
         >
           <ArrowLeft className="h-4 w-4" />
