@@ -236,7 +236,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
               <QuickActionButton 
                 icon={Calendar} 
                 label="Concerts" 
-                onClick={() => navigate(`/academy/${courseSlug}?tab=calendar`)} 
+                onClick={() => navigate('/music-library')} 
               />
               <QuickActionButton 
                 icon={MapPin} 
