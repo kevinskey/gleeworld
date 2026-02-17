@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp, Mic, MapPin } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
@@ -83,6 +83,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   };
 
   const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
+  const isMus070 = course.courseCode === 'MUS 070';
   
 
   return (
@@ -177,8 +178,8 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
           </Card>
         )}
 
-        {/* 4. All Assignments */}
-        {assignments.length > 0 && (
+        {/* 4. All Assignments (hidden for MUS 070) */}
+        {!isMus070 && assignments.length > 0 && (
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-bold text-foreground">Assignments</CardTitle>
@@ -212,28 +213,55 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
           </Card>
         )}
 
-        {/* 5. Quick Actions Row - 2x2 Grid */}
-        <div className="grid grid-cols-4 gap-3">
-          <QuickActionButton 
-            icon={LayoutGrid} 
-            label="Modules" 
-            onClick={() => navigate(`/academy/${courseSlug}?tab=modules`)} 
-          />
-          <QuickActionButton 
-            icon={ClipboardList} 
-            label="Assignments" 
-            onClick={() => navigate(`/academy/${courseSlug}?tab=assignments`)} 
-          />
-          <QuickActionButton 
-            icon={MessageSquare} 
-            label="Messages" 
-            onClick={() => navigate(`/academy/${courseSlug}?tab=messages`)} 
-          />
-          <QuickActionButton 
-            icon={BookOpen} 
-            label="Resources" 
-            onClick={() => navigate(`/academy/${courseSlug}?tab=resources`)} 
-          />
+        {/* 5. Quick Actions Row */}
+        <div className={`grid ${isMus070 ? 'grid-cols-4' : 'grid-cols-4'} gap-3`}>
+          {isMus070 ? (
+            <>
+              <QuickActionButton 
+                icon={Mic} 
+                label="Recordings" 
+                onClick={() => navigate(`/academy/${courseSlug}?tab=recordings`)} 
+              />
+              <QuickActionButton 
+                icon={Calendar} 
+                label="Concerts" 
+                onClick={() => navigate(`/academy/${courseSlug}?tab=calendar`)} 
+              />
+              <QuickActionButton 
+                icon={MapPin} 
+                label="Tour" 
+                onClick={() => navigate('/tour-planner')} 
+              />
+              <QuickActionButton 
+                icon={BookOpen} 
+                label="Resources" 
+                onClick={() => navigate(`/academy/${courseSlug}?tab=resources`)} 
+              />
+            </>
+          ) : (
+            <>
+              <QuickActionButton 
+                icon={LayoutGrid} 
+                label="Modules" 
+                onClick={() => navigate(`/academy/${courseSlug}?tab=modules`)} 
+              />
+              <QuickActionButton 
+                icon={ClipboardList} 
+                label="Assignments" 
+                onClick={() => navigate(`/academy/${courseSlug}?tab=assignments`)} 
+              />
+              <QuickActionButton 
+                icon={MessageSquare} 
+                label="Messages" 
+                onClick={() => navigate(`/academy/${courseSlug}?tab=messages`)} 
+              />
+              <QuickActionButton 
+                icon={BookOpen} 
+                label="Resources" 
+                onClick={() => navigate(`/academy/${courseSlug}?tab=resources`)} 
+              />
+            </>
+          )}
         </div>
 
         {/* 6. Announcements / Media Slider */}
