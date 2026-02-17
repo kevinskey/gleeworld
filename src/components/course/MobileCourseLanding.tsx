@@ -90,45 +90,52 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   return (
     <div className="bg-background">
       {/* Course Title Bar with Back, Title, and Grade */}
-      <div className="bg-card border-b border-border px-3 py-3 flex items-center justify-between gap-2">
-        {/* Left: Back Button + Course Badge */}
-        <div className="flex items-center gap-2 shrink-0">
+      <div className="bg-card border-b border-border">
+        <div className="px-3 py-3 flex items-center justify-between gap-2">
+          {/* Left: Back Button + Course Badge */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-muted transition-colors touch-manipulation"
+              aria-label="Go back"
+            >
+              <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+            </button>
+            <Badge className="bg-primary text-primary-foreground font-semibold px-2 py-0.5 text-xs shrink-0">
+              {course.courseCode}
+            </Badge>
+          </div>
+          
+          {/* Center: Course Title */}
+          <span className="font-semibold text-foreground text-base text-center flex-1 truncate">
+            {course.title}
+          </span>
+          
+          {/* Right: Grade Box */}
           <button
-            onClick={() => navigate(-1)}
-            className="flex items-center justify-center h-7 w-7 rounded-md hover:bg-muted transition-colors touch-manipulation"
-            aria-label="Go back"
+            onClick={() => navigate(`/grading/student/course/${course.id}`)}
+            className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors touch-manipulation shrink-0"
+            aria-label="View grade breakdown"
           >
-            <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+            <span className="text-xs font-bold text-foreground">
+              {gradeLoading ? '--' : `${percentage}%`}
+            </span>
+            <span className="text-xs font-semibold text-primary">
+              {gradeLoading ? '' : letterGrade}
+            </span>
           </button>
-          <Badge className="bg-primary text-primary-foreground font-semibold px-2 py-0.5 text-xs shrink-0">
-            {course.courseCode}
-          </Badge>
         </div>
-        
-        {/* Center: Course Title */}
-        <span className="font-semibold text-foreground text-base text-center flex-1 truncate">
-          {course.title}
-        </span>
-        
-        {/* Right: Grade Box */}
-        <button
-          onClick={() => navigate(`/grading/student/course/${course.id}`)}
-          className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors touch-manipulation shrink-0"
-          aria-label="View grade breakdown"
-        >
-          <span className="text-xs font-bold text-foreground">
-            {gradeLoading ? '--' : `${percentage}%`}
-          </span>
-          <span className="text-xs font-semibold text-primary">
-            {gradeLoading ? '' : letterGrade}
-          </span>
-        </button>
+
+        {/* GPS Check-in for MUS 070 - in header */}
+        {isMus070 && (
+          <div className="px-3 pb-3">
+            <GpsCheckin courseId={course.id} />
+          </div>
+        )}
       </div>
 
       {/* Main Content - Vertical Stack */}
       <main className="p-4 space-y-4 pb-32">
-        {/* GPS Check-in for MUS 070 */}
-        {isMus070 && <GpsCheckin courseId={course.id} />}
 
         {/* 2. Listen to Tracks - Dropdown Toggle */}
         <div className="relative">
