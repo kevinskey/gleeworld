@@ -126,7 +126,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
       </div>
 
       {/* Main Content - Vertical Stack */}
-      <main className="p-4 space-y-4 pb-24">
+      <main className="p-4 space-y-4 pb-32">
         {/* GPS Check-in for MUS 070 */}
         {isMus070 && <GpsCheckin courseId={course.id} />}
 
