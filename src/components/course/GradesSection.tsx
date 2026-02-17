@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { BarChart3, TrendingUp } from 'lucide-react';
+import { useCourseGrade } from '@/hooks/useCourseGrade';
 
 interface GradesSectionProps {
   courseId: string;
@@ -10,16 +11,17 @@ interface GradesSectionProps {
 }
 
 export const GradesSection: React.FC<GradesSectionProps> = ({ courseId, gradingBreakdown }) => {
-  // Mock data - in real implementation, fetch from database
-  const currentGrade = 92.5;
-  const letterGrade = 'A';
+  const { percentage, letterGrade, loading } = useCourseGrade(courseId);
+
+  const currentGrade = loading ? 0 : percentage;
+  const currentLetter = loading ? '--' : letterGrade;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Grades</h2>
         <Badge variant="default" className="text-lg px-4 py-2">
-          Current: {letterGrade} ({currentGrade}%)
+          Current: {currentLetter} ({currentGrade}%)
         </Badge>
       </div>
 

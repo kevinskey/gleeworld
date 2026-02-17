@@ -102,11 +102,12 @@ export const useCourseGrade = (courseId: string): CourseGradeResult => {
         console.error('Error fetching submissions:', submissionsError);
       }
 
-      // Fetch attendance records (unexcused absences)
+      // Fetch attendance records (unexcused absences) filtered by course
       const { data: attendance, error: attendanceError } = await supabase
         .from('attendance')
-        .select('status')
-        .eq('user_id', user.id);
+        .select('status, events!inner(course_id)')
+        .eq('user_id', user.id)
+        .eq('events.course_id', courseId);
 
       if (attendanceError) {
         console.error('Error fetching attendance:', attendanceError);
