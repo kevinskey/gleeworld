@@ -28,14 +28,11 @@ export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
     course_badge: 'Choral Ensemble',
     course_phases: null,
     grading_breakdown: [
-      { component: 'Attendance & Participation', weight: 40 },
-      { component: 'Concert Performances', weight: 30 },
-      { component: 'Sectional Preparation', weight: 15 },
-      { component: 'Uniform & Professionalism', weight: 15 }
+      { component: 'Attendance', weight: 100 },
     ],
     grading_scale: { 'A': '90-100', 'B': '80-89', 'C': '70-79', 'D': '60-69', 'F': 'Below 60' },
     weekly_schedule: null,
-    attendance_policy: 'Regular attendance at all rehearsals and performances is mandatory. Members are expected to arrive on time, prepared, and in appropriate attire. Unexcused absences from performances will result in grade reduction.',
+    attendance_policy: 'Grades are based entirely on attendance. Each member is allowed 2 unexcused absences per semester. The 3rd unexcused absence changes the grade from A to B. Each additional unexcused absence drops the grade by one full letter (B→C→D→F). Three tardies equal one absence.',
     late_assignment_policy: null,
     ...STANDARD_POLICIES
   },

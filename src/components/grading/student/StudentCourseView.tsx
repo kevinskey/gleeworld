@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, BarChart3, BookOpen, TrendingDown, Calendar, CheckCircle2, AlertCircle, GraduationCap, Target, Minus, Table2 } from 'lucide-react';
+import { FileText, ArrowLeft, BarChart3, BookOpen, TrendingDown, Calendar, CheckCircle2, AlertCircle, GraduationCap, Target, Minus, Table2, Users, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { StudentPollInterface } from '@/components/course/StudentPollInterface';
@@ -32,7 +32,8 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     letterGrade, 
     deductions, 
     stats, 
-    loading: gradeLoading 
+    loading: gradeLoading,
+    isAttendanceOnly,
   } = useCourseGrade(courseId);
 
   const { data: course, isLoading: courseLoading } = useQuery({
@@ -183,66 +184,144 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
       </div>
 
       {/* Main Grade Display */}
-      <Card className={cn("border-2", getGradeBg(percentage))}>
-        <CardContent className="pt-6 pb-6">
-          <div className="flex flex-col sm:flex-row items-center gap-6">
-            {/* Grade Circle */}
-            <div className="relative flex-shrink-0">
-              <div className={cn(
-                "h-32 w-32 rounded-full flex items-center justify-center border-4",
-                getGradeBg(percentage)
-              )}>
-                <div className="text-center">
-                  <div className={cn("text-4xl font-bold", getGradeColor(percentage))}>
-                    {letterGrade}
-                  </div>
-                  <div className={cn("text-lg font-semibold", getGradeColor(percentage))}>
-                    {percentage}%
-                  </div>
-                </div>
+      {isAttendanceOnly ? (
+        /* ═══ MUS 070 Attendance-Only Grade Card ═══ */
+        <div className="space-y-4">
+          {/* Navy header card */}
+          <div className="rounded-2xl overflow-hidden shadow-lg" style={{ background: 'linear-gradient(135deg, #003366 0%, #004d99 60%, #7cb9e8 100%)' }}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Users className="h-6 w-6 text-white/80" />
+                <h2 className="text-white text-lg font-bold">Grade Calculation</h2>
               </div>
-            </div>
-
-            {/* Grade Details */}
-            <div className="flex-1 space-y-4 w-full">
-              <div>
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5 text-primary" />
-                  Current Course Grade
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Based on the deductive grading model (starts at 100%)
-                </p>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Grade Progress</span>
-                  <span className="font-medium">{percentage}%</span>
-                </div>
-                <Progress value={percentage} className="h-3" />
-              </div>
-
-              {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="p-2 rounded-lg bg-muted/50">
-                  <div className="text-lg font-bold">{stats.assignmentCount}</div>
-                  <div className="text-xs text-muted-foreground">Assignments</div>
-                </div>
-                <div className="p-2 rounded-lg bg-muted/50">
-                  <div className="text-lg font-bold">{stats.gradedCount}</div>
-                  <div className="text-xs text-muted-foreground">Graded</div>
-                </div>
-                <div className="p-2 rounded-lg bg-muted/50">
-                  <div className="text-lg font-bold">{stats.absenceCount}</div>
-                  <div className="text-xs text-muted-foreground">Absences</div>
-                </div>
-              </div>
+              <p className="text-white/70 text-sm">Based on attendance only</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Starting Grade */}
+          <div className="rounded-xl border-2 border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800 p-4 flex items-center justify-between">
+            <span className="font-semibold text-green-800 dark:text-green-300 text-lg">Starting Grade</span>
+            <span className="text-3xl font-black text-green-700 dark:text-green-400">100%</span>
+          </div>
+
+          {/* Attendance Status */}
+          <div className="rounded-xl border bg-card p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                <span className="font-semibold text-foreground">Allowed Absences</span>
+              </div>
+              <span className="text-lg font-bold text-primary">{stats.allowedAbsences ?? 2}</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="h-5 w-5 text-destructive" />
+                <span className="font-semibold text-foreground">Your Unexcused Absences</span>
+              </div>
+              <span className={cn(
+                "text-lg font-bold",
+                (stats.excessAbsences ?? 0) > 0 ? "text-destructive" : "text-green-600"
+              )}>
+                {stats.absenceCount}
+              </span>
+            </div>
+
+            {(stats.excessAbsences ?? 0) > 0 && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>
+                  {stats.excessAbsences} absence{(stats.excessAbsences ?? 0) !== 1 ? 's' : ''} beyond the allowed {stats.allowedAbsences} — 
+                  grade dropped {stats.excessAbsences} letter grade{(stats.excessAbsences ?? 0) !== 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Current Grade Result */}
+          <div className="rounded-xl border-2 border-primary/30 p-5 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, #003366 0%, #004d99 100%)' }}>
+            <div className="flex items-center gap-3">
+              <GraduationCap className="h-6 w-6 text-white" />
+              <span className="text-white font-semibold text-lg">Current Grade</span>
+            </div>
+            <span className="text-4xl font-black text-white">{letterGrade}</span>
+          </div>
+
+          {/* Policy Reference */}
+          <Card className="border-dashed">
+            <CardContent className="py-4">
+              <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                <strong>Glee Club Handbook Policy:</strong> Grades are based entirely on attendance.
+                Each member is allowed <strong>2 unexcused absences</strong> per semester.
+                The 3rd unexcused absence changes the grade from A to B.
+                Each additional absence drops the grade by one full letter.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        /* ═══ Standard Grade Card ═══ */
+        <Card className={cn("border-2", getGradeBg(percentage))}>
+          <CardContent className="pt-6 pb-6">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              {/* Grade Circle */}
+              <div className="relative flex-shrink-0">
+                <div className={cn(
+                  "h-32 w-32 rounded-full flex items-center justify-center border-4",
+                  getGradeBg(percentage)
+                )}>
+                  <div className="text-center">
+                    <div className={cn("text-4xl font-bold", getGradeColor(percentage))}>
+                      {letterGrade}
+                    </div>
+                    <div className={cn("text-lg font-semibold", getGradeColor(percentage))}>
+                      {percentage}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grade Details */}
+              <div className="flex-1 space-y-4 w-full">
+                <div>
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5 text-primary" />
+                    Current Course Grade
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Based on the deductive grading model (starts at 100%)
+                  </p>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Grade Progress</span>
+                    <span className="font-medium">{percentage}%</span>
+                  </div>
+                  <Progress value={percentage} className="h-3" />
+                </div>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="p-2 rounded-lg bg-muted/50">
+                    <div className="text-lg font-bold">{stats.assignmentCount}</div>
+                    <div className="text-xs text-muted-foreground">Assignments</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-muted/50">
+                    <div className="text-lg font-bold">{stats.gradedCount}</div>
+                    <div className="text-xs text-muted-foreground">Graded</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-muted/50">
+                    <div className="text-lg font-bold">{stats.absenceCount}</div>
+                    <div className="text-xs text-muted-foreground">Absences</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

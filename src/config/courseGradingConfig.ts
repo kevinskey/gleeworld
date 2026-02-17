@@ -14,8 +14,13 @@ export interface CourseGradingConfig {
   courseId: string;
   courseCode: string;
   components: GradingComponent[];
-  usesDeductiveModel: boolean; // If true, starts at 100% and deducts
-  attendanceDeductionPerAbsence?: number; // Points deducted per unexcused absence
+  usesDeductiveModel: boolean;
+  attendanceDeductionPerAbsence?: number;
+  /** MUS 070 attendance-only grading model */
+  attendanceOnlyModel?: {
+    allowedAbsences: number;       // Free passes before grade drops
+    absencesPerLetterDrop: number;  // Each N additional absences = 1 letter grade drop
+  };
 }
 
 /**
@@ -29,17 +34,13 @@ export const COURSE_GRADING_CONFIGS: Record<string, CourseGradingConfig> = {
     courseId: 'a0000000-0000-0000-0000-000000000070',
     courseCode: 'MUS 070',
     components: [
-      { component: 'Attendance', weight: 45, description: 'Required attendance at all scheduled rehearsals' },
-      { component: 'Spring Concert', weight: 10, description: 'Flagship Spring 2026 performance' },
-      { component: 'Graduation/Commencement', weight: 5, description: 'Commencement ceremony performance' },
-      { component: 'Founders Day', weight: 4, description: 'Spelman Founders Day celebration' },
-      { component: 'TBD Performance 1', weight: 5.5, description: 'Community outreach, AUC collaboration, or festival' },
-      { component: 'TBD Performance 2', weight: 5.5, description: 'Community outreach, AUC collaboration, or festival' },
-      { component: 'Sight Singing – Music Reading', weight: 15, description: '2 weekly sight singing quizzes + 30 min/week on SightReadingFactory.com' },
-      { component: 'Sectionals', weight: 10, description: 'Attendance and participation in section rehearsals led by section leaders' }
+      { component: 'Attendance', weight: 100, description: 'Required attendance at all scheduled rehearsals and performances. 2 unexcused absences allowed; 3rd absence drops grade from A to B.' },
     ],
     usesDeductiveModel: true,
-    attendanceDeductionPerAbsence: 2
+    attendanceOnlyModel: {
+      allowedAbsences: 2,
+      absencesPerLetterDrop: 1,
+    },
   },
 
   // MUS 210 - Choral Conducting and Literature
