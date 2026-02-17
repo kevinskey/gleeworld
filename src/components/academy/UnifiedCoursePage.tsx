@@ -69,6 +69,9 @@ const ConductingTextbook = React.lazy(() => import('./mus210/ConductingTextbook'
 const ReadMusicTrainer = React.lazy(() => import('./mus210/ReadMusicTrainer').then(m => ({
   default: m.ReadMusicTrainer
 })));
+const StudentTourView = React.lazy(() => import('@/components/mus070/student/StudentTourView').then(m => ({
+  default: m.StudentTourView
+})));
 
 interface UnifiedCoursePageProps {
   course: AcademyCourse;
@@ -619,6 +622,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {activeTab === 'video-library' && <CourseVideoLibrary courseId={course.id} isInstructor={false} />}
 
             {activeTab === 'handbook' && course.courseCode === 'MUS 070' && <CourseHandbook courseCode={course.courseCode} />}
+
+            {/* Tour Tab - Only for MUS 070 */}
+            {activeTab === 'tour' && course.courseCode === 'MUS 070' && (
+              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading tour info...</CardContent></Card>}>
+                <StudentTourView />
+              </React.Suspense>
+            )}
 
             {/* Elections Tab - Only for MUS 070 */}
             {activeTab === 'elections' && course.courseCode === 'MUS 070' && <ElectionsModule courseId={course.id} />}
