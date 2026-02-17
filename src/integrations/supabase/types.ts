@@ -7013,6 +7013,7 @@ export type Database = {
           parent_qr_id: string | null
           pin_code: string | null
           qr_token: string
+          qr_type: string
           redirect_url: string | null
           rotate_interval_seconds: number | null
           rotation_sequence: number | null
@@ -7045,6 +7046,7 @@ export type Database = {
           parent_qr_id?: string | null
           pin_code?: string | null
           qr_token: string
+          qr_type?: string
           redirect_url?: string | null
           rotate_interval_seconds?: number | null
           rotation_sequence?: number | null
@@ -7077,6 +7079,7 @@ export type Database = {
           parent_qr_id?: string | null
           pin_code?: string | null
           qr_token?: string
+          qr_type?: string
           redirect_url?: string | null
           rotate_interval_seconds?: number | null
           rotation_sequence?: number | null
@@ -29740,14 +29743,24 @@ export type Database = {
         Args: { event_id_param: string }
         Returns: string
       }
-      generate_session_qr_code: {
-        Args: {
-          p_expires_in_minutes?: number
-          p_generated_by: string
-          p_session_id: string
-        }
-        Returns: Json
-      }
+      generate_session_qr_code:
+        | {
+            Args: {
+              p_expires_in_minutes?: number
+              p_generated_by: string
+              p_session_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_expires_in_minutes?: number
+              p_generated_by: string
+              p_qr_type?: string
+              p_session_id: string
+            }
+            Returns: Json
+          }
       generate_sheet_music_filename: {
         Args: {
           p_composer?: string
@@ -30201,6 +30214,10 @@ export type Database = {
         Returns: Json
       }
       process_qr_attendance_scan: {
+        Args: { p_qr_token: string; p_user_agent?: string; p_user_id: string }
+        Returns: Json
+      }
+      process_qr_checkout_scan: {
         Args: { p_qr_token: string; p_user_agent?: string; p_user_id: string }
         Returns: Json
       }

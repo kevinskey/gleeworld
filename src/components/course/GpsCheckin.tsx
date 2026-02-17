@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Loader2, LogIn, LogOut } from 'lucide-react';
+import { MapPin, Loader2, LogIn, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
@@ -82,7 +82,9 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
     enabled: !!todaySession?.id && !!profile?.id,
   });
 
-  const isCheckedIn = existingRecord?.status === 'present';
+  const isInRehearsal = existingRecord?.status === 'in_rehearsal';
+  const isPresent = existingRecord?.status === 'present';
+  const isCheckedIn = isInRehearsal || isPresent;
   
   // Determine if the session window is currently open
   const isSessionOpen = useMemo(() => {
@@ -148,7 +150,7 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
         {
           attendance_session_id: todaySession.id,
           student_profile_id: profile.id,
-          status: 'present',
+          status: 'in_rehearsal',
           check_in_method: 'gps',
           marked_at: new Date().toISOString(),
           note: `GPS check-in (${distance}m from ${REHEARSAL_LOCATION.name})`,
@@ -157,7 +159,7 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
       );
       if (error) throw error;
 
-      toast({ title: '✅ Checked In', description: `You're marked present at ${REHEARSAL_LOCATION.name}.` });
+      toast({ title: '✅ Checked In', description: `You're in rehearsal. Scan the checkout QR at the end of class to be marked present.` });
       refetchRecord();
     } catch (err: any) {
       toast({ title: 'Check-in failed', description: err.message, variant: 'destructive' });
@@ -166,29 +168,7 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
     }
   };
 
-  const handleCheckout = async () => {
-    if (!todaySession?.id || !profile?.id) return;
-    setSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from('gw_attendance_records')
-        .update({
-          status: 'checked_out',
-          note: `GPS check-out at ${new Date().toLocaleTimeString()}`,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('attendance_session_id', todaySession.id)
-        .eq('student_profile_id', profile.id);
-      if (error) throw error;
-
-      toast({ title: 'Checked Out', description: 'You have been checked out.' });
-      refetchRecord();
-    } catch (err: any) {
-      toast({ title: 'Check-out failed', description: err.message, variant: 'destructive' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  // No manual checkout - students must scan checkout QR
 
   // No active session today — don't show anything
   if (!todaySession) return null;
@@ -210,20 +190,19 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
           {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground text-sm">
-              {isCheckedIn ? 'You are checked in' : 'Rehearsal Attendance'}
+              {isPresent ? 'Attendance confirmed' : isInRehearsal ? 'In Rehearsal' : 'Rehearsal Attendance'}
             </p>
             <p className="text-xs text-muted-foreground">
-              {!isSessionOpen && !isCheckedIn && sessionLabel}
-              {isSessionOpen && geoState === 'locating' && 'Locating you...'}
-              {isSessionOpen && geoState === 'in-range' &&
-                (isCheckedIn
-                  ? `Checked in · ${distance}m from ${REHEARSAL_LOCATION.name}`
-                  : `You're within range (${distance}m)`)}
-              {isSessionOpen && geoState === 'out-of-range' &&
+              {isPresent && 'You are marked present for this session'}
+              {isInRehearsal && 'Scan the checkout QR at end of class to be marked present'}
+              {!isCheckedIn && !isSessionOpen && sessionLabel}
+              {!isCheckedIn && isSessionOpen && geoState === 'locating' && 'Locating you...'}
+              {!isCheckedIn && isSessionOpen && geoState === 'in-range' && `You're within range (${distance}m)`}
+              {!isCheckedIn && isSessionOpen && geoState === 'out-of-range' &&
                 `${distance}m away — must be within ${REHEARSAL_LOCATION.radiusMeters}m`}
-              {isSessionOpen && geoState === 'denied' && 'Location permission denied — enable in settings'}
-              {isSessionOpen && geoState === 'error' && 'Could not determine your location'}
-              {isSessionOpen && geoState === 'idle' && 'Tap to verify location'}
+              {!isCheckedIn && isSessionOpen && geoState === 'denied' && 'Location permission denied — enable in settings'}
+              {!isCheckedIn && isSessionOpen && geoState === 'error' && 'Could not determine your location'}
+              {!isCheckedIn && isSessionOpen && geoState === 'idle' && 'Tap to verify location'}
             </p>
           </div>
 
@@ -233,17 +212,15 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
               <Badge variant="outline" className="text-xs text-muted-foreground">
                 Upcoming
               </Badge>
-            ) : isCheckedIn ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleCheckout}
-                disabled={submitting}
-                className="text-xs"
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4 mr-1" />}
-                Out
-              </Button>
+            ) : isPresent ? (
+              <Badge className="text-xs bg-green-600 text-white border-green-600">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Present
+              </Badge>
+            ) : isInRehearsal ? (
+              <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
+                In Rehearsal
+              </Badge>
             ) : geoState === 'in-range' ? (
               <Button
                 size="sm"
