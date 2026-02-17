@@ -139,11 +139,26 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
         week_number: getWeekNumber(e.start_date)
       }));
 
-      // Merge and deduplicate by date+title, preferring session-based records
-      const allSessionDates = new Set(sessionList.map(s => s.date.split('T')[0] + '::' + s.title));
+      // Merge sessions and events: when a session and event share the same date+title,
+      // keep the session but track the paired event so we can merge attendance data
+      const sessionDateTitleMap = new Map<string, string>(); // "date::title" → session.id
+      const pairedEventToSession = new Map<string, string>(); // event.id → session.id (for merging attendance)
+      
+      sessionList.forEach(s => {
+        const key = s.date.split('T')[0] + '::' + s.title;
+        sessionDateTitleMap.set(key, s.id);
+      });
+      
       const uniqueEventSessions = eventSessionList.filter(e => {
         const key = e.date.split('T')[0] + '::' + e.title;
-        return !allSessionDates.has(key);
+        const matchingSessionId = sessionDateTitleMap.get(key);
+        if (matchingSessionId) {
+          // Pair this event's attendance data with the session column
+          const eventId = e.id.substring(7); // Remove 'event::' prefix
+          pairedEventToSession.set(eventId, matchingSessionId);
+          return false; // Don't add a duplicate column
+        }
+        return true;
       });
       
       const combinedSessions = [...sessionList, ...uniqueEventSessions].sort((a, b) => 
@@ -214,14 +229,25 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
         eventAttendanceData.forEach(r => {
           const mappedProfileId = userIdToProfileId.get(r.user_id);
           if (mappedProfileId === profileId) {
-            const eventSessionId = `event::${r.event_id}`;
             // Map attendance_status to standard status
             const status = r.attendance_status === 'present' ? 'present' 
               : r.attendance_status === 'late' ? 'late'
               : r.attendance_status === 'excused' ? 'excused'
               : r.attendance_status === 'absent' ? 'absent'
               : 'present'; // default QR check-ins to present
-            records.set(eventSessionId, status as any);
+            
+            // Check if this event is paired with a session (same date+title)
+            const pairedSessionId = pairedEventToSession.get(r.event_id);
+            if (pairedSessionId) {
+              // Merge into the session column — only if no session record exists yet
+              if (!records.has(pairedSessionId)) {
+                records.set(pairedSessionId, status as any);
+              }
+            } else {
+              // Standalone event — use event:: prefix
+              const eventSessionId = `event::${r.event_id}`;
+              records.set(eventSessionId, status as any);
+            }
           }
         });
 
