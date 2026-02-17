@@ -52,7 +52,7 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
         .from('gw_attendance_sessions')
         .select('*')
         .eq('course_id', courseId)
-        .eq('status', 'active')
+        .in('status', ['active', 'scheduled'])
         .gte('opens_at', startOfDay)
         .lt('opens_at', endOfDay)
         .order('opens_at', { ascending: false })
