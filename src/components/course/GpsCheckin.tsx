@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, CheckCircle2, XCircle, Loader2, LogIn, LogOut } from 'lucide-react';
+import { MapPin, Loader2, LogIn, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-
+import { format } from 'date-fns';
 // Spelman College Fine Arts Building
 const REHEARSAL_LOCATION = {
   lat: 33.7468,
@@ -44,18 +45,16 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
   const { data: todaySession } = useQuery({
     queryKey: ['gps-today-session', courseId],
     queryFn: async () => {
-      const today = new Date();
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
-      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+      const now = new Date().toISOString();
 
+      // Find the next session that hasn't closed yet
       const { data, error } = await supabase
         .from('gw_attendance_sessions')
         .select('*')
         .eq('course_id', courseId)
         .in('status', ['active', 'scheduled'])
-        .gte('opens_at', startOfDay)
-        .lt('opens_at', endOfDay)
-        .order('opens_at', { ascending: false })
+        .gte('closes_at', now)
+        .order('opens_at', { ascending: true })
         .limit(1)
         .maybeSingle();
 
@@ -84,6 +83,26 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
   });
 
   const isCheckedIn = existingRecord?.status === 'present';
+  
+  // Determine if the session window is currently open
+  const isSessionOpen = useMemo(() => {
+    if (!todaySession) return false;
+    const now = new Date();
+    return now >= new Date(todaySession.opens_at) && now <= new Date(todaySession.closes_at);
+  }, [todaySession]);
+
+  const sessionLabel = useMemo(() => {
+    if (!todaySession) return '';
+    const opensAt = new Date(todaySession.opens_at);
+    const now = new Date();
+    const isToday = opensAt.toDateString() === now.toDateString();
+    const timeStr = format(opensAt, 'h:mm a');
+    if (isToday) return `Today at ${timeStr}`;
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    if (opensAt.toDateString() === tomorrow.toDateString()) return `Tomorrow at ${timeStr}`;
+    return `${format(opensAt, 'EEE, MMM d')} at ${timeStr}`;
+  }, [todaySession]);
 
   const checkLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -116,7 +135,7 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
 
   // Auto-check location on mount
   useEffect(() => {
-    if (todaySession) {
+    if (todaySession && isSessionOpen) {
       checkLocation();
     }
   }, [todaySession, checkLocation]);
@@ -194,22 +213,27 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
               {isCheckedIn ? 'You are checked in' : 'Rehearsal Attendance'}
             </p>
             <p className="text-xs text-muted-foreground">
-              {geoState === 'locating' && 'Locating you...'}
-              {geoState === 'in-range' &&
+              {!isSessionOpen && !isCheckedIn && sessionLabel}
+              {isSessionOpen && geoState === 'locating' && 'Locating you...'}
+              {isSessionOpen && geoState === 'in-range' &&
                 (isCheckedIn
                   ? `Checked in · ${distance}m from ${REHEARSAL_LOCATION.name}`
                   : `You're within range (${distance}m)`)}
-              {geoState === 'out-of-range' &&
+              {isSessionOpen && geoState === 'out-of-range' &&
                 `${distance}m away — must be within ${REHEARSAL_LOCATION.radiusMeters}m`}
-              {geoState === 'denied' && 'Location permission denied — enable in settings'}
-              {geoState === 'error' && 'Could not determine your location'}
-              {geoState === 'idle' && 'Tap to verify location'}
+              {isSessionOpen && geoState === 'denied' && 'Location permission denied — enable in settings'}
+              {isSessionOpen && geoState === 'error' && 'Could not determine your location'}
+              {isSessionOpen && geoState === 'idle' && 'Tap to verify location'}
             </p>
           </div>
 
           {/* Action button */}
           <div className="shrink-0">
-            {isCheckedIn ? (
+            {!isSessionOpen && !isCheckedIn ? (
+              <Badge variant="outline" className="text-xs text-muted-foreground">
+                Upcoming
+              </Badge>
+            ) : isCheckedIn ? (
               <Button
                 size="sm"
                 variant="outline"
