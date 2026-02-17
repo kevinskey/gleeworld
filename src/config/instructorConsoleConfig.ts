@@ -99,6 +99,12 @@ export const INSTRUCTOR_FEATURE_OVERRIDES: Record<string, Partial<typeof DEFAULT
     hasDiscussions: false,
     hasSightReading: false,
   },
+  // MUS 070 - Glee Club (attendance, performances, tours - no assignments/discussions)
+  'a0000000-0000-0000-0000-000000000070': {
+    hasTests: false,
+    hasPolls: false,
+    hasDiscussions: false,
+  },
   // GLEE 000 - Sight Singing (focused on tests and assignments)
   'a0000000-0000-0000-0000-000000000000': {
     hasPolls: false,
