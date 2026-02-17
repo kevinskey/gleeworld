@@ -12,12 +12,14 @@ interface AttendanceQRDisplayProps {
   sessionId: string;
   generateToken?: (sessionId: string, expiresInMinutes?: number) => Promise<{ qr_token: string; expires_at: string } | undefined>;
   isSessionOpen: boolean;
+  qrType?: 'checkin' | 'checkout';
 }
 
 export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
   sessionId,
   generateToken,
   isSessionOpen,
+  qrType = 'checkin',
 }) => {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -36,7 +38,8 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
       const { data, error } = await supabase.rpc('generate_session_qr_code', {
         p_session_id: sessionId,
         p_generated_by: user.id,
-        p_expires_in_minutes: 2, // 2 minute expiry for rotating QR
+        p_expires_in_minutes: 2,
+        p_qr_type: qrType,
       });
 
       if (error) throw error;
@@ -83,7 +86,7 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [sessionId, generateToken, isSessionOpen, toast, user]);
+  }, [sessionId, generateToken, isSessionOpen, toast, user, qrType]);
 
   // Auto-refresh QR before expiry
   useEffect(() => {
@@ -136,7 +139,7 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
         <CardTitle className="flex items-center justify-between text-lg">
           <span className="flex items-center gap-2">
             <QrCode className="h-5 w-5 text-primary" />
-            Scan to Check In
+            {qrType === 'checkout' ? 'Scan to Check Out' : 'Scan to Check In'}
           </span>
           <Badge variant={timeLeft > 30 ? 'default' : 'destructive'} className="font-mono">
             <Clock className="h-3 w-3 mr-1" />
@@ -171,7 +174,9 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
         </Button>
         
         <p className="text-xs text-muted-foreground text-center">
-          QR code auto-refreshes every 90 seconds for security
+          {qrType === 'checkout'
+            ? 'Students must have checked in via GPS first. Scanning this marks them present.'
+            : 'QR code auto-refreshes every 90 seconds for security'}
         </p>
       </CardContent>
     </Card>

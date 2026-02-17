@@ -23,7 +23,7 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, is
   const { user } = useAuth();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ present: 0, absent: 0, late: 0, excused: 0 });
+  const [stats, setStats] = useState({ present: 0, absent: 0, late: 0, excused: 0, in_rehearsal: 0 });
 
   useEffect(() => {
     if (isEnrolled && user) {
@@ -47,7 +47,7 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, is
       setRecords(data || []);
 
       // Calculate stats
-      const newStats = { present: 0, absent: 0, late: 0, excused: 0 };
+      const newStats = { present: 0, absent: 0, late: 0, excused: 0, in_rehearsal: 0 };
       data?.forEach(record => {
         if (record.status in newStats) {
           newStats[record.status as keyof typeof newStats]++;
@@ -71,6 +71,8 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, is
         return <Clock className="h-4 w-4 text-yellow-500" />;
       case 'excused':
         return <AlertTriangle className="h-4 w-4 text-blue-500" />;
+      case 'in_rehearsal':
+        return <Clock className="h-4 w-4 text-amber-500" />;
       default:
         return null;
     }
@@ -81,12 +83,13 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, is
       present: 'bg-green-100 text-green-700 border-green-200',
       absent: 'bg-red-100 text-red-700 border-red-200',
       late: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      excused: 'bg-blue-100 text-blue-700 border-blue-200'
+      excused: 'bg-blue-100 text-blue-700 border-blue-200',
+      in_rehearsal: 'bg-amber-100 text-amber-700 border-amber-200',
     };
 
     return (
       <Badge variant="outline" className={variants[status] || ''}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {status === 'in_rehearsal' ? 'In Rehearsal' : status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
   };
@@ -105,13 +108,13 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, is
     );
   }
 
-  const total = stats.present + stats.absent + stats.late + stats.excused;
+  const total = stats.present + stats.absent + stats.late + stats.excused + stats.in_rehearsal;
   const attendanceRate = total > 0 ? ((stats.present + stats.late) / total * 100).toFixed(1) : '0';
 
   return (
     <div className="space-y-6">
       {/* Attendance Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-3xl font-bold text-foreground">{attendanceRate}%</div>
@@ -122,6 +125,12 @@ export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, is
           <CardContent className="p-4 text-center">
             <div className="text-3xl font-bold text-green-600">{stats.present}</div>
             <p className="text-sm text-muted-foreground">Present</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-3xl font-bold text-amber-600">{stats.in_rehearsal}</div>
+            <p className="text-sm text-muted-foreground">In Rehearsal</p>
           </CardContent>
         </Card>
         <Card>

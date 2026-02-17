@@ -156,35 +156,19 @@ export const QRAttendanceScanner = () => {
 
   const handleScan = async (qrData: string) => {
     console.log('QR handleScan called with:', qrData);
-    console.log('User object:', user);
-    console.log('Processing state:', processing);
-
-    if (processing || !user) {
-      console.log('Scan blocked - processing:', processing, 'user:', !!user);
-      return;
-    }
+    if (processing || !user) return;
 
     setProcessing(true);
-    stopScanner(); // Stop scanning while processing
+    stopScanner();
 
     try {
       const qrToken = parseQrToken(qrData);
+      if (!qrToken) throw new Error('Invalid QR code format');
+
       console.log('Parsed QR token:', qrToken);
 
-      if (!qrToken) {
-        throw new Error('Invalid QR code format');
-      }
-
-      console.log('Calling process_qr_attendance_scan with params:', {
-        p_qr_token: qrToken,
-        p_user_id: user.id,
-        p_scan_location: null,
-        p_user_agent: navigator.userAgent,
-        ip_address_param: null,
-      });
-
-      // Timeout protects against "nothing happened" hangs
-      const rpcPromise = supabase.rpc('process_qr_attendance_scan', {
+      // Try checkout first, then fall back to checkin
+      const rpcPromise = supabase.rpc('process_qr_checkout_scan', {
         p_qr_token: qrToken,
         p_user_id: user.id,
         p_user_agent: navigator.userAgent,
@@ -198,21 +182,12 @@ export const QRAttendanceScanner = () => {
       const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
 
       console.log('RPC response:', { data, error });
-
       if (error) throw error;
+      if (!data) throw new Error('No response from server');
 
-      if (!data) {
-        throw new Error('No response from server');
-      }
-
-      // Parse the response - handle both direct object and stringified JSON
       let result: ScanResult;
       if (typeof data === 'string') {
-        try {
-          result = JSON.parse(data);
-        } catch {
-          result = { success: false, message: 'Invalid response format', error: 'Could not parse response' };
-        }
+        try { result = JSON.parse(data); } catch { result = { success: false, message: 'Invalid response format', error: 'Could not parse response' }; }
       } else if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
         result = data as unknown as ScanResult;
       } else {
@@ -223,12 +198,14 @@ export const QRAttendanceScanner = () => {
       setScanResult(result);
 
       if (result.success) {
+        const isCheckout = (data as any)?.checkout === true;
         toast({
-          title: "Attendance Recorded",
-          description: `Successfully marked present for ${result.event_title || 'this event'}`,
+          title: isCheckout ? "✅ Attendance Confirmed" : "Attendance Recorded",
+          description: isCheckout
+            ? `You're marked present for ${result.event_title || 'this session'}`
+            : `Successfully marked for ${result.event_title || 'this event'}`,
         });
 
-        // Navigate to the specific course home if course_id is available
         const courseRoute = result.course_id ? COURSE_ROUTES[result.course_id] : null;
         const target = courseRoute || '/dashboard?module=glee-academy';
         
@@ -236,7 +213,6 @@ export const QRAttendanceScanner = () => {
           navigate(target);
         }, 2000);
       }
-      // Don't show a toast for failures — the inline scan result alert already displays the error
     } catch (error) {
       console.error('Error processing QR scan:', error);
       setScanResult({
