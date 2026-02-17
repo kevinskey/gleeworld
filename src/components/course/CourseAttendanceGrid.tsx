@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Search, Download, RefreshCw, Save, 
-  Check, X, Clock, AlertCircle, Minus, Users, Calendar
+  Check, X, Clock, AlertCircle, Minus, Users, Calendar, Filter
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -78,6 +80,8 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dirtyRecords, setDirtyRecords] = useState<Map<string, string>>(new Map());
+  const [viewMode, setViewMode] = useState<'grid' | 'session'>('grid');
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('all');
 
   const targetStudentId = studentId || user?.id;
 
@@ -436,10 +440,11 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
   };
 
   const exportToCSV = () => {
-    const headers = ['Student', ...sessions.map(s => format(toET(s.date), 'M/d')), 'Present', 'Absent', 'Excused', 'Late', 'Rate'];
+    const exportSessions = filteredSessions;
+    const headers = ['Student', ...exportSessions.map(s => format(toET(s.date), 'M/d')), 'Present', 'Absent', 'Excused', 'Late', 'Rate'];
     const rows = filteredStudents.map(s => [
       s.student_name,
-      ...sessions.map(sess => s.records.get(sess.id) || '-'),
+      ...exportSessions.map(sess => s.records.get(sess.id) || '-'),
       s.totals.present,
       s.totals.absent,
       s.totals.excused,
@@ -458,11 +463,19 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
     toast.success('Attendance exported');
   };
 
+  const filteredSessions = useMemo(() => {
+    if (selectedSessionId === 'all') return sessions;
+    return sessions.filter(s => s.id === selectedSessionId);
+  }, [sessions, selectedSessionId]);
+
   const filteredStudents = useMemo(() => {
-    if (!searchTerm) return students;
-    return students.filter(s => 
-      s.student_name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let result = students;
+    if (searchTerm) {
+      result = result.filter(s => 
+        s.student_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    return result;
   }, [students, searchTerm]);
 
   const getStatusStyle = (status: string | null) => {
@@ -490,68 +503,131 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
     <TooltipProvider>
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Calendar className="h-5 w-5 text-primary" />
-              {isInstructor ? 'Class Attendance Grid' : 'My Attendance Record'}
-            </CardTitle>
-            <div className="flex items-center gap-2 flex-wrap">
-              {isInstructor && !isMobile && (
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Calendar className="h-5 w-5 text-primary" />
+                {isInstructor ? 'Class Attendance Grid' : 'My Attendance Record'}
+              </CardTitle>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+                  <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                </Button>
+                {isInstructor && (
+                  <>
+                    <Button variant="outline" size="sm" onClick={exportToCSV}>
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={saveChanges} 
+                      disabled={saving || dirtyRecords.size === 0}
+                      className="gap-1"
+                    >
+                      <Save className="h-4 w-4" />
+                      Save {dirtyRecords.size > 0 && `(${dirtyRecords.size})`}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Filter bar: view mode + session selector + search */}
+            {isInstructor && (
+              <div className="flex flex-col sm:flex-row gap-2">
+                {/* View mode toggle */}
+                <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'grid' | 'session')} className="w-auto">
+                  <TabsList className="h-9">
+                    <TabsTrigger value="grid" className="text-xs px-3 h-7">
+                      <Users className="h-3.5 w-3.5 mr-1.5" />
+                      All Sessions
+                    </TabsTrigger>
+                    <TabsTrigger value="session" className="text-xs px-3 h-7">
+                      <Filter className="h-3.5 w-3.5 mr-1.5" />
+                      By Session
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                {/* Session selector (visible in session mode) */}
+                {viewMode === 'session' && sessions.length > 0 && (
+                  <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
+                    <SelectTrigger className="w-full sm:w-56 h-9 text-sm">
+                      <SelectValue placeholder="Select a session..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sessions</SelectItem>
+                      {sessions.map(s => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {format(toET(s.date), 'M/d')} — {s.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {/* Search */}
+                <div className="relative flex-1 sm:max-w-52">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input 
-                    placeholder="Search..." 
+                    placeholder="Search students..." 
                     value={searchTerm} 
                     onChange={e => setSearchTerm(e.target.value)} 
-                    className="pl-8 w-40 h-9" 
+                    className="pl-8 h-9 text-base sm:text-sm" 
                   />
                 </div>
-              )}
-              <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-              </Button>
-              {isInstructor && (
-                <>
-                  <Button variant="outline" size="sm" onClick={exportToCSV}>
-                    <Download className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    onClick={saveChanges} 
-                    disabled={saving || dirtyRecords.size === 0}
-                    className="gap-1"
-                  >
-                    <Save className="h-4 w-4" />
-                    Save {dirtyRecords.size > 0 && `(${dirtyRecords.size})`}
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Mobile search */}
-          {isInstructor && isMobile && (
-            <div className="relative mt-2">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search students..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 h-10 text-base"
-              />
-            </div>
-          )}
-
-          {/* Legend */}
-          <div className="flex items-center gap-3 mt-3 text-xs flex-wrap">
-            {STATUS_OPTIONS.slice(0, 4).map(opt => (
-              <div key={opt.value} className="flex items-center gap-1">
-                <span className={cn("w-5 h-5 rounded flex items-center justify-center font-semibold", opt.color)}>
-                  {opt.label}
-                </span>
-                <span className="text-muted-foreground capitalize">{opt.value}</span>
               </div>
-            ))}
+            )}
+
+            {/* Student-only search (non-instructor) */}
+            {!isInstructor && (
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search students..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-9 h-10 text-base"
+                />
+              </div>
+            )}
+
+            {/* Legend */}
+            <div className="flex items-center gap-3 text-xs flex-wrap">
+              {STATUS_OPTIONS.slice(0, 4).map(opt => (
+                <div key={opt.value} className="flex items-center gap-1">
+                  <span className={cn("w-5 h-5 rounded flex items-center justify-center font-semibold", opt.color)}>
+                    {opt.label}
+                  </span>
+                  <span className="text-muted-foreground capitalize">{opt.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Session detail info when filtering */}
+            {viewMode === 'session' && selectedSessionId !== 'all' && filteredSessions.length === 1 && (
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <p className="font-medium text-sm text-foreground">{filteredSessions[0].title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(toET(filteredSessions[0].date), 'EEEE, MMMM d, yyyy')} · Week {filteredSessions[0].week_number}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="text-green-700 dark:text-green-400 font-semibold">
+                      ✓ {filteredStudents.filter(s => s.records.get(selectedSessionId) === 'present').length} Present
+                    </span>
+                    <span className="text-red-700 dark:text-red-400 font-semibold">
+                      ✗ {filteredStudents.filter(s => s.records.get(selectedSessionId) === 'absent').length} Absent
+                    </span>
+                    <span className="text-muted-foreground font-semibold">
+                      — {filteredStudents.filter(s => !s.records.get(selectedSessionId)).length} Unmarked
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </CardHeader>
 
@@ -570,7 +646,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
           ) : isMobile ? (
             <AttendanceMobileCards
               students={filteredStudents}
-              sessions={sessions}
+              sessions={filteredSessions}
               isInstructor={isInstructor}
               onCycleStatus={cycleStatus}
               dirtyRecords={dirtyRecords}
@@ -608,7 +684,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
                   <div className="min-w-max">
                     {/* Date header row */}
                     <div className="flex h-12 border-b bg-[#003366]">
-                      {sessions.map((session) => (
+                      {filteredSessions.map((session) => (
                         <Tooltip key={session.id}>
                           <TooltipTrigger asChild>
                             <div className="w-10 min-w-10 flex flex-col items-center justify-center border-r border-white/10 cursor-help">
@@ -640,7 +716,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
                           rowIdx % 2 === 0 ? "bg-background" : "bg-muted/10"
                         )}
                       >
-                        {sessions.map(session => {
+                        {filteredSessions.map(session => {
                           const status = student.records.get(session.id) || null;
                           return (
                             <div

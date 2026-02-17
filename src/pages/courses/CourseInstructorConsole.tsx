@@ -231,26 +231,28 @@ export const CourseInstructorConsole = () => {
   return <UniversalLayout containerized={false}>
       <div className="min-h-screen academy-neutral" style={{ backgroundColor: '#F7F9FC' }}>
         {/* Top Bar */}
-        <div className="border-b bg-white">
-          <div className="max-w-[1800px] mx-auto px-3 sm:px-5 md:px-8 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="h-9 px-2.5 hover:bg-muted/60" style={{ color: '#0F172A' }}>
+        <div className="border-b bg-white sticky top-0 z-30">
+          <div className="max-w-[1800px] mx-auto px-3 sm:px-5 md:px-8 py-2.5 sm:py-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="h-9 w-9 p-0 sm:px-2.5 sm:w-auto hover:bg-muted/60 flex-shrink-0" style={{ color: '#0F172A' }}>
                   <Menu className="h-5 w-5" />
                 </Button>
-                <Badge className="bg-primary text-white border-0 font-semibold text-xs tracking-wide">
-                  <GraduationCap className="h-3.5 w-3.5 mr-1.5" />
-                  Instructor Console
+                <Badge className="bg-primary text-white border-0 font-semibold text-[11px] sm:text-xs tracking-wide flex-shrink-0 px-2 py-0.5">
+                  <GraduationCap className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
+                  <span className="hidden sm:inline">Instructor Console</span>
+                  <span className="sm:hidden">Instructor</span>
                 </Badge>
-                <span className="hidden sm:inline text-sm font-medium" style={{ color: '#334155' }}>
-                  {course.courseCode} — {course.title}
+                <span className="text-xs sm:text-sm font-medium truncate" style={{ color: '#334155' }}>
+                  {course.courseCode}{' '}
+                  <span className="hidden sm:inline">— {course.title}</span>
                 </span>
               </div>
               
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/academy/${courseSlug}`)} className="hidden sm:flex items-center gap-1.5 h-8 text-xs hover:text-primary" style={{ color: '#334155' }}>
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/academy/${courseSlug}`)} className="h-8 w-8 p-0 sm:w-auto sm:px-2 sm:flex items-center gap-1.5 text-xs hover:text-primary" style={{ color: '#334155' }}>
                   <Eye className="h-3.5 w-3.5" />
-                  <span>Student View</span>
+                  <span className="hidden sm:inline">Student View</span>
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/academy/${courseSlug}`)} className="hidden sm:flex items-center gap-1.5 h-8 text-xs hover:text-primary" style={{ color: '#334155' }}>
                   <Home className="h-3.5 w-3.5" />
@@ -278,7 +280,7 @@ export const CourseInstructorConsole = () => {
 
         {/* Main Content — full width */}
         <div className="max-w-[1800px] mx-auto">
-          <main className="p-5 sm:p-7 lg:p-10 pb-24">
+          <main className="p-3 sm:p-5 lg:p-10 pb-24">
             {activeTab === 'syllabus' && dbCourse && <SyllabusTemplateEditor courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} instructorName={course.instructor?.name} instructorEmail={course.instructor?.email} />}
             {activeTab === 'modules' && dbCourse && <ModulesSection courseId={dbCourse.id} />}
             {activeTab === 'class-notes' && dbCourse && <ClassNotesManager courseId={dbCourse.id} isInstructor={true} />}
