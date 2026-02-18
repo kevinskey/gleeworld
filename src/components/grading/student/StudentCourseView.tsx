@@ -21,6 +21,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 import { format } from 'date-fns';
+import { RehearsalConflictForm } from './RehearsalConflictForm';
 
 interface StudentCourseViewProps {
   courseId: string;
@@ -383,6 +384,9 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                   </CardContent>
                 )}
               </Card>
+
+              {/* Rehearsal Conflict Excuse Requests */}
+              <RehearsalConflictForm />
             </div>
           ) : (
             /* ── Standard Deductive Model ── */
