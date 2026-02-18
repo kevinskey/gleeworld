@@ -6,10 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, ChevronDown, Upload, Eye, EyeOff, Images, ExternalLink, Youtube, Image as ImageIcon, Video } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, Upload, Eye, EyeOff, Images, ExternalLink, Youtube, Image as ImageIcon, Video, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useSliderByPlacementAdmin, useCreateSlider, useCreateSlide, useUpdateSlide, useDeleteSlide } from '@/hooks/useUniversalSlider';
+import { useSliderByPlacementAdmin, useCreateSlider, useCreateSlide, useUpdateSlide, useDeleteSlide, useReorderSlides } from '@/hooks/useUniversalSlider';
 import { cn } from '@/lib/utils';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
 
@@ -57,8 +57,25 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
   const createSlide = useCreateSlide();
   const updateSlide = useUpdateSlide();
   const deleteSlide = useDeleteSlide();
+  const reorderSlides = useReorderSlides();
 
   const [expandedSlide, setExpandedSlide] = useState<string | null>(null);
+
+  const handleMoveSlide = async (index: number, direction: 'up' | 'down') => {
+    if (!slider?.slides) return;
+    const slides = [...slider.slides];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= slides.length) return;
+    [slides[index], slides[targetIndex]] = [slides[targetIndex], slides[index]];
+    const reorderData = slides.map((s, i) => ({ id: s.id, display_order: i }));
+    try {
+      await reorderSlides.mutateAsync(reorderData);
+      toast.success('Slides reordered');
+      refetch();
+    } catch {
+      toast.error('Failed to reorder slides');
+    }
+  };
 
   const handleCreateSlider = async () => {
     try {
@@ -307,8 +324,26 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                       </div>
                     </div>
 
-                    {/* Status & Actions */}
-                    <div className="flex items-center gap-2">
+                    {/* Reorder & Status */}
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={index === 0}
+                        onClick={(e) => { e.stopPropagation(); handleMoveSlide(index, 'up'); }}
+                      >
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={index === (slider.slides?.length || 1) - 1}
+                        onClick={(e) => { e.stopPropagation(); handleMoveSlide(index, 'down'); }}
+                      >
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </Button>
                       <Badge variant={slide.is_active ? "default" : "secondary"} className="text-xs">
                         {slide.is_active ? <Eye className="h-3 w-3 mr-1" /> : <EyeOff className="h-3 w-3 mr-1" />}
                         {slide.is_active ? 'Active' : 'Hidden'}
