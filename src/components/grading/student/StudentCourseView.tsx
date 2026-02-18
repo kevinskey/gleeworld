@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FileText, ArrowLeft, BarChart3, BookOpen, Calendar,
   CheckCircle2, AlertCircle, GraduationCap, Users,
-  ShieldCheck, ShieldAlert, Minus
+  ShieldCheck, ShieldAlert, Minus, MapPin, Clock, CalendarDays
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { getCourseGradingConfig } from '@/config/courseGradingConfig';
+import { format } from 'date-fns';
 
 interface StudentCourseViewProps {
   courseId: string;
@@ -94,6 +95,23 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     enabled: !!user,
   });
 
+  // Fetch course events via calendar_id
+  const { data: courseEvents } = useQuery({
+    queryKey: ['student-course-events', courseId, course?.calendar_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_events')
+        .select('*')
+        .eq('calendar_id', course.calendar_id)
+        .gte('start_date', new Date().toISOString())
+        .order('start_date', { ascending: true })
+        .limit(8);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!course?.calendar_id,
+  });
+
   if (courseLoading || assignmentsLoading || gradeLoading) {
     return <LoadingSpinner size="lg" text="Loading course..." />;
   }
@@ -142,6 +160,53 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
           </div>
         </div>
       </div>
+
+      {/* Upcoming Events Grid */}
+      {courseEvents && courseEvents.length > 0 && (
+        <div>
+          <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            Upcoming Events
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {courseEvents.map((event: any) => {
+              const eventDate = new Date(event.start_date);
+              return (
+                <div
+                  key={event.id}
+                  className="group bg-card rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <div className="p-3 border-b border-border/50 bg-primary/5">
+                    <div className="text-xs font-bold text-primary uppercase">
+                      {format(eventDate, 'MMM')}
+                    </div>
+                    <div className="text-2xl font-bold text-foreground leading-tight">
+                      {format(eventDate, 'd')}
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <h4 className="font-semibold text-foreground text-xs line-clamp-2 mb-1.5">
+                      {event.title}
+                    </h4>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <Clock className="h-3 w-3 flex-shrink-0" />
+                        <span>{format(eventDate, 'h:mm a')}</span>
+                      </div>
+                      {event.location && (
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{event.location}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Tabs — simplified */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
