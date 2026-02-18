@@ -102,15 +102,45 @@ export const useCourseGrade = (courseId: string): CourseGradeResult => {
         console.error('Error fetching submissions:', submissionsError);
       }
 
-      // Fetch attendance records (unexcused absences) filtered by course
-      const { data: attendance, error: attendanceError } = await supabase
-        .from('attendance')
-        .select('status, events!inner(course_id)')
-        .eq('user_id', user.id)
-        .eq('events.course_id', courseId);
+      // ── Attendance: use gw_events + gw_event_attendance (unified source) ──
+      // First get the course's calendar_id
+      const { data: courseData } = await supabase
+        .from('gw_courses')
+        .select('calendar_id')
+        .eq('id', courseId)
+        .single();
 
-      if (attendanceError) {
-        console.error('Error fetching attendance:', attendanceError);
+      let absenceCount = 0;
+
+      if (courseData?.calendar_id) {
+        // Get all past events for this course
+        const now = new Date().toISOString();
+        const { data: events } = await supabase
+          .from('gw_events')
+          .select('id')
+          .eq('calendar_id', courseData.calendar_id)
+          .lte('start_date', now);
+
+        if (events && events.length > 0) {
+          const eventIds = events.map(e => e.id);
+
+          // Get student's check-ins for these events
+          const { data: checkins } = await supabase
+            .from('gw_event_attendance')
+            .select('event_id, attendance_status')
+            .eq('user_id', user.id)
+            .in('event_id', eventIds);
+
+          const checkinMap = new Map(
+            (checkins || []).map(c => [c.event_id, c.attendance_status])
+          );
+
+          // Count absences: any past event without a 'present' status
+          absenceCount = events.filter(e => {
+            const status = checkinMap.get(e.id);
+            return !status || status === 'absent';
+          }).length;
+        }
       }
 
       // Calculate assignment deductions
@@ -134,7 +164,6 @@ export const useCourseGrade = (courseId: string): CourseGradeResult => {
         }
       });
 
-      const absenceCount = attendance?.filter(a => a.status === 'absent').length || 0;
       const attendanceDeduction = absenceCount * ABSENCE_DEDUCTION;
 
       return {
