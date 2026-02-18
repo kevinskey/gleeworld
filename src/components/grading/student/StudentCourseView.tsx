@@ -209,7 +209,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
       {/* Attendance Record Grid */}
       {attendanceRecords && attendanceRecords.length > 0 && (
-        <Collapsible>
+        <Collapsible defaultOpen={false}>
           <Card>
             <CollapsibleTrigger className="w-full">
               <CardHeader className="pb-3">
