@@ -362,307 +362,331 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
         </CardContent>
       </Card>;
   }
-  return <div className="space-y-3 sm:space-y-4 w-full min-w-0">
-      {/* Stats Cards - 2x2 grid */}
-      <div className="grid grid-cols-2 gap-1.5 sm:gap-2 md:gap-3">
-        <Card className="border border-border/60 shadow-sm overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
-          <CardContent className="p-2 sm:p-3 md:p-4">
-            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
-                <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-primary" />
+  return <div className="space-y-4 sm:space-y-5 lg:space-y-6 w-full min-w-0">
+      {/* Stats Cards - 2x2 on mobile, 4 cols on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+        <Card className="border border-border/60 shadow-sm" style={{ backgroundColor: '#ffffff' }}>
+          <CardContent className="p-3 sm:p-4 lg:p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 lg:p-2.5 rounded-lg bg-primary/10 flex-shrink-0">
+                <BookOpen className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-lg sm:text-xl md:text-2xl font-bold" style={{ color: '#0F172A' }}>{stats.totalAssignments}</p>
-                <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Total</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border border-border/60 shadow-sm overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
-          <CardContent className="p-2 sm:p-3 md:p-4">
-            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
-                <FileCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-primary" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-lg sm:text-xl md:text-2xl font-bold" style={{ color: '#0F172A' }}>{stats.totalSubmissions}</p>
-                <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Submitted</p>
+              <div>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: '#0F172A' }}>{stats.totalAssignments}</p>
+                <p className="text-xs lg:text-sm" style={{ color: '#64748B' }}>Total</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border border-border/60 shadow-sm overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
-          <CardContent className="p-2 sm:p-3 md:p-4">
-            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-amber-50 flex-shrink-0">
-                <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-amber-500" />
+        <Card className="border border-border/60 shadow-sm" style={{ backgroundColor: '#ffffff' }}>
+          <CardContent className="p-3 sm:p-4 lg:p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 lg:p-2.5 rounded-lg bg-primary/10 flex-shrink-0">
+                <FileCheck className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-lg sm:text-xl md:text-2xl font-bold" style={{ color: '#0F172A' }}>{stats.pendingGrading}</p>
-                <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Pending</p>
+              <div>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: '#0F172A' }}>{stats.totalSubmissions}</p>
+                <p className="text-xs lg:text-sm" style={{ color: '#64748B' }}>Submitted</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border border-border/60 shadow-sm overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
-          <CardContent className="p-2 sm:p-3 md:p-4">
-            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-              <div className="p-1 sm:p-1.5 md:p-2 rounded-lg bg-emerald-50 flex-shrink-0">
-                <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-emerald-500" />
+        <Card className="border border-border/60 shadow-sm" style={{ backgroundColor: '#ffffff' }}>
+          <CardContent className="p-3 sm:p-4 lg:p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 lg:p-2.5 rounded-lg bg-amber-50 flex-shrink-0">
+                <Clock className="h-4 w-4 lg:h-5 lg:w-5 text-amber-500" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-lg sm:text-xl md:text-2xl font-bold" style={{ color: '#0F172A' }}>{stats.totalGraded}</p>
-                <p className="text-[10px] sm:text-xs truncate" style={{ color: '#64748B' }}>Graded</p>
+              <div>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: '#0F172A' }}>{stats.pendingGrading}</p>
+                <p className="text-xs lg:text-sm" style={{ color: '#64748B' }}>Pending</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border border-border/60 shadow-sm" style={{ backgroundColor: '#ffffff' }}>
+          <CardContent className="p-3 sm:p-4 lg:p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 lg:p-2.5 rounded-lg bg-emerald-50 flex-shrink-0">
+                <CheckCircle className="h-4 w-4 lg:h-5 lg:w-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ color: '#0F172A' }}>{stats.totalGraded}</p>
+                <p className="text-xs lg:text-sm" style={{ color: '#64748B' }}>Graded</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Header with Add button */}
-      <div className="flex items-center justify-between py-1">
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          <h2 className="text-sm sm:text-base md:text-lg font-semibold truncate" style={{ color: '#0F172A' }}>Assignments</h2>
-          <span className="text-xs sm:text-sm md:text-base flex-shrink-0" style={{ color: '#64748B' }}>({filteredAndSortedAssignments.length})</span>
-        </div>
-        <Dialog open={isCreateOpen || !!editingAssignment} onOpenChange={open => {
-        if (!open) {
-          setIsCreateOpen(false);
-          setEditingAssignment(null);
-          resetForm();
-        }
-      }}>
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={() => setIsCreateOpen(true)} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 flex-shrink-0">
-              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
-              <span className="hidden xs:inline">Add</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="w-[95vw] max-w-3xl lg:max-w-4xl bg-white text-slate-900">
-            <DialogHeader className="pb-4 border-b">
-              <DialogTitle className="text-xl lg:text-2xl font-semibold text-slate-900">
-                {editingAssignment ? 'Edit Assignment' : 'Create Assignment'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6 py-6 max-h-[70vh] overflow-y-auto">
-              {/* Title */}
-              <div className="space-y-2">
-                <Label className="text-base font-medium text-slate-800">Title *</Label>
-                <Input 
-                  value={formData.title} 
-                  onChange={e => setFormData({ ...formData, title: e.target.value })} 
-                  placeholder="Assignment title" 
-                  className="h-12 text-base bg-white text-slate-900 border-slate-300 placeholder:text-slate-400"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="space-y-2">
-                <Label className="text-base font-medium text-slate-800">Description</Label>
-                <Textarea 
-                  value={formData.description} 
-                  onChange={e => setFormData({ ...formData, description: e.target.value })} 
-                  placeholder="Assignment description and instructions..." 
-                  rows={5}
-                  className="text-base bg-white text-slate-900 border-slate-300 placeholder:text-slate-400 resize-y min-h-[120px]"
-                />
-              </div>
-
-              {/* Type & Points Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-base font-medium text-slate-800">Assignment Type</Label>
-                  <Select 
-                    value={formData.assignment_type} 
-                    onValueChange={value => setFormData({ ...formData, assignment_type: value })}
-                  >
-                    <SelectTrigger className="h-12 text-base bg-white text-slate-900 border-slate-300">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {ASSIGNMENT_TYPES.map(type => (
-                        <SelectItem key={type.value} value={type.value} className="text-slate-900">
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+      {/* Header + Toolbar Card */}
+      <Card className="border border-border/60 shadow-sm" style={{ backgroundColor: '#ffffff' }}>
+        <CardContent className="p-3 sm:p-4 lg:p-5 space-y-3 lg:space-y-4">
+          {/* Header row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base sm:text-lg lg:text-xl font-semibold" style={{ color: '#0F172A' }}>Assignments</h2>
+              <Badge variant="secondary" className="text-xs lg:text-sm">{filteredAndSortedAssignments.length}</Badge>
+            </div>
+            <Dialog open={isCreateOpen || !!editingAssignment} onOpenChange={open => {
+              if (!open) {
+                setIsCreateOpen(false);
+                setEditingAssignment(null);
+                resetForm();
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button size="sm" onClick={() => setIsCreateOpen(true)} className="h-9 lg:h-10 text-sm lg:text-base px-3 lg:px-4">
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Add Assignment
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-[95vw] max-w-3xl lg:max-w-4xl bg-white text-slate-900">
+                <DialogHeader className="pb-4 border-b">
+                  <DialogTitle className="text-xl lg:text-2xl font-semibold text-slate-900">
+                    {editingAssignment ? 'Edit Assignment' : 'Create Assignment'}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6 py-6 max-h-[70vh] overflow-y-auto">
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium text-slate-800">Title *</Label>
+                    <Input 
+                      value={formData.title} 
+                      onChange={e => setFormData({ ...formData, title: e.target.value })} 
+                      placeholder="Assignment title" 
+                      className="h-12 text-base bg-white text-slate-900 border-slate-300 placeholder:text-slate-400"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium text-slate-800">Description</Label>
+                    <Textarea 
+                      value={formData.description} 
+                      onChange={e => setFormData({ ...formData, description: e.target.value })} 
+                      placeholder="Assignment description and instructions..." 
+                      rows={5}
+                      className="text-base bg-white text-slate-900 border-slate-300 placeholder:text-slate-400 resize-y min-h-[120px]"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-base font-medium text-slate-800">Assignment Type</Label>
+                      <Select 
+                        value={formData.assignment_type} 
+                        onValueChange={v => setFormData({ ...formData, assignment_type: v })}
+                      >
+                        <SelectTrigger className="h-12 text-base bg-white text-slate-900 border-slate-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                          {ASSIGNMENT_TYPES.map(type => (
+                            <SelectItem key={type.value} value={type.value} className="text-slate-900">{type.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-base font-medium text-slate-800">Points</Label>
+                      <Input 
+                        type="number" 
+                        value={formData.points} 
+                        onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) || 0 })} 
+                        className="h-12 text-base bg-white text-slate-900 border-slate-300"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium text-slate-800">Due Date</Label>
+                    <Input 
+                      type="datetime-local" 
+                      value={formData.due_at} 
+                      onChange={e => setFormData({ ...formData, due_at: e.target.value })} 
+                      className="h-12 text-base bg-white text-slate-900 border-slate-300"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium text-slate-800">Grading Rubric</Label>
+                    <Select
+                      value={formData.rubric_id || NO_RUBRIC_VALUE}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, rubric_id: value === NO_RUBRIC_VALUE ? '' : value })
+                      }
+                    >
+                      <SelectTrigger className="h-12 text-base bg-white text-slate-900 border-slate-300">
+                        <SelectValue placeholder="No rubric" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        <SelectItem value={NO_RUBRIC_VALUE} className="text-slate-900">No rubric</SelectItem>
+                        {rubrics.map(rubric => (
+                          <SelectItem key={rubric.id} value={rubric.id} className="text-slate-900">
+                            {rubric.name} ({rubric.total_points} pts)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm" style={{ color: '#64748B' }}>
+                      Rubric will be used for AI-assisted grading
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-base font-medium text-slate-800">Points</Label>
-                  <Input 
-                    type="number" 
-                    value={formData.points} 
-                    onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) || 0 })} 
-                    className="h-12 text-base bg-white text-slate-900 border-slate-300"
-                  />
-                </div>
-              </div>
-
-              {/* Due Date */}
-              <div className="space-y-2">
-                <Label className="text-base font-medium text-slate-800">Due Date</Label>
-                <Input 
-                  type="datetime-local" 
-                  value={formData.due_at} 
-                  onChange={e => setFormData({ ...formData, due_at: e.target.value })} 
-                  className="h-12 text-base bg-white text-slate-900 border-slate-300"
-                />
-              </div>
-
-              {/* Rubric */}
-              <div className="space-y-2">
-                <Label className="text-base font-medium text-slate-800">Grading Rubric</Label>
-                <Select
-                  value={formData.rubric_id || NO_RUBRIC_VALUE}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, rubric_id: value === NO_RUBRIC_VALUE ? '' : value })
-                  }
-                >
-                  <SelectTrigger className="h-12 text-base bg-white text-slate-900 border-slate-300">
-                    <SelectValue placeholder="No rubric" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value={NO_RUBRIC_VALUE} className="text-slate-900">No rubric</SelectItem>
-                    {rubrics.map(rubric => (
-                      <SelectItem key={rubric.id} value={rubric.id} className="text-slate-900">
-                        {rubric.name} ({rubric.total_points} pts)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-sm" style={{ color: '#64748B' }}>
-                  Rubric will be used for AI-assisted grading
-                </p>
-              </div>
-            </div>
-            <DialogFooter className="pt-4 border-t gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setIsCreateOpen(false);
-                  setEditingAssignment(null);
-                  resetForm();
-                }}
-                className="h-11 px-6 text-base"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSubmit} 
-                disabled={createMutation.isPending || updateMutation.isPending}
-                className="h-11 px-6 text-base"
-              >
-                {editingAssignment ? 'Update' : 'Create'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Sort & Filter Toolbar - Mobile optimized */}
-      <div className="flex flex-col gap-2 p-2 sm:p-3 rounded-lg border border-border/60 shadow-sm" style={{ backgroundColor: '#ffffff' }}>
-        {/* Search - full width */}
-        <div className="relative w-full">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color: '#64748B' }} />
-          <Input
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 sm:pl-9 h-9 sm:h-10 text-sm"
-          />
-        </div>
-        
-        {/* Filters row - compact on mobile */}
-        <div className="flex items-center gap-1.5 sm:gap-2 w-full">
-          {/* Filter by type */}
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="flex-1 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
-              <Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              {ASSIGNMENT_TYPES.map(type => (
-                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Sort by */}
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-            <SelectTrigger className="flex-1 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
-              <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="due_date">Due</SelectItem>
-              <SelectItem value="title">Title</SelectItem>
-              <SelectItem value="points">Pts</SelectItem>
-              <SelectItem value="type">Type</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Sort order toggle */}
-          <Button variant="outline" size="sm" className="h-8 sm:h-9 w-8 sm:w-9 p-0 flex-shrink-0" onClick={toggleSortOrder}>
-            {sortOrder === 'asc' ? <ArrowUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <ArrowDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
-          </Button>
-        </div>
-      </div>
-
-      {/* Assignment List - responsive height */}
-      <ScrollArea className="h-[calc(100vh-380px)] sm:h-[calc(100vh-340px)] md:h-[calc(100vh-280px)]">
-        <div className="space-y-1.5 sm:space-y-2 pr-1 sm:pr-2">
-          {filteredAndSortedAssignments.map(assignment => (
-            <div 
-              key={assignment.id} 
-              className={`flex items-start sm:items-center justify-between p-2 sm:p-3 md:p-4 rounded-lg border transition-all gap-2 ${
-                assignment.is_published 
-                  ? 'bg-white border-border/60 shadow-sm hover:shadow-md' 
-                  : 'bg-gray-50 border-dashed border-border/40 opacity-75'
-              }`}
-            >
-              <div className="flex flex-col gap-0.5 sm:gap-1 flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                  <span 
-                    className="text-sm sm:text-base md:text-lg font-medium line-clamp-1"
-                    style={{ color: assignment.is_published ? '#0F172A' : '#64748B' }}
+                <DialogFooter className="pt-4 border-t gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsCreateOpen(false);
+                      setEditingAssignment(null);
+                      resetForm();
+                    }}
+                    className="h-11 px-6 text-base"
                   >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSubmit} 
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                    className="h-11 px-6 text-base"
+                  >
+                    {editingAssignment ? 'Update' : 'Create'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Search & Filter toolbar — inline on desktop */}
+          <div className="flex flex-col lg:flex-row gap-2 lg:gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#64748B' }} />
+              <Input
+                placeholder="Search assignments..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10 text-sm lg:text-base"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="h-10 text-sm w-[130px] lg:w-[160px]">
+                  <Filter className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                  <SelectValue placeholder="All types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All types</SelectItem>
+                  {ASSIGNMENT_TYPES.map(type => (
+                    <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="h-10 text-sm w-[110px] lg:w-[130px]">
+                  <ArrowUpDown className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="due_date">Due Date</SelectItem>
+                  <SelectItem value="title">Title</SelectItem>
+                  <SelectItem value="points">Points</SelectItem>
+                  <SelectItem value="type">Type</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button variant="outline" size="icon" className="h-10 w-10 flex-shrink-0" onClick={toggleSortOrder}>
+                {sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Desktop table header — hidden on mobile */}
+      <div className="hidden lg:grid lg:grid-cols-[1fr_100px_80px_120px_180px] gap-4 px-5 py-2 text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748B' }}>
+        <span>Assignment</span>
+        <span>Type</span>
+        <span>Points</span>
+        <span>Due Date</span>
+        <span className="text-right">Actions</span>
+      </div>
+
+      {/* Assignment List */}
+      <div className="space-y-2 lg:space-y-1">
+        {filteredAndSortedAssignments.map(assignment => (
+          <div 
+            key={assignment.id} 
+            className={`rounded-lg border transition-all ${
+              assignment.is_published 
+                ? 'bg-white border-border/60 shadow-sm hover:shadow-md' 
+                : 'bg-gray-50 border-dashed border-border/40 opacity-75'
+            }`}
+          >
+            {/* Mobile layout */}
+            <div className="flex items-start justify-between p-3 sm:p-4 lg:hidden gap-2">
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-sm sm:text-base font-medium line-clamp-1" style={{ color: assignment.is_published ? '#0F172A' : '#64748B' }}>
                     {assignment.title}
                   </span>
-                  <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 sm:py-0.5 flex-shrink-0">
+                  <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-[10px] sm:text-xs px-1.5 py-0">
                     {assignment.assignment_type || 'task'}
                   </Badge>
                   {!assignment.is_published && (
-                    <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 sm:py-0.5 flex-shrink-0 border-amber-500/50 text-amber-600">
-                      Hidden
-                    </Badge>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/50 text-amber-600">Hidden</Badge>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-base" style={{ color: '#64748B' }}>
+                <div className="flex items-center gap-2 text-xs sm:text-sm" style={{ color: '#64748B' }}>
                   <span>{assignment.points} pts</span>
                   {assignment.due_date && (
                     <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <Calendar className="h-3 w-3" />
                       {format(new Date(assignment.due_date), 'MMM d, yyyy')}
                     </span>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/grading/instructor/assignment/${assignment.id}/submissions`)}>
+                  <Users className="h-3.5 w-3.5 text-primary" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleVisibilityMutation.mutate({ id: assignment.id, isPublished: !assignment.is_published })} disabled={toggleVisibilityMutation.isPending}>
+                  {assignment.is_published ? <Eye className="h-3.5 w-3.5 text-green-500" /> : <EyeOff className="h-3.5 w-3.5" style={{ color: '#64748B' }} />}
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(assignment)}>
+                  <Edit className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(assignment.id)}>
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Desktop table row */}
+            <div className="hidden lg:grid lg:grid-cols-[1fr_100px_80px_120px_180px] gap-4 items-center px-5 py-3.5">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-base font-medium truncate" style={{ color: assignment.is_published ? '#0F172A' : '#64748B' }}>
+                  {assignment.title}
+                </span>
+                {!assignment.is_published && (
+                  <Badge variant="outline" className="text-xs px-2 py-0.5 border-amber-500/50 text-amber-600 flex-shrink-0">Hidden</Badge>
+                )}
+              </div>
+              <div>
+                <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-xs px-2 py-0.5">
+                  {assignment.assignment_type || 'task'}
+                </Badge>
+              </div>
+              <span className="text-sm font-medium" style={{ color: '#334155' }}>{assignment.points}</span>
+              <span className="text-sm" style={{ color: '#64748B' }}>
+                {assignment.due_date ? format(new Date(assignment.due_date), 'MMM d, yyyy') : '—'}
+              </span>
+              <div className="flex items-center justify-end gap-1">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9" 
-                        onClick={() => navigate(`/grading/instructor/assignment/${assignment.id}/submissions`)}
-                      >
-                        <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(`/grading/instructor/assignment/${assignment.id}/submissions`)}>
+                        <Users className="h-4 w-4 text-primary" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>View & Grade Submissions</TooltipContent>
@@ -671,52 +695,54 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9" 
-                        onClick={() => toggleVisibilityMutation.mutate({ 
-                          id: assignment.id, 
-                          isPublished: !assignment.is_published 
-                        })}
-                        disabled={toggleVisibilityMutation.isPending}
-                      >
-                        {assignment.is_published ? (
-                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
-                        ) : (
-                          <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color: '#64748B' }} />
-                        )}
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => toggleVisibilityMutation.mutate({ id: assignment.id, isPublished: !assignment.is_published })} disabled={toggleVisibilityMutation.isPending}>
+                        {assignment.is_published ? <Eye className="h-4 w-4 text-green-500" /> : <EyeOff className="h-4 w-4" style={{ color: '#64748B' }} />}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      {assignment.is_published ? 'Hide from students' : 'Show to students'}
-                    </TooltipContent>
+                    <TooltipContent>{assignment.is_published ? 'Hide from students' : 'Show to students'}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9" onClick={() => handleEdit(assignment)}>
-                  <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9" onClick={() => handleDelete(assignment.id)}>
-                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleEdit(assignment)}>
+                        <Edit className="h-4 w-4" style={{ color: '#475569' }} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Edit Assignment</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleDelete(assignment.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete Assignment</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
-          ))}
+          </div>
+        ))}
 
-          {filteredAndSortedAssignments.length === 0 && (
-            <div className="border rounded-lg p-4 sm:p-6 md:p-8 text-center">
-              <p className="text-sm sm:text-base mb-2 sm:mb-3" style={{ color: '#475569' }}>
+        {filteredAndSortedAssignments.length === 0 && (
+          <Card className="border border-border/60" style={{ backgroundColor: '#ffffff' }}>
+            <CardContent className="py-12 text-center">
+              <BookOpen className="h-10 w-10 mx-auto mb-3" style={{ color: '#94a3b8' }} />
+              <p className="text-base mb-3" style={{ color: '#475569' }}>
                 {assignments.length === 0 ? 'No assignments yet' : 'No assignments match your filters'}
               </p>
               {assignments.length === 0 && (
-                <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
+                <Button onClick={() => setIsCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1.5" />
                   Create First Assignment
                 </Button>
               )}
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>;
 };
