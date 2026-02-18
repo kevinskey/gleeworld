@@ -11,8 +11,8 @@ import {
   FileText, ArrowLeft, BarChart3, BookOpen, Calendar,
   CheckCircle2, AlertCircle, GraduationCap, Users,
   ShieldCheck, ShieldAlert, Minus, Check, X, Clock, ChevronDown,
-  Music, Download
-} from 'lucide-react';
+  Music, Download } from
+'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { StudentPollInterface } from '@/components/course/StudentPollInterface';
@@ -41,7 +41,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     deductions,
     stats,
     loading: gradeLoading,
-    isAttendanceOnly,
+    isAttendanceOnly
   } = useCourseGrade(courseId);
 
   const gradingConfig = getCourseGradingConfig(courseId);
@@ -49,55 +49,55 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ['gw-course', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_courses' as any)
-        .select('*')
-        .eq('id', courseId)
-        .single();
+      const { data, error } = await supabase.
+      from('gw_courses' as any).
+      select('*').
+      eq('id', courseId).
+      single();
       if (error) throw error;
       return data as any;
-    },
+    }
   });
 
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ['gw-student-assignments', courseId, user?.id],
     queryFn: async () => {
-      const { data: assignmentsData, error } = await supabase
-        .from('gw_course_assignments')
-        .select('*')
-        .eq('course_id', courseId)
-        .eq('is_published', true)
-        .order('due_date', { ascending: true });
+      const { data: assignmentsData, error } = await supabase.
+      from('gw_course_assignments').
+      select('*').
+      eq('course_id', courseId).
+      eq('is_published', true).
+      order('due_date', { ascending: true });
 
       if (error) throw error;
 
-      const { data: submissionsData } = await supabase
-        .from('gw_assignment_submissions' as any)
-        .select('assignment_id, status')
-        .eq('user_id', user?.id);
+      const { data: submissionsData } = await supabase.
+      from('gw_assignment_submissions' as any).
+      select('assignment_id, status').
+      eq('user_id', user?.id);
 
       const submissionsMap = new Map(submissionsData?.map((s: any) => [s.assignment_id, s.status]));
 
       return (assignmentsData as any[])?.map((assignment: any) => ({
         ...assignment,
-        submissionStatus: submissionsMap.get(assignment.id) || 'not_submitted',
+        submissionStatus: submissionsMap.get(assignment.id) || 'not_submitted'
       }));
     },
-    enabled: !!user,
+    enabled: !!user
   });
 
   const { data: grades } = useQuery({
     queryKey: ['student-course-grades', courseId, user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_grades' as any)
-        .select('*, gw_course_assignments(points)')
-        .eq('student_id', user?.id)
-        .eq('released_to_student', true);
+      const { data, error } = await supabase.
+      from('gw_grades' as any).
+      select('*, gw_course_assignments(points)').
+      eq('student_id', user?.id).
+      eq('released_to_student', true);
       if (error) throw error;
       return data as any[];
     },
-    enabled: !!user,
+    enabled: !!user
   });
 
   // Fetch student's attendance records for this course
@@ -105,59 +105,59 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     queryKey: ['student-course-attendance', courseId, user?.id, course?.calendar_id],
     queryFn: async () => {
       // Get all events for this course's calendar
-      const { data: events, error: eventsErr } = await supabase
-        .from('gw_events')
-        .select('id, title, start_date')
-        .eq('calendar_id', course.calendar_id)
-        .order('start_date', { ascending: false });
+      const { data: events, error: eventsErr } = await supabase.
+      from('gw_events').
+      select('id, title, start_date').
+      eq('calendar_id', course.calendar_id).
+      order('start_date', { ascending: false });
       if (eventsErr) throw eventsErr;
       if (!events?.length) return [];
 
-      const eventIds = events.map(e => e.id);
-      const eventMap = new Map(events.map(e => [e.id, e]));
+      const eventIds = events.map((e) => e.id);
+      const eventMap = new Map(events.map((e) => [e.id, e]));
 
       // Get attendance for these events
-      const { data: attendance, error: attErr } = await supabase
-        .from('gw_event_attendance')
-        .select('event_id, attendance_status, check_in_time')
-        .eq('user_id', user!.id)
-        .in('event_id', eventIds);
+      const { data: attendance, error: attErr } = await supabase.
+      from('gw_event_attendance').
+      select('event_id, attendance_status, check_in_time').
+      eq('user_id', user!.id).
+      in('event_id', eventIds);
       if (attErr) throw attErr;
 
-      const attendedSet = new Map(attendance?.map(a => [a.event_id, a]) || []);
+      const attendedSet = new Map(attendance?.map((a) => [a.event_id, a]) || []);
 
       // Build full record: mark each past event as present/absent
       const now = new Date();
-      return events
-        .filter(e => new Date(e.start_date) <= now)
-        .map(e => {
-          const record = attendedSet.get(e.id);
-          return {
-            id: e.id,
-            title: e.title,
-            date: e.start_date,
-            status: record?.attendance_status || 'absent',
-            checkInTime: record?.check_in_time,
-          };
-        });
+      return events.
+      filter((e) => new Date(e.start_date) <= now).
+      map((e) => {
+        const record = attendedSet.get(e.id);
+        return {
+          id: e.id,
+          title: e.title,
+          date: e.start_date,
+          status: record?.attendance_status || 'absent',
+          checkInTime: record?.check_in_time
+        };
+      });
     },
-    enabled: !!user && !!course?.calendar_id,
+    enabled: !!user && !!course?.calendar_id
   });
 
   // Fetch schedule conflicts with MUS 070 rehearsal (MWF 5:00-6:15 PM)
   const { data: scheduleConflicts } = useQuery({
     queryKey: ['student-schedule-conflicts', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('student_class_schedules')
-        .select('course_name, course_code, days, start_time, end_time, conflict_details')
-        .eq('user_id', user!.id)
-        .eq('has_conflict', true)
-        .eq('semester', 'Spring 2026');
+      const { data, error } = await supabase.
+      from('student_class_schedules').
+      select('course_name, course_code, days, start_time, end_time, conflict_details').
+      eq('user_id', user!.id).
+      eq('has_conflict', true).
+      eq('semester', 'Spring 2026');
       if (error) throw error;
       return data;
     },
-    enabled: !!user && courseId === 'a0000000-0000-0000-0000-000000000070',
+    enabled: !!user && courseId === 'a0000000-0000-0000-0000-000000000070'
   });
 
   if (courseLoading || assignmentsLoading || gradeLoading) {
@@ -176,19 +176,19 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'present': return <Check className="h-4 w-4 text-green-600" />;
-      case 'excused': return <Clock className="h-4 w-4 text-yellow-600" />;
-      case 'late': return <Clock className="h-4 w-4 text-orange-600" />;
-      default: return <X className="h-4 w-4 text-destructive" />;
+      case 'present':return <Check className="h-4 w-4 text-green-600" />;
+      case 'excused':return <Clock className="h-4 w-4 text-yellow-600" />;
+      case 'late':return <Clock className="h-4 w-4 text-orange-600" />;
+      default:return <X className="h-4 w-4 text-destructive" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'present': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'excused': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'late': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
-      default: return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case 'present':return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'excused':return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'late':return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+      default:return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
     }
   };
 
@@ -196,20 +196,20 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     <div className="container mx-auto py-6 px-4 space-y-6 max-w-4xl">
       {/* Glee Club Banner */}
       <div className="flex justify-center">
-        <img 
-          src={spelmanGleeClubBanner} 
-          alt="Spelman College Glee Club — Amaze and Inspire" 
-          className="w-full max-w-md h-auto object-contain"
-        />
+        <img
+          src={spelmanGleeClubBanner}
+          alt="Spelman College Glee Club — Amaze and Inspire"
+          className="w-full max-w-md h-auto object-contain" />
+
       </div>
 
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => {
-          const courseConfig = ACADEMY_COURSES.find(c => c.id === courseId);
+          const courseConfig = ACADEMY_COURSES.find((c) => c.id === courseId);
           navigate(courseConfig?.route || '/dashboard');
         }}>
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5 text-black" />
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold">{course?.course_code}</h1>
@@ -226,9 +226,9 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
               <span className="text-white/80 text-sm font-medium">Current Grade</span>
             </div>
             <div className="text-white text-4xl font-black">{letterGrade}</div>
-            {!isAttendanceOnly && (
-              <div className="text-white/70 text-sm mt-1">{percentage}%</div>
-            )}
+            {!isAttendanceOnly &&
+            <div className="text-white/70 text-sm mt-1">{percentage}%</div>
+            }
           </div>
           <div className="text-right text-white/60 text-xs">
             {isAttendanceOnly ? 'Attendance-based' : 'Deductive model'}
@@ -237,8 +237,8 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
       </div>
 
       {/* Attendance Record Grid */}
-      {attendanceRecords && attendanceRecords.length > 0 && (
-        <Collapsible defaultOpen={false}>
+      {attendanceRecords && attendanceRecords.length > 0 &&
+      <Collapsible defaultOpen={false}>
           <Card>
             <CollapsibleTrigger className="w-full">
               <CardHeader className="pb-3">
@@ -249,7 +249,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                       Attendance Record
                     </CardTitle>
                     <CardDescription className="text-left mt-1">
-                      {attendanceRecords.filter(r => r.status === 'present').length} / {attendanceRecords.length} sessions attended
+                      {attendanceRecords.filter((r) => r.status === 'present').length} / {attendanceRecords.length} sessions attended
                     </CardDescription>
                   </div>
                   <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
@@ -259,11 +259,11 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
             <CollapsibleContent>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {attendanceRecords.slice(0, 20).map((record) => (
-                    <div
-                      key={record.id}
-                      className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 bg-muted/30"
-                    >
+                  {attendanceRecords.slice(0, 20).map((record) =>
+                <div
+                  key={record.id}
+                  className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 bg-muted/30">
+
                       <div className="flex items-center gap-2.5 min-w-0">
                         {getStatusIcon(record.status)}
                         <div className="min-w-0">
@@ -277,25 +277,25 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                         {record.status}
                       </Badge>
                     </div>
-                  ))}
+                )}
                 </div>
               </CardContent>
             </CollapsibleContent>
           </Card>
         </Collapsible>
-      )}
+      }
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className={cn("grid w-full", isAttendanceOnly ? "grid-cols-2" : "grid-cols-3")}>
           <TabsTrigger value="grades" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Grades</span>
           </TabsTrigger>
-          {!isAttendanceOnly && (
-            <TabsTrigger value="assignments" className="flex items-center gap-2">
+          {!isAttendanceOnly &&
+          <TabsTrigger value="assignments" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Work</span>
             </TabsTrigger>
-          )}
+          }
           <TabsTrigger value="polls" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Polls</span>
@@ -305,8 +305,8 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         {/* ═══ Grades Tab ═══ */}
         <TabsContent value="grades" className="mt-6 space-y-4">
           {isAttendanceOnly ? (
-            /* ── Attendance-Only Model (MUS 070) ── */
-            <div className="space-y-4">
+          /* ── Attendance-Only Model (MUS 070) ── */
+          <div className="space-y-4">
               <Card>
                 <CardContent className="pt-6 space-y-4">
                   <div className="flex items-center justify-between">
@@ -323,22 +323,22 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                       <span className="font-semibold">Your Unexcused Absences</span>
                     </div>
                     <span className={cn(
-                      "text-lg font-bold",
-                      (stats.excessAbsences ?? 0) > 0 ? "text-destructive" : "text-green-600"
-                    )}>
+                    "text-lg font-bold",
+                    (stats.excessAbsences ?? 0) > 0 ? "text-destructive" : "text-green-600"
+                  )}>
                       {stats.absenceCount}
                     </span>
                   </div>
 
-                  {(stats.excessAbsences ?? 0) > 0 && (
-                    <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  {(stats.excessAbsences ?? 0) > 0 &&
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                       <AlertCircle className="h-4 w-4 shrink-0" />
                       <span>
                         {stats.excessAbsences} absence{(stats.excessAbsences ?? 0) !== 1 ? 's' : ''} beyond the allowed {stats.allowedAbsences} —
                         grade dropped {stats.excessAbsences} letter grade{(stats.excessAbsences ?? 0) !== 1 ? 's' : ''}
                       </span>
                     </div>
-                  )}
+                }
                 </CardContent>
               </Card>
 
@@ -354,32 +354,32 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
               {/* Schedule Conflicts Card */}
               <Card className={cn(
-                scheduleConflicts && scheduleConflicts.length > 0
-                  ? "border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20"
-                  : "border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-950/20"
-              )}>
+              scheduleConflicts && scheduleConflicts.length > 0 ?
+              "border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20" :
+              "border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-950/20"
+            )}>
                 <CardHeader className="pb-2">
                   <CardTitle className={cn("text-sm flex items-center gap-2",
-                    scheduleConflicts && scheduleConflicts.length > 0
-                      ? "text-orange-700 dark:text-orange-400"
-                      : "text-green-700 dark:text-green-400"
-                  )}>
-                    {scheduleConflicts && scheduleConflicts.length > 0 ? (
-                      <><AlertCircle className="h-4 w-4" /> Schedule Conflicts with Rehearsal</>
-                    ) : (
-                      <><CheckCircle2 className="h-4 w-4" /> No Schedule Conflicts</>
-                    )}
+                scheduleConflicts && scheduleConflicts.length > 0 ?
+                "text-orange-700 dark:text-orange-400" :
+                "text-green-700 dark:text-green-400"
+                )}>
+                    {scheduleConflicts && scheduleConflicts.length > 0 ?
+                  <><AlertCircle className="h-4 w-4" /> Schedule Conflicts with Rehearsal</> :
+
+                  <><CheckCircle2 className="h-4 w-4" /> No Schedule Conflicts</>
+                  }
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    {scheduleConflicts && scheduleConflicts.length > 0
-                      ? "These classes overlap with MUS 070 rehearsal (MWF 5:00–6:15 PM)"
-                      : "None of your classes conflict with MUS 070 rehearsal (MWF 5:00–6:15 PM)"}
+                    {scheduleConflicts && scheduleConflicts.length > 0 ?
+                  "These classes overlap with MUS 070 rehearsal (MWF 5:00–6:15 PM)" :
+                  "None of your classes conflict with MUS 070 rehearsal (MWF 5:00–6:15 PM)"}
                   </CardDescription>
                 </CardHeader>
-                {scheduleConflicts && scheduleConflicts.length > 0 && (
-                  <CardContent className="space-y-2">
-                    {scheduleConflicts.map((conflict: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-card border border-border/50">
+                {scheduleConflicts && scheduleConflicts.length > 0 &&
+              <CardContent className="space-y-2">
+                    {scheduleConflicts.map((conflict: any, i: number) =>
+                <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-card border border-border/50">
                         <div className="min-w-0">
                           <p className="text-xs font-semibold truncate">
                             {conflict.course_code || conflict.course_name}
@@ -392,9 +392,9 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                           Conflict
                         </Badge>
                       </div>
-                    ))}
-                  </CardContent>
                 )}
+                  </CardContent>
+              }
               </Card>
 
               {/* Rehearsal Conflict Excuse Requests */}
@@ -402,10 +402,10 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
               {/* Super Admin Approval Card */}
               <AdminConflictApproval />
-            </div>
-          ) : (
-            /* ── Standard Deductive Model ── */
-            <div className="space-y-4">
+            </div>) : (
+
+          /* ── Standard Deductive Model ── */
+          <div className="space-y-4">
               {/* Syllabus Breakdown */}
               <Card>
                 <CardHeader className="pb-3">
@@ -414,17 +414,17 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {gradingConfig.components.map((comp, i) => (
-                    <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+                  {gradingConfig.components.map((comp, i) =>
+                <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
                       <div className="flex-1">
                         <div className="font-medium text-sm">{comp.component}</div>
-                        {comp.description && (
-                          <div className="text-xs text-muted-foreground mt-0.5">{comp.description}</div>
-                        )}
+                        {comp.description &&
+                    <div className="text-xs text-muted-foreground mt-0.5">{comp.description}</div>
+                    }
                       </div>
                       <Badge variant="outline" className="ml-3 shrink-0">{comp.weight}%</Badge>
                     </div>
-                  ))}
+                )}
                 </CardContent>
               </Card>
 
@@ -484,19 +484,19 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                   </CardContent>
                 </Card>
               </div>
-            </div>
-          )}
+            </div>)
+          }
         </TabsContent>
 
         {/* ═══ Assignments Tab ═══ */}
-        {!isAttendanceOnly && (
-          <TabsContent value="assignments" className="mt-6">
+        {!isAttendanceOnly &&
+        <TabsContent value="assignments" className="mt-6">
             <div className="grid gap-3">
               {assignments?.map((assignment: any) => {
-                const assignmentGrade = grades?.find((g: any) => g.assignment_id === assignment.id);
+              const assignmentGrade = grades?.find((g: any) => g.assignment_id === assignment.id);
 
-                return (
-                  <Card key={assignment.id} className="hover:shadow-md transition-shadow">
+              return (
+                <Card key={assignment.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="py-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium flex items-center gap-2">
@@ -504,10 +504,10 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                           {assignment.title}
                         </span>
                         <Badge variant={
-                          assignment.submissionStatus === 'graded' ? 'default' :
-                          assignment.submissionStatus === 'submitted' ? 'secondary' :
-                          'outline'
-                        }>
+                      assignment.submissionStatus === 'graded' ? 'default' :
+                      assignment.submissionStatus === 'submitted' ? 'secondary' :
+                      'outline'
+                      }>
                           {assignment.submissionStatus}
                         </Badge>
                       </div>
@@ -516,49 +516,49 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                           <Calendar className="h-3 w-3" />
                           {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
                         </span>
-                        {assignmentGrade ? (
-                          <span className="font-semibold text-foreground">
+                        {assignmentGrade ?
+                      <span className="font-semibold text-foreground">
                             {assignmentGrade.points_awarded} / {assignment.points} pts
-                          </span>
-                        ) : (
-                          <span>{assignment.points} pts</span>
-                        )}
+                          </span> :
+
+                      <span>{assignment.points} pts</span>
+                      }
                       </div>
-                      {assignmentGrade?.feedback && (
-                        <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted rounded">
+                      {assignmentGrade?.feedback &&
+                    <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted rounded">
                           {assignmentGrade.feedback}
                         </p>
-                      )}
+                    }
                       <Button
-                        size="sm"
-                        variant="outline"
-                        className="mt-2"
-                        onClick={() => navigate(`/grading/student/assignment/${assignment.id}`)}
-                      >
+                      size="sm"
+                      variant="outline"
+                      className="mt-2"
+                      onClick={() => navigate(`/grading/student/assignment/${assignment.id}`)}>
+
                         View
                       </Button>
                     </CardContent>
-                  </Card>
-                );
-              })}
+                  </Card>);
 
-              {!assignments || assignments.length === 0 ? (
-                <Card>
+            })}
+
+              {!assignments || assignments.length === 0 ?
+            <Card>
                   <CardContent className="py-8 text-center">
                     <AlertCircle className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                     <p className="text-muted-foreground">No assignments yet.</p>
                   </CardContent>
-                </Card>
-              ) : null}
+                </Card> :
+            null}
             </div>
           </TabsContent>
-        )}
+        }
 
         {/* ═══ Polls Tab ═══ */}
         <TabsContent value="polls" className="mt-6">
           <StudentPollInterface courseId={courseId} />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 };
