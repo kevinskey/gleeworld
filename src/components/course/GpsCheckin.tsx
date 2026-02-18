@@ -190,7 +190,7 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
           {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground text-sm">
-              {isPresent ? 'Attendance confirmed' : isInRehearsal ? 'In Rehearsal' : 'Rehearsal Attendance'}
+              {isPresent ? 'Attendance confirmed' : isInRehearsal ? 'In Rehearsal' : courseId === 'a0000000-0000-0000-0000-000000000070' ? 'Rehearsal Attendance' : 'Class Attendance'}
             </p>
             <p className="text-xs text-muted-foreground">
               {isPresent && 'You are marked present for this session'}
