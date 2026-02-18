@@ -22,7 +22,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 import { format } from 'date-fns';
-import { RehearsalConflictForm } from './RehearsalConflictForm';
+import { RehearsalConflictForm, type AbsenceExcuseData } from './RehearsalConflictForm';
 import { AdminConflictApproval } from './AdminConflictApproval';
 import spelmanGleeClubBanner from '@/assets/spelman-glee-club-banner.png';
 
@@ -34,6 +34,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('grades');
+  const [absenceExcuse, setAbsenceExcuse] = useState<AbsenceExcuseData | null>(null);
 
   const {
     percentage,
@@ -271,9 +272,23 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                           </p>
                         </div>
                       </div>
-                      <Badge variant="outline" className={cn("text-[10px] capitalize shrink-0 ml-2 border-white/20 text-white/80")}>
-                        {record.status}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        {record.status === 'absent' && (
+                          <button
+                            onClick={() => setAbsenceExcuse({
+                              eventId: record.id,
+                              eventTitle: record.title,
+                              eventDate: record.date,
+                            })}
+                            className="text-[9px] px-1.5 py-0.5 rounded bg-white/20 text-white/90 hover:bg-white/30 transition-colors"
+                          >
+                            Excuse
+                          </button>
+                        )}
+                        <Badge variant="outline" className={cn("text-[10px] capitalize border-white/20 text-white/80")}>
+                          {record.status}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -396,7 +411,10 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
               </Card>
 
               {/* Rehearsal Conflict Excuse Requests */}
-              <RehearsalConflictForm />
+              <RehearsalConflictForm 
+                absenceData={absenceExcuse} 
+                onAbsenceHandled={() => setAbsenceExcuse(null)} 
+              />
 
               {/* Super Admin Approval Card */}
               <AdminConflictApproval />

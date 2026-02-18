@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,7 +18,22 @@ import { format } from 'date-fns';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const;
 
-export const RehearsalConflictForm: React.FC = () => {
+export interface AbsenceExcuseData {
+  eventId: string;
+  eventTitle: string;
+  eventDate: string;
+}
+
+interface RehearsalConflictFormProps {
+  /** If provided, opens the form pre-filled for a specific absence */
+  absenceData?: AbsenceExcuseData | null;
+  onAbsenceHandled?: () => void;
+}
+
+export const RehearsalConflictForm: React.FC<RehearsalConflictFormProps> = ({ 
+  absenceData, 
+  onAbsenceHandled 
+}) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -32,6 +47,22 @@ export const RehearsalConflictForm: React.FC = () => {
   const [endTime, setEndTime] = useState('');
   const [excuseType, setExcuseType] = useState<'full' | 'partial'>('partial');
   const [reason, setReason] = useState('');
+
+  // Open dialog automatically when absenceData is passed
+  useEffect(() => {
+    if (absenceData) {
+      setOpen(true);
+      // Pre-fill with absence info
+      setCourseName('');
+      setCourseCode('');
+      setExcuseType('full');
+      setReason(`Requesting excuse for absence on ${format(new Date(absenceData.eventDate), 'MMMM d, yyyy')} — ${absenceData.eventTitle}`);
+      // Auto-detect day of week
+      const dayIndex = new Date(absenceData.eventDate).getDay();
+      const dayMap: Record<number, string> = { 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri' };
+      if (dayMap[dayIndex]) setSelectedDays([dayMap[dayIndex]]);
+    }
+  }, [absenceData]);
 
   // Fetch existing requests
   const { data: requests, isLoading } = useQuery({
@@ -62,37 +93,55 @@ export const RehearsalConflictForm: React.FC = () => {
     e.preventDefault();
     if (!user) return;
 
-    if (!courseName.trim() || selectedDays.length === 0 || !startTime || !endTime) {
+    // For absence-specific requests, course name & days are optional
+    const isAbsenceRequest = !!absenceData;
+
+    if (!isAbsenceRequest && (!courseName.trim() || selectedDays.length === 0 || !startTime || !endTime)) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     try {
       setSubmitting(true);
+      const insertData: any = {
+        user_id: user.id,
+        conflict_course_name: courseName.trim() || (isAbsenceRequest ? 'Absence Excuse' : ''),
+        conflict_course_code: courseCode.trim() || null,
+        conflict_days: selectedDays.length > 0 ? selectedDays : ['N/A'],
+        conflict_start_time: startTime || '17:00',
+        conflict_end_time: endTime || '18:15',
+        excuse_type: excuseType,
+        reason: reason.trim() || null,
+      };
+
+      if (isAbsenceRequest && absenceData) {
+        insertData.absence_event_id = absenceData.eventId;
+        insertData.absence_date = absenceData.eventDate.split('T')[0];
+      }
+
       const { error } = await supabase
         .from('gw_rehearsal_excuse_requests' as any)
-        .insert({
-          user_id: user.id,
-          conflict_course_name: courseName.trim(),
-          conflict_course_code: courseCode.trim() || null,
-          conflict_days: selectedDays,
-          conflict_start_time: startTime,
-          conflict_end_time: endTime,
-          excuse_type: excuseType,
-          reason: reason.trim() || null,
-        });
+        .insert(insertData);
 
       if (error) throw error;
 
-      toast.success('Conflict request submitted for review');
+      toast.success(isAbsenceRequest ? 'Absence excuse request submitted' : 'Conflict request submitted for review');
       queryClient.invalidateQueries({ queryKey: ['rehearsal-excuse-requests'] });
       resetForm();
       setOpen(false);
+      onAbsenceHandled?.();
     } catch (err) {
       console.error('Error submitting conflict request:', err);
       toast.error('Failed to submit request');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      onAbsenceHandled?.();
     }
   };
 
@@ -113,6 +162,8 @@ export const RehearsalConflictForm: React.FC = () => {
     }
   };
 
+  const isAbsenceMode = !!absenceData;
+
   return (
     <Card className="border-border">
       <CardHeader className="pb-2">
@@ -123,10 +174,10 @@ export const RehearsalConflictForm: React.FC = () => {
               Conflict Excuse Requests
             </CardTitle>
             <CardDescription className="text-xs mt-1">
-              Submit a class conflict for super-admin review to excuse absences
+              Submit a class conflict or absence excuse for super-admin review
             </CardDescription>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline" className="text-xs gap-1">
                 <Plus className="h-3 w-3" />
@@ -135,76 +186,90 @@ export const RehearsalConflictForm: React.FC = () => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle className="text-lg">Report Schedule Conflict</DialogTitle>
+                <DialogTitle className="text-lg">
+                  {isAbsenceMode ? 'Request Absence Excuse' : 'Report Schedule Conflict'}
+                </DialogTitle>
               </DialogHeader>
+
+              {isAbsenceMode && absenceData && (
+                <div className="rounded-lg bg-muted p-3 text-sm">
+                  <p className="font-medium">{absenceData.eventTitle}</p>
+                  <p className="text-xs text-muted-foreground">{format(new Date(absenceData.eventDate), 'EEEE, MMMM d, yyyy')}</p>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Course Name *</Label>
-                    <Input
-                      value={courseName}
-                      onChange={e => setCourseName(e.target.value)}
-                      placeholder="e.g. Intro to Biology"
-                      className="text-sm"
-                      maxLength={100}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Course Code</Label>
-                    <Input
-                      value={courseCode}
-                      onChange={e => setCourseCode(e.target.value)}
-                      placeholder="e.g. BIO 101"
-                      className="text-sm"
-                      maxLength={20}
-                    />
-                  </div>
-                </div>
+                {!isAbsenceMode && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Course Name *</Label>
+                        <Input
+                          value={courseName}
+                          onChange={e => setCourseName(e.target.value)}
+                          placeholder="e.g. Intro to Biology"
+                          className="text-sm"
+                          maxLength={100}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Course Code</Label>
+                        <Input
+                          value={courseCode}
+                          onChange={e => setCourseCode(e.target.value)}
+                          placeholder="e.g. BIO 101"
+                          className="text-sm"
+                          maxLength={20}
+                        />
+                      </div>
+                    </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Days of Conflict *</Label>
-                  <div className="flex gap-1.5">
-                    {DAYS.map(day => (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => toggleDay(day)}
-                        className={cn(
-                          "px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors",
-                          selectedDays.includes(day)
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"
-                        )}
-                      >
-                        {day}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Days of Conflict *</Label>
+                      <div className="flex gap-1.5">
+                        {DAYS.map(day => (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => toggleDay(day)}
+                            className={cn(
+                              "px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                              selectedDays.includes(day)
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"
+                            )}
+                          >
+                            {day}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Start Time *</Label>
-                    <Input
-                      type="time"
-                      value={startTime}
-                      onChange={e => setStartTime(e.target.value)}
-                      className="text-sm"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">End Time *</Label>
-                    <Input
-                      type="time"
-                      value={endTime}
-                      onChange={e => setEndTime(e.target.value)}
-                      className="text-sm"
-                      required
-                    />
-                  </div>
-                </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Start Time *</Label>
+                        <Input
+                          type="time"
+                          value={startTime}
+                          onChange={e => setStartTime(e.target.value)}
+                          className="text-sm"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">End Time *</Label>
+                        <Input
+                          type="time"
+                          value={endTime}
+                          onChange={e => setEndTime(e.target.value)}
+                          className="text-sm"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="space-y-1.5">
                   <Label className="text-xs">Excuse Type *</Label>
@@ -220,13 +285,13 @@ export const RehearsalConflictForm: React.FC = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Additional Notes</Label>
+                  <Label className="text-xs">Reason / Additional Notes</Label>
                   <Textarea
                     value={reason}
                     onChange={e => setReason(e.target.value)}
-                    placeholder="Explain why this conflict requires an excuse..."
+                    placeholder={isAbsenceMode ? "Explain why you need this absence excused..." : "Explain why this conflict requires an excuse..."}
                     className="text-sm resize-none"
-                    rows={2}
+                    rows={3}
                     maxLength={500}
                   />
                 </div>
@@ -248,10 +313,16 @@ export const RehearsalConflictForm: React.FC = () => {
               <div key={req.id} className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 bg-muted/30">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold truncate">
-                    {req.conflict_course_code ? `${req.conflict_course_code} — ` : ''}{req.conflict_course_name}
+                    {req.absence_date 
+                      ? `Absence: ${format(new Date(req.absence_date + 'T12:00:00'), 'MMM d, yyyy')}`
+                      : `${req.conflict_course_code ? `${req.conflict_course_code} — ` : ''}${req.conflict_course_name}`
+                    }
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    {req.conflict_days?.join(', ')} · {req.conflict_start_time?.slice(0, 5)}–{req.conflict_end_time?.slice(0, 5)} · {req.excuse_type === 'full' ? 'Full' : 'Partial'} excuse
+                    {req.absence_date 
+                      ? `${req.excuse_type === 'full' ? 'Full' : 'Partial'} excuse`
+                      : `${req.conflict_days?.join(', ')} · ${req.conflict_start_time?.slice(0, 5)}–${req.conflict_end_time?.slice(0, 5)} · ${req.excuse_type === 'full' ? 'Full' : 'Partial'} excuse`
+                    }
                   </p>
                   {req.review_notes && (
                     <p className="text-[10px] text-muted-foreground mt-1 italic">"{req.review_notes}"</p>
