@@ -159,7 +159,8 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
       );
       if (error) throw error;
 
-      toast({ title: '✅ Checked In', description: `You're in rehearsal. Scan the checkout QR at the end of class to be marked present.` });
+      const isMus070 = courseId === 'a0000000-0000-0000-0000-000000000070';
+      toast({ title: '✅ Checked In', description: isMus070 ? `You're in rehearsal. Scan the checkout QR at the end of class to be marked present.` : `You're checked in. Scan the checkout QR at the end of class to be marked present.` });
       refetchRecord();
     } catch (err: any) {
       toast({ title: 'Check-in failed', description: err.message, variant: 'destructive' });
