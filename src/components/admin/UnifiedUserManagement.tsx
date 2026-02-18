@@ -69,63 +69,63 @@ const PermissionOverview = () => {
   };
   return <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Groups</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Total Groups</CardTitle>
+            <Shield className="h-4 w-4" style={{ color: '#64748b' }} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalGroups}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold" style={{ color: '#0f172a' }}>{stats.totalGroups}</div>
+            <p className="text-xs" style={{ color: '#64748b' }}>
               Permission groups configured
             </p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Default Groups</CardTitle>
-            <Settings className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Default Groups</CardTitle>
+            <Settings className="h-4 w-4" style={{ color: '#64748b' }} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.defaultGroups}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold" style={{ color: '#0f172a' }}>{stats.defaultGroups}</div>
+            <p className="text-xs" style={{ color: '#64748b' }}>
               System-provided groups
             </p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Custom Groups</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Custom Groups</CardTitle>
+            <UserCheck className="h-4 w-4" style={{ color: '#64748b' }} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.customGroups}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold" style={{ color: '#0f172a' }}>{stats.customGroups}</div>
+            <p className="text-xs" style={{ color: '#64748b' }}>
               User-created groups
             </p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Groups</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Active Groups</CardTitle>
+            <Users className="h-4 w-4" style={{ color: '#64748b' }} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeGroups}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold" style={{ color: '#0f172a' }}>{stats.activeGroups}</div>
+            <p className="text-xs" style={{ color: '#64748b' }}>
               Currently available
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
         <CardHeader>
-          <CardTitle>Permission Groups Overview</CardTitle>
-          <CardDescription>
+          <CardTitle style={{ color: '#0f172a' }}>Permission Groups Overview</CardTitle>
+          <CardDescription style={{ color: '#64748b' }}>
             Quick overview of all configured permission groups
           </CardDescription>
         </CardHeader>
@@ -328,84 +328,84 @@ export const UnifiedUserManagement = () => {
         <LoadingSpinner size="lg" text="Loading users..." />
       </div>;
   }
-  return <div className="space-y-6">
+  return <div className="space-y-6" style={{ fontSize: '14px' }}>
       <div>
-        <h1 className="text-3xl font-bold text-black">User & Permission Management</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold" style={{ color: '#0f172a' }}>User & Permission Management</h1>
+        <p style={{ color: '#64748b', fontSize: '14px' }}>
           Unified management for users, roles, and permissions across the Glee Club platform
         </p>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-1">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3">Overview</TabsTrigger>
-          <TabsTrigger value="users" className="text-xs sm:text-sm px-2 sm:px-3">Users</TabsTrigger>
-          <TabsTrigger value="dossiers" className="text-xs sm:text-sm px-2 sm:px-3">Dossiers</TabsTrigger>
-          <TabsTrigger value="enroll" className="text-xs sm:text-sm px-2 sm:px-3">Add User</TabsTrigger>
-          <TabsTrigger value="permissions" className="text-xs sm:text-sm px-2 sm:px-3 pb-2">Permissions</TabsTrigger>
-          <TabsTrigger value="modules" className="text-xs sm:text-sm px-2 sm:px-3">Modules</TabsTrigger>
-          <TabsTrigger value="username" className="text-xs sm:text-sm px-2 sm:px-3">Username</TabsTrigger>
+          <TabsTrigger value="overview" className="text-sm px-2 sm:px-3">Overview</TabsTrigger>
+          <TabsTrigger value="users" className="text-sm px-2 sm:px-3">Users</TabsTrigger>
+          <TabsTrigger value="dossiers" className="text-sm px-2 sm:px-3">Dossiers</TabsTrigger>
+          <TabsTrigger value="enroll" className="text-sm px-2 sm:px-3">Add User</TabsTrigger>
+          <TabsTrigger value="permissions" className="text-sm px-2 sm:px-3 pb-2">Permissions</TabsTrigger>
+          <TabsTrigger value="modules" className="text-sm px-2 sm:px-3">Modules</TabsTrigger>
+          <TabsTrigger value="username" className="text-sm px-2 sm:px-3">Username</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-            <Card>
+            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Total Users</CardTitle>
+                <Users className="h-4 w-4" style={{ color: '#64748b' }} />
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold">{userStats.total}</div>
+                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.total}</div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">Admins</CardTitle>
-                <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Admins</CardTitle>
+                <Shield className="h-4 w-4" style={{ color: '#64748b' }} />
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold">{userStats.admins}</div>
+                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.admins}</div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">Students</CardTitle>
-                <User className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Students</CardTitle>
+                <User className="h-4 w-4" style={{ color: '#64748b' }} />
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold">{userStats.students}</div>
+                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.students}</div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">VIP</CardTitle>
-                <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
+                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>VIP</CardTitle>
+                <Star className="h-4 w-4" style={{ color: '#eab308' }} />
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold">{userStats.vips}</div>
+                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.vips}</div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">Alumnae</CardTitle>
-                <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
+                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Alumnae</CardTitle>
+                <GraduationCap className="h-4 w-4" style={{ color: '#9333ea' }} />
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold">{userStats.alumnae}</div>
+                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.alumnae}</div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">Exec Board</CardTitle>
-                <Settings className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Exec Board</CardTitle>
+                <Settings className="h-4 w-4" style={{ color: '#64748b' }} />
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold">{userStats.executives}</div>
+                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.executives}</div>
               </CardContent>
             </Card>
           </div>
