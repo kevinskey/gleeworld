@@ -19,7 +19,7 @@ type MeetingPatterns = MeetingPattern | DualMeetingPattern;
 export const CONFIRMED_SCHEDULES: Record<string, { id: string; pattern: MeetingPatterns }> = {
   'MUS 240': {
     id: '23c4ee3c-7bbb-4534-8c0a-eecd88298d37',
-    pattern: { days: [1, 3, 5], startTime: '13:00', endTime: '13:50' }, // MWF 1-1:50 PM
+    pattern: { days: [1, 3, 5], startTime: '13:00', endTime: '13:50' }, // MWF 1:00-1:50 PM (50 min)
   },
   'MUS 070': {
     id: 'a0000000-0000-0000-0000-000000000070',
