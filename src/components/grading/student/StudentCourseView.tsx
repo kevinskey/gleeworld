@@ -24,6 +24,7 @@ import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 import { format } from 'date-fns';
 import { RehearsalConflictForm } from './RehearsalConflictForm';
 import { AdminConflictApproval } from './AdminConflictApproval';
+import spelmanGleeClubBanner from '@/assets/spelman-glee-club-banner.png';
 
 interface StudentCourseViewProps {
   courseId: string;
@@ -193,6 +194,15 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
   return (
     <div className="container mx-auto py-6 px-4 space-y-6 max-w-4xl">
+      {/* Glee Club Banner */}
+      <div className="flex justify-center">
+        <img 
+          src={spelmanGleeClubBanner} 
+          alt="Spelman College Glee Club — Amaze and Inspire" 
+          className="w-full max-w-md h-auto object-contain"
+        />
+      </div>
+
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => {
