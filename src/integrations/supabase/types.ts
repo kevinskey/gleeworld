@@ -16178,6 +16178,8 @@ export type Database = {
       }
       gw_rehearsal_excuse_requests: {
         Row: {
+          absence_date: string | null
+          absence_event_id: string | null
           conflict_course_code: string | null
           conflict_course_name: string
           conflict_days: string[]
@@ -16196,6 +16198,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          absence_date?: string | null
+          absence_event_id?: string | null
           conflict_course_code?: string | null
           conflict_course_name: string
           conflict_days: string[]
@@ -16214,6 +16218,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          absence_date?: string | null
+          absence_event_id?: string | null
           conflict_course_code?: string | null
           conflict_course_name?: string
           conflict_days?: string[]
@@ -16231,7 +16237,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gw_rehearsal_excuse_requests_absence_event_id_fkey"
+            columns: ["absence_event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_rehearsal_feedback: {
         Row: {
