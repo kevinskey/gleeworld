@@ -235,7 +235,8 @@ export const CourseInstructorConsole = () => {
           <div className="max-w-[1800px] mx-auto px-3 sm:px-5 md:px-8 py-2.5 sm:py-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="h-9 w-9 p-0 sm:px-2.5 sm:w-auto hover:bg-muted/60 flex-shrink-0" style={{ color: '#0F172A' }}>
+                {/* Hamburger only on mobile */}
+                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden h-9 w-9 p-0 hover:bg-muted/60 flex-shrink-0" style={{ color: '#0F172A' }}>
                   <Menu className="h-5 w-5" />
                 </Button>
                 <Badge className="bg-primary text-white border-0 font-semibold text-[11px] sm:text-xs tracking-wide flex-shrink-0 px-2 py-0.5">
@@ -263,9 +264,9 @@ export const CourseInstructorConsole = () => {
           </div>
         </div>
 
-        {/* Flyout Sidebar */}
+        {/* Mobile Flyout Sidebar */}
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetContent side="left" className="w-72 sm:w-80 p-0 bg-white">
+          <SheetContent side="left" className="w-72 sm:w-80 p-0 bg-white lg:hidden">
             <div className="p-5 pt-6">
               <div className="mb-6 pb-5 border-b border-border/50">
                 <InstructorCourseSwitcher 
@@ -278,9 +279,23 @@ export const CourseInstructorConsole = () => {
           </SheetContent>
         </Sheet>
 
-        {/* Main Content — full width */}
-        <div className="max-w-[1800px] mx-auto">
-          <main className="p-3 sm:p-5 lg:p-10 pb-24">
+        {/* Desktop: sidebar + content side by side */}
+        <div className="max-w-[1800px] mx-auto flex">
+          {/* Persistent left sidebar — desktop only */}
+          <aside className="hidden lg:block w-56 xl:w-64 flex-shrink-0 border-r bg-white sticky top-[53px] h-[calc(100vh-53px)] overflow-y-auto">
+            <div className="p-4 pt-5">
+              <div className="mb-5 pb-4 border-b border-border/50">
+                <InstructorCourseSwitcher 
+                  currentCourse={course} 
+                  onClose={() => {}}
+                />
+              </div>
+              <SidebarNav />
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 min-w-0 p-3 sm:p-5 lg:p-8 xl:p-10 pb-24">
             {activeTab === 'syllabus' && dbCourse && <SyllabusTemplateEditor courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} instructorName={course.instructor?.name} instructorEmail={course.instructor?.email} />}
             {activeTab === 'modules' && dbCourse && <ModulesSection courseId={dbCourse.id} />}
             {activeTab === 'class-notes' && dbCourse && <ClassNotesManager courseId={dbCourse.id} isInstructor={true} />}
