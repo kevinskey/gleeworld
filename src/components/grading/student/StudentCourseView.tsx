@@ -212,7 +212,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
           <ArrowLeft className="h-5 w-5 text-black" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold">{course?.course_code}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-black">{course?.course_code}</h1>
           <p className="text-muted-foreground text-sm sm:text-base">{course?.course_name}</p>
         </div>
       </div>
