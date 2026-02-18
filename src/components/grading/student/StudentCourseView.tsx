@@ -216,73 +216,72 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         </div>
       </div>
 
-      {/* Grade Hero */}
+      {/* Combined Grade & Attendance Hero */}
       <div className="rounded-2xl overflow-hidden shadow-lg" style={{ background: 'linear-gradient(135deg, #003366 0%, #004d99 60%, #7cb9e8 100%)' }}>
-        <div className="p-6 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <GraduationCap className="h-5 w-5 text-white/80" />
-              <span className="text-white/80 text-sm font-medium">Current Grade</span>
+        <div className="p-5">
+          {/* Grade Section */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <GraduationCap className="h-4 w-4 text-white/70" />
+                <span className="text-white/70 text-xs font-medium uppercase tracking-wide">Current Grade</span>
+              </div>
+              <div className="text-white text-5xl font-black leading-none">{letterGrade}</div>
+              {!isAttendanceOnly && (
+                <div className="text-white/60 text-sm mt-1">{percentage}%</div>
+              )}
             </div>
-            <div className="text-white text-4xl font-black">{letterGrade}</div>
-            {!isAttendanceOnly &&
-            <div className="text-white/70 text-sm mt-1">{percentage}%</div>
-            }
+            <div className="text-right">
+              <span className="text-white/50 text-[10px] uppercase tracking-wider">
+                {isAttendanceOnly ? 'Attendance-based' : 'Deductive model'}
+              </span>
+            </div>
           </div>
-          <div className="text-right text-white/60 text-xs">
-            {isAttendanceOnly ? 'Attendance-based' : 'Deductive model'}
-          </div>
-        </div>
-      </div>
 
-      {/* Attendance Record Grid */}
-      {attendanceRecords && attendanceRecords.length > 0 &&
-      <Collapsible defaultOpen={false}>
-          <Card>
-            <CollapsibleTrigger className="w-full">
-              <CardHeader className="pb-3">
+          {/* Divider */}
+          <div className="border-t border-white/15 my-3" />
+
+          {/* Attendance Summary */}
+          {attendanceRecords && attendanceRecords.length > 0 && (
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base flex items-center gap-2 text-left">
-                      <CheckCircle2 className="h-5 w-5 text-primary" />
-                      Attendance Record
-                    </CardTitle>
-                    <CardDescription className="text-left mt-1">
-                      {attendanceRecords.filter((r) => r.status === 'present').length} / {attendanceRecords.length} sessions attended
-                    </CardDescription>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-white/70" />
+                    <span className="text-white/90 text-sm font-medium">Attendance</span>
+                    <span className="text-white/50 text-xs">
+                      {attendanceRecords.filter((r) => r.status === 'present').length}/{attendanceRecords.length} sessions
+                    </span>
                   </div>
-                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+                  <ChevronDown className="h-4 w-4 text-white/50 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
                 </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {attendanceRecords.slice(0, 20).map((record) =>
-                <div
-                  key={record.id}
-                  className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 bg-muted/30">
-
-                      <div className="flex items-center gap-2.5 min-w-0">
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {attendanceRecords.slice(0, 20).map((record) => (
+                    <div
+                      key={record.id}
+                      className="flex items-center justify-between p-2 rounded-lg bg-white/10">
+                      <div className="flex items-center gap-2 min-w-0">
                         {getStatusIcon(record.status)}
                         <div className="min-w-0">
-                          <p className="text-xs font-medium truncate">{record.title}</p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-[11px] font-medium text-white/90 truncate">{record.title}</p>
+                          <p className="text-[10px] text-white/50">
                             {format(new Date(record.date), 'MMM d, yyyy')}
                           </p>
                         </div>
                       </div>
-                      <Badge variant="outline" className={cn("text-[10px] capitalize shrink-0 ml-2", getStatusColor(record.status))}>
+                      <Badge variant="outline" className={cn("text-[10px] capitalize shrink-0 ml-2 border-white/20 text-white/80")}>
                         {record.status}
                       </Badge>
                     </div>
-                )}
+                  ))}
                 </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-      }
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+        </div>
+      </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className={cn("grid w-full", isAttendanceOnly ? "grid-cols-2" : "grid-cols-3")}>
           <TabsTrigger value="grades" className="flex items-center gap-2">
