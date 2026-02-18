@@ -10,7 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   FileText, ArrowLeft, BarChart3, BookOpen, Calendar,
   CheckCircle2, AlertCircle, GraduationCap, Users,
-  ShieldCheck, ShieldAlert, Minus, Check, X, Clock, ChevronDown
+  ShieldCheck, ShieldAlert, Minus, Check, X, Clock, ChevronDown,
+  Music, Download
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
