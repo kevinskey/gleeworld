@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 import { format } from 'date-fns';
 import { RehearsalConflictForm } from './RehearsalConflictForm';
+import { AdminConflictApproval } from './AdminConflictApproval';
 
 interface StudentCourseViewProps {
   courseId: string;
@@ -387,6 +388,9 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
               {/* Rehearsal Conflict Excuse Requests */}
               <RehearsalConflictForm />
+
+              {/* Super Admin Approval Card */}
+              <AdminConflictApproval />
             </div>
           ) : (
             /* ── Standard Deductive Model ── */
