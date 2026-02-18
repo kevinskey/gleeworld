@@ -328,7 +328,7 @@ export const UnifiedUserManagement = () => {
         <LoadingSpinner size="lg" text="Loading users..." />
       </div>;
   }
-  return <div className="space-y-6" style={{ fontSize: '14px' }}>
+  return <div className="space-y-6" style={{ fontSize: '14px', color: '#0f172a' }}>
       <div>
         <h1 className="text-3xl font-bold" style={{ color: '#0f172a' }}>User & Permission Management</h1>
         <p style={{ color: '#64748b', fontSize: '14px' }}>
@@ -416,15 +416,15 @@ export const UnifiedUserManagement = () => {
         <TabsContent value="users" className="space-y-6">
           <BulkExecBoardActions onActionComplete={fetchUsers} />
 
-          <Card>
+          <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2" style={{ color: '#0f172a' }}>
                     <User className="h-5 w-5" />
                     User Directory
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription style={{ color: '#64748b' }}>
                     Manage all registered users, their roles, and permissions
                   </CardDescription>
                 </div>
@@ -550,16 +550,16 @@ export const UnifiedUserManagement = () => {
               </div>
 
               {/* Desktop Table View */}
-              <div className="hidden sm:block">
+              <div className="hidden sm:block" style={{ color: '#0f172a' }}>
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Executive Board</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                    <TableRow style={{ borderColor: '#e2e8f0' }}>
+                      <TableHead style={{ color: '#0f172a' }}>User</TableHead>
+                      <TableHead style={{ color: '#0f172a' }}>Role</TableHead>
+                      <TableHead style={{ color: '#0f172a' }}>Executive Board</TableHead>
+                      <TableHead style={{ color: '#0f172a' }}>Status</TableHead>
+                      <TableHead style={{ color: '#0f172a' }}>Joined</TableHead>
+                      <TableHead className="text-right" style={{ color: '#0f172a' }}>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -570,10 +570,10 @@ export const UnifiedUserManagement = () => {
                               <User className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                              <div className="font-medium">
+                              <div className="font-medium" style={{ color: '#0f172a' }}>
                                 {user.full_name || 'No name set'}
                               </div>
-                              <div className="text-sm text-muted-foreground flex items-center gap-1">
+                              <div className="text-sm flex items-center gap-1" style={{ color: '#64748b' }}>
                                 <Mail className="h-3 w-3" />
                                 {user.email}
                               </div>
@@ -721,13 +721,13 @@ export const UnifiedUserManagement = () => {
         </TabsContent>
 
         <TabsContent value="dossiers" className="space-y-6">
-          <Card>
+          <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2" style={{ color: '#0f172a' }}>
                 <FolderOpen className="h-5 w-5" />
                 User Dossiers
               </CardTitle>
-              <CardDescription>
+              <CardDescription style={{ color: '#64748b' }}>
                 Comprehensive user profiles, usage analytics, and profile completion tracking for site management
               </CardDescription>
             </CardHeader>
@@ -738,13 +738,13 @@ export const UnifiedUserManagement = () => {
         </TabsContent>
 
         <TabsContent value="enroll" className="space-y-6">
-          <Card>
+          <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2" style={{ color: '#0f172a' }}>
                 <UserPlus className="h-5 w-5" />
                 Auto-Enroll User
               </CardTitle>
-              <CardDescription>
+              <CardDescription style={{ color: '#64748b' }}>
                 Quickly enroll a user with a specific role and send invitation
               </CardDescription>
             </CardHeader>
