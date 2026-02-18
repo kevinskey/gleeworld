@@ -43,6 +43,7 @@ import { InstructorAttendanceHub } from '@/components/course/InstructorAttendanc
 import { CourseVisibilitySettings } from '@/components/course/CourseVisibilitySettings';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 import { DiscussionGradingPanel } from '@/components/instructor/DiscussionGradingPanel';
+import { CourseSliderManager } from '@/components/admin/CourseSliderManager';
 
 // Wrapper for instructor discussions with grading sub-tab
 const InstructorDiscussionsWrapper: React.FC<{ courseId: string }> = ({ courseId }) => {
@@ -296,6 +297,7 @@ export const CourseInstructorConsole = () => {
 
           {/* Main Content */}
           <main className="flex-1 min-w-0 p-3 sm:p-5 lg:p-8 xl:p-10 pb-24">
+            {activeTab === 'hero-slides' && course && <CourseSliderManager courseCode={course.courseCode} courseTitle={course.title} coursePath={`/academy/${courseSlug}`} />}
             {activeTab === 'syllabus' && dbCourse && <SyllabusTemplateEditor courseId={dbCourse.id} courseCode={course.courseCode} courseTitle={course.title} instructorName={course.instructor?.name} instructorEmail={course.instructor?.email} />}
             {activeTab === 'modules' && dbCourse && <ModulesSection courseId={dbCourse.id} />}
             {activeTab === 'class-notes' && dbCourse && <ClassNotesManager courseId={dbCourse.id} isInstructor={true} />}
