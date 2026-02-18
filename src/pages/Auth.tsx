@@ -16,6 +16,9 @@ const Auth = () => {
   const theme = searchParams.get('theme') as 'default' | 'mus240' || 'default';
 
   useEffect(() => {
+    // Don't redirect if user is resetting their password
+    if (isReset) return;
+    
     // As soon as auth is established, redirect immediately (don't block on profile fetch)
     if (!loading && user) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -55,7 +58,7 @@ const Auth = () => {
   }
 
   // If user is logged in, show redirecting state
-  if (user) {
+  if (user && !isReset) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
