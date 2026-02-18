@@ -5,11 +5,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useNavigate } from 'react-router-dom';
 import {
   FileText, ArrowLeft, BarChart3, BookOpen, Calendar,
   CheckCircle2, AlertCircle, GraduationCap, Users,
-  ShieldCheck, ShieldAlert, Minus, Check, X, Clock
+  ShieldCheck, ShieldAlert, Minus, Check, X, Clock, ChevronDown
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
@@ -208,40 +209,51 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
 
       {/* Attendance Record Grid */}
       {attendanceRecords && attendanceRecords.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-              Attendance Record
-            </CardTitle>
-            <CardDescription>
-              {attendanceRecords.filter(r => r.status === 'present').length} / {attendanceRecords.length} sessions attended
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {attendanceRecords.slice(0, 20).map((record) => (
-                <div
-                  key={record.id}
-                  className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 bg-muted/30"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {getStatusIcon(record.status)}
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium truncate">{record.title}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {format(new Date(record.date), 'MMM d, yyyy')}
-                      </p>
-                    </div>
+        <Collapsible>
+          <Card>
+            <CollapsibleTrigger className="w-full">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2 text-left">
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                      Attendance Record
+                    </CardTitle>
+                    <CardDescription className="text-left mt-1">
+                      {attendanceRecords.filter(r => r.status === 'present').length} / {attendanceRecords.length} sessions attended
+                    </CardDescription>
                   </div>
-                  <Badge variant="outline" className={cn("text-[10px] capitalize shrink-0 ml-2", getStatusColor(record.status))}>
-                    {record.status}
-                  </Badge>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {attendanceRecords.slice(0, 20).map((record) => (
+                    <div
+                      key={record.id}
+                      className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 bg-muted/30"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {getStatusIcon(record.status)}
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium truncate">{record.title}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {format(new Date(record.date), 'MMM d, yyyy')}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className={cn("text-[10px] capitalize shrink-0 ml-2", getStatusColor(record.status))}>
+                        {record.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       )}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className={cn("grid w-full", isAttendanceOnly ? "grid-cols-2" : "grid-cols-3")}>
