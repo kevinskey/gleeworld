@@ -340,17 +340,30 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
               </Card>
 
               {/* Schedule Conflicts Card */}
-              {scheduleConflicts && scheduleConflicts.length > 0 && (
-                <Card className="border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2 text-orange-700 dark:text-orange-400">
-                      <AlertCircle className="h-4 w-4" />
-                      Schedule Conflicts with Rehearsal
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      These classes overlap with MUS 070 rehearsal (MWF 5:00–6:15 PM)
-                    </CardDescription>
-                  </CardHeader>
+              <Card className={cn(
+                scheduleConflicts && scheduleConflicts.length > 0
+                  ? "border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20"
+                  : "border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-950/20"
+              )}>
+                <CardHeader className="pb-2">
+                  <CardTitle className={cn("text-sm flex items-center gap-2",
+                    scheduleConflicts && scheduleConflicts.length > 0
+                      ? "text-orange-700 dark:text-orange-400"
+                      : "text-green-700 dark:text-green-400"
+                  )}>
+                    {scheduleConflicts && scheduleConflicts.length > 0 ? (
+                      <><AlertCircle className="h-4 w-4" /> Schedule Conflicts with Rehearsal</>
+                    ) : (
+                      <><CheckCircle2 className="h-4 w-4" /> No Schedule Conflicts</>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {scheduleConflicts && scheduleConflicts.length > 0
+                      ? "These classes overlap with MUS 070 rehearsal (MWF 5:00–6:15 PM)"
+                      : "None of your classes conflict with MUS 070 rehearsal (MWF 5:00–6:15 PM)"}
+                  </CardDescription>
+                </CardHeader>
+                {scheduleConflicts && scheduleConflicts.length > 0 && (
                   <CardContent className="space-y-2">
                     {scheduleConflicts.map((conflict: any, i: number) => (
                       <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-card border border-border/50">
@@ -368,8 +381,8 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                       </div>
                     ))}
                   </CardContent>
-                </Card>
-              )}
+                )}
+              </Card>
             </div>
           ) : (
             /* ── Standard Deductive Model ── */
