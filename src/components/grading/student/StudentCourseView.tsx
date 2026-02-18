@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FileText, ArrowLeft, BarChart3, BookOpen, Calendar,
   CheckCircle2, AlertCircle, GraduationCap, Users,
-  ShieldCheck, ShieldAlert, Minus, MapPin, Clock, CalendarDays
+  ShieldCheck, ShieldAlert, Minus, Check, X, Clock
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
@@ -95,21 +95,48 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     enabled: !!user,
   });
 
-  // Fetch course events via calendar_id
-  const { data: courseEvents } = useQuery({
-    queryKey: ['student-course-events', courseId, course?.calendar_id],
+  // Fetch student's attendance records for this course
+  const { data: attendanceRecords } = useQuery({
+    queryKey: ['student-course-attendance', courseId, user?.id, course?.calendar_id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get all events for this course's calendar
+      const { data: events, error: eventsErr } = await supabase
         .from('gw_events')
-        .select('*')
+        .select('id, title, start_date')
         .eq('calendar_id', course.calendar_id)
-        .gte('start_date', new Date().toISOString())
-        .order('start_date', { ascending: true })
-        .limit(8);
-      if (error) throw error;
-      return data;
+        .order('start_date', { ascending: false });
+      if (eventsErr) throw eventsErr;
+      if (!events?.length) return [];
+
+      const eventIds = events.map(e => e.id);
+      const eventMap = new Map(events.map(e => [e.id, e]));
+
+      // Get attendance for these events
+      const { data: attendance, error: attErr } = await supabase
+        .from('gw_event_attendance')
+        .select('event_id, attendance_status, check_in_time')
+        .eq('user_id', user!.id)
+        .in('event_id', eventIds);
+      if (attErr) throw attErr;
+
+      const attendedSet = new Map(attendance?.map(a => [a.event_id, a]) || []);
+
+      // Build full record: mark each past event as present/absent
+      const now = new Date();
+      return events
+        .filter(e => new Date(e.start_date) <= now)
+        .map(e => {
+          const record = attendedSet.get(e.id);
+          return {
+            id: e.id,
+            title: e.title,
+            date: e.start_date,
+            status: record?.attendance_status || 'absent',
+            checkInTime: record?.check_in_time,
+          };
+        });
     },
-    enabled: !!course?.calendar_id,
+    enabled: !!user && !!course?.calendar_id,
   });
 
   if (courseLoading || assignmentsLoading || gradeLoading) {
@@ -125,6 +152,24 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
   };
 
   const isMus240 = courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'present': return <Check className="h-4 w-4 text-green-600" />;
+      case 'excused': return <Clock className="h-4 w-4 text-yellow-600" />;
+      case 'late': return <Clock className="h-4 w-4 text-orange-600" />;
+      default: return <X className="h-4 w-4 text-destructive" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'present': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'excused': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'late': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+      default: return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+    }
+  };
 
   return (
     <div className="container mx-auto py-6 px-4 space-y-6 max-w-4xl">
@@ -161,54 +206,43 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         </div>
       </div>
 
-      {/* Upcoming Events Grid */}
-      {courseEvents && courseEvents.length > 0 && (
-        <div>
-          <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            Upcoming Events
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {courseEvents.map((event: any) => {
-              const eventDate = new Date(event.start_date);
-              return (
+      {/* Attendance Record Grid */}
+      {attendanceRecords && attendanceRecords.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              Attendance Record
+            </CardTitle>
+            <CardDescription>
+              {attendanceRecords.filter(r => r.status === 'present').length} / {attendanceRecords.length} sessions attended
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {attendanceRecords.slice(0, 20).map((record) => (
                 <div
-                  key={event.id}
-                  className="group bg-card rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-md transition-all duration-200"
+                  key={record.id}
+                  className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 bg-muted/30"
                 >
-                  <div className="p-3 border-b border-border/50 bg-primary/5">
-                    <div className="text-xs font-bold text-primary uppercase">
-                      {format(eventDate, 'MMM')}
-                    </div>
-                    <div className="text-2xl font-bold text-foreground leading-tight">
-                      {format(eventDate, 'd')}
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    <h4 className="font-semibold text-foreground text-xs line-clamp-2 mb-1.5">
-                      {event.title}
-                    </h4>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                        <Clock className="h-3 w-3 flex-shrink-0" />
-                        <span>{format(eventDate, 'h:mm a')}</span>
-                      </div>
-                      {event.location && (
-                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <MapPin className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{event.location}</span>
-                        </div>
-                      )}
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {getStatusIcon(record.status)}
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium truncate">{record.title}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {format(new Date(record.date), 'MMM d, yyyy')}
+                      </p>
                     </div>
                   </div>
+                  <Badge variant="outline" className={cn("text-[10px] capitalize shrink-0 ml-2", getStatusColor(record.status))}>
+                    {record.status}
+                  </Badge>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
-
-      {/* Tabs — simplified */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className={cn("grid w-full", isAttendanceOnly ? "grid-cols-2" : "grid-cols-3")}>
           <TabsTrigger value="grades" className="flex items-center gap-2">
