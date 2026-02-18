@@ -140,6 +140,22 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     enabled: !!user && !!course?.calendar_id,
   });
 
+  // Fetch schedule conflicts with MUS 070 rehearsal (MWF 5:00-6:15 PM)
+  const { data: scheduleConflicts } = useQuery({
+    queryKey: ['student-schedule-conflicts', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('student_class_schedules')
+        .select('course_name, course_code, days, start_time, end_time, conflict_details')
+        .eq('user_id', user!.id)
+        .eq('has_conflict', true)
+        .eq('semester', 'Spring 2026');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user && courseId === 'a0000000-0000-0000-0000-000000000070',
+  });
+
   if (courseLoading || assignmentsLoading || gradeLoading) {
     return <LoadingSpinner size="lg" text="Loading course..." />;
   }
@@ -322,6 +338,38 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                   </p>
                 </CardContent>
               </Card>
+
+              {/* Schedule Conflicts Card */}
+              {scheduleConflicts && scheduleConflicts.length > 0 && (
+                <Card className="border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-orange-700 dark:text-orange-400">
+                      <AlertCircle className="h-4 w-4" />
+                      Schedule Conflicts with Rehearsal
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      These classes overlap with MUS 070 rehearsal (MWF 5:00–6:15 PM)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {scheduleConflicts.map((conflict: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-card border border-border/50">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold truncate">
+                            {conflict.course_code || conflict.course_name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {conflict.days?.join(', ')} · {conflict.start_time?.slice(0, 5)}–{conflict.end_time?.slice(0, 5)}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 shrink-0 ml-2">
+                          Conflict
+                        </Badge>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           ) : (
             /* ── Standard Deductive Model ── */
