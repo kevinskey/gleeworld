@@ -180,7 +180,7 @@ export const CourseInstructorConsole = () => {
       
       {navCategories.map(category => (
         <div key={category.label}>
-          <h3 className="text-xs font-semibold uppercase tracking-widest mb-2.5 px-3" style={{ color: '#475569' }}>
+          <h3 className="text-xs font-semibold uppercase tracking-widest mb-3 px-3" style={{ color: '#475569', fontSize: '11px' }}>
             {category.label}
           </h3>
           <div className="space-y-0.5">
@@ -204,9 +204,9 @@ export const CourseInstructorConsole = () => {
                     color: isActive ? '#003666' : '#334155',
                     backgroundColor: isActive ? '#e0f2fe' : undefined,
                     borderColor: isActive ? '#bae6fd' : undefined,
-                    fontSize: '13px',
+                    fontSize: '15px',
                     fontWeight: isActive ? 600 : 500,
-                    height: '32px',
+                    height: '36px',
                   }}
                 >
                   <Icon 
