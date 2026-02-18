@@ -195,11 +195,11 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
   return (
     <div className="container mx-auto py-6 px-4 space-y-6 max-w-4xl">
       {/* Glee Club Banner */}
-      <div className="flex justify-center overflow-hidden max-w-md mx-auto">
+      <div className="flex justify-center overflow-hidden max-w-md mx-auto" style={{ maxHeight: '80px' }}>
         <img
           src={spelmanGleeClubBanner}
           alt="Spelman College Glee Club — Amaze and Inspire"
-          className="w-full h-auto object-cover scale-[1.35]" />
+          className="w-full h-auto object-contain -my-4" />
       </div>
 
       {/* Header */}
