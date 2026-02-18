@@ -16176,6 +16176,63 @@ export type Database = {
           },
         ]
       }
+      gw_rehearsal_excuse_requests: {
+        Row: {
+          conflict_course_code: string | null
+          conflict_course_name: string
+          conflict_days: string[]
+          conflict_end_time: string
+          conflict_start_time: string
+          course_id: string
+          created_at: string
+          excuse_type: string
+          id: string
+          reason: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conflict_course_code?: string | null
+          conflict_course_name: string
+          conflict_days: string[]
+          conflict_end_time: string
+          conflict_start_time: string
+          course_id?: string
+          created_at?: string
+          excuse_type?: string
+          id?: string
+          reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conflict_course_code?: string | null
+          conflict_course_name?: string
+          conflict_days?: string[]
+          conflict_end_time?: string
+          conflict_start_time?: string
+          course_id?: string
+          created_at?: string
+          excuse_type?: string
+          id?: string
+          reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_rehearsal_feedback: {
         Row: {
           category: Database["public"]["Enums"]["feedback_category_enum"]
