@@ -13,8 +13,10 @@ import {
   ChevronRight,
   Plus,
   RefreshCw,
-  Brain
+  Brain,
+  Trash2
 } from 'lucide-react';
+import { DeleteConfirmDialog } from '@/components/music-library/DeleteConfirmDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -59,6 +61,7 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [enrolledStudents, setEnrolledStudents] = useState<any[]>([]);
   const [grades, setGrades] = useState<any[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
 
   // Use individual hooks
   const { data: prompt, refetch: refetchPrompt } = useDiscussionPrompt(selectedDiscussion || '');
@@ -207,6 +210,28 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
   const myPeerResponses = myPosts.filter(p => p.post_type === 'peer_response');
   const mySynthesis = myPosts.find(p => p.post_type === 'synthesis');
 
+  const handleDeleteDiscussion = async () => {
+    if (!deleteTarget) return;
+    try {
+      const [{ error: promptError }, { error: legacyError }] = await Promise.all([
+        supabase.from('discussion_prompts').delete().eq('id', deleteTarget.id),
+        supabase.from('course_discussions').delete().eq('id', deleteTarget.id),
+      ]);
+      if (promptError) throw promptError;
+      if (legacyError) console.warn('Legacy delete failed (may not exist):', legacyError);
+
+      toast({ title: 'Deleted', description: `"${deleteTarget.title}" has been deleted` });
+      if (selectedDiscussion === deleteTarget.id) {
+        setSelectedDiscussion(null);
+      }
+      setDeleteTarget(null);
+      fetchDiscussions();
+    } catch (error) {
+      console.error('Error deleting discussion:', error);
+      toast({ title: 'Error', description: 'Failed to delete discussion', variant: 'destructive' });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -230,25 +255,39 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
         <ScrollArea className="h-[calc(100vh-200px)]">
           <div className="space-y-2">
             {discussions.map(disc => (
-              <button
-                key={disc.id}
-                onClick={() => setSelectedDiscussion(disc.id)}
-                className={`w-full text-left p-3 rounded-lg transition-colors ${
-                  selectedDiscussion === disc.id 
-                    ? 'bg-primary/10 border border-primary/30' 
-                    : 'hover:bg-muted/50'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm truncate">{disc.title}</span>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div className="flex gap-1 mt-1">
-                  {disc.is_locked && (
-                    <Badge variant="secondary" className="text-xs">Locked</Badge>
-                  )}
-                </div>
-              </button>
+              <div key={disc.id} className="group relative">
+                <button
+                  onClick={() => setSelectedDiscussion(disc.id)}
+                  className={`w-full text-left p-3 rounded-lg transition-colors ${
+                    selectedDiscussion === disc.id 
+                      ? 'bg-primary/10 border border-primary/30' 
+                      : 'hover:bg-muted/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm truncate pr-6">{disc.title}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </div>
+                  <div className="flex gap-1 mt-1">
+                    {disc.is_locked && (
+                      <Badge variant="secondary" className="text-xs">Locked</Badge>
+                    )}
+                  </div>
+                </button>
+                {isInstructor && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="absolute top-2 right-8 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTarget({ id: disc.id, title: disc.title });
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
             ))}
             {discussions.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-8">
@@ -430,6 +469,14 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
           </div>
         )}
       </div>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete Discussion"
+        description={`Are you sure you want to delete "${deleteTarget?.title}"? This will remove all associated posts, grades, and group data. This action cannot be undone.`}
+        onConfirm={handleDeleteDiscussion}
+      />
     </div>
   );
 };
