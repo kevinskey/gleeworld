@@ -115,10 +115,11 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                   ============================================================ */}
               <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
                 {/* Logo Image */}
-                <img 
-                  src={gleeWorldLogoCircle} 
-                  alt="GleeWorld" 
-                  className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0`}
+                <img
+                  src="/gleeworld-door-icon.png?v=2"
+                  alt="GleeWorld"
+                  className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0 object-contain`}
+                  style={{ filter: 'drop-shadow(0 0 0.5px rgba(0,0,0,0.18))' }}
                 />
                 
                 {/* Site Title - Cinzel font, 90% of logo size */}

@@ -2,9 +2,9 @@
   "name": "GleeWorld - Spelman College Glee Club",
   "short_name": "GleeWorld",
   "description": "Official digital platform of the Spelman College Glee Club - To Amaze and Inspire. Celebrating 100+ years of musical excellence.",
-  "theme_color": "#BA1E1E",
-  "background_color": "#0a0a0a",
-  "version": "3.0.0",
+  "theme_color": "#003666",
+  "background_color": "#003666",
+  "version": "4.0.0",
   "display": "standalone",
   "orientation": "any",
   "scope": "/",
@@ -15,61 +15,43 @@
   },
   "icons": [
     {
-      "src": "/lovable-uploads/gleeworld-logo.png",
-      "sizes": "72x72",
+      "src": "/favicon-16.png?v=2",
+      "sizes": "16x16",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/gleeworld-logo.png",
-      "sizes": "96x96",
+      "src": "/favicon-32.png?v=2",
+      "sizes": "32x32",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/gleeworld-logo.png",
-      "sizes": "128x128",
+      "src": "/apple-touch-icon.png?v=2",
+      "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/gleeworld-logo.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/lovable-uploads/gleeworld-logo.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/lovable-uploads/gleeworld-logo.png",
+      "src": "/icon-192.png?v=2",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/gleeworld-logo.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/lovable-uploads/gleeworld-logo.png",
+      "src": "/icon-512.png?v=2",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/lovable-uploads/gleeworld-logo.png",
+      "src": "/icon-192.png?v=2",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/lovable-uploads/gleeworld-logo.png",
+      "src": "/icon-512.png?v=2",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -84,13 +66,13 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "url": "/dashboard",
-      "icons": [{ "src": "/lovable-uploads/gleeworld-logo.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png?v=2", "sizes": "192x192" }]
     },
     {
       "name": "Events",
       "short_name": "Events",
       "url": "/events",
-      "icons": [{ "src": "/lovable-uploads/gleeworld-logo.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png?v=2", "sizes": "192x192" }]
     }
   ]
 }
