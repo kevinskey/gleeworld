@@ -38,6 +38,7 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
   const queryClient = useQueryClient();
 
   const [geoState, setGeoState] = useState<'idle' | 'locating' | 'in-range' | 'out-of-range' | 'denied' | 'error'>('idle');
+  const [permissionQueried, setPermissionQueried] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -109,30 +110,89 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
   const checkLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setGeoState('error');
+      setPermissionQueried(true);
       return;
     }
     setGeoState('locating');
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const dist = getDistanceMeters(
-          pos.coords.latitude,
-          pos.coords.longitude,
-          REHEARSAL_LOCATION.lat,
-          REHEARSAL_LOCATION.lng,
-        );
-        setDistance(Math.round(dist));
-        setGeoState(dist <= REHEARSAL_LOCATION.radiusMeters ? 'in-range' : 'out-of-range');
-      },
-      (err) => {
-        if (err.code === err.PERMISSION_DENIED) {
+    // First check the permission state if the API is available
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        setPermissionQueried(true);
+        if (result.state === 'denied') {
           setGeoState('denied');
-        } else {
-          setGeoState('error');
+          return;
         }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-    );
+        // Actually get position
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const dist = getDistanceMeters(
+              pos.coords.latitude,
+              pos.coords.longitude,
+              REHEARSAL_LOCATION.lat,
+              REHEARSAL_LOCATION.lng,
+            );
+            setDistance(Math.round(dist));
+            setGeoState(dist <= REHEARSAL_LOCATION.radiusMeters ? 'in-range' : 'out-of-range');
+          },
+          (err) => {
+            if (err.code === err.PERMISSION_DENIED) {
+              setGeoState('denied');
+            } else {
+              setGeoState('error');
+            }
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+        );
+      }).catch(() => {
+        // Permissions API not supported — fall back to direct call
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setPermissionQueried(true);
+            const dist = getDistanceMeters(
+              pos.coords.latitude,
+              pos.coords.longitude,
+              REHEARSAL_LOCATION.lat,
+              REHEARSAL_LOCATION.lng,
+            );
+            setDistance(Math.round(dist));
+            setGeoState(dist <= REHEARSAL_LOCATION.radiusMeters ? 'in-range' : 'out-of-range');
+          },
+          (err) => {
+            setPermissionQueried(true);
+            if (err.code === err.PERMISSION_DENIED) {
+              setGeoState('denied');
+            } else {
+              setGeoState('error');
+            }
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+        );
+      });
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setPermissionQueried(true);
+          const dist = getDistanceMeters(
+            pos.coords.latitude,
+            pos.coords.longitude,
+            REHEARSAL_LOCATION.lat,
+            REHEARSAL_LOCATION.lng,
+          );
+          setDistance(Math.round(dist));
+          setGeoState(dist <= REHEARSAL_LOCATION.radiusMeters ? 'in-range' : 'out-of-range');
+        },
+        (err) => {
+          setPermissionQueried(true);
+          if (err.code === err.PERMISSION_DENIED) {
+            setGeoState('denied');
+          } else {
+            setGeoState('error');
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      );
+    }
   }, []);
 
   // Auto-check location on mount
@@ -201,8 +261,12 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
               {!isCheckedIn && isSessionOpen && geoState === 'in-range' && `You're within range (${distance}m)`}
               {!isCheckedIn && isSessionOpen && geoState === 'out-of-range' &&
                 `${distance}m away — must be within ${REHEARSAL_LOCATION.radiusMeters}m`}
-              {!isCheckedIn && isSessionOpen && geoState === 'denied' && 'Location permission denied — enable in settings'}
-              {!isCheckedIn && isSessionOpen && geoState === 'error' && 'Could not determine your location'}
+              {!isCheckedIn && isSessionOpen && geoState === 'denied' && (
+                <span className="text-destructive">
+                  Location blocked. Open browser Settings → Site Settings → Location and allow access, then retry.
+                </span>
+              )}
+              {!isCheckedIn && isSessionOpen && geoState === 'error' && 'Could not get location. Check your connection and retry.'}
               {!isCheckedIn && isSessionOpen && geoState === 'idle' && 'Tap to verify location'}
             </p>
           </div>
@@ -232,7 +296,11 @@ export const GpsCheckin: React.FC<GpsCheckinProps> = ({ courseId }) => {
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4 mr-1" />}
                 Check In
               </Button>
-            ) : geoState === 'out-of-range' || geoState === 'denied' || geoState === 'error' ? (
+            ) : geoState === 'out-of-range' ? (
+              <Button size="sm" variant="outline" onClick={checkLocation} className="text-xs">
+                Retry
+              </Button>
+            ) : geoState === 'denied' || geoState === 'error' ? (
               <Button size="sm" variant="outline" onClick={checkLocation} className="text-xs">
                 Retry
               </Button>
