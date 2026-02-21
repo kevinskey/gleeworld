@@ -16,7 +16,7 @@ import { CourseTopicSlider } from '@/components/academy/CourseTopicSlider';
 import { ClassScheduleForm } from '@/components/academy/ClassScheduleForm';
 import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { MobilePlaylistDropdown } from './MobilePlaylistDropdown';
-import { GpsCheckin } from './GpsCheckin';
+
 
 interface MobileCourseLandingProps {
   course: AcademyCourse;
@@ -126,10 +126,6 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
           </button>
         </div>
 
-        {/* GPS Check-in - in header */}
-        <div className="px-3 pb-3">
-          <GpsCheckin courseId={course.id} />
-        </div>
       </div>
 
       {/* Main Content - Vertical Stack */}
