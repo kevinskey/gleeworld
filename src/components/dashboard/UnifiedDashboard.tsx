@@ -50,6 +50,17 @@ export const UnifiedDashboard = () => {
   const [simulatedStudentId, setSimulatedStudentId] = useState<string | null>(null);
   const [simulatedMemberId, setSimulatedMemberId] = useState<string | null>(null);
   const [simLoading, setSimLoading] = useState(false);
+
+  // Redirect students away from dashboard to their course(s)
+  useEffect(() => {
+    if (profileLoading || !profile) return;
+    const isLeadership = profile.is_super_admin || profile.is_admin || profile.is_exec_board ||
+      profile.role === 'super-admin' || profile.role === 'admin';
+    if (profile.role === 'student' && !isLeadership) {
+      navigate('/course-selection', { replace: true });
+    }
+  }, [profile, profileLoading, navigate]);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const moduleId = params.get('module');
