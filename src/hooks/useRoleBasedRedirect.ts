@@ -132,7 +132,9 @@ export const useRoleBasedRedirect = () => {
                           location.pathname.startsWith('/academy') ||
                           location.pathname.startsWith('/grading');
     
-    if (!isOnAuthPage && !isOnRootPage && isOnTargetPage) {
+    // Students on /dashboard should still be redirected away
+    const isStudentOnDashboard = userProfile.role === 'student' && !isLeadership && location.pathname.includes('/dashboard');
+    if (!isOnAuthPage && !isOnRootPage && isOnTargetPage && !isStudentOnDashboard) {
       console.log('useRoleBasedRedirect: Already on target page, skipping redirect');
       return;
     }
@@ -144,11 +146,13 @@ export const useRoleBasedRedirect = () => {
       const isPostLogin = redirectAfterAuth !== null || location.pathname === '/auth';
       
       // Don't redirect if user is on MUS 240 pages, academy, or other specific areas
+      // NOTE: Students on /dashboard should NOT be blocked - they need to be redirected away
+      const isStudentRole = userProfile.role === 'student' && !isLeadership;
       if (location.pathname.startsWith('/classes/mus240') || 
           location.pathname.startsWith('/academy') ||
           location.pathname.startsWith('/grading') ||
           location.pathname.startsWith('/admin') ||
-          location.pathname.includes('/dashboard')) {
+          (location.pathname.includes('/dashboard') && !isStudentRole)) {
         console.log('🛑 useRoleBasedRedirect: User on specific area, not redirecting');
         return;
       }
@@ -221,8 +225,8 @@ export const useRoleBasedRedirect = () => {
         } catch (err) {
           console.error('useRoleBasedRedirect: Error checking enrollments:', err);
         }
-        // Fallback: no enrollments or error
-        navigate('/dashboard', { replace: true });
+        // Fallback: no enrollments or error - send to course selection (not dashboard)
+        navigate('/course-selection', { replace: true });
         return;
       }
       
