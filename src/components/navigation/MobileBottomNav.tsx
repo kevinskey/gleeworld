@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Library, GraduationCap } from 'lucide-react';
+import { Camera, Library, GraduationCap, Music } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -84,6 +84,19 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
             className="flex items-center justify-center w-14 h-14 -mt-5 rounded-full bg-[#003666] text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all border-2 border-background"
           >
             <Camera className="h-6 w-6" />
+          </button>
+
+          {/* Academy */}
+          <button
+            onClick={() => navigate('/course-selection')}
+            className={cn(
+              "relative flex items-center justify-center w-14 h-14 rounded-full transition-all",
+              location.pathname.includes('/academy')
+                ? "text-primary bg-primary/10" 
+                : "text-foreground hover:bg-muted"
+            )}
+          >
+            <Music className="h-7 w-7" />
           </button>
 
           {/* Music Library */}
