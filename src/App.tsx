@@ -40,6 +40,7 @@ import GleeAcademy from "./pages/GleeAcademy";
 import Contact from "./pages/Contact";
 import GleeCamGallery from "./pages/GleeCamGallery";
 import PhotoGalleryPage from "./pages/PhotoGalleryPage";
+import CourseSelection from "./pages/CourseSelection";
 
 // Unified Course Pages
 import Mus070Page from "./pages/courses/Mus070Page";
@@ -789,6 +790,14 @@ const App = () => {
                      </ProtectedRoute>
                    } 
                  />
+                <Route 
+                  path="/course-selection" 
+                  element={
+                    <ProtectedRoute>
+                      <CourseSelection />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route 
                   path="/dashboard" 
                   element={
