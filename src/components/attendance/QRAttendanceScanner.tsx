@@ -199,10 +199,13 @@ export const QRAttendanceScanner = () => {
 
       if (result.success) {
         const isCheckout = (data as any)?.checkout === true;
+        const isInRehearsal = (data as any)?.status === 'in_rehearsal';
         toast({
-          title: isCheckout ? "✅ Attendance Confirmed" : "Attendance Recorded",
+          title: isCheckout ? "✅ Attendance Confirmed" : isInRehearsal ? "🎵 Checked In — In Rehearsal" : "Attendance Recorded",
           description: isCheckout
             ? `You're marked present for ${result.event_title || 'this session'}`
+            : isInRehearsal
+            ? `Scan the checkout QR at end of class to confirm attendance`
             : `Successfully marked for ${result.event_title || 'this event'}`,
         });
 

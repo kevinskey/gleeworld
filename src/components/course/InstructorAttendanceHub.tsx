@@ -61,11 +61,15 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
   const [allSessions, setAllSessions] = useState<CourseSession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [checkoutQrDataUrl, setCheckoutQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [generatingCheckout, setGeneratingCheckout] = useState(false);
   const [enrolledCount, setEnrolledCount] = useState(0);
   const [checkedInCount, setCheckedInCount] = useState(0);
+  const [inRehearsalCount, setInRehearsalCount] = useState(0);
   const [showFullScreen, setShowFullScreen] = useState(false);
+  const [showCheckoutFullScreen, setShowCheckoutFullScreen] = useState(false);
   const [attendanceSessionId, setAttendanceSessionId] = useState<string | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const { user } = useAuth();
@@ -390,16 +394,66 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
   const fetchCheckedInCount = useCallback(async () => {
     if (!attendanceSessionId) return;
     try {
-      const query = supabase.from('gw_attendance_records').select('id');
-      // @ts-ignore
-      const result = await query.eq('attendance_session_id', attendanceSessionId);
-      if (!result.error && result.data) {
-        setCheckedInCount(result.data.length);
+      const { data, error } = await supabase
+        .from('gw_attendance_records')
+        .select('id, status')
+        .eq('attendance_session_id', attendanceSessionId);
+      
+      if (!error && data) {
+        const inRehearsal = data.filter(r => r.status === 'in_rehearsal').length;
+        const present = data.filter(r => r.status === 'present').length;
+        setInRehearsalCount(inRehearsal);
+        setCheckedInCount(inRehearsal + present);
       }
     } catch (error) {
       console.error('Error fetching checked-in count:', error);
     }
   }, [attendanceSessionId]);
+
+  // Generate checkout QR for the current session
+  const generateCheckoutQR = async () => {
+    if (!user || !attendanceSessionId) return;
+    setGeneratingCheckout(true);
+    try {
+      const { data, error } = await supabase.rpc('generate_session_qr_code', {
+        p_session_id: attendanceSessionId,
+        p_generated_by: user.id,
+        p_expires_in_minutes: 30,
+        p_qr_type: 'checkout',
+      });
+
+      if (error) throw error;
+
+      const result = typeof data === 'string' ? JSON.parse(data) : data;
+      if (!result?.success) throw new Error(result?.error || 'Failed to generate checkout QR');
+
+      // Generate checkout QR image
+      const baseUrl = window.location.hostname.includes('lovable')
+        ? 'https://gleeworld.org'
+        : window.location.origin;
+      const checkoutUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(result.qr_token)}`;
+      const dataUrl = await QRCode.toDataURL(checkoutUrl, {
+        width: 300,
+        margin: 2,
+        color: { dark: '#003366', light: '#ffffff' },
+      });
+      setCheckoutQrDataUrl(dataUrl);
+
+      toast({
+        title: 'Checkout QR Ready!',
+        description: 'Students can now scan to confirm their attendance.',
+      });
+    } catch (error: any) {
+      console.error('Error generating checkout QR:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate checkout QR',
+        variant: 'destructive',
+      });
+    } finally {
+      setGeneratingCheckout(false);
+    }
+  };
 
   useEffect(() => {
     fetchSessions();
@@ -446,7 +500,7 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <Card className="bg-card">
           <CardContent className="p-3 sm:p-4 text-center">
             <Users className="h-5 w-5 mx-auto text-primary mb-1" />
@@ -456,21 +510,28 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
         </Card>
         <Card className="bg-card">
           <CardContent className="p-3 sm:p-4 text-center">
+            <Clock className="h-5 w-5 mx-auto text-amber-500 mb-1" />
+            <p className="text-2xl font-bold text-foreground">{inRehearsalCount}</p>
+            <p className="text-xs text-muted-foreground">In Rehearsal</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card">
+          <CardContent className="p-3 sm:p-4 text-center">
             <CheckCircle2 className="h-5 w-5 mx-auto text-green-600 mb-1" />
-            <p className="text-2xl font-bold text-foreground">{checkedInCount}</p>
-            <p className="text-xs text-muted-foreground">Checked In</p>
+            <p className="text-2xl font-bold text-foreground">{checkedInCount - inRehearsalCount}</p>
+            <p className="text-xs text-muted-foreground">Confirmed</p>
           </CardContent>
         </Card>
         <Card className="bg-card">
           <CardContent className="p-3 sm:p-4 text-center">
-            <BarChart3 className="h-5 w-5 mx-auto text-blue-600 mb-1" />
+            <BarChart3 className="h-5 w-5 mx-auto text-primary mb-1" />
             <p className="text-2xl font-bold text-foreground">{attendanceRate}%</p>
-            <p className="text-xs text-muted-foreground">Today's Rate</p>
+            <p className="text-xs text-muted-foreground">Check-In Rate</p>
           </CardContent>
         </Card>
         <Card className="bg-card">
           <CardContent className="p-3 sm:p-4 text-center">
-            <Calendar className="h-5 w-5 mx-auto text-amber-600 mb-1" />
+            <Calendar className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
             <p className="text-lg font-bold text-foreground truncate">
               {session ? getDateLabel(session.session_date) : 'None'}
             </p>
@@ -693,6 +754,72 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
         </Collapsible>
       )}
 
+      {/* Checkout QR Card — shown when a check-in QR has been generated */}
+      {attendanceSessionId && (
+        <Card className="bg-card border-primary/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              Checkout QR — End of Class
+              {inRehearsalCount > 0 && (
+                <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
+                  {inRehearsalCount} awaiting checkout
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Students who checked in are marked <strong>"In Rehearsal"</strong>. Display this checkout QR at the end of class so they can scan and confirm their attendance as <strong>"Present"</strong>.
+            </p>
+
+            {checkoutQrDataUrl ? (
+              <div className="flex flex-col sm:flex-row gap-4 items-center">
+                <div className="bg-white p-3 rounded-lg shadow-sm border border-primary/20">
+                  <img
+                    src={checkoutQrDataUrl}
+                    alt="Checkout QR Code"
+                    className="w-[180px] h-[180px] sm:w-[200px] sm:h-[200px]"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => setShowCheckoutFullScreen(true)}
+                  >
+                    <Maximize2 className="h-4 w-4 mr-1.5" />
+                    Full Screen Checkout
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={generateCheckoutQR}
+                    disabled={generatingCheckout}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-1.5 ${generatingCheckout ? 'animate-spin' : ''}`} />
+                    Refresh Code
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                onClick={generateCheckoutQR}
+                disabled={generatingCheckout || inRehearsalCount === 0}
+                className="gap-2"
+                variant={inRehearsalCount > 0 ? 'default' : 'outline'}
+              >
+                {generatingCheckout ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <QrCode className="h-4 w-4" />
+                )}
+                {generatingCheckout ? 'Generating...' : 'Generate Checkout QR'}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* No session — show one-click generate button */}
       {allSessions.length === 0 && !loading && (
         <Card className="bg-card">
@@ -735,19 +862,35 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
         />
       </div>
 
-      {/* Fullscreen Modal */}
+      {/* Fullscreen Check-In Modal */}
       {session && (
         <AttendanceFullScreenModal
           open={showFullScreen}
           onClose={() => setShowFullScreen(false)}
           qrDataUrl={qrDataUrl}
-          sessionTitle={`${courseCode} - ${session.title || 'Class Session'}`}
+          sessionTitle={`${courseCode} - ${session.title || 'Class Session'} (Check-In)`}
           sessionDate={parseISO(session.session_date)}
           startTime={session.start_time || undefined}
           endTime={session.end_time || undefined}
           location={session.location || undefined}
           enrolledCount={enrolledCount}
           checkedInCount={checkedInCount}
+        />
+      )}
+
+      {/* Fullscreen Checkout Modal */}
+      {session && (
+        <AttendanceFullScreenModal
+          open={showCheckoutFullScreen}
+          onClose={() => setShowCheckoutFullScreen(false)}
+          qrDataUrl={checkoutQrDataUrl}
+          sessionTitle={`${courseCode} - Checkout (Scan to Confirm Attendance)`}
+          sessionDate={parseISO(session.session_date)}
+          startTime={session.start_time || undefined}
+          endTime={session.end_time || undefined}
+          location={session.location || undefined}
+          enrolledCount={enrolledCount}
+          checkedInCount={checkedInCount - inRehearsalCount}
         />
       )}
     </div>
