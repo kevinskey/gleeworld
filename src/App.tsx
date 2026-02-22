@@ -200,6 +200,7 @@ import ExecutiveBoardMemberDashboard from "./pages/ExecutiveBoardMemberDashboard
 import GoogleDocsPage from "./pages/GoogleDocs";
 import LibrarianDashboardPage from "./pages/LibrarianDashboardPage";
 import QRGeneratorPage from "./pages/QRGenerator";
+import QRScannerPage from "./pages/QRScanner";
 import QRAnalytics from "./pages/QRAnalytics";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import WardrobeAppointments from "./pages/WardrobeAppointments";
@@ -1252,6 +1253,14 @@ const App = () => {
                     <Route 
                       path="/attendance-scan" 
                       element={<AttendanceScanPage />} 
+                    />
+                    <Route
+                      path="/qr-scanner"
+                      element={
+                        <ProtectedRoute>
+                          <QRScannerPage />
+                        </ProtectedRoute>
+                      }
                     />
                    <Route 
                      path="/music-library" 
