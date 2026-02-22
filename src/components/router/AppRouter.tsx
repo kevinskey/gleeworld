@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import Index from "@/pages/Index";
+import CourseSelection from "@/pages/CourseSelection";
 import Profile from "@/pages/Profile";
 import ContractSigning from "@/pages/ContractSigning";
 import AdminSigning from "@/pages/AdminSigning";
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <Index />,
+  },
+  {
+    path: "/course-selection",
+    element: <CourseSelection />,
   },
   {
     path: "/profile",
