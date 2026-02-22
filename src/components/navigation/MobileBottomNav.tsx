@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Library, GraduationCap, Music } from 'lucide-react';
+import { Camera, Library, GraduationCap, BookOpen } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -96,7 +96,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
                 : "text-foreground hover:bg-muted"
             )}
           >
-            <Music className="h-7 w-7" />
+            <BookOpen className="h-7 w-7" />
           </button>
 
           {/* Music Library */}
