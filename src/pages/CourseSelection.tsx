@@ -57,7 +57,7 @@ const CourseSelection: React.FC = () => {
               return (
                 <Card
                   key={course.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow border-border hover:border-primary/40"
+                  className="cursor-pointer hover:shadow-md transition-shadow bg-white border border-border hover:border-primary/40"
                   onClick={() => navigate(course.route)}
                 >
                   <CardContent className="flex items-center gap-4 p-5">
@@ -68,12 +68,12 @@ const CourseSelection: React.FC = () => {
                       <p className="text-xs font-semibold text-primary uppercase tracking-wide">
                         {course.courseCode}
                       </p>
-                      <h3 className="text-lg font-semibold text-foreground truncate">
+                      <h3 className="text-lg font-semibold text-[#0f172a] truncate">
                         {course.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground truncate">{course.description}</p>
+                      <p className="text-sm text-[#64748b] truncate">{course.description}</p>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <ArrowRight className="h-5 w-5 text-[#64748b] flex-shrink-0" />
                   </CardContent>
                 </Card>
               );
