@@ -62,10 +62,12 @@ export const UniversalHeader = ({
   } = useTheme();
 
   // Fetch courses for Institute dropdown
+  const isStudentRole = userProfile?.role === 'student' && !userProfile?.is_admin && !userProfile?.is_super_admin;
+  
   const {
     data: courses = []
   } = useQuery({
-    queryKey: ['glee-academy-courses-header'],
+    queryKey: ['glee-academy-courses-header', user?.id, isStudentRole],
     queryFn: async () => {
       const {
         data,
@@ -74,7 +76,24 @@ export const UniversalHeader = ({
         ascending: true
       });
       if (error) throw error;
-      return data || [];
+      const allCourses = data || [];
+      
+      // For students, filter to only enrolled courses
+      if (isStudentRole && user) {
+        const { data: enrollments } = await supabase
+          .from('gw_course_enrollments')
+          .select('course_id')
+          .eq('user_id', user.id)
+          .eq('enrollment_status', 'enrolled');
+        
+        if (enrollments && enrollments.length > 0) {
+          const enrolledIds = new Set(enrollments.map(e => e.course_id));
+          return allCourses.filter(c => enrolledIds.has(c.id));
+        }
+        return []; // No enrollments = no courses shown
+      }
+      
+      return allCourses;
     }
   });
 

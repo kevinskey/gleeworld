@@ -309,6 +309,24 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       }
     }
   };
+  // Guard: block non-enrolled students from accessing the course
+  if (!enrollmentLoading && !isEnrolled && !isAdmin && !isExecutiveBoard && user) {
+    return (
+      <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
+          <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-bold text-foreground mb-2">Access Restricted</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            You are not enrolled in <strong>{course.title}</strong>. Please contact your instructor or administrator for access.
+          </p>
+          <Button onClick={() => navigate('/course-selection')} variant="outline">
+            Back to My Courses
+          </Button>
+        </div>
+      </UniversalLayout>
+    );
+  }
+
   // Mobile-first landing page (new simplified layout)
   if (isMobile && activeTab === 'home') {
     return (
