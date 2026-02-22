@@ -174,8 +174,8 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
         </Button>
         
         <p className="text-xs text-muted-foreground text-center">
-          {qrType === 'checkout'
-            ? 'Students must have checked in via GPS first. Scanning this marks them present.'
+        {qrType === 'checkout'
+            ? 'Students must have checked in via QR first. Scanning this confirms attendance.'
             : 'QR code auto-refreshes every 90 seconds for security'}
         </p>
       </CardContent>
