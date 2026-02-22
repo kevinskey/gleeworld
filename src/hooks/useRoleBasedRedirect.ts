@@ -194,9 +194,34 @@ export const useRoleBasedRedirect = () => {
         return;
       }
       
-      // PRIORITY 6: Students -> simplified Student Dashboard
+      // PRIORITY 6: Students -> course home or course selection
       if (userProfile.role === 'student') {
-        console.log('👤 useRoleBasedRedirect: Student redirect to unified dashboard');
+        console.log('👤 useRoleBasedRedirect: Student - checking enrollments');
+        try {
+          const { data: enrollments } = await supabase
+            .from('gw_course_enrollments')
+            .select('course_id')
+            .eq('user_id', user.id)
+            .eq('enrollment_status', 'enrolled');
+          
+          if (enrollments && enrollments.length === 1) {
+            // Single enrollment - go directly to that course
+            const { ACADEMY_COURSES } = await import('@/config/academyCourses');
+            const course = ACADEMY_COURSES.find(c => c.id === enrollments[0].course_id);
+            if (course) {
+              console.log('🎓 useRoleBasedRedirect: Student enrolled in 1 course, redirecting to', course.route);
+              navigate(course.route, { replace: true });
+              return;
+            }
+          } else if (enrollments && enrollments.length > 1) {
+            console.log('🎓 useRoleBasedRedirect: Student enrolled in multiple courses, showing selection');
+            navigate('/course-selection', { replace: true });
+            return;
+          }
+        } catch (err) {
+          console.error('useRoleBasedRedirect: Error checking enrollments:', err);
+        }
+        // Fallback: no enrollments or error
         navigate('/dashboard', { replace: true });
         return;
       }
