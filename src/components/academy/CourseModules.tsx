@@ -935,7 +935,7 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                   {/* Module Info */}
                   <div className="flex-1 text-left min-w-0">
                     <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                      <span className="font-semibold text-xs truncate max-w-[180px] sm:max-w-none sm:text-lg">{module.title}</span>
+                      <span className="font-semibold text-sm truncate max-w-[180px] sm:max-w-none sm:text-xl">{module.title}</span>
                       {isCurrentWeek &&
                       <Badge variant="outline" className="text-[10px] sm:text-xs border-primary text-primary shrink-0">
                           Current
