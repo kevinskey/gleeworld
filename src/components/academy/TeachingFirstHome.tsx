@@ -671,7 +671,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
       {/* ═══ 2. CURRENT UNIT CARD — 60/40 Split ═══ */}
       {currentModule && (
         <Card className="overflow-hidden border-border">
-          <div className="flex flex-col md:flex-row">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-6">
             {/* Left 60% - Unit Info */}
             <div className="flex-[3] p-4 sm:p-6">
               <div className="flex items-center gap-2 mb-3 flex-wrap">
