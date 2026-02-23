@@ -117,9 +117,20 @@ const QRScannerPage = () => {
                   <XCircle className="h-12 w-12 text-destructive" />
                   <p className="text-lg font-semibold">Check-in Failed</p>
                   <p className="text-sm text-muted-foreground">{autoError}</p>
-                  <Button onClick={() => navigate('/qr-scanner')} variant="outline">
-                    Open Camera Scanner
-                  </Button>
+                  <div className="flex flex-col gap-2 w-full">
+                    {autoResult?.course_id && COURSE_ROUTES[autoResult.course_id] ? (
+                      <Button onClick={() => navigate(COURSE_ROUTES[autoResult.course_id])} className="w-full">
+                        Back to Class
+                      </Button>
+                    ) : (
+                      <Button onClick={() => navigate('/dashboard?module=glee-academy')} className="w-full">
+                        Back to Academy
+                      </Button>
+                    )}
+                    <Button onClick={() => { setAutoError(''); setAutoResult(null); }} variant="outline" className="w-full">
+                      Try Camera Scanner
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
