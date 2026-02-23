@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useTheme } from "@/contexts/ThemeContext";
+
 interface ClockProps {
   className?: string;
 }
@@ -11,12 +11,8 @@ export const HeaderClock = ({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showCountdown, setShowCountdown] = useState(false);
   const isMobile = useIsMobile();
-  const {
-    themeName
-  } = useTheme();
 
-  // Use currentColor to inherit from parent theme styling
-  const isHbcuTheme = themeName === 'hbcu';
+  const isHbcuTheme = false;
   useEffect(() => {
     // Initialize with current time
     setCurrentTime(new Date());

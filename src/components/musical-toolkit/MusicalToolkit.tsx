@@ -30,11 +30,9 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
   const { themeName } = useTheme();
   const isMobile = useIsMobile();
   
-  // Theme-specific colors
-  const isHbcuTheme = themeName === 'hbcu';
-  const isSpelmanBlue = themeName === 'spelman-blue';
-  const hbcuGold = '#FFDF00';
-  const spelmanWhite = '#ffffff';
+  // Single opinionated theme — no conditional styling
+  const isHbcuTheme = false;
+  const isSpelmanBlue = false;
 
   // Restore piano state if the header/toolkit remounts during orientation change
   useEffect(() => {
