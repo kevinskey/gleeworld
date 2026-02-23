@@ -29,10 +29,10 @@ import gleeWorldLogoCircle from "@/assets/glee-world-logo-circle.png";
 // ============================================================================
 const HEADER_STYLES = {
   // Brand color for all text and icons
-  brandColor: "#003666",
+  brandColor: "#FFFFFF",
   
   // Background color
-  backgroundColor: "#FFFFFF",
+  backgroundColor: "#060e1f",
   
   // Title font family (must match PersistentHeader)
   titleFontFamily: "'Cinzel', serif",
@@ -146,7 +146,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 className="hidden lg:flex flex-1 justify-center"
                 style={{ color: HEADER_STYLES.brandColor }}
               >
-                <div className="[&_a]:!text-[#003666] [&_button]:!text-[#003666] [&_svg]:!text-[#003666]">
+                <div className="[&_a]:!text-white [&_button]:!text-white [&_svg]:!text-white">
                   <ResponsiveNavigation variant="default" />
                 </div>
               </div>
@@ -161,7 +161,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                   <Button 
                     asChild
                     variant="ghost"
-                    className="relative text-xs lg:text-sm px-3 lg:px-4 py-0.5 lg:py-1.5 h-7 lg:h-auto font-medium rounded-full transition-all duration-300 text-[#003666] hover:bg-[#003666]/10 border border-[#003666]/30 hover:border-[#003666]/50"
+                    className="relative text-xs lg:text-sm px-3 lg:px-4 py-0.5 lg:py-1.5 h-7 lg:h-auto font-medium rounded-full transition-all duration-300 text-white hover:bg-white/10 border border-white/30 hover:border-white/50"
                   >
                     <Link 
                       to="/auth" 
