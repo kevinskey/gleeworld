@@ -41,10 +41,12 @@ const CourseSelection: React.FC = () => {
     <UniversalLayout containerized={false}>
       <div className="min-h-[80vh] relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #0a1628 0%, #0d1f3c 25%, #081430 50%, #060e1f 75%, #030812 100%)' }}>
         {/* Deep sea mesh gradient orbs */}
-        <div className="fixed inset-0 -z-10 pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-10%] left-[15%] w-[700px] h-[700px] rounded-full blur-[150px]" style={{ background: 'radial-gradient(circle, rgba(56,146,227,0.12) 0%, transparent 70%)' }} />
           <div className="absolute bottom-[-5%] right-[10%] w-[600px] h-[600px] rounded-full blur-[130px]" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
           <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[900px] h-[500px] rounded-full blur-[160px]" style={{ background: 'radial-gradient(circle, rgba(30,64,120,0.15) 0%, transparent 70%)' }} />
+          {/* The Glow — deep electric blue mesh gradient behind bento grid */}
+          <div className="absolute top-[30%] left-[50%] -translate-x-1/2 w-[1200px] h-[900px] rounded-full blur-[200px]" style={{ background: 'radial-gradient(ellipse at center, rgba(0,71,171,0.20) 0%, rgba(0,71,171,0.08) 40%, transparent 70%)' }} />
         </div>
         {/* Film grain noise overlay */}
         <div className="fixed inset-0 -z-[5] pointer-events-none opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`, backgroundRepeat: 'repeat', backgroundSize: '128px 128px' }} />
