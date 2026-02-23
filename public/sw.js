@@ -1,7 +1,7 @@
 // Service Worker for GleeWorld PWA
-// Version: 9.0 - February 2026 - New door brand icon
-// NOTE: v9.0 - Cache reset for new favicon/icon rollout
-const CACHE_VERSION = 'v9.0';
+// Version: 10.0 - February 2026 - Opinionated dark theme, calendar cleanup
+// NOTE: v10.0 - Cache reset for theme overhaul
+const CACHE_VERSION = 'v10.0';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
