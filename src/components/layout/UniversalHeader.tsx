@@ -259,13 +259,14 @@ export const UniversalHeader = ({
                     src="/gleeworld-door-icon.png?v=2"
                     alt="GleeWorld"
                     className="w-8 h-8 sm:w-9 sm:h-9 md:w-6 md:h-6 lg:w-10 lg:h-10 object-contain flex-shrink-0"
-                    style={{ filter: 'drop-shadow(0 0 0.5px rgba(0,0,0,0.18))' }}
+                    style={{ filter: 'drop-shadow(0 0 4px rgba(56,146,227,0.3))' }}
                   />
                 </div>
                 <span style={{
                     fontFamily: "'Cinzel', serif",
-                    letterSpacing: '0.02em'
-                  }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-medium text-white drop-shadow-sm">
+                    letterSpacing: '0.04em',
+                    textShadow: '0 0 10px rgba(56,146,227,0.3)'
+                  }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-semibold text-white">
                   GleeWorld
                 </span>
               </Link>
