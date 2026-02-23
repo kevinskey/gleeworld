@@ -22,7 +22,7 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
   courseId,
   moduleId,
   weekNumber,
-  onClose,
+  onClose
 }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -39,22 +39,22 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
   const { data: mediaItems, isLoading: mediaLoading } = useQuery({
     queryKey: ['media-library-picker'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_media_library')
-        .select('id, title, file_url, file_type, folder_id')
-        .order('created_at', { ascending: false })
-        .limit(300);
+      const { data, error } = await supabase.
+      from('gw_media_library').
+      select('id, title, file_url, file_type, folder_id').
+      order('created_at', { ascending: false }).
+      limit(300);
       if (error) throw error;
       // Normalize file_type for display
-      return (data || []).map(item => ({
+      return (data || []).map((item) => ({
         ...item,
-        file_type: item.file_type?.startsWith('audio') ? 'audio'
-          : item.file_type?.startsWith('video') ? 'video'
-          : item.file_type?.startsWith('image') ? 'image'
-          : 'document'
+        file_type: item.file_type?.startsWith('audio') ? 'audio' :
+        item.file_type?.startsWith('video') ? 'video' :
+        item.file_type?.startsWith('image') ? 'image' :
+        'document'
       }));
     },
-    enabled: pickerOpen,
+    enabled: pickerOpen
   });
 
   const handleAdd = async () => {
@@ -64,17 +64,17 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
     }
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('mus240_module_resources')
-        .insert({
-          module_id: `week-${weekNumber}`,
-          title: title.trim(),
-          url: url.trim() || null,
-          resource_type: resourceType,
-          description: description.trim() || null,
-          display_order: 0,
-          created_by: user?.id,
-        });
+      const { error } = await supabase.
+      from('mus240_module_resources').
+      insert({
+        module_id: `week-${weekNumber}`,
+        title: title.trim(),
+        url: url.trim() || null,
+        resource_type: resourceType,
+        description: description.trim() || null,
+        display_order: 0,
+        created_by: user?.id
+      });
       if (error) throw error;
       toast.success('Resource added');
       queryClient.invalidateQueries({ queryKey: ['mus240-module-resources'] });
@@ -88,27 +88,27 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
     }
   };
 
-  const handleSelectMedia = (item: { id: string; title: string; file_url: string; file_type: string }) => {
+  const handleSelectMedia = (item: {id: string;title: string;file_url: string;file_type: string;}) => {
     // Auto-fill the form with the selected media item
     setTitle(item.title.replace(/\.[^/.]+$/, '')); // strip file extension
     setUrl(item.file_url);
     // Map file_type to resource_type
-    if (item.file_type === 'audio') setResourceType('listening');
-    else if (item.file_type === 'video') setResourceType('video');
-    else setResourceType('reading');
+    if (item.file_type === 'audio') setResourceType('listening');else
+    if (item.file_type === 'video') setResourceType('video');else
+    setResourceType('reading');
     setPickerOpen(false);
     toast.success(`Selected: ${item.title}`);
   };
 
   const getFileIcon = (type: string) => {
     switch (type) {
-      case 'audio': return Music;
-      case 'video': return Video;
-      default: return FileText;
+      case 'audio':return Music;
+      case 'video':return Video;
+      default:return FileText;
     }
   };
 
-  const filteredMedia = (mediaItems || []).filter(item => {
+  const filteredMedia = (mediaItems || []).filter((item) => {
     const matchesSearch = !searchQuery || item.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' || item.file_type === filterType;
     return matchesSearch && matchesType;
@@ -127,8 +127,8 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
       <Button
         variant="outline"
         className="w-full justify-start gap-2 border-dashed"
-        onClick={() => setPickerOpen(true)}
-      >
+        onClick={() => setPickerOpen(true)}>
+
         <Library className="h-4 w-4 text-primary" />
         Browse Media Library (MP3, MP4, documents...)
       </Button>
@@ -137,8 +137,8 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
         <Input
           placeholder="Resource title"
           value={title}
-          onChange={e => setTitle(e.target.value)}
-        />
+          onChange={(e) => setTitle(e.target.value)} />
+
         <Select value={resourceType} onValueChange={setResourceType}>
           <SelectTrigger>
             <SelectValue />
@@ -154,14 +154,14 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
       <Input
         placeholder="URL (YouTube, media library link, etc.)"
         value={url}
-        onChange={e => setUrl(e.target.value)}
-      />
+        onChange={(e) => setUrl(e.target.value)} />
+
       <Input
         placeholder="Description (optional)"
         value={description}
-        onChange={e => setDescription(e.target.value)}
-      />
-      <Button size="sm" onClick={handleAdd} disabled={saving || !title.trim()}>
+        onChange={(e) => setDescription(e.target.value)} />
+
+      <Button size="sm" onClick={handleAdd} disabled={saving || !title.trim()} className="text-secondary">
         <Plus className="h-4 w-4 mr-1.5" /> Add Resource
       </Button>
 
@@ -183,9 +183,9 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
                 <Input
                   placeholder="Search media..."
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9" />
+
               </div>
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger className="w-[130px]">
@@ -203,30 +203,30 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
 
             {/* Results */}
             <ScrollArea className="h-[400px]">
-              {mediaLoading ? (
-                <div className="flex items-center justify-center py-12 text-muted-foreground">Loading media...</div>
-              ) : filteredMedia.length === 0 ? (
-                <div className="flex items-center justify-center py-12 text-muted-foreground">
+              {mediaLoading ?
+              <div className="flex items-center justify-center py-12 text-muted-foreground">Loading media...</div> :
+              filteredMedia.length === 0 ?
+              <div className="flex items-center justify-center py-12 text-muted-foreground">
                   No {filterType !== 'all' ? filterType : ''} files found
-                </div>
-              ) : (
-                <div className="space-y-1 pr-3">
-                  {filteredMedia.map(item => {
-                    const Icon = getFileIcon(item.file_type);
-                    const isSelected = url === item.file_url;
-                    return (
-                      <button
-                        key={item.id}
-                        className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors hover:bg-muted/70 ${
-                          isSelected ? 'bg-primary/10 ring-1 ring-primary' : ''
-                        }`}
-                        onClick={() => handleSelectMedia(item)}
-                      >
+                </div> :
+
+              <div className="space-y-1 pr-3">
+                  {filteredMedia.map((item) => {
+                  const Icon = getFileIcon(item.file_type);
+                  const isSelected = url === item.file_url;
+                  return (
+                    <button
+                      key={item.id}
+                      className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors hover:bg-muted/70 ${
+                      isSelected ? 'bg-primary/10 ring-1 ring-primary' : ''}`
+                      }
+                      onClick={() => handleSelectMedia(item)}>
+
                         <div className={`flex items-center justify-center w-9 h-9 rounded-md ${
-                          item.file_type === 'audio' ? 'bg-purple-100 text-purple-600' :
-                          item.file_type === 'video' ? 'bg-blue-100 text-blue-600' :
-                          'bg-amber-100 text-amber-600'
-                        }`}>
+                      item.file_type === 'audio' ? 'bg-purple-100 text-purple-600' :
+                      item.file_type === 'video' ? 'bg-blue-100 text-blue-600' :
+                      'bg-amber-100 text-amber-600'}`
+                      }>
                           <Icon className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -235,15 +235,15 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
                         </div>
                         {isSelected && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
                         <Badge variant="outline" className="text-xs capitalize flex-shrink-0">{item.file_type}</Badge>
-                      </button>
-                    );
-                  })}
+                      </button>);
+
+                })}
                 </div>
-              )}
+              }
             </ScrollArea>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 };
