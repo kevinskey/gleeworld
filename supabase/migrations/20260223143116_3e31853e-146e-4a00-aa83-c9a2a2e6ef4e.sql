@@ -1,0 +1,1 @@
+UPDATE mus240_module_settings SET is_published = true WHERE module_id = 'week-6';
