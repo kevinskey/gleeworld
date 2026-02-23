@@ -44,7 +44,7 @@ export const UniversalLayout = ({
       paddingLeft: 'env(safe-area-inset-left)',
       paddingRight: 'env(safe-area-inset-right)'
     }}>
-        {containerized ? <PageContainer maxWidth="full" padded={false} className="!p-0 !m-0 bg-primary-foreground">
+        {containerized ? <PageContainer maxWidth="full" padded={false} className="!p-0 !m-0">
           {children}
         </PageContainer> : children}
       </main>
