@@ -291,6 +291,64 @@
   }
 }
 
+/* ========================================
+   DARK MODE: Remap hardcoded gray/slate text utilities
+   Since GleeWorld uses a fixed dark theme, hardcoded light-mode
+   text colors (text-gray-900, text-slate-800, etc.) are unreadable
+   on the dark navy background. This remaps them to semantic tokens.
+   
+   Elements inside .bg-white containers (dialogs, modals, light cards)
+   restore the original dark text colors for proper contrast.
+   ======================================== */
+
+/* Dark text → light on dark backgrounds */
+.dark .text-gray-900 { color: hsl(var(--foreground)) !important; }
+.dark .text-gray-800 { color: hsl(var(--foreground)) !important; }
+.dark .text-gray-700 { color: hsl(var(--foreground) / 0.85) !important; }
+.dark .text-gray-600 { color: hsl(var(--muted-foreground)) !important; }
+.dark .text-gray-500 { color: hsl(var(--muted-foreground)) !important; }
+.dark .text-slate-900 { color: hsl(var(--foreground)) !important; }
+.dark .text-slate-800 { color: hsl(var(--foreground)) !important; }
+.dark .text-slate-700 { color: hsl(var(--foreground) / 0.85) !important; }
+.dark .text-slate-600 { color: hsl(var(--muted-foreground)) !important; }
+.dark .text-slate-500 { color: hsl(var(--muted-foreground)) !important; }
+.dark .text-zinc-900 { color: hsl(var(--foreground)) !important; }
+.dark .text-zinc-800 { color: hsl(var(--foreground)) !important; }
+.dark .text-neutral-900 { color: hsl(var(--foreground)) !important; }
+.dark .text-black { color: hsl(var(--foreground)) !important; }
+
+/* Gray background utilities → dark-theme equivalents */
+.dark .bg-gray-50 { background-color: hsl(var(--muted)) !important; }
+.dark .bg-gray-100 { background-color: hsl(var(--muted)) !important; }
+.dark .bg-gray-200 { background-color: hsl(var(--border)) !important; }
+.dark .bg-slate-50 { background-color: hsl(var(--muted)) !important; }
+.dark .bg-slate-100 { background-color: hsl(var(--muted)) !important; }
+
+/* Restore original dark text INSIDE white containers (dialogs, modals, light cards) */
+.dark .bg-white .text-gray-900,
+.dark .bg-white .text-slate-900 { color: rgb(17 24 39) !important; }
+.dark .bg-white .text-gray-800,
+.dark .bg-white .text-slate-800 { color: rgb(30 41 59) !important; }
+.dark .bg-white .text-gray-700,
+.dark .bg-white .text-slate-700 { color: rgb(55 65 81) !important; }
+.dark .bg-white .text-gray-600,
+.dark .bg-white .text-slate-600 { color: rgb(75 85 99) !important; }
+.dark .bg-white .text-gray-500,
+.dark .bg-white .text-slate-500 { color: rgb(107 114 128) !important; }
+.dark .bg-white .text-black { color: rgb(0 0 0) !important; }
+
+/* Also restore inside academy-neutral zones */
+.academy-neutral .text-gray-900,
+.academy-neutral .text-slate-900 { color: rgb(17 24 39) !important; }
+.academy-neutral .text-gray-800,
+.academy-neutral .text-slate-800 { color: rgb(30 41 59) !important; }
+.academy-neutral .text-gray-700,
+.academy-neutral .text-slate-700 { color: rgb(55 65 81) !important; }
+.academy-neutral .text-gray-600,
+.academy-neutral .text-slate-600 { color: rgb(75 85 99) !important; }
+.academy-neutral .text-gray-500,
+.academy-neutral .text-slate-500 { color: rgb(107 114 128) !important; }
+
 /* Theme overrides should respect design tokens (especially in dark mode).
    These theme classes are meant to tweak accent styling, not hard-force white UI. */
 .glass-theme [data-component="card"],
