@@ -30,12 +30,22 @@ const CourseSelection: React.FC = () => {
     );
   }
 
+  // Preferred display order: Glee Club, Survey of African American Music, MUS 210, Bowman Scholars, then rest
+  const PREFERRED_ORDER = ['MUS 070', 'MUS 240', 'MUS 210', 'LH 100'];
+
   const enrolledCourses = enrollments
     .map(e => {
       const course = ACADEMY_COURSES.find(c => c.id === e.course_id);
       return course ? { ...course, enrollment: e } : null;
     })
-    .filter(Boolean) as (typeof ACADEMY_COURSES[number] & { enrollment: any })[];
+    .filter(Boolean)
+    .sort((a, b) => {
+      const aIdx = PREFERRED_ORDER.indexOf(a!.courseCode);
+      const bIdx = PREFERRED_ORDER.indexOf(b!.courseCode);
+      const aPriority = aIdx === -1 ? PREFERRED_ORDER.length : aIdx;
+      const bPriority = bIdx === -1 ? PREFERRED_ORDER.length : bIdx;
+      return aPriority - bPriority;
+    }) as (typeof ACADEMY_COURSES[number] & { enrollment: any })[];
 
   return (
     <UniversalLayout containerized={false}>
