@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { toZonedTime } from 'date-fns-tz';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -131,11 +132,11 @@ export const QuickAttendanceQR: React.FC<QuickAttendanceQRProps> = ({
     if (!user) return;
     setGenerating(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const now = new Date();
-      const startTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const endHour = now.getHours() + 1;
-      const endTime = `${String(endHour > 23 ? 23 : endHour).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const nowET = toZonedTime(new Date(), 'America/New_York');
+      const today = format(nowET, 'yyyy-MM-dd');
+      const startTime = format(nowET, 'HH:mm');
+      const endHour = nowET.getHours() + 1;
+      const endTime = `${String(endHour > 23 ? 23 : endHour).padStart(2, '0')}:${String(nowET.getMinutes()).padStart(2, '0')}`;
 
       // Create a class session for today
       const { data: newSession, error: sessionError } = await supabase
