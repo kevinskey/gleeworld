@@ -39,7 +39,7 @@ const CourseSelection: React.FC = () => {
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="min-h-[80vh] relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #0a1628 0%, #0d1f3c 25%, #081430 50%, #060e1f 75%, #030812 100%)' }}>
+      <div className="min-h-[80vh] relative overflow-hidden pb-32 md:pb-16" style={{ background: 'linear-gradient(160deg, #0a1628 0%, #0d1f3c 25%, #081430 50%, #060e1f 75%, #030812 100%)' }}>
         {/* Deep sea mesh gradient orbs */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-10%] left-[15%] w-[700px] h-[700px] rounded-full blur-[150px]" style={{ background: 'radial-gradient(circle, rgba(56,146,227,0.12) 0%, transparent 70%)' }} />
@@ -52,14 +52,14 @@ const CourseSelection: React.FC = () => {
         <div className="fixed inset-0 -z-[5] pointer-events-none opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`, backgroundRepeat: 'repeat', backgroundSize: '128px 128px' }} />
 
         {/* Header */}
-        <div className="relative pt-12 pb-8">
-          <div className="max-w-6xl mx-auto px-6 text-center">
+        <div className="relative pt-6 md:pt-12 pb-4 md:pb-8">
+          <div className="max-w-6xl mx-auto px-4 md:px-6 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl mb-6">
               <Sparkles className="h-3.5 w-3.5 text-sky-400" />
               <span className="text-xs font-medium tracking-wide text-sky-300/70 uppercase">Your Classes</span>
             </div>
             <h1
-              className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-3"
+              className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-3"
               style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}
             >
               Course Dashboard
@@ -71,7 +71,7 @@ const CourseSelection: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="max-w-6xl mx-auto px-6 pb-16">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 pb-8 md:pb-16">
           {enrolledCourses.length === 0 ? (
             <div className="rounded-2xl p-12 text-center bg-white/5 backdrop-blur-[20px] border border-white/10">
               <p className="text-slate-400 mb-4 text-base">You are not enrolled in any courses yet.</p>
@@ -80,7 +80,7 @@ const CourseSelection: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 auto-rows-[180px] gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 auto-rows-auto md:auto-rows-[180px] gap-3 md:gap-4">
               {enrolledCourses.map((course, i) => {
                 const Icon = course.icon;
                 const bentoClass = BENTO_SIZES[i % BENTO_SIZES.length];
@@ -90,7 +90,7 @@ const CourseSelection: React.FC = () => {
                     <div
                     key={course.id}
                     className={`
-                      group relative cursor-pointer rounded-2xl p-6
+                      group relative cursor-pointer rounded-2xl p-4 md:p-6
                       bg-white/[0.03] backdrop-blur-xl
                       border border-white/10
                       shadow-[0_4px_30px_-4px_rgba(56,146,227,0.08),inset_0_1px_0_0_rgba(255,255,255,0.12),inset_0_-1px_0_0_rgba(0,0,0,0.15)]
