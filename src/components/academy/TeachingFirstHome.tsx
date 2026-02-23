@@ -9,7 +9,8 @@ import {
   Calendar, ClipboardList, CheckCircle, XCircle, Clock, 
   FileText, AlertCircle, Play, ChevronDown, ChevronRight, BookOpen, Headphones,
   MessageSquare, PenLine, BookMarked, ExternalLink, ArrowRight,
-  Lightbulb, Target, ListChecks, Pause, Music, History
+  Lightbulb, Target, ListChecks, Pause, Music, History,
+  GraduationCap, UserCheck
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +23,7 @@ import { CourseTopicSlider } from './CourseTopicSlider';
 import { ModuleVideosModal } from './ModuleVideosModal';
 import { ModuleReadingsModal } from './ModuleReadingsModal';
 import { useCoursePlaylist } from '@/hooks/useCoursePlaylist';
+import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { toast } from 'sonner';
 
 interface ModuleVideo {
@@ -101,6 +103,9 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
   const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
   const isMus240 = courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
   
+  // Grade hook for at-a-glance bar
+  const { letterGrade, percentage, loading: gradeLoading } = useCourseGrade(courseId);
+  
   // Playlist hook for listening dropdown
   const { tracks, tracksLoading, playlists, selectedPlaylist, selectPlaylist } = useCoursePlaylist(courseId);
   
@@ -110,11 +115,9 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
   // Auto-select playlist matching current module topic when module loads or week changes
   useEffect(() => {
     if (currentModule && playlists.length > 0) {
-      // Only update if week changed or no playlist selected yet
       const weekChanged = prevWeekRef.current !== currentModule.week_number;
       
       if (weekChanged || !selectedPlaylist) {
-        // Week-to-topic mapping for MUS-240
         const weekTopicMap: Record<number, string[]> = {
           1: ['introduction', 'african american', 'black folk'],
           2: ['spiritual', 'enslaved', 'negro spiritual'],
@@ -135,8 +138,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
         };
         
         const weekKeywords = weekTopicMap[currentModule.week_number] || [];
-        
-        // Find matching playlist by keywords
         const matchingPlaylist = playlists.find(p => {
           const playlistTitle = p.title.toLowerCase();
           return weekKeywords.some(keyword => playlistTitle.includes(keyword));
@@ -185,7 +186,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
     });
     
     audio.onended = () => {
-      // Auto-advance to next track
       if (index < tracks.length - 1) {
         playTrack(index + 1);
       } else {
@@ -286,7 +286,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
         });
 
         // Fetch discussions from both tables and merge
-        // discussion_prompts has the instructor-updated due dates
         const [{ data: promptsData }, { data: legacyDiscussionsData }] = await Promise.all([
           supabase
             .from('discussion_prompts')
@@ -304,7 +303,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             .limit(10)
         ]);
 
-        // Collect all discussion IDs for reply checking
         const promptIds = (promptsData || []).map((d: any) => d.id);
         const legacyIds = (legacyDiscussionsData || []).map((d: any) => d.id);
         const allDiscussionIds = [...new Set([...promptIds, ...legacyIds])];
@@ -322,7 +320,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           }
         }
 
-        // Map discussion_prompts (preferred source with updated dates)
         const promptAssignments: Assignment[] = (promptsData || []).map((d: any) => {
           const due = new Date(d.individual_due_at);
           const hasReplied = repliedDiscussionIds.has(d.id);
@@ -344,7 +341,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           };
         });
 
-        // Map legacy course_discussions (only include if not already in prompts)
         const promptIdSet = new Set(promptIds);
         const legacyAssignments: Assignment[] = (legacyDiscussionsData || [])
           .filter((d: any) => !promptIdSet.has(d.id))
@@ -370,20 +366,16 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           });
 
         const discussionAssignments = [...promptAssignments, ...legacyAssignments];
-
-        // Merge and sort chronologically by due date
         const allAssignments = [...mappedAssignments, ...discussionAssignments]
           .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
         setAssignments(allAssignments);
 
-        // Fetch current active module from database
-        // For MUS-240, use mus240_module_settings with date-based detection
+        // Fetch current active module
         let moduleData: any = null;
         let mus240ModuleId: string | null = null;
         
         if (isMus240) {
           const today = new Date().toISOString().split('T')[0];
-          // Primary: find module whose date range contains today (regardless of is_active)
           const { data: mus240Module } = await supabase
             .from('mus240_module_settings')
             .select('*')
@@ -403,7 +395,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               is_active: mus240Module.is_active
             };
           } else {
-            // Fallback: get the most recent module whose end_date has passed (latest week)
             const { data: fallbackModule } = await supabase
               .from('mus240_module_settings')
               .select('*')
@@ -424,7 +415,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             }
           }
           
-          // Fetch prior modules (weeks before current, sorted reverse chronologically)
           const { data: priorModulesData } = await supabase
             .from('mus240_module_settings')
             .select('id, module_id, title, start_date, end_date')
@@ -441,7 +431,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             })));
           }
         } else {
-          // For other courses, use gw_course_modules
           const { data: genericModule } = await supabase
             .from('gw_course_modules')
             .select('*')
@@ -452,7 +441,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             .maybeSingle();
           moduleData = genericModule;
           
-          // Fetch prior modules for generic courses
           if (genericModule) {
             const { data: priorGenericModules } = await supabase
               .from('gw_course_modules')
@@ -468,7 +456,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           }
         }
 
-        // Standard content types for each module, filtered by course features
+        // Content types
         const templateConfig = getCourseTemplateConfig(courseId);
         const allContentTypes = ['Video', 'Reading', 'Listening', 'Discussion', 'Journal'];
         const standardContentTypes = allContentTypes.filter(type => {
@@ -477,7 +465,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           return true;
         });
         
-        // Map assignments to content types based on assignment_type
         const getAssignmentForType = (type: string): Assignment | undefined => {
           const typeMapping: Record<string, string[]> = {
             'Video': ['video', 'video_response'],
@@ -486,21 +473,15 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             'Discussion': ['discussion'],
             'Journal': ['journal', 'reflection']
           };
-          
           const matchingTypes = typeMapping[type] || [];
-          
-          // First check regular assignments
           const assignment = allAssignments.find(a => {
             if (a.is_discussion && type === 'Discussion') return true;
-            // Check if assignment title or type matches
             const lowerTitle = a.title.toLowerCase();
             return matchingTypes.some(t => lowerTitle.includes(t));
           });
-          
           return assignment;
         };
 
-        // Check if assignment is completed
         const isTypeCompleted = (type: string): boolean => {
           const assignment = getAssignmentForType(type);
           return assignment?.status === 'submitted' || assignment?.status === 'graded';
@@ -512,7 +493,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           isCompleted: isTypeCompleted(type)
         }));
 
-        // Fetch the module's linked discussion
         let moduleDiscussionId: string | undefined;
         if (moduleData) {
           const { data: moduleDiscussion } = await supabase
@@ -521,7 +501,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             .eq('course_id', courseId)
             .eq('module_id', moduleData.id)
             .maybeSingle();
-          
           if (moduleDiscussion) {
             moduleDiscussionId = moduleDiscussion.id;
           }
@@ -537,7 +516,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             discussionId: moduleDiscussionId,
           });
         } else {
-          // Fallback if no active module in database
           setCurrentModule({
             id: '1',
             title: 'Current Week',
@@ -547,12 +525,9 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           });
         }
 
-        // Fetch module videos and readings if MUS-240 and we have a module
-        // Use the module_id string (e.g., 'week-2') for mus240_module_resources, not the UUID
+        // Fetch module videos and readings
         if (isMus240 && moduleData) {
           const weekModuleId = `week-${moduleData.week_number}`;
-          
-          // Fetch videos and readings in parallel
           const [{ data: videosData }, { data: readingsData }] = await Promise.all([
             supabase
               .from('mus240_module_resources')
@@ -568,30 +543,13 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               .order('display_order', { ascending: true })
           ]);
           
-          if (videosData && videosData.length > 0) {
-            setModuleVideos(videosData.map((r: any) => ({
-              id: r.id,
-              title: r.title,
-              url: r.url,
-              description: r.description,
-              duration: r.duration,
-              is_required: r.is_required || false
-            })));
-          } else {
-            setModuleVideos([]);
-          }
+          setModuleVideos(videosData?.length ? videosData.map((r: any) => ({
+            id: r.id, title: r.title, url: r.url, description: r.description, duration: r.duration, is_required: r.is_required || false
+          })) : []);
           
-          if (readingsData && readingsData.length > 0) {
-            setModuleReadings(readingsData.map((r: any) => ({
-              id: r.id,
-              title: r.title,
-              url: r.url,
-              description: r.description,
-              is_required: r.is_required || false
-            })));
-          } else {
-            setModuleReadings([]);
-          }
+          setModuleReadings(readingsData?.length ? readingsData.map((r: any) => ({
+            id: r.id, title: r.title, url: r.url, description: r.description, is_required: r.is_required || false
+          })) : []);
         }
 
         // Fetch upcoming events
@@ -640,22 +598,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
     );
   }
 
-  // Find the most urgent assignment
   const pendingAssignments = assignments.filter(a => a.status === 'pending' || a.status === 'overdue');
-  const urgentAssignment = pendingAssignments.find(a => a.status === 'overdue') || pendingAssignments[0];
-
-  const getStatusBadge = (status: Assignment['status']) => {
-    switch (status) {
-      case 'submitted':
-        return <Badge variant="default" className="text-xs"><CheckCircle className="h-3 w-3 mr-1" />Submitted</Badge>;
-      case 'graded':
-        return <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200"><CheckCircle className="h-3 w-3 mr-1" />Graded</Badge>;
-      case 'overdue':
-        return <Badge variant="destructive" className="text-xs"><AlertCircle className="h-3 w-3 mr-1" />Overdue</Badge>;
-      default:
-        return null;
-    }
-  };
 
   const getActivityIcon = (type: string) => {
     switch (type.toLowerCase()) {
@@ -669,57 +612,98 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
   };
 
   return (
-    <div className="flex gap-6">
-      {/* Main Content Column */}
-      <div className="flex-1 space-y-4 min-w-0">
-        
-        {/* 1. THIS WEEK'S MODULE - Hero section with activities */}
-        {currentModule && (
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-2 bg-primary text-primary-foreground">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-primary-foreground/80 uppercase tracking-wide font-medium">Week {currentModule.week_number}</p>
-                  <CardTitle className="text-xl font-bold mt-1 text-primary-foreground">{currentModule.title}</CardTitle>
-                </div>
-                <Badge variant="outline" className="bg-primary-foreground/10 text-primary-foreground border-primary-foreground/30 text-xs">
+    <div className="space-y-5">
+
+      {/* ═══ 1. AT-A-GLANCE STATS BAR ═══ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Grade */}
+        <button
+          onClick={() => navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=grades`)}
+          className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border hover:border-primary/40 transition-all group"
+        >
+          <div className="h-11 w-11 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <GraduationCap className="h-5 w-5 text-primary" />
+          </div>
+          <div className="text-left">
+            <p className="text-xs text-muted-foreground font-medium">Course Grade</p>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold text-foreground">{gradeLoading ? '--' : `${percentage}%`}</span>
+              <span className="text-sm font-semibold text-primary">{gradeLoading ? '' : letterGrade}</span>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+        </button>
+
+        {/* Attendance - Present */}
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
+          <div className="h-11 w-11 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+            <CheckCircle className="h-5 w-5 text-emerald-500" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground font-medium">Present</p>
+            <span className="text-2xl font-bold text-foreground">{attendance.present}</span>
+          </div>
+        </div>
+
+        {/* Attendance - Absent */}
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
+          <div className="h-11 w-11 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+            <XCircle className="h-5 w-5 text-red-500" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground font-medium">Absent</p>
+            <span className="text-2xl font-bold text-foreground">{attendance.absent}</span>
+          </div>
+        </div>
+
+        {/* Attendance - Late */}
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
+          <div className="h-11 w-11 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+            <Clock className="h-5 w-5 text-amber-500" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground font-medium">Late</p>
+            <span className="text-2xl font-bold text-foreground">{attendance.late}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ 2. CURRENT UNIT CARD — 60/40 Split ═══ */}
+      {currentModule && (
+        <Card className="overflow-hidden border-border">
+          <div className="flex flex-col lg:flex-row">
+            {/* Left 60% - Unit Info */}
+            <div className="flex-[3] p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Badge variant="secondary" className="text-xs font-mono">
+                  Week {currentModule.week_number}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
                   {currentModule.content_types.filter(c => c.isCompleted).length}/{currentModule.content_types.length} Complete
                 </Badge>
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              {/* Cover Image - full width */}
-              <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
+              <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2 uppercase tracking-wide">
+                {currentModule.title}
+              </h2>
 
-              {/* Activity Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y divide-border border-t">
+              {/* ─── Activity Progress Tracker (horizontal) ─── */}
+              <div className="flex flex-wrap gap-2 mt-5">
                 {currentModule.content_types.map((contentType) => {
-                  const handleStart = () => {
+                  const isCompleted = contentType.isCompleted;
+
+                  const handleActivityClick = () => {
                     if (contentType.type === 'Video' && isMus240) {
-                      if (moduleVideos.length > 0) {
-                        setVideoModalOpen(true);
-                        return;
-                      } else {
-                        toast.info('No videos assigned for this week yet');
-                        return;
-                      }
+                      if (moduleVideos.length > 0) { setVideoModalOpen(true); return; }
+                      else { toast.info('No videos assigned for this week yet'); return; }
                     }
-                    
                     if (contentType.type === 'Reading' && isMus240) {
-                      if (moduleReadings.length > 0) {
-                        setReadingsModalOpen(true);
-                        return;
-                      } else {
-                        toast.info('No readings assigned for this week yet');
-                        return;
-                      }
+                      if (moduleReadings.length > 0) { setReadingsModalOpen(true); return; }
+                      else { toast.info('No readings assigned for this week yet'); return; }
                     }
-                    
-                    // Listening is now handled by Popover, skip navigation
                     if (contentType.type === 'Listening') {
+                      setListeningOpen(!listeningOpen);
                       return;
                     }
-                    
                     if (contentType.assignment) {
                       if (contentType.assignment.is_discussion) {
                         if (currentModule?.discussionId) {
@@ -732,11 +716,8 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                       }
                     } else {
                       const tabMapping: Record<string, string> = {
-                        'Video': 'resources',
-                        'Reading': 'resources',
-                        'Listening': 'audio',
-                        'Discussion': 'discussions',
-                        'Journal': 'journal'
+                        'Video': 'resources', 'Reading': 'resources', 'Listening': 'audio',
+                        'Discussion': 'discussions', 'Journal': 'journal'
                       };
                       const tab = tabMapping[contentType.type] || 'resources';
                       if (contentType.type === 'Discussion' && currentModule?.discussionId) {
@@ -746,41 +727,27 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                       }
                     }
                   };
-                  
-                  // Special handling for Listening - use Popover dropdown
+
+                  // Listening with popover
                   if (contentType.type === 'Listening') {
                     return (
                       <Popover key={contentType.type} open={listeningOpen} onOpenChange={setListeningOpen}>
                         <PopoverTrigger asChild>
-                          <button 
-                            className={`flex flex-col items-center justify-center p-4 gap-2 transition-all hover:bg-muted/50 ${
-                              contentType.isCompleted ? 'bg-green-50 dark:bg-green-950/20' : ''
-                            } ${listeningOpen ? 'bg-primary/5' : ''}`}
-                          >
-                            <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                              contentType.isCompleted 
-                                ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' 
-                                : 'bg-primary/10 text-primary'
-                            }`}>
-                              {contentType.isCompleted ? (
-                                <CheckCircle className="h-5 w-5" />
-                              ) : (
-                                <Headphones className="h-4 w-4" />
-                              )}
-                            </div>
-                            <span className="text-xs font-medium">{contentType.type}</span>
-                            {!contentType.isCompleted && (
-                              <span className="text-[10px] text-primary font-semibold uppercase tracking-wide flex items-center gap-0.5">
-                                Start <ChevronDown className="h-2.5 w-2.5" />
-                              </span>
+                          <button className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
+                            isCompleted
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-card border-border hover:border-primary/50 hover:bg-primary/5 text-foreground'
+                          }`}>
+                            {isCompleted ? <CheckCircle className="h-4 w-4" /> : <Headphones className="h-4 w-4 text-primary" />}
+                            <span>{contentType.type}</span>
+                            {isCompleted ? (
+                              <span className="text-xs opacity-70">Done</span>
+                            ) : (
+                              <ChevronDown className="h-3 w-3 text-muted-foreground" />
                             )}
                           </button>
                         </PopoverTrigger>
-                        <PopoverContent 
-                          className="w-80 p-0 bg-background border shadow-lg z-50" 
-                          align="center"
-                          sideOffset={4}
-                        >
+                        <PopoverContent className="w-80 p-0 bg-background border shadow-lg z-50" align="start" sideOffset={4}>
                           <div className="p-3 border-b bg-muted/30">
                             <div className="flex items-center gap-2">
                               <Music className="h-4 w-4 text-primary" />
@@ -792,7 +759,6 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                               {currentModule.title} • {tracks.length} tracks
                             </p>
                           </div>
-                          
                           <ScrollArea className="max-h-[280px]">
                             {tracksLoading ? (
                               <div className="flex items-center justify-center py-8">
@@ -810,35 +776,18 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                                     key={track.id || idx}
                                     onClick={() => playTrack(idx)}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left transition-colors ${
-                                      idx === currentTrackIndex
-                                        ? 'bg-primary/10 border border-primary/30'
-                                        : 'hover:bg-muted/50'
+                                      idx === currentTrackIndex ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/50'
                                     }`}
                                   >
-                                    {/* Track Number / Play State */}
                                     <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center shrink-0">
-                                      {idx === currentTrackIndex && isPlaying ? (
-                                        <Pause className="h-4 w-4 text-primary" />
-                                      ) : idx === currentTrackIndex ? (
-                                        <Play className="h-4 w-4 text-primary" />
-                                      ) : (
-                                        <span className="text-xs text-muted-foreground font-medium">
-                                          {idx + 1}
-                                        </span>
-                                      )}
+                                      {idx === currentTrackIndex && isPlaying ? <Pause className="h-4 w-4 text-primary" /> : idx === currentTrackIndex ? <Play className="h-4 w-4 text-primary" /> : <span className="text-xs text-muted-foreground font-medium">{idx + 1}</span>}
                                     </div>
-
-                                    {/* Track Info */}
                                     <div className="flex-1 min-w-0">
-                                      <p className={`text-sm font-medium truncate ${
-                                        idx === currentTrackIndex ? 'text-primary' : ''
-                                      }`}>
+                                      <p className={`text-sm font-medium truncate ${idx === currentTrackIndex ? 'text-primary' : ''}`}>
                                         {cleanDisplayTitle(track.track_data?.title || `Track ${idx + 1}`)}
                                       </p>
                                       {track.track_data?.artist && (
-                                        <p className="text-xs text-muted-foreground truncate">
-                                          {track.track_data.artist}
-                                        </p>
+                                        <p className="text-xs text-muted-foreground truncate">{track.track_data.artist}</p>
                                       )}
                                     </div>
                                   </button>
@@ -846,18 +795,12 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                               </div>
                             )}
                           </ScrollArea>
-                          
                           {tracks.length > 0 && (
                             <div className="p-2 border-t bg-muted/20">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="w-full text-xs"
-                                onClick={() => {
-                                  setListeningOpen(false);
-                                  navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=audio`, { replace: true });
-                                }}
-                              >
+                              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => {
+                                setListeningOpen(false);
+                                navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=audio`, { replace: true });
+                              }}>
                                 View Full Library
                               </Button>
                             </div>
@@ -866,52 +809,95 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                       </Popover>
                     );
                   }
-                  
+
                   return (
-                    <button 
+                    <button
                       key={contentType.type}
-                      onClick={handleStart}
-                      className={`flex flex-col items-center justify-center p-4 gap-2 transition-all hover:bg-muted/50 ${
-                        contentType.isCompleted ? 'bg-green-50 dark:bg-green-950/20' : ''
+                      onClick={handleActivityClick}
+                      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border ${
+                        isCompleted
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-card border-border hover:border-primary/50 hover:bg-primary/5 text-foreground'
                       }`}
                     >
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                        contentType.isCompleted 
-                          ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' 
-                          : 'bg-primary/10 text-primary'
-                      }`}>
-                        {contentType.isCompleted ? (
-                          <CheckCircle className="h-5 w-5" />
-                        ) : (
-                          getActivityIcon(contentType.type)
-                        )}
-                      </div>
-                      <span className="text-xs font-medium">{contentType.type}</span>
-                      {!contentType.isCompleted && (
-                        <span className="text-[10px] text-primary font-semibold uppercase tracking-wide">Start</span>
+                      {isCompleted ? <CheckCircle className="h-4 w-4" /> : getActivityIcon(contentType.type)}
+                      <span>{contentType.type}</span>
+                      {isCompleted ? (
+                        <span className="text-xs opacity-70">Done</span>
+                      ) : (
+                        <ArrowRight className="h-3 w-3 text-primary" />
                       )}
                     </button>
                   );
                 })}
               </div>
+            </div>
 
-              {/* Due This Week - Assignments */}
-              {currentModule.assignments.length > 0 && (
-                <div className="p-4 border-t bg-muted/20">
-                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                    Due This Week
-                  </h4>
-                  <div className="grid gap-2">
-                    {currentModule.assignments.map((assignment) => (
-                      <div 
-                        key={assignment.id}
-                        className={`p-3 rounded-lg border transition-colors cursor-pointer space-y-2 ${
-                          assignment.status === 'overdue' 
-                            ? 'bg-destructive/5 border-destructive/30 hover:bg-destructive/10' 
-                            : 'bg-card hover:bg-muted/50'
-                        }`}
-                        onClick={() => {
+            {/* Right 40% - Thumbnail Image */}
+            <div className="flex-[2] relative min-h-[200px] lg:min-h-0 border-t lg:border-t-0 lg:border-l border-border overflow-hidden bg-muted/20">
+              <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* ═══ 3. DUE THIS WEEK — Urgency System ═══ */}
+      {currentModule && currentModule.assignments.length > 0 && (
+        <div>
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2 mb-3">
+            <ClipboardList className="h-5 w-5 text-muted-foreground" />
+            Due This Week
+          </h3>
+          <div className="grid gap-3">
+            {currentModule.assignments.map((assignment) => {
+              const isOverdue = assignment.status === 'overdue';
+              const isSubmitted = assignment.status === 'submitted' || assignment.status === 'graded';
+
+              return (
+                <div
+                  key={assignment.id}
+                  className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${
+                    isOverdue
+                      ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/50'
+                      : isSubmitted
+                      ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/50'
+                      : 'bg-card border-border hover:border-primary/40'
+                  }`}
+                  onClick={() => {
+                    if (assignment.is_discussion) {
+                      navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
+                    } else {
+                      navigate(`/grading/student/assignment/${assignment.id}`);
+                    }
+                  }}
+                >
+                  <div className="flex-1 min-w-0 mr-4">
+                    <p className="text-base font-semibold text-foreground">{assignment.title}</p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1 font-medium">
+                      <Calendar className="h-3.5 w-3.5" />
+                      Due {format(new Date(assignment.due_date), 'MMM d, h:mm a')} · {assignment.points} pts
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {isOverdue && (
+                      <Badge className="bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-300 dark:border-red-700 font-semibold text-xs">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Overdue
+                      </Badge>
+                    )}
+                    {isSubmitted && (
+                      <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 font-semibold text-xs">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        {assignment.status === 'graded' ? 'Graded' : 'Submitted'}
+                      </Badge>
+                    )}
+                    {!isSubmitted && (
+                      <Button
+                        size="default"
+                        variant={isOverdue ? 'destructive' : 'default'}
+                        className="font-semibold px-5"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (assignment.is_discussion) {
                             navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
                           } else {
@@ -919,202 +905,132 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                           }
                         }}
                       >
-                        <div>
-                          <p className="text-sm font-medium">{assignment.title}</p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                            <Calendar className="h-3 w-3" />
-                            Due {format(new Date(assignment.due_date), 'MMM d, h:mm a')} · {assignment.points} pts
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          {getStatusBadge(assignment.status)}
-                          <Button 
-                            size="sm" 
-                            variant={assignment.status === 'overdue' ? 'destructive' : 'default'}
-                            className="text-xs h-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (assignment.is_discussion) {
-                                navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`, { replace: true });
-                              } else {
-                                navigate(`/grading/student/assignment/${assignment.id}`);
-                              }
-                            }}
-                          >
-                            {assignment.is_discussion ? 'Discuss' : 'Start'}
-                            <ArrowRight className="h-3 w-3 ml-1" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Prior Modules - Collapsed state */}
-              {priorModules.length > 0 && (
-                <div className="p-4 border-t bg-muted/10">
-                  <Collapsible>
-                    <CollapsibleTrigger className="w-full">
-                      <div className="flex items-center justify-between hover:bg-muted/30 -mx-2 px-2 py-1 rounded-md transition-colors">
-                        <h4 className="text-sm font-semibold flex items-center gap-2">
-                          <History className="h-4 w-4 text-muted-foreground" />
-                          Prior Modules
-                          <Badge variant="secondary" className="text-xs ml-1">{priorModules.length}</Badge>
-                        </h4>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3 space-y-2">
-                      {priorModules.map((module) => (
-                        <div 
-                          key={module.id}
-                          className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
-                          onClick={() => {
-                            // Navigate to module details or expand inline
-                            navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=modules&week=${module.week_number}`);
-                          }}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">
-                              Week {module.week_number}: {module.title}
-                            </p>
-                            {module.end_date && (
-                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                                <Calendar className="h-3 w-3" />
-                                Completed {format(new Date(module.end_date), 'MMM d')}
-                              </p>
-                            )}
-                          </div>
-                          <Badge variant="outline" className="text-xs shrink-0 ml-2">
-                            <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                            Completed
-                          </Badge>
-                        </div>
-                      ))}
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Right Context Panel */}
-      <div className="w-72 flex-shrink-0 space-y-4 hidden lg:block">
-        {/* Upcoming */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              Upcoming
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 max-h-48 overflow-y-auto">
-            {upcomingEvents.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-3">
-                No upcoming events
-              </p>
-            ) : (
-              upcomingEvents.slice(0, 4).map((event) => (
-                <div 
-                  key={event.id} 
-                  className={`flex items-start gap-2 p-2 rounded-md text-xs transition-colors cursor-pointer ${
-                    event.is_assignment 
-                      ? 'bg-primary/5 hover:bg-primary/10 border-l-2 border-l-primary' 
-                      : 'bg-muted/30 hover:bg-muted/50'
-                  }`}
-                  onClick={() => {
-                    if (event.is_assignment) {
-                      const assignmentId = event.id.replace('assignment-', '');
-                      navigate(`/grading/student/assignment/${assignmentId}`);
-                    }
-                  }}
-                >
-                  <div className="text-center shrink-0 w-8">
-                    <div className="text-[10px] font-semibold text-muted-foreground uppercase">
-                      {format(new Date(event.start_date), 'MMM')}
-                    </div>
-                    <div className="text-sm font-bold">
-                      {format(new Date(event.start_date), 'd')}
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{event.title}</p>
-                    {event.is_assignment && (
-                      <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 mt-1">
-                        {event.points} pts
-                      </Badge>
+                        {assignment.is_discussion ? 'Discuss' : 'Start'}
+                        <ArrowRight className="h-4 w-4 ml-1.5" />
+                      </Button>
                     )}
                   </div>
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-        {/* Attendance */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-              Attendance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-2 text-center">
-                <p className="text-lg font-bold text-green-600">{attendance.present}</p>
-                <p className="text-[10px] text-muted-foreground">Present</p>
-              </div>
-              <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-2 text-center">
-                <p className="text-lg font-bold text-red-600">{attendance.absent}</p>
-                <p className="text-[10px] text-muted-foreground">Absent</p>
-              </div>
-              <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2 text-center">
-                <p className="text-lg font-bold text-amber-600">{attendance.late}</p>
-                <p className="text-[10px] text-muted-foreground">Late</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Links */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-              Quick Links
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {[
-              { label: 'Syllabus', icon: BookOpen },
-              { label: 'Grades', icon: ClipboardList },
-              { label: 'Resources', icon: FileText },
-            ].map((link) => (
-              <Button
-                key={link.label}
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-xs h-8"
+      {/* ═══ 4. UPCOMING CLASSES — Calendar Layout ═══ */}
+      {upcomingEvents.length > 0 && (
+        <div>
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2 mb-3">
+            <Calendar className="h-5 w-5 text-muted-foreground" />
+            Upcoming
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {upcomingEvents.slice(0, 6).map((event) => (
+              <div
+                key={event.id}
+                className={`flex items-start gap-3 p-4 rounded-xl border transition-all ${
+                  event.is_assignment
+                    ? 'bg-primary/5 border-primary/20 hover:border-primary/40 cursor-pointer'
+                    : 'bg-card border-border hover:border-border/80'
+                }`}
                 onClick={() => {
-                  // Navigate to appropriate tab
-                  const tabMap: Record<string, string> = {
-                    'Syllabus': 'syllabus',
-                    'Grades': 'grades',
-                    'Resources': 'resources',
-                  };
-                  navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=${tabMap[link.label]}`);
+                  if (event.is_assignment) {
+                    const assignmentId = event.id.replace('assignment-', '');
+                    navigate(`/grading/student/assignment/${assignmentId}`);
+                  }
                 }}
               >
-                <link.icon className="h-3.5 w-3.5 mr-2" />
-                {link.label}
-              </Button>
+                {/* Date Block */}
+                <div className="w-12 h-12 rounded-lg bg-muted flex flex-col items-center justify-center shrink-0">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase leading-none">
+                    {format(new Date(event.start_date), 'MMM')}
+                  </span>
+                  <span className="text-lg font-bold text-foreground leading-none mt-0.5">
+                    {format(new Date(event.start_date), 'd')}
+                  </span>
+                </div>
+                {/* Event Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{event.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {format(new Date(event.start_date), 'h:mm a')}
+                    {event.location && ` · ${event.location}`}
+                  </p>
+                  {event.is_assignment && event.points && (
+                    <Badge variant="outline" className="text-[10px] mt-1.5 px-1.5 py-0 h-4">
+                      {event.points} pts
+                    </Badge>
+                  )}
+                </div>
+              </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ 5. PRIOR MODULES (collapsed) ═══ */}
+      {priorModules.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <Collapsible>
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center justify-between hover:bg-muted/30 -mx-2 px-2 py-1 rounded-md transition-colors">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <History className="h-4 w-4 text-muted-foreground" />
+                    Prior Modules
+                    <Badge variant="secondary" className="text-xs ml-1">{priorModules.length}</Badge>
+                  </h4>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3 space-y-2">
+                {priorModules.map((module) => (
+                  <div
+                    key={module.id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=modules&week=${module.week_number}`)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        Week {module.week_number}: {module.title}
+                      </p>
+                      {module.end_date && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Calendar className="h-3 w-3" />
+                          Completed {format(new Date(module.end_date), 'MMM d')}
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant="outline" className="text-xs shrink-0 ml-2">
+                      <CheckCircle className="h-3 w-3 mr-1 text-emerald-500" />
+                      Completed
+                    </Badge>
+                  </div>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
           </CardContent>
         </Card>
+      )}
+
+      {/* Quick Links */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { label: 'Syllabus', icon: BookOpen, tab: 'syllabus' },
+          { label: 'Grades', icon: ClipboardList, tab: 'grades' },
+          { label: 'Resources', icon: FileText, tab: 'resources' },
+        ].map((link) => (
+          <Button
+            key={link.label}
+            variant="outline"
+            size="sm"
+            className="gap-2 text-sm"
+            onClick={() => navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=${link.tab}`)}
+          >
+            <link.icon className="h-4 w-4" />
+            {link.label}
+          </Button>
+        ))}
       </div>
 
       {/* Module Videos Modal for MUS-240 */}
