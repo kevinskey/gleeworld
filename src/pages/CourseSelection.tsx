@@ -38,7 +38,7 @@ const CourseSelection: React.FC = () => {
     .filter(Boolean) as (typeof ACADEMY_COURSES[number] & { enrollment: any })[];
 
   return (
-    <UniversalLayout>
+    <UniversalLayout containerized={false}>
       <div className="min-h-[80vh] relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #0a1628 0%, #0d1f3c 25%, #081430 50%, #060e1f 75%, #030812 100%)' }}>
         {/* Deep sea mesh gradient orbs */}
         <div className="fixed inset-0 -z-10 pointer-events-none">
