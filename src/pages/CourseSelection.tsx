@@ -5,9 +5,17 @@ import { useCourseEnrollments } from '@/hooks/useCourseEnrollments';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, ArrowRight } from 'lucide-react';
+import { BookOpen, ArrowRight, Sparkles } from 'lucide-react';
+
+const BENTO_SIZES = [
+  'md:col-span-2 md:row-span-2',
+  'md:col-span-1 md:row-span-1',
+  'md:col-span-1 md:row-span-2',
+  'md:col-span-2 md:row-span-1',
+  'md:col-span-1 md:row-span-1',
+  'md:col-span-1 md:row-span-1',
+];
 
 const CourseSelection: React.FC = () => {
   const { user } = useAuth();
@@ -31,70 +39,110 @@ const CourseSelection: React.FC = () => {
 
   return (
     <UniversalLayout>
-      <div className="min-h-[80vh] bg-[#f8f9fb]">
+      <div className="min-h-[80vh] relative overflow-hidden">
+        {/* Mesh gradient background */}
+        <div className="fixed inset-0 -z-10 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[120px]" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-accent/10 blur-[100px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full bg-secondary/6 blur-[140px]" />
+        </div>
+
         {/* Header */}
-        <div className="bg-[#003366] py-10">
-          <div className="max-w-7xl mx-auto px-6 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/15 mb-4">
-              <BookOpen className="h-7 w-7 text-white" />
+        <div className="relative pt-12 pb-8">
+          <div className="max-w-6xl mx-auto px-6 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/40 bg-card/50 backdrop-blur-xl mb-6">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Your Classes</span>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
-              Your Classes
+            <h1
+              className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-3"
+              style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}
+            >
+              Course Dashboard
             </h1>
-            <p className="text-white/70 text-sm">Select a class to continue</p>
+            <p className="text-base text-muted-foreground max-w-md mx-auto">
+              Select a class to continue your learning journey
+            </p>
           </div>
         </div>
 
         {/* Content */}
-        <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="max-w-6xl mx-auto px-6 pb-16">
           {enrolledCourses.length === 0 ? (
-            <Card className="text-center py-12 bg-white border border-border shadow-sm">
-              <CardContent>
-                <p className="text-foreground/60 mb-4">You are not enrolled in any courses yet.</p>
-                <Button onClick={() => navigate('/academy')} variant="outline">
-                  Browse Academy
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="glass-card rounded-2xl p-12 text-center">
+              <p className="text-muted-foreground mb-4 text-base">You are not enrolled in any courses yet.</p>
+              <Button onClick={() => navigate('/academy')} variant="outline" className="rounded-xl">
+                Browse Academy
+              </Button>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {enrolledCourses.map(course => {
+            <div className="grid grid-cols-1 md:grid-cols-3 auto-rows-[180px] gap-4">
+              {enrolledCourses.map((course, i) => {
                 const Icon = course.icon;
+                const bentoClass = BENTO_SIZES[i % BENTO_SIZES.length];
+                const isLarge = bentoClass.includes('col-span-2') || bentoClass.includes('row-span-2');
+
                 return (
-                  <Card
+                  <div
                     key={course.id}
-                    className="group cursor-pointer bg-white border border-border hover:border-primary/30 hover:shadow-lg transition-all duration-200"
+                    className={`
+                      group relative cursor-pointer rounded-2xl p-6
+                      bg-card/40 backdrop-blur-[20px]
+                      border border-border/30
+                      shadow-[0_2px_20px_-4px_hsl(var(--primary)/0.06)]
+                      transition-all duration-300 ease-out
+                      hover:scale-[1.02] hover:shadow-[0_8px_40px_-8px_hsl(var(--primary)/0.15)]
+                      hover:border-primary/20 hover:bg-card/60
+                      active:scale-[0.98]
+                      ${bentoClass}
+                    `}
                     onClick={() => navigate(course.route)}
                   >
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">
+                    {/* Soft glow on hover */}
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.04),transparent_70%)]" />
+
+                    <div className="relative h-full flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                            <Icon className="h-5 w-5 text-primary" />
+                          </div>
+                          <span className="text-xs font-semibold text-primary/80 uppercase tracking-widest">
                             {course.courseCode}
-                          </p>
-                          <h3 className="text-lg font-semibold text-foreground leading-snug mb-1">
-                            {course.title}
-                          </h3>
-                          <p className="text-base text-muted-foreground line-clamp-2">{course.description}</p>
+                          </span>
                         </div>
+
+                        <h3
+                          className={`font-semibold text-foreground leading-snug mb-2 ${isLarge ? 'text-2xl' : 'text-lg'}`}
+                          style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}
+                        >
+                          {course.title}
+                        </h3>
+
+                        {isLarge && (
+                          <p className="text-base text-muted-foreground line-clamp-3 leading-relaxed">
+                            {course.description}
+                          </p>
+                        )}
                       </div>
-                      <div className="flex justify-end mt-4">
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary group-hover:translate-x-0.5 transition-transform">
-                          Enter Course <ArrowRight className="h-3.5 w-3.5" />
-                        </span>
+
+                      <div className="flex items-center gap-1.5 text-sm font-medium text-primary/70 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300">
+                        Enter Course <ArrowRight className="h-4 w-4" />
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 );
               })}
             </div>
           )}
 
-          <div className="text-center mt-10">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="text-muted-foreground hover:text-foreground">
+          <div className="text-center mt-12">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="text-muted-foreground hover:text-foreground rounded-xl"
+            >
               ← Back to Dashboard
             </Button>
           </div>
