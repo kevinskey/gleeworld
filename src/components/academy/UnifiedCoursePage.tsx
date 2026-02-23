@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers, Archive, Images, User } from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers, Archive, Images, User, QrCode } from 'lucide-react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -487,11 +487,15 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
                   {/* Action Buttons */}
                   <div className="flex justify-end gap-3">
+                    <Button variant="default" className="gap-2 rounded-full px-6 bg-primary hover:bg-primary/90" onClick={() => navigate('/qr-scanner')}>
+                      <QrCode className="h-4 w-4" />
+                      Check In
+                    </Button>
                     {isExecutiveBoard && <Button variant="outline" className="gap-2 rounded-full px-6" onClick={() => navigate('/admin/calendar')}>
                         <Plus className="h-4 w-4" />
                         Add Event
                       </Button>}
-                    <Button variant="default" className="gap-2 rounded-full px-6" onClick={() => navigate('/booking')}>
+                    <Button variant="outline" className="gap-2 rounded-full px-6" onClick={() => navigate('/booking')}>
                       <Calendar className="h-4 w-4" />
                       Book Appointment
                     </Button>
