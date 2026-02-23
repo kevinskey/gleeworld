@@ -244,16 +244,16 @@ export const UniversalHeader = ({
   return (
     <>
       <div
-        className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none bg-primary-foreground"
+        className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none"
         style={{ top: 'var(--gw-safe-top)' }}
       >
-        <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0 bg-primary-foreground">
-        <header ref={headerRef} className={`w-full shadow-md relative rounded-b-lg bg-white/80 backdrop-blur-xl text-foreground ${user ? getRoleAccentColor() : 'border-b border-white/20'}`}>
+        <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0">
+        <header ref={headerRef} className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative rounded-b-lg bg-[rgba(6,14,31,0.75)] backdrop-blur-md border-b border-white/[0.08] text-white ${user ? getRoleAccentColor() : 'border-b border-white/20'} [&_button:hover]:shadow-[0_0_12px_rgba(56,146,227,0.25)] [&_button]:transition-shadow [&_button]:duration-300`}>
           <div className="flex items-center justify-between w-full min-h-10 sm:min-h-12 md:min-h-10 py-1.5 md:py-1 px-2 sm:px-3 md:px-4 lg:px-6">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 min-w-0">
             <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">
-              <Link to="/" className="flex items-center gap-1.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-card-foreground p-0.5 sm:p-1">
+              <Link to="/" className="flex items-center gap-1.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-white p-0.5 sm:p-1">
                 <div className="relative">
                   <img
                     src="/gleeworld-door-icon.png?v=2"
@@ -265,7 +265,7 @@ export const UniversalHeader = ({
                 <span style={{
                     fontFamily: "'Cinzel', serif",
                     letterSpacing: '0.02em'
-                  }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-medium text-card-foreground drop-shadow-sm">
+                  }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-medium text-white drop-shadow-sm">
                   GleeWorld
                 </span>
               </Link>
@@ -279,19 +279,19 @@ export const UniversalHeader = ({
           </div>
 
           {/* Right side actions - Mobile-optimized icon bar */}
-          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-3 xl:gap-4 text-spelman-blue-dark pr-2 sm:pr-4 md:pr-6 lg:pr-8 xl:pr-12">
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-3 xl:gap-4 text-white/80 pr-2 sm:pr-4 md:pr-6 lg:pr-8 xl:pr-12">
             <HeaderRadioControls />
             
             {/* Email/SMS Messenger - Available to all authenticated users */}
             {user && <EnhancedTooltip content="Send Email/SMS">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/messenger')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/messenger')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                   <Mail className={HEADER_ICON_SIZES.icon} />
                 </Button>
               </EnhancedTooltip>}
 
             {/* Calendar Quick Access */}
             {user && <EnhancedTooltip content="View Calendar">
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                     <CalendarDays className={HEADER_ICON_SIZES.icon} />
                   </Button>
                 </EnhancedTooltip>}
@@ -306,7 +306,7 @@ export const UniversalHeader = ({
                 <DropdownMenu>
                   <EnhancedTooltip content="Glee Academy">
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                      <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                         <Landmark className={HEADER_ICON_SIZES.icon} />
                       </Button>
                     </DropdownMenuTrigger>
