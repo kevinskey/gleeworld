@@ -112,8 +112,8 @@ const GleeAcademy = () => {
           {loadingBadges ? <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8">
               {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="aspect-square bg-white/10 animate-pulse rounded-xl" />)}
             </div> : badges.length > 0 ? <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8 justify-items-center">
-              {badges.map(badge => {
-            const imgSrc = badge.badge_image_url?.includes('office-hours-badge') ? officeHoursBadge : badge.badge_image_url;
+          {badges.filter(badge => !badge.badge_image_url?.includes('office-hours-badge')).map(badge => {
+            const imgSrc = badge.badge_image_url;
             return <div key={badge.id} onClick={() => handleBadgeClick(badge)} className="cursor-pointer transition-all duration-300 hover:scale-105 flex items-center justify-center">
                     {imgSrc ? <img src={imgSrc} alt={`${badge.course_code} - ${badge.course_title}`} className="w-full h-auto max-h-64 object-contain drop-shadow-2xl hover:brightness-110 mx-auto rounded-2xl" /> : <div className="aspect-square w-full bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex flex-col items-center justify-center p-4 hover:bg-white/20">
                         <span className="text-white font-bold text-xl sm:text-2xl">{badge.course_code}</span>
