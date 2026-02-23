@@ -67,6 +67,9 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
       return data || [];
     },
     enabled: !!course.id,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+    staleTime: 10_000,
   });
 
   const formatDueDate = (dueDate: string) => {

@@ -111,6 +111,9 @@ export const EmbeddedStudentGradeView: React.FC<EmbeddedStudentGradeViewProps> =
       }));
     },
     enabled: !!user,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+    staleTime: 10_000,
   });
 
   const { data: grades } = useQuery({

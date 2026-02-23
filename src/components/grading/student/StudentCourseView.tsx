@@ -84,7 +84,10 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         submissionStatus: submissionsMap.get(assignment.id) || 'not_submitted'
       }));
     },
-    enabled: !!user
+    enabled: !!user,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000, // Poll every 30s for instructor changes
+    staleTime: 10_000,
   });
 
   const { data: grades } = useQuery({
