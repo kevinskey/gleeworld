@@ -276,7 +276,7 @@ export const GleeWorldLanding = () => {
         <div className="w-full max-w-7xl mx-auto">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
             {adaptedSlides.length > 0 ? (
-              <div className="aspect-[16/9] sm:aspect-[16/9] md:aspect-[16/8] lg:aspect-[16/7]">
+              <div className="aspect-[16/9] sm:aspect-[16/9] md:aspect-[16/8] lg:aspect-[16/7] flex items-center justify-center">
                 <HeroSlider 
                   slides={adaptedSlides}
                   defaultDurationMs={6000}
