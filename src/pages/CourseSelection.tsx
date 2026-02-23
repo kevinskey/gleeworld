@@ -22,7 +22,6 @@ const CourseSelection: React.FC = () => {
     );
   }
 
-  // Match enrollments to course config
   const enrolledCourses = enrollments
     .map(e => {
       const course = ACADEMY_COURSES.find(c => c.id === e.course_id);
@@ -32,59 +31,73 @@ const CourseSelection: React.FC = () => {
 
   return (
     <UniversalLayout>
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <BookOpen className="h-8 w-8 text-primary" />
+      <div className="min-h-[80vh] bg-[#f8f9fb]">
+        {/* Header */}
+        <div className="bg-[#003366] py-10">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/15 mb-4">
+              <BookOpen className="h-7 w-7 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-1" style={{ fontFamily: "'Cinzel', serif" }}>
+              Your Classes
+            </h1>
+            <p className="text-white/70 text-sm">Select a class to continue</p>
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Your Classes</h1>
-          <p className="text-muted-foreground">Select a class to continue</p>
         </div>
 
-        {enrolledCourses.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <p className="text-muted-foreground mb-4">You are not enrolled in any courses yet.</p>
-              <Button onClick={() => navigate('/academy')} variant="outline">
-                Browse Academy
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4">
-            {enrolledCourses.map(course => {
-              const Icon = course.icon;
-              return (
-                <Card
-                  key={course.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow bg-white border border-border hover:border-primary/40"
-                  onClick={() => navigate(course.route)}
-                >
-                  <CardContent className="flex items-center gap-4 p-5">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-                        {course.courseCode}
-                      </p>
-                      <h3 className="text-lg font-semibold text-[#0f172a] truncate">
-                        {course.title}
-                      </h3>
-                      <p className="text-sm text-[#64748b] truncate">{course.description}</p>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-[#64748b] flex-shrink-0" />
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+        {/* Content */}
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          {enrolledCourses.length === 0 ? (
+            <Card className="text-center py-12 bg-white border border-border shadow-sm">
+              <CardContent>
+                <p className="text-foreground/60 mb-4">You are not enrolled in any courses yet.</p>
+                <Button onClick={() => navigate('/academy')} variant="outline">
+                  Browse Academy
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {enrolledCourses.map(course => {
+                const Icon = course.icon;
+                return (
+                  <Card
+                    key={course.id}
+                    className="group cursor-pointer bg-white border border-border hover:border-primary/30 hover:shadow-lg transition-all duration-200"
+                    onClick={() => navigate(course.route)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Icon className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-bold text-primary uppercase tracking-widest mb-1">
+                            {course.courseCode}
+                          </p>
+                          <h3 className="text-base font-semibold text-foreground leading-snug mb-1">
+                            {course.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{course.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-end mt-4">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary group-hover:translate-x-0.5 transition-transform">
+                          Enter Course <ArrowRight className="h-3.5 w-3.5" />
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
 
-        <div className="text-center mt-8">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-            Go to Dashboard instead
-          </Button>
+          <div className="text-center mt-10">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="text-muted-foreground hover:text-foreground">
+              ← Back to Dashboard
+            </Button>
+          </div>
         </div>
       </div>
     </UniversalLayout>
