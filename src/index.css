@@ -343,16 +343,16 @@ button.module-card-solid:hover,
   background-image: none !important;
 }
 
-/* Header styling - solid white for maximum readability */
+/* Header styling - solid dark navy for maximum readability */
 header,
 .spelman-blue-theme header,
 .glass-theme header,
 [class*="theme"] header {
-  background-color: hsl(0 0% 100%) !important;
-  background: hsl(0 0% 100%) !important;
+  background-color: #060e1f !important;
+  background: #060e1f !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  color: hsl(222 47% 11%) !important;
+  color: hsl(0 0% 100%) !important;
 }
 
 /* HBCU theme keeps dark header */
@@ -376,7 +376,7 @@ header svg,
 .spelman-blue-theme header a,
 .spelman-blue-theme header button:not([style*="background"]),
 .spelman-blue-theme header svg {
-  color: #003666 !important;
+  color: #FFFFFF !important;
 }
 
 /* Exception: buttons with explicit background styling (like Sign In button) should have white text */
@@ -394,7 +394,7 @@ header button.bg-\[\#003666\]:hover a,
 header button.bg-\[\#003666\]:hover span,
 header a.bg-\[\#003666\]:hover,
 header a.bg-\[\#003666\]:hover span {
-  color: #003666 !important;
+  color: white !important;
 }
 
 /* Use on pages that must stay white even when a theme class is present on <html>.
