@@ -39,28 +39,30 @@ const CourseSelection: React.FC = () => {
 
   return (
     <UniversalLayout>
-      <div className="min-h-[80vh] relative overflow-hidden">
-        {/* Mesh gradient background */}
+      <div className="min-h-[80vh] relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #0a1628 0%, #0d1f3c 25%, #081430 50%, #060e1f 75%, #030812 100%)' }}>
+        {/* Deep sea mesh gradient orbs */}
         <div className="fixed inset-0 -z-10 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[120px]" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-accent/10 blur-[100px]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full bg-secondary/6 blur-[140px]" />
+          <div className="absolute top-[-10%] left-[15%] w-[700px] h-[700px] rounded-full blur-[150px]" style={{ background: 'radial-gradient(circle, rgba(56,146,227,0.12) 0%, transparent 70%)' }} />
+          <div className="absolute bottom-[-5%] right-[10%] w-[600px] h-[600px] rounded-full blur-[130px]" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)' }} />
+          <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[900px] h-[500px] rounded-full blur-[160px]" style={{ background: 'radial-gradient(circle, rgba(30,64,120,0.15) 0%, transparent 70%)' }} />
         </div>
+        {/* Film grain noise overlay */}
+        <div className="fixed inset-0 -z-[5] pointer-events-none opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`, backgroundRepeat: 'repeat', backgroundSize: '128px 128px' }} />
 
         {/* Header */}
         <div className="relative pt-12 pb-8">
           <div className="max-w-6xl mx-auto px-6 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/40 bg-card/50 backdrop-blur-xl mb-6">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Your Classes</span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl mb-6">
+              <Sparkles className="h-3.5 w-3.5 text-sky-400" />
+              <span className="text-xs font-medium tracking-wide text-sky-300/70 uppercase">Your Classes</span>
             </div>
             <h1
-              className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-3"
+              className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-3"
               style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}
             >
               Course Dashboard
             </h1>
-            <p className="text-base text-muted-foreground max-w-md mx-auto">
+            <p className="text-base text-slate-400 max-w-md mx-auto">
               Select a class to continue your learning journey
             </p>
           </div>
@@ -69,9 +71,9 @@ const CourseSelection: React.FC = () => {
         {/* Content */}
         <div className="max-w-6xl mx-auto px-6 pb-16">
           {enrolledCourses.length === 0 ? (
-            <div className="glass-card rounded-2xl p-12 text-center">
-              <p className="text-muted-foreground mb-4 text-base">You are not enrolled in any courses yet.</p>
-              <Button onClick={() => navigate('/academy')} variant="outline" className="rounded-xl">
+            <div className="rounded-2xl p-12 text-center bg-white/5 backdrop-blur-[20px] border border-white/10">
+              <p className="text-slate-400 mb-4 text-base">You are not enrolled in any courses yet.</p>
+              <Button onClick={() => navigate('/academy')} variant="outline" className="rounded-xl border-white/20 text-white hover:bg-white/10">
                 Browse Academy
               </Button>
             </div>
@@ -83,50 +85,50 @@ const CourseSelection: React.FC = () => {
                 const isLarge = bentoClass.includes('col-span-2') || bentoClass.includes('row-span-2');
 
                 return (
-                  <div
+                    <div
                     key={course.id}
                     className={`
                       group relative cursor-pointer rounded-2xl p-6
-                      bg-card/40 backdrop-blur-[20px]
-                      border border-border/30
-                      shadow-[0_2px_20px_-4px_hsl(var(--primary)/0.06)]
+                      bg-white/[0.06] backdrop-blur-[20px]
+                      border border-white/[0.08]
+                      shadow-[0_2px_30px_-4px_rgba(56,146,227,0.06),inset_0_1px_0_0_rgba(255,255,255,0.05)]
                       transition-all duration-300 ease-out
-                      hover:scale-[1.02] hover:shadow-[0_8px_40px_-8px_hsl(var(--primary)/0.15)]
-                      hover:border-primary/20 hover:bg-card/60
+                      hover:scale-[1.02] hover:shadow-[0_8px_50px_-8px_rgba(56,146,227,0.2),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+                      hover:border-white/15 hover:bg-white/[0.09]
                       active:scale-[0.98]
                       ${bentoClass}
                     `}
                     onClick={() => navigate(course.route)}
                   >
                     {/* Soft glow on hover */}
-                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.04),transparent_70%)]" />
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(56,146,227,0.06),transparent_70%)]" />
 
                     <div className="relative h-full flex flex-col justify-between">
                       <div>
                         <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-                            <Icon className="h-5 w-5 text-primary" />
+                          <div className="w-10 h-10 rounded-xl bg-sky-400/10 backdrop-blur-sm border border-sky-400/10 flex items-center justify-center group-hover:bg-sky-400/15 transition-colors">
+                            <Icon className="h-5 w-5 text-sky-400" />
                           </div>
-                          <span className="text-xs font-semibold text-primary/80 uppercase tracking-widest">
+                          <span className="text-xs font-semibold text-sky-400/70 uppercase tracking-widest">
                             {course.courseCode}
                           </span>
                         </div>
 
                         <h3
-                          className={`font-semibold text-foreground leading-snug mb-2 ${isLarge ? 'text-2xl' : 'text-lg'}`}
+                          className={`font-semibold text-white leading-snug mb-2 ${isLarge ? 'text-2xl' : 'text-lg'}`}
                           style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}
                         >
                           {course.title}
                         </h3>
 
                         {isLarge && (
-                          <p className="text-base text-muted-foreground line-clamp-3 leading-relaxed">
+                          <p className="text-base text-slate-400 line-clamp-3 leading-relaxed">
                             {course.description}
                           </p>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-sm font-medium text-primary/70 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300">
+                      <div className="flex items-center gap-1.5 text-sm font-medium text-sky-400/60 group-hover:text-sky-300 group-hover:translate-x-1 transition-all duration-300">
                         Enter Course <ArrowRight className="h-4 w-4" />
                       </div>
                     </div>
