@@ -29,11 +29,11 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
   const { data: modules, isLoading } = useQuery({
     queryKey: ['gw-course-modules', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_course_modules')
-        .select('*')
-        .eq('course_id', courseId)
-        .order('week_number', { ascending: true });
+      const { data, error } = await supabase.
+      from('gw_course_modules').
+      select('*').
+      eq('course_id', courseId).
+      order('week_number', { ascending: true });
       if (error) throw error;
       return data;
     }
@@ -43,10 +43,10 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
   const { data: mus240Resources } = useQuery({
     queryKey: ['mus240-module-resources', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('mus240_module_resources')
-        .select('*')
-        .order('display_order', { ascending: true });
+      const { data, error } = await supabase.
+      from('mus240_module_resources').
+      select('*').
+      order('display_order', { ascending: true });
       if (error) throw error;
       return data || [];
     }
@@ -56,22 +56,22 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
   const { data: gwResources } = useQuery({
     queryKey: ['gw-course-module-resources', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_course_module_resources')
-        .select('*')
-        .eq('course_id', courseId)
-        .order('display_order', { ascending: true });
+      const { data, error } = await supabase.
+      from('gw_course_module_resources').
+      select('*').
+      eq('course_id', courseId).
+      order('display_order', { ascending: true });
       if (error) throw error;
       return data || [];
     }
   });
 
   const updateModule = useMutation({
-    mutationFn: async ({ id, title, description }: { id: string; title: string; description: string }) => {
-      const { error } = await supabase
-        .from('gw_course_modules')
-        .update({ title, description })
-        .eq('id', id);
+    mutationFn: async ({ id, title, description }: {id: string;title: string;description: string;}) => {
+      const { error } = await supabase.
+      from('gw_course_modules').
+      update({ title, description }).
+      eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -83,11 +83,11 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
   });
 
   const togglePublish = useMutation({
-    mutationFn: async ({ id, is_published }: { id: string; is_published: boolean }) => {
-      const { error } = await supabase
-        .from('gw_course_modules')
-        .update({ is_published })
-        .eq('id', id);
+    mutationFn: async ({ id, is_published }: {id: string;is_published: boolean;}) => {
+      const { error } = await supabase.
+      from('gw_course_modules').
+      update({ is_published }).
+      eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -99,14 +99,14 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
   const resourcesByWeek = React.useMemo(() => {
     const map: Record<string, any[]> = {};
     // mus240 resources use module_id like "week-1"
-    (mus240Resources || []).forEach(r => {
+    (mus240Resources || []).forEach((r) => {
       const key = r.module_id;
       if (!map[key]) map[key] = [];
       map[key].push(r);
     });
     // gw resources use module_id (UUID) – map them to week number via modules
-    (gwResources || []).forEach(r => {
-      const mod = modules?.find(m => m.id === r.module_id);
+    (gwResources || []).forEach((r) => {
+      const mod = modules?.find((m) => m.id === r.module_id);
       if (mod) {
         const key = `week-${mod.week_number}`;
         if (!map[key]) map[key] = [];
@@ -122,15 +122,15 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
     if (!mod.start_date || !mod.end_date) return false;
     try {
       return isWithinInterval(today, { start: parseISO(mod.start_date), end: parseISO(mod.end_date) });
-    } catch { return false; }
+    } catch {return false;}
   };
 
   const getResourceIcon = (type: string) => {
     switch (type) {
-      case 'video': return Video;
-      case 'reading': return BookOpen;
-      case 'listening': return Music;
-      default: return FileText;
+      case 'video':return Video;
+      case 'reading':return BookOpen;
+      case 'listening':return Music;
+      default:return FileText;
     }
   };
 
@@ -158,8 +158,8 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
             const isEditing = editingModuleId === mod.id;
             const weekKey = `week-${mod.week_number}`;
             const resources = resourcesByWeek[weekKey] || [];
-            const videoCount = resources.filter(r => r.resource_type === 'video').length;
-            const readingCount = resources.filter(r => r.resource_type === 'reading').length;
+            const videoCount = resources.filter((r) => r.resource_type === 'video').length;
+            const readingCount = resources.filter((r) => r.resource_type === 'reading').length;
 
             if (isEditing) {
               return (
@@ -167,15 +167,15 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                   <CardContent className="pt-4 space-y-3">
                     <Input
                       value={editTitle}
-                      onChange={e => setEditTitle(e.target.value)}
-                      placeholder="Module title"
-                    />
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="Module title" />
+
                     <Textarea
                       value={editDescription}
-                      onChange={e => setEditDescription(e.target.value)}
+                      onChange={(e) => setEditDescription(e.target.value)}
                       placeholder="Description (optional)"
-                      rows={3}
-                    />
+                      rows={3} />
+
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => updateModule.mutate({ id: mod.id, title: editTitle, description: editDescription })}>
                         <Save className="h-4 w-4 mr-2" /> Save
@@ -185,8 +185,8 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                       </Button>
                     </div>
                   </CardContent>
-                </Card>
-              );
+                </Card>);
+
             }
 
             return (
@@ -201,16 +201,16 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                           </div>
                           <div className="text-left">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <CardTitle className="text-base font-semibold">{mod.title}</CardTitle>
+                              <CardTitle className="font-semibold text-4xl">{mod.title}</CardTitle>
                               {isCurrent && <Badge className="bg-primary text-primary-foreground text-xs">Current Week</Badge>}
                               {!mod.is_published && <Badge variant="secondary" className="text-xs">Draft</Badge>}
                             </div>
-                            {mod.start_date && mod.end_date && (
-                              <span className="text-xs flex items-center gap-1 text-muted-foreground mt-1">
+                            {mod.start_date && mod.end_date &&
+                            <span className="text-xs flex items-center gap-1 text-muted-foreground mt-1">
                                 <Calendar className="h-3 w-3" />
                                 {format(parseISO(mod.start_date), 'MMM d')} – {format(parseISO(mod.end_date), 'MMM d')}
                               </span>
-                            )}
+                            }
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -223,17 +223,17 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <CardContent className="pt-0 pb-4 space-y-3">
-                      {mod.description && (
-                        <p className="text-sm text-muted-foreground">{mod.description}</p>
-                      )}
+                      {mod.description &&
+                      <p className="text-sm text-muted-foreground">{mod.description}</p>
+                      }
 
                       {/* Resources for this week */}
-                      {resources.length > 0 ? (
-                        <div className="space-y-2">
-                          {resources.map(r => {
-                            const Icon = getResourceIcon(r.resource_type);
-                            return (
-                              <div key={r.id} className="flex items-center justify-between p-2.5 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
+                      {resources.length > 0 ?
+                      <div className="space-y-2">
+                          {resources.map((r) => {
+                          const Icon = getResourceIcon(r.resource_type);
+                          return (
+                            <div key={r.id} className="flex items-center justify-between p-2.5 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
                                 <div className="flex items-center gap-3 min-w-0">
                                   <Icon className="h-4 w-4 text-primary flex-shrink-0" />
                                   <div className="min-w-0">
@@ -243,19 +243,19 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
                                   <Badge variant="outline" className="text-xs capitalize">{r.resource_type}</Badge>
-                                  {r.url && (
-                                    <a href={r.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
+                                  {r.url &&
+                                <a href={r.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
                                       <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
                                     </a>
-                                  )}
+                                }
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground text-center py-2">No resources added yet</p>
-                      )}
+                              </div>);
+
+                        })}
+                        </div> :
+
+                      <p className="text-sm text-muted-foreground text-center py-2">No resources added yet</p>
+                      }
 
                       {/* Action buttons */}
                       <div className="flex gap-2 pt-2 border-t border-border/50">
@@ -267,8 +267,8 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                             setEditingModuleId(mod.id);
                             setEditTitle(mod.title);
                             setEditDescription(mod.description || '');
-                          }}
-                        >
+                          }}>
+
                           <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
                         </Button>
                         <Button
@@ -277,8 +277,8 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedModuleId(selectedModuleId === mod.id ? null : mod.id);
-                          }}
-                        >
+                          }}>
+
                           <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Resources
                         </Button>
                         <Button
@@ -287,42 +287,42 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                           onClick={(e) => {
                             e.stopPropagation();
                             togglePublish.mutate({ id: mod.id, is_published: !mod.is_published });
-                          }}
-                        >
+                          }}>
+
                           {mod.is_published ? 'Unpublish' : 'Publish'}
                         </Button>
                       </div>
 
                       {/* Inline resource manager */}
-                      {selectedModuleId === mod.id && (
-                        <div className="mt-3 pt-3 border-t border-border">
+                      {selectedModuleId === mod.id &&
+                      <div className="mt-3 pt-3 border-t border-border">
                           <ModuleResourceManager
-                            courseId={courseId}
-                            moduleId={mod.id}
-                            weekNumber={mod.week_number}
-                            onClose={() => setSelectedModuleId(null)}
-                          />
+                          courseId={courseId}
+                          moduleId={mod.id}
+                          weekNumber={mod.week_number}
+                          onClose={() => setSelectedModuleId(null)} />
+
                         </div>
-                      )}
+                      }
                     </CardContent>
                   </CollapsibleContent>
                 </Card>
-              </Collapsible>
-            );
-          }) : (
-            <Card>
+              </Collapsible>);
+
+          }) :
+          <Card>
               <CardContent className="py-12 flex flex-col items-center justify-center text-center">
                 <Calendar className="h-12 w-12 mb-4 text-muted-foreground" />
                 <p className="text-foreground">No modules available yet.</p>
                 <p className="text-sm mt-1 text-muted-foreground">Switch to "Create Module" to add weeks.</p>
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
 
         {/* Resources Overview Tab */}
         <TabsContent value="resources" className="space-y-4 mt-4">
-          {hasModules ? modules.map(mod => {
+          {hasModules ? modules.map((mod) => {
             const weekKey = `week-${mod.week_number}`;
             const resources = resourcesByWeek[weekKey] || [];
             if (resources.length === 0) return null;
@@ -337,7 +337,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                 </CardHeader>
                 <CardContent className="pt-0 pb-3">
                   <div className="space-y-1.5">
-                    {resources.map(r => {
+                    {resources.map((r) => {
                       const Icon = getResourceIcon(r.resource_type);
                       return (
                         <div key={r.id} className="flex items-center justify-between p-2 rounded hover:bg-muted/50">
@@ -347,32 +347,32 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs capitalize">{r.resource_type}</Badge>
-                            {r.url && (
-                              <a href={r.url} target="_blank" rel="noopener noreferrer">
+                            {r.url &&
+                            <a href={r.url} target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
                               </a>
-                            )}
+                            }
                           </div>
-                        </div>
-                      );
+                        </div>);
+
                     })}
                   </div>
                 </CardContent>
-              </Card>
-            );
-          }) : (
-            <Card>
+              </Card>);
+
+          }) :
+          <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
                 No resources added yet.
               </CardContent>
             </Card>
-          )}
+          }
         </TabsContent>
 
         <TabsContent value="create" className="mt-4">
           <ModuleCreator courseId={courseId} />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 };
