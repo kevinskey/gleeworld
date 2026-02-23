@@ -36,7 +36,7 @@ export const UniversalLayout = ({
   const shellBg = isDashboardShell ? 'bg-background' : 'bg-background';
   return <div className={`min-h-dvh w-full ${shellBg}`}>
       {/* Fixed Header */}
-      {showHeader && (shouldUsePublicHeader ? <PublicHeader className="bg-card" /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
+      {showHeader && (shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
       
       {/* Main Content - padded by header height only when header is shown */}
       <main className={`w-full ${showHeader ? 'pt-[calc(var(--gw-header-h,4rem)+var(--gw-radio-bar-height,0px))]' : ''} ${shellBg} text-foreground ${className}`} style={{
