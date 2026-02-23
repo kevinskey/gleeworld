@@ -89,12 +89,13 @@ const CourseSelection: React.FC = () => {
                     key={course.id}
                     className={`
                       group relative cursor-pointer rounded-2xl p-6
-                      bg-white/[0.06] backdrop-blur-[20px]
-                      border border-white/[0.08]
-                      shadow-[0_2px_30px_-4px_rgba(56,146,227,0.06),inset_0_1px_0_0_rgba(255,255,255,0.05)]
+                      bg-white/[0.03] backdrop-blur-xl
+                      border border-white/10
+                      shadow-[0_4px_30px_-4px_rgba(56,146,227,0.08),inset_0_1px_0_0_rgba(255,255,255,0.12),inset_0_-1px_0_0_rgba(0,0,0,0.15)]
                       transition-all duration-300 ease-out
-                      hover:scale-[1.02] hover:shadow-[0_8px_50px_-8px_rgba(56,146,227,0.2),inset_0_1px_0_0_rgba(255,255,255,0.1)]
-                      hover:border-white/15 hover:bg-white/[0.09]
+                      hover:scale-[1.02] hover:bg-white/[0.07]
+                      hover:shadow-[0_8px_50px_-8px_rgba(56,146,227,0.2),inset_0_1px_0_0_rgba(255,255,255,0.18),inset_0_-1px_0_0_rgba(0,0,0,0.1)]
+                      hover:border-white/20
                       active:scale-[0.98]
                       ${bentoClass}
                     `}
