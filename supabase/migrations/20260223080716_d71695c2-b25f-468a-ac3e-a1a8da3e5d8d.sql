@@ -1,0 +1,1 @@
+DELETE FROM gw_events WHERE title ILIKE 'MUS 210:%' AND title ILIKE '%Due';
