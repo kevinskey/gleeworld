@@ -72,13 +72,13 @@ const CourseSelection: React.FC = () => {
                           <Icon className="h-5 w-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">
+                          <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">
                             {course.courseCode}
                           </p>
-                          <h3 className="text-base font-semibold text-foreground leading-snug mb-1">
+                          <h3 className="text-lg font-semibold text-foreground leading-snug mb-1">
                             {course.title}
                           </h3>
-                          <p className="text-[16px] text-muted-foreground line-clamp-2">{course.description}</p>
+                          <p className="text-base text-muted-foreground line-clamp-2">{course.description}</p>
                         </div>
                       </div>
                       <div className="flex justify-end mt-4">
