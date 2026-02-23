@@ -834,8 +834,10 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             </div>
 
             {/* Right 40% - Thumbnail Image */}
-            <div className="flex-[2] relative min-h-[200px] md:min-h-0 border-t md:border-t-0 md:border-l border-border overflow-hidden bg-muted/20">
-              <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
+            <div className="flex-[2] relative min-h-[180px] md:min-h-[220px] border-t md:border-t-0 md:border-l border-border overflow-hidden bg-muted/20">
+              <div className="absolute inset-0">
+                <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
+              </div>
             </div>
           </div>
         </Card>
