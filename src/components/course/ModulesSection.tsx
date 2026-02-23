@@ -201,7 +201,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                           </div>
                           <div className="text-left">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <CardTitle className="font-semibold text-4xl">{mod.title}</CardTitle>
+                              <CardTitle className="font-semibold text-2xl">{mod.title}</CardTitle>
                               {isCurrent && <Badge className="bg-primary text-primary-foreground text-xs">Current Week</Badge>}
                               {!mod.is_published && <Badge variant="secondary" className="text-xs">Draft</Badge>}
                             </div>
