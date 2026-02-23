@@ -200,21 +200,23 @@ export const QRAttendanceScanner = () => {
       if (result.success) {
         const isCheckout = (data as any)?.checkout === true;
         const isInRehearsal = (data as any)?.status === 'in_rehearsal';
+        
+        const courseRoute = result.course_id ? COURSE_ROUTES[result.course_id] : null;
+        const target = courseRoute || '/dashboard?module=glee-academy';
+
         toast({
           title: isCheckout ? "✅ Attendance Confirmed" : isInRehearsal ? "🎵 Checked In — In Rehearsal" : "Attendance Recorded",
           description: isCheckout
-            ? `You're marked present for ${result.event_title || 'this session'}`
+            ? `You're marked present for ${result.event_title || 'this session'}. Redirecting...`
             : isInRehearsal
-            ? `Scan the checkout QR at end of class to confirm attendance`
-            : `Successfully marked for ${result.event_title || 'this event'}`,
+            ? `Scan the checkout QR at end of class to confirm attendance. Redirecting...`
+            : `Successfully marked for ${result.event_title || 'this event'}. Redirecting...`,
         });
 
-        const courseRoute = result.course_id ? COURSE_ROUTES[result.course_id] : null;
-        const target = courseRoute || '/dashboard?module=glee-academy';
-        
+        // Navigate to course landing page quickly
         setTimeout(() => {
           navigate(target);
-        }, 2000);
+        }, 1200);
       }
     } catch (error) {
       console.error('Error processing QR scan:', error);
