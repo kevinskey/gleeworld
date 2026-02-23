@@ -34,7 +34,7 @@ const CourseSelection: React.FC = () => {
       <div className="min-h-[80vh] bg-[#f8f9fb]">
         {/* Header */}
         <div className="bg-[#003366] py-10">
-          <div className="max-w-4xl mx-auto px-6 text-center">
+          <div className="max-w-7xl mx-auto px-6 text-center">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/15 mb-4">
               <BookOpen className="h-7 w-7 text-white" />
             </div>
@@ -46,7 +46,7 @@ const CourseSelection: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="max-w-4xl mx-auto px-6 py-10">
+        <div className="max-w-7xl mx-auto px-6 py-10">
           {enrolledCourses.length === 0 ? (
             <Card className="text-center py-12 bg-white border border-border shadow-sm">
               <CardContent>
