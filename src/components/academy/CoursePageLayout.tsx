@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, HelpCircle, UserCheck, Ruler, Settings, ChevronDown, Music, ArrowLeft } from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, HelpCircle, UserCheck, Ruler, Settings, ChevronDown, Music, ArrowLeft, QrCode } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseResourcesList } from './CourseResourcesList';
@@ -174,9 +174,15 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
                   <CardContent className="p-6">
                     <h2 className="text-xl font-bold text-foreground mb-4">Welcome!</h2>
                     <p className="text-muted-foreground mb-6">{welcomeDetails}</p>
-                    {!isEnrolled && onEnroll && <Button onClick={onEnroll} variant="default">
-                        Enroll in Course
-                      </Button>}
+                    <div className="flex gap-3">
+                      <Button onClick={() => navigate('/qr-scanner')} variant="default" className="gap-2">
+                        <QrCode className="h-4 w-4" />
+                        Check In
+                      </Button>
+                      {!isEnrolled && onEnroll && <Button onClick={onEnroll} variant="outline">
+                          Enroll in Course
+                        </Button>}
+                    </div>
                   </CardContent>
                 </Card>
 
