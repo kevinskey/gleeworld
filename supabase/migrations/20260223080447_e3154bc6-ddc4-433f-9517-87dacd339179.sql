@@ -1,0 +1,1 @@
+UPDATE gw_events SET is_public = false WHERE id = '74a4e0c3-1c8d-4090-a591-855679901e6f';
