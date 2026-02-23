@@ -615,55 +615,55 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
     <div className="space-y-5">
 
       {/* ═══ 1. AT-A-GLANCE STATS BAR ═══ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
         {/* Grade */}
         <button
           onClick={() => navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=grades`)}
-          className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border hover:border-primary/40 transition-all group"
+          className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-card border border-border hover:border-primary/40 transition-all group"
         >
-          <div className="h-11 w-11 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <GraduationCap className="h-5 w-5 text-primary" />
+          <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           </div>
-          <div className="text-left">
-            <p className="text-xs text-muted-foreground font-medium">Course Grade</p>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold text-foreground">{gradeLoading ? '--' : `${percentage}%`}</span>
-              <span className="text-sm font-semibold text-primary">{gradeLoading ? '' : letterGrade}</span>
+          <div className="text-left min-w-0">
+            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">Grade</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg sm:text-2xl font-bold text-foreground">{gradeLoading ? '--' : `${percentage}%`}</span>
+              <span className="text-xs sm:text-sm font-semibold text-primary">{gradeLoading ? '' : letterGrade}</span>
             </div>
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
         </button>
 
         {/* Attendance - Present */}
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
-          <div className="h-11 w-11 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-            <CheckCircle className="h-5 w-5 text-emerald-500" />
+        <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-card border border-border">
+          <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground font-medium">Present</p>
-            <span className="text-2xl font-bold text-foreground">{attendance.present}</span>
+            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">Present</p>
+            <span className="text-lg sm:text-2xl font-bold text-foreground">{attendance.present}</span>
           </div>
         </div>
 
         {/* Attendance - Absent */}
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
-          <div className="h-11 w-11 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
-            <XCircle className="h-5 w-5 text-red-500" />
+        <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-card border border-border">
+          <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+            <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground font-medium">Absent</p>
-            <span className="text-2xl font-bold text-foreground">{attendance.absent}</span>
+            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">Absent</p>
+            <span className="text-lg sm:text-2xl font-bold text-foreground">{attendance.absent}</span>
           </div>
         </div>
 
         {/* Attendance - Late */}
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
-          <div className="h-11 w-11 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-            <Clock className="h-5 w-5 text-amber-500" />
+        <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-card border border-border">
+          <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground font-medium">Late</p>
-            <span className="text-2xl font-bold text-foreground">{attendance.late}</span>
+            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">Late</p>
+            <span className="text-lg sm:text-2xl font-bold text-foreground">{attendance.late}</span>
           </div>
         </div>
       </div>
@@ -671,10 +671,10 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
       {/* ═══ 2. CURRENT UNIT CARD — 60/40 Split ═══ */}
       {currentModule && (
         <Card className="overflow-hidden border-border">
-          <div className="flex flex-col lg:flex-row">
+          <div className="flex flex-col md:flex-row">
             {/* Left 60% - Unit Info */}
-            <div className="flex-[3] p-6">
-              <div className="flex items-center gap-2 mb-3">
+            <div className="flex-[3] p-4 sm:p-6">
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
                 <Badge variant="secondary" className="text-xs font-mono">
                   Week {currentModule.week_number}
                 </Badge>
@@ -682,7 +682,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                   {currentModule.content_types.filter(c => c.isCompleted).length}/{currentModule.content_types.length} Complete
                 </Badge>
               </div>
-              <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2 uppercase tracking-wide">
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-2 uppercase tracking-wide">
                 {currentModule.title}
               </h2>
 
@@ -834,7 +834,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             </div>
 
             {/* Right 40% - Thumbnail Image */}
-            <div className="flex-[2] relative min-h-[200px] lg:min-h-0 border-t lg:border-t-0 lg:border-l border-border overflow-hidden bg-muted/20">
+            <div className="flex-[2] relative min-h-[200px] md:min-h-0 border-t md:border-t-0 md:border-l border-border overflow-hidden bg-muted/20">
               <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
             </div>
           </div>
@@ -856,7 +856,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               return (
                 <div
                   key={assignment.id}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-xl border transition-all cursor-pointer gap-2 ${
                     isOverdue
                       ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/50'
                       : isSubmitted
@@ -871,14 +871,14 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                     }
                   }}
                 >
-                  <div className="flex-1 min-w-0 mr-4">
-                    <p className="text-base font-semibold text-foreground">{assignment.title}</p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1 font-medium">
-                      <Calendar className="h-3.5 w-3.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm sm:text-base font-semibold text-foreground">{assignment.title}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5 mt-1 font-medium">
+                      <Calendar className="h-3.5 w-3.5 shrink-0" />
                       Due {format(new Date(assignment.due_date), 'MMM d, h:mm a')} · {assignment.points} pts
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     {isOverdue && (
                       <Badge className="bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-300 dark:border-red-700 font-semibold text-xs">
                         <AlertCircle className="h-3 w-3 mr-1" />

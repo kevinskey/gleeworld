@@ -911,10 +911,10 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                 isCurrentWeek ? 'border-primary shadow-sm' : 'border-border'
               } ${module.is_locked ? 'opacity-75' : ''}`}
             >
-              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 [&[data-state=open]]:bg-muted/20">
-                <div className="flex items-center gap-3 w-full">
+              <AccordionTrigger className="px-3 sm:px-4 py-3 hover:no-underline hover:bg-muted/30 [&[data-state=open]]:bg-muted/20">
+                <div className="flex items-center gap-2 sm:gap-3 w-full">
                   {/* Week Number Badge */}
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 ${
                     module.completion_percentage === 100 
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                       : isCurrentWeek 
@@ -924,9 +924,9 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                           : 'bg-muted text-foreground'
                   }`}>
                     {module.completion_percentage === 100 ? (
-                      <CheckCircle2 className="h-5 w-5" />
+                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
                     ) : module.is_locked ? (
-                      <Lock className="h-4 w-4" />
+                      <Lock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     ) : (
                       module.week_number
                     )}
@@ -934,28 +934,28 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
 
                   {/* Module Info */}
                   <div className="flex-1 text-left min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm truncate">{module.title}</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                      <span className="font-semibold text-xs sm:text-sm truncate max-w-[180px] sm:max-w-none">{module.title}</span>
                       {isCurrentWeek && (
-                        <Badge variant="outline" className="text-xs border-primary text-primary">
+                        <Badge variant="outline" className="text-[10px] sm:text-xs border-primary text-primary shrink-0">
                           Current
                         </Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 sm:gap-3 mt-1 text-[10px] sm:text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {format(new Date(module.start_date), 'MMM d')} - {format(new Date(module.end_date), 'MMM d')}
                       </span>
                       <span className="flex items-center gap-1">
                         <FileText className="h-3 w-3" />
-                        {completedResources}/{totalResources} items
+                        {completedResources}/{totalResources}
                       </span>
                     </div>
                   </div>
 
-                  {/* Progress Circle */}
-                  <div className="flex-shrink-0 mr-2">
+                  {/* Progress Circle - hidden on very small, shown on sm+ */}
+                  <div className="flex-shrink-0 mr-1 sm:mr-2 hidden sm:block">
                     <div className="relative w-10 h-10">
                       <svg className="w-10 h-10 transform -rotate-90">
                         <circle
@@ -983,6 +983,10 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                       </span>
                     </div>
                   </div>
+                  {/* Compact progress on mobile */}
+                  <span className="sm:hidden text-[10px] font-semibold text-muted-foreground shrink-0 mr-1">
+                    {module.completion_percentage || 0}%
+                  </span>
                 </div>
               </AccordionTrigger>
 
@@ -1050,10 +1054,9 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                               const colorClass = getResourceColor(resource.type);
 
                               return (
-                                <div 
+                          <div 
                                   key={resource.id}
                                 onClick={() => {
-                                    // Open resource in in-app viewer if it has a URL
                                     if (resource.url) {
                                       setSelectedResource({
                                         title: resource.title,
@@ -1063,35 +1066,36 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                                       });
                                     }
                                   }}
-                                  className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                                  className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
                                     resource.completed 
                                       ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800/30' 
                                       : 'bg-background hover:bg-muted/50'
                                   }`}
                                 >
-                                  <div className={`p-2 rounded-lg bg-muted ${colorClass}`}>
-                                    <Icon className="h-4 w-4" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium text-sm truncate">{resource.title}</span>
-                                      <Badge variant="outline" className="text-xs capitalize">
-                                        {resource.type}
-                                      </Badge>
+                                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className={`p-2 rounded-lg bg-muted shrink-0 ${colorClass}`}>
+                                      <Icon className="h-4 w-4" />
                                     </div>
-                                    {resource.duration && (
-                                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
-                                        {resource.duration}
-                                      </span>
-                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-medium text-sm truncate">{resource.title}</span>
+                                        <Badge variant="outline" className="text-[10px] sm:text-xs capitalize shrink-0">
+                                          {resource.type}
+                                        </Badge>
+                                      </div>
+                                      {resource.duration && (
+                                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                          <Clock className="h-3 w-3" />
+                                          {resource.duration}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    {/* Mark complete button */}
+                                  <div className="flex items-center gap-2 pl-11 sm:pl-0 shrink-0">
                                     <Button 
                                       size="sm" 
                                       variant={resource.completed ? "ghost" : "outline"}
-                                      className={`h-8 px-3 ${resource.completed ? 'text-green-600 hover:text-green-700' : ''}`}
+                                      className={`h-8 px-2 sm:px-3 text-xs sm:text-sm ${resource.completed ? 'text-green-600 hover:text-green-700' : ''}`}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         toggleResourceComplete(resource.id, module.id, resource.completed || false);
@@ -1099,22 +1103,23 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                                     >
                                       {resource.completed ? (
                                         <>
-                                          <CheckCircle2 className="h-4 w-4 mr-1" />
-                                          Completed
+                                          <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
+                                          <span className="hidden sm:inline">Completed</span>
+                                          <span className="sm:hidden">Done</span>
                                         </>
                                       ) : (
                                         <>
-                                          <Circle className="h-4 w-4 mr-1" />
-                                          Mark Done
+                                          <Circle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
+                                          <span className="hidden sm:inline">Mark Done</span>
+                                          <span className="sm:hidden">Done</span>
                                         </>
                                       )}
                                     </Button>
-                                    {/* Open resource button */}
                                     {resource.url && (
                                       <Button 
                                         size="sm" 
                                         variant="ghost" 
-                                        className="h-8 px-3"
+                                        className="h-8 px-2 sm:px-3 text-xs sm:text-sm"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setSelectedResource({
@@ -1126,20 +1131,11 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                                         }}
                                       >
                                         {resource.type === 'video' ? (
-                                          <>
-                                            <Play className="h-3 w-3 mr-1" />
-                                            Watch
-                                          </>
+                                          <><Play className="h-3 w-3 mr-1" />Watch</>
                                         ) : resource.type === 'audio' ? (
-                                          <>
-                                            <Headphones className="h-3 w-3 mr-1" />
-                                            Listen
-                                          </>
+                                          <><Headphones className="h-3 w-3 mr-1" />Listen</>
                                         ) : (
-                                          <>
-                                            <ExternalLink className="h-3 w-3 mr-1" />
-                                            Open
-                                          </>
+                                          <><ExternalLink className="h-3 w-3 mr-1" />Open</>
                                         )}
                                       </Button>
                                     )}
