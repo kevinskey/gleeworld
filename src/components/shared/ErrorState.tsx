@@ -26,8 +26,8 @@ export const ErrorState = ({
           <div className="mx-auto mb-4 text-red-500">
             {icon || <AlertCircle className="h-12 w-12" />}
           </div>
-          <h3 className="text-lg font-semibold mb-2 text-gray-900">{title}</h3>
-          <p className="text-red-600 mb-4">{message}</p>
+          <h3 className="text-lg font-semibold mb-2 text-foreground">{title}</h3>
+          <p className="text-destructive mb-4">{message}</p>
           {onRetry && (
             <Button onClick={onRetry} variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
               <RefreshCw className="h-4 w-4 mr-2" />
