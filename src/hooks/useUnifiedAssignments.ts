@@ -43,7 +43,10 @@ export const useUnifiedAssignments = (courseId: string) => {
         };
       });
     },
-    enabled: !!courseId
+    enabled: !!courseId,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+    staleTime: 10_000,
   });
 };
 

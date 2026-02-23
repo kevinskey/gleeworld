@@ -76,6 +76,9 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
   useEffect(() => {
     if (hasAccess) {
       fetchAssignments();
+      // Poll every 30s for instructor changes
+      const interval = setInterval(fetchAssignments, 30_000);
+      return () => clearInterval(interval);
     } else {
       setLoading(false);
     }
