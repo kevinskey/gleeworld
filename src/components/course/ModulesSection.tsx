@@ -206,7 +206,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
                               {!mod.is_published && <Badge variant="secondary" className="text-xs">Draft</Badge>}
                             </div>
                             {mod.start_date && mod.end_date &&
-                            <span className="text-xs flex items-center gap-1 text-muted-foreground mt-1">
+                            <span className="flex items-center gap-1 text-muted-foreground mt-1 text-base">
                                 <Calendar className="h-3 w-3" />
                                 {format(parseISO(mod.start_date), 'MMM d')} – {format(parseISO(mod.end_date), 'MMM d')}
                               </span>
