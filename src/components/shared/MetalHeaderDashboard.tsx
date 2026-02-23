@@ -192,9 +192,7 @@ export const MetalHeaderDashboard = ({
     isSuperAdmin
   } = useUserRole();
   const {
-    themeName,
-    isDarkMode,
-    toggleDarkMode
+    themeName
   } = useTheme();
 
   // Listen for quick actions toggle from header
@@ -204,8 +202,8 @@ export const MetalHeaderDashboard = ({
     return () => window.removeEventListener('toggle-quick-actions', handleToggle);
   }, []);
 
-  // HBCU theme colors
-  const isHbcuTheme = themeName === 'hbcu';
+  // Single opinionated theme — no conditional styling
+  const isHbcuTheme = false;
   const hbcuGold = '#FFDF00';
   const hbcuRed = '#8B0000';
   const {

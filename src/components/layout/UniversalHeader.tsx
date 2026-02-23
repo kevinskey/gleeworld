@@ -128,9 +128,9 @@ export const UniversalHeader = ({
     };
   }, [canUseQuickActions, memberQuickActions, addQuickAction, removeQuickAction, reorderQuickActions, isInQuickActions]);
 
-  // Theme-specific styling - use CSS variables from theme system
-  const isHbcuTheme = themeName === 'hbcu';
-  const isSpelmanBlue = themeName === 'spelman-blue';
+  // Single opinionated theme — no conditional styling needed
+  const isHbcuTheme = false;
+  const isSpelmanBlue = false;
 
   // Role-based accent colors for header branding
   const getRoleAccentColor = () => {

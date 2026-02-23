@@ -20,7 +20,6 @@ import {
   Bell, 
   Shield, 
   Settings as SettingsIcon, 
-  Palette,
   Save,
   Globe,
   Moon,
@@ -28,7 +27,6 @@ import {
   Monitor
 } from "lucide-react";
 import { DashboardBackgroundUploader } from "@/components/profile/DashboardBackgroundUploader";
-import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { AnnouncementStyleSelector } from "@/components/settings/AnnouncementStyleSelector";
 
 const settingsSchema = z.object({
@@ -145,7 +143,7 @@ export default function Settings() {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Tabs defaultValue="personal" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="personal" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 Personal
@@ -161,10 +159,6 @@ export default function Settings() {
               <TabsTrigger value="account" className="flex items-center gap-2">
                 <SettingsIcon className="h-4 w-4" />
                 Account
-              </TabsTrigger>
-              <TabsTrigger value="theme" className="flex items-center gap-2">
-                <Palette className="h-4 w-4" />
-                Theme
               </TabsTrigger>
             </TabsList>
 
@@ -521,9 +515,8 @@ export default function Settings() {
               </Card>
             </TabsContent>
 
-            {/* Theme Preferences */}
-            <TabsContent value="theme" className="space-y-6">
-              <ThemeSelector />
+            {/* Announcement Style */}
+            <TabsContent value="account" className="space-y-6">
               <AnnouncementStyleSelector />
             </TabsContent>
           </Tabs>

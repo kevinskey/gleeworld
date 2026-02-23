@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight, X, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useTheme } from "@/contexts/ThemeContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import useEmblaCarousel from 'embla-carousel-react';
 
@@ -31,7 +30,6 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
   const [loading, setLoading] = useState(true);
   const [expandedSlide, setExpandedSlide] = useState<HeroSlide | null>(null);
   const isMobile = useIsMobile();
-  const { themeName } = useTheme();
   
   // Embla carousel with swipe support on all devices
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
@@ -58,11 +56,6 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
     }
   }, [emblaApi, slides]);
   
-  // HBCU theme colors
-  const isHbcuTheme = themeName === 'hbcu';
-  const hbcuGold = '#FFDF00';
-  const hbcuRed = '#8B0000';
-
   useEffect(() => {
     fetchHeroSlides();
   }, []);
@@ -168,8 +161,6 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
                   key={slide.id} 
                   slide={slide} 
                   getImageUrl={getImageUrl}
-                  isHbcuTheme={isHbcuTheme}
-                  hbcuGold={hbcuGold}
                   onClick={handleSlideClick}
                 />
               ))}
@@ -211,8 +202,6 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
                 key={slide.id} 
                 slide={slide} 
                 getImageUrl={getImageUrl}
-                isHbcuTheme={isHbcuTheme}
-                hbcuGold={hbcuGold}
                 onClick={handleSlideClick}
               />
             ))}
@@ -258,14 +247,10 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
 const SlideItem = ({ 
   slide, 
   getImageUrl, 
-  isHbcuTheme, 
-  hbcuGold, 
   onClick 
 }: { 
   slide: HeroSlide; 
   getImageUrl: (slide: HeroSlide) => string;
-  isHbcuTheme: boolean;
-  hbcuGold: string;
   onClick: (slide: HeroSlide, e: React.MouseEvent) => void;
 }) => (
   <div 
@@ -283,7 +268,7 @@ const SlideItem = ({
         {slide.title && (
           <h3 
             className="text-xs sm:text-sm font-serif font-bold mb-0.5 drop-shadow-lg line-clamp-1"
-            style={{ color: isHbcuTheme ? hbcuGold : '#ffffff' }}
+            style={{ color: '#ffffff' }}
           >
             {slide.title}
           </h3>
@@ -291,7 +276,7 @@ const SlideItem = ({
         {slide.description && (
           <p 
             className="text-[9px] sm:text-[10px] line-clamp-1 drop-shadow-md"
-            style={{ color: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.95)', opacity: isHbcuTheme ? 0.9 : 1 }}
+            style={{ color: 'rgba(255,255,255,0.95)' }}
           >
             {slide.description}
           </p>
