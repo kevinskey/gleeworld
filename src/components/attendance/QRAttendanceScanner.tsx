@@ -355,7 +355,16 @@ export const QRAttendanceScanner = () => {
           )}
 
           {scanResult && (
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-2">
+              {!scanResult.success && scanResult.course_id && COURSE_ROUTES[scanResult.course_id] ? (
+                <Button onClick={() => navigate(COURSE_ROUTES[scanResult.course_id!])} className="flex items-center gap-2">
+                  Back to Class
+                </Button>
+              ) : !scanResult.success ? (
+                <Button onClick={() => navigate('/dashboard?module=glee-academy')} className="flex items-center gap-2">
+                  Back to Academy
+                </Button>
+              ) : null}
               <Button onClick={resetScanner} variant="outline">
                 Scan Another Code
               </Button>
