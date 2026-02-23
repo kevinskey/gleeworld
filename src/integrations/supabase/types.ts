@@ -7162,6 +7162,7 @@ export type Database = {
           marked_at: string
           marked_by: string | null
           note: string | null
+          qr_scan_id: string | null
           status: string
           student_profile_id: string
           updated_at: string
@@ -7174,6 +7175,7 @@ export type Database = {
           marked_at?: string
           marked_by?: string | null
           note?: string | null
+          qr_scan_id?: string | null
           status?: string
           student_profile_id: string
           updated_at?: string
@@ -7186,6 +7188,7 @@ export type Database = {
           marked_at?: string
           marked_by?: string | null
           note?: string | null
+          qr_scan_id?: string | null
           status?: string
           student_profile_id?: string
           updated_at?: string
