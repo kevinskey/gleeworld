@@ -31,6 +31,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { AttendanceFullScreenModal } from './AttendanceFullScreenModal';
 import { CourseAttendanceGrid } from './CourseAttendanceGrid';
 
@@ -121,13 +122,10 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
 
       const eventItems: CourseSession[] = (courseEvents || []).map(e => {
         const startDate = typeof e.start_date === 'string' ? e.start_date : '';
-        const dateOnly = startDate.split('T')[0] || startDate.split(' ')[0];
-        // Extract time if present
-        const timePart = startDate.includes('T')
-          ? startDate.split('T')[1]?.substring(0, 5) || ''
-          : startDate.includes(' ')
-            ? startDate.split(' ')[1]?.substring(0, 5) || ''
-            : '';
+        // Convert UTC to Eastern Time for correct display
+        const etZoned = toZonedTime(new Date(startDate), 'America/New_York');
+        const dateOnly = format(etZoned, 'yyyy-MM-dd');
+        const timePart = format(etZoned, 'HH:mm');
         return {
           id: `event::${e.id}`,
           title: e.title,
