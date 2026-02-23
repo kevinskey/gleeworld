@@ -1,0 +1,1 @@
+ALTER TABLE public.gw_attendance_records ADD COLUMN IF NOT EXISTS qr_scan_id uuid;
