@@ -143,7 +143,7 @@ export const TourManagerLanding = ({
       <TourMilestones />
 
       {/* Compact Stats Row */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+      <div className="hidden md:grid grid-cols-6 gap-2">
         {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="text-center p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
             <div className="text-xl font-bold text-foreground">{section.stat}</div>
             <div className="text-[10px] capitalize text-slate-950">{section.statLabel}</div>
