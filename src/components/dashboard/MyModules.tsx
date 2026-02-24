@@ -53,6 +53,28 @@ export const MyModules = ({
     }
   };
 
+  // Color mapping for icon backgrounds
+  const getIconColorClasses = (color: string) => {
+    const colorMap: Record<string, string> = {
+      emerald: 'from-emerald-400 to-emerald-600',
+      pink: 'from-pink-400 to-pink-600',
+      purple: 'from-purple-400 to-purple-600',
+      green: 'from-green-400 to-green-600',
+      teal: 'from-teal-400 to-teal-600',
+      blue: 'from-blue-400 to-blue-600',
+      red: 'from-red-400 to-red-600',
+      orange: 'from-orange-400 to-orange-600',
+      yellow: 'from-yellow-400 to-yellow-600',
+      indigo: 'from-indigo-400 to-indigo-600',
+      cyan: 'from-cyan-400 to-cyan-600',
+      rose: 'from-rose-400 to-rose-600',
+      amber: 'from-amber-400 to-amber-600',
+      gray: 'from-slate-400 to-slate-600',
+      slate: 'from-slate-400 to-slate-600',
+    };
+    return colorMap[color] || 'from-primary/80 to-primary';
+  };
+
   // For super admins, show all modules; for others, show up to 12
   const allModulesWithDetails = accessibleModules.map(module => {
     const unifiedModule = UNIFIED_MODULES.find(u => u.id === module.id);
@@ -147,13 +169,14 @@ export const MyModules = ({
             <div className="grid w-full grid-cols-3 gap-y-6 gap-x-2 justify-items-center py-2">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
+              const colorClasses = getIconColorClasses(module.iconColor);
               return <button 
                   key={module.id} 
                   onClick={() => navigate(module.route)} 
                   className="flex flex-col items-center gap-1.5 group w-20 sm:w-24"
                 >
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary/80 to-primary shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-xl transition-all duration-200">
-                      <IconComponent className="h-7 w-7 sm:h-8 sm:w-8 text-primary-foreground" />
+                    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-[22%] bg-gradient-to-br ${colorClasses} shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
+                      <IconComponent className="h-7 w-7 sm:h-8 sm:w-8 text-white drop-shadow-sm" />
                     </div>
                     <span className="text-[11px] sm:text-xs text-center leading-tight line-clamp-2 text-foreground/80 group-hover:text-foreground transition-colors font-medium">
                       {module.title}
@@ -164,8 +187,8 @@ export const MyModules = ({
                   className="flex flex-col items-center gap-1.5 group w-20 sm:w-24" 
                   onClick={() => navigate('/dashboard?module=admin-settings')}
                 >
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-muted-foreground/60 to-muted-foreground shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-xl transition-all duration-200">
-                    <Settings className="h-7 w-7 sm:h-8 sm:w-8 text-primary-foreground" />
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[22%] bg-gradient-to-br from-slate-400 to-slate-600 shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-xl transition-all duration-200">
+                    <Settings className="h-7 w-7 sm:h-8 sm:w-8 text-white drop-shadow-sm" />
                   </div>
                   <span className="text-[11px] sm:text-xs text-center leading-tight font-medium text-foreground/80 group-hover:text-foreground transition-colors">Admin Settings</span>
                 </button>}
