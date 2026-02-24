@@ -255,49 +255,7 @@ export const TourManagerLanding = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Tour Route Timeline */}
         
-        {/* Key Personnel */}
-        <Card>
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              Key Personnel
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4 pt-0">
-            {keyPersonnel.length === 0 ? <div className="text-center py-6">
-                <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="text-sm text-muted-foreground">No personnel assigned</p>
-                <p className="text-xs mt-1 text-muted-foreground">Configure tour personnel in settings</p>
-              </div> : <div className="grid grid-cols-2 gap-2">
-                {keyPersonnel.map(person => <div key={`${person.role}-${person.name}`} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <Avatar className="h-7 w-7">
-                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                        {person.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium truncate text-foreground">{person.name}</p>
-                      <p className="text-[10px] truncate text-muted-foreground">{person.role}</p>
-                    </div>
-                  </div>)}
-              </div>}
-            
-            {/* Section Leaders */}
-            {sectionLeaders.length > 0 && <div className="mt-3 pt-3 border-t">
-                <p className="text-xs font-medium mb-2">Section Leaders</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {sectionLeaders.map(person => <div key={person.role} className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/30 transition-colors">
-                      <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Music className="h-3 w-3 text-primary" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-medium truncate text-muted-foreground">{person.role}: {person.name}</p>
-                      </div>
-                    </div>)}
-                </div>
-              </div>}
-          </CardContent>
-        </Card>
+        {/* Upcoming Tour Dates */}
         <Card>
           <CardHeader className="py-3 px-4">
             <div className="flex items-center justify-between">
