@@ -297,7 +297,75 @@ export const TourManagerLanding = ({
         </CardContent>
       </Card>
 
-      {/* Tour Roster Collapsible */}
+      {/* Tour Itinerary */}
+      <Collapsible>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <MapPinned className="h-4 w-4 text-primary" />
+                  Tour Itinerary
+                  <Badge variant="secondary" className="text-[10px] ml-1">{tourEvents.length} stops</Badge>
+                </CardTitle>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="px-4 pb-4 pt-0">
+              {tourEvents.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No itinerary events yet</p>
+              ) : (
+                <div className="relative">
+                  {/* Timeline line */}
+                  <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-border" />
+                  <div className="space-y-0">
+                    {tourEvents.map((event, i) => {
+                      const eventDate = new Date(event.start_date);
+                      const isPast = eventDate < new Date();
+                      const isToday = isSameDay(eventDate, new Date());
+                      const typeColors: Record<string, string> = {
+                        performance: 'bg-primary',
+                        travel: 'bg-amber-500',
+                        free: 'bg-emerald-500',
+                        workshop: 'bg-violet-500',
+                      };
+                      const dotColor = typeColors[event.event_type || ''] || 'bg-muted-foreground';
+                      return (
+                        <div key={event.id} className={cn("flex gap-3 py-1.5 pl-0 relative", isPast && !isToday && "opacity-50")}>
+                          <div className={cn("w-[11px] h-[11px] rounded-full flex-shrink-0 mt-1 z-10 ring-2 ring-background", isToday ? "ring-primary bg-primary animate-pulse" : dotColor)} />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
+                                {format(eventDate, 'EEE, MMM d')}
+                              </span>
+                              {isToday && <Badge className="text-[8px] h-4 px-1 bg-primary">Today</Badge>}
+                              {event.event_type && (
+                                <Badge variant="outline" className="text-[8px] h-4 px-1 capitalize">{event.event_type}</Badge>
+                              )}
+                            </div>
+                            <p className="text-xs font-medium text-foreground truncate">{event.title}</p>
+                            {event.location && (
+                              <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 truncate">
+                                <MapPin className="h-2.5 w-2.5 flex-shrink-0" /> {event.location}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <Button variant="ghost" size="sm" className="w-full mt-2 text-xs" onClick={() => onNavigate('tour-dates')}>
+                    Manage Itinerary <ChevronRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
       <Collapsible open={rosterOpen} onOpenChange={setRosterOpen}>
         <Card>
           <CollapsibleTrigger asChild>
