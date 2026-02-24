@@ -248,7 +248,7 @@ export const UniversalHeader = ({
         style={{ top: 'var(--gw-safe-top)' }}
       >
         <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0">
-        <header ref={headerRef} className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative rounded-b-lg bg-[#060e1f] backdrop-blur-md border-b border-white/[0.08] text-white ${user ? getRoleAccentColor() : 'border-b border-white/20'} [&_button:hover]:shadow-[0_0_12px_rgba(56,146,227,0.25)] [&_button]:transition-shadow [&_button]:duration-300`}>
+        <header ref={headerRef} className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative rounded-b-lg bg-[hsl(var(--spelman-navy))] backdrop-blur-md border-b border-white/[0.08] text-white ${user ? getRoleAccentColor() : 'border-b border-white/20'} [&_button:hover]:shadow-[0_0_12px_rgba(56,146,227,0.25)] [&_button]:transition-shadow [&_button]:duration-300`}>
           <div className="flex items-center justify-between w-full min-h-10 sm:min-h-12 md:min-h-10 py-1.5 md:py-1 px-2 sm:px-3 md:px-4 lg:px-6">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 min-w-0">
