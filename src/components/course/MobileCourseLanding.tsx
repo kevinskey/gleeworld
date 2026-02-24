@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp, Mic, MapPin, QrCode } from 'lucide-react';
+import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp, Mic, MapPin } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
@@ -156,14 +156,6 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
 
         <main className="p-4 space-y-4 pb-32">
 
-          {/* Check-In Button */}
-          <Button
-            onClick={() => navigate('/qr-scanner')}
-            className={`w-full h-12 text-base font-semibold shadow-md ${isMus070 ? 'bg-sky-400/20 border border-sky-400/30 text-sky-400 hover:bg-sky-400/30 backdrop-blur-xl' : 'bg-primary hover:bg-primary/90 text-primary-foreground'}`}
-          >
-            <QrCode className="h-5 w-5 mr-2" />
-            Check In
-          </Button>
 
           {/* Listen to Tracks */}
           <div className="relative">
