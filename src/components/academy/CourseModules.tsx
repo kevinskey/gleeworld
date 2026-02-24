@@ -611,10 +611,6 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
   const isLH100 = courseId === LH100_UUID || courseId === 'lh-100';
   const isMUS240 = courseId === MUS240_UUID || courseId === 'mus-240';
 
-  if (isLH100) {
-    return <EditableLH100Modules isEnrolled={isEnrolled} isAdmin={isAdmin} />;
-  }
-
   // Get modules for the specific course - return empty array if not found (only non-MUS240 courses)
   const courseModules = !isMUS240 ? COURSE_MODULES[courseId] || [] : [];
   const [modules, setModules] = useState<WeeklyModule[]>(courseModules);
@@ -748,6 +744,10 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
 
     fetchMUS240Data();
   }, [isMUS240, isAdmin, user]);
+
+  if (isLH100) {
+    return <EditableLH100Modules isEnrolled={isEnrolled} isAdmin={isAdmin} />;
+  }
 
   // Handler to mark a resource as complete/incomplete
   const toggleResourceComplete = async (resourceId: string, moduleId: string, currentlyCompleted: boolean) => {
