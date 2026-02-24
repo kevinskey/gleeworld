@@ -3,10 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink } from 'lucide-react';
+import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isSameDay, isWithinInterval } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { TourMilestones } from './TourMilestones';
 import { TourRouteTimeline } from './TourRouteTimeline';
@@ -47,6 +47,49 @@ export const TourManagerLanding = ({
   const navigate = useNavigate();
   const [contractTourDates, setContractTourDates] = useState<ContractTourDate[]>([]);
   const [tourTitle, setTourTitle] = useState<string | null>(null);
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
+  const [tourEvents, setTourEvents] = useState<{ id: string; title: string; start_date: string; end_date: string | null; location: string | null; venue_name: string | null; event_type: string | null }[]>([]);
+
+  useEffect(() => {
+    const fetchTourEvents = async () => {
+      const { data } = await supabase
+        .from('gw_tour_events')
+        .select('id, title, start_date, end_date, location, venue_name, event_type')
+        .order('start_date', { ascending: true });
+      if (data) setTourEvents(data);
+    };
+    fetchTourEvents();
+  }, []);
+
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekEnd = endOfWeek(weekStart, { weekStartsOn: 0 });
+
+  const getEventsForDay = (day: Date) => {
+    return tourEvents.filter(event => {
+      const eventStart = new Date(event.start_date);
+      if (isSameDay(eventStart, day)) return true;
+      if (event.end_date) {
+        const eventEnd = new Date(event.end_date);
+        return isWithinInterval(day, { start: eventStart, end: eventEnd });
+      }
+      return false;
+    });
+  };
+
+  useEffect(() => {
+    const fetchContractTourDates = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const {
+        data
+      } = await supabase.from('contracts_v2').select('id, title, status, contract_metadata').not('contract_metadata->performance_date', 'is', null).gte('contract_metadata->performance_date', today).in('status', ['completed', 'pending', 'sent']).order('contract_metadata->performance_date', {
+        ascending: true
+      }).limit(5);
+      if (data) {
+        setContractTourDates(data as ContractTourDate[]);
+      }
+    };
+    fetchContractTourDates();
+  }, []);
   const [keyPersonnel, setKeyPersonnel] = useState<KeyPerson[]>([{
     role: 'Tour Manager',
     name: 'Aaliyah Deere',
@@ -65,20 +108,6 @@ export const TourManagerLanding = ({
     rosterCount: stats?.rosterCount ?? 0,
     pendingDocs: stats?.pendingDocs ?? 0
   };
-  useEffect(() => {
-    const fetchContractTourDates = async () => {
-      const today = new Date().toISOString().split('T')[0];
-      const {
-        data
-      } = await supabase.from('contracts_v2').select('id, title, status, contract_metadata').not('contract_metadata->performance_date', 'is', null).gte('contract_metadata->performance_date', today).in('status', ['completed', 'pending', 'sent']).order('contract_metadata->performance_date', {
-        ascending: true
-      }).limit(5);
-      if (data) {
-        setContractTourDates(data as ContractTourDate[]);
-      }
-    };
-    fetchContractTourDates();
-  }, []);
   const sections = [{
     id: 'tour-dates',
     title: 'Dates',
@@ -122,22 +151,94 @@ export const TourManagerLanding = ({
     stat: defaultStats.pendingDocs,
     statLabel: 'pending'
   }];
-  const handleViewCalendar = () => {
-    navigate('/calendar');
-  };
   return <div className="space-y-4">
-      {/* Tour Title & Quick Stats */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-        <div>
-          
-          
-        </div>
-        <Button variant="outline" size="sm" onClick={handleViewCalendar} className="gap-1.5">
-          <CalendarDays className="h-3.5 w-3.5" />
-          View Calendar
-          <ExternalLink className="h-3 w-3" />
-        </Button>
-      </div>
+      {/* Mini Weekly Calendar */}
+      <Card>
+        <CardHeader className="py-3 px-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-primary" />
+              Tour Schedule
+            </CardTitle>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekStart(prev => subWeeks(prev, 1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }))}>
+                Today
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekStart(prev => addWeeks(prev, 1))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {format(weekStart, 'MMM d')} – {format(addDays(weekStart, 6), 'MMM d, yyyy')}
+          </p>
+        </CardHeader>
+        <CardContent className="px-4 pb-4 pt-0">
+          <div className="grid grid-cols-7 gap-1">
+            {weekDays.map(day => {
+              const dayEvents = getEventsForDay(day);
+              const isToday = isSameDay(day, new Date());
+              return (
+                <div key={day.toISOString()} className="flex flex-col items-center">
+                  <span className="text-[10px] uppercase text-muted-foreground font-medium">
+                    {format(day, 'EEE')}
+                  </span>
+                  <div className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium mt-0.5",
+                    isToday ? "bg-primary text-primary-foreground" : "text-foreground",
+                    dayEvents.length > 0 && !isToday && "ring-2 ring-primary/30"
+                  )}>
+                    {format(day, 'd')}
+                  </div>
+                  {dayEvents.length > 0 && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-0.5" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* Events for the week */}
+          {(() => {
+            const allWeekEvents = weekDays.flatMap(day => 
+              getEventsForDay(day).map(e => ({ ...e, displayDate: day }))
+            );
+            // Deduplicate by event id
+            const seen = new Set<string>();
+            const unique = allWeekEvents.filter(e => {
+              if (seen.has(e.id)) return false;
+              seen.add(e.id);
+              return true;
+            });
+            if (unique.length === 0) return (
+              <p className="text-xs text-muted-foreground text-center mt-3">No tour events this week</p>
+            );
+            return (
+              <div className="mt-3 space-y-1.5 border-t pt-3">
+                {unique.slice(0, 4).map(event => (
+                  <div key={event.id} className="flex items-center gap-2 p-1.5 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => onNavigate('tour-dates')}>
+                    <div className="w-1 h-8 rounded-full bg-primary flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium truncate text-foreground">{event.title}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {format(new Date(event.start_date), 'EEE, MMM d · h:mm a')}
+                        {event.venue_name && ` · ${event.venue_name}`}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {unique.length > 4 && (
+                  <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => onNavigate('tour-dates')}>
+                    +{unique.length - 4} more events
+                  </Button>
+                )}
+              </div>
+            );
+          })()}
+        </CardContent>
+      </Card>
 
       {/* Tour Milestones */}
       <TourMilestones />
