@@ -197,6 +197,10 @@ export const TourManagerLanding = ({
     role: 'Tour Manager',
     name: 'Onnesty Peele',
     icon: Users
+  }, {
+    role: 'Tour Manager',
+    name: 'Soleil',
+    icon: Users
   }]);
   const [sectionLeaders, setSectionLeaders] = useState<KeyPerson[]>([]);
   const defaultStats = {
