@@ -104,6 +104,14 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const [loading, setLoading] = useState(true);
 
   const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
+  const isMus070 = course.courseCode === 'MUS 070';
+
+  // Glass card classes for MUS 070 deep-sea theme
+  const glassCard = isMus070 ? 'bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl shadow-none' : '';
+  const glassText = isMus070 ? 'text-white' : 'text-foreground';
+  const glassTextMuted = isMus070 ? 'text-slate-400' : 'text-muted-foreground';
+  const glassBg = isMus070 ? 'bg-white/[0.03]' : 'bg-muted/30';
+  const glassAccent = isMus070 ? 'text-sky-400' : 'text-primary';
 
   // Refetch when user navigates back to this page (location.key changes on navigation)
   useEffect(() => {
@@ -427,7 +435,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative z-10">
       {/* Advertising Hero - Full width above content */}
       <AdvertisingHero className="rounded-xl overflow-hidden" />
       
@@ -437,32 +445,31 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         
         {/* What's Due Next Card - only show if there's a pending/overdue assignment */}
         {urgentAssignment && (
-          <Card className="border-l-4 border-l-primary">
+          <Card className={`${isMus070 ? `${glassCard} border-l-4 border-l-sky-400` : 'border-l-4 border-l-primary'}`}>
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <ClipboardList className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className={`flex items-center gap-2 text-base font-semibold ${glassText}`}>
+                <ClipboardList className={`h-4 w-4 ${glassAccent}`} />
                 What's Due Next
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="p-4 bg-card rounded-lg border space-y-3">
+              <div className={`p-4 rounded-lg border space-y-3 ${isMus070 ? 'bg-white/[0.03] border-white/10' : 'bg-card'}`}>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-lg">{urgentAssignment.title}</h3>
+                      <h3 className={`font-semibold text-lg ${glassText}`}>{urgentAssignment.title}</h3>
                       {getStatusBadge(urgentAssignment.status)}
                     </div>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <p className={`text-sm flex items-center gap-2 ${glassTextMuted}`}>
                       <Calendar className="h-3.5 w-3.5" />
                       Due: {format(new Date(urgentAssignment.due_date), 'MMM d')} · {urgentAssignment.points} pts
                       {urgentAssignment.status === 'overdue' && ' · OVERDUE'}
                     </p>
                   </div>
                   <Button 
-                    className="bg-primary hover:bg-primary/90"
+                    className={isMus070 ? 'bg-white/[0.08] border border-white/10 text-sky-400 hover:bg-white/[0.12]' : 'bg-primary hover:bg-primary/90'}
                     onClick={() => {
                       if (urgentAssignment.is_discussion) {
-                        // Navigate to discussions tab
                         navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=discussions`);
                       } else {
                         navigate(`/grading/student/assignment/${urgentAssignment.id}`);
@@ -507,11 +514,11 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
         {/* Current Module / Week - Only show for MUS 240 which has DB-driven modules */}
         {currentModule && course.courseCode === 'MUS 240' && (
-        <Card>
+        <Card className={glassCard}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <FileText className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className={`flex items-center gap-2 text-base font-semibold ${glassText}`}>
+                <FileText className={`h-4 w-4 ${glassAccent}`} />
                 Current Module / Week
               </CardTitle>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -522,8 +529,8 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
           <CardContent className="space-y-4">
             {/* Module Header */}
             <div>
-              <h3 className="text-xl font-bold">Week {currentModule.week_number}: {currentModule.title}</h3>
-              <div className="flex gap-2 text-sm text-muted-foreground mt-1">
+              <h3 className={`text-xl font-bold ${glassText}`}>Week {currentModule.week_number}: {currentModule.title}</h3>
+              <div className={`flex gap-2 text-sm mt-1 ${glassTextMuted}`}>
                 {currentModule.content_types.map((type, idx) => (
                   <React.Fragment key={type}>
                     {idx > 0 && <span>·</span>}
@@ -581,7 +588,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
             {/* Assignments List */}
             <div className="space-y-3">
-              <h4 className="font-semibold text-base">Assignments</h4>
+              <h4 className={`font-semibold text-base ${glassText}`}>Assignments</h4>
               {assignments.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No assignments yet</p>
               ) : (
@@ -736,10 +743,10 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
       {/* Right Sidebar - 30% */}
       <div className="w-80 flex-shrink-0 space-y-6 hidden lg:block">
         {/* Upcoming Events & Assignments */}
-        <Card>
+        <Card className={glassCard}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className={`text-base font-semibold flex items-center gap-2 ${glassText}`}>
+              <Calendar className={`h-4 w-4 ${glassAccent}`} />
               Upcoming
             </CardTitle>
           </CardHeader>
@@ -813,10 +820,10 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         </Card>
 
         {/* Attendance Summary */}
-        <Card>
+        <Card className={glassCard}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className={`text-base font-semibold flex items-center gap-2 ${glassText}`}>
+              <CheckCircle className={`h-4 w-4 ${glassAccent}`} />
               Attendance
             </CardTitle>
           </CardHeader>

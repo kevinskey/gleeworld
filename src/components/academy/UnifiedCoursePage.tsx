@@ -340,7 +340,24 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   
   return <div className="academy-neutral">
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
-        <div className={`flex ${isMus070Page ? 'bg-[#003666]' : 'bg-background'}`}>
+        <div 
+          className={`flex ${isMus070Page ? '' : 'bg-background'}`}
+          style={isMus070Page ? {
+            background: 'linear-gradient(160deg, #0a1628, #0d1f3c, #081430, #060e1f, #030812)',
+            position: 'relative',
+          } : undefined}
+        >
+          {/* Deep-sea glow orbs & grain for MUS 070 */}
+          {isMus070Page && (
+            <>
+              <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%)' }} />
+                <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[50%] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 70%)' }} />
+                <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.1) 0%, transparent 70%)' }} />
+              </div>
+              <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />
+            </>
+          )}
         {/* Left Sidebar - Navigation - Visible on tablet (md) and up */}
         <div className="w-[216px] md:w-[240px] lg:w-[264px] min-w-[216px] md:min-w-[240px] lg:min-w-[264px] bg-card border-r border-border flex-shrink-0 hidden md:flex md:flex-col h-[calc(100vh-var(--gw-header-h,4rem))]">
           {/* Course Grade Stat - Above Navigation */}
