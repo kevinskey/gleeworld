@@ -354,14 +354,7 @@ export const UnifiedDashboard = () => {
       </div>
 
 
-
-
-      {/* YouTube Channel Slider - white background wrapper */}
-      <div className="px-4 py-2" style={{ backgroundColor: '#ffffff' }}>
-        <YouTubeChannelSlider />
-      </div>
-
-      {/* My Modules - Bottom of Dashboard */}
+      {/* My Modules */}
       {user && <div className="px-4 py-6 bg-primary-foreground">
           <MyModules userProfile={{
         user_id: user.id,
@@ -372,6 +365,11 @@ export const UnifiedDashboard = () => {
         is_super_admin: profile?.is_super_admin
       }} />
         </div>}
+
+      {/* YouTube Channel Slider - white background wrapper */}
+      <div className="px-4 py-2" style={{ backgroundColor: '#ffffff' }}>
+        <YouTubeChannelSlider />
+      </div>
       
       {/* Messages Panel Overlay */}
       {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
