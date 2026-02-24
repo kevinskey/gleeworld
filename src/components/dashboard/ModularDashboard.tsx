@@ -349,7 +349,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({ hideHeader =
                           : 'rounded-lg border border-border bg-background'
                       } ${isMobile ? '' : 'shadow-lg'}`}>
                         <div
-                          className="flex items-center justify-between p-2 border-b cursor-pointer hover:bg-muted/40"
+                          className="flex items-center justify-between p-2 border-b cursor-pointer hover:bg-muted/40 lg:flex hidden"
                           onClick={() => openModule(module.id)}
                         >
                           <div className="flex items-center gap-2">
