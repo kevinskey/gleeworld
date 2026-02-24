@@ -122,6 +122,7 @@ export const TourManagerLanding = ({
       const { data } = await supabase
         .from('budgets')
         .select('id, title, description, total_amount, spent_amount, remaining_amount, budget_type, status, start_date, end_date')
+        .eq('budget_type', 'tour')
         .order('created_at', { ascending: false });
       if (data) setBudgets(data);
     };
