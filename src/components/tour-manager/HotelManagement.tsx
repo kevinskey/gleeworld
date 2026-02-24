@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { HotelDetailView } from './HotelDetailView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,6 +96,7 @@ export const HotelManagement = () => {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState<HotelInfo | null>(null);
+  const [viewingHotel, setViewingHotel] = useState<HotelInfo | null>(null);
   const { toast } = useToast();
 
   // Google search state
@@ -389,6 +391,16 @@ export const HotelManagement = () => {
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
+    );
+  }
+
+  // Show detail view when a hotel is selected
+  if (viewingHotel) {
+    return (
+      <HotelDetailView
+        hotel={viewingHotel}
+        onBack={() => setViewingHotel(null)}
+      />
     );
   }
 
@@ -730,7 +742,7 @@ export const HotelManagement = () => {
       {/* Hotels Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {hotels.map(hotel => (
-          <Card key={hotel.id} className="overflow-hidden">
+          <Card key={hotel.id} className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow" onClick={() => setViewingHotel(hotel)}>
             <CardHeader className="pb-2 bg-primary/5">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
@@ -744,7 +756,7 @@ export const HotelManagement = () => {
                     </Badge>
                   )}
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(hotel)}>
                     <Edit2 className="h-3.5 w-3.5" />
                   </Button>
