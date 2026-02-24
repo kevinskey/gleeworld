@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown, Bus, Building2, FileCheck, Upload, Eye } from 'lucide-react';
+import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown, Bus, Building2, FileCheck, Upload, Eye, Wallet, Plus, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isSameDay, isWithinInterval } from 'date-fns';
@@ -58,9 +58,12 @@ export const TourManagerLanding = ({
   const [rosterOpen, setRosterOpen] = useState(false);
   const [hostsOpen, setHostsOpen] = useState(false);
   const [contractsOpen, setContractsOpen] = useState(false);
+  const [budgetsOpen, setBudgetsOpen] = useState(false);
   const [busOpen, setBusOpen] = useState(false);
   const [hosts, setHosts] = useState<{ id: string; contact_name: string; organization_name: string; contact_phone: string | null; city: string | null; state: string | null; status: string }[]>([]);
   const [contracts, setContracts] = useState<{ id: string; title: string; status: string }[]>([]);
+  const [budgets, setBudgets] = useState<{ id: string; title: string; description: string | null; total_amount: number; spent_amount: number; remaining_amount: number | null; budget_type: string; status: string; start_date: string; end_date: string | null }[]>([]);
+  const [budgetCategories, setBudgetCategories] = useState<{ id: string; budget_id: string; name: string; allocated_amount: number; spent_amount: number; remaining_amount: number | null }[]>([]);
   const [busCompanies, setBusCompanies] = useState<{ id: string; company_name: string; contact_name: string | null; contact_phone: string | null; driver_name: string | null; driver_phone: string | null; contract_pdf_url: string | null }[]>([]);
 
   useEffect(() => {
@@ -115,11 +118,27 @@ export const TourManagerLanding = ({
         .order('company_name');
       if (data) setBusCompanies(data);
     };
+    const fetchBudgets = async () => {
+      const { data } = await supabase
+        .from('budgets')
+        .select('id, title, description, total_amount, spent_amount, remaining_amount, budget_type, status, start_date, end_date')
+        .order('created_at', { ascending: false });
+      if (data) setBudgets(data);
+    };
+    const fetchBudgetCategories = async () => {
+      const { data } = await supabase
+        .from('budget_categories')
+        .select('id, budget_id, name, allocated_amount, spent_amount, remaining_amount')
+        .order('name');
+      if (data) setBudgetCategories(data);
+    };
     fetchTourEvents();
     fetchRoster();
     fetchHosts();
     fetchContracts();
     fetchBusCompanies();
+    fetchBudgets();
+    fetchBudgetCategories();
   }, []);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -536,6 +555,118 @@ export const TourManagerLanding = ({
                   ))}
                   <Button variant="ghost" size="sm" className="w-full mt-1 text-xs" onClick={() => onNavigate('contracts')}>
                     Manage Contracts <ChevronRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Tour Budgets Section */}
+      <Collapsible open={budgetsOpen} onOpenChange={setBudgetsOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-primary" />
+                  Tour Budgets
+                  <Badge variant="secondary" className="text-[10px] ml-1">{budgets.length}</Badge>
+                </CardTitle>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", budgetsOpen && "rotate-180")} />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="px-4 pb-4 pt-0">
+              {budgets.length === 0 ? (
+                <div className="text-center py-4">
+                  <Wallet className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                  <p className="text-sm text-muted-foreground">No budgets created yet</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">Add a main tour budget and sub-budgets for expenses</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {budgets.map(budget => {
+                    const spent = budget.spent_amount || 0;
+                    const total = budget.total_amount || 1;
+                    const remaining = budget.remaining_amount ?? (total - spent);
+                    const percentUsed = Math.min(Math.round((spent / total) * 100), 100);
+                    const categories = budgetCategories.filter(c => c.budget_id === budget.id);
+                    const isOverBudget = remaining < 0;
+
+                    return (
+                      <div key={budget.id} className="p-3 rounded-lg border bg-muted/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="h-4 w-4 text-primary" />
+                            <p className="text-sm font-semibold text-foreground">{budget.title}</p>
+                          </div>
+                          <Badge variant={budget.status === 'active' ? 'default' : 'outline'} className="text-[10px] capitalize">
+                            {budget.status}
+                          </Badge>
+                        </div>
+                        {budget.description && (
+                          <p className="text-[10px] text-muted-foreground mb-2">{budget.description}</p>
+                        )}
+
+                        {/* Budget progress bar */}
+                        <div className="mb-2">
+                          <div className="flex justify-between text-[10px] mb-1">
+                            <span className="text-muted-foreground">Spent: ${spent.toLocaleString()}</span>
+                            <span className="text-muted-foreground">Total: ${total.toLocaleString()}</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className={cn("h-full rounded-full transition-all", isOverBudget ? "bg-destructive" : percentUsed > 80 ? "bg-amber-500" : "bg-primary")}
+                              style={{ width: `${percentUsed}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] mt-1">
+                            <span className={cn("font-medium", isOverBudget ? "text-destructive" : "text-foreground")}>
+                              {isOverBudget ? `Over by $${Math.abs(remaining).toLocaleString()}` : `$${remaining.toLocaleString()} remaining`}
+                            </span>
+                            <span className="text-muted-foreground">{percentUsed}%</span>
+                          </div>
+                        </div>
+
+                        {/* Sub-budget categories */}
+                        {categories.length > 0 && (
+                          <div className="mt-2 pt-2 border-t space-y-1.5">
+                            <p className="text-[10px] font-semibold uppercase text-muted-foreground">Sub-Budgets</p>
+                            {categories.map(cat => {
+                              const catSpent = cat.spent_amount || 0;
+                              const catTotal = cat.allocated_amount || 1;
+                              const catPercent = Math.min(Math.round((catSpent / catTotal) * 100), 100);
+                              return (
+                                <div key={cat.id} className="flex items-center gap-2">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex justify-between text-[10px]">
+                                      <span className="text-foreground font-medium truncate">{cat.name}</span>
+                                      <span className="text-muted-foreground">${catSpent.toLocaleString()} / ${catTotal.toLocaleString()}</span>
+                                    </div>
+                                    <div className="h-1 rounded-full bg-muted overflow-hidden mt-0.5">
+                                      <div className="h-full rounded-full bg-primary/60" style={{ width: `${catPercent}%` }} />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Date range */}
+                        <div className="mt-2 pt-2 border-t flex items-center gap-2 text-[10px] text-muted-foreground">
+                          <CalendarDays className="h-3 w-3" />
+                          {format(new Date(budget.start_date), 'MMM d, yyyy')}
+                          {budget.end_date && ` – ${format(new Date(budget.end_date), 'MMM d, yyyy')}`}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <Button variant="ghost" size="sm" className="w-full mt-1 text-xs" onClick={() => onNavigate('budgets')}>
+                    Manage Budgets <ChevronRight className="h-3 w-3 ml-1" />
                   </Button>
                 </div>
               )}
