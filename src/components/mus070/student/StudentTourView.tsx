@@ -6,7 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { MapPin, Calendar, Clock, Hotel, Music, Bus, Utensils, Users, ChevronRight, Plane } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, isValid, parseISO } from 'date-fns';
+
+const safeFormat = (dateStr: string | null | undefined, fmt: string, fallback = '—') => {
+  if (!dateStr) return fallback;
+  try {
+    const d = typeof dateStr === 'string' && !dateStr.includes('T') ? new Date(dateStr + 'T12:00:00') : new Date(dateStr);
+    return isValid(d) ? format(d, fmt) : fallback;
+  } catch { return fallback; }
+};
 
 interface TourCity {
   id: string;
@@ -153,7 +161,7 @@ export const StudentTourView: React.FC = () => {
           <div>
             <h2 className="text-2xl font-bold">{tour.name}</h2>
             <p className="text-primary-foreground/80 mt-1">
-              {format(new Date(tour.start_date), 'MMMM d')} – {format(new Date(tour.end_date), 'MMMM d, yyyy')}
+              {safeFormat(tour.start_date, 'MMMM d')} – {safeFormat(tour.end_date, 'MMMM d, yyyy')}
             </p>
           </div>
           <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-sm">
@@ -205,7 +213,7 @@ export const StudentTourView: React.FC = () => {
                           {city.city_name}, {city.state_code}
                         </CardTitle>
                         <p className="text-xs text-foreground/70">
-                          {format(new Date(city.arrival_date + 'T12:00:00'), 'EEEE, MMMM d')}
+                          {safeFormat(city.arrival_date, 'EEEE, MMMM d')}
                         </p>
                       </div>
                     </div>
@@ -235,7 +243,7 @@ export const StudentTourView: React.FC = () => {
                           )}
                           <p className="text-xs text-foreground/70 flex items-center gap-1 mt-0.5">
                             <Clock className="h-3 w-3" />
-                            {format(new Date(event.start_date), 'h:mm a')} – {format(new Date(event.end_date), 'h:mm a')}
+                            {safeFormat(event.start_date, 'h:mm a')} – {safeFormat(event.end_date, 'h:mm a')}
                           </p>
                         </div>
                         <Badge variant="outline" className="text-xs shrink-0">{cfg.label}</Badge>
