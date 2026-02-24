@@ -1,0 +1,20 @@
+-- Add travel logistics and concert detail columns to gw_tour_events
+ALTER TABLE public.gw_tour_events
+  ADD COLUMN IF NOT EXISTS concert_type TEXT,
+  ADD COLUMN IF NOT EXISTS concert_time TEXT,
+  ADD COLUMN IF NOT EXISTS travel_from TEXT,
+  ADD COLUMN IF NOT EXISTS travel_to TEXT,
+  ADD COLUMN IF NOT EXISTS travel_distance_miles NUMERIC,
+  ADD COLUMN IF NOT EXISTS travel_duration_hours NUMERIC,
+  ADD COLUMN IF NOT EXISTS departure_time TIMESTAMP WITH TIME ZONE,
+  ADD COLUMN IF NOT EXISTS arrival_time TIMESTAMP WITH TIME ZONE,
+  ADD COLUMN IF NOT EXISTS bus_company_id UUID REFERENCES public.gw_tour_bus_companies(id),
+  ADD COLUMN IF NOT EXISTS driver_notes TEXT,
+  ADD COLUMN IF NOT EXISTS driver_hours_before NUMERIC DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS host_phone TEXT,
+  ADD COLUMN IF NOT EXISTS host_email TEXT,
+  ADD COLUMN IF NOT EXISTS lodging_name TEXT,
+  ADD COLUMN IF NOT EXISTS lodging_address TEXT,
+  ADD COLUMN IF NOT EXISTS lodging_phone TEXT,
+  ADD COLUMN IF NOT EXISTS meal_info TEXT,
+  ADD COLUMN IF NOT EXISTS notes TEXT;
