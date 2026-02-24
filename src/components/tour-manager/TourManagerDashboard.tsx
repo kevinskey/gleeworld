@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid, ArrowLeft } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -295,9 +295,19 @@ export const TourManagerDashboard = ({
             <span className="text-xs hidden sm:inline text-primary-foreground/70">—</span>
             <span className="text-xs hidden sm:inline truncate text-primary-foreground/70">{currentContent.description}</span>
           </div>
-          <div className="relative w-96 hidden md:block">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder="Search" className="pl-8 h-8 text-sm bg-background border focus-visible:ring-1" />
+          <div className="flex items-center gap-2">
+            <div className="relative w-96 hidden md:block">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input placeholder="Search" className="pl-8 h-8 text-sm bg-background border focus-visible:ring-1" />
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden h-8 w-8 text-primary-foreground"
+              onClick={() => navigate('/dashboard')}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
           </div>
         </div>
       </header>
