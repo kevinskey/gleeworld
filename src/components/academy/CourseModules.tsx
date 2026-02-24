@@ -618,8 +618,8 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
   // Get modules for the specific course - return empty array if not found (only non-MUS240 courses)
   const courseModules = !isMUS240 ? COURSE_MODULES[courseId] || [] : [];
   const [modules, setModules] = useState<WeeklyModule[]>(courseModules);
-  // Default to collapsed on mobile, expanded on desktop
-  const [expandedWeeks, setExpandedWeeks] = useState<string[]>(isMobile ? [] : ['week-1', 'week-2']);
+  // Default to collapsed state
+  const [expandedWeeks, setExpandedWeeks] = useState<string[]>([]);
   const [loading, setLoading] = useState(isMUS240);
   const [studentProgress, setStudentProgress] = useState<Set<string>>(new Set());
   const [selectedResource, setSelectedResource] = useState<{
