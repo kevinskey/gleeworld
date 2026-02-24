@@ -29,7 +29,7 @@ const GW_TOKENS = {
   '--card':                   '220 35% 12%',
   '--card-foreground':        '0 0% 96%',
   '--muted':                  '220 30% 16%',
-  '--muted-foreground':       '0 0% 70%',
+  '--muted-foreground':       '0 0% 82%',
   '--border':                 '220 20% 22%',
   '--destructive':            '0 84% 60%',
   '--destructive-foreground': '0 0% 100%',
