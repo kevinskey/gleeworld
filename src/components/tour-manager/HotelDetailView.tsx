@@ -26,6 +26,7 @@ import {
   Dumbbell,
   Calendar,
   Globe,
+  Bed,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -85,6 +86,8 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
   const [nearbyPlaces, setNearbyPlaces] = useState<Record<string, NearbyPlace[]>>({});
   const [loadingNearby, setLoadingNearby] = useState(false);
   const [nearbyError, setNearbyError] = useState<string | null>(null);
+  const [roomAssignments, setRoomAssignments] = useState<any[]>([]);
+  const [roomAssignmentsLoading, setRoomAssignmentsLoading] = useState(true);
   const [mapsApiKey, setMapsApiKey] = useState<string | null>(null);
   const [mapsKeyLoading, setMapsKeyLoading] = useState(true);
 
@@ -103,6 +106,46 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
     };
     fetchMapsKey();
   }, []);
+
+  // Fetch room assignments for this hotel
+  useEffect(() => {
+    const fetchRoomAssignments = async () => {
+      if (!hotel?.id) {
+        setRoomAssignmentsLoading(false);
+        return;
+      }
+      try {
+        const { data: roomData, error: roomError } = await supabase
+          .from('gw_room_assignments')
+          .select('id, room_number, room_type, max_occupants, floor')
+          .eq('hotel_id', hotel.id)
+          .order('room_number');
+
+        if (roomError) throw roomError;
+
+        if (roomData && roomData.length > 0) {
+          const roomIds = roomData.map(r => r.id);
+          const { data: occData } = await supabase
+            .from('gw_room_occupants')
+            .select('room_assignment_id, user_id')
+            .in('room_assignment_id', roomIds);
+
+          const enriched = roomData.map(room => ({
+            ...room,
+            occupantCount: occData?.filter(o => o.room_assignment_id === room.id).length || 0,
+          }));
+          setRoomAssignments(enriched);
+        } else {
+          setRoomAssignments([]);
+        }
+      } catch (err) {
+        console.error('Error fetching room assignments:', err);
+      } finally {
+        setRoomAssignmentsLoading(false);
+      }
+    };
+    fetchRoomAssignments();
+  }, [hotel?.id]);
 
   // We need lat/lng. The gw_tour_hotels table might not store them yet,
   // so we'll use the hotel's city for a geocode fallback via the search-hotels function.
@@ -283,29 +326,70 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
             <CardTitle className="text-sm sm:text-base">Rooms & Amenities</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-3 sm:pb-6">
-            {/* Room Info */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              {hotel.room_count && (
+            {/* Room Stats from Assignments */}
+            {roomAssignmentsLoading ? (
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <Skeleton className="h-20 rounded-lg" />
+                <Skeleton className="h-20 rounded-lg" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="bg-primary/5 rounded-lg p-2.5 sm:p-3 text-center">
+                  <Bed className="h-4 w-4 sm:h-5 sm:w-5 text-primary mx-auto mb-1" />
+                  <p className="text-base sm:text-lg font-bold">
+                    {roomAssignments.length > 0 ? roomAssignments.length : (hotel.room_count || 0)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {roomAssignments.length > 0 ? 'Rooms Assigned' : 'Rooms'}
+                  </p>
+                </div>
                 <div className="bg-primary/5 rounded-lg p-2.5 sm:p-3 text-center">
                   <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary mx-auto mb-1" />
-                  <p className="text-base sm:text-lg font-bold">{hotel.room_count}</p>
-                  <p className="text-xs text-muted-foreground">Rooms</p>
+                  <p className="text-base sm:text-lg font-bold">
+                    {roomAssignments.reduce((sum, r) => sum + r.occupantCount, 0)}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      /{roomAssignments.reduce((sum, r) => sum + r.max_occupants, 0) || '—'}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">Occupants</p>
                 </div>
-              )}
-              {hotel.room_rate && (
-                <div className="bg-primary/5 rounded-lg p-2.5 sm:p-3 text-center">
-                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-primary mx-auto mb-1" />
-                  <p className="text-base sm:text-lg font-bold">${hotel.room_rate}</p>
-                  <p className="text-xs text-muted-foreground">Per Night</p>
+                {hotel.room_rate && (
+                  <div className="bg-primary/5 rounded-lg p-2.5 sm:p-3 text-center">
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-primary mx-auto mb-1" />
+                    <p className="text-base sm:text-lg font-bold">${hotel.room_rate}</p>
+                    <p className="text-xs text-muted-foreground">Per Night</p>
+                  </div>
+                )}
+                {hotel.total_cost && (
+                  <div className="bg-accent/10 rounded-lg p-2.5 sm:p-3 text-center">
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-primary mx-auto mb-1" />
+                    <p className="text-base sm:text-lg font-bold text-primary">${hotel.total_cost.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">Est. Total</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Room Breakdown */}
+            {roomAssignments.length > 0 && (
+              <div>
+                <p className="text-sm font-medium mb-2">Room Breakdown</p>
+                <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
+                  {roomAssignments.map(room => (
+                    <div key={room.id} className="flex items-center justify-between text-xs sm:text-sm p-1.5 sm:p-2 rounded bg-muted/30">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Bed className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                        <span className="truncate">Room {room.room_number}</span>
+                        <Badge variant="outline" className="text-[10px] px-1 h-4 capitalize">{room.room_type}</Badge>
+                      </div>
+                      <span className="text-muted-foreground shrink-0">
+                        {room.occupantCount}/{room.max_occupants}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              )}
-              {hotel.total_cost && (
-                <div className="bg-accent/10 rounded-lg p-2.5 sm:p-3 text-center col-span-2">
-                  <p className="text-xs text-muted-foreground">Estimated Total</p>
-                  <p className="text-lg sm:text-xl font-bold text-primary">${hotel.total_cost.toLocaleString()}</p>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Amenities */}
             {hotel.amenities && hotel.amenities.length > 0 && (
