@@ -358,7 +358,7 @@ export const UnifiedDashboard = () => {
 
 
       {/* My Modules */}
-      {user && <div className="px-4 py-6 bg-primary-foreground">
+      {user && <div className="px-0 sm:px-4 py-6 bg-primary-foreground">
           <MyModules userProfile={{
         user_id: user.id,
         role: profile?.role,
