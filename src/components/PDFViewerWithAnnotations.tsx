@@ -267,8 +267,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     // Allow multi-touch gestures (pinch zoom) to pass through
     if (e.touches.length > 1) return;
     
-    // Don't handle navigation when in annotation mode or on scrollable areas
-    if (annotationMode) return;
+    // Don't handle navigation when actively drawing in annotation mode
+    if (annotationMode && activeTool !== "select") return;
     
     // Don't track touch if it's on a button or interactive element
     const target = e.target as HTMLElement;
@@ -284,7 +284,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       time: Date.now()
     });
     setTouchEnd(null);
-  }, [annotationMode]);
+  }, [annotationMode, activeTool]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     // Allow multi-touch gestures (pinch zoom) to pass through
@@ -302,8 +302,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (!touchStart) return;
-    // Don't handle navigation when in annotation mode
-    if (annotationMode) return;
+    // Don't handle navigation when actively drawing in annotation mode
+    if (annotationMode && activeTool !== "select") return;
 
     // Don't prevent default if touching a button or interactive element
     const target = e.target as HTMLElement;
@@ -1343,6 +1343,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                       e.preventDefault();
                       e.stopPropagation();
                       handleStart(e);
+                    } else {
+                      // In select mode, track touch for tap-to-navigate
+                      handleTouchStart(e);
                     }
                   }}
                   onTouchMove={(e) => {
@@ -1355,6 +1358,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                       e.preventDefault();
                       e.stopPropagation();
                       handleMove(e);
+                    } else if (activeTool === "select") {
+                      handleTouchMove(e);
                     }
                   }}
                   onTouchEnd={(e) => {
@@ -1363,6 +1368,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                       e.preventDefault();
                       e.stopPropagation();
                       handleEnd();
+                    } else {
+                      // In select mode, handle tap-to-navigate
+                      handleTouchEnd(e);
                     }
                   }}
                   onTouchCancel={() => {
