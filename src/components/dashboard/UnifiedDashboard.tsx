@@ -25,12 +25,12 @@ import { YouTubeChannelSlider } from './YouTubeChannelSlider';
 import { OfficeHoursWidget } from './OfficeHoursWidget';
 
 // Lazy load heavy components
-const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then(m => ({
+const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then((m) => ({
   default: m.MemberNavigation
 })));
 
 // Lazy load role-based module cards
-const GleeAcademyDashboardCard = lazy(() => import('@/components/user-dashboard/GleeAcademyDashboardCard').then(m => ({
+const GleeAcademyDashboardCard = lazy(() => import('@/components/user-dashboard/GleeAcademyDashboardCard').then((m) => ({
   default: m.GleeAcademyDashboardCard
 })));
 export const UnifiedDashboard = () => {
@@ -55,7 +55,7 @@ export const UnifiedDashboard = () => {
   useEffect(() => {
     if (profileLoading || !profile) return;
     const isLeadership = profile.is_super_admin || profile.is_admin || profile.is_exec_board ||
-      profile.role === 'super-admin' || profile.role === 'admin';
+    profile.role === 'super-admin' || profile.role === 'admin';
     if (profile.role === 'student' && !isLeadership) {
       navigate('/course-selection', { replace: true });
     }
@@ -69,7 +69,7 @@ export const UnifiedDashboard = () => {
 
   // Listen for toggle-messages event from UniversalHeader
   useEffect(() => {
-    const handleToggleMessages = () => setShowMessages(prev => !prev);
+    const handleToggleMessages = () => setShowMessages((prev) => !prev);
     window.addEventListener('toggle-messages', handleToggleMessages);
     return () => window.removeEventListener('toggle-messages', handleToggleMessages);
   }, []);
@@ -162,13 +162,13 @@ export const UnifiedDashboard = () => {
     const hideBackButton = activeModuleId === 'tour-management';
     return <div className="min-h-screen">
         <div className={hideBackButton ? '' : 'px-1 py-1 sm:px-6 sm:py-4'}>
-          {!hideBackButton && (
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="mb-2 sm:mb-4 hover:bg-primary/10">
+          {!hideBackButton &&
+        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="mb-2 sm:mb-4 hover:bg-primary/10">
               <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Back to Dashboard</span>
               <span className="sm:hidden">Back</span>
             </Button>
-          )}
+        }
           <ModuleDisplay selectedModule={activeModuleId} />
         </div>
         {showMemberNav && profile && <div className="px-1 sm:px-6 pb-4 sm:pb-8">
@@ -355,7 +355,7 @@ export const UnifiedDashboard = () => {
       </div>
 
       {/* My Modules */}
-      {user && <div className="px-0 sm:px-4 py-6">
+      {user && <div className="px-0 sm:px-4 py-6 rounded-none">
           <MyModules userProfile={{
         user_id: user.id,
         role: profile?.role,
