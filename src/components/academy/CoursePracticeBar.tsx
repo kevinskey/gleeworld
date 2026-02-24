@@ -211,30 +211,30 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
         className
       )}>
         {/* Row 1: Course Identity + Now Playing */}
-        <div className="px-3 sm:px-4 py-2.5 border-b border-border/50 bg-muted/30">
-          <div className="flex items-center gap-3">
+        <div className="px-3 sm:px-4 py-1.5 sm:py-2.5 border-b border-border/50 bg-muted/30">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Course Badge */}
             <Badge variant="secondary" className="font-mono text-xs shrink-0">
               {courseCode}
             </Badge>
 
             {/* Album Art & Track Info */}
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0 border border-border/50">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0 border border-border/50">
                 {currentTrack ? (
-                  <Music className="h-5 w-5 text-primary" />
+                  <Music className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 ) : (
-                  <BookOpen className="h-5 w-5 text-muted-foreground" />
+                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                 )}
               </div>
               
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">
+                <p className="text-xs sm:text-sm font-medium text-foreground truncate">
                   {currentTrack?.track_data?.title 
                     ? cleanDisplayTitle(currentTrack.track_data.title) 
                     : 'Course Listening & Practice Engine'}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
                   {currentTrack ? (
                     <>
                       <span className="truncate">
@@ -272,8 +272,8 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
         </div>
 
         {/* Row 2: Transport + Waveform + Tools */}
-        <div className="px-3 sm:px-4 py-2 bg-card">
-          <div className="flex items-center gap-2 sm:gap-3">
+        <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-card">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             {/* Modules Button */}
             <CourseModulesSheet courseId={courseId} courseCode={courseCode} />
 
@@ -292,7 +292,7 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
               <Button
                 variant="default"
                 size="icon"
-                className="h-10 w-10 rounded-md shadow-sm"
+                className="h-8 w-8 sm:h-10 sm:w-10 rounded-md shadow-sm"
                 onClick={currentTrack ? togglePlay : handleFirstPlay}
                 disabled={tracks.length === 0}
               >

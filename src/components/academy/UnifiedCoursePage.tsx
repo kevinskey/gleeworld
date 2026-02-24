@@ -409,6 +409,19 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
+          {/* Breadcrumb Navigation */}
+          <div className="px-3 sm:px-4 md:px-6 py-2 border-b border-border/50 bg-muted/30 flex items-center gap-2 text-sm">
+            <button 
+              onClick={() => navigate('/course-selection')}
+              className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>My Courses</span>
+            </button>
+            <span className="text-muted-foreground/50">/</span>
+            <span className="text-foreground font-medium truncate">{course.title}</span>
+          </div>
+
           {/* Course Practice Bar - Integrated Listening & Practice Engine */}
           <CoursePracticeBar
             courseId={course.id}
