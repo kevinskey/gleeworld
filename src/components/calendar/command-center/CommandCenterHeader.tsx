@@ -46,8 +46,8 @@ export const CommandCenterHeader = ({
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <div className="min-w-[120px] text-center">
-                <h1 className="text-base font-bold tracking-tight">
+              <div className="min-w-[130px] text-center">
+                <h1 className="text-lg font-bold tracking-tight uppercase">
                   {format(currentDate, 'MMM yyyy')}
                 </h1>
               </div>
