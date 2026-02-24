@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isSameDay, isWithinInterval } from 'date-fns';
@@ -49,6 +50,8 @@ export const TourManagerLanding = ({
   const [tourTitle, setTourTitle] = useState<string | null>(null);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [tourEvents, setTourEvents] = useState<{ id: string; title: string; start_date: string; end_date: string | null; location: string | null; venue_name: string | null; event_type: string | null }[]>([]);
+  const [rosterMembers, setRosterMembers] = useState<{ id: string; full_name: string; voice_part: string | null; status: string }[]>([]);
+  const [rosterOpen, setRosterOpen] = useState(false);
 
   useEffect(() => {
     const fetchTourEvents = async () => {
@@ -58,7 +61,23 @@ export const TourManagerLanding = ({
         .order('start_date', { ascending: true });
       if (data) setTourEvents(data);
     };
+    const fetchRoster = async () => {
+      const { data } = await supabase
+        .from('gw_tour_roster')
+        .select('id, status, user_id, gw_profiles(full_name, voice_part)')
+        .eq('status', 'confirmed')
+        .order('created_at', { ascending: true });
+      if (data) {
+        setRosterMembers(data.map((r: any) => ({
+          id: r.id,
+          full_name: r.gw_profiles?.full_name || 'Unknown',
+          voice_part: r.gw_profiles?.voice_part || null,
+          status: r.status,
+        })));
+      }
+    };
     fetchTourEvents();
+    fetchRoster();
   }, []);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -240,7 +259,82 @@ export const TourManagerLanding = ({
         </CardContent>
       </Card>
 
-      {/* Tour Milestones */}
+      {/* Tour Roster Collapsible */}
+      <Collapsible open={rosterOpen} onOpenChange={setRosterOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  Tour Roster
+                  <Badge variant="secondary" className="text-[10px] ml-1">{rosterMembers.length}</Badge>
+                </CardTitle>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", rosterOpen && "rotate-180")} />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="px-4 pb-4 pt-0">
+              {rosterMembers.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No confirmed roster members</p>
+              ) : (
+                <>
+                  {/* Group by voice part */}
+                  {(['S1', 'S2', 'A1', 'A2'] as const).map(part => {
+                    const members = rosterMembers.filter(m => m.voice_part === part);
+                    if (members.length === 0) return null;
+                    return (
+                      <div key={part} className="mb-3 last:mb-0">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1.5">{part} · {members.length}</p>
+                        <div className="grid grid-cols-2 gap-1">
+                          {members.map(m => (
+                            <div key={m.id} className="flex items-center gap-1.5 p-1 rounded-md">
+                              <Avatar className="h-5 w-5">
+                                <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+                                  {m.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs truncate text-foreground">{m.full_name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {/* Unassigned */}
+                  {(() => {
+                    const unassigned = rosterMembers.filter(m => !m.voice_part || !['S1','S2','A1','A2'].includes(m.voice_part));
+                    if (unassigned.length === 0) return null;
+                    return (
+                      <div className="mb-3 last:mb-0">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1.5">Unassigned · {unassigned.length}</p>
+                        <div className="grid grid-cols-2 gap-1">
+                          {unassigned.map(m => (
+                            <div key={m.id} className="flex items-center gap-1.5 p-1 rounded-md">
+                              <Avatar className="h-5 w-5">
+                                <AvatarFallback className="text-[8px] bg-muted text-muted-foreground">
+                                  {m.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs truncate text-foreground">{m.full_name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  <Button variant="ghost" size="sm" className="w-full mt-2 text-xs" onClick={() => onNavigate('roster')}>
+                    Manage Roster
+                    <ChevronRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
       <TourMilestones />
 
       {/* Compact Stats Row */}
