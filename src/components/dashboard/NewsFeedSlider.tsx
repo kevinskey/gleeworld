@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { Newspaper, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,8 +14,6 @@ interface NewsItem {
 }
 
 export const NewsFeedSlider: React.FC = () => {
-  const [isPaused, setIsPaused] = useState(false);
-
   const { data: newsItems, isLoading } = useQuery({
     queryKey: ['news-feed'],
     queryFn: async () => {
@@ -24,14 +22,9 @@ export const NewsFeedSlider: React.FC = () => {
       if (!data?.success) throw new Error(data?.error || 'Failed to fetch news');
       return data.items as NewsItem[];
     },
-    staleTime: 1000 * 60 * 15, // 15 minutes
+    staleTime: 1000 * 60 * 15,
     refetchInterval: 1000 * 60 * 15,
   });
-
-  const duplicatedItems = useMemo(() => {
-    if (!newsItems || newsItems.length === 0) return [];
-    return [...newsItems, ...newsItems, ...newsItems];
-  }, [newsItems]);
 
   const formatTimeAgo = (dateStr: string) => {
     if (!dateStr) return '';
@@ -51,8 +44,6 @@ export const NewsFeedSlider: React.FC = () => {
     }
   };
 
-  const animationDuration = newsItems ? Math.max(newsItems.length * 6, 20) : 20;
-
   return (
     <div className="w-full">
       {/* Header */}
@@ -64,50 +55,35 @@ export const NewsFeedSlider: React.FC = () => {
         News Feed
       </div>
 
-      {/* News Slider */}
-      <div
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
-        className="bg-gradient-to-b from-[hsl(220,40%,10%)] to-[hsl(220,40%,8%)]"
-      >
+      {/* Swipeable News Slider */}
+      <div className="bg-gradient-to-b from-[hsl(220,40%,10%)] to-[hsl(220,40%,8%)]">
         {isLoading ? (
           <div className="flex gap-4 px-5 py-4">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="flex-shrink-0 w-72 sm:w-80 lg:w-96 h-48 bg-white/10 rounded-lg animate-pulse"
-              />
+              <div key={i} className="flex-shrink-0 w-72 sm:w-80 lg:w-96 h-48 bg-white/10 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : newsItems && newsItems.length > 0 ? (
           <div
-            className="flex gap-4 pl-5 py-4"
-            style={{
-              animation: `newsScrollInfinite ${animationDuration}s linear infinite`,
-              animationPlayState: isPaused ? 'paused' : 'running',
-            }}
+            className="flex gap-4 px-5 py-4 overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
           >
-            {duplicatedItems.map((item, index) => (
+            {newsItems.map((item, index) => (
               <a
                 key={`${item.link}-${index}`}
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-shrink-0 group text-left block"
+                className="flex-shrink-0 snap-start group text-left block"
               >
                 <div className="relative w-72 sm:w-80 lg:w-96 rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all shadow-lg bg-[hsl(220,35%,12%)]">
-                  {/* Image */}
                   {item.imageUrl ? (
                     <div className="w-full h-36 overflow-hidden">
                       <img
                         src={item.imageUrl}
                         alt=""
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                     </div>
                   ) : (
@@ -115,8 +91,6 @@ export const NewsFeedSlider: React.FC = () => {
                       <Newspaper className="h-12 w-12 text-white/20" />
                     </div>
                   )}
-
-                  {/* Content */}
                   <div className="p-3">
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <span className="text-sm">{item.sourceIcon}</span>
@@ -124,9 +98,7 @@ export const NewsFeedSlider: React.FC = () => {
                       {item.pubDate && (
                         <>
                           <span className="text-white/30">·</span>
-                          <span className="text-[11px] text-white/40">
-                            {formatTimeAgo(item.pubDate)}
-                          </span>
+                          <span className="text-[11px] text-white/40">{formatTimeAgo(item.pubDate)}</span>
                         </>
                       )}
                       <ExternalLink className="h-3 w-3 text-white/30 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -135,9 +107,7 @@ export const NewsFeedSlider: React.FC = () => {
                       {item.title}
                     </h3>
                     {item.description && (
-                      <p className="text-[11px] text-white/40 mt-1 line-clamp-1">
-                        {item.description}
-                      </p>
+                      <p className="text-[11px] text-white/40 mt-1 line-clamp-1">{item.description}</p>
                     )}
                   </div>
                 </div>
@@ -148,14 +118,6 @@ export const NewsFeedSlider: React.FC = () => {
           <div className="text-white/60 text-sm py-4 px-5">No news available</div>
         )}
       </div>
-
-      {/* Infinite scroll keyframes */}
-      <style>{`
-        @keyframes newsScrollInfinite {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-33.33%); }
-        }
-      `}</style>
     </div>
   );
 };
