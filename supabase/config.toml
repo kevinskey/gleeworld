@@ -417,3 +417,6 @@ verify_jwt = false
 
 [functions.office-hours-action]
 verify_jwt = false
+
+[functions.fetch-news-feeds]
+verify_jwt = false
