@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown, Bus, Building2, FileCheck, Upload, Eye, Wallet, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown, Bus, Building2, FileCheck, Upload, Eye, Wallet, Plus, Pencil, Trash2, AlertTriangle, Hotel } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isSameDay, isWithinInterval } from 'date-fns';
@@ -65,6 +65,7 @@ export const TourManagerLanding = ({
   const [budgets, setBudgets] = useState<{ id: string; title: string; description: string | null; total_amount: number; spent_amount: number; remaining_amount: number | null; budget_type: string; status: string; start_date: string; end_date: string | null }[]>([]);
   const [budgetCategories, setBudgetCategories] = useState<{ id: string; budget_id: string; name: string; allocated_amount: number; spent_amount: number; remaining_amount: number | null }[]>([]);
   const [busCompanies, setBusCompanies] = useState<{ id: string; company_name: string; contact_name: string | null; contact_phone: string | null; driver_name: string | null; driver_phone: string | null; contract_pdf_url: string | null }[]>([]);
+  const [citiesWithoutHotels, setCitiesWithoutHotels] = useState<{ id: string; city_name: string; state_code: string | null; arrival_date: string | null }[]>([]);
 
   useEffect(() => {
     const fetchTourEvents = async () => {
@@ -133,6 +134,22 @@ export const TourManagerLanding = ({
         .order('name');
       if (data) setBudgetCategories(data);
     };
+    const fetchHotelGaps = async () => {
+      // Get all tour cities
+      const { data: cities } = await supabase
+        .from('gw_tour_cities')
+        .select('id, city_name, state_code, arrival_date')
+        .order('arrival_date', { ascending: true });
+      if (!cities || cities.length === 0) return;
+      // Get all hotels linked to cities
+      const { data: hotels } = await supabase
+        .from('gw_tour_hotels')
+        .select('tour_city_id')
+        .not('tour_city_id', 'is', null);
+      const coveredCityIds = new Set((hotels || []).map(h => h.tour_city_id));
+      const gaps = cities.filter(c => !coveredCityIds.has(c.id));
+      setCitiesWithoutHotels(gaps);
+    };
     fetchTourEvents();
     fetchRoster();
     fetchHosts();
@@ -140,6 +157,7 @@ export const TourManagerLanding = ({
     fetchBusCompanies();
     fetchBudgets();
     fetchBudgetCategories();
+    fetchHotelGaps();
   }, []);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -320,6 +338,39 @@ export const TourManagerLanding = ({
           })()}
         </CardContent>
       </Card>
+
+      {/* Hotel Coverage Alert */}
+      {citiesWithoutHotels.length > 0 && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-4 w-4" />
+              Hotel Coverage Gap — {citiesWithoutHotels.length} {citiesWithoutHotels.length === 1 ? 'city' : 'cities'} without hotels
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="space-y-1.5">
+              {citiesWithoutHotels.map(city => (
+                <div key={city.id} className="flex items-center justify-between p-2 rounded-md bg-background border border-border">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Hotel className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                    <span className="text-xs font-medium text-foreground truncate">
+                      {city.city_name}{city.state_code ? `, ${city.state_code}` : ''}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
+                    {city.arrival_date ? format(new Date(city.arrival_date + 'T12:00:00'), 'MMM d') : 'No date'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <Button variant="outline" size="sm" className="w-full mt-3 text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10" onClick={() => onNavigate('hotels')}>
+              <Plus className="h-3 w-3" />
+              Assign Hotels
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tour Itinerary */}
       <Collapsible>
