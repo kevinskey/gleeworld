@@ -79,6 +79,7 @@ import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
 import DocsArchitecture from "./pages/DocsArchitecture";
 import SavedFeed from "./pages/SavedFeed";
+import FeedControl from "./pages/FeedControl";
 import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
 import TestBuilderPage from "./pages/mus240/TestBuilderPage";
 import TestBuilderEdit from "./pages/TestBuilderEdit";
@@ -1890,6 +1891,16 @@ const App = () => {
                                     element={
                                       <ProtectedRoute>
                                         <PRHubPage />
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                                  <Route 
+                                    path="/feed-control" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <UniversalLayout>
+                                          <FeedControl />
+                                        </UniversalLayout>
                                       </ProtectedRoute>
                                     } 
                                   />
