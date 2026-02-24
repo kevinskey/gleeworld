@@ -166,7 +166,7 @@ export const MyModules = ({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div className="grid w-full grid-cols-3 gap-y-6 gap-x-2 justify-items-center py-2">
+            <div className="grid w-full grid-cols-3 sm:grid-cols-4 gap-y-5 gap-x-1 justify-items-center py-2">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
               const colorClasses = getIconColorClasses(module.iconColor);
