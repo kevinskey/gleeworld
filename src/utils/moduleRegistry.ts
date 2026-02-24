@@ -256,3 +256,18 @@ ModuleRegistry.registerModule({
   component: CourseAttendanceLedger,
   requiredPermissions: ['admin', 'super-admin', 'exec-board', 'secretary']
 });
+
+// Register Feed Control
+import FeedControl from '@/pages/FeedControl';
+import { Rss } from 'lucide-react';
+
+ModuleRegistry.registerModule({
+  id: 'feed-control',
+  title: 'Feed Control',
+  description: 'Manage news and scholarship RSS feed sources, filtering, quantity, and timing',
+  icon: Rss,
+  iconColor: 'orange',
+  category: 'system',
+  component: FeedControl,
+  requiredPermissions: ['admin', 'super-admin']
+});

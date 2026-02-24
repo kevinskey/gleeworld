@@ -10,6 +10,7 @@ import {
   PenTool, TrendingUp, Inbox, ScrollText, BadgeCheck, Folder, SquareUser, Newspaper,
   ImagePlus, Clapperboard, BookMarked, PencilRuler, Award, MessageCircle, Layers,
   Presentation, MicVocal, Wrench, Contact,
+  Rss,
 } from 'lucide-react';
 
 // Import core module components
@@ -86,6 +87,8 @@ import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentMod
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 import { MessengerAdminModule } from '@/components/modules/MessengerAdminModule';
 import { AmazonAffiliateModule } from '@/components/modules/AmazonAffiliateModule';
+import FeedControl from '@/pages/FeedControl';
+const FeedControlModule = FeedControl;
 
 // Import alumni-specific modules
 import {
@@ -1275,6 +1278,20 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: AlumnaCalendarModule,
     dbFunctionName: "alumna-calendar",
     requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "feed-control",
+    name: "feed-control",
+    title: "Feed Control",
+    description: "Manage news and scholarship RSS feed sources, filtering, quantity, and timing",
+    icon: Rss,
+    iconColor: "orange",
+    category: "system",
+    isNew: true,
+    isActive: true,
+    component: FeedControlModule,
+    dbFunctionName: "feed-control",
+    requiredRoles: ["admin", "super-admin"]
   }
 ];
 
