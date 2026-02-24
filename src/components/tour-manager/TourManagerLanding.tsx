@@ -768,8 +768,8 @@ export const TourManagerLanding = ({
           </button>)}
       </div>
 
-      {/* Two Column Layout: Route & Upcoming Dates */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Two Column Layout: Route & Upcoming Dates - hidden on mobile */}
+      <div className="hidden sm:grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Tour Route Timeline */}
         
         {/* Upcoming Tour Dates */}
@@ -840,7 +840,7 @@ export const TourManagerLanding = ({
       
 
       {/* Section Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors text-left">
             <section.icon className={cn("h-5 w-5 mb-2", section.color.replace('bg-', 'text-'))} />
             <div className="text-sm font-medium">{section.title}</div>
