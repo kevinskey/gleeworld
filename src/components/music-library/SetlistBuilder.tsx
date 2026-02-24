@@ -745,8 +745,9 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                 {selectedSetlist.items?.map((item, index) => (
                   <div 
                     key={item.id} 
-                    className="flex items-center gap-2 px-2 py-1.5 rounded bg-white hover:bg-slate-50 group/item border border-slate-200"
+                    className="flex items-center gap-2 px-2 py-1.5 rounded bg-white hover:bg-slate-50 group/item border border-slate-200 cursor-pointer"
                     style={{ backgroundColor: 'white' }}
+                    onClick={() => handleViewPdf(item)}
                   >
                     <span className="text-xs w-5 text-right font-mono" style={{ color: '#475569' }}>{index + 1}.</span>
                     <div className="flex-1 min-w-0">
@@ -755,11 +756,11 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                         <span className="text-xs truncate block" style={{ color: '#475569' }}>{item.sheet_music.composer}</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity">
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleViewPdf(item)}
+                        onClick={(e) => { e.stopPropagation(); handleViewPdf(item); }}
                         disabled={!item.sheet_music?.pdf_url}
                         className="h-5 w-5 p-0"
                       >
@@ -768,7 +769,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => openSetlistPlayer(selectedSetlist.id)}
+                        onClick={(e) => { e.stopPropagation(); openSetlistPlayer(selectedSetlist.id); }}
                         className="h-5 w-5 p-0"
                       >
                         <Play className="h-3 w-3" />
@@ -776,7 +777,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => removeFromSetlist(item.id)}
+                        onClick={(e) => { e.stopPropagation(); removeFromSetlist(item.id); }}
                         className="h-5 w-5 p-0 text-destructive"
                       >
                         <Trash2 className="h-3 w-3" />
