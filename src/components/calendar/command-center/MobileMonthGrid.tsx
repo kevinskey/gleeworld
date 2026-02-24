@@ -87,13 +87,13 @@ export const MobileMonthGrid = ({
       {/* Day Headers */}
       <div className="grid grid-cols-7 bg-[#003366] text-white flex-shrink-0">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-          <div key={idx} className="py-2 text-center text-xs font-semibold tracking-wide">
+          <div key={idx} className="py-2.5 text-center text-sm font-bold tracking-wider">
             {day}
           </div>
         ))}
       </div>
 
-      {/* Compact Month Grid */}
+      {/* Compact Month Grid - taller cells */}
       <div className="grid grid-cols-7 flex-shrink-0">
         {days.map((day) => {
           const dayEvents = getEventsForDate(day);
@@ -112,14 +112,14 @@ export const MobileMonthGrid = ({
               key={day.toString()}
               onClick={() => onDateSelect(day)}
               className={cn(
-                "flex flex-col items-center py-2 min-h-[48px] touch-manipulation transition-colors border-b border-r border-slate-100",
+                "flex flex-col items-center py-2.5 min-h-[56px] touch-manipulation transition-colors border-b border-r border-slate-100",
                 !isCurrentMonth && "opacity-30",
                 isSelected && "bg-blue-50",
                 isToday && !isSelected && "bg-amber-50",
               )}
             >
               <span className={cn(
-                "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold",
+                "inline-flex items-center justify-center w-8 h-8 rounded-full text-base font-bold",
                 isToday && "bg-[#003366] text-white",
                 isSelected && !isToday && "bg-[#B8860B] text-white",
                 !isToday && !isSelected && isCurrentMonth && "text-slate-800",
@@ -143,19 +143,19 @@ export const MobileMonthGrid = ({
       </div>
 
       {/* Selected Day Events Panel */}
-      <div className="border-t border-slate-200">
-        <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between sticky top-0">
-          <h3 className="text-sm font-bold" style={{ color: '#0f172a' }}>
+      <div className="border-t-2 border-slate-300">
+        <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: '#003366' }}>
             {format(selectedDate, 'EEEE, MMMM d')}
           </h3>
           <span className="text-xs font-medium text-slate-500">
             {selectedDayEvents.length} event{selectedDayEvents.length !== 1 ? 's' : ''}
           </span>
         </div>
-        <div className="p-3 space-y-2">
+        <div className="p-2 space-y-1.5">
           {selectedDayEvents.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-slate-400">No events scheduled</p>
+            <div className="text-center py-4">
+              <p className="text-xs text-slate-400">No events scheduled</p>
             </div>
           ) : (
             selectedDayEvents.map((event) => {
@@ -164,10 +164,10 @@ export const MobileMonthGrid = ({
               return (
                 <div
                   key={event.id}
-                  className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-slate-100 shadow-sm"
+                  className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-100 shadow-sm"
                 >
                   <div
-                    className="w-1 self-stretch min-h-[36px] rounded-full flex-shrink-0"
+                    className="w-1 self-stretch min-h-[32px] rounded-full flex-shrink-0"
                     style={{ backgroundColor: config?.color || '#708090' }}
                   />
                   <div className="flex-1 min-w-0">
