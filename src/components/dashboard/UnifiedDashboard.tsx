@@ -354,10 +354,6 @@ export const UnifiedDashboard = () => {
       </div>
 
 
-      {/* Office Hours Widget - visible to students, admins, and super admins */}
-      {(profile?.is_super_admin || profile?.is_admin || profile?.role === 'student') && <div className="px-4 pt-4">
-          <OfficeHoursWidget />
-        </div>}
 
       {/* Modern Store Section - white background wrapper */}
       <div className="px-4 py-2" style={{ backgroundColor: '#ffffff' }}>
