@@ -62,19 +62,26 @@ export const TourManagerLanding = ({
       if (data) setTourEvents(data);
     };
     const fetchRoster = async () => {
-      const { data } = await supabase
+      const { data: roster } = await supabase
         .from('gw_tour_roster')
-        .select('id, status, user_id, gw_profiles(full_name, voice_part)')
-        .eq('status', 'confirmed')
-        .order('created_at', { ascending: true });
-      if (data) {
-        setRosterMembers(data.map((r: any) => ({
+        .select('id, status, user_id')
+        .eq('status', 'confirmed');
+      if (!roster || roster.length === 0) return;
+      const userIds = roster.map(r => r.user_id);
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, voice_part')
+        .in('user_id', userIds);
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+      setRosterMembers(roster.map(r => {
+        const p = profileMap.get(r.user_id);
+        return {
           id: r.id,
-          full_name: r.gw_profiles?.full_name || 'Unknown',
-          voice_part: r.gw_profiles?.voice_part || null,
+          full_name: p?.full_name || 'Unknown',
+          voice_part: p?.voice_part || null,
           status: r.status,
-        })));
-      }
+        };
+      }).sort((a, b) => a.full_name.localeCompare(b.full_name)));
     };
     fetchTourEvents();
     fetchRoster();
