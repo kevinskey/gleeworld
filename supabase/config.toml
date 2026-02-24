@@ -3,6 +3,9 @@ project_id = "oopmlreysjzuxzylyheb"
 [functions.handle-sms-approval]
 verify_jwt = false
 
+[functions.search-hotels]
+verify_jwt = false
+
 [api]
 enabled = true
 port = 54321
