@@ -315,7 +315,7 @@ export const TourManagerDashboard = ({
       {/* Content Area with Sidebar */}
       <div className="flex-1 flex flex-row">
         {/* Sidebar - hidden on mobile, shown on desktop */}
-        <aside className={cn("fixed top-12 bottom-0 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:h-[calc(100vh-48px)] lg:inset-y-0 lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
+        <aside className={cn("fixed top-[6.5rem] bottom-0 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:h-[calc(100vh-48px)] lg:inset-y-0 lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
           <div className="flex flex-col h-full px-0 pt-4">
             {/* Navigation */}
             <nav className="flex flex-col space-y-1 px-2 w-full">
