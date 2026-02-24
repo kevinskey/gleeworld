@@ -11,6 +11,8 @@ import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isSameDay,
 import { useNavigate } from 'react-router-dom';
 import { TourMilestones } from './TourMilestones';
 import { TourRouteTimeline } from './TourRouteTimeline';
+import { TourStopDetailDialog, type TourStopFull } from './TourStopDetailDialog';
+import { TourStopEditForm } from './TourStopEditForm';
 interface TourManagerLandingProps {
   onNavigate: (section: string) => void;
   stats?: {
@@ -49,7 +51,9 @@ export const TourManagerLanding = ({
   const [contractTourDates, setContractTourDates] = useState<ContractTourDate[]>([]);
   const [tourTitle, setTourTitle] = useState<string | null>(null);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
-  const [tourEvents, setTourEvents] = useState<{ id: string; title: string; start_date: string; end_date: string | null; location: string | null; venue_name: string | null; event_type: string | null }[]>([]);
+  const [tourEvents, setTourEvents] = useState<TourStopFull[]>([]);
+  const [selectedStop, setSelectedStop] = useState<TourStopFull | null>(null);
+  const [editingStop, setEditingStop] = useState<TourStopFull | null>(null);
   const [rosterMembers, setRosterMembers] = useState<{ id: string; full_name: string; voice_part: string | null; status: string }[]>([]);
   const [rosterOpen, setRosterOpen] = useState(false);
   const [hostsOpen, setHostsOpen] = useState(false);
@@ -63,9 +67,9 @@ export const TourManagerLanding = ({
     const fetchTourEvents = async () => {
       const { data } = await supabase
         .from('gw_tour_events')
-        .select('id, title, start_date, end_date, location, venue_name, event_type')
+        .select('*')
         .order('start_date', { ascending: true });
-      if (data) setTourEvents(data);
+      if (data) setTourEvents(data as TourStopFull[]);
     };
     const fetchRoster = async () => {
       const { data: roster } = await supabase
@@ -333,7 +337,7 @@ export const TourManagerLanding = ({
                       };
                       const dotColor = typeColors[event.event_type || ''] || 'bg-muted-foreground';
                       return (
-                        <div key={event.id} className={cn("flex gap-3 py-1.5 pl-0 relative", isPast && !isToday && "opacity-50")}>
+                        <div key={event.id} className={cn("flex gap-3 py-1.5 pl-0 relative cursor-pointer hover:bg-muted/30 rounded-md px-1 -mx-1 transition-colors", isPast && !isToday && "opacity-50")} onClick={() => setSelectedStop(event)}>
                           <div className={cn("w-[11px] h-[11px] rounded-full flex-shrink-0 mt-1 z-10 ring-2 ring-background", isToday ? "ring-primary bg-primary animate-pulse" : dotColor)} />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
@@ -711,5 +715,29 @@ export const TourManagerLanding = ({
             <div className="text-xs text-muted-foreground">{section.stat} {section.statLabel}</div>
           </button>)}
       </div>
+
+      {/* Tour Stop Detail Dialog */}
+      <TourStopDetailDialog
+        stop={selectedStop}
+        open={!!selectedStop}
+        onOpenChange={(open) => !open && setSelectedStop(null)}
+        onEdit={(stop) => { setSelectedStop(null); setEditingStop(stop); }}
+        busCompanyName={busCompanies.find(b => b.id === selectedStop?.bus_company_id)?.company_name}
+      />
+
+      {/* Tour Stop Edit Form */}
+      <TourStopEditForm
+        stop={editingStop}
+        open={!!editingStop}
+        onOpenChange={(open) => !open && setEditingStop(null)}
+        onSaved={() => {
+          const fetchTourEvents = async () => {
+            const { data } = await supabase.from('gw_tour_events').select('*').order('start_date', { ascending: true });
+            if (data) setTourEvents(data as TourStopFull[]);
+          };
+          fetchTourEvents();
+        }}
+        busCompanies={busCompanies.map(b => ({ id: b.id, company_name: b.company_name }))}
+      />
     </div>;
 };

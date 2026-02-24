@@ -19715,24 +19715,42 @@ export type Database = {
       }
       gw_tour_events: {
         Row: {
+          arrival_time: string | null
           budget_allocated: number | null
+          bus_company_id: string | null
+          concert_time: string | null
+          concert_type: string | null
           created_at: string
           created_by: string
+          departure_time: string | null
           deposit_amount: number | null
           description: string | null
+          driver_hours_before: number | null
+          driver_notes: string | null
           end_date: string | null
           event_type: string | null
           honorarium_amount: number | null
           host_department: string | null
+          host_email: string | null
           host_location: string | null
           host_name: string | null
+          host_phone: string | null
           host_signatory_name: string | null
           host_signatory_title: string | null
           id: string
           location: string
+          lodging_address: string | null
+          lodging_name: string | null
+          lodging_phone: string | null
+          meal_info: string | null
+          notes: string | null
           setlist_id: string | null
           start_date: string
           title: string
+          travel_distance_miles: number | null
+          travel_duration_hours: number | null
+          travel_from: string | null
+          travel_to: string | null
           updated_at: string
           venue_address: string | null
           venue_contact: string | null
@@ -19741,24 +19759,42 @@ export type Database = {
           venue_phone: string | null
         }
         Insert: {
+          arrival_time?: string | null
           budget_allocated?: number | null
+          bus_company_id?: string | null
+          concert_time?: string | null
+          concert_type?: string | null
           created_at?: string
           created_by: string
+          departure_time?: string | null
           deposit_amount?: number | null
           description?: string | null
+          driver_hours_before?: number | null
+          driver_notes?: string | null
           end_date?: string | null
           event_type?: string | null
           honorarium_amount?: number | null
           host_department?: string | null
+          host_email?: string | null
           host_location?: string | null
           host_name?: string | null
+          host_phone?: string | null
           host_signatory_name?: string | null
           host_signatory_title?: string | null
           id?: string
           location: string
+          lodging_address?: string | null
+          lodging_name?: string | null
+          lodging_phone?: string | null
+          meal_info?: string | null
+          notes?: string | null
           setlist_id?: string | null
           start_date: string
           title: string
+          travel_distance_miles?: number | null
+          travel_duration_hours?: number | null
+          travel_from?: string | null
+          travel_to?: string | null
           updated_at?: string
           venue_address?: string | null
           venue_contact?: string | null
@@ -19767,24 +19803,42 @@ export type Database = {
           venue_phone?: string | null
         }
         Update: {
+          arrival_time?: string | null
           budget_allocated?: number | null
+          bus_company_id?: string | null
+          concert_time?: string | null
+          concert_type?: string | null
           created_at?: string
           created_by?: string
+          departure_time?: string | null
           deposit_amount?: number | null
           description?: string | null
+          driver_hours_before?: number | null
+          driver_notes?: string | null
           end_date?: string | null
           event_type?: string | null
           honorarium_amount?: number | null
           host_department?: string | null
+          host_email?: string | null
           host_location?: string | null
           host_name?: string | null
+          host_phone?: string | null
           host_signatory_name?: string | null
           host_signatory_title?: string | null
           id?: string
           location?: string
+          lodging_address?: string | null
+          lodging_name?: string | null
+          lodging_phone?: string | null
+          meal_info?: string | null
+          notes?: string | null
           setlist_id?: string | null
           start_date?: string
           title?: string
+          travel_distance_miles?: number | null
+          travel_duration_hours?: number | null
+          travel_from?: string | null
+          travel_to?: string | null
           updated_at?: string
           venue_address?: string | null
           venue_contact?: string | null
@@ -19793,6 +19847,13 @@ export type Database = {
           venue_phone?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "gw_tour_events_bus_company_id_fkey"
+            columns: ["bus_company_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_bus_companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gw_tour_events_setlist_id_fkey"
             columns: ["setlist_id"]
