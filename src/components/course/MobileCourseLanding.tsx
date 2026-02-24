@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { CourseTopicSlider } from '@/components/academy/CourseTopicSlider';
+import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
 import { ClassScheduleForm } from '@/components/academy/ClassScheduleForm';
 import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { MobilePlaylistDropdown } from './MobilePlaylistDropdown';
@@ -91,9 +92,9 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   
 
   return (
-    <div className="bg-background">
+    <div className="bg-white text-foreground">
       {/* Course Title Bar with Back, Title, and Grade */}
-      <div className="bg-card border-b border-border">
+      <div className="bg-white border-b border-gray-200">
         <div className="px-3 py-3 flex items-center justify-between gap-2">
           {/* Left: Back Button + Course Badge */}
           <div className="flex items-center gap-2 shrink-0">
@@ -132,6 +133,9 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
       </div>
 
       {/* Main Content - Vertical Stack */}
+      {/* Advertising Hero */}
+      <AdvertisingHero />
+
       <main className="p-4 space-y-4 pb-32">
 
         {/* Check-In Button */}
