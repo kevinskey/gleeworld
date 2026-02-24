@@ -370,7 +370,7 @@ export const UnifiedDashboard = () => {
         </div>}
 
       {/* YouTube Channel Slider - white background wrapper */}
-      <div className="px-4 py-2" style={{ backgroundColor: '#ffffff' }}>
+      <div className="px-2 sm:px-4 py-1" style={{ backgroundColor: '#ffffff' }}>
         <YouTubeChannelSlider />
       </div>
       

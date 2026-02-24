@@ -67,7 +67,7 @@ export const YouTubeChannelSlider: React.FC = () => {
         animationPlayState: isPaused ? 'paused' : 'running'
       }}>
             {duplicatedVideos.map((video, index) => <button key={`${video.id}-${index}`} onClick={() => handleVideoClick(video)} className="flex-shrink-0 group text-left">
-                <div className="relative w-72 sm:w-80 lg:w-96 aspect-video rounded-lg overflow-hidden border-2 border-white/10 hover:border-primary transition-all shadow-lg">
+                <div className="relative w-72 sm:w-80 lg:w-96 aspect-video rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all shadow-lg">
                   <img src={getThumbnail(video)} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={e => {
               (e.target as HTMLImageElement).src = '/placeholder.svg';
             }} />
