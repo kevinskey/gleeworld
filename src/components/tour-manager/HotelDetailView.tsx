@@ -85,6 +85,24 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
   const [nearbyPlaces, setNearbyPlaces] = useState<Record<string, NearbyPlace[]>>({});
   const [loadingNearby, setLoadingNearby] = useState(false);
   const [nearbyError, setNearbyError] = useState<string | null>(null);
+  const [mapsApiKey, setMapsApiKey] = useState<string | null>(null);
+  const [mapsKeyLoading, setMapsKeyLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMapsKey = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-google-maps-config');
+        if (!error && data?.apiKey) {
+          setMapsApiKey(data.apiKey);
+        }
+      } catch (e) {
+        console.error('Failed to fetch maps API key:', e);
+      } finally {
+        setMapsKeyLoading(false);
+      }
+    };
+    fetchMapsKey();
+  }, []);
 
   // We need lat/lng. The gw_tour_hotels table might not store them yet,
   // so we'll use the hotel's city for a geocode fallback via the search-hotels function.
@@ -336,21 +354,35 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
           </CardTitle>
         </CardHeader>
         <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-          <div className="rounded-lg overflow-hidden border border-border">
-            <iframe
-              width="100%"
-              height="250"
-              className="sm:h-[300px]"
-              style={{ border: 0 }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_EMBED_KEY || ''}&q=${encodeURIComponent(`${hotel.hotel_name} ${hotel.city} ${hotel.state}`)}`}
-              allowFullScreen
-            />
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            If the map doesn't load, <a href={getGoogleMapsUrl()} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">open in Google Maps</a>.
-          </p>
+          {mapsKeyLoading ? (
+            <Skeleton className="w-full h-[250px] sm:h-[300px] rounded-lg" />
+          ) : mapsApiKey ? (
+            <div className="rounded-lg overflow-hidden border border-border">
+              <iframe
+                width="100%"
+                height="250"
+                className="sm:h-[300px]"
+                style={{ border: 0 }}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.google.com/maps/embed/v1/place?key=${mapsApiKey}&q=${encodeURIComponent(`${hotel.hotel_name} ${hotel.city} ${hotel.state}`)}`}
+                allowFullScreen
+              />
+            </div>
+          ) : (
+            <div className="w-full h-[250px] sm:h-[300px] rounded-lg bg-muted/50 flex flex-col items-center justify-center gap-3">
+              <MapPin className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Map preview unavailable</p>
+              <a
+                href={getGoogleMapsUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+              >
+                Open in Google Maps <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          )}
         </CardContent>
       </Card>
 
