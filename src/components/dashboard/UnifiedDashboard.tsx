@@ -355,10 +355,6 @@ export const UnifiedDashboard = () => {
 
 
 
-      {/* Modern Store Section - white background wrapper */}
-      <div className="px-4 py-2" style={{ backgroundColor: '#ffffff' }}>
-        <DashboardStoreSection />
-      </div>
 
       {/* YouTube Channel Slider - white background wrapper */}
       <div className="px-4 py-2" style={{ backgroundColor: '#ffffff' }}>
