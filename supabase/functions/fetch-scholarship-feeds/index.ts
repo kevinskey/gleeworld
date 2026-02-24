@@ -15,33 +15,33 @@ interface FeedItem {
 
 const RSS_FEEDS = [
   {
-    url: 'https://news.google.com/rss/search?q=scholarships+African+American+college+students+2026&hl=en-US&gl=US&ceid=US:en',
-    source: 'Google News',
-    sourceIcon: '🔍',
-  },
-  {
-    url: 'https://news.google.com/rss/search?q=HBCU+scholarships+grants+Black+students&hl=en-US&gl=US&ceid=US:en',
-    source: 'HBCU Scholarships',
+    url: 'https://www.scholarships.com/news/feed/',
+    source: 'Scholarships.com',
     sourceIcon: '🎓',
   },
   {
-    url: 'https://news.google.com/rss/search?q=%22UNCF%22+OR+%22United+Negro+College+Fund%22+scholarship&hl=en-US&gl=US&ceid=US:en',
-    source: 'UNCF',
-    sourceIcon: '🏫',
-  },
-  {
-    url: 'https://news.google.com/rss/search?q=grants+Black+women+college+OR+Spelman+OR+%22minority+scholarship%22&hl=en-US&gl=US&ceid=US:en',
-    source: 'Grants & Aid',
-    sourceIcon: '💰',
-  },
-  {
-    url: 'https://www.fastweb.com/college-scholarships/articles/rss',
-    source: 'Fastweb',
+    url: 'https://www.edvisors.com/blog/feed/',
+    source: 'Edvisors',
     sourceIcon: '📋',
   },
   {
-    url: 'https://news.google.com/rss/search?q=music+scholarship+OR+choir+scholarship+OR+performing+arts+grant+Black+students&hl=en-US&gl=US&ceid=US:en',
-    source: 'Music & Arts',
+    url: 'https://blog.collegegreenlight.com/blog/feed/',
+    source: 'College Greenlight',
+    sourceIcon: '💚',
+  },
+  {
+    url: 'https://thegrio.com/category/education/feed/',
+    source: 'TheGrio Education',
+    sourceIcon: '📡',
+  },
+  {
+    url: 'https://hbcubuzz.com/feed/',
+    source: 'HBCU Buzz',
+    sourceIcon: '🏫',
+  },
+  {
+    url: 'https://www.diverseeducation.com/feed',
+    source: 'Diverse Education',
     sourceIcon: '🎵',
   },
 ];
