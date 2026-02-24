@@ -42,6 +42,7 @@ export const AIRoutePlanner = ({
 }: AIRoutePlannerProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingRoute, setEditingRoute] = useState<TourRoute | null>(null);
+  const [originCity, setOriginCity] = useState('');
   const [newRoute, setNewRoute] = useState({
     name: '',
     description: '',
@@ -150,22 +151,32 @@ export const AIRoutePlanner = ({
       }).select().single();
       if (tourError) throw tourError;
 
-      // Add cities
-      if (routeData.stops.length > 0) {
-        const cities = routeData.stops.map((stop, index) => {
-          const parts = stop.city.split(',').map(p => p.trim());
-          return {
-            tour_id: tour.id,
-            city_name: parts[0],
-            state_code: parts[1] || null,
-            city_order: index + 1,
-            arrival_date: stop.date || null,
-            city_notes: stop.venue
-          };
+      // Add origin city + tour stops
+      const allCities: any[] = [];
+      if (originCity.trim()) {
+        const originParts = originCity.split(',').map(p => p.trim());
+        allCities.push({
+          tour_id: tour.id,
+          city_name: originParts[0],
+          state_code: originParts[1] || null,
+          city_order: 0,
+          arrival_date: null,
+          city_notes: 'Origin / Departure City'
         });
-        const {
-          error: citiesError
-        } = await supabase.from('gw_tour_cities').insert(cities);
+      }
+      routeData.stops.forEach((stop, index) => {
+        const parts = stop.city.split(',').map(p => p.trim());
+        allCities.push({
+          tour_id: tour.id,
+          city_name: parts[0],
+          state_code: parts[1] || null,
+          city_order: index + 1,
+          arrival_date: stop.date || null,
+          city_notes: stop.venue
+        });
+      });
+      if (allCities.length > 0) {
+        const { error: citiesError } = await supabase.from('gw_tour_cities').insert(allCities);
         if (citiesError) throw citiesError;
       }
       return tour;
@@ -175,6 +186,7 @@ export const AIRoutePlanner = ({
         queryKey: ['tour-routes']
       });
       setIsCreating(false);
+      setOriginCity('');
       setNewRoute({
         name: '',
         description: '',
@@ -230,25 +242,33 @@ export const AIRoutePlanner = ({
       if (tourError) throw tourError;
 
       // Delete existing cities and re-add
-      const {
-        error: deleteError
-      } = await supabase.from('gw_tour_cities').delete().eq('tour_id', routeData.id);
+      const { error: deleteError } = await supabase.from('gw_tour_cities').delete().eq('tour_id', routeData.id);
       if (deleteError) throw deleteError;
-      if (routeData.stops.length > 0) {
-        const cities = routeData.stops.map((stop, index) => {
-          const parts = stop.city.split(',').map(p => p.trim());
-          return {
-            tour_id: routeData.id,
-            city_name: parts[0],
-            state_code: parts[1] || null,
-            city_order: index + 1,
-            arrival_date: stop.date || null,
-            city_notes: stop.venue
-          };
+      const allCities: any[] = [];
+      if (originCity.trim()) {
+        const originParts = originCity.split(',').map(p => p.trim());
+        allCities.push({
+          tour_id: routeData.id,
+          city_name: originParts[0],
+          state_code: originParts[1] || null,
+          city_order: 0,
+          arrival_date: null,
+          city_notes: 'Origin / Departure City'
         });
-        const {
-          error: citiesError
-        } = await supabase.from('gw_tour_cities').insert(cities);
+      }
+      routeData.stops.forEach((stop, index) => {
+        const parts = stop.city.split(',').map(p => p.trim());
+        allCities.push({
+          tour_id: routeData.id,
+          city_name: parts[0],
+          state_code: parts[1] || null,
+          city_order: index + 1,
+          arrival_date: stop.date || null,
+          city_notes: stop.venue
+        });
+      });
+      if (allCities.length > 0) {
+        const { error: citiesError } = await supabase.from('gw_tour_cities').insert(allCities);
         if (citiesError) throw citiesError;
       }
       return routeData;
@@ -258,6 +278,7 @@ export const AIRoutePlanner = ({
         queryKey: ['tour-routes']
       });
       setEditingRoute(null);
+      setOriginCity('');
       setNewRoute({
         name: '',
         description: '',
@@ -278,10 +299,13 @@ export const AIRoutePlanner = ({
   });
   const startEditing = (route: TourRoute) => {
     setEditingRoute(route);
+    // Find origin city (city_order === 0)
+    const originStop = route.stops.find(s => s.city_order === 0);
+    setOriginCity(originStop ? originStop.city : '');
     setNewRoute({
       name: route.name,
       description: route.description,
-      stops: route.stops
+      stops: route.stops.filter(s => s.city_order !== 0)
     });
     setMultipleCities(['']);
     setCurrentStop({
@@ -293,6 +317,7 @@ export const AIRoutePlanner = ({
   };
   const cancelEditing = () => {
     setEditingRoute(null);
+    setOriginCity('');
     setNewRoute({
       name: '',
       description: '',
@@ -473,6 +498,20 @@ export const AIRoutePlanner = ({
                 </div>
               </div>
 
+              {/* Origin City */}
+              <div className="space-y-2 p-3 border border-dashed rounded-md bg-muted/30">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Navigation className="h-4 w-4 text-primary" />
+                  Origin / Departure City
+                </label>
+                <Input
+                  placeholder="e.g., Atlanta, GA"
+                  value={originCity}
+                  onChange={e => setOriginCity(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Where the tour bus departs from — used for DOT compliance & first-leg distance calculations</p>
+              </div>
+
               <div className="space-y-4">
                 <h4 className="font-medium">Add Tour Stops</h4>
                 
@@ -574,6 +613,20 @@ export const AIRoutePlanner = ({
                   description: e.target.value
                 }))} />
                 </div>
+              </div>
+
+              {/* Origin City */}
+              <div className="space-y-2 p-3 border border-dashed rounded-md bg-muted/30">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Navigation className="h-4 w-4 text-primary" />
+                  Origin / Departure City
+                </label>
+                <Input
+                  placeholder="e.g., Atlanta, GA"
+                  value={originCity}
+                  onChange={e => setOriginCity(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Where the tour bus departs from — used for DOT compliance & first-leg distance calculations</p>
               </div>
 
               <div className="space-y-4">
