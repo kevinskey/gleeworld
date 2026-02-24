@@ -156,20 +156,20 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 pb-24 sm:pb-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button onClick={onBack} variant="outline" size="sm" className="gap-2">
+      <div className="flex items-start gap-2 sm:gap-3">
+        <Button onClick={onBack} variant="outline" size="sm" className="gap-1.5 shrink-0 mt-0.5">
           <ArrowLeft className="h-4 w-4" />
-          Back
+          <span className="hidden sm:inline">Back</span>
         </Button>
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 truncate">
-            <Hotel className="h-5 w-5 text-primary flex-shrink-0" />
-            {hotel.hotel_name}
+          <h2 className="text-base sm:text-xl font-semibold text-foreground flex items-center gap-2">
+            <Hotel className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+            <span className="truncate">{hotel.hotel_name}</span>
           </h2>
           {hotel.tour_city && (
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Tour Stop: {hotel.tour_city.city_name}, {hotel.tour_city.state_code}
             </p>
           )}
@@ -177,19 +177,19 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
       </div>
 
       {/* Main Hotel Info */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
         {/* Left: Hotel Details */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Accommodation Details</CardTitle>
+          <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardTitle className="text-sm sm:text-base">Accommodation Details</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-3 sm:pb-6">
             {/* Address */}
-            <div className="flex items-start gap-3">
-              <MapPin className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
-              <div>
-                {hotel.address && <p className="text-sm font-medium">{hotel.address}</p>}
-                <p className="text-sm text-muted-foreground">{hotel.city}, {hotel.state} {hotel.zip_code}</p>
+            <div className="flex items-start gap-2 sm:gap-3">
+              <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+              <div className="min-w-0">
+                {hotel.address && <p className="text-sm font-medium break-words">{hotel.address}</p>}
+                <p className="text-xs sm:text-sm text-muted-foreground">{hotel.city}, {hotel.state} {hotel.zip_code}</p>
                 <a
                   href={getGoogleMapsUrl()}
                   target="_blank"
@@ -202,16 +202,16 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
             </div>
 
             {/* Check-in/out */}
-            <div className="flex items-start gap-3">
-              <Calendar className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
-              <div className="text-sm space-y-1">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <Calendar className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+              <div className="text-xs sm:text-sm space-y-1">
                 <p>
-                  <span className="text-muted-foreground">Check-in:</span>{' '}
+                  <span className="text-muted-foreground">In:</span>{' '}
                   <span className="font-medium">{formatDate(hotel.check_in_date)}</span>
                   {hotel.check_in_time && <span className="text-muted-foreground"> at {hotel.check_in_time}</span>}
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Check-out:</span>{' '}
+                  <span className="text-muted-foreground">Out:</span>{' '}
                   <span className="font-medium">{formatDate(hotel.check_out_date)}</span>
                   {hotel.check_out_time && <span className="text-muted-foreground"> at {hotel.check_out_time}</span>}
                 </p>
@@ -220,7 +220,7 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
 
             {/* Phone */}
             {hotel.phone && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <Phone className="h-4 w-4 text-primary flex-shrink-0" />
                 <a href={`tel:${hotel.phone}`} className="text-sm text-primary hover:underline">{hotel.phone}</a>
               </div>
@@ -228,9 +228,9 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
 
             {/* Website */}
             {hotel.website && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <Globe className="h-4 w-4 text-primary flex-shrink-0" />
-                <a href={hotel.website} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate">
+                <a href={hotel.website} target="_blank" rel="noopener noreferrer" className="text-xs sm:text-sm text-primary hover:underline truncate">
                   {hotel.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                 </a>
               </div>
@@ -238,19 +238,19 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
 
             {/* Confirmation */}
             {hotel.confirmation_number && (
-              <div className="bg-muted/50 p-3 rounded-lg">
+              <div className="bg-muted/50 p-2.5 sm:p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground">Confirmation Number</p>
-                <p className="font-mono font-semibold text-sm">{hotel.confirmation_number}</p>
+                <p className="font-mono font-semibold text-xs sm:text-sm break-all">{hotel.confirmation_number}</p>
               </div>
             )}
 
             {/* Contact */}
             {(hotel.contact_name || hotel.contact_email) && (
-              <div className="bg-muted/50 p-3 rounded-lg">
+              <div className="bg-muted/50 p-2.5 sm:p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Hotel Contact</p>
                 {hotel.contact_name && <p className="text-sm font-medium">{hotel.contact_name}</p>}
                 {hotel.contact_email && (
-                  <a href={`mailto:${hotel.contact_email}`} className="text-xs text-primary hover:underline">
+                  <a href={`mailto:${hotel.contact_email}`} className="text-xs text-primary hover:underline break-all">
                     {hotel.contact_email}
                   </a>
                 )}
@@ -261,30 +261,30 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
 
         {/* Right: Rooms, Cost, Amenities */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Rooms & Amenities</CardTitle>
+          <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardTitle className="text-sm sm:text-base">Rooms & Amenities</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-3 sm:pb-6">
             {/* Room Info */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {hotel.room_count && (
-                <div className="bg-primary/5 rounded-lg p-3 text-center">
-                  <Users className="h-5 w-5 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold">{hotel.room_count}</p>
+                <div className="bg-primary/5 rounded-lg p-2.5 sm:p-3 text-center">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary mx-auto mb-1" />
+                  <p className="text-base sm:text-lg font-bold">{hotel.room_count}</p>
                   <p className="text-xs text-muted-foreground">Rooms</p>
                 </div>
               )}
               {hotel.room_rate && (
-                <div className="bg-primary/5 rounded-lg p-3 text-center">
-                  <DollarSign className="h-5 w-5 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold">${hotel.room_rate}</p>
+                <div className="bg-primary/5 rounded-lg p-2.5 sm:p-3 text-center">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-primary mx-auto mb-1" />
+                  <p className="text-base sm:text-lg font-bold">${hotel.room_rate}</p>
                   <p className="text-xs text-muted-foreground">Per Night</p>
                 </div>
               )}
               {hotel.total_cost && (
-                <div className="bg-accent/10 rounded-lg p-3 text-center col-span-2">
+                <div className="bg-accent/10 rounded-lg p-2.5 sm:p-3 text-center col-span-2">
                   <p className="text-xs text-muted-foreground">Estimated Total</p>
-                  <p className="text-xl font-bold text-primary">${hotel.total_cost.toLocaleString()}</p>
+                  <p className="text-lg sm:text-xl font-bold text-primary">${hotel.total_cost.toLocaleString()}</p>
                 </div>
               )}
             </div>
@@ -293,14 +293,14 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
             {hotel.amenities && hotel.amenities.length > 0 && (
               <div>
                 <p className="text-sm font-medium mb-2">Amenities</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                   {hotel.amenities.map((amenity: string) => {
                     const Icon = AMENITY_ICONS[amenity] || Hotel;
                     const label = AMENITY_LABELS[amenity] || amenity;
                     return (
-                      <div key={amenity} className="flex items-center gap-2 text-sm p-2 rounded bg-muted/30">
-                        <Icon className="h-4 w-4 text-primary" />
-                        <span>{label}</span>
+                      <div key={amenity} className="flex items-center gap-2 text-xs sm:text-sm p-1.5 sm:p-2 rounded bg-muted/30">
+                        <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+                        <span className="truncate">{label}</span>
                       </div>
                     );
                   })}
@@ -312,7 +312,7 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
             {hotel.parking_info && (
               <div>
                 <p className="text-sm font-medium mb-1">Parking</p>
-                <p className="text-sm text-muted-foreground">{hotel.parking_info}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{hotel.parking_info}</p>
               </div>
             )}
 
@@ -320,7 +320,7 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
             {hotel.notes && (
               <div>
                 <p className="text-sm font-medium mb-1">Notes</p>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{hotel.notes}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-wrap">{hotel.notes}</p>
               </div>
             )}
           </CardContent>
@@ -329,17 +329,18 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
 
       {/* Google Maps Embed */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
+        <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+          <CardTitle className="text-sm sm:text-base flex items-center gap-2">
             <MapPin className="h-4 w-4 text-primary" />
             Location
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
           <div className="rounded-lg overflow-hidden border border-border">
             <iframe
               width="100%"
-              height="300"
+              height="250"
+              className="sm:h-[300px]"
               style={{ border: 0 }}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
@@ -355,19 +356,19 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
 
       {/* Nearby Places / City Highlights */}
       <div>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Navigation className="h-5 w-5 text-primary" />
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+          <Navigation className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           What's Nearby
         </h3>
 
         {loadingNearby && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <Card key={i}>
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
                   <Skeleton className="h-5 w-32" />
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 px-3 sm:px-6 pb-3 sm:pb-6">
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
@@ -378,7 +379,7 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
         )}
 
         {nearbyError && (
-          <Card className="p-6 text-center">
+          <Card className="p-4 sm:p-6 text-center">
             <p className="text-muted-foreground text-sm">{nearbyError}</p>
             <Button variant="outline" size="sm" className="mt-3" onClick={fetchNearbyPlaces}>
               Retry
@@ -387,45 +388,50 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
         )}
 
         {!loadingNearby && !nearbyError && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {Object.entries(nearbyPlaces).map(([category, places]) => {
               const CategoryIcon = CATEGORY_ICONS[category] || Landmark;
               if (!places || places.length === 0) return null;
 
               return (
                 <Card key={category}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <CategoryIcon className="h-4 w-4 text-primary" />
+                  <CardHeader className="pb-1.5 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                    <CardTitle className="text-xs sm:text-sm flex items-center gap-2">
+                      <CategoryIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                       {category}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2">
+                  <CardContent className="space-y-1.5 sm:space-y-2 px-3 sm:px-6 pb-3 sm:pb-6">
                     {places.map((place) => (
                       <div
                         key={place.id}
-                        className="p-2 rounded-lg border border-border/50 hover:border-border transition-colors"
+                        className="p-1.5 sm:p-2 rounded-lg border border-border/50 hover:border-border transition-colors"
                       >
-                        <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start justify-between gap-1.5 sm:gap-2">
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">{place.name}</p>
+                            <p className="text-xs sm:text-sm font-medium truncate">{place.name}</p>
                             <p className="text-xs text-muted-foreground truncate">{place.address}</p>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             {place.rating && (
-                              <Badge variant="secondary" className="text-xs gap-0.5 px-1.5">
+                              <Badge variant="secondary" className="text-xs gap-0.5 px-1 sm:px-1.5 h-5">
                                 <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
                                 {place.rating}
                               </Badge>
                             )}
                             {place.isOpen !== null && (
-                              <Badge variant={place.isOpen ? 'default' : 'outline'} className="text-xs px-1.5">
+                              <Badge variant={place.isOpen ? 'default' : 'outline'} className="text-xs px-1 sm:px-1.5 h-5 hidden sm:inline-flex">
                                 {place.isOpen ? 'Open' : 'Closed'}
                               </Badge>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-1.5">
+                        <div className="flex items-center gap-2 mt-1 sm:mt-1.5 flex-wrap">
+                          {place.isOpen !== null && (
+                            <span className={`text-xs sm:hidden ${place.isOpen ? 'text-green-600' : 'text-muted-foreground'}`}>
+                              {place.isOpen ? '● Open' : '● Closed'}
+                            </span>
+                          )}
                           {place.priceLevel && PRICE_LABELS[place.priceLevel] && (
                             <span className="text-xs text-muted-foreground">{PRICE_LABELS[place.priceLevel]}</span>
                           )}
@@ -458,7 +464,7 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
         )}
 
         {!loadingNearby && !nearbyError && Object.values(nearbyPlaces).every(p => p.length === 0) && (
-          <Card className="p-6 text-center">
+          <Card className="p-4 sm:p-6 text-center">
             <p className="text-muted-foreground text-sm">No nearby places found.</p>
           </Card>
         )}
