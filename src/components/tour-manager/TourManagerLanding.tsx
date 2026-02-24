@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown } from 'lucide-react';
+import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown, Bus, Building2, FileCheck, Upload, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isSameDay, isWithinInterval } from 'date-fns';
@@ -52,6 +52,12 @@ export const TourManagerLanding = ({
   const [tourEvents, setTourEvents] = useState<{ id: string; title: string; start_date: string; end_date: string | null; location: string | null; venue_name: string | null; event_type: string | null }[]>([]);
   const [rosterMembers, setRosterMembers] = useState<{ id: string; full_name: string; voice_part: string | null; status: string }[]>([]);
   const [rosterOpen, setRosterOpen] = useState(false);
+  const [hostsOpen, setHostsOpen] = useState(false);
+  const [contractsOpen, setContractsOpen] = useState(false);
+  const [busOpen, setBusOpen] = useState(false);
+  const [hosts, setHosts] = useState<{ id: string; contact_name: string; organization_name: string; contact_phone: string | null; city: string | null; state: string | null; status: string }[]>([]);
+  const [contracts, setContracts] = useState<{ id: string; title: string; status: string }[]>([]);
+  const [busCompanies, setBusCompanies] = useState<{ id: string; company_name: string; contact_name: string | null; contact_phone: string | null; driver_name: string | null; driver_phone: string | null; contract_pdf_url: string | null }[]>([]);
 
   useEffect(() => {
     const fetchTourEvents = async () => {
@@ -83,8 +89,33 @@ export const TourManagerLanding = ({
         };
       }).sort((a, b) => a.full_name.localeCompare(b.full_name)));
     };
+    const fetchHosts = async () => {
+      const { data } = await supabase
+        .from('hosts')
+        .select('id, contact_name, organization_name, contact_phone, city, state, status')
+        .order('contact_name');
+      if (data) setHosts(data);
+    };
+    const fetchContracts = async () => {
+      const { data } = await supabase
+        .from('contracts_v2')
+        .select('id, title, status')
+        .order('created_at', { ascending: false });
+      if (data) setContracts(data);
+    };
+    const fetchBusCompanies = async () => {
+      const { data } = await supabase
+        .from('gw_tour_bus_companies')
+        .select('id, company_name, contact_name, contact_phone, driver_name, driver_phone, contract_pdf_url')
+        .eq('is_active', true)
+        .order('company_name');
+      if (data) setBusCompanies(data);
+    };
     fetchTourEvents();
     fetchRoster();
+    fetchHosts();
+    fetchContracts();
+    fetchBusCompanies();
   }, []);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -342,7 +373,188 @@ export const TourManagerLanding = ({
         </Card>
       </Collapsible>
 
-      <TourMilestones />
+      {/* Hosts Section */}
+      <Collapsible open={hostsOpen} onOpenChange={setHostsOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  Tour Hosts
+                  <Badge variant="secondary" className="text-[10px] ml-1">{hosts.length}</Badge>
+                </CardTitle>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", hostsOpen && "rotate-180")} />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="px-4 pb-4 pt-0">
+              {hosts.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No hosts added yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {hosts.map(host => (
+                    <div key={host.id} className="flex items-start gap-3 p-2 rounded-lg border hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => onNavigate('hosts')}>
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Building2 className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-foreground">{host.organization_name}</p>
+                        <p className="text-[10px] text-muted-foreground">{host.contact_name}</p>
+                        <div className="flex items-center gap-3 mt-0.5">
+                          {host.contact_phone && (
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                              <Phone className="h-2.5 w-2.5" /> {host.contact_phone}
+                            </span>
+                          )}
+                          {host.city && (
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                              <MapPin className="h-2.5 w-2.5" /> {host.city}{host.state ? `, ${host.state}` : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] flex-shrink-0 capitalize">{host.status}</Badge>
+                    </div>
+                  ))}
+                  <Button variant="ghost" size="sm" className="w-full mt-1 text-xs" onClick={() => onNavigate('hosts')}>
+                    Manage Hosts <ChevronRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Contracts Section */}
+      <Collapsible open={contractsOpen} onOpenChange={setContractsOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <FileCheck className="h-4 w-4 text-primary" />
+                  Contracts
+                  <Badge variant="secondary" className="text-[10px] ml-1">{contracts.length}</Badge>
+                </CardTitle>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", contractsOpen && "rotate-180")} />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="px-4 pb-4 pt-0">
+              {contracts.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No contracts yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {contracts.map(contract => (
+                    <div key={contract.id} className="flex items-center gap-3 p-2 rounded-lg border hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => onNavigate('contracts')}>
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <FileText className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-foreground truncate">{contract.title}</p>
+                      </div>
+                      <Badge variant={contract.status === 'completed' ? 'default' : 'outline'} className="text-[10px] flex-shrink-0 capitalize">
+                        {contract.status}
+                      </Badge>
+                    </div>
+                  ))}
+                  <Button variant="ghost" size="sm" className="w-full mt-1 text-xs" onClick={() => onNavigate('contracts')}>
+                    Manage Contracts <ChevronRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Bus Company Section */}
+      <Collapsible open={busOpen} onOpenChange={setBusOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Bus className="h-4 w-4 text-primary" />
+                  Bus Company
+                  {busCompanies.length > 0 && <Badge variant="secondary" className="text-[10px] ml-1">{busCompanies.length}</Badge>}
+                </CardTitle>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", busOpen && "rotate-180")} />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="px-4 pb-4 pt-0">
+              {busCompanies.length === 0 ? (
+                <div className="text-center py-4">
+                  <Bus className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                  <p className="text-sm text-muted-foreground">No bus company added yet</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">Add your contracted bus company details</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {busCompanies.map(bus => (
+                    <div key={bus.id} className="p-3 rounded-lg border bg-muted/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Bus className="h-4 w-4 text-primary" />
+                        <p className="text-sm font-semibold text-foreground">{bus.company_name}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        {bus.contact_name && (
+                          <div>
+                            <p className="text-muted-foreground text-[10px] uppercase font-medium">Contact</p>
+                            <p className="text-foreground">{bus.contact_name}</p>
+                          </div>
+                        )}
+                        {bus.contact_phone && (
+                          <div>
+                            <p className="text-muted-foreground text-[10px] uppercase font-medium">Phone</p>
+                            <p className="text-foreground flex items-center gap-1"><Phone className="h-3 w-3" /> {bus.contact_phone}</p>
+                          </div>
+                        )}
+                        {bus.driver_name ? (
+                          <div>
+                            <p className="text-muted-foreground text-[10px] uppercase font-medium">Driver</p>
+                            <p className="text-foreground">{bus.driver_name}</p>
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="text-muted-foreground text-[10px] uppercase font-medium">Driver</p>
+                            <p className="text-muted-foreground italic">No driver info</p>
+                          </div>
+                        )}
+                        {bus.driver_phone && (
+                          <div>
+                            <p className="text-muted-foreground text-[10px] uppercase font-medium">Driver Phone</p>
+                            <p className="text-foreground flex items-center gap-1"><Phone className="h-3 w-3" /> {bus.driver_phone}</p>
+                          </div>
+                        )}
+                      </div>
+                      {bus.contract_pdf_url && (
+                        <div className="mt-2 pt-2 border-t">
+                          <a
+                            href={bus.contract_pdf_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                          >
+                            <Eye className="h-3 w-3" /> View Contract PDF
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
 
       {/* Compact Stats Row */}
       <div className="hidden md:grid grid-cols-6 gap-2">

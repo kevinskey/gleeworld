@@ -19459,6 +19459,54 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_tour_bus_companies: {
+        Row: {
+          company_name: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          contract_pdf_url: string | null
+          created_at: string
+          created_by: string | null
+          driver_name: string | null
+          driver_phone: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contract_pdf_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contract_pdf_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_tour_cities: {
         Row: {
           arrival_date: string | null
