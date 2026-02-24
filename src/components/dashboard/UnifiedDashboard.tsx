@@ -159,13 +159,16 @@ export const UnifiedDashboard = () => {
   if (activeModuleId && activeModuleId !== 'collapsed-toggle' && viewMode === 'default') {
     const memberModules = ['music-library', 'member-sight-reading-studio', 'attendance', 'wardrobe', 'karaoke'];
     const showMemberNav = memberModules.includes(activeModuleId) && !profile?.is_admin && !profile?.is_super_admin;
+    const hideBackButton = activeModuleId === 'tour-management';
     return <div className="min-h-screen">
-        <div className="px-1 py-1 sm:px-6 sm:py-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="mb-2 sm:mb-4 hover:bg-primary/10">
-            <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Back to Dashboard</span>
-            <span className="sm:hidden">Back</span>
-          </Button>
+        <div className={hideBackButton ? '' : 'px-1 py-1 sm:px-6 sm:py-4'}>
+          {!hideBackButton && (
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="mb-2 sm:mb-4 hover:bg-primary/10">
+              <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+              <span className="sm:hidden">Back</span>
+            </Button>
+          )}
           <ModuleDisplay selectedModule={activeModuleId} />
         </div>
         {showMemberNav && profile && <div className="px-1 sm:px-6 pb-4 sm:pb-8">
