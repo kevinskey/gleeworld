@@ -349,16 +349,13 @@ export const UnifiedDashboard = () => {
 
   // DEFAULT VIEW: New streamlined 4-card layout
   return <div className="min-h-screen bg-background">
-      {/* Advertising Hero - TOP OF DASHBOARD in its own container */}
-      <div className="w-full bg-primary">
-        <div className="w-full">
-          <AdvertisingHero />
-        </div>
+      {/* Advertising Hero - TOP OF DASHBOARD */}
+      <div className="w-full">
+        <AdvertisingHero />
       </div>
 
-
       {/* My Modules */}
-      {user && <div className="px-0 sm:px-4 py-6 bg-primary-foreground">
+      {user && <div className="px-0 sm:px-4 py-6">
           <MyModules userProfile={{
         user_id: user.id,
         role: profile?.role,
@@ -369,8 +366,8 @@ export const UnifiedDashboard = () => {
       }} />
         </div>}
 
-      {/* YouTube Channel Slider - white background wrapper */}
-      <div style={{ backgroundColor: '#ffffff' }}>
+      {/* YouTube Channel Slider */}
+      <div>
         <YouTubeChannelSlider />
       </div>
       
