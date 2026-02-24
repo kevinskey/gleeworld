@@ -129,7 +129,7 @@ export const MyModules = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <LayoutGrid className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg font-semibold text-white/90" style={{ fontFamily: "'Cinzel', serif" }}>My Modules</CardTitle>
+                <CardTitle className="text-sm sm:text-xl font-semibold text-white/90" style={{ fontFamily: "'Cinzel', serif" }}>My Modules</CardTitle>
               </div>
               <ChevronDown className={`h-5 w-5 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </div>
