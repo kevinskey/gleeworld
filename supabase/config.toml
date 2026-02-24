@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.search-hotels]
 verify_jwt = false
 
+[functions.nearby-places]
+verify_jwt = false
+
 [api]
 enabled = true
 port = 54321
