@@ -17,6 +17,7 @@ import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
 import { CourseTopicSlider } from './CourseTopicSlider';
 import { ClassScheduleForm } from './ClassScheduleForm';
+import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
 
 interface StudentProfile {
   user_id: string;
@@ -426,7 +427,11 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   };
 
   return (
-    <div className="flex gap-6">
+    <div className="space-y-6">
+      {/* Advertising Hero - Full width above content */}
+      <AdvertisingHero className="rounded-xl overflow-hidden" />
+      
+      <div className="flex gap-6">
       {/* Main Content Column - 70% */}
       <div className="flex-1 space-y-6 min-w-0">
         
@@ -848,6 +853,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
           </CardContent>
         </Card>
       </div>
+    </div>
     </div>
   );
 };
