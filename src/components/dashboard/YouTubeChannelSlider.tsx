@@ -53,7 +53,7 @@ export const YouTubeChannelSlider: React.FC = () => {
       {/* Header */}
       <div style={{
       fontFamily: "'Cinzel', serif"
-    }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] text-primary-foreground flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 my-[5px]">
+    }} className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] text-primary-foreground flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20">
         <Youtube className="h-4 w-4 sm:h-5 sm:w-5" />
         YouTube Channel
       </div>
