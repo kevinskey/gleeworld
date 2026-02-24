@@ -144,30 +144,30 @@ export const MyModules = ({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="grid w-full grid-cols-3 gap-y-6 gap-x-2 justify-items-center py-2">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
               return <button 
                   key={module.id} 
                   onClick={() => navigate(module.route)} 
-                  className="h-24 md:h-28 py-3 px-3 flex flex-col items-center justify-center gap-2 rounded-md border border-border bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground hover:border-primary/40 transition-all shadow-sm"
+                  className="flex flex-col items-center gap-1.5 group w-20 sm:w-24"
                 >
-                    <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
-                      <IconComponent className="h-6 w-6 md:h-7 md:w-7 text-primary" />
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary/80 to-primary shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-xl transition-all duration-200">
+                      <IconComponent className="h-7 w-7 sm:h-8 sm:w-8 text-primary-foreground" />
                     </div>
-                    <span className="text-xs md:text-sm text-center leading-tight line-clamp-2 px-1 font-medium break-words w-full">
+                    <span className="text-[11px] sm:text-xs text-center leading-tight line-clamp-2 text-foreground/80 group-hover:text-foreground transition-colors font-medium">
                       {module.title}
                     </span>
                   </button>;
             })}
               {showAdminSettings && <button 
-                  className="h-24 md:h-28 py-3 px-3 flex flex-col items-center justify-center gap-2 rounded-md border border-border bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground hover:border-primary/40 transition-all shadow-sm" 
+                  className="flex flex-col items-center gap-1.5 group w-20 sm:w-24" 
                   onClick={() => navigate('/dashboard?module=admin-settings')}
                 >
-                  <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
-                    <Settings className="h-6 w-6 md:h-7 md:w-7 text-primary" />
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-muted-foreground/60 to-muted-foreground shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-xl transition-all duration-200">
+                    <Settings className="h-7 w-7 sm:h-8 sm:w-8 text-primary-foreground" />
                   </div>
-                  <span className="text-xs md:text-sm text-center leading-tight font-medium">Admin Settings</span>
+                  <span className="text-[11px] sm:text-xs text-center leading-tight font-medium text-foreground/80 group-hover:text-foreground transition-colors">Admin Settings</span>
                 </button>}
             </div>
           </CardContent>
