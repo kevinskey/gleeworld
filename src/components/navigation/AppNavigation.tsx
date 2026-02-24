@@ -24,7 +24,8 @@ import {
   BookOpen,
   Sofa,
   Images,
-  Bookmark
+  Bookmark,
+  Rss
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/constants/permissions";
@@ -111,6 +112,12 @@ export const AppNavigation = () => {
       href: "/saved-feed",
       icon: Bookmark,
       permission: null
+    },
+    {
+      label: "Feed Control",
+      href: "/feed-control",
+      icon: Rss,
+      permission: "manage_settings"
     },
   ];
 

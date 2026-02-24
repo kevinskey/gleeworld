@@ -11334,6 +11334,81 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_feed_settings: {
+        Row: {
+          cache_minutes: number
+          feed_type: string
+          id: string
+          is_enabled: boolean
+          max_total_items: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cache_minutes?: number
+          feed_type: string
+          id?: string
+          is_enabled?: boolean
+          max_total_items?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cache_minutes?: number
+          feed_type?: string
+          id?: string
+          is_enabled?: boolean
+          max_total_items?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      gw_feed_sources: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          display_order: number
+          feed_type: string
+          icon: string
+          id: string
+          is_active: boolean
+          max_items_per_source: number
+          name: string
+          timeout_ms: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          feed_type: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          max_items_per_source?: number
+          name: string
+          timeout_ms?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          feed_type?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          max_items_per_source?: number
+          name?: string
+          timeout_ms?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       gw_feedback: {
         Row: {
           author_id: string | null
