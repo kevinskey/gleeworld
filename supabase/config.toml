@@ -420,3 +420,6 @@ verify_jwt = false
 
 [functions.fetch-news-feeds]
 verify_jwt = false
+
+[functions.fetch-scholarship-feeds]
+verify_jwt = false

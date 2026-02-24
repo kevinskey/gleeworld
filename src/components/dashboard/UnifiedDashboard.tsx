@@ -23,6 +23,7 @@ import { FourCardLayout } from './FourCardLayout';
 import { DashboardStoreSection } from './DashboardStoreSection';
 import { YouTubeChannelSlider } from './YouTubeChannelSlider';
 import { NewsFeedSlider } from './NewsFeedSlider';
+import { ScholarshipFeedSlider } from './ScholarshipFeedSlider';
 import { OfficeHoursWidget } from './OfficeHoursWidget';
 
 // Lazy load heavy components
@@ -375,6 +376,11 @@ export const UnifiedDashboard = () => {
       {/* News Feed */}
       <div>
         <NewsFeedSlider />
+      </div>
+
+      {/* Scholarship Feed */}
+      <div>
+        <ScholarshipFeedSlider />
       </div>
       
       {/* Messages Panel Overlay */}
