@@ -123,7 +123,7 @@ export const MyModules = ({
     return null; // Don't render if no assigned modules
   }
   return <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border border-white/10 bg-gradient-to-b from-[hsl(208,100%,14%)] to-[hsl(208,100%,10%)] shadow-sm py-0">
+      <Card className="border border-white/10 bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] shadow-sm py-0">
         <CollapsibleTrigger asChild>
           <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-white/5 transition-colors">
             <div className="flex items-center justify-between">
