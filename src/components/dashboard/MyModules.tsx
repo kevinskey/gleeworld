@@ -70,14 +70,14 @@ export const MyModules = ({
       rose: 'from-rose-400 to-rose-600',
       amber: 'from-amber-400 to-amber-600',
       gray: 'from-slate-400 to-slate-600',
-      slate: 'from-slate-400 to-slate-600',
+      slate: 'from-slate-400 to-slate-600'
     };
     return colorMap[color] || 'from-primary/80 to-primary';
   };
 
   // For super admins, show all modules; for others, show up to 12
-  const allModulesWithDetails = accessibleModules.map(module => {
-    const unifiedModule = UNIFIED_MODULES.find(u => u.id === module.id);
+  const allModulesWithDetails = accessibleModules.map((module) => {
+    const unifiedModule = UNIFIED_MODULES.find((u) => u.id === module.id);
     return {
       id: module.id,
       title: unifiedModule?.title || module.title || module.id,
@@ -88,7 +88,7 @@ export const MyModules = ({
   }).slice(0, isSuperAdmin ? 100 : 12);
 
   // Filter by search
-  const filteredModules = allModulesWithDetails.filter(module => module.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredModules = allModulesWithDetails.filter((module) => module.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   // Sort modules
   const modulesWithDetails = [...filteredModules].sort((a, b) => {
@@ -125,7 +125,7 @@ export const MyModules = ({
   return <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <Card className="border border-white/10 bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] shadow-sm py-0">
         <CollapsibleTrigger asChild>
-          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-white/5 transition-colors">
+          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-white/5 transition-colors rounded-none">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <LayoutGrid className="h-5 w-5 text-primary" />
@@ -141,7 +141,7 @@ export const MyModules = ({
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 bg-background border border-border text-foreground placeholder:text-muted-foreground shadow-sm" />
+                <Input placeholder="Search modules..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 bg-background border border-border text-foreground placeholder:text-muted-foreground shadow-sm" />
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -167,14 +167,14 @@ export const MyModules = ({
               </DropdownMenu>
             </div>
             <div className="grid w-full grid-cols-3 sm:grid-cols-4 gap-y-5 gap-x-1 justify-items-center py-2">
-              {modulesWithDetails.map(module => {
+              {modulesWithDetails.map((module) => {
               const IconComponent = getIconComponent(module.icon);
               const colorClasses = getIconColorClasses(module.iconColor);
-              return <button 
-                  key={module.id} 
-                  onClick={() => navigate(module.route)} 
-                  className="flex flex-col items-center gap-1.5 group w-20 sm:w-24"
-                >
+              return <button
+                key={module.id}
+                onClick={() => navigate(module.route)}
+                className="flex flex-col items-center gap-1.5 group w-20 sm:w-24">
+
                     <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${colorClasses} shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
                       <IconComponent className="h-7 w-7 sm:h-8 sm:w-8 text-white drop-shadow-sm" />
                     </div>
@@ -183,10 +183,10 @@ export const MyModules = ({
                     </span>
                   </button>;
             })}
-              {showAdminSettings && <button 
-                  className="flex flex-col items-center gap-1.5 group w-20 sm:w-24" 
-                  onClick={() => navigate('/dashboard?module=admin-settings')}
-                >
+              {showAdminSettings && <button
+              className="flex flex-col items-center gap-1.5 group w-20 sm:w-24"
+              onClick={() => navigate('/dashboard?module=admin-settings')}>
+
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-xl transition-all duration-200">
                     <Settings className="h-7 w-7 sm:h-8 sm:w-8 text-white drop-shadow-sm" />
                   </div>
