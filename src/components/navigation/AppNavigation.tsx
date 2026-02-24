@@ -23,7 +23,8 @@ import {
   GraduationCap,
   BookOpen,
   Sofa,
-  Images
+  Images,
+  Bookmark
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/constants/permissions";
@@ -103,6 +104,12 @@ export const AppNavigation = () => {
       label: "Photo Gallery",
       href: "/photo-gallery",
       icon: Images,
+      permission: null
+    },
+    {
+      label: "Saved Feed",
+      href: "/saved-feed",
+      icon: Bookmark,
       permission: null
     },
   ];

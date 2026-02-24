@@ -11286,6 +11286,54 @@ export type Database = {
           },
         ]
       }
+      gw_feed_saves: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          feed_type: string
+          id: string
+          image_url: string | null
+          is_bookmarked: boolean | null
+          is_liked: boolean | null
+          link: string
+          pub_date: string | null
+          source: string | null
+          source_icon: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          feed_type: string
+          id?: string
+          image_url?: string | null
+          is_bookmarked?: boolean | null
+          is_liked?: boolean | null
+          link: string
+          pub_date?: string | null
+          source?: string | null
+          source_icon?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          feed_type?: string
+          id?: string
+          image_url?: string | null
+          is_bookmarked?: boolean | null
+          is_liked?: boolean | null
+          link?: string
+          pub_date?: string | null
+          source?: string | null
+          source_icon?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_feedback: {
         Row: {
           author_id: string | null

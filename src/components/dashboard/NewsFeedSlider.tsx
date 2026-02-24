@@ -2,6 +2,8 @@ import React from 'react';
 import { Newspaper, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useFeedSaves } from '@/hooks/useFeedSaves';
+import { FeedCardActions } from './FeedCardActions';
 
 interface NewsItem {
   title: string;
@@ -26,6 +28,8 @@ export const NewsFeedSlider: React.FC = () => {
     refetchInterval: 1000 * 60 * 15,
   });
 
+  const { isLiked, isBookmarked, toggleLike, toggleBookmark, share } = useFeedSaves();
+
   const formatTimeAgo = (dateStr: string) => {
     if (!dateStr) return '';
     try {
@@ -44,9 +48,12 @@ export const NewsFeedSlider: React.FC = () => {
     }
   };
 
+  const handleCardClick = (link: string) => {
+    window.open(link, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="w-full">
-      {/* Header */}
       <div
         style={{ fontFamily: "'Cinzel', serif" }}
         className="w-full h-12 gap-2 text-sm sm:text-xl bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] text-primary-foreground flex items-center justify-start text-left px-3 sm:px-6 lg:px-8 shadow-lg border-t border-t-white/20 mt-4"
@@ -55,7 +62,6 @@ export const NewsFeedSlider: React.FC = () => {
         News Feed
       </div>
 
-      {/* Swipeable News Slider */}
       <div className="bg-gradient-to-b from-[hsl(220,40%,10%)] to-[hsl(220,40%,8%)]">
         {isLoading ? (
           <div className="flex gap-4 px-5 py-4">
@@ -69,12 +75,10 @@ export const NewsFeedSlider: React.FC = () => {
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
           >
             {newsItems.map((item, index) => (
-              <a
+              <div
                 key={`${item.link}-${index}`}
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-shrink-0 snap-start group text-left block"
+                onClick={() => handleCardClick(item.link)}
+                className="flex-shrink-0 snap-start group text-left cursor-pointer"
               >
                 <div className="relative w-72 sm:w-80 lg:w-96 rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all shadow-lg bg-[hsl(220,35%,12%)]">
                   {item.imageUrl ? (
@@ -109,9 +113,16 @@ export const NewsFeedSlider: React.FC = () => {
                     {item.description && (
                       <p className="text-[11px] text-white/40 mt-1 line-clamp-1">{item.description}</p>
                     )}
+                    <FeedCardActions
+                      isLiked={isLiked(item.link)}
+                      isBookmarked={isBookmarked(item.link)}
+                      onLike={(e) => { e.stopPropagation(); toggleLike('news', item); }}
+                      onBookmark={(e) => { e.stopPropagation(); toggleBookmark('news', item); }}
+                      onShare={(e) => { e.stopPropagation(); share(item); }}
+                    />
                   </div>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         ) : (

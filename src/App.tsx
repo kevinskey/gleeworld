@@ -78,6 +78,7 @@ import W9FormPage from "./pages/W9FormPage";
 import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
 import DocsArchitecture from "./pages/DocsArchitecture";
+import SavedFeed from "./pages/SavedFeed";
 import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
 import TestBuilderPage from "./pages/mus240/TestBuilderPage";
 import TestBuilderEdit from "./pages/TestBuilderEdit";
@@ -807,6 +808,16 @@ const App = () => {
                         <UnifiedDashboard />
                       </UniversalLayout>
                     </ProtectedRoute>
+                   } 
+                 />
+                 <Route 
+                   path="/saved-feed" 
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout>
+                         <SavedFeed />
+                       </UniversalLayout>
+                     </ProtectedRoute>
                    } 
                  />
                  <Route 
