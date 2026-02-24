@@ -33,7 +33,7 @@ export const CommandCenterHeader = ({
   isMobile,
 }: CommandCenterHeaderProps) => {
   return (
-    <div className="bg-[hsl(var(--message-header))] text-white px-3 md:px-6 py-3 flex-shrink-0">
+    <div className="bg-secondary text-secondary-foreground px-3 md:px-6 py-3 flex-shrink-0">
       {/* Mobile layout: stacked rows */}
       {isMobile ? (
         <div className="flex flex-col gap-2">
