@@ -35,7 +35,7 @@ export const MyModules = ({
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('default');
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const {
     getAccessibleModules,
     loading
