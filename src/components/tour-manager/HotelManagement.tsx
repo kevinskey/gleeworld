@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,6 @@ import {
   Plus, 
   Edit2, 
   Trash2, 
-  Star,
   Wifi,
   Car,
   Coffee,
@@ -23,7 +22,11 @@ import {
   Users,
   DollarSign,
   ExternalLink,
-  Calendar
+  Calendar,
+  Search,
+  Star,
+  Loader2,
+  CheckCircle2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -65,6 +68,19 @@ interface HotelInfo {
   tour_city?: TourCity;
 }
 
+interface GooglePlaceResult {
+  place_id: string;
+  name: string;
+  formatted_address: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  phone: string | null;
+  website: string | null;
+  rating: number | null;
+}
+
 const AMENITY_OPTIONS = [
   { value: 'wifi', label: 'Free WiFi', icon: Wifi },
   { value: 'parking', label: 'Free Parking', icon: Car },
@@ -80,6 +96,15 @@ export const HotelManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState<HotelInfo | null>(null);
   const { toast } = useToast();
+
+  // Google search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCity, setSearchCity] = useState('');
+  const [searchState, setSearchState] = useState('');
+  const [searchResults, setSearchResults] = useState<GooglePlaceResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<GooglePlaceResult | null>(null);
+  const [step, setStep] = useState<'search' | 'details'>('search');
 
   const [formData, setFormData] = useState({
     tour_city_id: '',
@@ -102,7 +127,8 @@ export const HotelManagement = () => {
     contact_name: '',
     contact_email: '',
     parking_info: '',
-    breakfast_included: false
+    breakfast_included: false,
+    google_place_id: '',
   });
 
   useEffect(() => {
@@ -125,7 +151,6 @@ export const HotelManagement = () => {
       setHotels((data || []) as unknown as HotelInfo[]);
     } catch (error) {
       console.error('Error loading hotels:', error);
-      // Table might not exist yet, that's okay
     } finally {
       setLoading(false);
     }
@@ -167,9 +192,58 @@ export const HotelManagement = () => {
       contact_name: '',
       contact_email: '',
       parking_info: '',
-      breakfast_included: false
+      breakfast_included: false,
+      google_place_id: '',
     });
     setEditingHotel(null);
+    setSearchQuery('');
+    setSearchCity('');
+    setSearchState('');
+    setSearchResults([]);
+    setSelectedPlace(null);
+    setStep('search');
+  };
+
+  const handleSearchHotels = useCallback(async () => {
+    if (!searchQuery || searchQuery.length < 2) return;
+    setIsSearching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('search-hotels', {
+        body: { query: searchQuery, city: searchCity, state: searchState },
+      });
+      if (error) throw error;
+      setSearchResults(data?.results || []);
+    } catch (err: any) {
+      console.error('Hotel search error:', err);
+      toast({ title: 'Search failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchQuery, searchCity, searchState, toast]);
+
+  const handleSelectPlace = (place: GooglePlaceResult) => {
+    setSelectedPlace(place);
+    setFormData(prev => ({
+      ...prev,
+      hotel_name: place.name,
+      address: place.address,
+      city: place.city,
+      state: place.state,
+      zip_code: place.zip_code,
+      phone: place.phone || '',
+      website: place.website || '',
+      google_place_id: place.place_id,
+    }));
+    setStep('details');
+  };
+
+  const handleTourCityChange = (cityId: string) => {
+    const city = tourCities.find(c => c.id === cityId);
+    setFormData(prev => ({ ...prev, tour_city_id: cityId }));
+    if (city) {
+      setSearchCity(city.city_name);
+      setSearchState(city.state_code || '');
+    }
   };
 
   const handleEdit = (hotel: HotelInfo) => {
@@ -195,8 +269,10 @@ export const HotelManagement = () => {
       contact_name: hotel.contact_name || '',
       contact_email: hotel.contact_email || '',
       parking_info: hotel.parking_info || '',
-      breakfast_included: hotel.breakfast_included || false
+      breakfast_included: hotel.breakfast_included || false,
+      google_place_id: '',
     });
+    setStep('details'); // Skip search when editing
     setIsDialogOpen(true);
   };
 
@@ -322,7 +398,7 @@ export const HotelManagement = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-foreground">Hotel Information</h2>
-          <p className="text-sm text-muted-foreground">Manage accommodations for tour cities</p>
+          <p className="text-sm text-muted-foreground">Search & verify hotels via Google before adding</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
@@ -336,234 +412,302 @@ export const HotelManagement = () => {
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingHotel ? 'Edit Hotel' : 'Add New Hotel'}</DialogTitle>
+              <DialogTitle>
+                {editingHotel ? 'Edit Hotel' : step === 'search' ? 'Search for a Hotel' : 'Hotel Details'}
+              </DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {/* Tour City Selection */}
-              {tourCities.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Tour City (Optional)</Label>
-                  <Select value={formData.tour_city_id} onValueChange={(value) => setFormData(prev => ({ ...prev, tour_city_id: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Link to a tour city..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tourCities.map(city => (
-                        <SelectItem key={city.id} value={city.id}>
-                          {city.city_name}, {city.state_code}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
 
-              {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Hotel Name *</Label>
-                  <Input 
-                    value={formData.hotel_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, hotel_name: e.target.value }))}
-                    placeholder="e.g., Hilton Garden Inn"
+            {/* Step 1: Google Search */}
+            {step === 'search' && !editingHotel && (
+              <div className="space-y-4 py-2">
+                <p className="text-sm text-muted-foreground">
+                  Search Google to find and verify the hotel. Only verified hotels with real addresses can be added.
+                </p>
+
+                {/* Tour City Selection — pre-fills city/state for search */}
+                {tourCities.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Tour City (narrows search)</Label>
+                    <Select value={formData.tour_city_id} onValueChange={handleTourCityChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a tour city..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tourCities.map(city => (
+                          <SelectItem key={city.id} value={city.id}>
+                            {city.city_name}{city.state_code ? `, ${city.state_code}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Search hotel name (e.g. Marriott, Hilton)..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchHotels()}
+                    className="flex-1"
                   />
+                  <Button onClick={handleSearchHotels} disabled={isSearching || searchQuery.length < 2} className="gap-2">
+                    {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                    Search
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label>Confirmation #</Label>
-                  <Input 
-                    value={formData.confirmation_number}
-                    onChange={(e) => setFormData(prev => ({ ...prev, confirmation_number: e.target.value }))}
-                    placeholder="Booking confirmation"
-                  />
-                </div>
+
+                {!formData.tour_city_id && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">City (optional filter)</Label>
+                      <Input
+                        placeholder="e.g. Chicago"
+                        value={searchCity}
+                        onChange={(e) => setSearchCity(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">State (optional filter)</Label>
+                      <Input
+                        placeholder="e.g. IL"
+                        value={searchState}
+                        onChange={(e) => setSearchState(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Search Results */}
+                {searchResults.length > 0 && (
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {searchResults.map((place) => (
+                      <button
+                        key={place.place_id}
+                        onClick={() => handleSelectPlace(place)}
+                        className="w-full text-left p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground truncate">{place.name}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                              <MapPin className="h-3 w-3 flex-shrink-0" />
+                              {place.formatted_address}
+                            </p>
+                            {place.phone && (
+                              <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                <Phone className="h-3 w-3 flex-shrink-0" />
+                                {place.phone}
+                              </p>
+                            )}
+                          </div>
+                          {place.rating && (
+                            <Badge variant="secondary" className="flex items-center gap-1 text-xs shrink-0">
+                              <Star className="h-3 w-3 fill-current text-amber-500" />
+                              {place.rating}
+                            </Badge>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {searchResults.length === 0 && searchQuery.length >= 2 && !isSearching && (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    No hotels found. Try a different search term.
+                  </p>
+                )}
               </div>
+            )}
 
-              {/* Address */}
-              <div className="space-y-2">
-                <Label>Street Address</Label>
-                <Input 
-                  value={formData.address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="123 Main Street"
-                />
+            {/* Step 2: Hotel Details (after selecting from Google or editing) */}
+            {step === 'details' && (
+              <div className="grid gap-4 py-4">
+                {/* Selected hotel badge */}
+                {selectedPlace && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground">{selectedPlace.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{selectedPlace.formatted_address}</p>
+                    </div>
+                    {!editingHotel && (
+                      <Button variant="ghost" size="sm" className="text-xs shrink-0" onClick={() => {
+                        setStep('search');
+                        setSelectedPlace(null);
+                      }}>
+                        Change
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* Tour City Selection */}
+                {tourCities.length > 0 && !formData.tour_city_id && (
+                  <div className="space-y-2">
+                    <Label>Link to Tour City</Label>
+                    <Select value={formData.tour_city_id} onValueChange={(value) => setFormData(prev => ({ ...prev, tour_city_id: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Link to a tour city..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tourCities.map(city => (
+                          <SelectItem key={city.id} value={city.id}>
+                            {city.city_name}{city.state_code ? `, ${city.state_code}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Read-only verified info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Hotel Name</Label>
+                    <Input value={formData.hotel_name} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-muted' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, hotel_name: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Confirmation #</Label>
+                    <Input 
+                      value={formData.confirmation_number}
+                      onChange={(e) => setFormData(prev => ({ ...prev, confirmation_number: e.target.value }))}
+                      placeholder="Booking confirmation"
+                    />
+                  </div>
+                </div>
+
+                {/* Address — read only from Google */}
+                <div className="space-y-2">
+                  <Label>Street Address {selectedPlace && <span className="text-xs text-muted-foreground">(verified by Google)</span>}</Label>
+                  <Input value={formData.address} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-muted' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, address: e.target.value }))} />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>City</Label>
+                    <Input value={formData.city} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-muted' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, city: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>State</Label>
+                    <Input value={formData.state} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-muted' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, state: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ZIP Code</Label>
+                    <Input value={formData.zip_code} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-muted' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, zip_code: e.target.value }))} />
+                  </div>
+                </div>
+
+                {/* Contact */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Phone</Label>
+                    <Input 
+                      value={formData.phone}
+                      readOnly={!!selectedPlace && !!formData.phone}
+                      className={selectedPlace && formData.phone ? 'bg-muted' : ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Website</Label>
+                    <Input 
+                      value={formData.website}
+                      readOnly={!!selectedPlace && !!formData.website}
+                      className={selectedPlace && formData.website ? 'bg-muted' : ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
+
+                {/* Check-in/out Dates */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Check-in Date</Label>
+                    <Input type="date" value={formData.check_in_date} onChange={(e) => setFormData(prev => ({ ...prev, check_in_date: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Check-out Date</Label>
+                    <Input type="date" value={formData.check_out_date} onChange={(e) => setFormData(prev => ({ ...prev, check_out_date: e.target.value }))} />
+                  </div>
+                </div>
+
+                {/* Check-in/out Times */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Check-in Time</Label>
+                    <Input type="time" value={formData.check_in_time} onChange={(e) => setFormData(prev => ({ ...prev, check_in_time: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Check-out Time</Label>
+                    <Input type="time" value={formData.check_out_time} onChange={(e) => setFormData(prev => ({ ...prev, check_out_time: e.target.value }))} />
+                  </div>
+                </div>
+
+                {/* Rooms & Rate */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Number of Rooms</Label>
+                    <Input type="number" value={formData.room_count} onChange={(e) => setFormData(prev => ({ ...prev, room_count: e.target.value }))} placeholder="14" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Rate per Room ($)</Label>
+                    <Input type="number" step="0.01" value={formData.room_rate} onChange={(e) => setFormData(prev => ({ ...prev, room_rate: e.target.value }))} placeholder="129.00" />
+                  </div>
+                </div>
+
+                {/* Amenities */}
+                <div className="space-y-2">
+                  <Label>Amenities</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {AMENITY_OPTIONS.map(amenity => (
+                      <Button
+                        key={amenity.value}
+                        type="button"
+                        variant={formData.amenities.includes(amenity.value) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleAmenity(amenity.value)}
+                        className="gap-1"
+                      >
+                        <amenity.icon className="h-3.5 w-3.5" />
+                        {amenity.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Parking */}
+                <div className="space-y-2">
+                  <Label>Parking Information</Label>
+                  <Input value={formData.parking_info} onChange={(e) => setFormData(prev => ({ ...prev, parking_info: e.target.value }))} placeholder="Free parking, Valet available, etc." />
+                </div>
+
+                {/* Contact Person */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Contact Name</Label>
+                    <Input value={formData.contact_name} onChange={(e) => setFormData(prev => ({ ...prev, contact_name: e.target.value }))} placeholder="Hotel contact person" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Contact Email</Label>
+                    <Input type="email" value={formData.contact_email} onChange={(e) => setFormData(prev => ({ ...prev, contact_email: e.target.value }))} placeholder="contact@hotel.com" />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-2">
+                  <Label>Notes</Label>
+                  <Textarea value={formData.notes} onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))} placeholder="Special instructions, group code, etc." rows={3} />
+                </div>
+
+                <Button onClick={handleSubmit} className="w-full">
+                  {editingHotel ? 'Update Hotel' : 'Add Hotel'}
+                </Button>
               </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>City *</Label>
-                  <Input 
-                    value={formData.city}
-                    onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                    placeholder="City"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>State</Label>
-                  <Input 
-                    value={formData.state}
-                    onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
-                    placeholder="GA"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>ZIP Code</Label>
-                  <Input 
-                    value={formData.zip_code}
-                    onChange={(e) => setFormData(prev => ({ ...prev, zip_code: e.target.value }))}
-                    placeholder="30314"
-                  />
-                </div>
-              </div>
-
-              {/* Contact */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Phone</Label>
-                  <Input 
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="(555) 123-4567"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Website</Label>
-                  <Input 
-                    value={formData.website}
-                    onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-                    placeholder="https://..."
-                  />
-                </div>
-              </div>
-
-              {/* Check-in/out Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Check-in Date</Label>
-                  <Input 
-                    type="date"
-                    value={formData.check_in_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, check_in_date: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Check-out Date</Label>
-                  <Input 
-                    type="date"
-                    value={formData.check_out_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, check_out_date: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              {/* Check-in/out Times */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Check-in Time</Label>
-                  <Input 
-                    type="time"
-                    value={formData.check_in_time}
-                    onChange={(e) => setFormData(prev => ({ ...prev, check_in_time: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Check-out Time</Label>
-                  <Input 
-                    type="time"
-                    value={formData.check_out_time}
-                    onChange={(e) => setFormData(prev => ({ ...prev, check_out_time: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              {/* Rooms & Rate */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Number of Rooms</Label>
-                  <Input 
-                    type="number"
-                    value={formData.room_count}
-                    onChange={(e) => setFormData(prev => ({ ...prev, room_count: e.target.value }))}
-                    placeholder="14"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Rate per Room ($)</Label>
-                  <Input 
-                    type="number"
-                    step="0.01"
-                    value={formData.room_rate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, room_rate: e.target.value }))}
-                    placeholder="129.00"
-                  />
-                </div>
-              </div>
-
-              {/* Amenities */}
-              <div className="space-y-2">
-                <Label>Amenities</Label>
-                <div className="flex flex-wrap gap-2">
-                  {AMENITY_OPTIONS.map(amenity => (
-                    <Button
-                      key={amenity.value}
-                      type="button"
-                      variant={formData.amenities.includes(amenity.value) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => toggleAmenity(amenity.value)}
-                      className="gap-1"
-                    >
-                      <amenity.icon className="h-3.5 w-3.5" />
-                      {amenity.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Parking */}
-              <div className="space-y-2">
-                <Label>Parking Information</Label>
-                <Input 
-                  value={formData.parking_info}
-                  onChange={(e) => setFormData(prev => ({ ...prev, parking_info: e.target.value }))}
-                  placeholder="Free parking, Valet available, etc."
-                />
-              </div>
-
-              {/* Contact Person */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Contact Name</Label>
-                  <Input 
-                    value={formData.contact_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, contact_name: e.target.value }))}
-                    placeholder="Hotel contact person"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Contact Email</Label>
-                  <Input 
-                    type="email"
-                    value={formData.contact_email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, contact_email: e.target.value }))}
-                    placeholder="contact@hotel.com"
-                  />
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label>Notes</Label>
-                <Textarea 
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Special instructions, group code, etc."
-                  rows={3}
-                />
-              </div>
-
-              <Button onClick={handleSubmit} className="w-full">
-                {editingHotel ? 'Update Hotel' : 'Add Hotel'}
-              </Button>
-            </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
@@ -574,11 +718,11 @@ export const HotelManagement = () => {
           <Hotel className="h-16 w-16 mx-auto text-muted-foreground/40 mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">No Hotels Added</h3>
           <p className="text-muted-foreground mb-4">
-            Add hotel information for your tour cities to keep everything organized.
+            Search Google to find verified hotels for your tour cities.
           </p>
           <Button onClick={() => setIsDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add First Hotel
+            <Search className="h-4 w-4 mr-2" />
+            Search & Add Hotel
           </Button>
         </Card>
       )}
