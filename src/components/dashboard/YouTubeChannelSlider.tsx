@@ -59,16 +59,16 @@ export const YouTubeChannelSlider: React.FC = () => {
       </div>
 
       {/* Video Slider with Infinite Scroll */}
-      <div className={`bg-gradient-to-b from-[hsl(208,100%,14%)] to-[hsl(208,100%,10%)] py-5 ${isPaused ? 'overflow-x-auto' : 'overflow-hidden'} touch-pan-x`} onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)} onTouchStart={() => setIsPaused(true)} onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}>
+      <div onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)} onTouchStart={() => setIsPaused(true)} onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)} className="">
         {isLoading ? <div className="flex gap-4 px-5">
-            {[1, 2, 3].map(i => <div key={i} className="flex-shrink-0 w-72 sm:w-80 lg:w-96 aspect-video bg-white/10 rounded-lg animate-pulse" />)}
+            {[1, 2, 3].map((i) => <div key={i} className="flex-shrink-0 w-72 sm:w-80 lg:w-96 aspect-video bg-white/10 rounded-lg animate-pulse" />)}
           </div> : videos && videos.length > 0 ? <div className="flex gap-4 pl-5" style={{
         animation: `scrollInfinite ${animationDuration}s linear infinite`,
         animationPlayState: isPaused ? 'paused' : 'running'
       }}>
             {duplicatedVideos.map((video, index) => <button key={`${video.id}-${index}`} onClick={() => handleVideoClick(video)} className="flex-shrink-0 group text-left">
                 <div className="relative w-72 sm:w-80 lg:w-96 aspect-video rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all shadow-lg">
-                  <img src={getThumbnail(video)} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={e => {
+                  <img src={getThumbnail(video)} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => {
               (e.target as HTMLImageElement).src = '/placeholder.svg';
             }} />
                   {/* Play overlay */}
