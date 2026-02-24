@@ -429,3 +429,9 @@ verify_jwt = false
 
 [functions.fetch-scholarship-feeds]
 verify_jwt = false
+
+[functions.suggest-lunch-stops]
+verify_jwt = false
+
+[functions.get-google-maps-config]
+verify_jwt = false
