@@ -457,19 +457,19 @@ export const TourBudgetManager = () => {
         return <AlertCircle className="h-4 w-4 text-gray-400" />;
     }
   };
-  return <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Tour Budget</h2>
-          <p className="text-sm text-muted-foreground">Plan and track tour expenses and revenue</p>
+  return <div className="space-y-3">
+      {/* Header - compact mobile-first */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-foreground">Tour Budget</h2>
+          <p className="text-xs text-muted-foreground">Track tour expenses & revenue</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 shrink-0">
           <Dialog open={isAddingRevenue} onOpenChange={setIsAddingRevenue}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Add Revenue
+              <Button variant="outline" size="sm" className="gap-1 text-xs h-8 px-2.5">
+                <TrendingUp className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Add</span> Revenue
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -514,9 +514,9 @@ export const TourBudgetManager = () => {
           
           <Dialog open={isAddingItem} onOpenChange={setIsAddingItem}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Expense
+              <Button size="sm" className="gap-1 text-xs h-8 px-2.5">
+                <Plus className="h-3.5 w-3.5" />
+                Expense
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -664,46 +664,26 @@ export const TourBudgetManager = () => {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <TrendingUp className="h-4 w-4 text-green-500" />
-              <span className="text-xs text-primary-foreground">Revenue</span>
-            </div>
-            <p className="text-xl font-bold text-green-600">{formatCurrency(summary.total_revenue)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Calculator className="h-4 w-4 text-blue-500" />
-              <span className="text-xs text-secondary-foreground">Estimated</span>
-            </div>
-            <p className="text-xl font-bold text-blue-600">{formatCurrency(summary.total_estimated)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <TrendingDown className="h-4 w-4 text-red-500" />
-              <span className="text-xs text-secondary-foreground">Actual</span>
-            </div>
-            <p className="text-xl font-bold text-red-600">{formatCurrency(summary.total_actual)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <DollarSign className="h-4 w-4" />
-              <span className="text-xs text-primary-foreground">Net Balance</span>
-            </div>
-            <p className={`text-xl font-bold ${summary.net_balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatCurrency(summary.net_balance)}
-            </p>
-          </CardContent>
-        </Card>
+      {/* Summary - compact 2x2 grid */}
+      <div className="grid grid-cols-4 gap-1.5">
+        <div className="rounded-lg bg-muted/40 p-2.5 text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Revenue</p>
+          <p className="text-sm font-bold text-green-500 mt-0.5">{formatCurrency(summary.total_revenue)}</p>
+        </div>
+        <div className="rounded-lg bg-muted/40 p-2.5 text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Estimated</p>
+          <p className="text-sm font-bold text-blue-500 mt-0.5">{formatCurrency(summary.total_estimated)}</p>
+        </div>
+        <div className="rounded-lg bg-muted/40 p-2.5 text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Actual</p>
+          <p className="text-sm font-bold text-red-500 mt-0.5">{formatCurrency(summary.total_actual)}</p>
+        </div>
+        <div className="rounded-lg bg-muted/40 p-2.5 text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Balance</p>
+          <p className={`text-sm font-bold mt-0.5 ${summary.net_balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {formatCurrency(summary.net_balance)}
+          </p>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -769,55 +749,59 @@ export const TourBudgetManager = () => {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="space-y-2">
-                    {items.map(item => <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50">
-                        {getStatusIcon(item.status)}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate text-primary-foreground">{item.description}</p>
-                          <p className="text-xs text-primary-foreground">
-                            {item.quantity} × {formatCurrency(item.unit_cost)}
-                          </p>
+                    {items.map(item => <div key={item.id} className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            {getStatusIcon(item.status)}
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium truncate">{item.description}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {item.quantity} × {formatCurrency(item.unit_cost)}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-sm font-semibold shrink-0">{formatCurrency(item.unit_cost * item.quantity)}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold">{formatCurrency(item.unit_cost * item.quantity)}</p>
-                          {item.actual_cost > 0 && <p className="text-xs text-muted-foreground">
+                        <div className="flex items-center justify-between gap-1.5 pl-6">
+                          {item.actual_cost > 0 && <span className="text-[11px] text-muted-foreground">
                               Actual: {formatCurrency(item.actual_cost)}
-                            </p>}
-                        </div>
-                        <div className="flex gap-1">
-                          <Select value={item.status} onValueChange={v => handleUpdateItem(item.id, {
-                      status: v as BudgetLineItem['status']
-                    })}>
-                            <SelectTrigger className="w-24 h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="planned">Planned</SelectItem>
-                              <SelectItem value="confirmed">Confirmed</SelectItem>
-                              <SelectItem value="paid">Paid</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingItem(item)}>
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Item</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Delete "{item.description}"? This cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteItem(item.id)}>Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                            </span>}
+                          <div className="flex items-center gap-1 ml-auto">
+                            <Select value={item.status} onValueChange={v => handleUpdateItem(item.id, {
+                              status: v as BudgetLineItem['status']
+                            })}>
+                              <SelectTrigger className="w-[85px] h-7 text-[11px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="planned">Planned</SelectItem>
+                                <SelectItem value="confirmed">Confirmed</SelectItem>
+                                <SelectItem value="paid">Paid</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem(item)}>
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Delete "{item.description}"? This cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteItem(item.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </div>
                       </div>)}
                   </div>
