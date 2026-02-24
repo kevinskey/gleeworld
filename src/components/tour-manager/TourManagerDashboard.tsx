@@ -75,6 +75,10 @@ const navItems = [{
   label: 'Routes',
   icon: MapPin
 }, {
+  value: 'hotels',
+  label: 'Hotels',
+  icon: Hotel
+}, {
   value: 'rooming',
   label: 'Rooms',
   icon: Bed
@@ -146,6 +150,10 @@ const contentConfig: Record<string, {
   'rooming': {
     title: 'Rooms',
     description: 'View and manage hotel room assignments'
+  },
+  'hotels': {
+    title: 'Hotels',
+    description: 'Manage hotels and link them to tour city itineraries'
   },
   'bus-buddies': {
     title: 'Bus Buddies',
