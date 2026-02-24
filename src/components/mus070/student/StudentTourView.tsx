@@ -194,7 +194,7 @@ export const StudentTourView: React.FC = () => {
             return (
               <Card key={city.id} className="overflow-hidden border-border">
                 {/* City Header */}
-                <CardHeader className="pb-2 bg-muted/30">
+                <CardHeader className="pb-2 bg-muted/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">
@@ -204,7 +204,7 @@ export const StudentTourView: React.FC = () => {
                         <CardTitle className="text-base font-bold text-foreground">
                           {city.city_name}, {city.state_code}
                         </CardTitle>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-foreground/70">
                           {format(new Date(city.arrival_date + 'T12:00:00'), 'EEEE, MMMM d')}
                         </p>
                       </div>
@@ -218,22 +218,22 @@ export const StudentTourView: React.FC = () => {
                     const cfg = eventTypeConfig[event.event_type] || eventTypeConfig.performance;
                     const Icon = cfg.icon;
                     return (
-                      <div key={event.id} className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/20">
+                      <div key={event.id} className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/40">
                         <div className={`flex items-center justify-center w-8 h-8 rounded-md ${cfg.color} flex-shrink-0`}>
                           <Icon className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm text-foreground">{event.title}</p>
                           {event.host_name && (
-                            <p className="text-xs text-muted-foreground mt-0.5">Host: {event.host_name}</p>
+                            <p className="text-xs text-foreground/70 mt-0.5">Host: {event.host_name}</p>
                           )}
                           {event.location && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <p className="text-xs text-foreground/70 flex items-center gap-1 mt-0.5">
                               <MapPin className="h-3 w-3" />
                               {event.location}
                             </p>
                           )}
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <p className="text-xs text-foreground/70 flex items-center gap-1 mt-0.5">
                             <Clock className="h-3 w-3" />
                             {format(new Date(event.start_date), 'h:mm a')} – {format(new Date(event.end_date), 'h:mm a')}
                           </p>
@@ -248,14 +248,14 @@ export const StudentTourView: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                       {cityLogistics.lodging_name && (
                         <div className="flex items-start gap-2 text-sm">
-                          <Hotel className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                          <Hotel className="h-4 w-4 text-foreground/60 mt-0.5 shrink-0" />
                           <div>
                             <p className="font-medium text-foreground">{cityLogistics.lodging_name}</p>
                             {cityLogistics.lodging_address && (
-                              <p className="text-xs text-muted-foreground">{cityLogistics.lodging_address}</p>
+                              <p className="text-xs text-foreground/60">{cityLogistics.lodging_address}</p>
                             )}
                             {(cityLogistics.check_in_time || cityLogistics.check_out_time) && (
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-xs text-foreground/60">
                                 {cityLogistics.check_in_time && `Check-in: ${cityLogistics.check_in_time}`}
                                 {cityLogistics.check_in_time && cityLogistics.check_out_time && ' • '}
                                 {cityLogistics.check_out_time && `Check-out: ${cityLogistics.check_out_time}`}
