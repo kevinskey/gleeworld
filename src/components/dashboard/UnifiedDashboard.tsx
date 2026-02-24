@@ -22,6 +22,7 @@ import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
 import { FourCardLayout } from './FourCardLayout';
 import { DashboardStoreSection } from './DashboardStoreSection';
 import { YouTubeChannelSlider } from './YouTubeChannelSlider';
+import { NewsFeedSlider } from './NewsFeedSlider';
 import { OfficeHoursWidget } from './OfficeHoursWidget';
 
 // Lazy load heavy components
@@ -369,6 +370,11 @@ export const UnifiedDashboard = () => {
       {/* YouTube Channel Slider */}
       <div>
         <YouTubeChannelSlider />
+      </div>
+
+      {/* News Feed */}
+      <div>
+        <NewsFeedSlider />
       </div>
       
       {/* Messages Panel Overlay */}
