@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MapPin, Route, Plus, Zap, Clock, DollarSign, Navigation, AlertCircle, CheckCircle, Trash2, Loader2, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { TourStopLogisticsEditor } from './TourStopLogisticsEditor';
 interface TourStop {
   id: string;
   city: string;
@@ -21,6 +22,7 @@ interface TourRoute {
   name: string;
   description: string;
   stops: TourStop[];
+  cityData: any[];
   status: 'planning' | 'optimized' | 'approved';
   totalDistance: number;
   estimatedDuration: string;
@@ -81,7 +83,6 @@ export const AIRoutePlanner = ({
         description: tour.description || '',
         stops: (tour.gw_tour_cities || [])
           .sort((a: any, b: any) => {
-            // Sort by arrival_date chronologically, fallback to city_order
             if (a.arrival_date && b.arrival_date) {
               return new Date(a.arrival_date).getTime() - new Date(b.arrival_date).getTime();
             }
@@ -95,8 +96,18 @@ export const AIRoutePlanner = ({
             venue: city.city_notes || 'TBD',
             date: city.arrival_date || '',
             address: '',
-            city_order: index + 1 // Use chronological index as display order
+            city_order: index + 1
           })),
+        // Full city data for logistics editor
+        cityData: (tour.gw_tour_cities || [])
+          .sort((a: any, b: any) => {
+            if (a.arrival_date && b.arrival_date) {
+              return new Date(a.arrival_date).getTime() - new Date(b.arrival_date).getTime();
+            }
+            if (a.arrival_date && !b.arrival_date) return -1;
+            if (!a.arrival_date && b.arrival_date) return 1;
+            return (a.city_order || 0) - (b.city_order || 0);
+          }),
         status: tour.status as 'planning' | 'optimized' | 'approved',
         totalDistance: tour.total_distance || 0,
         estimatedDuration: tour.estimated_duration || 'Not calculated',
@@ -699,28 +710,14 @@ export const AIRoutePlanner = ({
                 </div>
               </div>
 
-              {/* Route Stops */}
-              {route.stops.length > 0 && <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Tour Stops</h4>
-                  <div className="grid gap-2">
-                    {route.stops.map((stop, index) => <div key={stop.id} className="flex items-center gap-3 p-2 bg-muted rounded">
-                        <Badge variant="outline" className="text-xs">
-                          {index + 1}
-                        </Badge>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm text-foreground">{stop.city}</span>
-                            {stop.venue && stop.venue !== 'TBD' && <>
-                                <span className="text-xs text-muted-foreground">•</span>
-                                <span className="text-sm">{stop.venue}</span>
-                              </>}
-                          </div>
-                          {stop.date && <div className="text-xs text-muted-foreground">
-                              {new Date(stop.date).toLocaleDateString()}
-                            </div>}
-                        </div>
-                      </div>)}
-                  </div>
+              {/* Route Stops with Logistics Editor */}
+              {route.cityData && route.cityData.length > 0 && <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Tour Stops & Logistics</h4>
+                  <TourStopLogisticsEditor
+                    stops={route.cityData}
+                    tourId={route.id}
+                    onUpdate={() => queryClient.invalidateQueries({ queryKey: ['tour-routes'] })}
+                  />
                 </div>}
 
               {/* Action Buttons */}

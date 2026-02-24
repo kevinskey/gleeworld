@@ -19510,45 +19510,66 @@ export type Database = {
       gw_tour_cities: {
         Row: {
           arrival_date: string | null
+          arrival_time: string | null
           city_name: string
           city_notes: string | null
           city_order: number
           country_code: string | null
           created_at: string | null
           departure_date: string | null
+          departure_time: string | null
+          estimated_drive_hours: number | null
+          estimated_drive_miles: number | null
           id: string
           latitude: number | null
           longitude: number | null
+          lunch_stop_suggestion: Json | null
+          meal_notes: string | null
+          meals_needed: string[] | null
           state_code: string | null
           tour_id: string
           updated_at: string | null
         }
         Insert: {
           arrival_date?: string | null
+          arrival_time?: string | null
           city_name: string
           city_notes?: string | null
           city_order: number
           country_code?: string | null
           created_at?: string | null
           departure_date?: string | null
+          departure_time?: string | null
+          estimated_drive_hours?: number | null
+          estimated_drive_miles?: number | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          lunch_stop_suggestion?: Json | null
+          meal_notes?: string | null
+          meals_needed?: string[] | null
           state_code?: string | null
           tour_id: string
           updated_at?: string | null
         }
         Update: {
           arrival_date?: string | null
+          arrival_time?: string | null
           city_name?: string
           city_notes?: string | null
           city_order?: number
           country_code?: string | null
           created_at?: string | null
           departure_date?: string | null
+          departure_time?: string | null
+          estimated_drive_hours?: number | null
+          estimated_drive_miles?: number | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          lunch_stop_suggestion?: Json | null
+          meal_notes?: string | null
+          meals_needed?: string[] | null
           state_code?: string | null
           tour_id?: string
           updated_at?: string | null
