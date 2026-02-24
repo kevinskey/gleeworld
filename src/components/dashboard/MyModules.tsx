@@ -123,20 +123,20 @@ export const MyModules = ({
     return null; // Don't render if no assigned modules
   }
   return <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border border-primary/30 bg-card shadow-sm py-0">
+      <Card className="border border-white/10 bg-gradient-to-b from-[hsl(208,100%,14%)] to-[hsl(208,100%,10%)] shadow-sm py-0">
         <CollapsibleTrigger asChild>
-          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-accent/50 transition-colors">
+          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-white/5 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <LayoutGrid className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg font-semibold text-foreground">My Modules</CardTitle>
+                <CardTitle className="text-lg font-semibold text-white/90">My Modules</CardTitle>
               </div>
-              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-5 w-5 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </div>
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="px-4 pb-4 py-4 space-y-4 bg-card pt-0">
+          <CardContent className="px-4 pb-4 py-4 space-y-4 pt-0">
             {/* Search and Sort Controls */}
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -178,7 +178,7 @@ export const MyModules = ({
                     <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${colorClasses} shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-xl transition-all duration-200`}>
                       <IconComponent className="h-7 w-7 sm:h-8 sm:w-8 text-white drop-shadow-sm" />
                     </div>
-                    <span className="text-[11px] sm:text-xs text-center leading-tight line-clamp-2 text-foreground/80 group-hover:text-foreground transition-colors font-medium">
+                    <span className="text-[11px] sm:text-xs text-center leading-tight line-clamp-2 text-white/70 group-hover:text-white transition-colors font-medium">
                       {module.title}
                     </span>
                   </button>;
@@ -190,7 +190,7 @@ export const MyModules = ({
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-xl transition-all duration-200">
                     <Settings className="h-7 w-7 sm:h-8 sm:w-8 text-white drop-shadow-sm" />
                   </div>
-                  <span className="text-[11px] sm:text-xs text-center leading-tight font-medium text-foreground/80 group-hover:text-foreground transition-colors">Admin Settings</span>
+                  <span className="text-[11px] sm:text-xs text-center leading-tight font-medium text-white/70 group-hover:text-white transition-colors">Admin Settings</span>
                 </button>}
             </div>
           </CardContent>
