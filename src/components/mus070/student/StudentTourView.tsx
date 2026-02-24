@@ -49,7 +49,7 @@ interface TourLogistics {
 
 const eventTypeConfig: Record<string, { icon: React.ElementType; color: string; label: string }> = {
   performance: { icon: Music, color: 'bg-primary text-primary-foreground', label: 'Performance' },
-  travel: { icon: Bus, color: 'bg-muted text-muted-foreground', label: 'Travel Day' },
+  travel: { icon: Bus, color: 'bg-muted text-foreground/70', label: 'Travel Day' },
   free: { icon: Calendar, color: 'bg-accent text-accent-foreground', label: 'Free Day' },
   rehearsal: { icon: Music, color: 'bg-secondary text-secondary-foreground', label: 'Rehearsal' },
 };
@@ -125,9 +125,9 @@ export const StudentTourView: React.FC = () => {
   if (!tour) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Plane className="h-12 w-12 text-muted-foreground mb-4" />
+        <Plane className="h-12 w-12 text-foreground/50 mb-4" />
         <h3 className="text-lg font-semibold text-foreground mb-1">No Upcoming Tour</h3>
-        <p className="text-sm text-muted-foreground">Tour information will appear here when a tour is scheduled.</p>
+        <p className="text-sm text-foreground/60">Tour information will appear here when a tour is scheduled.</p>
       </div>
     );
   }
@@ -267,30 +267,30 @@ export const StudentTourView: React.FC = () => {
 
                       {cityLogistics.meal_arrangements && (
                         <div className="flex items-start gap-2 text-sm">
-                          <Utensils className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                          <Utensils className="h-4 w-4 text-foreground/60 mt-0.5 shrink-0" />
                           <div>
                             <p className="font-medium text-foreground">Meals</p>
-                            <p className="text-xs text-muted-foreground">{cityLogistics.meal_arrangements}</p>
+                            <p className="text-xs text-foreground/60">{cityLogistics.meal_arrangements}</p>
                           </div>
                         </div>
                       )}
 
                       {cityLogistics.transport_notes && (
                         <div className="flex items-start gap-2 text-sm">
-                          <Bus className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                          <Bus className="h-4 w-4 text-foreground/60 mt-0.5 shrink-0" />
                           <div>
                             <p className="font-medium text-foreground">Transportation</p>
-                            <p className="text-xs text-muted-foreground">{cityLogistics.transport_notes}</p>
+                            <p className="text-xs text-foreground/60">{cityLogistics.transport_notes}</p>
                           </div>
                         </div>
                       )}
 
                       {cityLogistics.hospitality_notes && (
                         <div className="flex items-start gap-2 text-sm">
-                          <Users className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                          <Users className="h-4 w-4 text-foreground/60 mt-0.5 shrink-0" />
                           <div>
                             <p className="font-medium text-foreground">Hospitality</p>
-                            <p className="text-xs text-muted-foreground">{cityLogistics.hospitality_notes}</p>
+                            <p className="text-xs text-foreground/60">{cityLogistics.hospitality_notes}</p>
                           </div>
                         </div>
                       )}
@@ -299,7 +299,7 @@ export const StudentTourView: React.FC = () => {
 
                   {/* No details fallback */}
                   {cityEvents.length === 0 && !cityLogistics && city.city_notes && (
-                    <p className="text-sm text-muted-foreground italic">{city.city_notes}</p>
+                    <p className="text-sm text-foreground/60 italic">{city.city_notes}</p>
                   )}
                 </CardContent>
               </Card>
