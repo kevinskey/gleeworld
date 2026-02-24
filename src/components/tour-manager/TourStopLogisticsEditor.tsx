@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TimeSelect } from '@/components/ui/time-select';
 import {
   ChevronDown, ChevronUp, Clock, MapPin, Utensils, Save, Loader2,
   Sparkles, AlertTriangle, CheckCircle, Info,
@@ -345,22 +346,18 @@ export const TourStopLogisticsEditor: React.FC<{
                     <label className="text-xs font-medium flex items-center gap-1">
                       <Clock className="h-3 w-3" /> Arrival Time
                     </label>
-                    <Input
-                      type="time"
-                      value={data.arrival_time || ''}
-                      onChange={e => updateField(stop.id, 'arrival_time', e.target.value)}
-                      className="h-8 text-sm"
+                    <TimeSelect
+                      value={data.arrival_time}
+                      onChange={v => updateField(stop.id, 'arrival_time', v)}
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-medium flex items-center gap-1">
                       <Clock className="h-3 w-3" /> Departure Time
                     </label>
-                    <Input
-                      type="time"
-                      value={data.departure_time || ''}
-                      onChange={e => updateField(stop.id, 'departure_time', e.target.value)}
-                      className="h-8 text-sm"
+                    <TimeSelect
+                      value={data.departure_time}
+                      onChange={v => updateField(stop.id, 'departure_time', v)}
                     />
                   </div>
                 </div>
