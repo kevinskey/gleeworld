@@ -1289,8 +1289,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 ref={canvasRef}
                 className="block bg-white transition-opacity duration-300 mx-auto"
                 style={{ 
-                  width: isInMobileViewer ? '100%' : `${scale * 100}%`,
-                  maxWidth: isInMobileViewer ? '100%' : (scale > 1 ? 'none' : '100%'),
+                  width: `${scale * 100}%`,
+                  maxWidth: scale > 1 ? 'none' : '100%',
                   height: 'auto', 
                   opacity: isLoading ? 0.6 : 1
                 }}
