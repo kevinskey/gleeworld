@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,28 +8,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, UserCog, Shield, Crown, User, UserCheck, UserX, Mail, Calendar, MoreHorizontal, Plus, RefreshCw, UserPlus, Users, Settings, KeyRound, Trash2, BookOpen, Boxes, Star, GraduationCap, FolderOpen } from "lucide-react";
+import { Search, UserCog, Shield, Crown, User, UserCheck, UserX, Mail, Calendar, MoreHorizontal, RefreshCw, UserPlus, Users, Settings, KeyRound, Trash2, GraduationCap, FolderOpen, Star } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { UserRoleEditor } from './UserRoleEditor';
 import { BulkExecBoardActions } from './user-management/BulkExecBoardActions';
 import { DeleteUserDialog } from './DeleteUserDialog';
 import { ResetPasswordDialog } from './ResetPasswordDialog';
-import { PasswordResetTool } from './PasswordResetTool';
 import { UserPermissionManagement } from './UserPermissionManagement';
 import { UserModuleAssignment } from './UserModuleAssignment';
 import { RoleBasedModuleAssignment } from './RoleBasedModuleAssignment';
 import { UsernamePermissionsManager } from './UsernamePermissionsManager';
 import { PermissionErrorBoundary } from './PermissionErrorBoundary';
 import { useAutoEnrollUser } from '@/hooks/useAutoEnrollUser';
-import { useUsernamePermissionsAdmin } from '@/hooks/useUsernamePermissions';
 import { usePermissionGroups } from '@/hooks/usePermissionGroups';
 import MemberDossiersModule from '@/components/modules/member-dossiers/MemberDossiersModule';
 import type { User as AdminUser } from '@/hooks/useUsers';
+
 interface UserProfile {
-  id: string; // profile row id
-  user_id?: string; // auth user id
+  id: string;
+  user_id?: string;
   email: string | null;
   full_name: string | null;
   role: string;
@@ -43,739 +41,406 @@ interface UserProfile {
   last_sign_in_at?: string;
 }
 
-// Permission Groups Overview Component
-const PermissionOverview = () => {
-  const {
-    groups,
-    loading
-  } = usePermissionGroups();
-  if (loading) {
-    return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => <Card key={i} className="animate-pulse">
-            <CardHeader className="pb-2">
-              <div className="h-4 bg-muted rounded w-3/4"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-muted rounded w-1/2"></div>
-            </CardContent>
-          </Card>)}
-      </div>;
+const getRoleBadgeColor = (role?: string) => {
+  switch (role) {
+    case 'super-admin': return 'bg-red-500/20 text-red-400 border-red-500/30';
+    case 'admin': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+    case 'executive': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    case 'student': return 'bg-green-500/20 text-green-400 border-green-500/30';
+    case 'alumna': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+    case 'vip': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+    case 'auditioner': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+    default: return 'bg-muted text-muted-foreground border-border';
   }
-  const stats = {
-    totalGroups: groups.length,
-    defaultGroups: groups.filter(g => g.is_default).length,
-    customGroups: groups.filter(g => !g.is_default).length,
-    activeGroups: groups.filter(g => g.is_active).length
-  };
-  return <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Total Groups</CardTitle>
-            <Shield className="h-4 w-4" style={{ color: '#64748b' }} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" style={{ color: '#0f172a' }}>{stats.totalGroups}</div>
-            <p className="text-xs" style={{ color: '#64748b' }}>
-              Permission groups configured
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Default Groups</CardTitle>
-            <Settings className="h-4 w-4" style={{ color: '#64748b' }} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" style={{ color: '#0f172a' }}>{stats.defaultGroups}</div>
-            <p className="text-xs" style={{ color: '#64748b' }}>
-              System-provided groups
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Custom Groups</CardTitle>
-            <UserCheck className="h-4 w-4" style={{ color: '#64748b' }} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" style={{ color: '#0f172a' }}>{stats.customGroups}</div>
-            <p className="text-xs" style={{ color: '#64748b' }}>
-              User-created groups
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Active Groups</CardTitle>
-            <Users className="h-4 w-4" style={{ color: '#64748b' }} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" style={{ color: '#0f172a' }}>{stats.activeGroups}</div>
-            <p className="text-xs" style={{ color: '#64748b' }}>
-              Currently available
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-        <CardHeader>
-          <CardTitle style={{ color: '#0f172a' }}>Permission Groups Overview</CardTitle>
-          <CardDescription style={{ color: '#64748b' }}>
-            Quick overview of all configured permission groups
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {groups.map(group => <Badge key={group.id} variant={group.is_default ? "default" : "secondary"} className="flex items-center gap-2" style={{
-            backgroundColor: `${group.color}20`,
-            borderColor: group.color,
-            color: group.color
-          }}>
-                <div className="w-2 h-2 rounded-full" style={{
-              backgroundColor: group.color
-            }} />
-                {group.name}
-                {group.is_default && <span className="text-xs opacity-70">(Default)</span>}
-              </Badge>)}
-          </div>
-        </CardContent>
-      </Card>
-    </div>;
 };
+
+const getRoleIcon = (role?: string) => {
+  switch (role) {
+    case 'super-admin': return <Crown className="h-3 w-3" />;
+    case 'admin': return <Shield className="h-3 w-3" />;
+    case 'executive': return <UserCog className="h-3 w-3" />;
+    case 'alumna': return <GraduationCap className="h-3 w-3" />;
+    case 'vip': return <Star className="h-3 w-3" />;
+    case 'auditioner': return <Calendar className="h-3 w-3" />;
+    default: return <User className="h-3 w-3" />;
+  }
+};
+
+// Compact stat pill
+const StatPill = ({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) => (
+  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/60 border border-border/50">
+    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+    <span className="text-xs text-muted-foreground">{label}</span>
+    <span className="text-sm font-bold text-foreground">{value}</span>
+  </div>
+);
+
 export const UnifiedUserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('');
-  const {
-    toast
-  } = useToast();
-  const {
-    autoEnrollUser,
-    enrolling
-  } = useAutoEnrollUser();
-  const {
-    grantPermission
-  } = useUsernamePermissionsAdmin();
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const { toast } = useToast();
+  const { autoEnrollUser, enrolling } = useAutoEnrollUser();
+
+  useEffect(() => { fetchUsers(); }, []);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const {
-        data: profiles,
-        error: profilesError
-      } = await supabase.from('gw_profiles').select('*').order('created_at', {
-        ascending: false
-      });
-      if (profilesError) throw profilesError;
+      const { data: profiles, error } = await supabase
+        .from('gw_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
       setUsers(profiles || []);
     } catch (error) {
       console.error('Error fetching users:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load users. Please try again.",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to load users.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = !searchTerm || user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    return matchesSearch && matchesRole;
-  });
-  const getRoleBadgeColor = (role?: string) => {
-    switch (role) {
-      case 'super-admin':
-        return 'bg-red-500/20 text-red-600';
-      case 'admin':
-        return 'bg-purple-500/20 text-purple-600';
-      case 'executive':
-        return 'bg-blue-500/20 text-blue-600';
-      case 'student':
-        return 'bg-green-500/20 text-green-600';
-      case 'alumna':
-        return 'bg-gold-500/20 text-gold-600';
-      case 'fan':
-        return 'bg-gray-500/20 text-gray-600';
-      case 'student':
-        return 'bg-blue-500/20 text-blue-600';
-      case 'auditioner':
-        return 'bg-yellow-500/20 text-yellow-600';
-      default:
-        return 'bg-gray-500/20 text-gray-600';
+
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      const matchesSearch = !searchTerm || 
+        user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+      return matchesSearch && matchesRole;
+    });
+  }, [users, searchTerm, roleFilter]);
+
+  const userStats = useMemo(() => ({
+    total: users.length,
+    admins: users.filter(u => u.role === 'admin' || u.role === 'super-admin').length,
+    students: users.filter(u => u.role === 'student').length,
+    executives: users.filter(u => u.role === 'executive' || u.is_exec_board).length,
+    vips: users.filter(u => u.role === 'vip').length,
+    alumnae: users.filter(u => u.role === 'alumna').length,
+    verified: users.filter(u => u.verified).length,
+  }), [users]);
+
+  const handleQuickRoleChange = async (userId: string, newRole: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_profiles')
+        .update({ role: newRole })
+        .eq('user_id', userId)
+        .select();
+      if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Update failed - insufficient permissions');
+      setUsers(users.map(u => u.user_id === userId ? { ...u, role: newRole } : u));
+      toast({ title: "Role Updated", description: `User role changed to ${newRole}` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update role", variant: "destructive" });
     }
   };
-  const getRoleIcon = (role?: string) => {
-    switch (role) {
-      case 'super-admin':
-        return <Crown className="h-4 w-4" />;
-      case 'admin':
-        return <Shield className="h-4 w-4" />;
-      case 'executive':
-        return <UserCog className="h-4 w-4" />;
-      case 'student':
-        return <User className="h-4 w-4" />;
-      case 'alumna':
-        return <UserCheck className="h-4 w-4" />;
-      case 'fan':
-        return <UserX className="h-4 w-4" />;
-      case 'student':
-        return <User className="h-4 w-4" />;
-      case 'auditioner':
-        return <Calendar className="h-4 w-4" />;
-      default:
-        return <User className="h-4 w-4" />;
+
+  const handleVerificationToggle = async (userId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('gw_profiles')
+        .update({ verified: !currentStatus })
+        .eq('user_id', userId);
+      if (error) throw error;
+      setUsers(users.map(u => u.user_id === userId ? { ...u, verified: !currentStatus } : u));
+      toast({ title: "Status Updated", description: `User ${!currentStatus ? 'verified' : 'unverified'}` });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
     }
   };
+
   const handleAutoEnroll = async () => {
     if (!email || !role) return;
     try {
       const result = await autoEnrollUser(email, fullName || undefined, undefined, role);
       if (result.success && result.enrolled) {
-        setEmail('');
-        setFullName('');
-        setRole('');
+        setEmail(''); setFullName(''); setRole('');
         await fetchUsers();
       }
     } catch (error) {
       console.error('Auto-enroll error:', error);
     }
   };
-  const handleQuickRoleChange = async (userId: string, newRole: string) => {
-    try {
-      const {
-        data,
-        error,
-        count
-      } = await supabase.from('gw_profiles').update({
-        role: newRole
-      }).eq('user_id', userId).select();
-      if (error) throw error;
 
-      // Check if the update actually affected any rows
-      if (!data || data.length === 0) {
-        throw new Error('Update failed - you may not have permission to change this user\'s role');
-      }
-      setUsers(users.map(user => user.user_id === userId ? {
-        ...user,
-        role: newRole
-      } : user));
-      toast({
-        title: "Role Updated",
-        description: `User role changed to ${newRole}`
-      });
-    } catch (error: any) {
-      console.error('Error updating role:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update user role",
-        variant: "destructive"
-      });
-    }
-  };
-  const handleVerificationToggle = async (userId: string, currentStatus: boolean) => {
-    try {
-      const newStatus = !currentStatus;
-      const {
-        error
-      } = await supabase.from('gw_profiles').update({
-        verified: newStatus
-      }).eq('user_id', userId);
-      if (error) throw error;
-      setUsers(users.map(user => user.user_id === userId ? {
-        ...user,
-        verified: newStatus
-      } : user));
-      toast({
-        title: "Status Updated",
-        description: `User ${newStatus ? 'verified' : 'unverified'}`
-      });
-    } catch (error) {
-      console.error('Error updating verification:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update verification status",
-        variant: "destructive"
-      });
-    }
-  };
-  const userStats = {
-    total: users.length,
-    admins: users.filter(u => u.role === 'admin' || u.role === 'super-admin').length,
-    students: users.filter(u => u.role === 'student').length,
-    executives: users.filter(u => u.role === 'executive' || u.is_exec_board).length,
-    vips: users.filter(u => u.role === 'vip').length,
-    alumnae: users.filter(u => u.role === 'alumna').length
-  };
+  const makeUserObj = (user: UserProfile): AdminUser => ({
+    id: user.user_id!,
+    email: user.email,
+    full_name: user.full_name,
+    role: user.role,
+    created_at: user.created_at,
+    exec_board_role: user.exec_board_role ?? null,
+    is_exec_board: !!user.is_exec_board,
+    avatar_url: user.avatar_url ?? null,
+    verified: !!user.verified,
+    is_admin: !!user.is_admin,
+    is_super_admin: !!user.is_super_admin,
+  });
+
   if (loading) {
-    return <div className="flex items-center justify-center py-12">
+    return (
+      <div className="flex items-center justify-center py-12">
         <LoadingSpinner size="lg" text="Loading users..." />
-      </div>;
+      </div>
+    );
   }
-  return <div className="space-y-6" style={{ fontSize: '14px', color: '#0f172a' }}>
-      <div>
-        <h1 className="text-3xl font-bold" style={{ color: '#0f172a' }}>User & Permission Management</h1>
-        <p style={{ color: '#64748b', fontSize: '14px' }}>
-          Unified management for users, roles, and permissions across the Glee Club platform
-        </p>
+
+  return (
+    <div className="space-y-4">
+      {/* Compact header with inline stats */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-foreground">User Management</h1>
+            <p className="text-sm text-muted-foreground">
+              {userStats.total} users · {userStats.verified} verified
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="gap-1.5">
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+
+        {/* Stat pills row */}
+        <div className="flex flex-wrap gap-2">
+          <StatPill label="Total" value={userStats.total} icon={Users} />
+          <StatPill label="Admins" value={userStats.admins} icon={Shield} />
+          <StatPill label="Students" value={userStats.students} icon={User} />
+          <StatPill label="Alumnae" value={userStats.alumnae} icon={GraduationCap} />
+          <StatPill label="VIP" value={userStats.vips} icon={Star} />
+          <StatPill label="Exec" value={userStats.executives} icon={Settings} />
+        </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-1">
-          <TabsTrigger value="overview" className="text-sm px-2 sm:px-3">Overview</TabsTrigger>
-          <TabsTrigger value="users" className="text-sm px-2 sm:px-3">Users</TabsTrigger>
-          <TabsTrigger value="dossiers" className="text-sm px-2 sm:px-3">Dossiers</TabsTrigger>
-          <TabsTrigger value="enroll" className="text-sm px-2 sm:px-3">Add User</TabsTrigger>
-          <TabsTrigger value="permissions" className="text-sm px-2 sm:px-3 pb-2">Permissions</TabsTrigger>
-          <TabsTrigger value="modules" className="text-sm px-2 sm:px-3">Modules</TabsTrigger>
-          <TabsTrigger value="username" className="text-sm px-2 sm:px-3">Username</TabsTrigger>
+      {/* Tabs */}
+      <Tabs defaultValue="users" className="space-y-3">
+        <TabsList className="h-9 bg-muted/50">
+          <TabsTrigger value="users" className="text-xs px-3 h-7">Users</TabsTrigger>
+          <TabsTrigger value="dossiers" className="text-xs px-3 h-7">Dossiers</TabsTrigger>
+          <TabsTrigger value="enroll" className="text-xs px-3 h-7">Add User</TabsTrigger>
+          <TabsTrigger value="permissions" className="text-xs px-3 h-7">Permissions</TabsTrigger>
+          <TabsTrigger value="modules" className="text-xs px-3 h-7">Modules</TabsTrigger>
+          <TabsTrigger value="username" className="text-xs px-3 h-7">Username</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Total Users</CardTitle>
-                <Users className="h-4 w-4" style={{ color: '#64748b' }} />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.total}</div>
-              </CardContent>
-            </Card>
-            
-            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Admins</CardTitle>
-                <Shield className="h-4 w-4" style={{ color: '#64748b' }} />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.admins}</div>
-              </CardContent>
-            </Card>
-            
-            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Students</CardTitle>
-                <User className="h-4 w-4" style={{ color: '#64748b' }} />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.students}</div>
-              </CardContent>
-            </Card>
-            
-            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>VIP</CardTitle>
-                <Star className="h-4 w-4" style={{ color: '#eab308' }} />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.vips}</div>
-              </CardContent>
-            </Card>
-            
-            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Alumnae</CardTitle>
-                <GraduationCap className="h-4 w-4" style={{ color: '#9333ea' }} />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.alumnae}</div>
-              </CardContent>
-            </Card>
-            
-            <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-sm font-medium" style={{ color: '#0f172a' }}>Exec Board</CardTitle>
-                <Settings className="h-4 w-4" style={{ color: '#64748b' }} />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold" style={{ color: '#0f172a' }}>{userStats.executives}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <PermissionOverview />
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-6">
+        {/* ── USERS TAB ── */}
+        <TabsContent value="users" className="space-y-3 mt-0">
           <BulkExecBoardActions onActionComplete={fetchUsers} />
 
-          <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2" style={{ color: '#0f172a' }}>
-                    <User className="h-5 w-5" />
-                    User Directory
-                  </CardTitle>
-                  <CardDescription style={{ color: '#64748b' }}>
-                    Manage all registered users, their roles, and permissions
-                  </CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search by name or email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
-                  </div>
-                </div>
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value="guest">Guest</SelectItem>
-                    <SelectItem value="fan">Fan</SelectItem>
-                    <SelectItem value="member">Member</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="alumna">Alumna</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
-                    <SelectItem value="executive">Executive</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="super-admin">Super Admin</SelectItem>
-                    <SelectItem value="auditioner">Auditioner</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Search + Filter bar */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search name or email..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pl-9 h-9 bg-card border-border text-sm"
+              />
+            </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-full sm:w-[160px] h-9 bg-card border-border text-sm">
+                <SelectValue placeholder="All Roles" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="guest">Guest</SelectItem>
+                <SelectItem value="fan">Fan</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="alumna">Alumna</SelectItem>
+                <SelectItem value="vip">VIP</SelectItem>
+                <SelectItem value="executive">Executive</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="super-admin">Super Admin</SelectItem>
+                <SelectItem value="auditioner">Auditioner</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-              {/* Mobile Cards View */}
-              <div className="sm:hidden space-y-3">
-                {filteredUsers.map(user => <Card key={user.id} className="p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <User className="h-4 w-4 text-primary" />
+          <p className="text-xs text-muted-foreground">
+            Showing {filteredUsers.length} of {users.length}
+          </p>
+
+          {/* Mobile card list */}
+          <div className="sm:hidden space-y-2">
+            {filteredUsers.map(user => (
+              <div key={user.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-card border border-border">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xs font-medium text-primary">
+                  {user.full_name?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate text-foreground">{user.full_name || 'No name'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                </div>
+                <Badge variant="outline" className={`text-[10px] shrink-0 ${getRoleBadgeColor(user.role)}`}>
+                  {getRoleIcon(user.role)}
+                  <span className="ml-1">{user.role || 'guest'}</span>
+                </Badge>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 max-h-[300px] overflow-y-auto">
+                    <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => { setSelectedUser(makeUserObj(user)); setShowResetDialog(true); }}>
+                      <KeyRound className="h-3.5 w-3.5 mr-2 text-blue-400" />Reset Password
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleVerificationToggle(user.user_id!, user.verified || false)}>
+                      {user.verified ? <><UserX className="h-3.5 w-3.5 mr-2 text-yellow-400" />Unverify</> : <><UserCheck className="h-3.5 w-3.5 mr-2 text-green-400" />Verify</>}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setSelectedUser(makeUserObj(user)); setDeleteDialogOpen(true); }} className="text-destructive">
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />Delete
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs">Change Role</DropdownMenuLabel>
+                    {['guest','fan','student','member','alumna','vip','executive','admin','super-admin'].map(r => (
+                      <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r} className="text-xs">
+                        {getRoleIcon(r)}<span className="ml-1.5 capitalize">{r.replace('-', ' ')}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block rounded-lg border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">User</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Role</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Status</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Joined</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map(user => (
+                  <TableRow key={user.id} className="h-11 hover:bg-muted/20">
+                    <TableCell className="py-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary shrink-0">
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
+                          ) : (
+                            user.full_name?.charAt(0)?.toUpperCase() || '?'
+                          )}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm truncate">{user.full_name || 'No name'}</p>
-                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate text-foreground leading-tight">{user.full_name || 'No name'}</p>
+                          <p className="text-xs text-muted-foreground truncate leading-tight">{user.email}</p>
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <Badge variant="outline" className={`text-[11px] py-0 h-5 ${getRoleBadgeColor(user.role)}`}>
+                        {getRoleIcon(user.role)}
+                        <span className="ml-1">{user.role || 'guest'}</span>
+                      </Badge>
+                      {user.is_exec_board && (
+                        <Badge variant="outline" className="ml-1 text-[10px] py-0 h-5 text-blue-400 border-blue-400/30">
+                          {user.exec_board_role || 'Exec'}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-2">
+                      {user.verified ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-400">
+                          <UserCheck className="h-3 w-3" /> Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs text-yellow-400">
+                          <Calendar className="h-3 w-3" /> Pending
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <span className="text-xs text-muted-foreground">
+                        {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-2 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 max-h-[300px] overflow-y-auto">
-                          <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
+                        <DropdownMenuContent align="end" className="w-48 max-h-[400px] overflow-y-auto z-50">
+                          <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => {
-                        setSelectedUser({
-                          id: user.user_id,
-                          email: user.email,
-                          full_name: user.full_name,
-                          role: user.role,
-                          created_at: user.created_at,
-                          exec_board_role: user.exec_board_role ?? null,
-                          is_exec_board: !!user.is_exec_board,
-                          avatar_url: user.avatar_url ?? null,
-                          verified: !!user.verified,
-                          is_admin: !!user.is_admin,
-                          is_super_admin: !!user.is_super_admin
-                        });
-                        setShowResetDialog(true);
-                      }}>
-                            <KeyRound className="h-4 w-4 mr-2 text-blue-500" />
-                            Reset Password
+                          <DropdownMenuItem onClick={() => { setSelectedUser(makeUserObj(user)); setShowResetDialog(true); }}>
+                            <KeyRound className="h-3.5 w-3.5 mr-2 text-blue-400" />Reset Password
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleVerificationToggle(user.user_id!, user.verified || false)}>
-                            {user.verified ? <><UserX className="h-4 w-4 mr-2 text-yellow-500" />Mark Unverified</> : <><UserCheck className="h-4 w-4 mr-2 text-green-500" />Mark Verified</>}
+                            {user.verified ? <><UserX className="h-3.5 w-3.5 mr-2 text-yellow-400" />Unverify</> : <><UserCheck className="h-3.5 w-3.5 mr-2 text-green-400" />Verify</>}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                        setSelectedUser({
-                          id: user.user_id!,
-                          email: user.email,
-                          full_name: user.full_name,
-                          role: user.role,
-                          created_at: user.created_at,
-                          exec_board_role: user.exec_board_role ?? null,
-                          is_exec_board: !!user.is_exec_board,
-                          avatar_url: user.avatar_url ?? null,
-                          verified: !!user.verified,
-                          is_admin: !!user.is_admin,
-                          is_super_admin: !!user.is_super_admin
-                        });
-                        setDeleteDialogOpen(true);
-                      }} className="text-destructive">
-                            <Trash2 className="h-4 w-4 mr-2" />Delete User
+                          <DropdownMenuItem onClick={() => { setSelectedUser(makeUserObj(user)); setDeleteDialogOpen(true); }} className="text-destructive">
+                            <Trash2 className="h-3.5 w-3.5 mr-2" />Delete
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-                          {['vip', 'guest', 'fan', 'student', 'member', 'alumna', 'executive', 'admin', 'super-admin'].map(r => <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r}>
-                              {getRoleIcon(r)}
-                              <span className="ml-2 capitalize">{r.replace('-', ' ')}</span>
-                            </DropdownMenuItem>)}
+                          <DropdownMenuLabel className="text-xs">Change Role</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {['vip','guest','fan','student','member','alumna','executive','admin','super-admin','auditioner'].map(r => (
+                            <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r} className="text-xs">
+                              {getRoleIcon(r)}<span className="ml-1.5 capitalize">{r.replace('-', ' ')}</span>
+                            </DropdownMenuItem>
+                          ))}
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      <Badge className={`${getRoleBadgeColor(user.role)} text-xs`}>
-                        {getRoleIcon(user.role)}
-                        <span className="ml-1">{user.role || 'No role'}</span>
-                      </Badge>
-                      {user.is_exec_board && <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs">
-                          {user.exec_board_role || 'Exec'}
-                        </Badge>}
-                      <Badge variant={user.verified ? "default" : "secondary"} className="text-xs">
-                        {user.verified ? 'Verified' : 'Unverified'}
-                      </Badge>
-                    </div>
-                  </Card>)}
-              </div>
-
-              {/* Desktop Table View */}
-              <div className="hidden sm:block" style={{ color: '#0f172a' }}>
-                <Table>
-                  <TableHeader>
-                    <TableRow style={{ borderColor: '#e2e8f0' }}>
-                      <TableHead style={{ color: '#0f172a' }}>User</TableHead>
-                      <TableHead style={{ color: '#0f172a' }}>Role</TableHead>
-                      <TableHead style={{ color: '#0f172a' }}>Executive Board</TableHead>
-                      <TableHead style={{ color: '#0f172a' }}>Status</TableHead>
-                      <TableHead style={{ color: '#0f172a' }}>Joined</TableHead>
-                      <TableHead className="text-right" style={{ color: '#0f172a' }}>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map(user => <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <User className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <div className="font-medium" style={{ color: '#0f172a' }}>
-                                {user.full_name || 'No name set'}
-                              </div>
-                              <div className="text-sm flex items-center gap-1" style={{ color: '#64748b' }}>
-                                <Mail className="h-3 w-3" />
-                                {user.email}
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getRoleBadgeColor(user.role)}>
-                            <div className="flex items-center gap-1">
-                              {getRoleIcon(user.role)}
-                              {user.role || 'No role'}
-                            </div>
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {user.is_exec_board ? <Badge variant="outline" className="text-blue-600 border-blue-200">
-                              {user.exec_board_role || 'Executive'}
-                            </Badge> : <span className="text-muted-foreground text-sm">—</span>}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.verified ? "default" : "secondary"}>
-                            {user.verified ? 'Verified' : 'Unverified'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56 max-h-[400px] overflow-y-auto z-50 bg-popover" sideOffset={5}>
-                              <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              
-                              <DropdownMenuItem onClick={() => {
-                            setSelectedUser({
-                              id: user.user_id,
-                              email: user.email,
-                              full_name: user.full_name,
-                              role: user.role,
-                              created_at: user.created_at,
-                              exec_board_role: user.exec_board_role ?? null,
-                              is_exec_board: !!user.is_exec_board,
-                              avatar_url: user.avatar_url ?? null,
-                              verified: !!user.verified,
-                              is_admin: !!user.is_admin,
-                              is_super_admin: !!user.is_super_admin
-                            });
-                            setShowResetDialog(true);
-                          }}>
-                                <KeyRound className="h-4 w-4 mr-2 text-blue-500" />
-                                Reset Password
-                              </DropdownMenuItem>
-                              
-                              <DropdownMenuItem onClick={() => handleVerificationToggle(user.user_id!, user.verified || false)}>
-                                {user.verified ? <>
-                                    <UserX className="h-4 w-4 mr-2 text-yellow-500" />
-                                    Mark Unverified
-                                  </> : <>
-                                    <UserCheck className="h-4 w-4 mr-2 text-green-500" />
-                                    Mark Verified
-                                  </>}
-                              </DropdownMenuItem>
-                              
-                              <DropdownMenuItem onClick={() => {
-                            setSelectedUser({
-                              id: user.user_id!,
-                              email: user.email,
-                              full_name: user.full_name,
-                              role: user.role,
-                              created_at: user.created_at,
-                              exec_board_role: user.exec_board_role ?? null,
-                              is_exec_board: !!user.is_exec_board,
-                              avatar_url: user.avatar_url ?? null,
-                              verified: !!user.verified,
-                              is_admin: !!user.is_admin,
-                              is_super_admin: !!user.is_super_admin
-                            });
-                            setDeleteDialogOpen(true);
-                          }} className="text-destructive">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete User
-                              </DropdownMenuItem>
-                              
-                              <DropdownMenuSeparator />
-                              <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              
-                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'vip')} disabled={user.role === 'vip'}>
-                                <Star className="h-4 w-4 mr-2 text-yellow-500" />
-                                Make VIP
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'guest')} disabled={user.role === 'guest'}>
-                                <User className="h-4 w-4 mr-2" />
-                                Make Guest
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'fan')} disabled={user.role === 'fan'}>
-                                <UserX className="h-4 w-4 mr-2" />
-                                Make Fan
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'student')} disabled={user.role === 'student'}>
-                                <User className="h-4 w-4 mr-2" />
-                                Make Student
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'member')} disabled={user.role === 'member'}>
-                                <User className="h-4 w-4 mr-2" />
-                                Make Member
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'alumna')} disabled={user.role === 'alumna'}>
-                                <UserCheck className="h-4 w-4 mr-2" />
-                                Make Alumna
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'executive')} disabled={user.role === 'executive'}>
-                                <UserCog className="h-4 w-4 mr-2" />
-                                Make Executive
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'admin')} disabled={user.role === 'admin'}>
-                                <Shield className="h-4 w-4 mr-2" />
-                                Make Admin
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'super-admin')} disabled={user.role === 'super-admin'}>
-                                <Crown className="h-4 w-4 mr-2" />
-                                Make Super Admin
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleQuickRoleChange(user.user_id!, 'auditioner')} disabled={user.role === 'auditioner'}>
-                                <Calendar className="h-4 w-4 mr-2" />
-                                Make Auditioner
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>)}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </TabsContent>
 
-        <TabsContent value="dossiers" className="space-y-6">
-          <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2" style={{ color: '#0f172a' }}>
-                <FolderOpen className="h-5 w-5" />
-                User Dossiers
-              </CardTitle>
-              <CardDescription style={{ color: '#64748b' }}>
-                Comprehensive user profiles, usage analytics, and profile completion tracking for site management
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <MemberDossiersModule />
-            </CardContent>
-          </Card>
+        {/* ── DOSSIERS TAB ── */}
+        <TabsContent value="dossiers" className="mt-0">
+          <MemberDossiersModule />
         </TabsContent>
 
-        <TabsContent value="enroll" className="space-y-6">
-          <Card style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2" style={{ color: '#0f172a' }}>
-                <UserPlus className="h-5 w-5" />
+        {/* ── ADD USER TAB ── */}
+        <TabsContent value="enroll" className="mt-0">
+          <Card className="bg-card border-border max-w-lg">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2 text-foreground">
+                <UserPlus className="h-4 w-4" />
                 Auto-Enroll User
               </CardTitle>
-              <CardDescription style={{ color: '#64748b' }}>
-                Quickly enroll a user with a specific role and send invitation
+              <CardDescription className="text-xs">
+                Create an account and send an invitation email
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <UserPlus className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-foreground">How Auto-Enrollment Works</h4>
-                    <p className="text-sm text-blue-700 mt-1">
-                      This will create a new user account and send them an invitation email to set up their password.
-                      The user will be assigned the selected role immediately.
-                    </p>
-                  </div>
-                </div>
+            <CardContent className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs">Email *</Label>
+                <Input id="email" type="email" placeholder="user@spelman.edu" value={email} onChange={e => setEmail(e.target.value)} className="h-9 text-sm" />
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
-                <Input id="email" type="email" placeholder="user@spelman.edu" value={email} onChange={e => setEmail(e.target.value)} required />
+              <div className="space-y-1.5">
+                <Label htmlFor="fullName" className="text-xs">Full Name</Label>
+                <Input id="fullName" placeholder="Alexandra Williams" value={fullName} onChange={e => setFullName(e.target.value)} className="h-9 text-sm" />
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name (Optional)</Label>
-                <Input id="fullName" placeholder="Alexandra Williams" value={fullName} onChange={e => setFullName(e.target.value)} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role">Role *</Label>
-                <Select value={role} onValueChange={setRole} required>
-                  <SelectTrigger>
+              <div className="space-y-1.5">
+                <Label htmlFor="role" className="text-xs">Role *</Label>
+                <Select value={role} onValueChange={setRole}>
+                  <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -784,41 +449,32 @@ export const UnifiedUserManagement = () => {
                     <SelectItem value="alumna">Alumna</SelectItem>
                     <SelectItem value="fan">Fan</SelectItem>
                     <SelectItem value="executive">Executive</SelectItem>
-                    <SelectItem value="librarian">Librarian</SelectItem>
-                    <SelectItem value="crew-manager">Crew Manager</SelectItem>
-                    <SelectItem value="director">Director</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="pt-4">
-                <Button onClick={handleAutoEnroll} disabled={!email.trim() || !role || enrolling} className="w-full" size="lg">
-                  {enrolling ? <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Enrolling User...
-                    </> : <>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Auto-Enroll User
-                    </>}
-                </Button>
-              </div>
+              <Button onClick={handleAutoEnroll} disabled={!email.trim() || !role || enrolling} className="w-full h-9 text-sm mt-2">
+                {enrolling ? 'Enrolling...' : <><UserPlus className="h-3.5 w-3.5 mr-1.5" />Enroll User</>}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="permissions" className="space-y-4">
+        {/* ── PERMISSIONS TAB ── */}
+        <TabsContent value="permissions" className="mt-0">
           <UserPermissionManagement />
         </TabsContent>
-        
-        <TabsContent value="modules" className="space-y-4">
+
+        {/* ── MODULES TAB ── */}
+        <TabsContent value="modules" className="mt-0 space-y-3">
           <PermissionErrorBoundary>
             <RoleBasedModuleAssignment />
             <UserModuleAssignment />
           </PermissionErrorBoundary>
         </TabsContent>
-        
-        <TabsContent value="username" className="space-y-4">
+
+        {/* ── USERNAME TAB ── */}
+        <TabsContent value="username" className="mt-0">
           <PermissionErrorBoundary>
             <UsernamePermissionsManager />
           </PermissionErrorBoundary>
@@ -826,10 +482,7 @@ export const UnifiedUserManagement = () => {
       </Tabs>
 
       <ResetPasswordDialog user={selectedUser} open={showResetDialog} onOpenChange={setShowResetDialog} />
-
-      <DeleteUserDialog user={selectedUser} open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} onUserDeleted={() => {
-      setSelectedUser(null);
-      fetchUsers();
-    }} />
-    </div>;
+      <DeleteUserDialog user={selectedUser} open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} onUserDeleted={() => { setSelectedUser(null); fetchUsers(); }} />
+    </div>
+  );
 };
