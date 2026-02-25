@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, UserCog, Shield, Crown, User, UserCheck, UserX, Mail, Calendar, MoreHorizontal, RefreshCw, UserPlus, Users, Settings, KeyRound, Trash2, GraduationCap, FolderOpen, Star } from "lucide-react";
+import { Search, UserCog, Shield, Crown, User, UserCheck, UserX, Mail, Calendar, MoreHorizontal, RefreshCw, UserPlus, Users, Settings, KeyRound, Trash2, GraduationCap, FolderOpen, Star, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -80,6 +80,8 @@ export const UnifiedUserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [sortField, setSortField] = useState<'name' | 'role' | 'status' | 'joined'>('joined');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
@@ -108,15 +110,41 @@ export const UnifiedUserManagement = () => {
     }
   };
 
+  const toggleSort = (field: typeof sortField) => {
+    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortField(field); setSortDir('asc'); }
+  };
+
+  const SortIcon = ({ field }: { field: typeof sortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
+    return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
   const filteredUsers = useMemo(() => {
-    return users.filter(user => {
+    const filtered = users.filter(user => {
       const matchesSearch = !searchTerm || 
         user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
         user.email?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
       return matchesSearch && matchesRole;
     });
-  }, [users, searchTerm, roleFilter]);
+
+    return [...filtered].sort((a, b) => {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      switch (sortField) {
+        case 'name':
+          return dir * (a.full_name || '').localeCompare(b.full_name || '');
+        case 'role':
+          return dir * (a.role || '').localeCompare(b.role || '');
+        case 'status':
+          return dir * (Number(a.verified || 0) - Number(b.verified || 0));
+        case 'joined':
+          return dir * ((a.created_at || '').localeCompare(b.created_at || ''));
+        default:
+          return 0;
+      }
+    });
+  }, [users, searchTerm, roleFilter, sortField, sortDir]);
 
   const userStats = useMemo(() => ({
     total: users.length,
@@ -260,9 +288,33 @@ export const UnifiedUserManagement = () => {
             </Select>
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            Showing {filteredUsers.length} of {users.length}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Showing {filteredUsers.length} of {users.length}
+            </p>
+            {/* Mobile sort selector */}
+            <div className="sm:hidden">
+              <Select value={`${sortField}-${sortDir}`} onValueChange={(v) => {
+                const [f, d] = v.split('-') as [typeof sortField, 'asc' | 'desc'];
+                setSortField(f); setSortDir(d);
+              }}>
+                <SelectTrigger className="h-8 text-xs bg-card border-border w-[130px]">
+                  <ArrowUpDown className="h-3 w-3 mr-1" />
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">Name A→Z</SelectItem>
+                  <SelectItem value="name-desc">Name Z→A</SelectItem>
+                  <SelectItem value="role-asc">Role A→Z</SelectItem>
+                  <SelectItem value="role-desc">Role Z→A</SelectItem>
+                  <SelectItem value="joined-desc">Newest first</SelectItem>
+                  <SelectItem value="joined-asc">Oldest first</SelectItem>
+                  <SelectItem value="status-desc">Verified first</SelectItem>
+                  <SelectItem value="status-asc">Pending first</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           {/* Mobile card list */}
           <div className="sm:hidden space-y-2">
@@ -315,10 +367,18 @@ export const UnifiedUserManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">User</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Role</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Status</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Joined</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none" onClick={() => toggleSort('name')}>
+                    <span className="inline-flex items-center">User<SortIcon field="name" /></span>
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none" onClick={() => toggleSort('role')}>
+                    <span className="inline-flex items-center">Role<SortIcon field="role" /></span>
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                    <span className="inline-flex items-center">Status<SortIcon field="status" /></span>
+                  </TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none" onClick={() => toggleSort('joined')}>
+                    <span className="inline-flex items-center">Joined<SortIcon field="joined" /></span>
+                  </TableHead>
                   <TableHead className="text-xs font-semibold text-muted-foreground h-9 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
