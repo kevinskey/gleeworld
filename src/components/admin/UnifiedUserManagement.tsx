@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, UserCog, Shield, Crown, User, UserCheck, UserX, Mail, Calendar, MoreHorizontal, RefreshCw, UserPlus, Users, Settings, KeyRound, Trash2, GraduationCap, FolderOpen, Star, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Search, UserCog, Shield, Crown, User, UserCheck, UserX, Mail, Calendar, MoreHorizontal, RefreshCw, UserPlus, Users, Settings, KeyRound, Trash2, GraduationCap, FolderOpen, Star, ArrowUpDown, ArrowUp, ArrowDown, Pencil } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -85,6 +86,9 @@ export const UnifiedUserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [editNameDialogOpen, setEditNameDialogOpen] = useState(false);
+  const [editNameUserId, setEditNameUserId] = useState<string | null>(null);
+  const [editNameValue, setEditNameValue] = useState('');
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('');
@@ -196,6 +200,28 @@ export const UnifiedUserManagement = () => {
       }
     } catch (error) {
       console.error('Auto-enroll error:', error);
+    }
+  };
+
+  const openEditName = (user: UserProfile) => {
+    setEditNameUserId(user.user_id || null);
+    setEditNameValue(user.full_name || '');
+    setEditNameDialogOpen(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!editNameUserId || !editNameValue.trim()) return;
+    try {
+      const { error } = await supabase
+        .from('gw_profiles')
+        .update({ full_name: editNameValue.trim() })
+        .eq('user_id', editNameUserId);
+      if (error) throw error;
+      setUsers(users.map(u => u.user_id === editNameUserId ? { ...u, full_name: editNameValue.trim() } : u));
+      toast({ title: "Name Updated", description: `User name changed to "${editNameValue.trim()}"` });
+      setEditNameDialogOpen(false);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update name", variant: "destructive" });
     }
   };
 
@@ -340,6 +366,9 @@ export const UnifiedUserManagement = () => {
                   <DropdownMenuContent align="end" className="w-48 max-h-[300px] overflow-y-auto">
                     <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => openEditName(user)}>
+                      <Pencil className="h-3.5 w-3.5 mr-2 text-primary" />Edit Name
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { setSelectedUser(makeUserObj(user)); setShowResetDialog(true); }}>
                       <KeyRound className="h-3.5 w-3.5 mr-2 text-blue-400" />Reset Password
                     </DropdownMenuItem>
@@ -437,6 +466,9 @@ export const UnifiedUserManagement = () => {
                         <DropdownMenuContent align="end" className="w-48 max-h-[400px] overflow-y-auto z-50">
                           <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => openEditName(user)}>
+                            <Pencil className="h-3.5 w-3.5 mr-2 text-primary" />Edit Name
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => { setSelectedUser(makeUserObj(user)); setShowResetDialog(true); }}>
                             <KeyRound className="h-3.5 w-3.5 mr-2 text-blue-400" />Reset Password
                           </DropdownMenuItem>
@@ -527,6 +559,33 @@ export const UnifiedUserManagement = () => {
 
       <ResetPasswordDialog user={selectedUser} open={showResetDialog} onOpenChange={setShowResetDialog} />
       <DeleteUserDialog user={selectedUser} open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} onUserDeleted={() => { setSelectedUser(null); fetchUsers(); }} />
+
+      {/* Edit Name Dialog */}
+      <Dialog open={editNameDialogOpen} onOpenChange={setEditNameDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base">Edit User Name</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="editName" className="text-sm">Full Name</Label>
+              <Input
+                id="editName"
+                value={editNameValue}
+                onChange={e => setEditNameValue(e.target.value)}
+                placeholder="Enter full name"
+                className="h-10"
+                autoFocus
+                onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditNameDialogOpen(false)} size="sm">Cancel</Button>
+            <Button onClick={handleSaveName} disabled={!editNameValue.trim()} size="sm">Save Name</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
