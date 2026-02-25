@@ -25,7 +25,7 @@ import { Calendar, MapPin, ArrowRight, ChevronLeft, ChevronRight, Sparkles, X, M
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
-import { PublicAssistant } from "@/components/assistant/PublicAssistant";
+
 import { SmartCoverImage } from "@/components/ui/SmartCoverImage";
 import { FeaturedVideoCarousel } from "@/components/public/FeaturedVideoCarousel";
 import { AllVideosGrid } from "@/components/youtube/AllVideosGrid";
@@ -626,6 +626,6 @@ export const GleeWorldLanding = () => {
       </section>
       </PublicLayout>
       <PWAInstallPrompt />
-      <PublicAssistant />
+      
     </div>;
 };
