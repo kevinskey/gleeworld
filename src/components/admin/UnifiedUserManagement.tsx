@@ -12,7 +12,7 @@ import { Search, UserCog, Shield, Crown, User, UserCheck, UserX, Mail, Calendar,
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { BulkExecBoardActions } from './user-management/BulkExecBoardActions';
+
 import { DeleteUserDialog } from './DeleteUserDialog';
 import { ResetPasswordDialog } from './ResetPasswordDialog';
 import { UserPermissionManagement } from './UserPermissionManagement';
@@ -234,8 +234,6 @@ export const UnifiedUserManagement = () => {
 
         {/* ── USERS TAB ── */}
         <TabsContent value="users" className="space-y-3 mt-0">
-          <BulkExecBoardActions onActionComplete={fetchUsers} />
-
           {/* Search + Filter bar */}
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
