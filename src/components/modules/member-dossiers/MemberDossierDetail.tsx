@@ -287,26 +287,26 @@ export const MemberDossierDetail: React.FC<MemberDossierDetailProps> = ({
             <p className="text-sm text-muted-foreground">No attendance records found</p>
           ) : (
             <>
-              <div className="grid grid-cols-4 gap-3 mb-4">
-                <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-center">
-                  <CheckCircle className="h-5 w-5 mx-auto text-green-600 mb-1" />
-                  <p className="text-lg font-bold text-green-600">{attendanceStats.present}</p>
-                  <p className="text-xs text-muted-foreground">Present</p>
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-2 text-center">
+                  <CheckCircle className="h-3.5 w-3.5 mx-auto text-green-600 mb-0.5" />
+                  <p className="text-sm font-bold text-green-600">{attendanceStats.present}</p>
+                  <p className="text-[10px] text-muted-foreground">Present</p>
                 </div>
-                <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-3 text-center">
-                  <XCircle className="h-5 w-5 mx-auto text-red-600 mb-1" />
-                  <p className="text-lg font-bold text-red-600">{attendanceStats.absent}</p>
-                  <p className="text-xs text-muted-foreground">Absent</p>
+                <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-2 text-center">
+                  <XCircle className="h-3.5 w-3.5 mx-auto text-red-600 mb-0.5" />
+                  <p className="text-sm font-bold text-red-600">{attendanceStats.absent}</p>
+                  <p className="text-[10px] text-muted-foreground">Absent</p>
                 </div>
-                <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
-                  <Clock className="h-5 w-5 mx-auto text-amber-600 mb-1" />
-                  <p className="text-lg font-bold text-amber-600">{attendanceStats.late}</p>
-                  <p className="text-xs text-muted-foreground">Late</p>
+                <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2 text-center">
+                  <Clock className="h-3.5 w-3.5 mx-auto text-amber-600 mb-0.5" />
+                  <p className="text-sm font-bold text-amber-600">{attendanceStats.late}</p>
+                  <p className="text-[10px] text-muted-foreground">Late</p>
                 </div>
-                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 text-center">
-                  <Calendar className="h-5 w-5 mx-auto text-blue-600 mb-1" />
-                  <p className="text-lg font-bold text-blue-600">{attendanceStats.excused}</p>
-                  <p className="text-xs text-muted-foreground">Excused</p>
+                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-2 text-center">
+                  <Calendar className="h-3.5 w-3.5 mx-auto text-blue-600 mb-0.5" />
+                  <p className="text-sm font-bold text-blue-600">{attendanceStats.excused}</p>
+                  <p className="text-[10px] text-muted-foreground">Excused</p>
                 </div>
               </div>
               <div className="max-h-40 overflow-y-auto">

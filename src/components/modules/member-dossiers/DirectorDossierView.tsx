@@ -604,46 +604,46 @@ export const DirectorDossierView: React.FC<DirectorDossierViewProps> = ({
       </Card>
 
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Card className="p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Calendar className="h-4 w-4 text-green-600" />
-            <span className="text-xs text-muted-foreground">Attendance</span>
+      <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+        <Card className="p-2.5">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5 text-green-600 shrink-0" />
+            <span className="text-xs text-muted-foreground truncate">Attendance</span>
           </div>
-          <p className="text-2xl font-bold text-green-600">{attendanceRate}%</p>
-          <p className="text-xs text-muted-foreground">{attendanceStats.total} events</p>
+          <p className="text-base font-bold text-green-600 mt-0.5">{attendanceRate}%</p>
+          <p className="text-[10px] text-muted-foreground">{attendanceStats.total} events</p>
         </Card>
-        <Card className="p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <BookOpen className="h-4 w-4 text-blue-600" />
-            <span className="text-xs text-muted-foreground">Assignments</span>
+        <Card className="p-2.5">
+          <div className="flex items-center gap-1.5">
+            <BookOpen className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+            <span className="text-xs text-muted-foreground truncate">Assignments</span>
           </div>
-          <p className="text-2xl font-bold text-blue-600">{assignmentStats.submitted}</p>
-          <p className="text-xs text-muted-foreground">Avg: {assignmentStats.avgGrade || 'N/A'}%</p>
+          <p className="text-base font-bold text-blue-600 mt-0.5">{assignmentStats.submitted}</p>
+          <p className="text-[10px] text-muted-foreground">Avg: {assignmentStats.avgGrade || 'N/A'}%</p>
         </Card>
-        <Card className="p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Music className="h-4 w-4 text-purple-600" />
-            <span className="text-xs text-muted-foreground">Music Library</span>
+        <Card className="p-2.5">
+          <div className="flex items-center gap-1.5">
+            <Music className="h-3.5 w-3.5 text-purple-600 shrink-0" />
+            <span className="text-xs text-muted-foreground truncate">Music Library</span>
           </div>
-          <p className="text-2xl font-bold text-purple-600">{sheetMusicStats.uniquePieces}</p>
-          <p className="text-xs text-muted-foreground">{sheetMusicStats.views} views</p>
+          <p className="text-base font-bold text-purple-600 mt-0.5">{sheetMusicStats.uniquePieces}</p>
+          <p className="text-[10px] text-muted-foreground">{sheetMusicStats.views} views</p>
         </Card>
-        <Card className="p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <FileCheck className="h-4 w-4 text-amber-600" />
-            <span className="text-xs text-muted-foreground">Contracts</span>
+        <Card className="p-2.5">
+          <div className="flex items-center gap-1.5">
+            <FileCheck className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+            <span className="text-xs text-muted-foreground truncate">Contracts</span>
           </div>
-          <p className="text-2xl font-bold text-amber-600">{contractStats.signed}/{contractStats.total}</p>
-          <p className="text-xs text-muted-foreground">signed</p>
+          <p className="text-base font-bold text-amber-600 mt-0.5">{contractStats.signed}/{contractStats.total}</p>
+          <p className="text-[10px] text-muted-foreground">signed</p>
         </Card>
-        <Card className="p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Activity className="h-4 w-4 text-primary" />
-            <span className="text-xs text-muted-foreground">Activity</span>
+        <Card className="p-2.5">
+          <div className="flex items-center gap-1.5">
+            <Activity className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span className="text-xs text-muted-foreground truncate">Activity</span>
           </div>
-          <p className="text-2xl font-bold text-primary">{activityStats.total}</p>
-          <p className="text-xs text-muted-foreground">actions logged</p>
+          <p className="text-base font-bold text-primary mt-0.5">{activityStats.total}</p>
+          <p className="text-[10px] text-muted-foreground">actions logged</p>
         </Card>
       </div>
 
