@@ -2,7 +2,7 @@ import React, { useState, lazy, Suspense, useMemo, useEffect } from 'react';
 import { MessagesPanel } from './MessagesPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, GraduationCap } from 'lucide-react';
+import { ArrowLeft, GraduationCap, Youtube, Newspaper, ChevronDown } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
@@ -25,6 +25,8 @@ import { YouTubeChannelSlider } from './YouTubeChannelSlider';
 import { NewsFeedSlider } from './NewsFeedSlider';
 import { ScholarshipFeedSlider } from './ScholarshipFeedSlider';
 import { OfficeHoursWidget } from './OfficeHoursWidget';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 // Lazy load heavy components
 const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then((m) => ({
@@ -35,6 +37,33 @@ const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation
 const GleeAcademyDashboardCard = lazy(() => import('@/components/user-dashboard/GleeAcademyDashboardCard').then((m) => ({
   default: m.GleeAcademyDashboardCard
 })));
+
+const CollapsibleDashboardSection = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="border border-white/10 bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] shadow-sm py-0 rounded-none">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-white/5 transition-colors rounded-none">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {icon}
+                <CardTitle className="text-sm sm:text-xl font-semibold text-white/90" style={{ fontFamily: "'Cinzel', serif" }}>{title}</CardTitle>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="px-0 pb-0 pt-0">
+            {children}
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
+  );
+};
+
 export const UnifiedDashboard = () => {
   const {
     user
@@ -369,19 +398,19 @@ export const UnifiedDashboard = () => {
         </div>}
 
       {/* YouTube Channel Slider */}
-      <div>
+      <CollapsibleDashboardSection title="YouTube Channel" icon={<Youtube className="h-5 w-5 text-red-500" />}>
         <YouTubeChannelSlider />
-      </div>
+      </CollapsibleDashboardSection>
 
       {/* News Feed */}
-      <div>
+      <CollapsibleDashboardSection title="News Feed" icon={<Newspaper className="h-5 w-5 text-blue-400" />}>
         <NewsFeedSlider />
-      </div>
+      </CollapsibleDashboardSection>
 
       {/* Scholarship Feed */}
-      <div>
+      <CollapsibleDashboardSection title="Scholarship Feed" icon={<GraduationCap className="h-5 w-5 text-amber-400" />}>
         <ScholarshipFeedSlider />
-      </div>
+      </CollapsibleDashboardSection>
       
       {/* Messages Panel Overlay */}
       {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
