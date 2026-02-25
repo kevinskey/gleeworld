@@ -20,8 +20,6 @@ import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 
 
-import { GleeAssistant } from "@/components/assistant/GleeAssistant";
-import { AssistantProvider } from "@/contexts/AssistantContext";
 import { MessengerProvider } from "@/contexts/MessengerContext";
 import { MessengerModal } from "@/components/messenger/MessengerModal";
 
@@ -355,13 +353,11 @@ const App = () => {
                   <Mus240SemesterProvider>
                   <CourseProvider>
                   <MessengerProvider>
-                  <AssistantProvider>
                   <AudioCompanionProvider>
                   <div>
                   <Toaster />
                   <Sonner />
                   
-                  {/* <GleeAssistant /> */}
                   <MessengerModal />
                   <DesignSystemEnforcer />
                   <GlobalMiniPlayer />
@@ -2399,7 +2395,6 @@ const App = () => {
                     <PWAInstallPrompt />
                    </div>
                    </AudioCompanionProvider>
-                   </AssistantProvider>
                   </MessengerProvider>
                   </CourseProvider>
                   </Mus240SemesterProvider>
