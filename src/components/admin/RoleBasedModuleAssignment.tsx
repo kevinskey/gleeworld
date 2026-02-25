@@ -36,57 +36,24 @@ export const RoleBasedModuleAssignment = () => {
     { value: 'super-admin', label: 'Super Admin' }
   ];
 
-  useEffect(() => {
-    fetchModules();
-  }, []);
-
-  useEffect(() => {
-    if (selectedRole) {
-      fetchRoleModules();
-    }
-  }, [selectedRole]);
+  useEffect(() => { fetchModules(); }, []);
+  useEffect(() => { if (selectedRole) setSelectedModules([]); }, [selectedRole]);
 
   const fetchModules = async () => {
     try {
       setLoading(true);
-      
-      // Get all modules from ModuleRegistry
       const registryModules = ModuleRegistry.getModules();
-      
-      const moduleList = registryModules.map(module => ({
+      setModules(registryModules.map(module => ({
         id: module.id,
         name: module.title,
         title: module.title,
         description: module.description || '',
         icon: module.icon || Settings,
         iconColor: module.iconColor || 'blue'
-      }));
-
-      setModules(moduleList);
+      })));
     } catch (error) {
       console.error('Error fetching modules:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load modules',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchRoleModules = async () => {
-    try {
-      setLoading(true);
-      // Start fresh with no modules selected when role changes
-      setSelectedModules([]);
-    } catch (error) {
-      console.error('Error fetching role modules:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load role modules',
-        variant: 'destructive'
-      });
+      toast({ title: 'Error', description: 'Failed to load modules', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -94,66 +61,44 @@ export const RoleBasedModuleAssignment = () => {
 
   const handleToggleModule = (moduleId: string) => {
     setSelectedModules(prev =>
-      prev.includes(moduleId)
-        ? prev.filter(id => id !== moduleId)
-        : [...prev, moduleId]
+      prev.includes(moduleId) ? prev.filter(id => id !== moduleId) : [...prev, moduleId]
     );
   };
 
   const handleAssignModules = async () => {
     if (!selectedRole) {
-      toast({
-        title: 'Error',
-        description: 'Please select a role',
-        variant: 'destructive'
-      });
+      toast({ title: 'Error', description: 'Please select a role', variant: 'destructive' });
       return;
     }
 
     try {
       setAssigning(true);
-
-      // Get all users with the selected role
       const { data: users, error: usersError } = await supabase
         .from('gw_profiles')
         .select('user_id')
         .eq('role', selectedRole);
 
       if (usersError) throw usersError;
-
       if (!users || users.length === 0) {
-        toast({
-          title: 'No users found',
-          description: `No users with role "${selectedRole}" found`,
-          variant: 'destructive'
-        });
+        toast({ title: 'No users found', description: `No users with role "${selectedRole}"`, variant: 'destructive' });
         return;
       }
 
-      // Get current user for granted_by
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('Not authenticated');
 
-      const userIds = users.map(u => u.user_id).filter(id => id); // Filter out any null IDs
-
+      const userIds = users.map(u => u.user_id).filter(id => id);
       if (userIds.length === 0) {
-        toast({
-          title: 'Error',
-          description: 'No valid user IDs found',
-          variant: 'destructive'
-        });
+        toast({ title: 'Error', description: 'No valid user IDs', variant: 'destructive' });
         return;
       }
 
-      // Remove all existing permissions for these users
       const { error: deleteError } = await supabase
         .from('gw_user_module_permissions')
         .delete()
         .in('user_id', userIds);
-
       if (deleteError) throw deleteError;
 
-      // Add new permissions for selected modules
       if (selectedModules.length > 0) {
         const permissions = userIds.flatMap(userId =>
           selectedModules.map(moduleId => ({
@@ -164,137 +109,106 @@ export const RoleBasedModuleAssignment = () => {
             notes: `Assigned via role: ${selectedRole}`
           }))
         );
-
         const { error: insertError } = await supabase
           .from('gw_user_module_permissions')
           .insert(permissions);
-
         if (insertError) throw insertError;
       }
 
       toast({
         title: 'Success',
-        description: `Assigned ${selectedModules.length} modules to ${userIds.length} users with role "${selectedRole}"`,
+        description: `Assigned ${selectedModules.length} modules to ${userIds.length} ${selectedRole}s`,
       });
     } catch (error) {
       console.error('Error assigning modules:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to assign modules',
-        variant: 'destructive'
-      });
+      toast({ title: 'Error', description: 'Failed to assign modules', variant: 'destructive' });
     } finally {
       setAssigning(false);
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Role-Based Module Assignment
-        </CardTitle>
-        <CardDescription>
-          Assign modules to all users with a specific role
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Role Selection */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Select Role</label>
-          <Select value={selectedRole} onValueChange={setSelectedRole}>
-            <SelectTrigger>
-              <SelectValue placeholder="Choose a role..." />
-            </SelectTrigger>
-            <SelectContent>
-              {roles.map(role => (
-                <SelectItem key={role.value} value={role.value}>
-                  {role.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="space-y-3">
+      <div>
+        <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          Role-Based Assignment
+        </h3>
+        <p className="text-xs text-muted-foreground">Assign modules to all users with a specific role</p>
+      </div>
 
-        {/* Module Selection */}
-        {selectedRole && (
-          <>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Select Modules</label>
-                <Badge variant="secondary">
-                  {selectedModules.length} selected
-                </Badge>
-              </div>
+      <Select value={selectedRole} onValueChange={setSelectedRole}>
+        <SelectTrigger className="h-9 text-sm bg-card border-border">
+          <SelectValue placeholder="Choose a role..." />
+        </SelectTrigger>
+        <SelectContent>
+          {roles.map(role => (
+            <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <ScrollArea className="h-[400px] rounded-md border p-4">
-                  <div className="space-y-2">
-                    {modules.map(module => {
-                      const IconComponent = module.icon;
-                      const isSelected = selectedModules.includes(module.id);
+      {selectedRole && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Select modules</span>
+            <Badge variant="secondary" className="text-[10px]">{selectedModules.length} selected</Badge>
+          </div>
 
-                      return (
-                        <div
-                          key={module.id}
-                          className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent/50 transition-colors"
-                        >
-                          <Checkbox
-                            id={module.id}
-                            checked={isSelected}
-                            onCheckedChange={() => handleToggleModule(module.id)}
-                          />
-                          <label
-                            htmlFor={module.id}
-                            className="flex items-center gap-3 flex-1 cursor-pointer"
-                          >
-                            {IconComponent && (
-                              <div className={`p-1.5 rounded bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
-                                <IconComponent className={`h-4 w-4 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
-                              </div>
-                            )}
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">{module.title}</p>
-                              {module.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-1">
-                                  {module.description}
-                                </p>
-                              )}
-                            </div>
-                          </label>
+          {loading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <ScrollArea className="h-[50vh] sm:h-[300px] rounded-md border p-2 sm:p-3">
+              <div className="space-y-1">
+                {modules.map(module => {
+                  const IconComponent = module.icon;
+                  return (
+                    <div key={module.id} className="flex items-center gap-2.5 p-2 rounded-md hover:bg-accent/50">
+                      <Checkbox
+                        id={module.id}
+                        checked={selectedModules.includes(module.id)}
+                        onCheckedChange={() => handleToggleModule(module.id)}
+                      />
+                      <label htmlFor={module.id} className="flex items-center gap-2 flex-1 cursor-pointer min-w-0">
+                        {IconComponent && <IconComponent className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{module.title}</p>
+                          {module.description && (
+                            <p className="text-[10px] text-muted-foreground truncate">{module.description}</p>
+                          )}
                         </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              )}
-            </div>
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          )}
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => setSelectedModules([])}
-                disabled={assigning || selectedModules.length === 0}
-              >
-                Clear All
-              </Button>
-              <Button
-                onClick={handleAssignModules}
-                disabled={assigning || !selectedRole}
-              >
-                {assigning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Assign to All {roles.find(r => r.value === selectedRole)?.label}s
-              </Button>
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+          <div className="flex items-center justify-between gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedModules([])}
+              disabled={assigning || selectedModules.length === 0}
+              className="text-xs h-8"
+            >
+              Clear
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleAssignModules}
+              disabled={assigning || !selectedRole}
+              className="text-xs h-8"
+            >
+              {assigning && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+              Assign to {roles.find(r => r.value === selectedRole)?.label}s
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
