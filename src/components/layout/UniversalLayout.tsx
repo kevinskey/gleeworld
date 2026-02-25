@@ -31,15 +31,13 @@ export const UniversalLayout = ({
   const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae', '/glee-academy', '/public-calendar'];
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname) || location.pathname.startsWith('/glee-academy');
 
-  // Full-bleed shell background for wide screens on dashboards
-  const isDashboardShell = location.pathname.startsWith('/dashboard');
-  const shellBg = isDashboardShell ? 'bg-background' : 'bg-background';
-  return <div className={`min-h-dvh w-full ${shellBg}`}>
+  const shellBg = 'bg-[hsl(40,10%,96%)]';
+  return <div className={`flex flex-col min-h-screen w-full ${shellBg}`}>
       {/* Fixed Header */}
       {showHeader && (shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
       
       {/* Main Content - padded by header height only when header is shown */}
-      <main className={`w-full ${showHeader ? 'pt-[calc(var(--gw-header-h,4rem)+var(--gw-radio-bar-height,0px))]' : ''} ${shellBg} text-foreground ${className}`} style={{
+      <main className={`w-full flex-1 ${showHeader ? 'pt-[calc(var(--gw-header-h,4rem)+var(--gw-radio-bar-height,0px))]' : ''} ${shellBg} text-foreground ${className}`} style={{
       paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       paddingLeft: 'env(safe-area-inset-left)',
       paddingRight: 'env(safe-area-inset-right)'
