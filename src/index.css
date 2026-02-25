@@ -4,6 +4,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fast collapsible expand/collapse animation */
+[data-state="open"][data-radix-collapsible-content] {
+  animation: collapsible-open 150ms ease-out;
+}
+[data-state="closed"][data-radix-collapsible-content] {
+  animation: collapsible-close 100ms ease-out;
+}
+@keyframes collapsible-open {
+  from { height: 0; opacity: 0; overflow: hidden; }
+  to { height: var(--radix-collapsible-content-height); opacity: 1; }
+}
+@keyframes collapsible-close {
+  from { height: var(--radix-collapsible-content-height); opacity: 1; }
+  to { height: 0; opacity: 0; overflow: hidden; }
+}
+
 /* Full-bleed utility - extends background colors edge-to-edge while keeping content padded */
 @layer utilities {
   .full-bleed {
