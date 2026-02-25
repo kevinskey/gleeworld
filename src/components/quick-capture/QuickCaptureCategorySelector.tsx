@@ -72,14 +72,14 @@ export const QuickCaptureCategorySelector = ({
             <div className="flex flex-col gap-1">
               <button
                 onClick={() => setSelectedType('photo')}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded transition-colors w-full text-left"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded transition-colors w-full text-left"
               >
                 <Image className="h-4 w-4" />
                 Photo
               </button>
               <button
                 onClick={() => setSelectedType('video')}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded transition-colors w-full text-left"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded transition-colors w-full text-left"
               >
                 <Film className="h-4 w-4" />
                 Video
@@ -89,7 +89,7 @@ export const QuickCaptureCategorySelector = ({
             <div className="flex flex-col gap-1">
               <button
                 onClick={handleBack}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-left border-b border-border mb-1"
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-900 transition-colors w-full text-left border-b border-gray-200 mb-1"
               >
                 ← Back
               </button>
@@ -97,7 +97,7 @@ export const QuickCaptureCategorySelector = ({
                 <button
                   key={category.id}
                   onClick={() => handleSelectCategory(category.id)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded transition-colors w-full text-left"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded transition-colors w-full text-left"
                 >
                   {category.icon}
                   {category.title}
