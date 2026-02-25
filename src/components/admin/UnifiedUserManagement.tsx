@@ -352,7 +352,7 @@ export const UnifiedUserManagement = () => {
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs">Change Role</DropdownMenuLabel>
                     {['guest','fan','student','member','alumna','vip','executive','admin','super-admin'].map(r => (
-                      <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r} className="text-xs">
+                      <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r} className={`text-xs ${user.role === r ? 'opacity-50' : ''}`}>
                         {getRoleIcon(r)}<span className="ml-1.5 capitalize">{r.replace('-', ' ')}</span>
                       </DropdownMenuItem>
                     ))}
@@ -364,22 +364,22 @@ export const UnifiedUserManagement = () => {
 
           {/* Desktop table */}
           <div className="hidden sm:block rounded-lg border border-border overflow-hidden">
-            <Table>
+            <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none" onClick={() => toggleSort('name')}>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none w-[40%]" onClick={() => toggleSort('name')}>
                     <span className="inline-flex items-center">User<SortIcon field="name" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none" onClick={() => toggleSort('role')}>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none w-[20%]" onClick={() => toggleSort('role')}>
                     <span className="inline-flex items-center">Role<SortIcon field="role" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none w-[15%]" onClick={() => toggleSort('status')}>
                     <span className="inline-flex items-center">Status<SortIcon field="status" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none" onClick={() => toggleSort('joined')}>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none w-[15%]" onClick={() => toggleSort('joined')}>
                     <span className="inline-flex items-center">Joined<SortIcon field="joined" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 text-right">Actions</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 text-right w-[10%]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -450,7 +450,7 @@ export const UnifiedUserManagement = () => {
                           <DropdownMenuLabel className="text-xs">Change Role</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {['vip','guest','fan','student','member','alumna','executive','admin','super-admin','auditioner'].map(r => (
-                            <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r} className="text-xs">
+                            <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r} className={`text-xs ${user.role === r ? 'opacity-50' : ''}`}>
                               {getRoleIcon(r)}<span className="ml-1.5 capitalize">{r.replace('-', ' ')}</span>
                             </DropdownMenuItem>
                           ))}
