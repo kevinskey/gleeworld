@@ -15,7 +15,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 import { DeleteUserDialog } from './DeleteUserDialog';
 import { ResetPasswordDialog } from './ResetPasswordDialog';
-import { UserPermissionManagement } from './UserPermissionManagement';
+
 import { UserModuleAssignment } from './UserModuleAssignment';
 import { RoleBasedModuleAssignment } from './RoleBasedModuleAssignment';
 import { UsernamePermissionsManager } from './UsernamePermissionsManager';
@@ -227,9 +227,7 @@ export const UnifiedUserManagement = () => {
           <TabsTrigger value="users" className="text-xs px-3 h-7">Users</TabsTrigger>
           <TabsTrigger value="dossiers" className="text-xs px-3 h-7">Dossiers</TabsTrigger>
           <TabsTrigger value="enroll" className="text-xs px-3 h-7">Add User</TabsTrigger>
-          <TabsTrigger value="permissions" className="text-xs px-3 h-7">Permissions</TabsTrigger>
           <TabsTrigger value="modules" className="text-xs px-3 h-7">Modules</TabsTrigger>
-          <TabsTrigger value="username" className="text-xs px-3 h-7">Username</TabsTrigger>
         </TabsList>
 
         {/* ── USERS TAB ── */}
@@ -458,22 +456,11 @@ export const UnifiedUserManagement = () => {
           </Card>
         </TabsContent>
 
-        {/* ── PERMISSIONS TAB ── */}
-        <TabsContent value="permissions" className="mt-0">
-          <UserPermissionManagement />
-        </TabsContent>
-
         {/* ── MODULES TAB ── */}
         <TabsContent value="modules" className="mt-0 space-y-3">
           <PermissionErrorBoundary>
             <RoleBasedModuleAssignment />
             <UserModuleAssignment />
-          </PermissionErrorBoundary>
-        </TabsContent>
-
-        {/* ── USERNAME TAB ── */}
-        <TabsContent value="username" className="mt-0">
-          <PermissionErrorBoundary>
             <UsernamePermissionsManager />
           </PermissionErrorBoundary>
         </TabsContent>
