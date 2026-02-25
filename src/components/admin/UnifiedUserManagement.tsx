@@ -195,30 +195,27 @@ export const UnifiedUserManagement = () => {
 
   return (
     <div className="space-y-4">
-      {/* Compact header with inline stats */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">User Management</h1>
-            <p className="text-sm text-muted-foreground">
-              {userStats.total} users · {userStats.verified} verified
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="gap-1.5">
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+      {/* Single compact header row */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Shield className="h-5 w-5 text-primary shrink-0" />
+          <h1 className="text-lg font-bold text-foreground truncate">Users</h1>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">{userStats.total} · {userStats.verified} verified</span>
         </div>
+        <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="gap-1.5 shrink-0 h-8">
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Refresh</span>
+        </Button>
+      </div>
 
-        {/* Stat pills row */}
-        <div className="flex flex-wrap gap-2">
-          <StatPill label="Total" value={userStats.total} icon={Users} />
-          <StatPill label="Admins" value={userStats.admins} icon={Shield} />
-          <StatPill label="Students" value={userStats.students} icon={User} />
-          <StatPill label="Alumnae" value={userStats.alumnae} icon={GraduationCap} />
-          <StatPill label="VIP" value={userStats.vips} icon={Star} />
-          <StatPill label="Exec" value={userStats.executives} icon={Settings} />
-        </div>
+      {/* Stat pills - horizontally scrollable on mobile */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+        <StatPill label="Total" value={userStats.total} icon={Users} />
+        <StatPill label="Admins" value={userStats.admins} icon={Shield} />
+        <StatPill label="Students" value={userStats.students} icon={User} />
+        <StatPill label="Alumnae" value={userStats.alumnae} icon={GraduationCap} />
+        <StatPill label="VIP" value={userStats.vips} icon={Star} />
+        <StatPill label="Exec" value={userStats.executives} icon={Settings} />
       </div>
 
       {/* Tabs */}
