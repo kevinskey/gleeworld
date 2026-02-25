@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { UnifiedUserManagement } from '@/components/admin/UnifiedUserManagement';
-import { Loader2, Users, Shield } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const AdminUsers = () => {
   const { user, loading: authLoading } = useAuth();
@@ -32,20 +32,7 @@ const AdminUsers = () => {
 
   return (
     <UniversalLayout>
-      <div className="space-y-4 md:space-y-6 px-4 md:px-0">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Shield className="h-6 w-6 md:h-8 md:w-8 text-brand-500" />
-            <Users className="h-6 w-6 md:h-8 md:w-8 text-brand-500" />
-            <h1 className="text-2xl md:text-3xl font-bebas text-brand-800 tracking-wide">User Management</h1>
-          </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Manage member accounts, roles, permissions, and executive board assignments
-          </p>
-        </div>
-
-        {/* User Management Component */}
+      <div className="px-4 md:px-0">
         <UnifiedUserManagement />
       </div>
     </UniversalLayout>
