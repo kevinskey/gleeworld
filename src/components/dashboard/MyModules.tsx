@@ -125,7 +125,7 @@ export const MyModules = ({
   return <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <Card className="border border-white/10 bg-gradient-to-b from-[hsl(208,100%,20%)] via-[hsl(208,100%,17%)] to-[hsl(208,100%,14%)] shadow-sm py-0 rounded-none">
         <CollapsibleTrigger asChild>
-          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-white/5 transition-colors rounded-none">
+          <CardHeader className="py-4 px-4 cursor-pointer hover:bg-white/5 transition-colors rounded-none">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <LayoutGrid className="h-5 w-5 text-primary" />
