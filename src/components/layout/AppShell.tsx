@@ -40,7 +40,7 @@ export const AppShell = ({
   const shouldUsePublicHeader = publicHeaderPaths.includes(location.pathname);
 
   return (
-    <div className="min-h-screen w-full bg-background">
+    <div className="min-h-screen w-full bg-[hsl(40,10%,96%)]">
       {/* Fixed Header */}
       {showHeader && (
         shouldUsePublicHeader 
@@ -55,7 +55,7 @@ export const AppShell = ({
           min-h-dvh 
           pt-[var(--gw-header-h,4rem)]
           pb-20 sm:pb-0
-          bg-white/80
+          bg-[hsl(40,10%,96%)]
           ${className}
         `.trim().replace(/\s+/g, ' ')}
       >
