@@ -63,10 +63,9 @@ export const QuickCaptureCategorySelector = ({
         onClick={handleClose}
       />
       
-      {/* Small dropdown positioned top-right */}
+      {/* Small dropdown - centered on mobile/tablet, positioned near camera on desktop */}
       <div 
-        className="fixed z-[9999] bg-white text-gray-900 border border-gray-200 rounded-lg shadow-xl"
-        style={{ top: 'calc(var(--gw-header-h, 56px) + 4px)', right: '140px' }}
+        className="fixed z-[9999] bg-white text-gray-900 border border-gray-200 rounded-lg shadow-xl left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-[140px] bottom-20 sm:bottom-auto sm:top-[calc(var(--gw-header-h,56px)+4px)]"
       >
         <div className="p-2 min-w-[140px]">
           {!selectedType ? (
