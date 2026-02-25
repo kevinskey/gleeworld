@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp, Mic, MapPin } from 'lucide-react';
+import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp, Mic, MapPin, Settings } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
@@ -32,6 +32,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   const [scheduleOpen, setScheduleOpen] = useState(false);
 
   const isMus070 = course.courseCode === 'MUS 070';
+  const isAdmin = profile?.is_admin || profile?.is_super_admin || profile?.role === 'instructor';
 
   // Glass styling helpers for MUS 070
   const glass = isMus070 ? 'bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl shadow-none' : '';
@@ -295,6 +296,19 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
                 </CollapsibleContent>
               </Card>
             </Collapsible>
+          )}
+
+          {/* Instructor Console - for admins/instructors on tablet */}
+          {isAdmin && (
+            <Button
+              onClick={() => navigate(`/${courseSlug}/instructor/console`)}
+              variant="default"
+              className="w-full h-12 text-sm font-semibold"
+              size="lg"
+            >
+              <Settings className="h-5 w-5 mr-2" />
+              Instructor Control Center
+            </Button>
           )}
         </main>
       </div>
