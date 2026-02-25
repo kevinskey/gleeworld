@@ -57,10 +57,10 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="flex items-center justify-evenly w-full h-12 px-4 bg-background">
+        <div className="flex items-center justify-evenly w-full h-10 px-4 bg-background">
           {/* Musical Toolkit */}
-          <div className="flex items-center justify-center w-14 h-14 text-foreground">
-            <MusicalToolkit className="!p-0 [&_svg]:!h-10 [&_svg]:!w-10" />
+          <div className="flex items-center justify-center w-10 h-10 text-foreground">
+            <MusicalToolkit className="!p-0 [&_svg]:!h-6 [&_svg]:!w-6" />
           </div>
 
           {/* Instructor Console - only for instructors/admins */}
@@ -68,48 +68,48 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
             <button
               onClick={() => navigate('/grading/instructor/dashboard')}
               className={cn(
-                "relative flex items-center justify-center w-14 h-14 rounded-full transition-all",
+                "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
                 location.pathname.includes('/instructor')
                   ? "text-primary bg-primary/10"
                   : "text-foreground hover:bg-muted"
               )}
             >
-              <GraduationCap className="h-7 w-7" />
+              <GraduationCap className="h-5 w-5" />
             </button>
           )}
 
-          {/* Glee Cam - Highlighted Center with Navy Blue */}
+          {/* Glee Cam - Highlighted Center */}
           <button
             onClick={() => setShowCategorySelector(true)}
-            className="flex items-center justify-center w-14 h-14 -mt-5 rounded-full bg-[#003666] text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all border-2 border-background"
+            className="flex items-center justify-center w-11 h-11 -mt-4 rounded-full bg-[#003666] text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all border-2 border-background"
           >
-            <Camera className="h-6 w-6" />
+            <Camera className="h-5 w-5" />
           </button>
 
           {/* Academy */}
           <button
             onClick={() => navigate('/course-selection')}
             className={cn(
-              "relative flex items-center justify-center w-14 h-14 rounded-full transition-all",
+              "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
               location.pathname.includes('/academy')
                 ? "text-primary bg-primary/10" 
                 : "text-foreground hover:bg-muted"
             )}
           >
-            <BookOpen className="h-7 w-7" />
+            <BookOpen className="h-5 w-5" />
           </button>
 
           {/* Music Library */}
           <button
             onClick={handleLibraryClick}
             className={cn(
-              "relative flex items-center justify-center w-14 h-14 rounded-full transition-all",
+              "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
               isActive('/music-library')
                 ? "text-primary bg-primary/10" 
                 : "text-foreground hover:bg-muted"
             )}
           >
-            <Library className="h-7 w-7" />
+            <Library className="h-5 w-5" />
           </button>
         </div>
       </nav>

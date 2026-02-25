@@ -322,11 +322,11 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
       </div>;
   }
   const courseSlug = courseCode.toLowerCase().replace(' ', '-');
-  return <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+  return <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h3 className="text-2xl font-bold text-foreground">Course Enrollment Management</h3>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Manage student enrollments for {courseCode} {term ? `(${term})` : ''}
           </p>
         </div>
@@ -371,70 +371,65 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex gap-4 flex-wrap">
-          <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search students..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
-            </div>
-          </div>
+      {/* Compact search + filters row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[160px] max-w-[280px]">
+          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+          <Input placeholder="Search students..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 h-9 text-sm" />
         </div>
         
-        <div className="flex gap-4 items-center flex-wrap">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="enrolled">Enrolled</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="dropped">Dropped</SelectItem>
-                <SelectItem value="withdrawn">Withdrawn</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <Select value={gradeFilter} onValueChange={setGradeFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Filter by grade" />
+        <div className="flex items-center gap-1.5">
+          <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32 h-9 text-sm">
+              <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Grades</SelectItem>
-              <SelectItem value="graded">Graded</SelectItem>
-              <SelectItem value="ungraded">Ungraded</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="enrolled">Enrolled</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="dropped">Dropped</SelectItem>
+              <SelectItem value="withdrawn">Withdrawn</SelectItem>
             </SelectContent>
           </Select>
-          
-          <div className="flex items-center gap-2">
-            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Full Name</SelectItem>
-                <SelectItem value="last_name">Last Name</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="enrolled_at">Enrollment Date</SelectItem>
-                <SelectItem value="status">Status</SelectItem>
-                <SelectItem value="grade">Grade</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-1">
-            {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-            {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-          </Button>
-          
-          <div className="ml-auto text-sm text-muted-foreground">
-            {filteredAndSortedEnrollments.length} of {enrollments.length} students
-          </div>
         </div>
+        
+        <Select value={gradeFilter} onValueChange={setGradeFilter}>
+          <SelectTrigger className="w-28 h-9 text-sm">
+            <SelectValue placeholder="Grade" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Grades</SelectItem>
+            <SelectItem value="graded">Graded</SelectItem>
+            <SelectItem value="ungraded">Ungraded</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <div className="flex items-center gap-1.5">
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-36 h-9 text-sm">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Full Name</SelectItem>
+              <SelectItem value="last_name">Last Name</SelectItem>
+              <SelectItem value="email">Email</SelectItem>
+              <SelectItem value="enrolled_at">Enrollment Date</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="grade">Grade</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="h-9 flex items-center gap-1 text-sm">
+          {sortOrder === 'asc' ? <SortAsc className="h-3.5 w-3.5" /> : <SortDesc className="h-3.5 w-3.5" />}
+          {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+        </Button>
+        
+        <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap">
+          {filteredAndSortedEnrollments.length} of {enrollments.length} students
+        </span>
       </div>
 
       <div className="grid gap-4">
