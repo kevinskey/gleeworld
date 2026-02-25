@@ -55,7 +55,7 @@ export const AppShell = ({
           min-h-dvh 
           pt-[var(--gw-header-h,4rem)]
           pb-20 sm:pb-0
-          bg-background
+          bg-white/80
           ${className}
         `.trim().replace(/\s+/g, ' ')}
       >

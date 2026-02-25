@@ -401,24 +401,24 @@ button.module-card-solid:hover,
   background-image: none !important;
 }
 
-/* Header styling - solid dark navy for maximum readability */
+/* Header styling - Spelman Navy to match module cards */
 header,
 .spelman-blue-theme header,
 .glass-theme header,
 [class*="theme"] header {
-  background-color: #060e1f !important;
-  background: #060e1f !important;
+  background-color: hsl(208 100% 20%) !important;
+  background: hsl(208 100% 20%) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   color: hsl(0 0% 100%) !important;
 }
 
-/* HBCU theme keeps dark header */
+/* HBCU theme keeps same navy header */
 .hbcu-theme header {
-  background-color: rgba(0, 0, 0, 0.85) !important;
-  background: rgba(0, 0, 0, 0.85) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background-color: hsl(208 100% 20%) !important;
+  background: hsl(208 100% 20%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Force header text and icons to #003666 Spelman blue */

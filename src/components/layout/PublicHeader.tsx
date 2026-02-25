@@ -32,7 +32,7 @@ const HEADER_STYLES = {
   brandColor: "#FFFFFF",
   
   // Background color
-  backgroundColor: "#060e1f",
+  backgroundColor: "#003666",
   
   // Title font family (must match PersistentHeader)
   titleFontFamily: "'Cinzel', serif",
