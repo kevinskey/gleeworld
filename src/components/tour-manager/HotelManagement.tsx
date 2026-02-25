@@ -99,6 +99,7 @@ export const HotelManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState<HotelInfo | null>(null);
   const [viewingHotel, setViewingHotel] = useState<HotelInfo | null>(null);
+  const [isOpen, setIsOpen] = useState(true);
   const { toast } = useToast();
 
   // Google search state
@@ -406,14 +407,26 @@ export const HotelManagement = () => {
     );
   }
 
+
   return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="overflow-hidden">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors py-3">
+            <CardTitle className="flex items-center justify-between text-base">
+              <div className="flex items-center gap-2">
+                <Hotel className="h-4 w-4 text-primary" />
+                <span>Hotel Information</span>
+                <span className="text-xs font-normal text-muted-foreground ml-1">Search & verify hotels via Google before adding</span>
+              </div>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-0 pb-4">
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Hotel Information</h2>
-          <p className="text-sm text-muted-foreground">Search & verify hotels via Google before adding</p>
-        </div>
+      <div className="flex items-center justify-end">
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) resetForm();
@@ -881,5 +894,9 @@ export const HotelManagement = () => {
         ))}
       </div>
     </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 };
