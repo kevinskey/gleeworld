@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Search, RefreshCw, Music, BarChart3, Upload, AlertTriangle, ArrowUpDown, X, Filter } from "lucide-react";
+import { Users, Search, RefreshCw, Music, BarChart3, Upload, AlertTriangle, ArrowUpDown, X, Filter, ChevronDown } from "lucide-react";
 import { MemberDossierCard } from "./MemberDossierCard";
 import { DirectorDossierView } from "./DirectorDossierView";
 import { MemberDossierAnalytics } from "./MemberDossierAnalytics";
 import { MemberDataUpload } from "./MemberDataUpload";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface MemberProfile {
   user_id: string;
@@ -82,7 +83,7 @@ interface MemberDossierData {
 }
 
 interface MemberDossiersModuleProps {
-  courseId?: string; // If provided, only show students enrolled in this course
+  courseId?: string;
 }
 
 type SortOption = 
@@ -111,6 +112,7 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
   const [selectedMember, setSelectedMember] = useState<MemberDossierData | null>(null);
   const [activeTab, setActiveTab] = useState("members");
   const [missingInterviews, setMissingInterviews] = useState<Array<{ name: string; email: string }>>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -118,7 +120,6 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
       let profiles: MemberProfile[] = [];
 
       if (courseId) {
-        // Fetch only students enrolled in this specific course
         const { data: enrollments, error: enrollmentError } = await supabase
           .from("gw_course_enrollments")
           .select("user_id")
@@ -141,7 +142,6 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
           profiles = profileData || [];
         }
       } else {
-        // Fetch all user profiles (for admin view)
         const { data: profileData, error: profilesError } = await supabase
           .from("gw_profiles")
           .select("*")
@@ -152,7 +152,6 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
         profiles = profileData || [];
       }
 
-      // Fetch all exit interviews
       const { data: interviews, error: interviewsError } = await supabase
         .from("member_exit_interviews")
         .select("*")
@@ -162,7 +161,6 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
 
       setAllInterviews(interviews || []);
 
-      // Group interviews by user_id
       const interviewsByUser: Record<string, ExitInterview[]> = {};
       (interviews || []).forEach((interview) => {
         if (!interviewsByUser[interview.user_id]) {
@@ -171,10 +169,8 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
         interviewsByUser[interview.user_id].push(interview);
       });
 
-      // Calculate average satisfaction for each member
       const calculateAvgSatisfaction = (userInterviews: ExitInterview[]) => {
         if (userInterviews.length === 0) return null;
-        
         const allScores: number[] = [];
         userInterviews.forEach(interview => {
           const scores = [
@@ -187,11 +183,9 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
           ].filter(s => s !== null) as number[];
           allScores.push(...scores);
         });
-        
         return allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : null;
       };
 
-      // Combine data - ALL members, with or without interviews
       const memberDossiers: MemberDossierData[] = (profiles || []).map((profile) => ({
         profile,
         exitInterviews: interviewsByUser[profile.user_id] || [],
@@ -210,10 +204,8 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
     fetchData();
   }, []);
 
-  // Filter and sort members
   const filteredMembers = useMemo(() => {
     let result = members.filter(member => {
-      // Search filter - expanded to include more fields
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = !searchQuery || 
         member.profile.full_name?.toLowerCase().includes(searchLower) ||
@@ -223,28 +215,23 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
         member.profile.role?.toLowerCase().includes(searchLower) ||
         member.profile.exec_board_role?.toLowerCase().includes(searchLower);
 
-      // Voice part filter
       const matchesVoicePart = voicePartFilter === "all" || 
         member.profile.voice_part === voicePartFilter;
 
-      // Role filter
       const matchesRole = roleFilter === "all" || 
         member.profile.role === roleFilter;
 
-      // Interview filter
       const hasInterview = member.exitInterviews.length > 0;
       const matchesInterview = interviewFilter === "all" || 
         (interviewFilter === "submitted" && hasInterview) ||
         (interviewFilter === "missing" && !hasInterview);
 
-      // Class year filter
       const matchesClassYear = classYearFilter === "all" || 
         member.profile.class_year?.toString() === classYearFilter;
 
       return matchesSearch && matchesVoicePart && matchesRole && matchesInterview && matchesClassYear;
     });
 
-    // Apply sorting
     result.sort((a, b) => {
       switch (sortBy) {
         case "name-asc":
@@ -275,7 +262,6 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
     return result;
   }, [members, searchQuery, voicePartFilter, roleFilter, interviewFilter, classYearFilter, sortBy]);
 
-  // Get unique voice parts for filter
   const voiceParts = useMemo(() => {
     const parts = new Set<string>();
     members.forEach(m => {
@@ -284,7 +270,6 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
     return Array.from(parts).sort();
   }, [members]);
 
-  // Get unique roles for filter
   const roles = useMemo(() => {
     const roleSet = new Set<string>();
     members.forEach(m => {
@@ -293,7 +278,6 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
     return Array.from(roleSet).sort();
   }, [members]);
 
-  // Get unique class years for filter
   const classYears = useMemo(() => {
     const years = new Set<number>();
     members.forEach(m => {
@@ -302,11 +286,9 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
     return Array.from(years).sort((a, b) => b - a);
   }, [members]);
 
-  // Check if any filters are active
   const hasActiveFilters = searchQuery || voicePartFilter !== "all" || roleFilter !== "all" || 
     interviewFilter !== "all" || classYearFilter !== "all" || sortBy !== "name-asc";
 
-  // Clear all filters
   const clearFilters = () => {
     setSearchQuery("");
     setVoicePartFilter("all");
@@ -316,7 +298,6 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
     setSortBy("name-asc");
   };
 
-  // Stats
   const stats = useMemo(() => {
     const withInterviews = members.filter(m => m.exitInterviews.length > 0);
     const withoutInterviews = members.filter(m => m.exitInterviews.length === 0);
@@ -343,110 +324,125 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
     );
   }
 
+  const activeFilterCount = [
+    voicePartFilter !== "all",
+    roleFilter !== "all",
+    interviewFilter !== "all",
+    classYearFilter !== "all",
+    sortBy !== "name-asc"
+  ].filter(Boolean).length;
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <CardTitle className="flex items-center gap-2 text-lg">
+    <div className="space-y-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
             <Users className="h-5 w-5" />
             Member Dossiers
-          </CardTitle>
-          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          </Button>
+          </h2>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+            <span>{stats.total} total</span>
+            <span className="text-green-500">{stats.withInterviews} submitted</span>
+            <span className="text-orange-500">{stats.withoutInterviews} missing</span>
+            {stats.avgSatisfaction && <span>Avg: {stats.avgSatisfaction.toFixed(1)}/5</span>}
+          </div>
         </div>
-        
-        {/* Stats */}
-        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mt-2">
-          <span>{stats.total} total members</span>
-          <span>•</span>
-          <span className="text-green-600">{stats.withInterviews} submitted</span>
-          <span>•</span>
-          <span className="text-orange-600">{stats.withoutInterviews} missing</span>
-          {stats.avgSatisfaction && (
-            <>
-              <span>•</span>
-              <span>Avg satisfaction: {stats.avgSatisfaction.toFixed(1)}/5</span>
-            </>
-          )}
-        </div>
-      </CardHeader>
+        <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="h-8 w-8 p-0 sm:w-auto sm:px-3 sm:gap-1.5">
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          <span className="hidden sm:inline">Refresh</span>
+        </Button>
+      </div>
 
-      <CardContent className="space-y-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full">
-            <TabsTrigger value="analytics" className="flex-1">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Analytics
+      {/* Tabs - scrollable on mobile */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="overflow-x-auto -mx-1 px-1 pb-1">
+          <TabsList className="h-9 bg-muted/50 w-auto inline-flex">
+            <TabsTrigger value="members" className="text-xs px-2.5 sm:px-3 h-7 gap-1">
+              <Users className="h-3.5 w-3.5 sm:hidden" />
+              <span className="hidden sm:inline">Members</span>
+              <span className="sm:hidden">{stats.total}</span>
+              <span className="hidden sm:inline">({stats.total})</span>
             </TabsTrigger>
-            <TabsTrigger value="members" className="flex-1">
-              <Users className="h-4 w-4 mr-2" />
-              Members ({stats.total})
+            <TabsTrigger value="analytics" className="text-xs px-2.5 sm:px-3 h-7 gap-1">
+              <BarChart3 className="h-3.5 w-3.5 sm:hidden" />
+              <span>Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="upload" className="flex-1">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Data
+            <TabsTrigger value="upload" className="text-xs px-2.5 sm:px-3 h-7 gap-1">
+              <Upload className="h-3.5 w-3.5 sm:hidden" />
+              <span>Upload</span>
             </TabsTrigger>
-            <TabsTrigger value="missing" className="flex-1">
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              Missing ({stats.withoutInterviews})
+            <TabsTrigger value="missing" className="text-xs px-2.5 sm:px-3 h-7 gap-1">
+              <AlertTriangle className="h-3.5 w-3.5 sm:hidden" />
+              <span className="hidden sm:inline">Missing</span>
+              <span>({stats.withoutInterviews})</span>
             </TabsTrigger>
           </TabsList>
+        </div>
 
-          <TabsContent value="analytics" className="mt-4">
-            {loading ? (
-              <div className="flex items-center justify-center h-32">
-                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <MemberDossierAnalytics interviews={allInterviews} />
-            )}
-          </TabsContent>
+        <TabsContent value="analytics" className="mt-3">
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <MemberDossierAnalytics interviews={allInterviews} />
+          )}
+        </TabsContent>
 
-          <TabsContent value="members" className="mt-4 space-y-4">
-            {/* Search & Filters */}
-            <div className="space-y-3">
-              {/* Search Row */}
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search name, email, phone, student #..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                
-                {/* Sort Dropdown */}
+        <TabsContent value="members" className="mt-3 space-y-3">
+          {/* Search */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search name, email, phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-sm bg-card border-border"
+              />
+            </div>
+            <Button
+              variant={activeFilterCount > 0 ? "default" : "outline"}
+              size="sm"
+              className="h-9 gap-1 shrink-0"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+            >
+              <Filter className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Filters</span>
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="h-4 w-4 p-0 flex items-center justify-center text-[10px] rounded-full">
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </Button>
+          </div>
+
+          {/* Collapsible filters */}
+          <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <CollapsibleContent>
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 p-3 rounded-lg bg-muted/30 border border-border/50">
                 <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <ArrowUpDown className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Sort by" />
+                  <SelectTrigger className="h-8 text-xs col-span-2 sm:w-[160px]">
+                    <ArrowUpDown className="h-3 w-3 mr-1 shrink-0" />
+                    <SelectValue placeholder="Sort" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="name-asc">Name A-Z</SelectItem>
                     <SelectItem value="name-desc">Name Z-A</SelectItem>
-                    <SelectItem value="class-year-desc">Class Year (Newest)</SelectItem>
-                    <SelectItem value="class-year-asc">Class Year (Oldest)</SelectItem>
-                    <SelectItem value="satisfaction-desc">Satisfaction (High)</SelectItem>
-                    <SelectItem value="satisfaction-asc">Satisfaction (Low)</SelectItem>
-                    <SelectItem value="interview-submitted">Has Interview First</SelectItem>
-                    <SelectItem value="interview-missing">Missing Interview First</SelectItem>
+                    <SelectItem value="class-year-desc">Year (Newest)</SelectItem>
+                    <SelectItem value="class-year-asc">Year (Oldest)</SelectItem>
+                    <SelectItem value="satisfaction-desc">Satisfaction ↓</SelectItem>
+                    <SelectItem value="satisfaction-asc">Satisfaction ↑</SelectItem>
+                    <SelectItem value="interview-submitted">Has Interview</SelectItem>
+                    <SelectItem value="interview-missing">Missing Interview</SelectItem>
                     <SelectItem value="join-date-desc">Recently Joined</SelectItem>
                     <SelectItem value="join-date-asc">Oldest Members</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
 
-              {/* Filter Row */}
-              <div className="flex flex-wrap gap-2 items-center">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                
-                {/* Voice Part Filter */}
                 <Select value={voicePartFilter} onValueChange={setVoicePartFilter}>
-                  <SelectTrigger className="w-[130px] h-8 text-xs">
-                    <Music className="h-3 w-3 mr-1" />
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Voice Part" />
                   </SelectTrigger>
                   <SelectContent>
@@ -457,9 +453,8 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
                   </SelectContent>
                 </Select>
 
-                {/* Role Filter */}
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-[120px] h-8 text-xs">
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -470,22 +465,20 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
                   </SelectContent>
                 </Select>
 
-                {/* Interview Status Filter */}
                 <Select value={interviewFilter} onValueChange={setInterviewFilter}>
-                  <SelectTrigger className="w-[140px] h-8 text-xs">
-                    <SelectValue placeholder="Interview Status" />
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Interview" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Interviews</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     <SelectItem value="submitted">Submitted</SelectItem>
                     <SelectItem value="missing">Missing</SelectItem>
                   </SelectContent>
                 </Select>
 
-                {/* Class Year Filter */}
                 <Select value={classYearFilter} onValueChange={setClassYearFilter}>
-                  <SelectTrigger className="w-[110px] h-8 text-xs">
-                    <SelectValue placeholder="Class Year" />
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Year" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Years</SelectItem>
@@ -495,113 +488,119 @@ const MemberDossiersModule: React.FC<MemberDossiersModuleProps> = ({ courseId })
                   </SelectContent>
                 </Select>
 
-                {/* Clear Filters Button */}
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs px-2">
-                    <X className="h-3 w-3 mr-1" />
-                    Clear
+                    <X className="h-3 w-3 mr-1" /> Clear
                   </Button>
                 )}
               </div>
+            </CollapsibleContent>
+          </Collapsible>
 
-              {/* Active Filters Summary */}
-              {hasActiveFilters && (
-                <div className="flex flex-wrap gap-1">
-                  {searchQuery && (
-                    <Badge variant="secondary" className="text-xs">Search: "{searchQuery}"</Badge>
-                  )}
-                  {voicePartFilter !== "all" && (
-                    <Badge variant="secondary" className="text-xs">Part: {voicePartFilter}</Badge>
-                  )}
-                  {roleFilter !== "all" && (
-                    <Badge variant="secondary" className="text-xs">Role: {roleFilter}</Badge>
-                  )}
-                  {interviewFilter !== "all" && (
-                    <Badge variant="secondary" className="text-xs">Interview: {interviewFilter}</Badge>
-                  )}
-                  {classYearFilter !== "all" && (
-                    <Badge variant="secondary" className="text-xs">Class: {classYearFilter}</Badge>
-                  )}
-                  <span className="text-xs text-muted-foreground ml-2">
-                    Showing {filteredMembers.length} of {members.length}
-                  </span>
-                </div>
-              )}
+          {/* Active filter badges */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap gap-1 items-center">
+              {searchQuery && <Badge variant="secondary" className="text-[10px]">"{searchQuery}"</Badge>}
+              {voicePartFilter !== "all" && <Badge variant="secondary" className="text-[10px]">{voicePartFilter}</Badge>}
+              {roleFilter !== "all" && <Badge variant="secondary" className="text-[10px]">{roleFilter}</Badge>}
+              {interviewFilter !== "all" && <Badge variant="secondary" className="text-[10px]">{interviewFilter}</Badge>}
+              {classYearFilter !== "all" && <Badge variant="secondary" className="text-[10px]">{classYearFilter}</Badge>}
+              <span className="text-[10px] text-muted-foreground ml-1">
+                {filteredMembers.length}/{members.length}
+              </span>
             </div>
+          )}
 
-            {/* Member List */}
-            {loading ? (
-              <div className="flex items-center justify-center h-32">
-                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : filteredMembers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                {searchQuery || voicePartFilter !== "all"
-                  ? "No members match your filters"
-                  : "No exit interviews submitted yet"}
+          {/* Member list */}
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredMembers.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              {searchQuery || voicePartFilter !== "all" ? "No members match your filters" : "No members found"}
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {filteredMembers.map((member) => (
+                <MemberDossierCard
+                  key={member.profile.user_id}
+                  member={member.profile}
+                  hasExitInterview={member.exitInterviews.length > 0}
+                  satisfactionAvg={member.avgSatisfaction}
+                  onViewDossier={() => setSelectedMember(member)}
+                  onViewInterview={() => navigate(`/dashboard?module=exit-interviews&search=${encodeURIComponent(member.profile.full_name || member.profile.email)}`)}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="upload" className="mt-3">
+          <MemberDataUpload onMissingInterviewsFound={setMissingInterviews} />
+        </TabsContent>
+
+        <TabsContent value="missing" className="mt-3">
+          {(() => {
+            const membersWithoutInterviews = members.filter(m => m.exitInterviews.length === 0);
+            return membersWithoutInterviews.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                All members have submitted exit interviews!
               </div>
             ) : (
-              <div className="space-y-2">
-                {filteredMembers.map((member) => (
-                  <MemberDossierCard
-                    key={member.profile.user_id}
-                    member={member.profile}
-                    hasExitInterview={member.exitInterviews.length > 0}
-                    satisfactionAvg={member.avgSatisfaction}
-                    onViewDossier={() => setSelectedMember(member)}
-                    onViewInterview={() => navigate(`/dashboard?module=exit-interviews&search=${encodeURIComponent(member.profile.full_name || member.profile.email)}`)}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="upload" className="mt-4">
-            <MemberDataUpload onMissingInterviewsFound={setMissingInterviews} />
-          </TabsContent>
-
-          <TabsContent value="missing" className="mt-4">
-            {(() => {
-              const membersWithoutInterviews = members.filter(m => m.exitInterviews.length === 0);
-              return membersWithoutInterviews.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  All members have submitted exit interviews!
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-orange-500 text-sm">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span className="font-medium">{membersWithoutInterviews.length} missing</span>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-orange-600">
-                    <AlertTriangle className="h-5 w-5" />
-                    <span className="font-medium">{membersWithoutInterviews.length} member(s) have NOT submitted exit interviews</span>
-                  </div>
-                  <div className="border rounded overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted sticky top-0">
-                        <tr>
-                          <th className="text-left p-3 font-medium">#</th>
-                          <th className="text-left p-3 font-medium">Name</th>
-                          <th className="text-left p-3 font-medium">Email</th>
-                          <th className="text-left p-3 font-medium">Voice Part</th>
+                
+                {/* Mobile card list */}
+                <div className="sm:hidden space-y-1.5">
+                  {membersWithoutInterviews.map((member, i) => (
+                    <div key={member.profile.user_id} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-card border border-border">
+                      <span className="text-xs text-muted-foreground w-5 shrink-0">{i + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate text-foreground">
+                          {member.profile.full_name || `${member.profile.first_name} ${member.profile.last_name}`}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{member.profile.email}</p>
+                      </div>
+                      {member.profile.voice_part && (
+                        <Badge variant="outline" className="text-[10px] shrink-0">{member.profile.voice_part}</Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden sm:block border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/30">
+                      <tr>
+                        <th className="text-left p-2.5 font-medium text-xs text-muted-foreground">#</th>
+                        <th className="text-left p-2.5 font-medium text-xs text-muted-foreground">Name</th>
+                        <th className="text-left p-2.5 font-medium text-xs text-muted-foreground">Email</th>
+                        <th className="text-left p-2.5 font-medium text-xs text-muted-foreground">Voice Part</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {membersWithoutInterviews.map((member, i) => (
+                        <tr key={member.profile.user_id} className="border-t hover:bg-muted/20">
+                          <td className="p-2.5 text-muted-foreground text-xs">{i + 1}</td>
+                          <td className="p-2.5 font-medium text-foreground text-sm">{member.profile.full_name || `${member.profile.first_name} ${member.profile.last_name}`}</td>
+                          <td className="p-2.5 text-muted-foreground text-sm">{member.profile.email}</td>
+                          <td className="p-2.5 text-muted-foreground text-sm">{member.profile.voice_part || '-'}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {membersWithoutInterviews.map((member, i) => (
-                          <tr key={member.profile.user_id} className="border-t hover:bg-muted/50">
-                            <td className="p-3 text-muted-foreground">{i + 1}</td>
-                            <td className="p-3 font-medium text-foreground">{member.profile.full_name || `${member.profile.first_name} ${member.profile.last_name}`}</td>
-                            <td className="p-3 text-muted-foreground">{member.profile.email}</td>
-                            <td className="p-3 text-muted-foreground">{member.profile.voice_part || '-'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              );
-            })()}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+              </div>
+            );
+          })()}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

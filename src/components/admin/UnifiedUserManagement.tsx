@@ -457,10 +457,12 @@ export const UnifiedUserManagement = () => {
         </TabsContent>
 
         {/* ── MODULES TAB ── */}
-        <TabsContent value="modules" className="mt-0 space-y-3">
+        <TabsContent value="modules" className="mt-0 space-y-6">
           <PermissionErrorBoundary>
             <RoleBasedModuleAssignment />
+            <div className="border-t border-border" />
             <UserModuleAssignment />
+            <div className="border-t border-border" />
             <UsernamePermissionsManager />
           </PermissionErrorBoundary>
         </TabsContent>
