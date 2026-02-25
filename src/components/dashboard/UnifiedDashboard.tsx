@@ -379,7 +379,7 @@ export const UnifiedDashboard = () => {
   };
 
   // DEFAULT VIEW: New streamlined 4-card layout
-  return <div className="min-h-screen bg-[hsl(40,10%,96%)]">
+  return <div className="bg-[hsl(40,10%,96%)]">
       {/* Advertising Hero - TOP OF DASHBOARD */}
       <div className="w-full">
         <AdvertisingHero />

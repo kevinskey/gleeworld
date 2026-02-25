@@ -40,7 +40,7 @@ export const AppShell = ({
   const shouldUsePublicHeader = publicHeaderPaths.includes(location.pathname);
 
   return (
-    <div className="min-h-screen w-full bg-[hsl(40,10%,96%)]">
+    <div className="flex flex-col min-h-screen w-full bg-[hsl(40,10%,96%)]">
       {/* Fixed Header */}
       {showHeader && (
         shouldUsePublicHeader 
@@ -52,7 +52,7 @@ export const AppShell = ({
       <main 
         className={`
           w-full 
-          min-h-dvh 
+          flex-1
           pt-[var(--gw-header-h,4rem)]
           pb-0
           bg-[hsl(40,10%,96%)]
