@@ -49,7 +49,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     root.style.setProperty('--font-family', "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif");
     root.style.setProperty('--font-heading', "'Cinzel', 'Georgia', serif");
-    root.style.setProperty('--theme-background', 'linear-gradient(160deg, hsl(220 40% 8%) 0%, hsl(220 50% 12%) 50%, hsl(220 40% 6%) 100%)');
+    root.style.setProperty('--theme-background', 'hsl(40 10% 96%)');
     root.style.removeProperty('--heading-shadow');
   }, []);
 
