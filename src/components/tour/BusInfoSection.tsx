@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { 
-  Bus, Search, MapPin, Star, 
-  Loader2, Building2, DollarSign, ExternalLink 
+  Bus, Search, MapPin, Star, Phone, Mail, User, FileText,
+  Loader2, Building2, DollarSign, ExternalLink, StickyNote
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface BusCompany {
+interface BusCompanyResult {
   id: string;
   name: string;
   address: string;
@@ -23,36 +25,55 @@ interface BusCompany {
   photoReference?: string;
 }
 
+interface SavedBusCompany {
+  id: string;
+  company_name: string;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  driver_name: string | null;
+  driver_phone: string | null;
+  contract_pdf_url: string | null;
+  notes: string | null;
+  is_active: boolean;
+}
+
 export const BusInfoSection = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
-  const [companies, setCompanies] = useState<BusCompany[]>([]);
+  const [companies, setCompanies] = useState<BusCompanyResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+
+  const { data: savedCompanies = [], isLoading: loadingSaved } = useQuery({
+    queryKey: ['tour-bus-companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_tour_bus_companies')
+        .select('*')
+        .eq('is_active', true)
+        .order('company_name');
+      if (error) throw error;
+      return data as SavedBusCompany[];
+    },
+  });
 
   const searchBusCompanies = async () => {
     if (!searchQuery && !location) {
       toast.error('Please enter a search term or location');
       return;
     }
-
     setLoading(true);
     setHasSearched(true);
-
     try {
       const { data, error } = await supabase.functions.invoke('search-bus-companies', {
         body: { query: searchQuery, location }
       });
-
       if (error) throw error;
-
       if (data.success) {
         setCompanies(data.companies);
-        if (data.companies.length === 0) {
-          toast.info('No bus companies found. Try a different search.');
-        } else {
-          toast.success(`Found ${data.companies.length} bus companies`);
-        }
+        if (data.companies.length === 0) toast.info('No bus companies found.');
+        else toast.success(`Found ${data.companies.length} bus companies`);
       } else {
         throw new Error(data.error || 'Search failed');
       }
@@ -64,87 +85,178 @@ export const BusInfoSection = () => {
     }
   };
 
-  const getPriceLevelText = (level?: number) => {
-    if (!level) return null;
-    return '$'.repeat(level);
-  };
+  const getPriceLevelText = (level?: number) => level ? '$'.repeat(level) : null;
 
-  const openInMaps = (company: BusCompany) => {
+  const openInMaps = (company: BusCompanyResult) => {
     const query = encodeURIComponent(`${company.name} ${company.address}`);
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   };
 
   return (
     <div className="space-y-6">
+      {/* Saved Bus Companies — Tour's Assigned Companies */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <Bus className="h-5 w-5 text-primary" />
+          Tour Bus Companies
+        </h2>
+
+        {loadingSaved ? (
+          <Card className="p-6 flex items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+          </Card>
+        ) : savedCompanies.length === 0 ? (
+          <Card className="p-6 text-center text-muted-foreground">
+            <Bus className="h-10 w-10 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">No bus companies assigned to this tour yet.</p>
+            <p className="text-xs mt-1">Add bus companies from the Route Manager.</p>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {savedCompanies.map((bus) => (
+              <Card key={bus.id} className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-primary" />
+                    {bus.company_name}
+                    <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  {/* Contact Info */}
+                  {(bus.contact_name || bus.contact_phone || bus.contact_email) && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact</p>
+                      {bus.contact_name && (
+                        <div className="flex items-center gap-2">
+                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>{bus.contact_name}</span>
+                        </div>
+                      )}
+                      {bus.contact_phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                          <a href={`tel:${bus.contact_phone}`} className="text-primary hover:underline">{bus.contact_phone}</a>
+                        </div>
+                      )}
+                      {bus.contact_email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                          <a href={`mailto:${bus.contact_email}`} className="text-primary hover:underline">{bus.contact_email}</a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Driver Info */}
+                  {(bus.driver_name || bus.driver_phone) && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Driver</p>
+                      {bus.driver_name && (
+                        <div className="flex items-center gap-2">
+                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>{bus.driver_name}</span>
+                        </div>
+                      )}
+                      {bus.driver_phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                          <a href={`tel:${bus.driver_phone}`} className="text-primary hover:underline">{bus.driver_phone}</a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  {bus.notes && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Notes</p>
+                      <p className="text-muted-foreground text-xs bg-muted/50 rounded p-2">{bus.notes}</p>
+                    </div>
+                  )}
+
+                  {/* Contract PDF */}
+                  {bus.contract_pdf_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-1"
+                      onClick={() => window.open(bus.contract_pdf_url!, '_blank')}
+                    >
+                      <FileText className="h-4 w-4 mr-1.5" />
+                      View Contract PDF
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
       {/* Search Section */}
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Search className="h-5 w-5 text-primary" />
-            Search Bus Companies
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Company Name or Type</label>
-              <Input
-                placeholder="e.g., luxury charter, school bus..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && searchBusCompanies()}
-              />
+      <div className="space-y-4">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Search className="h-5 w-5 text-primary" />
+              Search Bus Companies
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Company Name or Type</label>
+                <Input
+                  placeholder="e.g., luxury charter, school bus..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchBusCompanies()}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Location / City</label>
+                <Input
+                  placeholder="e.g., Atlanta, GA"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchBusCompanies()}
+                />
+              </div>
+              <div className="flex items-end">
+                <Button onClick={searchBusCompanies} disabled={loading} className="w-full">
+                  {loading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Searching...</>
+                  ) : (
+                    <><Search className="h-4 w-4 mr-2" />Search</>
+                  )}
+                </Button>
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Location / City</label>
-              <Input
-                placeholder="e.g., Atlanta, GA"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && searchBusCompanies()}
-              />
-            </div>
-            <div className="flex items-end">
-              <Button onClick={searchBusCompanies} disabled={loading} className="w-full">
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4 mr-2" />
-                    Search
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Results */}
-      {hasSearched && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              {companies.length > 0 ? `${companies.length} Results` : 'No Results'}
-            </h2>
-          </div>
+        {/* Search Results */}
+        {hasSearched && (
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground">
+              {companies.length > 0 ? `${companies.length} Search Results` : 'No Results'}
+            </h3>
 
-          {companies.length === 0 && !loading && (
-            <Card className="p-8 text-center">
-              <Bus className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">No bus companies found</p>
-              <p className="text-sm text-muted-foreground">Try adjusting your search terms or location</p>
-            </Card>
-          )}
+            {companies.length === 0 && !loading && (
+              <Card className="p-8 text-center">
+                <Bus className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground">No bus companies found</p>
+                <p className="text-sm text-muted-foreground">Try adjusting your search terms or location</p>
+              </Card>
+            )}
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {companies.map((company) => (
-              <Card key={company.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {companies.map((company) => (
+                <Card key={company.id} className="hover:shadow-lg transition-shadow">
+                  <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-semibold line-clamp-2">{company.name}</h3>
                       {company.isOpen !== undefined && (
@@ -153,12 +265,10 @@ export const BusInfoSection = () => {
                         </Badge>
                       )}
                     </div>
-
                     <div className="flex items-start gap-2 text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
                       <span className="line-clamp-2">{company.address}</span>
                     </div>
-
                     <div className="flex items-center gap-4 text-sm">
                       {company.rating && (
                         <div className="flex items-center gap-1">
@@ -176,55 +286,35 @@ export const BusInfoSection = () => {
                         </div>
                       )}
                     </div>
-
                     <div className="flex gap-2 pt-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1"
-                        onClick={() => openInMaps(company)}
-                      >
-                        <MapPin className="h-4 w-4 mr-1" />
-                        View on Map
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => openInMaps(company)}>
+                        <MapPin className="h-4 w-4 mr-1" />View on Map
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(company.name + ' phone number')}`, '_blank')}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(company.name + ' phone number')}`, '_blank')}>
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Tips Section */}
-      {!hasSearched && (
-        <Card className="border-dashed">
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-3">Search Tips</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <Bus className="h-4 w-4" />
-                Search by type: "luxury charter", "coach bus", "mini bus"
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Include city and state for best results: "Atlanta, GA"
-              </li>
-              <li className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                Search specific companies by name if you know them
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+        {/* Tips */}
+        {!hasSearched && (
+          <Card className="border-dashed">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-3">Search Tips</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2"><Bus className="h-4 w-4" />Search by type: "luxury charter", "coach bus", "mini bus"</li>
+                <li className="flex items-center gap-2"><MapPin className="h-4 w-4" />Include city and state for best results: "Atlanta, GA"</li>
+                <li className="flex items-center gap-2"><Building2 className="h-4 w-4" />Search specific companies by name if you know them</li>
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
