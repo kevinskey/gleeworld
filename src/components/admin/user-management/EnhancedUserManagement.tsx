@@ -201,8 +201,8 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
       </div>
 
       {/* Main User Management Card */}
-      <Card className="shadow-xl border-0 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75">
-        <CardHeader className="bg-gradient-to-r from-card to-muted/20 border-b">
+      <Card className="shadow-xl border-0 bg-white backdrop-blur" style={{ color: '#1a1a2e' }}>
+        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
           <div className="flex flex-col space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -210,8 +210,8 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                   <Search className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl text-primary">Search & Filter Users</CardTitle>
-                  <CardDescription className="text-base mt-1">
+                  <CardTitle className="text-xl" style={{ color: '#003666' }}>Search & Filter Users</CardTitle>
+                  <CardDescription className="text-base mt-1" style={{ color: '#4a5568' }}>
                     Find and manage user accounts by name, email, role, or status
                   </CardDescription>
                 </div>
@@ -234,7 +234,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
             </div>
             
             {/* Enhanced Search and Filter Controls */}
-            <div className="bg-card p-4 rounded-lg border border-border">
+            <div className="bg-white p-4 rounded-lg border border-slate-200">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Search Input */}
                 <div className="relative">
@@ -370,7 +370,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
               </div>
               
               {/* Results Summary */}
-              <div className="mt-3 pt-3 border-t border-primary/10 flex items-center justify-between text-sm text-muted-foreground">
+              <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between text-sm" style={{ color: '#4a5568' }}>
                 <span>
                   Showing {filteredAndSortedUsers.length} of {users.length} users
                 </span>
@@ -400,14 +400,14 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
           ) : error ? (
             <div className="p-6 text-center">
               <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-3" />
-              <p className="text-destructive font-medium">Error loading users</p>
-              <p className="text-muted-foreground mt-1">{error}</p>
+              <p className="font-medium" style={{ color: '#c53030' }}>Error loading users</p>
+              <p className="mt-1" style={{ color: '#4a5568' }}>{error}</p>
             </div>
           ) : filteredAndSortedUsers.length === 0 ? (
             <div className="p-8 text-center">
               <Users className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-medium text-muted-foreground mb-2">No users found</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-lg font-medium mb-2" style={{ color: '#4a5568' }}>No users found</h3>
+              <p style={{ color: '#718096' }}>
                 {searchQuery || selectedRole || (selectedStatus && selectedStatus !== 'all')
                   ? "Try adjusting your search filters"
                   : "Get started by adding your first user"
@@ -415,50 +415,50 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden border-t border-primary/10">
+            <div className="overflow-hidden border-t border-slate-200">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-primary/10">
-                  <thead className="bg-gradient-to-r from-muted/50 to-muted/30">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-primary uppercase tracking-wider border-r border-primary/10">
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-200" style={{ color: '#003666' }}>
                         <Button 
                           variant="ghost" 
                           onClick={() => setSortBy('full_name')} 
-                          className="w-full justify-start hover:bg-primary/10 text-primary font-semibold p-0"
+                          className="w-full justify-start font-semibold p-0" style={{ color: '#003666' }}
                         >
                           <Users className="h-4 w-4 mr-2" />
                           Name
                           <ChevronRight className={`h-3 w-3 ml-2 transition-transform ${sortBy === 'full_name' ? (sortOrder === 'asc' ? 'rotate-90' : '-rotate-90') : ''}`} />
                         </Button>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-primary uppercase tracking-wider border-r border-primary/10">
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-200" style={{ color: '#003666' }}>
                         <Button 
                           variant="ghost" 
                           onClick={() => setSortBy('email')} 
-                          className="w-full justify-start hover:bg-primary/10 text-primary font-semibold p-0"
+                          className="w-full justify-start font-semibold p-0" style={{ color: '#003666' }}
                         >
                           Email
                           <ChevronRight className={`h-3 w-3 ml-2 transition-transform ${sortBy === 'email' ? (sortOrder === 'asc' ? 'rotate-90' : '-rotate-90') : ''}`} />
                         </Button>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-primary uppercase tracking-wider border-r border-primary/10">
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-200" style={{ color: '#003666' }}>
                         <div className="flex items-center gap-2">
                           <Shield className="h-4 w-4" />
                           Role
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-primary uppercase tracking-wider border-r border-primary/10">
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-200" style={{ color: '#003666' }}>
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4" />
                           Status
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-center text-xs font-semibold text-primary uppercase tracking-wider bg-muted/20">
+                      <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider bg-slate-100" style={{ color: '#003666' }}>
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody className="divide-y divide-slate-200 bg-white">
                     {filteredAndSortedUsers.map((user, index) => (
                       <tr 
                         key={user.id || `user-${index}`} 
@@ -494,26 +494,26 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                               </div>
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-foreground" style={{ color: 'hsl(var(--foreground))' }}>
+                              <div className="text-sm font-medium" style={{ color: '#1a1a2e' }}>
                                 {user.full_name || 'No name'}
                               </div>
-                              <div className="text-xs" style={{ color: 'hsl(var(--foreground) / 0.7)' }}>
+                              <div className="text-xs" style={{ color: '#718096' }}>
                                 ID: {user.id?.slice(0, 8)}...
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap border-r border-primary/5">
-                          <div className="text-sm font-mono text-foreground" style={{ color: 'hsl(var(--foreground))' }}>{user.email}</div>
+                        <td className="px-6 py-4 whitespace-nowrap border-r border-slate-100">
+                          <div className="text-sm font-mono" style={{ color: '#1a1a2e' }}>{user.email}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap border-r border-primary/5">
+                        <td className="px-6 py-4 whitespace-nowrap border-r border-slate-100">
                           <div className="flex items-center gap-2">
                             <Select 
                               value={user.role || 'guest'} 
                               onValueChange={(newRole) => handleRoleChange(user.id, newRole, user.role || 'guest')}
                               disabled={changingRoles.has(user.id)}
                             >
-                              <SelectTrigger className="w-36 h-8 bg-background border-primary/20 hover:border-primary/40 focus:border-primary focus:ring-primary/20">
+                              <SelectTrigger className="w-36 h-8 bg-white border-slate-300 hover:border-slate-400" style={{ color: '#1a1a2e' }}>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-popover border-primary/20 shadow-lg z-50">
@@ -533,7 +533,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap border-r border-primary/5">
+                        <td className="px-6 py-4 whitespace-nowrap border-r border-slate-100">
                           <div className="flex items-center gap-2">
                             {user.verified ? (
                               <>
@@ -548,7 +548,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center bg-muted/10">
+                        <td className="px-6 py-4 whitespace-nowrap text-center bg-slate-50">
                           <Button 
                             variant="outline" 
                             size="sm" 
