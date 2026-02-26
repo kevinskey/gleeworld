@@ -345,10 +345,10 @@ export const UnifiedUserManagement = () => {
                   <p className="text-sm font-medium truncate text-slate-900">{user.full_name || 'No name'}</p>
                   <p className="text-xs text-slate-500 truncate">{user.email}</p>
                 </div>
-                <Badge variant="outline" className={`text-[10px] shrink-0 ${getRoleBadgeColor(user.role)}`}>
+                <div className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${getRoleBadgeColor(user.role)}`}>
                   {getRoleIcon(user.role)}
                   <span className="ml-1">{user.role || 'guest'}</span>
-                </Badge>
+                </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
@@ -422,14 +422,14 @@ export const UnifiedUserManagement = () => {
                       </div>
                     </TableCell>
                     <TableCell className="py-1.5">
-                      <Badge variant="outline" className={`text-[10px] py-0 h-4 ${getRoleBadgeColor(user.role)}`}>
+                      <div className={`inline-flex items-center rounded-md border px-1.5 py-0 h-4 text-[10px] font-medium ${getRoleBadgeColor(user.role)}`}>
                         {getRoleIcon(user.role)}
                         <span className="ml-1">{user.role || 'guest'}</span>
-                      </Badge>
+                      </div>
                       {user.is_exec_board && (
-                        <Badge variant="outline" className="ml-1 text-[10px] py-0 h-4 text-blue-700 border-blue-300 bg-blue-50">
+                        <div className="inline-flex items-center ml-1 rounded-md border px-1.5 py-0 h-4 text-[10px] font-medium text-blue-700 border-blue-300 bg-blue-50">
                           {user.exec_board_role || 'Exec'}
-                        </Badge>
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="py-1.5">
