@@ -242,60 +242,46 @@ export const TourRosterSection = () => {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Status Summary - Clean flat cards with high contrast */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Check className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-medium text-muted-foreground">Confirmed</span>
-          </div>
-          <p className="text-3xl font-bold text-foreground">{statusCounts.confirmed}</p>
+    <div className="space-y-4">
+      {/* Status Summary - Compact strip */}
+      <div className="flex flex-wrap gap-2">
+        <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5">
+          <Check className="h-3.5 w-3.5 text-emerald-600" />
+          <span className="text-xs text-muted-foreground">Confirmed</span>
+          <span className="text-sm font-bold text-foreground">{statusCounts.confirmed}</span>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Clock className="h-4 w-4 text-amber-600" />
-            <span className="text-sm font-medium text-muted-foreground">Pending</span>
-          </div>
-          <p className="text-3xl font-bold text-foreground">{statusCounts.pending}</p>
+        <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5">
+          <Clock className="h-3.5 w-3.5 text-amber-600" />
+          <span className="text-xs text-muted-foreground">Pending</span>
+          <span className="text-sm font-bold text-foreground">{statusCounts.pending}</span>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertCircle className="h-4 w-4 text-slate-500" />
-            <span className="text-sm font-medium text-muted-foreground">Waitlist</span>
-          </div>
-          <p className="text-3xl font-bold text-foreground">{statusCounts.waitlist}</p>
+        <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5">
+          <AlertCircle className="h-3.5 w-3.5 text-slate-500" />
+          <span className="text-xs text-muted-foreground">Waitlist</span>
+          <span className="text-sm font-bold text-foreground">{statusCounts.waitlist}</span>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-muted-foreground">Total</span>
-          </div>
-          <p className="text-3xl font-bold text-foreground">{statusCounts.total}</p>
+        <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5">
+          <Users className="h-3.5 w-3.5 text-primary" />
+          <span className="text-xs text-muted-foreground">Total</span>
+          <span className="text-sm font-bold text-foreground">{statusCounts.total}</span>
         </div>
       </div>
 
-      {/* Section Mix - Clean cards with readable text */}
-      <div className="bg-card border border-border rounded-lg p-6">
-        <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          Voice Part Distribution
-          <span className="text-sm font-normal text-muted-foreground">({confirmedMembers.length} confirmed)</span>
-        </h3>
-        <div className="grid grid-cols-5 gap-4">
-          {[
-            { label: 'S1', count: sectionStats.S1 },
-            { label: 'S2', count: sectionStats.S2 },
-            { label: 'A1', count: sectionStats.A1 },
-            { label: 'A2', count: sectionStats.A2 },
-            { label: 'Other', count: unassigned },
-          ].map((section) => (
-            <div key={section.label} className="text-center p-4 bg-muted/30 border border-border rounded-lg">
-              <p className="text-2xl font-bold text-foreground">{section.count}</p>
-              <p className="text-sm font-medium text-muted-foreground">{section.label}</p>
-            </div>
-          ))}
-        </div>
+      {/* Voice Part Distribution - Compact strip */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-muted-foreground mr-1">Voice Parts ({confirmedMembers.length})</span>
+        {[
+          { label: 'S1', count: sectionStats.S1 },
+          { label: 'S2', count: sectionStats.S2 },
+          { label: 'A1', count: sectionStats.A1 },
+          { label: 'A2', count: sectionStats.A2 },
+          { label: 'Other', count: unassigned },
+        ].map((section) => (
+          <div key={section.label} className="flex items-center gap-1 bg-muted/50 border border-border rounded-md px-2.5 py-1">
+            <span className="text-sm font-bold text-foreground">{section.count}</span>
+            <span className="text-xs text-muted-foreground">{section.label}</span>
+          </div>
+        ))}
       </div>
 
       {/* Two Column Layout */}
