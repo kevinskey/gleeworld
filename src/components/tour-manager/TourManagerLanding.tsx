@@ -60,6 +60,7 @@ export const TourManagerLanding = ({
   const [contractsOpen, setContractsOpen] = useState(false);
   const [budgetsOpen, setBudgetsOpen] = useState(false);
   const [busOpen, setBusOpen] = useState(false);
+  const [hotelsOpen, setHotelsOpen] = useState(false);
   const [hosts, setHosts] = useState<{ id: string; contact_name: string; organization_name: string; contact_phone: string | null; city: string | null; state: string | null; status: string }[]>([]);
   const [contracts, setContracts] = useState<{ id: string; title: string; status: string }[]>([]);
   const [budgets, setBudgets] = useState<{ id: string; title: string; description: string | null; total_amount: number; spent_amount: number; remaining_amount: number | null; budget_type: string; status: string; start_date: string; end_date: string | null }[]>([]);
@@ -343,38 +344,30 @@ export const TourManagerLanding = ({
         </CardContent>
       </Card>
 
-      {/* Hotel Coverage Alert */}
-      {citiesWithoutHotels.length > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-4 w-4" />
-              Hotel Coverage Gap — {citiesWithoutHotels.length} {citiesWithoutHotels.length === 1 ? 'city' : 'cities'} without hotels
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4 pt-0">
-            <div className="space-y-1.5">
-              {citiesWithoutHotels.map(city => (
-                <div key={city.id} className="flex items-center justify-between p-2 rounded-md bg-background border border-border">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Hotel className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs font-medium text-foreground truncate">
-                      {city.city_name}{city.state_code ? `, ${city.state_code}` : ''}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
-                    {city.arrival_date ? format(new Date(city.arrival_date + 'T12:00:00'), 'MMM d') : 'No date'}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <Button variant="outline" size="sm" className="w-full mt-3 text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10" onClick={() => onNavigate('hotels')}>
-              <Plus className="h-3 w-3" />
-              Assign Hotels
-            </Button>
-          </CardContent>
+      {/* Hotels Section */}
+      <Collapsible open={hotelsOpen} onOpenChange={setHotelsOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Hotel className="h-4 w-4 text-primary" />
+                  Hotels
+                </CardTitle>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", hotelsOpen && "rotate-180")} />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="px-4 pb-4 pt-0">
+              <p className="text-sm text-muted-foreground text-center py-4">Manage hotel assignments for tour cities</p>
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => onNavigate('hotels')}>
+                Manage Hotels <ChevronRight className="h-3 w-3 ml-1" />
+              </Button>
+            </CardContent>
+          </CollapsibleContent>
         </Card>
-      )}
+      </Collapsible>
 
       {/* Tour Itinerary */}
       <Collapsible>
