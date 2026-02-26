@@ -176,15 +176,15 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
   return (
     <div className="space-y-6 p-4 bg-gradient-to-br from-background to-secondary/5 min-h-screen">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-primary to-primary-foreground rounded-xl p-6 text-primary-foreground shadow-lg">
+      <div className="bg-primary rounded-xl p-6 shadow-lg">
         <div className="flex items-center gap-3 mb-2">
-          <Users className="h-8 w-8" />
-          <h1 className="text-3xl font-bebas tracking-wide">User Management</h1>
+          <Users className="h-8 w-8 text-primary-foreground" />
+          <h1 className="text-3xl font-bebas tracking-wide text-primary-foreground">User Management</h1>
         </div>
         <p className="text-primary-foreground/80 text-lg">
           Search, filter, and manage user accounts across all roles and permissions
         </p>
-        <div className="mt-4 flex items-center gap-6 text-sm">
+        <div className="mt-4 flex items-center gap-6 text-sm text-primary-foreground">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full"></div>
             <span>{filteredAndSortedUsers.filter(u => u.verified).length} Verified</span>
@@ -458,7 +458,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-background divide-y divide-primary/5">
+                  <tbody className="divide-y divide-border">
                     {filteredAndSortedUsers.map((user, index) => (
                       <tr 
                         key={user.id || `user-${index}`} 
@@ -494,7 +494,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                               </div>
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-foreground">
+                              <div className="text-sm font-medium" style={{ color: '#1a1a2e' }}>
                                 {user.full_name || 'No name'}
                               </div>
                               <div className="text-xs text-muted-foreground">
@@ -504,7 +504,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap border-r border-primary/5">
-                          <div className="text-sm text-foreground font-mono">{user.email}</div>
+                          <div className="text-sm font-mono" style={{ color: '#1a1a2e' }}>{user.email}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap border-r border-primary/5">
                           <div className="flex items-center gap-2">
