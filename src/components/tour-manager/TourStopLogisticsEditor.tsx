@@ -3,8 +3,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TimeSelect } from '@/components/ui/time-select';
 import {
@@ -125,13 +123,6 @@ export const TourStopLogisticsEditor: React.FC<{
       ...prev,
       [stopId]: { ...(prev[stopId] || {}), [field]: value },
     }));
-  };
-
-  const toggleMeal = (stopId: string, meal: string, current: string[]) => {
-    const updated = current.includes(meal)
-      ? current.filter(m => m !== meal)
-      : [...current, meal];
-    updateField(stopId, 'meals_needed', updated);
   };
 
   const saveStop = async (stopId: string, overrideData?: Partial<TourStopLogistics>) => {
@@ -335,7 +326,7 @@ export const TourStopLogisticsEditor: React.FC<{
                 loadingAI={loadingAI}
                 onToggleExpand={() => setExpandedStop(isExpanded ? null : stop.id)}
                 onUpdateField={updateFieldWithAutoSave}
-                onToggleMeal={toggleMeal}
+                
                 onSaveStop={saveStop}
                 onFetchLunch={() => fetchLunchSuggestions(index)}
               />
@@ -362,10 +353,9 @@ const SortableStopCard: React.FC<{
   loadingAI: string | null;
   onToggleExpand: () => void;
   onUpdateField: (stopId: string, field: string, value: any) => void;
-  onToggleMeal: (stopId: string, meal: string, current: string[]) => void;
   onSaveStop: (stopId: string) => void;
   onFetchLunch: () => void;
-}> = ({ stop, index, isExpanded, data, compliance, aiData, hasChanges, stops, reordering, saving, loadingAI, onToggleExpand, onUpdateField, onToggleMeal, onSaveStop, onFetchLunch }) => {
+}> = ({ stop, index, isExpanded, data, compliance, aiData, hasChanges, stops, reordering, saving, loadingAI, onToggleExpand, onUpdateField, onSaveStop, onFetchLunch }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -420,13 +410,11 @@ const SortableStopCard: React.FC<{
             </Badge>
           )}
 
-          {/* Meal indicators */}
-          {(data.meals_needed || []).length > 0 && (
-            <div className="flex gap-1 shrink-0">
-              {(data.meals_needed || []).map((m: string) => (
-                <Badge key={m} variant="outline" className="text-[10px] px-1 capitalize">{m[0]}</Badge>
-              ))}
-            </div>
+          {/* AI meal suggestions indicator */}
+          {aiData?.suggestions && aiData.suggestions.length > 0 && (
+            <Badge variant="outline" className="text-[10px] px-1 shrink-0 gap-0.5">
+              <Utensils className="h-2.5 w-2.5" /> {aiData.suggestions.length}
+            </Badge>
           )}
 
           {isExpanded ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
@@ -513,36 +501,12 @@ const SortableStopCard: React.FC<{
             );
           })()}
 
-          {/* Meals Needed */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium flex items-center gap-1">
-              <Utensils className="h-3 w-3" /> Meals Needed (46 people)
-            </label>
-            <div className="flex gap-4">
-              {['breakfast', 'lunch', 'dinner'].map(meal => (
-                <label key={meal} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <Checkbox
-                    checked={(data.meals_needed || []).includes(meal)}
-                    onCheckedChange={() => onToggleMeal(stop.id, meal, data.meals_needed || [])}
-                  />
-                  <span className="capitalize">{meal}</span>
-                </label>
-              ))}
-            </div>
-            <Textarea
-              placeholder="Meal notes (dietary restrictions, pre-orders, venue catering, etc.)"
-              value={data.meal_notes || ''}
-              onChange={e => onUpdateField(stop.id, 'meal_notes', e.target.value)}
-              className="text-sm min-h-[60px]"
-            />
-          </div>
-
-          {/* AI Lunch Stop Suggestions */}
+          {/* AI Meal Stop Finder */}
           {index > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-primary" /> AI Lunch Stop Suggestions
+                  <Utensils className="h-3 w-3" /> <Sparkles className="h-3 w-3 text-primary" /> Find Meal Stops (46 people)
                 </label>
                 <Button
                   size="sm"
@@ -552,12 +516,18 @@ const SortableStopCard: React.FC<{
                   disabled={loadingAI === stop.id}
                 >
                   {loadingAI === stop.id ? (
-                    <><Loader2 className="h-3 w-3 animate-spin" /> Finding...</>
+                    <><Loader2 className="h-3 w-3 animate-spin" /> Finding restaurants...</>
                   ) : (
-                    <><Sparkles className="h-3 w-3" /> Find Stops</>
+                    <><Sparkles className="h-3 w-3" /> Find Meal Stops</>
                   )}
                 </Button>
               </div>
+
+              {!aiData?.suggestions && loadingAI !== stop.id && (
+                <p className="text-xs text-muted-foreground italic">
+                  Use AI to find group-friendly restaurants between {stops[index - 1].city_name} and {stop.city_name} that can seat 46+ people with bus parking.
+                </p>
+              )}
 
               {loadingAI === stop.id && (
                 <div className="space-y-2">
@@ -568,6 +538,11 @@ const SortableStopCard: React.FC<{
 
               {aiData?.suggestions && aiData.suggestions.length > 0 && (
                 <div className="space-y-2">
+                  {aiData.total_distance_miles && aiData.total_drive_hours && (
+                    <p className="text-xs text-muted-foreground">
+                      Route: {aiData.total_distance_miles} mi · ~{aiData.total_drive_hours}h drive
+                    </p>
+                  )}
                   {aiData.suggestions.map((s: any, i: number) => (
                     <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1">
                       <div className="flex items-start justify-between gap-2">
@@ -575,7 +550,7 @@ const SortableStopCard: React.FC<{
                           <p className="text-sm font-medium">{s.name}</p>
                           <p className="text-xs text-muted-foreground">
                             <MapPin className="h-3 w-3 inline mr-1" />
-                            {s.city} · {s.distance_from_origin_miles} mi · {s.drive_time_from_origin}
+                            {s.city} · {s.distance_from_origin_miles} mi from {stops[index - 1].city_name} · {s.drive_time_from_origin}
                           </p>
                         </div>
                         <Badge variant="outline" className="text-[10px] shrink-0">{s.cost_per_person}/pp</Badge>
