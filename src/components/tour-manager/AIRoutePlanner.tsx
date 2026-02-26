@@ -31,6 +31,8 @@ interface TourRoute {
   estimatedDuration: string;
   estimatedCost: number;
   created_at: string;
+  start_date: string;
+  end_date: string;
 }
 interface AIRoutePlannerProps {
   user?: {
@@ -156,11 +158,13 @@ export const AIRoutePlanner = ({
             })),
           // Full city data for logistics editor
           cityData: sortedCities,
-          status: tour.status as 'planning' | 'optimized' | 'approved',
+  status: tour.status as 'planning' | 'optimized' | 'approved',
           totalDistance: tour.total_distance || 0,
           estimatedDuration: tour.estimated_duration || 'Not calculated',
           estimatedCost: tour.estimated_cost || 0,
-          created_at: tour.created_at
+          created_at: tour.created_at,
+          start_date: tour.start_date || '',
+          end_date: tour.end_date || ''
         };
       }) as TourRoute[];
     }
@@ -781,9 +785,17 @@ export const AIRoutePlanner = ({
         {routes.map(route => <Card key={route.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-4">
               <div className="flex justify-between items-start">
-                <div className="space-y-2">
+              <div className="space-y-2">
                   <CardTitle className="text-lg">{route.name}</CardTitle>
                   <p className="text-sm text-muted-foreground">{route.description}</p>
+                  {(route.start_date || route.end_date) && (
+                    <p className="text-sm font-medium text-primary flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      {route.start_date && new Date(route.start_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {route.start_date && route.end_date && ' — '}
+                      {route.end_date && new Date(route.end_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className={`${getStatusColor(route.status)} gap-1`}>
