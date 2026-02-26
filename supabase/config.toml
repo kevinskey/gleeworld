@@ -438,3 +438,6 @@ verify_jwt = false
 
 [functions.analyze-route-segment]
 verify_jwt = false
+
+[functions.pos-create-payment-link]
+verify_jwt = false
