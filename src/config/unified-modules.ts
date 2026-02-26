@@ -70,6 +70,7 @@ import { Mus240GroupsModule } from '@/components/modules/Mus240GroupsModule';
 import { AnnouncementsModule } from '@/components/modules/AnnouncementsModule';
 import { TestBuilderModule } from '@/components/modules/TestBuilderModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
+import { InvoiceMakerModule } from '@/components/modules/InvoiceMakerModule';
 import { GradingModule } from '@/components/modules/GradingModule';
 import { ConcertTicketRequestsModule } from '@/components/modules/ConcertTicketRequestsModule';
 import ExitInterviewsModule from '@/components/modules/ExitInterviewsModule';
@@ -590,6 +591,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: BudgetsModule, // Placeholder for receipts
     dbFunctionName: "receipts-records"
+  },
+  {
+    id: "invoice-maker",
+    name: "invoice-maker",
+    title: "Invoice Maker",
+    description: "Create and manage nonprofit donation invoices for the Glee Club",
+    icon: FileText,
+    iconColor: "emerald",
+    category: "finances",
+    isActive: true,
+    component: InvoiceMakerModule,
+    dbFunctionName: "invoice-maker"
   },
   {
     id: "approval-system",
