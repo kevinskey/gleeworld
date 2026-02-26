@@ -12,6 +12,7 @@ import { useCurrentProvider, useProviderAvailability, ProviderAvailability } fro
 import { CommandCenterHeader } from "./CommandCenterHeader";
 import { CommandCenterFilterRail } from "./CommandCenterFilterRail";
 import { CommandCenterGrid } from "./CommandCenterGrid";
+import { WeeklyTimeGrid } from "./WeeklyTimeGrid";
 import { DailyRunSheet } from "./DailyRunSheet";
 import { AgendaView } from "./AgendaView";
 import { MobileMonthGrid } from "./MobileMonthGrid";
@@ -280,6 +281,16 @@ export const CommandCenterCalendar = () => {
                   </div>
                 )}
               </>
+            ) : viewMode === 'week' ? (
+              <WeeklyTimeGrid
+                events={filteredEvents}
+                currentDate={currentDate}
+                selectedDate={selectedDate}
+                onDateSelect={setSelectedDate}
+                getCategoryForEvent={getCategoryForEvent}
+                categoryConfigs={CATEGORY_CONFIGS}
+                onEventDeleted={fetchEvents}
+              />
             ) : (
               <CommandCenterGrid
                 events={filteredEvents}
