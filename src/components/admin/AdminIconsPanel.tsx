@@ -81,6 +81,14 @@ const adminFunctions: AdminFunction[] = [
     color: 'bg-teal-500 hover:bg-teal-600'
   },
   {
+    id: 'invoices',
+    title: 'Invoice Maker',
+    description: 'Create nonprofit invoices',
+    icon: FileText,
+    tab: 'invoices',
+    color: 'bg-emerald-500 hover:bg-emerald-600'
+  },
+  {
     id: 'executive',
     title: 'Executive Board',
     description: 'Board member management',
