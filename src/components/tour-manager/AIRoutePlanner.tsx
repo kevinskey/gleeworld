@@ -425,7 +425,7 @@ export const AIRoutePlanner = ({
       });
       toast({
         title: "Route optimized",
-        description: "AI has optimized the route for minimum travel time and cost."
+        description: "Route has been optimized for minimum travel time and cost."
       });
     }
   });
@@ -535,9 +535,9 @@ export const AIRoutePlanner = ({
       {/* Header with Create Button */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-semibold">AI Route Planning</h3>
+          <h3 className="text-lg font-semibold">My Route Planning</h3>
           <p className="text-sm text-muted-foreground">
-            Plan optimal tour routes using AI-powered optimization
+            Plan optimal tour routes with smart optimization
           </p>
         </div>
         <Dialog open={isCreating} onOpenChange={setIsCreating}>
@@ -850,7 +850,7 @@ export const AIRoutePlanner = ({
                 <div className="flex gap-2">
                   {route.status === 'planning' && <Button size="sm" onClick={() => optimizeMutation.mutate(route.id)} disabled={optimizeMutation.isPending}>
                       {optimizeMutation.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Zap className="h-4 w-4 mr-1" />}
-                      {optimizeMutation.isPending ? 'Optimizing...' : 'AI Optimize'}
+                      {optimizeMutation.isPending ? 'Optimizing...' : 'Optimize'}
                     </Button>}
                   {route.status === 'optimized' && <Button variant="outline" size="sm" onClick={async () => {
                 await supabase.from('gw_tours').update({

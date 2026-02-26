@@ -214,13 +214,13 @@ export const TourStopLogisticsEditor: React.FC<{
 
       toast({ title: 'Lunch suggestions loaded' });
     } catch (err: any) {
-      toast({ title: 'AI suggestion failed', description: err.message, variant: 'destructive' });
+      toast({ title: 'Suggestion failed', description: err.message, variant: 'destructive' });
     } finally {
       setLoadingAI(null);
     }
   };
 
-  // Analyze full route with AI
+  // Analyze full route
   const analyzeFullRoute = async () => {
     if (stops.length < 2) {
       toast({ title: 'Need at least 2 stops', description: 'Add more cities to analyze the route.', variant: 'destructive' });
@@ -342,9 +342,9 @@ export const TourStopLogisticsEditor: React.FC<{
           variant="default"
         >
           {analyzingRoute ? (
-            <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing {stops.length - 1} legs with AI...</>
+            <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing {stops.length - 1} legs...</>
           ) : (
-            <><Sparkles className="h-4 w-4" /> <Route className="h-4 w-4" /> AI Route Analysis — Distance, Tolls, Parking & DOT Compliance</>
+            <><Sparkles className="h-4 w-4" /> <Route className="h-4 w-4" /> My Route Analysis — Distance, Tolls, Parking & DOT Compliance</>
           )}
         </Button>
       )}
@@ -356,7 +356,7 @@ export const TourStopLogisticsEditor: React.FC<{
             <div className="flex items-start gap-3">
               <Route className="h-5 w-5 text-primary shrink-0 mt-0.5" />
               <div className="flex-1">
-                <h4 className="font-semibold text-sm">AI Route Analysis Summary</h4>
+                <h4 className="font-semibold text-sm">My Route Analysis Summary</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-3">
                   <div className="text-center">
                     <p className="text-lg font-bold">{routeAnalysis.total_distance_miles?.toFixed(0) || totalMiles.toFixed(0)}</p>
@@ -528,7 +528,7 @@ const SortableStopCard: React.FC<{
                 <Badge variant="secondary" className="text-[10px]">Returning</Badge>
               )}
             </div>
-            {/* Inline distance/time from AI */}
+            {/* Inline distance/time */}
             {index > 0 && (data.estimated_drive_miles || segAnalysis?.distance_miles) && (
               <p className="text-xs text-muted-foreground">
                 {(data.estimated_drive_miles || segAnalysis?.distance_miles)?.toFixed(0)} mi · {(data.estimated_drive_hours || segAnalysis?.drive_hours)?.toFixed(1)}h
@@ -563,7 +563,7 @@ const SortableStopCard: React.FC<{
             </Badge>
           )}
 
-          {/* AI meal suggestions indicator */}
+          {/* Meal suggestions indicator */}
           {aiData?.suggestions && aiData.suggestions.length > 0 && (
             <Badge variant="outline" className="text-[10px] px-1 shrink-0 gap-0.5">
               <Utensils className="h-2.5 w-2.5" /> {aiData.suggestions.length}
@@ -607,7 +607,7 @@ const SortableStopCard: React.FC<{
                 </div>
               </div>
 
-              {/* AI Route Analysis Details */}
+              {/* My Route Analysis Details */}
               {segAnalysis && (
                 <div className="space-y-2 mt-2">
                   {/* Suggested Route */}
@@ -663,7 +663,7 @@ const SortableStopCard: React.FC<{
                     </div>
                   )}
 
-                  {/* DOT Warnings from AI */}
+                  {/* DOT Warnings */}
                   {segAnalysis.dot_warnings && segAnalysis.dot_warnings.length > 0 && (
                     <div className="space-y-1">
                       {segAnalysis.dot_warnings.map((w: string, wi: number) => (
@@ -691,7 +691,7 @@ const SortableStopCard: React.FC<{
                 </div>
               )}
 
-              {/* Fallback DOT warnings (when no AI analysis) */}
+              {/* Fallback DOT warnings (when no analysis) */}
               {!segAnalysis && compliance.warnings.length > 0 && (
                 <div className="space-y-1 mt-2">
                   {compliance.warnings.map((w: string, i: number) => (
@@ -738,7 +738,7 @@ const SortableStopCard: React.FC<{
             );
           })()}
 
-          {/* AI Meal Stop Finder */}
+          {/* My Meal Stop Finder */}
           {index > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -762,7 +762,7 @@ const SortableStopCard: React.FC<{
 
               {!aiData?.suggestions && loadingAI !== stop.id && (
                 <p className="text-xs text-muted-foreground italic">
-                  Use AI to find group-friendly restaurants between {stops[index - 1].city_name} and {stop.city_name} that can seat 46+ people with bus parking.
+                  Find group-friendly restaurants between {stops[index - 1].city_name} and {stop.city_name} that can seat 46+ people with bus parking.
                 </p>
               )}
 
