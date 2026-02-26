@@ -127,8 +127,6 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         );
       case 'first-year-console':
         return <FirstYearConsoleModule />;
-      case 'user-management':
-        return <PermissionsModule />;
       case 'bowman-scholars':
         return <BowmanScholarsModule />;
       case 'glee-academy':

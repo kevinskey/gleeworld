@@ -8,7 +8,7 @@ export const AdminToolsCard = () => {
   const navigate = useNavigate();
   
   const adminLinks = [
-    { label: 'User Management', icon: Users, module: 'user-management' },
+    { label: 'User Management', icon: Users, path: '/admin/users' },
     { label: 'Contracts', icon: FileText, module: 'contracts' },
     { label: 'Analytics', icon: BarChart3, module: 'analytics' },
     { label: 'Settings', icon: Settings, module: 'dashboard-settings' },
@@ -23,11 +23,11 @@ export const AdminToolsCard = () => {
       <div className="grid grid-cols-2 gap-2">
         {adminLinks.map((link) => (
           <Button
-            key={link.module}
+            key={link.label}
             variant="outline"
             size="sm"
             className="justify-start gap-2 h-auto py-3"
-            onClick={() => navigate(`/dashboard?module=${link.module}`)}
+            onClick={() => navigate((link as any).path || `/dashboard?module=${(link as any).module}`)}
           >
             <link.icon className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm">{link.label}</span>
