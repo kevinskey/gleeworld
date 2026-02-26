@@ -7800,6 +7800,7 @@ export type Database = {
           paired_with_seat_id: string | null
           row_number: number
           seat_letter: string
+          seat_purpose: string
           updated_at: string
           user_id: string | null
         }
@@ -7811,6 +7812,7 @@ export type Database = {
           paired_with_seat_id?: string | null
           row_number: number
           seat_letter: string
+          seat_purpose?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -7822,6 +7824,7 @@ export type Database = {
           paired_with_seat_id?: string | null
           row_number?: number
           seat_letter?: string
+          seat_purpose?: string
           updated_at?: string
           user_id?: string | null
         }

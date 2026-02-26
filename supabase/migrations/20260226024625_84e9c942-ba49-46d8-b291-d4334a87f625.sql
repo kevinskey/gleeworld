@@ -1,0 +1,2 @@
+ALTER TABLE public.gw_bus_seats ADD COLUMN seat_purpose text NOT NULL DEFAULT 'passenger';
+COMMENT ON COLUMN public.gw_bus_seats.seat_purpose IS 'Purpose of the seat: passenger, food, equipment, etc.';

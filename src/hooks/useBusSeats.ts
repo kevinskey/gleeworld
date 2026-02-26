@@ -10,6 +10,7 @@ export interface BusSeat {
   is_double_seat: boolean;
   paired_with_seat_id: string | null;
   notes: string | null;
+  seat_purpose: string;
   profile?: {
     full_name: string | null;
     voice_part: string | null;
@@ -148,10 +149,24 @@ export const useBusSeats = () => {
     return true;
   };
 
+  const toggleSeatPurpose = async (seatId: string, purpose: string) => {
+    const { error } = await supabase
+      .from('gw_bus_seats')
+      .update({ seat_purpose: purpose, user_id: null, updated_at: new Date().toISOString() })
+      .eq('id', seatId);
+
+    if (error) {
+      toast({ title: 'Error updating seat purpose', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    await fetchSeats();
+    return true;
+  };
+
   useEffect(() => {
     fetchSeats();
     fetchRoster();
   }, [fetchSeats, fetchRoster]);
 
-  return { seats, rosterMembers, loading, assignSeat, clearSeat, assignDoubleSeat, refetch: fetchSeats };
+  return { seats, rosterMembers, loading, assignSeat, clearSeat, assignDoubleSeat, toggleSeatPurpose, refetch: fetchSeats };
 };
