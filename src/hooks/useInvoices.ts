@@ -69,10 +69,15 @@ export const useInvoices = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (fetchError) throw fetchError;
-      setInvoices((data || []) as unknown as Invoice[]);
-      setError(null);
+      if (fetchError) {
+        console.error('Error fetching invoices:', fetchError);
+        setError(fetchError.message);
+      } else {
+        setInvoices((data || []) as unknown as Invoice[]);
+        setError(null);
+      }
     } catch (err: any) {
+      console.error('Invoice fetch exception:', err);
       setError(err.message);
     } finally {
       setLoading(false);
