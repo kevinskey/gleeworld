@@ -262,6 +262,23 @@ export const ProductManager = () => {
       });
     }
   };
+  const handleToggleActive = async (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    try {
+      const newStatus = !product.is_active;
+      const { error } = await supabase
+        .from('gw_products')
+        .update({ is_active: newStatus })
+        .eq('id', product.id);
+      if (error) throw error;
+      toast({ title: `Product ${newStatus ? 'activated' : 'deactivated'}` });
+      loadProducts();
+    } catch (error) {
+      console.error('Error toggling product status:', error);
+      toast({ title: "Error", description: "Failed to update product status", variant: "destructive" });
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
@@ -483,7 +500,10 @@ export const ProductManager = () => {
                     <Package className="h-12 w-12 text-muted-foreground/30" />
                   </div>}
                 {/* Status Badge */}
-                <Badge className={`absolute top-2 left-2 ${product.is_active ? 'bg-green-500' : 'bg-muted'}`}>
+                <Badge
+                  className={`absolute top-2 left-2 cursor-pointer hover:opacity-80 ${product.is_active ? 'bg-green-500' : 'bg-muted'}`}
+                  onClick={(e) => handleToggleActive(e, product)}
+                >
                   {product.is_active ? "Active" : "Inactive"}
                 </Badge>
                 {/* Action buttons on hover */}
@@ -527,7 +547,11 @@ export const ProductManager = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold truncate">{product.title}</h3>
-                      <Badge variant={product.is_active ? "default" : "secondary"} className="flex-shrink-0">
+                      <Badge
+                        variant={product.is_active ? "default" : "secondary"}
+                        className="flex-shrink-0 cursor-pointer hover:opacity-80"
+                        onClick={(e) => handleToggleActive(e, product)}
+                      >
                         {product.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </div>
