@@ -72,7 +72,7 @@ export const AgendaView = ({
   const isToday = isSameDayET(selectedDate, new Date());
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="flex flex-col h-full bg-white text-slate-900 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Date Header with Swipe Navigation */}
       <div className="bg-[#003366] text-white p-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">

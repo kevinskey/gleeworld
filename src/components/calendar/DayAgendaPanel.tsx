@@ -30,7 +30,7 @@ export const DayAgendaPanel = ({
   const myEvents = events.filter(e => !e.is_public && e.created_by === user?.id);
 
   return (
-    <div className="h-full flex flex-col bg-slate-100 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="h-full flex flex-col bg-slate-100 text-slate-900 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Header - More compact on tablet */}
       <div className="bg-slate-800 text-white px-3 md:px-4 py-2 md:py-3 flex-shrink-0">
         <h2 className="text-sm md:text-base font-bold leading-tight">
