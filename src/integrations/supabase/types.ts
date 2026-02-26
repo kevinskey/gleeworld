@@ -20362,6 +20362,87 @@ export type Database = {
           },
         ]
       }
+      gw_tour_timeline_events: {
+        Row: {
+          assigned_to: string[] | null
+          city_id: string | null
+          created_at: string
+          created_by: string | null
+          display_order: number | null
+          end_time: string | null
+          event_category: string
+          event_date: string
+          event_time: string | null
+          id: string
+          is_auto_generated: boolean | null
+          label: string
+          location: string | null
+          notes: string | null
+          source_module: string | null
+          status: string
+          target_group: string | null
+          tour_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string[] | null
+          city_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_order?: number | null
+          end_time?: string | null
+          event_category?: string
+          event_date: string
+          event_time?: string | null
+          id?: string
+          is_auto_generated?: boolean | null
+          label: string
+          location?: string | null
+          notes?: string | null
+          source_module?: string | null
+          status?: string
+          target_group?: string | null
+          tour_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string[] | null
+          city_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_order?: number | null
+          end_time?: string | null
+          event_category?: string
+          event_date?: string
+          event_time?: string | null
+          id?: string
+          is_auto_generated?: boolean | null
+          label?: string
+          location?: string | null
+          notes?: string | null
+          source_module?: string | null
+          status?: string
+          target_group?: string | null
+          tour_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_timeline_events_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_tour_timeline_events_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_tours: {
         Row: {
           budget: number | null
