@@ -89,13 +89,24 @@ export const TourStopLogisticsEditor: React.FC<{
     const reordered = arrayMove(stops, oldIndex, newIndex);
     setOrderedStops(reordered);
 
-    // Persist new order to DB
+    // Persist new order to DB and sync tour dates
     setReordering(true);
     try {
       const updates = reordered.map((stop, idx) =>
         supabase.from('gw_tour_cities').update({ city_order: idx }).eq('id', stop.id)
       );
       await Promise.all(updates);
+
+      // Sync tour start/end dates from city arrival dates
+      const dates = reordered
+        .filter(s => s.arrival_date)
+        .map(s => new Date(s.arrival_date + 'T12:00:00'));
+      if (dates.length > 0) {
+        const startDate = new Date(Math.min(...dates.map(d => d.getTime()))).toISOString().split('T')[0];
+        const endDate = new Date(Math.max(...dates.map(d => d.getTime()))).toISOString().split('T')[0];
+        await supabase.from('gw_tours').update({ start_date: startDate, end_date: endDate }).eq('id', tourId);
+      }
+
       toast({ title: 'City order updated' });
       onUpdate();
     } catch (err: any) {

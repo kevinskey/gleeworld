@@ -129,29 +129,40 @@ export const AIRoutePlanner = ({
         ascending: false
       });
       if (error) throw error;
-      return (tours || []).map(tour => ({
-        id: tour.id,
-        name: tour.name,
-        description: tour.description || '',
-        stops: (tour.gw_tour_cities || [])
-          .sort((a: any, b: any) => (a.city_order ?? 999) - (b.city_order ?? 999))
-          .map((city: any, index: number) => ({
-            id: city.id,
-            city: city.city_name + (city.state_code ? `, ${city.state_code}` : ''),
-            venue: city.city_notes || 'TBD',
-            date: city.arrival_date || '',
-            address: '',
-            city_order: index + 1
-          })),
-        // Full city data for logistics editor
-        cityData: (tour.gw_tour_cities || [])
-          .sort((a: any, b: any) => (a.city_order ?? 999) - (b.city_order ?? 999)),
-        status: tour.status as 'planning' | 'optimized' | 'approved',
-        totalDistance: tour.total_distance || 0,
-        estimatedDuration: tour.estimated_duration || 'Not calculated',
-        estimatedCost: tour.estimated_cost || 0,
-        created_at: tour.created_at
-      })) as TourRoute[];
+      return (tours || []).map(tour => {
+        const sortedCities = (tour.gw_tour_cities || [])
+          .sort((a: any, b: any) => {
+            // Origin city (city_notes containing 'Origin') always first
+            const aIsOrigin = a.city_notes?.toLowerCase().includes('origin');
+            const bIsOrigin = b.city_notes?.toLowerCase().includes('origin');
+            if (aIsOrigin && !bIsOrigin) return -1;
+            if (!aIsOrigin && bIsOrigin) return 1;
+            // Then sort by city_order
+            return (a.city_order ?? 999) - (b.city_order ?? 999);
+          });
+
+        return {
+          id: tour.id,
+          name: tour.name,
+          description: tour.description || '',
+          stops: sortedCities
+            .map((city: any, index: number) => ({
+              id: city.id,
+              city: city.city_name + (city.state_code ? `, ${city.state_code}` : ''),
+              venue: city.city_notes || 'TBD',
+              date: city.arrival_date || '',
+              address: '',
+              city_order: city.city_notes?.toLowerCase().includes('origin') ? 0 : (city.city_order ?? index + 1)
+            })),
+          // Full city data for logistics editor
+          cityData: sortedCities,
+          status: tour.status as 'planning' | 'optimized' | 'approved',
+          totalDistance: tour.total_distance || 0,
+          estimatedDuration: tour.estimated_duration || 'Not calculated',
+          estimatedCost: tour.estimated_cost || 0,
+          created_at: tour.created_at
+        };
+      }) as TourRoute[];
     }
   });
 
@@ -270,12 +281,21 @@ export const AIRoutePlanner = ({
       description: string;
       stops: TourStop[];
     }) => {
+      // Calculate dates from stops for syncing
+      const dates = routeData.stops.filter(s => s.date).map(s => new Date(s.date + 'T12:00:00'));
+      const startDate = dates.length > 0 ? new Date(Math.min(...dates.map(d => d.getTime()))) : null;
+      const endDate = dates.length > 0 ? new Date(Math.max(...dates.map(d => d.getTime()))) : null;
+
+      const tourUpdate: any = {
+        name: routeData.name,
+        description: routeData.description,
+      };
+      if (startDate) tourUpdate.start_date = startDate.toISOString().split('T')[0];
+      if (endDate) tourUpdate.end_date = endDate.toISOString().split('T')[0];
+
       const {
         error: tourError
-      } = await supabase.from('gw_tours').update({
-        name: routeData.name,
-        description: routeData.description
-      }).eq('id', routeData.id);
+      } = await supabase.from('gw_tours').update(tourUpdate).eq('id', routeData.id);
       if (tourError) throw tourError;
 
       // Delete existing cities and re-add
@@ -336,13 +356,23 @@ export const AIRoutePlanner = ({
   });
   const startEditing = (route: TourRoute) => {
     setEditingRoute(route);
-    // Find origin city (city_order === 0)
-    const originStop = route.stops.find(s => s.city_order === 0);
-    setOriginCity(originStop ? originStop.city : '');
+    // Find origin city by city_order === 0 OR by city_notes containing 'Origin'
+    const originStop = route.stops.find(s => s.city_order === 0) 
+      || route.cityData?.find((c: any) => c.city_notes?.toLowerCase().includes('origin'));
+    if (originStop) {
+      const city = 'city' in originStop 
+        ? originStop.city 
+        : `${originStop.city_name}${originStop.state_code ? `, ${originStop.state_code}` : ''}`;
+      setOriginCity(city);
+    } else {
+      setOriginCity('');
+    }
+    // Filter out origin stops from editable list
+    const isOrigin = (s: TourStop) => s.city_order === 0;
     setNewRoute({
       name: route.name,
       description: route.description,
-      stops: route.stops.filter(s => s.city_order !== 0)
+      stops: route.stops.filter(s => !isOrigin(s))
     });
     setMultipleCities(['']);
     setCurrentStop({
