@@ -4,10 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, Camera, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, Camera, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark, Radio } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -17,7 +16,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
-import { HeaderClock } from "@/components/ui/header-clock";
 import { HeaderRadioControls } from "@/components/radio/HeaderRadioControls";
 import { DynamicCountdownText } from "@/components/ui/DynamicCountdownText";
 import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
@@ -26,11 +24,8 @@ import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components
 import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
-import { HEADER_ICON_SIZES } from "@/components/layout/headerIconSizes";
 
 import { LandingPageModal } from "@/components/landing/LandingPageModal";
-
-// import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
 
 interface UniversalHeaderProps {
   viewMode?: 'admin' | 'member';
@@ -90,7 +85,7 @@ export const UniversalHeader = ({
           const enrolledIds = new Set(enrollments.map(e => e.course_id));
           return allCourses.filter(c => enrolledIds.has(c.id));
         }
-        return []; // No enrollments = no courses shown
+        return [];
       }
       
       return allCourses;
@@ -128,26 +123,22 @@ export const UniversalHeader = ({
     };
   }, [canUseQuickActions, memberQuickActions, addQuickAction, removeQuickAction, reorderQuickActions, isInQuickActions]);
 
-  // Single opinionated theme — no conditional styling needed
-  const isHbcuTheme = false;
-  const isSpelmanBlue = false;
-
-  // Role-based accent colors for header branding
-  const getRoleAccentColor = () => {
+  // Role-based accent colors for header branding — now a top border accent
+  const getRoleAccentBorder = () => {
     const role = userProfile?.role;
-    if (userProfile?.is_super_admin) return 'border-b-4 border-b-spelman-blue-dark';
-    if (userProfile?.is_admin || userProfile?.is_exec_board) return 'border-b-4 border-b-purple-500';
+    if (userProfile?.is_super_admin) return 'border-t-2 border-t-red-500';
+    if (userProfile?.is_admin || userProfile?.is_exec_board) return 'border-t-2 border-t-purple-500';
     switch (role) {
       case 'student':
-        return 'border-b-4 border-b-emerald-500';
+        return 'border-t-2 border-t-emerald-500';
       case 'alumna':
-        return 'border-b-4 border-b-amber-500';
+        return 'border-t-2 border-t-amber-500';
       case 'fan':
-        return 'border-b-4 border-b-sky-500';
+        return 'border-t-2 border-t-sky-500';
       case 'auditioner':
-        return 'border-b-4 border-b-yellow-500';
+        return 'border-t-2 border-t-yellow-500';
       default:
-        return 'border-b border-white/20';
+        return '';
     }
   };
   const getRoleBadgeLabel = () => {
@@ -174,14 +165,7 @@ export const UniversalHeader = ({
   const canAccessPR = isAdmin || isPRCoordinator;
   const isExecBoardMember = userProfile?.exec_board_role && userProfile.exec_board_role.trim() !== '';
   const hasExecBoardPerms = isAdmin || isExecBoardMember;
-  console.log('UniversalHeader: PR Access Debug', {
-    userProfile: userProfile,
-    isAdmin: isAdmin,
-    isPRCoordinator: isPRCoordinator,
-    canAccessPR: canAccessPR,
-    userRole: userProfile?.role,
-    execBoardRole: userProfile?.exec_board_role
-  });
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -189,12 +173,7 @@ export const UniversalHeader = ({
       console.error('Sign out error:', error);
     }
   };
-  const getInitials = (email: string) => {
-    return email.charAt(0).toUpperCase();
-  };
 
-  // Ensure the header stays fixed across all scroll containers by using a fixed header
-  // and pushing page content down by the measured header height.
   const headerRef = useRef<HTMLElement | null>(null);
   const lastHeaderHeightRef = useRef<number>(0);
   const isInitializedRef = useRef(false);
@@ -202,44 +181,33 @@ export const UniversalHeader = ({
     const update = (force = false) => {
       const el = headerRef.current;
       if (!el) return;
-
       const baseHeight = Math.round(el.getBoundingClientRect().height);
-
-      // Only update on initial mount or if height changes significantly (> 2px)
-      // This prevents dropdown interactions from causing layout shifts
       if (!force && isInitializedRef.current && Math.abs(baseHeight - lastHeaderHeightRef.current) <= 2) {
         return;
       }
-
       lastHeaderHeightRef.current = baseHeight;
-
-      // Set base height; CSS combines with safe-area inset via calc()
       document.documentElement.style.setProperty('--gw-header-base-h', `${baseHeight}px`);
-
-      // Backwards compat: some parts of the app still read these vars directly.
-      // Keep them pointing at the combined value.
       document.documentElement.style.setProperty('--gw-header-h', `calc(var(--gw-header-base-h) + var(--gw-safe-top))`);
       document.documentElement.style.setProperty('--gw-header-height', `calc(var(--gw-header-base-h) + var(--gw-safe-top))`);
-
       isInitializedRef.current = true;
     };
-
-    // Initialize once on mount
     update(true);
-
-    // Only update on window resize, not on internal ResizeObserver changes
-    // This prevents dropdowns/popups from triggering layout recalculations
     const handleResize = () => update(true);
     window.addEventListener('resize', handleResize);
-
-    // In iOS PWA, safe-area inset can be reported after first paint
     const safeTopRecheck = window.setTimeout(() => update(true), 250);
-
     return () => {
       window.removeEventListener('resize', handleResize);
       window.clearTimeout(safeTopRecheck);
     };
   }, []);
+
+  // Icon button style — compact, clear
+  const iconBtn = "h-8 w-8 p-0 rounded-full hover:bg-[hsl(var(--spelman-navy))]/10 transition-colors text-[hsl(var(--spelman-navy))]";
+  const iconSize = "h-[18px] w-[18px]";
+
+  // Desktop icon button — slightly larger
+  const deskIconBtn = "sm:h-9 sm:w-9";
+  const deskIconSize = "sm:h-5 sm:w-5";
 
   return (
     <>
@@ -248,270 +216,319 @@ export const UniversalHeader = ({
         style={{ top: 'var(--gw-safe-top)' }}
       >
         <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0">
-        <header ref={headerRef} className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative rounded-b-lg bg-[hsl(var(--spelman-navy))] backdrop-blur-md border-b border-white/[0.08] text-white ${user ? getRoleAccentColor() : 'border-b border-white/20'} [&_button:hover]:shadow-[0_0_12px_rgba(56,146,227,0.25)] [&_button]:transition-shadow [&_button]:duration-300`}>
-          <div className="flex items-center justify-between w-full min-h-10 sm:min-h-12 md:min-h-10 py-1.5 md:py-1 px-2 sm:px-3 md:px-4 lg:px-6">
-          {/* Logo and Navigation */}
-          <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 min-w-0">
-            <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">
-              <Link to="/" className="flex items-center gap-1.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-white p-0.5 sm:p-1">
-                <div className="relative">
-                  <img
-                    src="/gleeworld-door-icon.png?v=2"
-                    alt="GleeWorld"
-                    className="w-8 h-8 sm:w-9 sm:h-9 md:w-6 md:h-6 lg:w-10 lg:h-10 object-contain flex-shrink-0"
-                    style={{ filter: 'drop-shadow(0 0 4px rgba(56,146,227,0.3))' }}
-                  />
-                </div>
-                <span style={{
-                    fontFamily: "'Cinzel', serif",
-                    letterSpacing: '0.04em',
-                    textShadow: '0 0 10px rgba(56,146,227,0.3)'
-                  }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-semibold text-white">
-                  GleeWorld
-                </span>
-              </Link>
-            </EnhancedTooltip>
-            
-            {/* Clock + Countdown - Hidden on mobile, shown on larger screens */}
-            <div className="hidden sm:flex items-center gap-2">
-              <HeaderClock className="text-xs sm:text-sm" />
-              <DynamicCountdownText className="bg-muted/40" />
-            </div>
-          </div>
+        <header
+          ref={headerRef}
+          className={`
+            w-full relative
+            bg-white/95 backdrop-blur-md
+            border-b border-slate-200
+            shadow-[0_1px_3px_rgba(0,0,0,0.08)]
+            ${user ? getRoleAccentBorder() : ''}
+          `.trim().replace(/\s+/g, ' ')}
+        >
+          <div className="flex items-center justify-between w-full h-11 sm:h-12 md:h-11 px-2 sm:px-3 md:px-4 lg:px-6">
+            {/* Left: Logo + Brand */}
+            <Link to="/" className="flex items-center gap-1.5 flex-shrink-0 hover:opacity-80 transition-opacity">
+              <img
+                src="/gleeworld-door-icon.png?v=2"
+                alt="GleeWorld"
+                className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+              />
+              <span
+                style={{
+                  fontFamily: "'Cinzel', serif",
+                  letterSpacing: '0.03em',
+                }}
+                className="text-base sm:text-lg md:text-xl font-semibold text-[hsl(var(--spelman-navy))] whitespace-nowrap"
+              >
+                GleeWorld
+              </span>
+            </Link>
 
-          {/* Right side actions - Mobile-optimized icon bar */}
-          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-3 xl:gap-4 text-white/80 pr-2 sm:pr-4 md:pr-6 lg:pr-8 xl:pr-12">
-            <HeaderRadioControls />
-            
-            {/* Email/SMS Messenger - Available to all authenticated users */}
-            {user && <EnhancedTooltip content="Send Email/SMS">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/messenger')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                  <Mail className={HEADER_ICON_SIZES.icon} />
+            {/* Center: Countdown (tablet/desktop only) */}
+            <div className="hidden sm:flex items-center">
+              <DynamicCountdownText className="text-xs bg-slate-100 text-slate-600 border-0" />
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5">
+              {/* Radio — always visible, compact */}
+              <HeaderRadioControls />
+
+              {/* Mail — hidden on mobile (in bottom nav) */}
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/messenger')}
+                  className={`hidden sm:flex ${iconBtn} ${deskIconBtn}`}
+                  type="button"
+                  title="Messages"
+                >
+                  <Mail className={`${iconSize} ${deskIconSize}`} />
                 </Button>
-              </EnhancedTooltip>}
+              )}
 
-            {/* Calendar Quick Access */}
-            {user && <EnhancedTooltip content="View Calendar">
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                    <CalendarDays className={HEADER_ICON_SIZES.icon} />
-                  </Button>
-                </EnhancedTooltip>}
+              {/* Calendar — hidden on mobile */}
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/calendar')}
+                  className={`hidden sm:flex ${iconBtn} ${deskIconBtn}`}
+                  type="button"
+                  title="Calendar"
+                >
+                  <CalendarDays className={`${iconSize} ${deskIconSize}`} />
+                </Button>
+              )}
 
-            {/* Musical Toolkit - positioned left of Academy */}
-            <div className="hidden sm:block">
-              <MusicalToolkit />
-            </div>
+              {/* Musical Toolkit — hidden on mobile */}
+              <div className="hidden md:block">
+                <MusicalToolkit />
+              </div>
 
-            {/* Institute Dropdown with Courses */}
-            {user && <div className="hidden sm:block">
-                <DropdownMenu>
-                  <EnhancedTooltip content="Glee Academy">
+              {/* Academy — hidden on small screens */}
+              {user && (
+                <div className="hidden md:block">
+                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                        <Landmark className={HEADER_ICON_SIZES.icon} />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`${iconBtn} ${deskIconBtn}`}
+                        type="button"
+                        title="Glee Academy"
+                      >
+                        <Landmark className={`${iconSize} ${deskIconSize}`} />
                       </Button>
                     </DropdownMenuTrigger>
-                  </EnhancedTooltip>
-                  <DropdownMenuContent align="end" className="w-64 bg-popover border border-border shadow-xl z-[100]">
-                    <DropdownMenuItem onClick={() => navigate('/glee-academy')} className="cursor-pointer font-medium">
-                      <Landmark className="w-4 h-4 mr-2" />
-                      Glee Academy Home
-                    </DropdownMenuItem>
+                    <DropdownMenuContent align="end" className="w-64 bg-white border border-slate-200 shadow-xl z-[100] text-slate-900">
+                      <DropdownMenuItem onClick={() => navigate('/glee-academy')} className="cursor-pointer font-medium">
+                        <Landmark className="w-4 h-4 mr-2" />
+                        Glee Academy Home
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-xs text-slate-500">Courses</DropdownMenuLabel>
+                      {courses.map(course => (
+                        <DropdownMenuItem
+                          key={course.id}
+                          onClick={() => {
+                            if (course.course_code === 'MUS 000') {
+                              window.open('https://readmusic.gleeworld.org', '_blank');
+                            } else {
+                              navigate(`/academy/${course.course_code?.toLowerCase().replace(' ', '-')}`);
+                            }
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <span className="text-xs text-slate-400 mr-2">{course.course_code}</span>
+                          {course.title}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
+
+              {/* Super Admin Dashboard Switcher */}
+              {user && userProfile?.is_super_admin && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`hidden sm:flex ${iconBtn} ${deskIconBtn}`}
+                      type="button"
+                      title="Switch Dashboard"
+                    >
+                      <Crown className={`${iconSize} ${deskIconSize}`} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 shadow-xl z-[100] text-slate-900">
+                    <DropdownMenuLabel className="text-xs text-slate-500">Quick Access</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">Glee Academy Courses</DropdownMenuLabel>
-                    {courses.map(course => <DropdownMenuItem key={course.id} onClick={() => {
-                        if (course.course_code === 'MUS 000') {
-                          window.open('https://readmusic.gleeworld.org', '_blank');
-                        } else {
-                          navigate(`/academy/${course.course_code?.toLowerCase().replace(' ', '-')}`);
-                        }
-                      }} className="cursor-pointer">
-                        <span className="text-xs text-muted-foreground mr-2">{course.course_code}</span>
-                        {course.title}
-                      </DropdownMenuItem>)}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>}
-            
-            {user && <>
-                {/* Keep dashboard switcher as secondary navigation - Super Admin only */}
-                {userProfile?.is_super_admin && <DropdownMenu>
-                   <DropdownMenuTrigger asChild>
-                      
-                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64 bg-popover border border-border shadow-xl z-[100]">
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">Quick Access</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    
-                    {/* Main Dashboard Views */}
-                    {isAdmin && <DropdownMenuItem onClick={() => navigate('/dashboard')} className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        My Dashboard
-                      </DropdownMenuItem>}
+                    {isAdmin && (
+                      <DropdownMenuItem onClick={() => navigate('/dashboard')} className="cursor-pointer">
+                        <User className="mr-2 h-4 w-4" /> My Dashboard
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => navigate('/dashboard/member')} className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      Member
+                      <User className="mr-2 h-4 w-4" /> Member
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/dashboard/student')} className="cursor-pointer">
-                      <GraduationCap className="mr-2 h-4 w-4" />
-                      Student
+                      <GraduationCap className="mr-2 h-4 w-4" /> Student
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/dashboard/fan')} className="cursor-pointer">
-                      <Heart className="mr-2 h-4 w-4" />
-                      Fan
+                      <Heart className="mr-2 h-4 w-4" /> Fan
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/alumnae')} className="cursor-pointer">
-                      <GraduationCap className="mr-2 h-4 w-4" />
-                      Alumnae
+                      <GraduationCap className="mr-2 h-4 w-4" /> Alumnae
                     </DropdownMenuItem>
-                    {hasExecBoardPerms && <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
-                        <Crown className="mr-2 h-4 w-4" />
-                        Admin
-                      </DropdownMenuItem>}
-                    
+                    {hasExecBoardPerms && (
+                      <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
+                        <Crown className="mr-2 h-4 w-4" /> Admin
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">Public Pages</DropdownMenuLabel>
-                    
+                    <DropdownMenuLabel className="text-xs text-slate-500">Public Pages</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => setIsLandingModalOpen(true)} className="cursor-pointer">
-                      <Globe className="mr-2 h-4 w-4" />
-                      Landing Page
+                      <Globe className="mr-2 h-4 w-4" /> Landing Page
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      navigate('/glee-academy');
-                      window.scrollTo(0, 0);
-                    }} className="cursor-pointer">
-                      <GraduationCap className="mr-2 h-4 w-4" />
-                      Glee Academy
+                    <DropdownMenuItem onClick={() => { navigate('/glee-academy'); window.scrollTo(0, 0); }} className="cursor-pointer">
+                      <GraduationCap className="mr-2 h-4 w-4" /> Glee Academy
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/dashboard/public')} className="cursor-pointer">
-                      <Globe className="mr-2 h-4 w-4" />
-                      Public View
+                      <Globe className="mr-2 h-4 w-4" /> Public View
                     </DropdownMenuItem>
-                    
-                    {/* Executive Board Dropdown */}
-                    {hasExecBoardPerms && <>
-                      <DropdownMenuSeparator />
-                      <ExecutiveBoardDropdown />
-                    </>}
-                  </DropdownMenuContent>
-                </DropdownMenu>}
-
-                
-                {/* Add Module Quick Action - For members without admin access - Hidden on mobile */}
-                {!hasExecBoardPerms && <EnhancedTooltip content="Add Module to Dashboard">
-                    <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/member?addModule=true')} className={`hidden sm:flex ${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                      <Plus className={HEADER_ICON_SIZES.icon} />
-                    </Button>
-                  </EnhancedTooltip>}
-
-                {/* Glee Cam Quick Capture - Hidden on mobile (available in bottom nav) */}
-                <div className="hidden sm:block">
-                  <EnhancedTooltip content="Glee Cam - Quick Capture">
-                    <Button variant="ghost" size="sm" onClick={e => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('Camera button clicked - showing category selector');
-                      setShowCategorySelector(true);
-                    }} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                      <Camera className={HEADER_ICON_SIZES.icon} />
-                    </Button>
-                  </EnhancedTooltip>
-                </div>
-
-                {/* Quick Actions Button */}
-                <EnhancedTooltip content="Members Quick Access">
-                  <Button variant="ghost" size="sm" onClick={() => setIsQuickActionsOpen(prev => !prev)} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                    <Key className={HEADER_ICON_SIZES.icon} />
-                  </Button>
-                </EnhancedTooltip>
-                
-               <DropdownMenu>
-                   <EnhancedTooltip content="Profile menu">
-                      <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" className={`relative ${HEADER_ICON_SIZES.button} rounded-full p-0 hover:bg-gray-100`} type="button">
-                           <Avatar className={`${HEADER_ICON_SIZES.avatar} border border-border`}>
-                             <AvatarImage src={userProfile?.avatar_url || undefined} alt={userProfile?.full_name || user?.email || "Your Profile"} className="object-cover" onError={e => {
-                            console.log('Avatar image failed to load:', userProfile?.avatar_url);
-                            e.currentTarget.style.display = 'none';
-                          }} onLoad={() => {
-                            console.log('Avatar image loaded successfully:', userProfile?.avatar_url);
-                          }} />
-                             <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-bold relative">
-                               {userProfile?.full_name ? userProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'U'}
-                             </AvatarFallback>
-                           </Avatar>
-                        </Button>
-                      </DropdownMenuTrigger>
-                   </EnhancedTooltip>
-                    <DropdownMenuContent align="end" className="w-64 bg-popover border border-border shadow-xl z-[100]">
-                      <div className="flex flex-col space-y-1 p-2">
-                         <p className="text-sm font-medium leading-none truncate">
-                           {userProfile?.full_name || user.email}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                        {getRoleBadgeLabel() && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium w-fit mt-1 ${userProfile?.is_super_admin ? 'bg-red-100 text-red-700' : userProfile?.is_admin ? 'bg-purple-100 text-purple-700' : userProfile?.is_exec_board ? 'bg-blue-100 text-blue-700' : userProfile?.role === 'student' ? 'bg-emerald-100 text-emerald-700' : userProfile?.role === 'alumna' ? 'bg-amber-100 text-amber-700' : userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-700'}`}>
-                            {getRoleBadgeLabel()}
-                          </span>}
-                      </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="cursor-pointer">
-                        <Link to="/profile" className="flex items-center">
-                          <User className="mr-2 h-4 w-4" />
-                          Profile
-                        </Link>
-                      </DropdownMenuItem>
-                       <DropdownMenuItem asChild className="cursor-pointer">
-                         <Link to="/settings" className="flex items-center">
-                           <Settings className="mr-2 h-4 w-4" />
-                           Settings
-                         </Link>
-                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-                       <LogOut className="mr-2 h-4 w-4" />
-                       Sign out
-                     </DropdownMenuItem>
+                    {hasExecBoardPerms && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <ExecutiveBoardDropdown />
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </>}
+              )}
 
-            {!user && <EnhancedTooltip content="Sign in to access your dashboard">
-                <Button asChild variant="default" size="sm" className="text-xs sm:text-sm px-3 sm:px-6 min-w-[70px] sm:min-w-[80px] whitespace-nowrap">
+              {/* Add Module — hidden on mobile */}
+              {!hasExecBoardPerms && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/dashboard/member?addModule=true')}
+                  className={`hidden sm:flex ${iconBtn} ${deskIconBtn}`}
+                  type="button"
+                  title="Add Module"
+                >
+                  <Plus className={`${iconSize} ${deskIconSize}`} />
+                </Button>
+              )}
+
+              {/* Camera — hidden on mobile (in bottom nav) */}
+              <div className="hidden sm:block">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowCategorySelector(true);
+                  }}
+                  className={`${iconBtn} ${deskIconBtn}`}
+                  type="button"
+                  title="Glee Cam"
+                >
+                  <Camera className={`${iconSize} ${deskIconSize}`} />
+                </Button>
+              </div>
+
+              {/* Quick Actions */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsQuickActionsOpen(prev => !prev)}
+                className={`${iconBtn} ${deskIconBtn}`}
+                type="button"
+                title="Quick Access"
+              >
+                <Key className={`${iconSize} ${deskIconSize}`} />
+              </Button>
+
+              {/* Avatar / Profile Menu */}
+              {user && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 sm:h-9 sm:w-9 rounded-full p-0 hover:ring-2 hover:ring-slate-300 transition-all" type="button">
+                      <Avatar className="h-7 w-7 sm:h-8 sm:w-8 border border-slate-200">
+                        <AvatarImage
+                          src={userProfile?.avatar_url || undefined}
+                          alt={userProfile?.full_name || user?.email || "Profile"}
+                          className="object-cover"
+                          onError={e => { e.currentTarget.style.display = 'none'; }}
+                        />
+                        <AvatarFallback className="bg-[hsl(var(--spelman-navy))] text-white font-bold text-xs">
+                          {userProfile?.full_name ? userProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 shadow-xl z-[100] text-slate-900">
+                    <div className="flex flex-col space-y-1 p-2">
+                      <p className="text-sm font-medium leading-none truncate text-slate-900">
+                        {userProfile?.full_name || user.email}
+                      </p>
+                      <p className="text-xs leading-none text-slate-500">
+                        {user.email}
+                      </p>
+                      {getRoleBadgeLabel() && (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium w-fit mt-1 ${
+                          userProfile?.is_super_admin ? 'bg-red-100 text-red-700' :
+                          userProfile?.is_admin ? 'bg-purple-100 text-purple-700' :
+                          userProfile?.is_exec_board ? 'bg-blue-100 text-blue-700' :
+                          userProfile?.role === 'student' ? 'bg-emerald-100 text-emerald-700' :
+                          userProfile?.role === 'alumna' ? 'bg-amber-100 text-amber-700' :
+                          userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {getRoleBadgeLabel()}
+                        </span>
+                      )}
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to="/profile" className="flex items-center">
+                        <User className="mr-2 h-4 w-4" /> Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to="/settings" className="flex items-center">
+                        <Settings className="mr-2 h-4 w-4" /> Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600">
+                      <LogOut className="mr-2 h-4 w-4" /> Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {!user && (
+                <Button asChild variant="default" size="sm" className="text-xs px-3 h-8 whitespace-nowrap bg-[hsl(var(--spelman-navy))] hover:bg-[hsl(var(--spelman-navy))]/90 text-white">
                   <Link to="/auth">Sign In</Link>
                 </Button>
-              </EnhancedTooltip>}
-          </div>
+              )}
             </div>
-          </header>
           </div>
+        </header>
         </div>
+      </div>
 
       {/* Quick Capture Category Selector */}
       <QuickCaptureCategorySelector open={showCategorySelector} onClose={() => setShowCategorySelector(false)} onSelectCategory={category => {
-      setShowCategorySelector(false);
-      setSelectedCategory(category);
-    }} />
+        setShowCategorySelector(false);
+        setSelectedCategory(category);
+      }} />
 
       {/* Categorized Quick Capture */}
       {selectedCategory && <CategorizedQuickCapture category={selectedCategory} onClose={() => setSelectedCategory(null)} onBack={() => {
-      setSelectedCategory(null);
-      setShowCategorySelector(true);
-    }} />}
+        setSelectedCategory(null);
+        setShowCategorySelector(true);
+      }} />}
 
       {/* Quick Actions Panel */}
       {user && <QuickActionsPanel user={{
-      id: user.id,
-      email: user.email || '',
-      full_name: userProfile?.full_name || user.email || '',
-      role: userProfile?.role || 'student',
-      exec_board_role: userProfile?.exec_board_role || undefined,
-      is_exec_board: userProfile?.is_exec_board || false
-    }} onModuleSelect={moduleId => {
-      navigate(`/dashboard?module=${moduleId}`);
-      setIsQuickActionsOpen(false);
-    }} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />}
+        id: user.id,
+        email: user.email || '',
+        full_name: userProfile?.full_name || user.email || '',
+        role: userProfile?.role || 'student',
+        exec_board_role: userProfile?.exec_board_role || undefined,
+        is_exec_board: userProfile?.is_exec_board || false
+      }} onModuleSelect={moduleId => {
+        navigate(`/dashboard?module=${moduleId}`);
+        setIsQuickActionsOpen(false);
+      }} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />}
 
       {/* Landing Page Modal */}
       <LandingPageModal 
