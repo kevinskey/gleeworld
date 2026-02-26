@@ -460,26 +460,33 @@ const SortableStopCard: React.FC<{
           )}
 
           {/* Departure / Arrival Times */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-xs font-medium flex items-center gap-1">
-                <Clock className="h-3 w-3" /> Arrival Time
-              </label>
-              <TimeSelect
-                value={data.arrival_time}
-                onChange={(v: string | null) => onUpdateField(stop.id, 'arrival_time', v)}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium flex items-center gap-1">
-                <Clock className="h-3 w-3" /> Departure Time
-              </label>
-              <TimeSelect
-                value={data.departure_time}
-                onChange={(v: string | null) => onUpdateField(stop.id, 'departure_time', v)}
-              />
-            </div>
-          </div>
+          {(() => {
+            const isOrigin = index === 0 && stop.city_order === 0;
+            return (
+              <div className={`grid ${isOrigin ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
+                {!isOrigin && (
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> Arrival Time
+                    </label>
+                    <TimeSelect
+                      value={data.arrival_time}
+                      onChange={(v: string | null) => onUpdateField(stop.id, 'arrival_time', v)}
+                    />
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium flex items-center gap-1">
+                    <Clock className="h-3 w-3" /> Departure Time
+                  </label>
+                  <TimeSelect
+                    value={data.departure_time}
+                    onChange={(v: string | null) => onUpdateField(stop.id, 'departure_time', v)}
+                  />
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Meals Needed */}
           <div className="space-y-2">
