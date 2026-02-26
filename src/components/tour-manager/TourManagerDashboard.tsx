@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid, ArrowLeft } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid, ArrowLeft, MessageSquare } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -26,6 +26,7 @@ import { HotelManagement } from './HotelManagement';
 import { TourBudgetManager } from './TourBudgetManager';
 import { TourMilestones } from './TourMilestones';
 import { RisersSection } from '@/components/tour/RisersSection';
+import { TourNotesSection } from '@/components/tour/TourNotesSection';
 import { supabase } from '@/integrations/supabase/client';
 interface TourManagerDashboardProps {
   user?: {
@@ -106,6 +107,10 @@ const navItems = [{
   value: 'milestones',
   label: 'Milestones',
   icon: CheckCircle2
+}, {
+  value: 'notes',
+  label: 'Notes',
+  icon: MessageSquare
 }];
 const contentConfig: Record<string, {
   title: string;
@@ -170,6 +175,10 @@ const contentConfig: Record<string, {
   'wardrobe': {
     title: 'Wardrobe',
     description: 'Track uniforms, costumes, and wardrobe items'
+  },
+  'notes': {
+    title: 'Notes',
+    description: 'Real-time status updates from exec board and tour managers'
   }
 };
 export const TourManagerDashboard = ({
@@ -285,6 +294,8 @@ export const TourManagerDashboard = ({
         return <TourBudgetManager />;
       case 'milestones':
         return <TourMilestones />;
+      case 'notes':
+        return <TourNotesSection />;
       default:
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
     }
