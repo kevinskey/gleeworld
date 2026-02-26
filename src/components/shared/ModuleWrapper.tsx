@@ -40,7 +40,7 @@ export const ModuleWrapper = ({
   defaultOpen = false
 }: ModuleWrapperProps) => {
   const containerClass = fullPage ? "min-h-screen space-y-4" : "space-y-4";
-  const headerClass = stickyHeader ? "sticky z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60" : "";
+  const headerClass = stickyHeader ? "sticky z-10 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80" : "";
   const [collapsed, setCollapsed] = useState(collapsible ? !(defaultOpen ?? true) : false);
   const content = <div className={`${containerClass} ${className}`}>
       {/* Standardized Header */}
