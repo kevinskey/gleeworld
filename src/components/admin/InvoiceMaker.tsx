@@ -48,7 +48,7 @@ const emptyLineItem: InvoiceLineItem = {
 };
 
 export const InvoiceMaker = () => {
-  const { invoices, loading, createInvoice, deleteInvoice } = useInvoices();
+  const { invoices, loading, error, createInvoice, deleteInvoice } = useInvoices();
   const [showForm, setShowForm] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [saving, setSaving] = useState(false);
@@ -182,6 +182,12 @@ export const InvoiceMaker = () => {
         <CardContent>
           {loading ? (
             <p className="text-muted-foreground text-center py-8">Loading invoices...</p>
+          ) : error ? (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 mx-auto text-destructive/50 mb-2" />
+              <p className="text-destructive">Error loading invoices</p>
+              <p className="text-sm text-muted-foreground mt-1">{error}</p>
+            </div>
           ) : invoices.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
