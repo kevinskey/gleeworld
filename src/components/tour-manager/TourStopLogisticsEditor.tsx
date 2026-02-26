@@ -8,6 +8,7 @@ import { TimeSelect } from '@/components/ui/time-select';
 import {
   ChevronDown, ChevronUp, Clock, MapPin, Utensils, Save, Loader2,
   Sparkles, AlertTriangle, CheckCircle, Info, GripVertical,
+  Navigation, DollarSign, ParkingCircle, Fuel, Shield, Route,
 } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -29,6 +30,9 @@ interface TourStopLogistics {
   estimated_drive_hours: number | null;
   estimated_drive_miles: number | null;
   lunch_stop_suggestion: any;
+  toll_estimate: number | null;
+  parking_notes: string | null;
+  route_analysis: any;
 }
 
 interface LunchSuggestion {
@@ -64,6 +68,8 @@ export const TourStopLogisticsEditor: React.FC<{
   const [loadingAI, setLoadingAI] = useState<string | null>(null);
   const [aiResults, setAiResults] = useState<Record<string, any>>({});
   const [reordering, setReordering] = useState(false);
+  const [analyzingRoute, setAnalyzingRoute] = useState(false);
+  const [routeAnalysis, setRouteAnalysis] = useState<any>(null);
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -74,6 +80,11 @@ export const TourStopLogisticsEditor: React.FC<{
   // Sync if parent stops change
   React.useEffect(() => {
     setOrderedStops(initialStops);
+    // Load any existing route_analysis from first non-origin stop
+    const existingAnalysis = initialStops.find(s => s.route_analysis)?.route_analysis;
+    if (existingAnalysis && !routeAnalysis) {
+      setRouteAnalysis(existingAnalysis);
+    }
   }, [initialStops]);
 
   const stops = orderedStops;
@@ -87,7 +98,6 @@ export const TourStopLogisticsEditor: React.FC<{
     const reordered = arrayMove(stops, oldIndex, newIndex);
     setOrderedStops(reordered);
 
-    // Persist new order to DB and sync tour dates
     setReordering(true);
     try {
       const updates = reordered.map((stop, idx) =>
@@ -95,7 +105,6 @@ export const TourStopLogisticsEditor: React.FC<{
       );
       await Promise.all(updates);
 
-      // Sync tour start/end dates from city arrival dates
       const dates = reordered
         .filter(s => s.arrival_date)
         .map(s => new Date(s.arrival_date + 'T12:00:00'));
@@ -148,7 +157,6 @@ export const TourStopLogisticsEditor: React.FC<{
 
       if (error) throw error;
       toast({ title: 'Logistics saved' });
-      // Clear the saved fields from editData
       setEditData(prev => {
         const { [stopId]: _, ...rest } = prev;
         return rest;
@@ -167,7 +175,6 @@ export const TourStopLogisticsEditor: React.FC<{
   const updateFieldWithAutoSave = (stopId: string, field: string, value: any) => {
     updateField(stopId, field, value);
 
-    // Auto-save for time fields
     if (field === 'departure_time' || field === 'arrival_time') {
       if (autoSaveTimeoutRef.current[stopId]) {
         clearTimeout(autoSaveTimeoutRef.current[stopId]);
@@ -194,7 +201,6 @@ export const TourStopLogisticsEditor: React.FC<{
       if (error) throw error;
       setAiResults(prev => ({ ...prev, [curStop.id]: data }));
 
-      // Also save distance/hours if returned
       if (data?.total_distance_miles || data?.total_drive_hours) {
         updateField(curStop.id, 'estimated_drive_miles', data.total_distance_miles);
         updateField(curStop.id, 'estimated_drive_hours', data.total_drive_hours);
@@ -211,6 +217,77 @@ export const TourStopLogisticsEditor: React.FC<{
       toast({ title: 'AI suggestion failed', description: err.message, variant: 'destructive' });
     } finally {
       setLoadingAI(null);
+    }
+  };
+
+  // Analyze full route with AI
+  const analyzeFullRoute = async () => {
+    if (stops.length < 2) {
+      toast({ title: 'Need at least 2 stops', description: 'Add more cities to analyze the route.', variant: 'destructive' });
+      return;
+    }
+
+    setAnalyzingRoute(true);
+    try {
+      const segments = [];
+      for (let i = 1; i < stops.length; i++) {
+        const from = `${stops[i - 1].city_name}${stops[i - 1].state_code ? `, ${stops[i - 1].state_code}` : ''}`;
+        const to = `${stops[i].city_name}${stops[i].state_code ? `, ${stops[i].state_code}` : ''}`;
+        segments.push({ from, to, cityId: stops[i].id });
+      }
+
+      const { data, error } = await supabase.functions.invoke('analyze-route-segment', {
+        body: { segments, groupSize: 46 },
+      });
+
+      if (error) throw error;
+
+      setRouteAnalysis(data);
+
+      // Persist analysis to each city
+      if (data?.segments) {
+        const updatePromises = data.segments.map((seg: any, i: number) => {
+          const stop = stops[i + 1]; // segments[0] corresponds to stops[1]
+          if (!stop) return Promise.resolve();
+          return supabase.from('gw_tour_cities').update({
+            estimated_drive_miles: seg.distance_miles,
+            estimated_drive_hours: seg.drive_hours,
+            toll_estimate: seg.toll_estimate,
+            parking_notes: seg.parking_options?.map((p: any) => `${p.name} (${p.type}): ${p.notes}`).join('\n') || null,
+            route_analysis: seg,
+          }).eq('id', stop.id);
+        });
+        await Promise.all(updatePromises);
+
+        // Update total on tour
+        await supabase.from('gw_tours').update({
+          total_distance: data.total_distance_miles,
+          estimated_duration: `${data.total_drive_hours.toFixed(1)} hours`,
+          estimated_cost: (data.total_toll_estimate || 0) + (data.total_fuel_estimate || 0),
+        }).eq('id', tourId);
+
+        // Update local state
+        const updatedStops = stops.map((stop, idx) => {
+          if (idx === 0) return stop;
+          const seg = data.segments[idx - 1];
+          if (!seg) return stop;
+          return {
+            ...stop,
+            estimated_drive_miles: seg.distance_miles,
+            estimated_drive_hours: seg.drive_hours,
+            toll_estimate: seg.toll_estimate,
+            route_analysis: seg,
+          };
+        });
+        setOrderedStops(updatedStops);
+      }
+
+      toast({ title: 'Route analyzed!', description: `${data.segments?.length || 0} legs analyzed with distance, tolls, parking & DOT compliance.` });
+      onUpdate();
+    } catch (err: any) {
+      toast({ title: 'Route analysis failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setAnalyzingRoute(false);
     }
   };
 
@@ -251,10 +328,70 @@ export const TourStopLogisticsEditor: React.FC<{
   }, 0);
   const violationCount = dotCompliance.filter(d => d.exceedsLimit).length;
 
+  const totalTolls = routeAnalysis?.total_toll_estimate || stops.reduce((sum, s) => sum + (s.toll_estimate || 0), 0);
+  const totalFuel = routeAnalysis?.total_fuel_estimate || 0;
+
   return (
     <div className="space-y-4">
-      {/* DOT Compliance Summary Card */}
+      {/* Analyze Full Route Button */}
       {stops.length > 1 && (
+        <Button
+          onClick={analyzeFullRoute}
+          disabled={analyzingRoute}
+          className="w-full gap-2"
+          variant="default"
+        >
+          {analyzingRoute ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing {stops.length - 1} legs with AI...</>
+          ) : (
+            <><Sparkles className="h-4 w-4" /> <Route className="h-4 w-4" /> AI Route Analysis — Distance, Tolls, Parking & DOT Compliance</>
+          )}
+        </Button>
+      )}
+
+      {/* Route Analysis Summary Card */}
+      {routeAnalysis && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <Route className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="font-semibold text-sm">AI Route Analysis Summary</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-3">
+                  <div className="text-center">
+                    <p className="text-lg font-bold">{routeAnalysis.total_distance_miles?.toFixed(0) || totalMiles.toFixed(0)}</p>
+                    <p className="text-xs text-muted-foreground">Total Miles</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold">{routeAnalysis.total_drive_hours?.toFixed(1) || totalDriveHours.toFixed(1)}h</p>
+                    <p className="text-xs text-muted-foreground">Drive Time</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold">${totalTolls.toFixed(0)}</p>
+                    <p className="text-xs text-muted-foreground">Est. Tolls</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold">${totalFuel.toFixed(0)}</p>
+                    <p className="text-xs text-muted-foreground">Est. Fuel</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold">{routeAnalysis.recommended_drivers || '—'}</p>
+                    <p className="text-xs text-muted-foreground">Drivers Needed</p>
+                  </div>
+                </div>
+                {routeAnalysis.overall_dot_assessment && (
+                  <div className="mt-3 p-2 rounded bg-muted/50 text-xs">
+                    <span className="font-medium"><Shield className="h-3 w-3 inline mr-1" />DOT Assessment:</span> {routeAnalysis.overall_dot_assessment}
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* DOT Compliance Summary Card */}
+      {stops.length > 1 && !routeAnalysis && (
         <Card className={violationCount > 0 ? 'border-destructive/50 bg-destructive/5' : 'border-primary/30 bg-primary/5'}>
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
@@ -290,7 +427,7 @@ export const TourStopLogisticsEditor: React.FC<{
                 </div>
                 {violationCount > 0 && (
                   <div className="mt-3 p-2 rounded bg-destructive/10 text-xs text-destructive">
-                    {violationCount} leg(s) exceed the DOT 10-hour driving limit. 
+                    {violationCount} leg(s) exceed the DOT 10-hour driving limit.
                     Consider splitting into multiple driving days or adding overnight stops.
                   </div>
                 )}
@@ -309,6 +446,7 @@ export const TourStopLogisticsEditor: React.FC<{
             const compliance = dotCompliance[index];
             const aiData = aiResults[stop.id] || stop.lunch_stop_suggestion;
             const hasChanges = !!editData[stop.id];
+            const segAnalysis = stop.route_analysis || routeAnalysis?.segments?.[index - 1];
 
             return (
               <SortableStopCard
@@ -324,9 +462,9 @@ export const TourStopLogisticsEditor: React.FC<{
                 reordering={reordering}
                 saving={saving}
                 loadingAI={loadingAI}
+                segAnalysis={segAnalysis}
                 onToggleExpand={() => setExpandedStop(isExpanded ? null : stop.id)}
                 onUpdateField={updateFieldWithAutoSave}
-                
                 onSaveStop={saveStop}
                 onFetchLunch={() => fetchLunchSuggestions(index)}
               />
@@ -351,11 +489,12 @@ const SortableStopCard: React.FC<{
   reordering: boolean;
   saving: string | null;
   loadingAI: string | null;
+  segAnalysis: any;
   onToggleExpand: () => void;
   onUpdateField: (stopId: string, field: string, value: any) => void;
   onSaveStop: (stopId: string) => void;
   onFetchLunch: () => void;
-}> = ({ stop, index, isExpanded, data, compliance, aiData, hasChanges, stops, reordering, saving, loadingAI, onToggleExpand, onUpdateField, onSaveStop, onFetchLunch }) => {
+}> = ({ stop, index, isExpanded, data, compliance, aiData, hasChanges, stops, reordering, saving, loadingAI, segAnalysis, onToggleExpand, onUpdateField, onSaveStop, onFetchLunch }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -389,7 +528,14 @@ const SortableStopCard: React.FC<{
                 <Badge variant="secondary" className="text-[10px]">Returning</Badge>
               )}
             </div>
-            {stop.arrival_date && (
+            {/* Inline distance/time from AI */}
+            {index > 0 && (data.estimated_drive_miles || segAnalysis?.distance_miles) && (
+              <p className="text-xs text-muted-foreground">
+                {(data.estimated_drive_miles || segAnalysis?.distance_miles)?.toFixed(0)} mi · {(data.estimated_drive_hours || segAnalysis?.drive_hours)?.toFixed(1)}h
+                {segAnalysis?.toll_estimate > 0 && ` · $${segAnalysis.toll_estimate} tolls`}
+              </p>
+            )}
+            {stop.arrival_date && !(data.estimated_drive_miles || segAnalysis?.distance_miles) && (
               <p className="text-xs text-muted-foreground">
                 {new Date(stop.arrival_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}
               </p>
@@ -407,6 +553,13 @@ const SortableStopCard: React.FC<{
             <Badge variant="secondary" className="text-[10px] gap-1 shrink-0">
               <Info className="h-3 w-3" />
               {compliance.driveHours.toFixed(1)}h
+            </Badge>
+          )}
+
+          {/* Route analysis indicator */}
+          {segAnalysis && !compliance.exceedsLimit && (
+            <Badge variant="outline" className="text-[10px] px-1 shrink-0 gap-0.5 text-primary border-primary/30">
+              <Route className="h-2.5 w-2.5" /> ✓
             </Badge>
           )}
 
@@ -454,8 +607,92 @@ const SortableStopCard: React.FC<{
                 </div>
               </div>
 
-              {/* DOT warnings inline */}
-              {compliance.warnings.length > 0 && (
+              {/* AI Route Analysis Details */}
+              {segAnalysis && (
+                <div className="space-y-2 mt-2">
+                  {/* Suggested Route */}
+                  {segAnalysis.suggested_route && (
+                    <div className="flex items-start gap-2 p-2 rounded bg-background border border-border/50">
+                      <Navigation className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-medium">Suggested Route</p>
+                        <p className="text-xs text-muted-foreground">{segAnalysis.suggested_route}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tolls & Fuel */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {segAnalysis.toll_estimate !== undefined && (
+                      <div className="flex items-center gap-2 p-2 rounded bg-background border border-border/50">
+                        <DollarSign className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium">${segAnalysis.toll_estimate} Tolls</p>
+                          {segAnalysis.toll_details && (
+                            <p className="text-[10px] text-muted-foreground">{segAnalysis.toll_details}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {segAnalysis.fuel_estimate !== undefined && (
+                      <div className="flex items-center gap-2 p-2 rounded bg-background border border-border/50">
+                        <Fuel className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium">${segAnalysis.fuel_estimate} Fuel</p>
+                          <p className="text-[10px] text-muted-foreground">~6 MPG charter bus</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Parking Options */}
+                  {segAnalysis.parking_options && segAnalysis.parking_options.length > 0 && (
+                    <div className="p-2 rounded bg-background border border-border/50">
+                      <p className="text-xs font-medium flex items-center gap-1 mb-1">
+                        <ParkingCircle className="h-3.5 w-3.5 text-blue-500" /> Charter Bus Parking
+                      </p>
+                      <div className="space-y-1">
+                        {segAnalysis.parking_options.map((p: any, pi: number) => (
+                          <div key={pi} className="text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground">{p.name}</span>
+                            <span className="text-[10px]"> ({p.type})</span>
+                            {p.notes && <span> — {p.notes}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* DOT Warnings from AI */}
+                  {segAnalysis.dot_warnings && segAnalysis.dot_warnings.length > 0 && (
+                    <div className="space-y-1">
+                      {segAnalysis.dot_warnings.map((w: string, wi: number) => (
+                        <div key={wi} className={`text-xs p-2 rounded flex items-start gap-1 ${
+                          !segAnalysis.dot_compliant ? 'bg-destructive/10 text-destructive' : 'bg-accent/50 text-accent-foreground'
+                        }`}>
+                          <Shield className="h-3 w-3 shrink-0 mt-0.5" />
+                          {w}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Route Warnings */}
+                  {segAnalysis.route_warnings && segAnalysis.route_warnings.length > 0 && (
+                    <div className="space-y-1">
+                      {segAnalysis.route_warnings.map((w: string, wi: number) => (
+                        <div key={wi} className="text-xs p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-start gap-1">
+                          <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
+                          {w}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Fallback DOT warnings (when no AI analysis) */}
+              {!segAnalysis && compliance.warnings.length > 0 && (
                 <div className="space-y-1 mt-2">
                   {compliance.warnings.map((w: string, i: number) => (
                     <div

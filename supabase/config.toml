@@ -435,3 +435,6 @@ verify_jwt = false
 
 [functions.get-google-maps-config]
 verify_jwt = false
+
+[functions.analyze-route-segment]
+verify_jwt = false
