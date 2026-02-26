@@ -44,13 +44,13 @@ const navItems = [{
   label: 'Overview',
   icon: Home
 }, {
+  value: 'notes',
+  label: 'Notes',
+  icon: MessageSquare
+}, {
   value: 'logistics',
   label: 'Logistics',
   icon: Clock
-}, {
-  value: 'booking-requests',
-  label: 'Requests',
-  icon: Mail
 }, {
   value: 'contracts',
   label: 'Contracts',
@@ -104,13 +104,9 @@ const navItems = [{
   label: 'Budget',
   icon: DollarSign
 }, {
-  value: 'milestones',
-  label: 'Milestones',
-  icon: CheckCircle2
-}, {
-  value: 'notes',
-  label: 'Notes',
-  icon: MessageSquare
+  value: 'booking-requests',
+  label: 'Requests',
+  icon: Mail
 }];
 const contentConfig: Record<string, {
   title: string;
@@ -292,8 +288,7 @@ export const TourManagerDashboard = ({
         return <WardrobeMistressHub />;
       case 'budget':
         return <TourBudgetManager />;
-      case 'milestones':
-        return <TourMilestones />;
+      case 'notes':
       case 'notes':
         return <TourNotesSection />;
       default:
