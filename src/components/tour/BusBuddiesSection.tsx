@@ -230,8 +230,8 @@ const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign,
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <span className="text-[8px] text-foreground font-medium truncate max-w-full px-0.5 leading-tight">
-              {seat.profile?.full_name?.split(' ')[0] || '?'}
+            <span className="text-[7px] text-foreground font-medium truncate max-w-full px-0.5 leading-tight">
+              {seat.profile?.full_name || '?'}
             </span>
           </button>
         </PopoverTrigger>
