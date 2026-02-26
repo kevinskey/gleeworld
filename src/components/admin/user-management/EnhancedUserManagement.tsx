@@ -494,17 +494,17 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                               </div>
                             </div>
                             <div>
-                              <div className="text-sm font-medium" style={{ color: '#1a1a2e' }}>
+                              <div className="text-sm font-medium text-foreground" style={{ color: 'hsl(var(--foreground))' }}>
                                 {user.full_name || 'No name'}
                               </div>
-                              <div className="text-xs text-muted-foreground">
+                              <div className="text-xs" style={{ color: 'hsl(var(--foreground) / 0.7)' }}>
                                 ID: {user.id?.slice(0, 8)}...
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap border-r border-primary/5">
-                          <div className="text-sm font-mono" style={{ color: '#1a1a2e' }}>{user.email}</div>
+                          <div className="text-sm font-mono text-foreground" style={{ color: 'hsl(var(--foreground))' }}>{user.email}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap border-r border-primary/5">
                           <div className="flex items-center gap-2">
