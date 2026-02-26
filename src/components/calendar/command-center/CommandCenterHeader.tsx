@@ -34,34 +34,34 @@ export const CommandCenterHeader = ({
 }: CommandCenterHeaderProps) => {
   return (
     <div className="bg-[#003666] text-white px-3 md:px-6 py-3 flex-shrink-0">
-      {/* Mobile layout: stacked rows */}
+      {/* Mobile / Tablet layout */}
       {isMobile ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           {/* Row 1: Month nav + Today + Add Event */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <button 
                 onClick={() => onNavigateMonth('prev')} 
-                className="h-8 w-8 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                className="h-10 w-10 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-6 w-6" />
               </button>
-              <div className="min-w-[130px] text-center">
-                <h1 className="text-lg font-bold tracking-tight uppercase">
+              <div className="min-w-[140px] text-center">
+                <h1 className="text-xl font-bold tracking-tight uppercase">
                   {format(currentDate, 'MMM yyyy')}
                 </h1>
               </div>
               <button 
                 onClick={() => onNavigateMonth('next')} 
-                className="h-8 w-8 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                className="h-10 w-10 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-6 w-6" />
               </button>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <button 
                 onClick={onToday}
-                className="h-7 px-3 rounded-lg text-xs font-semibold bg-[#B8860B] text-white hover:bg-[#9A7209] transition-all shadow-sm"
+                className="h-9 px-4 rounded-lg text-sm font-semibold bg-[#B8860B] text-white hover:bg-[#9A7209] transition-all shadow-sm"
               >
                 Today
               </button>
@@ -69,9 +69,9 @@ export const CommandCenterHeader = ({
                 <Button
                   onClick={onAddEvent}
                   size="sm"
-                  className="h-7 w-7 p-0 bg-[#B8860B] hover:bg-[#9A7209] text-white font-semibold shadow-sm"
+                  className="h-9 w-9 p-0 bg-[#B8860B] hover:bg-[#9A7209] text-white font-semibold shadow-sm"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-5 w-5" />
                 </Button>
               )}
             </div>
@@ -83,34 +83,36 @@ export const CommandCenterHeader = ({
               <button
                 onClick={() => onViewModeChange('month')}
                 className={cn(
-                  "flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
                   viewMode === 'month' 
                     ? "bg-white text-[#003366]" 
                     : "text-white/80 hover:text-white hover:bg-white/10"
                 )}
               >
-                <LayoutGrid className="h-3.5 w-3.5" />
+                <LayoutGrid className="h-4 w-4" />
+                <span>Month</span>
               </button>
               <button
                 onClick={() => onViewModeChange('agenda')}
                 className={cn(
-                  "flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
                   viewMode === 'agenda' 
                     ? "bg-white text-[#003366]" 
                     : "text-white/80 hover:text-white hover:bg-white/10"
                 )}
               >
-                <List className="h-3.5 w-3.5" />
+                <List className="h-4 w-4" />
+                <span>Agenda</span>
               </button>
             </div>
             <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-8 h-7 w-full bg-white/10 border-white/20 text-white text-base placeholder:text-white/50 focus:bg-white focus:text-slate-900 focus:placeholder:text-slate-400 transition-all text-xs"
+                className="pl-9 h-9 w-full bg-white/10 border-white/20 text-white text-base placeholder:text-white/50 focus:bg-white focus:text-slate-900 focus:placeholder:text-slate-400 transition-all"
               />
             </div>
           </div>
