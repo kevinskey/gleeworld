@@ -6,9 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { MapPin, Route, Plus, Zap, Clock, DollarSign, Navigation, AlertCircle, CheckCircle, Trash2, Loader2, Pencil } from 'lucide-react';
+import { MapPin, Route, Plus, Zap, Clock, DollarSign, Navigation, AlertCircle, CheckCircle, Trash2, Loader2, Pencil, GripVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TourStopLogisticsEditor } from './TourStopLogisticsEditor';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 interface TourStop {
   id: string;
   city: string;
@@ -37,6 +40,38 @@ interface AIRoutePlannerProps {
     role?: string;
   };
 }
+// Sortable stop item for drag-and-drop reordering
+const SortableStopItem: React.FC<{
+  stop: TourStop;
+  index: number;
+  onRemove: (id: string) => void;
+}> = ({ stop, index, onRemove }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center justify-between p-2 border rounded bg-background">
+      <div className="flex items-center gap-3">
+        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing touch-none p-1">
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </button>
+        <Badge variant="outline">{index + 1}</Badge>
+        <div>
+          <p className="font-medium text-sm">{stop.city} {stop.venue !== 'TBD' && `- ${stop.venue}`}</p>
+          {stop.date && <p className="text-xs text-muted-foreground">{new Date(stop.date).toLocaleDateString()}</p>}
+        </div>
+      </div>
+      <Button variant="ghost" size="sm" onClick={() => onRemove(stop.id)}>
+        Remove
+      </Button>
+    </div>
+  );
+};
+
 export const AIRoutePlanner = ({
   user
 }: AIRoutePlannerProps) => {
@@ -60,6 +95,22 @@ export const AIRoutePlanner = ({
     toast
   } = useToast();
   const queryClient = useQueryClient();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleStopDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setNewRoute(prev => {
+        const oldIndex = prev.stops.findIndex(s => s.id === active.id);
+        const newIndex = prev.stops.findIndex(s => s.id === over.id);
+        return { ...prev, stops: arrayMove(prev.stops, oldIndex, newIndex) };
+      });
+    }
+  };
 
   // Fetch tours with their cities from database
   const {
@@ -559,21 +610,16 @@ export const AIRoutePlanner = ({
               </div>
 
               {newRoute.stops.length > 0 && <div className="space-y-2">
-                  <h4 className="font-medium">Tour Stops ({newRoute.stops.length})</h4>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {newRoute.stops.map((stop, index) => <div key={stop.id} className="flex items-center justify-between p-2 border rounded">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline">{index + 1}</Badge>
-                          <div>
-                            <p className="font-medium text-sm">{stop.city} {stop.venue !== 'TBD' && `- ${stop.venue}`}</p>
-                            {stop.date && <p className="text-xs text-muted-foreground">{new Date(stop.date).toLocaleDateString()}</p>}
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => removeStop(stop.id)}>
-                          Remove
-                        </Button>
-                      </div>)}
-                  </div>
+                  <h4 className="font-medium">Tour Stops ({newRoute.stops.length}) — drag to reorder</h4>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleStopDragEnd}>
+                    <SortableContext items={newRoute.stops.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {newRoute.stops.map((stop, index) => (
+                          <SortableStopItem key={stop.id} stop={stop} index={index} onRemove={removeStop} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 </div>}
 
               <div className="flex gap-2 justify-end">
@@ -673,21 +719,16 @@ export const AIRoutePlanner = ({
               </div>
 
               {newRoute.stops.length > 0 && <div className="space-y-2">
-                  <h4 className="font-medium">Tour Stops ({newRoute.stops.length})</h4>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {newRoute.stops.map((stop, index) => <div key={stop.id} className="flex items-center justify-between p-2 border rounded">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline">{index + 1}</Badge>
-                          <div>
-                            <p className="font-medium text-sm">{stop.city} {stop.venue !== 'TBD' && `- ${stop.venue}`}</p>
-                            {stop.date && <p className="text-xs text-muted-foreground">{new Date(stop.date).toLocaleDateString()}</p>}
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => removeStop(stop.id)}>
-                          Remove
-                        </Button>
-                      </div>)}
-                  </div>
+                  <h4 className="font-medium">Tour Stops ({newRoute.stops.length}) — drag to reorder</h4>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleStopDragEnd}>
+                    <SortableContext items={newRoute.stops.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {newRoute.stops.map((stop, index) => (
+                          <SortableStopItem key={stop.id} stop={stop} index={index} onRemove={removeStop} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 </div>}
 
               <div className="flex gap-2 justify-end">
