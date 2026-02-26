@@ -388,19 +388,19 @@ export const UnifiedUserManagement = () => {
             <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow className="bg-slate-100 hover:bg-slate-100 border-slate-200">
-                  <TableHead className="text-[11px] font-semibold text-slate-700 h-8 cursor-pointer select-none w-[40%] uppercase tracking-wide" onClick={() => toggleSort('name')}>
+                  <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 cursor-pointer select-none w-[40%] uppercase tracking-wide" onClick={() => toggleSort('name')}>
                     <span className="inline-flex items-center">User<SortIcon field="name" /></span>
                   </TableHead>
-                  <TableHead className="text-[11px] font-semibold text-slate-700 h-8 cursor-pointer select-none w-[20%] uppercase tracking-wide" onClick={() => toggleSort('role')}>
+                  <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 cursor-pointer select-none w-[20%] uppercase tracking-wide" onClick={() => toggleSort('role')}>
                     <span className="inline-flex items-center">Role<SortIcon field="role" /></span>
                   </TableHead>
-                  <TableHead className="text-[11px] font-semibold text-slate-700 h-8 cursor-pointer select-none w-[15%] uppercase tracking-wide" onClick={() => toggleSort('status')}>
+                  <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 cursor-pointer select-none w-[15%] uppercase tracking-wide" onClick={() => toggleSort('status')}>
                     <span className="inline-flex items-center">Status<SortIcon field="status" /></span>
                   </TableHead>
-                  <TableHead className="text-[11px] font-semibold text-slate-700 h-8 cursor-pointer select-none w-[15%] uppercase tracking-wide" onClick={() => toggleSort('joined')}>
+                  <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 cursor-pointer select-none w-[15%] uppercase tracking-wide" onClick={() => toggleSort('joined')}>
                     <span className="inline-flex items-center">Joined<SortIcon field="joined" /></span>
                   </TableHead>
-                  <TableHead className="text-[11px] font-semibold text-slate-700 h-8 text-right w-[10%] uppercase tracking-wide">Actions</TableHead>
+                  <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 text-right w-[10%] uppercase tracking-wide">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
