@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
   Bus, Search, MapPin, Star, Phone, Mail, User, FileText,
-  Loader2, Building2, DollarSign, ExternalLink, StickyNote
+  Loader2, Building2, DollarSign, ExternalLink, StickyNote,
+  Copy, Send, Calendar, Route, Clock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 interface BusCompanyResult {
   id: string;
@@ -57,6 +59,60 @@ export const BusInfoSection = () => {
       return data as SavedBusCompany[];
     },
   });
+
+  // Fetch tour cities for itinerary
+  const { data: tourData } = useQuery({
+    queryKey: ['tour-itinerary-for-bus'],
+    queryFn: async () => {
+      const { data: tours, error: tErr } = await supabase
+        .from('gw_tours')
+        .select('id, name, start_date, end_date, status')
+        .eq('status', 'active')
+        .order('start_date', { ascending: true })
+        .limit(1);
+      if (tErr) throw tErr;
+      if (!tours || tours.length === 0) return null;
+      const tour = tours[0];
+      const { data: cities, error: cErr } = await supabase
+        .from('gw_tour_cities')
+        .select('city_name, state_code, arrival_date, arrival_time, departure_date, departure_time, city_order, city_notes')
+        .eq('tour_id', tour.id)
+        .order('city_order', { ascending: true });
+      if (cErr) throw cErr;
+      return { tour, cities: cities || [] };
+    },
+  });
+
+  const itineraryText = useMemo(() => {
+    if (!tourData) return '';
+    const { tour, cities } = tourData;
+    const lines: string[] = [
+      `TOUR ITINERARY — ${tour.name}`,
+      `Dates: ${tour.start_date ? format(new Date(tour.start_date), 'MMM d, yyyy') : 'TBD'} – ${tour.end_date ? format(new Date(tour.end_date), 'MMM d, yyyy') : 'TBD'}`,
+      `Total Stops: ${cities.length}`,
+      '',
+      '--- ROUTE ---',
+    ];
+    cities.forEach((city, i) => {
+      lines.push(`\nStop ${i + 1}: ${city.city_name}${city.state_code ? `, ${city.state_code}` : ''}`);
+      if (city.arrival_date) lines.push(`  Arrive: ${format(new Date(city.arrival_date), 'MMM d, yyyy')}${city.arrival_time ? ` at ${city.arrival_time}` : ''}`);
+      if (city.departure_date) lines.push(`  Depart: ${format(new Date(city.departure_date), 'MMM d, yyyy')}${city.departure_time ? ` at ${city.departure_time}` : ''}`);
+      if (city.city_notes) lines.push(`  Notes: ${city.city_notes}`);
+    });
+    lines.push('\n---\nPlease provide a quote for charter bus service for the above itinerary.\nThank you.');
+    return lines.join('\n');
+  }, [tourData]);
+
+  const copyItinerary = () => {
+    navigator.clipboard.writeText(itineraryText);
+    toast.success('Itinerary copied to clipboard');
+  };
+
+  const emailItinerary = () => {
+    const subject = encodeURIComponent(`Charter Bus Quote Request — ${tourData?.tour.name || 'Tour'}`);
+    const body = encodeURIComponent(itineraryText);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+  };
 
   const searchBusCompanies = async () => {
     if (!searchQuery && !location) {
@@ -196,7 +252,87 @@ export const BusInfoSection = () => {
 
       <Separator />
 
-      {/* Search Section */}
+      {/* Tour Itinerary for Bus Companies */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <Route className="h-5 w-5 text-primary" />
+          Tour Itinerary for Bus Companies
+        </h2>
+
+        {!tourData ? (
+          <Card className="p-6 text-center text-muted-foreground">
+            <Route className="h-10 w-10 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">No active tour found. Create a tour to generate an itinerary.</p>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  {tourData.tour.name}
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={copyItinerary}>
+                    <Copy className="h-4 w-4 mr-1.5" />
+                    Copy
+                  </Button>
+                  <Button variant="default" size="sm" onClick={emailItinerary}>
+                    <Send className="h-4 w-4 mr-1.5" />
+                    Email to Company
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {tourData.tour.start_date ? format(new Date(tourData.tour.start_date), 'MMM d, yyyy') : 'TBD'} – {tourData.tour.end_date ? format(new Date(tourData.tour.end_date), 'MMM d, yyyy') : 'TBD'} · {tourData.cities.length} stops
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {tourData.cities.map((city, i) => (
+                <div key={i} className="flex items-start gap-3 p-2.5 rounded-md bg-muted/40 border border-border/50">
+                  <div className="flex flex-col items-center">
+                    <Badge variant="secondary" className="text-[10px] w-6 h-6 flex items-center justify-center rounded-full p-0">
+                      {i + 1}
+                    </Badge>
+                    {i < tourData.cities.length - 1 && <div className="w-px h-4 bg-border mt-1" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">
+                      {city.city_name}{city.state_code ? `, ${city.state_code}` : ''}
+                    </p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+                      {city.arrival_date && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Arrive: {format(new Date(city.arrival_date), 'MMM d')}{city.arrival_time ? ` ${city.arrival_time}` : ''}
+                        </span>
+                      )}
+                      {city.departure_date && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Depart: {format(new Date(city.departure_date), 'MMM d')}{city.departure_time ? ` ${city.departure_time}` : ''}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Copyable raw text */}
+              <details className="pt-2">
+                <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                  View plain text version
+                </summary>
+                <pre className="mt-2 p-3 bg-muted rounded-md text-xs whitespace-pre-wrap font-mono text-foreground border border-border overflow-auto max-h-64">
+                  {itineraryText}
+                </pre>
+              </details>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      <Separator />
       <div className="space-y-4">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80">
           <CardHeader>
