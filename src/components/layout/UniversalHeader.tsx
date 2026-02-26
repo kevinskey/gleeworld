@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, Camera, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, Camera, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -294,6 +294,13 @@ export const UniversalHeader = ({
             {user && <EnhancedTooltip content="View Calendar">
                   <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                     <CalendarDays className={HEADER_ICON_SIZES.icon} />
+                  </Button>
+                </EnhancedTooltip>}
+
+            {/* POS Quick Access - Admin only */}
+            {user && isAdmin && <EnhancedTooltip content="Point of Sale">
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/pos')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                    <ShoppingBag className={HEADER_ICON_SIZES.icon} />
                   </Button>
                 </EnhancedTooltip>}
 
