@@ -468,25 +468,6 @@ export const GleeWorldLanding = () => {
         </section>
       )}
 
-      {/* Featured Products Section */}
-      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 w-full">
-        <div className="w-full">
-          <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
-            {/* The Glee Store Title */}
-            <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
-              <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-secondary animate-pulse" />
-                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-dancing font-bold text-foreground mb-2">
-                  The Glee Store
-                </h2>
-                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-primary animate-pulse" />
-              </div>
-            </div>
-            
-            <FeaturedProducts limit={8} showTitle={false} />
-          </Card>
-        </div>
-      </section>
 
       {/* Albums Section */}
       {albums.length > 0 && (
