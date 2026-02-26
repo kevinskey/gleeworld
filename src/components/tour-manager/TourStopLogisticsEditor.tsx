@@ -134,31 +134,56 @@ export const TourStopLogisticsEditor: React.FC<{
     updateField(stopId, 'meals_needed', updated);
   };
 
-  const saveStop = async (stopId: string) => {
-    const data = editData[stopId];
+  const saveStop = async (stopId: string, overrideData?: Partial<TourStopLogistics>) => {
+    const data = overrideData || editData[stopId];
     if (!data) return;
 
     setSaving(stopId);
     try {
+      const updatePayload: Record<string, any> = {};
+      if (data.departure_time !== undefined) updatePayload.departure_time = data.departure_time;
+      if (data.arrival_time !== undefined) updatePayload.arrival_time = data.arrival_time;
+      if (data.meals_needed !== undefined) updatePayload.meals_needed = data.meals_needed;
+      if (data.meal_notes !== undefined) updatePayload.meal_notes = data.meal_notes;
+      if (data.estimated_drive_hours !== undefined) updatePayload.estimated_drive_hours = data.estimated_drive_hours;
+      if (data.estimated_drive_miles !== undefined) updatePayload.estimated_drive_miles = data.estimated_drive_miles;
+
+      if (Object.keys(updatePayload).length === 0) return;
+
       const { error } = await supabase
         .from('gw_tour_cities')
-        .update({
-          departure_time: data.departure_time,
-          arrival_time: data.arrival_time,
-          meals_needed: data.meals_needed,
-          meal_notes: data.meal_notes,
-          estimated_drive_hours: data.estimated_drive_hours,
-          estimated_drive_miles: data.estimated_drive_miles,
-        })
+        .update(updatePayload)
         .eq('id', stopId);
 
       if (error) throw error;
       toast({ title: 'Logistics saved' });
+      // Clear the saved fields from editData
+      setEditData(prev => {
+        const { [stopId]: _, ...rest } = prev;
+        return rest;
+      });
       onUpdate();
     } catch (err: any) {
       toast({ title: 'Error saving', description: err.message, variant: 'destructive' });
     } finally {
       setSaving(null);
+    }
+  };
+
+  // Auto-save time fields when they change
+  const autoSaveTimeoutRef = React.useRef<Record<string, NodeJS.Timeout>>({});
+
+  const updateFieldWithAutoSave = (stopId: string, field: string, value: any) => {
+    updateField(stopId, field, value);
+
+    // Auto-save for time fields
+    if (field === 'departure_time' || field === 'arrival_time') {
+      if (autoSaveTimeoutRef.current[stopId]) {
+        clearTimeout(autoSaveTimeoutRef.current[stopId]);
+      }
+      autoSaveTimeoutRef.current[stopId] = setTimeout(() => {
+        saveStop(stopId, { [field]: value } as Partial<TourStopLogistics>);
+      }, 600);
     }
   };
 
@@ -309,7 +334,7 @@ export const TourStopLogisticsEditor: React.FC<{
                 saving={saving}
                 loadingAI={loadingAI}
                 onToggleExpand={() => setExpandedStop(isExpanded ? null : stop.id)}
-                onUpdateField={updateField}
+                onUpdateField={updateFieldWithAutoSave}
                 onToggleMeal={toggleMeal}
                 onSaveStop={saveStop}
                 onFetchLunch={() => fetchLunchSuggestions(index)}
