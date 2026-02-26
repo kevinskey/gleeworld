@@ -4,7 +4,7 @@ import CourseSelection from "@/pages/CourseSelection";
 import Profile from "@/pages/Profile";
 import ContractSigning from "@/pages/ContractSigning";
 import AdminSigning from "@/pages/AdminSigning";
-import MusicLibrary from "@/pages/MusicLibrary";
+import MusicLibrary from "@/pages/member/MusicLibraryPage";
 import Notifications from "@/pages/Notifications";
 import SMSTest from "@/pages/SMSTest";
 import NotificationPreferences from "@/components/notifications/NotificationPreferences";
