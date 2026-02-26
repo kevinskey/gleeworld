@@ -6,7 +6,7 @@ export const UniversalFooter = () => {
   const navigate = useNavigate();
 
   return (
-    <footer className="relative z-20 bg-[hsl(208,100%,20%)] border-t border-white/10 mt-auto">
+    <footer className="relative z-20 bg-[hsl(208,100%,20%)] border-t border-white/10 mt-auto pb-14 sm:pb-0">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
           {/* Company Info */}
