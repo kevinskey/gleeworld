@@ -67,7 +67,7 @@ export const BusInfoSection = () => {
       const { data: tours, error: tErr } = await supabase
         .from('gw_tours')
         .select('id, name, start_date, end_date, status')
-        .eq('status', 'active')
+        .in('status', ['active', 'planning', 'draft'])
         .order('start_date', { ascending: true })
         .limit(1);
       if (tErr) throw tErr;
