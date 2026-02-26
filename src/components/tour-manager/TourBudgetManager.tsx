@@ -9,10 +9,13 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DollarSign, Plus, Edit2, Trash2, Bus, Hotel, Utensils, Music, Users, FileText, TrendingUp, TrendingDown, Calculator, CheckCircle, Clock, AlertCircle, Save, PieChart } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DollarSign, Plus, Edit2, Trash2, Bus, Hotel, Utensils, Music, Users, FileText, TrendingUp, Calculator, CheckCircle, Clock, AlertCircle, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 interface BudgetCategory {
   id: string;
   name: string;
@@ -20,6 +23,7 @@ interface BudgetCategory {
   color: string;
   items: BudgetLineItem[];
 }
+
 interface BudgetLineItem {
   id: string;
   category: string;
@@ -31,281 +35,144 @@ interface BudgetLineItem {
   notes?: string;
   status: 'planned' | 'confirmed' | 'paid';
 }
+
 interface TourBudgetSummary {
   total_estimated: number;
   total_actual: number;
   total_revenue: number;
   net_balance: number;
 }
-const BUDGET_CATEGORIES: BudgetCategory[] = [{
-  id: 'transportation',
-  name: 'Transportation',
-  icon: Bus,
-  color: 'bg-blue-500',
-  items: []
-}, {
-  id: 'lodging',
-  name: 'Lodging',
-  icon: Hotel,
-  color: 'bg-purple-500',
-  items: []
-}, {
-  id: 'meals',
-  name: 'Meals & Food',
-  icon: Utensils,
-  color: 'bg-orange-500',
-  items: []
-}, {
-  id: 'stipends',
-  name: 'Singer Stipends',
-  icon: Users,
-  color: 'bg-green-500',
-  items: []
-}, {
-  id: 'performance',
-  name: 'Performance Costs',
-  icon: Music,
-  color: 'bg-pink-500',
-  items: []
-}, {
-  id: 'misc',
-  name: 'Miscellaneous',
-  icon: FileText,
-  color: 'bg-gray-500',
-  items: []
-}];
-const DEFAULT_LINE_ITEMS: Record<string, Array<{
-  description: string;
-  unit_cost: number;
-  quantity: number;
-}>> = {
-  transportation: [{
-    description: 'Charter Bus Rental',
-    unit_cost: 2500,
-    quantity: 1
-  }, {
-    description: 'Bus Driver Gratuity',
-    unit_cost: 100,
-    quantity: 1
-  }, {
-    description: 'Fuel Surcharge',
-    unit_cost: 300,
-    quantity: 1
-  }],
-  lodging: [{
-    description: 'Hotel Rooms (Double Occupancy)',
-    unit_cost: 129,
-    quantity: 14
-  }, {
-    description: 'Director Suite',
-    unit_cost: 179,
-    quantity: 1
-  }, {
-    description: 'Accompanist Room',
-    unit_cost: 129,
-    quantity: 1
-  }],
-  meals: [{
-    description: 'Bus Snacks & Drinks',
-    unit_cost: 150,
-    quantity: 1
-  }, {
-    description: 'Group Dinner',
-    unit_cost: 25,
-    quantity: 44
-  }, {
-    description: 'Breakfast (if not included)',
-    unit_cost: 15,
-    quantity: 44
-  }],
-  stipends: [{
-    description: 'Singer Per Diem',
-    unit_cost: 50,
-    quantity: 44
-  }],
-  performance: [{
-    description: 'Performance Attire Cleaning',
-    unit_cost: 200,
-    quantity: 1
-  }, {
-    description: 'Music Supplies',
-    unit_cost: 50,
-    quantity: 1
-  }],
-  misc: [{
-    description: 'Emergency Fund',
-    unit_cost: 500,
-    quantity: 1
-  }, {
-    description: 'Parking Fees',
-    unit_cost: 50,
-    quantity: 1
-  }]
-};
+
+const BUDGET_CATEGORIES: BudgetCategory[] = [
+  { id: 'transportation', name: 'Transportation', icon: Bus, color: 'bg-blue-500', items: [] },
+  { id: 'lodging', name: 'Lodging', icon: Hotel, color: 'bg-purple-500', items: [] },
+  { id: 'meals', name: 'Meals & Food', icon: Utensils, color: 'bg-orange-500', items: [] },
+  { id: 'stipends', name: 'Singer Stipends', icon: Users, color: 'bg-green-500', items: [] },
+  { id: 'performance', name: 'Performance Costs', icon: Music, color: 'bg-pink-500', items: [] },
+  { id: 'misc', name: 'Miscellaneous', icon: FileText, color: 'bg-muted-foreground', items: [] },
+];
+
 export const TourBudgetManager = () => {
   const [budgetItems, setBudgetItems] = useState<BudgetLineItem[]>([]);
-  const [revenues, setRevenues] = useState<Array<{
-    id: string;
-    source: string;
-    amount: number;
-    status: string;
-  }>>([]);
+  const [revenues, setRevenues] = useState<Array<{ id: string; source: string; amount: number; status: string }>>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('expenses');
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [isAddingRevenue, setIsAddingRevenue] = useState(false);
   const [editingItem, setEditingItem] = useState<BudgetLineItem | null>(null);
-  const {
-    toast
-  } = useToast();
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
+
   const [newItem, setNewItem] = useState({
     category: 'transportation',
     description: '',
     unit_cost: '',
     quantity: '1',
     notes: '',
-    status: 'planned' as const
-  });
-  const [newRevenue, setNewRevenue] = useState({
-    source: '',
-    amount: '',
-    status: 'expected'
+    status: 'planned' as const,
   });
 
-  // Load from Supabase
+  const [newRevenue, setNewRevenue] = useState({ source: '', amount: '', status: 'expected' });
+
   const fetchBudgetData = async () => {
     setLoading(true);
     try {
-      // Fetch budget items
-      const {
-        data: items,
-        error: itemsError
-      } = await supabase.from('tour_budget_items').select('*').order('created_at', {
-        ascending: true
-      });
+      const { data: items, error: itemsError } = await supabase
+        .from('tour_budget_items')
+        .select('*')
+        .order('created_at', { ascending: true });
       if (itemsError) throw itemsError;
 
-      // Fetch revenues
-      const {
-        data: revs,
-        error: revsError
-      } = await supabase.from('tour_budget_revenues').select('*').order('created_at', {
-        ascending: true
-      });
+      const { data: revs, error: revsError } = await supabase
+        .from('tour_budget_revenues')
+        .select('*')
+        .order('created_at', { ascending: true });
       if (revsError) throw revsError;
-      setBudgetItems((items || []).map(item => ({
-        id: item.id,
-        category: item.category,
-        description: item.description,
-        estimated_cost: item.unit_cost * item.quantity,
-        actual_cost: item.actual_cost || 0,
-        quantity: item.quantity,
-        unit_cost: item.unit_cost,
-        notes: item.notes || undefined,
-        status: item.status as 'planned' | 'confirmed' | 'paid'
-      })));
-      setRevenues((revs || []).map(rev => ({
-        id: rev.id,
-        source: rev.source,
-        amount: rev.amount,
-        status: rev.status
-      })));
+
+      setBudgetItems(
+        (items || []).map((item) => ({
+          id: item.id,
+          category: item.category,
+          description: item.description,
+          estimated_cost: item.unit_cost * item.quantity,
+          actual_cost: item.actual_cost || 0,
+          quantity: item.quantity,
+          unit_cost: item.unit_cost,
+          notes: item.notes || undefined,
+          status: item.status as 'planned' | 'confirmed' | 'paid',
+        }))
+      );
+      setRevenues(
+        (revs || []).map((rev) => ({
+          id: rev.id,
+          source: rev.source,
+          amount: rev.amount,
+          status: rev.status,
+        }))
+      );
     } catch (error) {
       console.error('Error fetching budget data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load budget data",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'Failed to load budget data', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchBudgetData();
-
-    // Subscribe to realtime updates
-    const itemsChannel = supabase.channel('tour-budget-items-changes').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'tour_budget_items'
-    }, () => fetchBudgetData()).subscribe();
-    const revenuesChannel = supabase.channel('tour-budget-revenues-changes').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'tour_budget_revenues'
-    }, () => fetchBudgetData()).subscribe();
+    const itemsChannel = supabase
+      .channel('tour-budget-items-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tour_budget_items' }, () => fetchBudgetData())
+      .subscribe();
+    const revenuesChannel = supabase
+      .channel('tour-budget-revenues-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tour_budget_revenues' }, () => fetchBudgetData())
+      .subscribe();
     return () => {
       supabase.removeChannel(itemsChannel);
       supabase.removeChannel(revenuesChannel);
     };
   }, []);
+
   const calculateSummary = (): TourBudgetSummary => {
     const total_estimated = budgetItems.reduce((sum, item) => sum + item.unit_cost * item.quantity, 0);
     const total_actual = budgetItems.reduce((sum, item) => sum + item.actual_cost, 0);
     const total_revenue = revenues.reduce((sum, r) => sum + r.amount, 0);
-    return {
-      total_estimated,
-      total_actual,
-      total_revenue,
-      net_balance: total_revenue - (total_actual || total_estimated)
-    };
+    return { total_estimated, total_actual, total_revenue, net_balance: total_revenue - (total_actual || total_estimated) };
   };
+
   const handleAddItem = async () => {
     if (!newItem.description || !newItem.unit_cost) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in description and cost",
-        variant: "destructive"
-      });
+      toast({ title: 'Missing fields', description: 'Please fill in description and cost', variant: 'destructive' });
       return;
     }
     try {
-      const {
-        error
-      } = await supabase.from('tour_budget_items').insert([{
+      const { error } = await supabase.from('tour_budget_items').insert([{
         category: newItem.category,
         description: newItem.description,
         unit_cost: parseFloat(newItem.unit_cost),
         quantity: parseInt(newItem.quantity) || 1,
         notes: newItem.notes || null,
-        status: newItem.status
+        status: newItem.status,
       }]);
       if (error) throw error;
-      setNewItem({
-        category: 'transportation',
-        description: '',
-        unit_cost: '',
-        quantity: '1',
-        notes: '',
-        status: 'planned'
-      });
+      setNewItem({ category: 'transportation', description: '', unit_cost: '', quantity: '1', notes: '', status: 'planned' });
       setIsAddingItem(false);
-      toast({
-        title: "Item added",
-        description: "Budget line item has been added"
-      });
+      toast({ title: 'Item added', description: 'Budget line item has been added' });
     } catch (error) {
       console.error('Error adding item:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add budget item",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'Failed to add budget item', variant: 'destructive' });
     }
   };
-  const handleUpdateItem = async (id: string, updates: Partial<BudgetLineItem>) => {
-    // Optimistically update local state immediately
-    setBudgetItems(prev => prev.map(item => 
-      item.id === id 
-        ? { 
-            ...item, 
-            ...updates,
-            estimated_cost: (updates.unit_cost ?? item.unit_cost) * (updates.quantity ?? item.quantity)
-          } 
-        : item
-    ));
 
+  const handleUpdateItem = async (id: string, updates: Partial<BudgetLineItem>) => {
+    setBudgetItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, ...updates, estimated_cost: (updates.unit_cost ?? item.unit_cost) * (updates.quantity ?? item.quantity) }
+          : item
+      )
+    );
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.status !== undefined) dbUpdates.status = updates.status;
@@ -315,150 +182,89 @@ export const TourBudgetManager = () => {
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
       if (updates.category !== undefined) dbUpdates.category = updates.category;
-      const {
-        error
-      } = await supabase.from('tour_budget_items').update(dbUpdates).eq('id', id);
+      const { error } = await supabase.from('tour_budget_items').update(dbUpdates).eq('id', id);
       if (error) throw error;
-      toast({ title: "Updated", description: "Budget item saved" });
+      toast({ title: 'Updated', description: 'Budget item saved' });
     } catch (error) {
       console.error('Error updating item:', error);
-      // Revert on error by refetching
       fetchBudgetData();
-      toast({
-        title: "Error",
-        description: "Failed to update item",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'Failed to update item', variant: 'destructive' });
     }
   };
+
   const handleDeleteItem = async (id: string) => {
     try {
-      const {
-        error
-      } = await supabase.from('tour_budget_items').delete().eq('id', id);
+      const { error } = await supabase.from('tour_budget_items').delete().eq('id', id);
       if (error) throw error;
-      toast({
-        title: "Item deleted"
-      });
+      toast({ title: 'Item deleted' });
     } catch (error) {
       console.error('Error deleting item:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete item",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'Failed to delete item', variant: 'destructive' });
     }
   };
+
   const handleAddRevenue = async () => {
     if (!newRevenue.source || !newRevenue.amount) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in source and amount",
-        variant: "destructive"
-      });
+      toast({ title: 'Missing fields', description: 'Please fill in source and amount', variant: 'destructive' });
       return;
     }
-
     const amount = parseFloat(String(newRevenue.amount).replace(/[^0-9.-]/g, ''));
     if (Number.isNaN(amount)) {
-      toast({
-        title: "Invalid amount",
-        description: "Please enter a valid number (e.g., 5000)",
-        variant: "destructive"
-      });
+      toast({ title: 'Invalid amount', description: 'Please enter a valid number', variant: 'destructive' });
       return;
     }
-
     try {
-      const {
-        error
-      } = await supabase.from('tour_budget_revenues').insert([{
-        source: newRevenue.source,
-        amount,
-        status: newRevenue.status
-      }]);
+      const { error } = await supabase.from('tour_budget_revenues').insert([{ source: newRevenue.source, amount, status: newRevenue.status }]);
       if (error) throw error;
-      setNewRevenue({
-        source: '',
-        amount: '',
-        status: 'expected'
-      });
+      setNewRevenue({ source: '', amount: '', status: 'expected' });
       setIsAddingRevenue(false);
-      toast({
-        title: "Revenue added"
-      });
+      toast({ title: 'Revenue added' });
     } catch (error) {
       console.error('Error adding revenue:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add revenue",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'Failed to add revenue', variant: 'destructive' });
     }
   };
+
   const handleDeleteRevenue = async (id: string) => {
     try {
-      const {
-        error
-      } = await supabase.from('tour_budget_revenues').delete().eq('id', id);
+      const { error } = await supabase.from('tour_budget_revenues').delete().eq('id', id);
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting revenue:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete revenue",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'Failed to delete revenue', variant: 'destructive' });
     }
   };
-  const loadDefaultItems = async (category: string) => {
-    const defaults = DEFAULT_LINE_ITEMS[category] || [];
-    const newItems = defaults.map(d => ({
-      category,
-      description: d.description,
-      unit_cost: d.unit_cost,
-      quantity: d.quantity,
-      status: 'planned' as const
-    }));
-    try {
-      const {
-        error
-      } = await supabase.from('tour_budget_items').insert(newItems);
-      if (error) throw error;
-      toast({
-        title: "Default items added",
-        description: `Added ${newItems.length} default items for ${category}`
-      });
-    } catch (error) {
-      console.error('Error loading default items:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add default items",
-        variant: "destructive"
-      });
-    }
-  };
+
   const summary = calculateSummary();
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount);
-  const getItemsByCategory = (categoryId: string) => budgetItems.filter(item => item.category === categoryId);
-  const getCategoryTotal = (categoryId: string) => {
-    return getItemsByCategory(categoryId).reduce((sum, item) => sum + item.unit_cost * item.quantity, 0);
-  };
-  const getStatusIcon = (status: string) => {
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+
+  const getItemsByCategory = (categoryId: string) => budgetItems.filter((item) => item.category === categoryId);
+  const getCategoryTotal = (categoryId: string) =>
+    getItemsByCategory(categoryId).reduce((sum, item) => sum + item.unit_cost * item.quantity, 0);
+  const getCategoryActual = (categoryId: string) =>
+    getItemsByCategory(categoryId).reduce((sum, item) => sum + item.actual_cost, 0);
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'paid':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 text-[10px]"><CheckCircle className="h-3 w-3 mr-1" />Paid</Badge>;
       case 'confirmed':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 text-[10px]"><Clock className="h-3 w-3 mr-1" />Confirmed</Badge>;
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-400" />;
+        return <Badge variant="secondary" className="text-[10px]"><AlertCircle className="h-3 w-3 mr-1" />Planned</Badge>;
     }
   };
-  return <div className="space-y-3">
-      {/* Header - compact mobile-first */}
+
+  const toggleCategory = (id: string) => {
+    setOpenCategories((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const categoriesWithItems = BUDGET_CATEGORIES.filter((cat) => getItemsByCategory(cat.id).length > 0);
+
+  return (
+    <div className="space-y-3">
+      {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-foreground">Tour Budget</h2>
@@ -473,33 +279,20 @@ export const TourBudgetManager = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Revenue Source</DialogTitle>
-              </DialogHeader>
+              <DialogHeader><DialogTitle>Add Revenue Source</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label>Revenue Source</Label>
-                  <Input value={newRevenue.source} onChange={e => setNewRevenue(prev => ({
-                  ...prev,
-                  source: e.target.value
-                }))} placeholder="e.g., Syracuse Jazz Festival Stipend" />
+                  <Input value={newRevenue.source} onChange={(e) => setNewRevenue((p) => ({ ...p, source: e.target.value }))} placeholder="e.g., Syracuse Jazz Festival Stipend" />
                 </div>
                 <div className="space-y-2">
                   <Label>Amount ($)</Label>
-                  <Input type="number" value={newRevenue.amount} onChange={e => setNewRevenue(prev => ({
-                  ...prev,
-                  amount: e.target.value
-                }))} placeholder="5000" />
+                  <Input type="number" value={newRevenue.amount} onChange={(e) => setNewRevenue((p) => ({ ...p, amount: e.target.value }))} placeholder="5000" />
                 </div>
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  <Select value={newRevenue.status} onValueChange={v => setNewRevenue(prev => ({
-                  ...prev,
-                  status: v
-                }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={newRevenue.status} onValueChange={(v) => setNewRevenue((p) => ({ ...p, status: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="expected">Expected</SelectItem>
                       <SelectItem value="confirmed">Confirmed</SelectItem>
@@ -511,62 +304,42 @@ export const TourBudgetManager = () => {
               </div>
             </DialogContent>
           </Dialog>
-          
+
           <Dialog open={isAddingItem} onOpenChange={setIsAddingItem}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1 text-xs h-8 px-2.5">
-                <Plus className="h-3.5 w-3.5" />
-                Expense
+                <Plus className="h-3.5 w-3.5" /> Expense
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Budget Item</DialogTitle>
-              </DialogHeader>
+              <DialogHeader><DialogTitle>Add Budget Item</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label>Category</Label>
-                  <Select value={newItem.category} onValueChange={v => setNewItem(prev => ({
-                  ...prev,
-                  category: v
-                }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={newItem.category} onValueChange={(v) => setNewItem((p) => ({ ...p, category: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {BUDGET_CATEGORIES.map(cat => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                      {BUDGET_CATEGORIES.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Description</Label>
-                  <Input value={newItem.description} onChange={e => setNewItem(prev => ({
-                  ...prev,
-                  description: e.target.value
-                }))} placeholder="e.g., Charter Bus Rental" />
+                  <Input value={newItem.description} onChange={(e) => setNewItem((p) => ({ ...p, description: e.target.value }))} placeholder="e.g., Charter Bus Rental" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Unit Cost ($)</Label>
-                    <Input type="number" value={newItem.unit_cost} onChange={e => setNewItem(prev => ({
-                    ...prev,
-                    unit_cost: e.target.value
-                  }))} placeholder="100" />
+                    <Input type="number" value={newItem.unit_cost} onChange={(e) => setNewItem((p) => ({ ...p, unit_cost: e.target.value }))} placeholder="100" />
                   </div>
                   <div className="space-y-2">
                     <Label>Quantity</Label>
-                    <Input type="number" value={newItem.quantity} onChange={e => setNewItem(prev => ({
-                    ...prev,
-                    quantity: e.target.value
-                  }))} placeholder="1" />
+                    <Input type="number" value={newItem.quantity} onChange={(e) => setNewItem((p) => ({ ...p, quantity: e.target.value }))} placeholder="1" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Notes</Label>
-                  <Textarea value={newItem.notes} onChange={e => setNewItem(prev => ({
-                  ...prev,
-                  notes: e.target.value
-                }))} placeholder="Optional notes..." rows={2} />
+                  <Textarea value={newItem.notes} onChange={(e) => setNewItem((p) => ({ ...p, notes: e.target.value }))} placeholder="Optional notes..." rows={2} />
                 </div>
                 <Button onClick={handleAddItem} className="w-full">Add Item</Button>
               </div>
@@ -576,69 +349,41 @@ export const TourBudgetManager = () => {
           {/* Edit Expense Dialog */}
           <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Expense</DialogTitle>
-              </DialogHeader>
+              <DialogHeader><DialogTitle>Edit Expense</DialogTitle></DialogHeader>
               {editingItem && (
                 <div className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label>Category</Label>
-                    <Select 
-                      value={editingItem.category} 
-                      onValueChange={v => setEditingItem(prev => prev ? {...prev, category: v} : null)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                    <Select value={editingItem.category} onValueChange={(v) => setEditingItem((p) => p ? { ...p, category: v } : null)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {BUDGET_CATEGORIES.map(cat => (
-                          <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                        ))}
+                        {BUDGET_CATEGORIES.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>Description</Label>
-                    <Input 
-                      value={editingItem.description} 
-                      onChange={e => setEditingItem(prev => prev ? {...prev, description: e.target.value} : null)} 
-                    />
+                    <Input value={editingItem.description} onChange={(e) => setEditingItem((p) => p ? { ...p, description: e.target.value } : null)} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Unit Cost ($)</Label>
-                      <Input 
-                        type="number" 
-                        value={editingItem.unit_cost} 
-                        onChange={e => setEditingItem(prev => prev ? {...prev, unit_cost: parseFloat(e.target.value) || 0} : null)} 
-                      />
+                      <Input type="number" value={editingItem.unit_cost} onChange={(e) => setEditingItem((p) => p ? { ...p, unit_cost: parseFloat(e.target.value) || 0 } : null)} />
                     </div>
                     <div className="space-y-2">
                       <Label>Quantity</Label>
-                      <Input 
-                        type="number" 
-                        value={editingItem.quantity} 
-                        onChange={e => setEditingItem(prev => prev ? {...prev, quantity: parseInt(e.target.value) || 1} : null)} 
-                      />
+                      <Input type="number" value={editingItem.quantity} onChange={(e) => setEditingItem((p) => p ? { ...p, quantity: parseInt(e.target.value) || 1 } : null)} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Actual Cost ($)</Label>
-                    <Input 
-                      type="number" 
-                      value={editingItem.actual_cost} 
-                      onChange={e => setEditingItem(prev => prev ? {...prev, actual_cost: parseFloat(e.target.value) || 0} : null)} 
-                    />
+                    <Input type="number" value={editingItem.actual_cost} onChange={(e) => setEditingItem((p) => p ? { ...p, actual_cost: parseFloat(e.target.value) || 0 } : null)} />
                   </div>
                   <div className="space-y-2">
                     <Label>Notes</Label>
-                    <Textarea 
-                      value={editingItem.notes || ''} 
-                      onChange={e => setEditingItem(prev => prev ? {...prev, notes: e.target.value} : null)} 
-                      rows={2} 
-                    />
+                    <Textarea value={editingItem.notes || ''} onChange={(e) => setEditingItem((p) => p ? { ...p, notes: e.target.value } : null)} rows={2} />
                   </div>
-                  <Button 
+                  <Button
                     onClick={async () => {
                       if (editingItem) {
                         await handleUpdateItem(editingItem.id, {
@@ -647,12 +392,11 @@ export const TourBudgetManager = () => {
                           unit_cost: editingItem.unit_cost,
                           quantity: editingItem.quantity,
                           actual_cost: editingItem.actual_cost,
-                          notes: editingItem.notes
+                          notes: editingItem.notes,
                         });
                         setEditingItem(null);
-                        toast({ title: "Expense updated" });
                       }
-                    }} 
+                    }}
                     className="w-full"
                   >
                     Save Changes
@@ -664,7 +408,7 @@ export const TourBudgetManager = () => {
         </div>
       </div>
 
-      {/* Summary - compact 2x2 grid */}
+      {/* Summary Strip */}
       <div className="grid grid-cols-4 gap-1.5">
         <div className="rounded-lg bg-muted/40 p-2.5 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Revenue</p>
@@ -688,175 +432,193 @@ export const TourBudgetManager = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
           <TabsTrigger value="revenue">Revenue</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          {/* Category Summary */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {BUDGET_CATEGORIES.map(category => {
-            const items = getItemsByCategory(category.id);
-            const total = getCategoryTotal(category.id);
-            const percentage = summary.total_estimated > 0 ? total / summary.total_estimated * 100 : 0;
-            return <Card key={category.id} className="overflow-hidden">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <div className={`p-1.5 rounded ${category.color}`}>
-                          <category.icon className="h-4 w-4 text-white" />
-                        </div>
-                        {category.name}
-                      </CardTitle>
-                      <Badge variant="outline" className="text-primary-foreground">{items.length} items</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-primary-foreground">Total</span>
-                        <span className="font-semibold text-primary-foreground">{formatCurrency(total)}</span>
-                      </div>
-                      <Progress value={percentage} className="h-2" />
-                      <p className="text-xs text-primary-foreground">{percentage.toFixed(1)}% of budget</p>
-                      
-                      {items.length === 0 && <Button variant="ghost" size="sm" onClick={() => loadDefaultItems(category.id)} className="w-full text-xs text-primary-foreground">
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add Default Items
-                        </Button>}
-                    </div>
-                  </CardContent>
-                </Card>;
-          })}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="expenses" className="space-y-4">
-          {BUDGET_CATEGORIES.map(category => {
-          const items = getItemsByCategory(category.id);
-          if (items.length === 0) return null;
-          return <Card key={category.id}>
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <category.icon className="h-4 w-4" />
-                    {category.name}
-                    <Badge variant="secondary" className="ml-auto">
-                      {formatCurrency(getCategoryTotal(category.id))}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    {items.map(item => <div key={item.id} className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 space-y-1.5">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            {getStatusIcon(item.status)}
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">{item.description}</p>
-                              <p className="text-[11px] text-muted-foreground">
-                                {item.quantity} × {formatCurrency(item.unit_cost)}
-                              </p>
-                            </div>
-                          </div>
-                          <p className="text-sm font-semibold shrink-0">{formatCurrency(item.unit_cost * item.quantity)}</p>
-                        </div>
-                        <div className="flex items-center justify-between gap-1.5 pl-6">
-                          {item.actual_cost > 0 && <span className="text-[11px] text-muted-foreground">
-                              Actual: {formatCurrency(item.actual_cost)}
-                            </span>}
-                          <div className="flex items-center gap-1 ml-auto">
-                            <Select value={item.status} onValueChange={v => handleUpdateItem(item.id, {
-                              status: v as BudgetLineItem['status']
-                            })}>
-                              <SelectTrigger className="w-[85px] h-7 text-[11px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="planned">Planned</SelectItem>
-                                <SelectItem value="confirmed">Confirmed</SelectItem>
-                                <SelectItem value="paid">Paid</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem(item)}>
-                              <Edit2 className="h-3 w-3" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Item</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Delete "{item.description}"? This cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteItem(item.id)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </div>
-                      </div>)}
-                  </div>
-                </CardContent>
-              </Card>;
-        })}
-          
-          {budgetItems.length === 0 && <Card className="p-12 text-center">
+        {/* Expenses Tab - Grouped by Category */}
+        <TabsContent value="expenses" className="space-y-3 mt-3">
+          {budgetItems.length === 0 ? (
+            <Card className="p-12 text-center">
               <Calculator className="h-16 w-16 mx-auto text-muted-foreground/40 mb-4" />
               <h3 className="text-lg font-medium mb-2">No Budget Items</h3>
               <p className="text-muted-foreground mb-4">Start building your tour budget by adding expenses.</p>
               <Button onClick={() => setIsAddingItem(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add First Item
+                <Plus className="h-4 w-4 mr-2" /> Add First Item
               </Button>
-            </Card>}
+            </Card>
+          ) : (
+            <>
+              {BUDGET_CATEGORIES.map((category) => {
+                const items = getItemsByCategory(category.id);
+                if (items.length === 0) return null;
+                const catTotal = getCategoryTotal(category.id);
+                const catActual = getCategoryActual(category.id);
+                const isOpen = openCategories[category.id] !== false; // default open
+                const percentage = summary.total_estimated > 0 ? (catTotal / summary.total_estimated) * 100 : 0;
+                const Icon = category.icon;
+
+                return (
+                  <Collapsible key={category.id} open={isOpen} onOpenChange={() => toggleCategory(category.id)}>
+                    <Card className="overflow-hidden">
+                      <CollapsibleTrigger asChild>
+                        <button className="w-full text-left">
+                          <div className="flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors">
+                            <div className={`p-1.5 rounded ${category.color}`}>
+                              <Icon className="h-4 w-4 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold">{category.name}</h3>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs text-muted-foreground">{items.length} item{items.length !== 1 ? 's' : ''}</span>
+                                  <span className="text-sm font-bold">{formatCurrency(catTotal)}</span>
+                                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Progress value={percentage} className="h-1.5 flex-1" />
+                                <span className="text-[10px] text-muted-foreground w-10 text-right">{percentage.toFixed(0)}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="border-t">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="text-[11px]">
+                                <TableHead className="pl-4">Description</TableHead>
+                                <TableHead className="text-right w-20">Qty</TableHead>
+                                <TableHead className="text-right w-24">Unit Cost</TableHead>
+                                <TableHead className="text-right w-28">Estimated</TableHead>
+                                <TableHead className="text-right w-28">Actual</TableHead>
+                                <TableHead className="w-24">Status</TableHead>
+                                <TableHead className="w-20 text-right pr-4">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {items.map((item) => (
+                                <TableRow key={item.id} className="text-sm">
+                                  <TableCell className="pl-4 font-medium">
+                                    <div>
+                                      <span>{item.description}</span>
+                                      {item.notes && <p className="text-[10px] text-muted-foreground mt-0.5">{item.notes}</p>}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-right tabular-nums">{item.quantity}</TableCell>
+                                  <TableCell className="text-right tabular-nums">{formatCurrency(item.unit_cost)}</TableCell>
+                                  <TableCell className="text-right tabular-nums font-medium">{formatCurrency(item.unit_cost * item.quantity)}</TableCell>
+                                  <TableCell className="text-right tabular-nums">
+                                    {item.actual_cost > 0 ? formatCurrency(item.actual_cost) : <span className="text-muted-foreground">—</span>}
+                                  </TableCell>
+                                  <TableCell>{getStatusBadge(item.status)}</TableCell>
+                                  <TableCell className="text-right pr-4">
+                                    <div className="flex items-center justify-end gap-0.5">
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem(item)}>
+                                        <Edit2 className="h-3 w-3" />
+                                      </Button>
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                                            <AlertDialogDescription>Delete "{item.description}"? This cannot be undone.</AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteItem(item.id)}>Delete</AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                              {/* Category subtotal row */}
+                              <TableRow className="bg-muted/30 font-semibold text-sm">
+                                <TableCell className="pl-4" colSpan={3}>Subtotal</TableCell>
+                                <TableCell className="text-right tabular-nums">{formatCurrency(catTotal)}</TableCell>
+                                <TableCell className="text-right tabular-nums">
+                                  {catActual > 0 ? formatCurrency(catActual) : '—'}
+                                </TableCell>
+                                <TableCell colSpan={2} />
+                              </TableRow>
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
+                );
+              })}
+
+              {/* Grand Total */}
+              <Card className="border-2 border-primary/20">
+                <div className="p-3 flex items-center justify-between">
+                  <span className="font-semibold text-sm">Grand Total ({budgetItems.length} items)</span>
+                  <div className="flex items-center gap-6 text-sm">
+                    <div className="text-right">
+                      <p className="text-[10px] text-muted-foreground">Estimated</p>
+                      <p className="font-bold">{formatCurrency(summary.total_estimated)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-muted-foreground">Actual</p>
+                      <p className="font-bold">{summary.total_actual > 0 ? formatCurrency(summary.total_actual) : '—'}</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </>
+          )}
         </TabsContent>
 
-        <TabsContent value="revenue" className="space-y-4">
+        {/* Revenue Tab */}
+        <TabsContent value="revenue" className="space-y-3 mt-3">
           <Card>
             <CardHeader className="py-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-green-500" />
                 Revenue Sources
-                <Badge variant="secondary" className="ml-auto">
-                  {formatCurrency(summary.total_revenue)}
-                </Badge>
+                <Badge variant="secondary" className="ml-auto">{formatCurrency(summary.total_revenue)}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              {revenues.length === 0 ? <div className="text-center py-8">
+              {revenues.length === 0 ? (
+                <div className="text-center py-8">
                   <DollarSign className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
                   <p className="text-muted-foreground mb-4">No revenue sources added yet.</p>
                   <Button variant="outline" onClick={() => setIsAddingRevenue(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Revenue
+                    <Plus className="h-4 w-4 mr-2" /> Add Revenue
                   </Button>
-                </div> : <div className="space-y-2">
-                  {revenues.map(rev => <div key={rev.id} className="flex items-center gap-4 p-3 rounded-lg bg-green-50 dark:bg-green-950/30">
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {revenues.map((rev) => (
+                    <div key={rev.id} className="flex items-center gap-4 p-3 rounded-lg bg-green-50 dark:bg-green-950/30">
                       <TrendingUp className="h-4 w-4 text-green-500" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">{rev.source}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {rev.status}
-                        </Badge>
+                        <Badge variant="outline" className="text-xs">{rev.status}</Badge>
                       </div>
                       <p className="text-lg font-bold text-green-600">{formatCurrency(rev.amount)}</p>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteRevenue(rev.id)}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
-                    </div>)}
-                </div>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>;
+    </div>
+  );
 };
