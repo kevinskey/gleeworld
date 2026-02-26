@@ -19652,7 +19652,10 @@ export type Database = {
           lunch_stop_suggestion: Json | null
           meal_notes: string | null
           meals_needed: string[] | null
+          parking_notes: string | null
+          route_analysis: Json | null
           state_code: string | null
+          toll_estimate: number | null
           tour_id: string
           updated_at: string | null
         }
@@ -19674,7 +19677,10 @@ export type Database = {
           lunch_stop_suggestion?: Json | null
           meal_notes?: string | null
           meals_needed?: string[] | null
+          parking_notes?: string | null
+          route_analysis?: Json | null
           state_code?: string | null
+          toll_estimate?: number | null
           tour_id: string
           updated_at?: string | null
         }
@@ -19696,7 +19702,10 @@ export type Database = {
           lunch_stop_suggestion?: Json | null
           meal_notes?: string | null
           meals_needed?: string[] | null
+          parking_notes?: string | null
+          route_analysis?: Json | null
           state_code?: string | null
+          toll_estimate?: number | null
           tour_id?: string
           updated_at?: string | null
         }
