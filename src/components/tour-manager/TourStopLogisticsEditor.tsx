@@ -9,8 +9,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TimeSelect } from '@/components/ui/time-select';
 import {
   ChevronDown, ChevronUp, Clock, MapPin, Utensils, Save, Loader2,
-  Sparkles, AlertTriangle, CheckCircle, Info,
+  Sparkles, AlertTriangle, CheckCircle, Info, GripVertical,
 } from 'lucide-react';
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -55,13 +58,52 @@ export const TourStopLogisticsEditor: React.FC<{
   stops: TourStopLogistics[];
   tourId: string;
   onUpdate: () => void;
-}> = ({ stops, tourId, onUpdate }) => {
+}> = ({ stops: initialStops, tourId, onUpdate }) => {
+  const [orderedStops, setOrderedStops] = useState(initialStops);
   const [expandedStop, setExpandedStop] = useState<string | null>(null);
   const [editData, setEditData] = useState<Record<string, Partial<TourStopLogistics>>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [loadingAI, setLoadingAI] = useState<string | null>(null);
   const [aiResults, setAiResults] = useState<Record<string, any>>({});
+  const [reordering, setReordering] = useState(false);
   const { toast } = useToast();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  // Sync if parent stops change
+  React.useEffect(() => {
+    setOrderedStops(initialStops);
+  }, [initialStops]);
+
+  const stops = orderedStops;
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = stops.findIndex(s => s.id === active.id);
+    const newIndex = stops.findIndex(s => s.id === over.id);
+    const reordered = arrayMove(stops, oldIndex, newIndex);
+    setOrderedStops(reordered);
+
+    // Persist new order to DB
+    setReordering(true);
+    try {
+      const updates = reordered.map((stop, idx) =>
+        supabase.from('gw_tour_cities').update({ city_order: idx }).eq('id', stop.id)
+      );
+      await Promise.all(updates);
+      toast({ title: 'City order updated' });
+      onUpdate();
+    } catch (err: any) {
+      toast({ title: 'Failed to save order', description: err.message, variant: 'destructive' });
+    } finally {
+      setReordering(false);
+    }
+  };
 
   const getEditData = (stopId: string, stop: TourStopLogistics) => {
     return { ...stop, ...(editData[stopId] || {}) };
@@ -231,232 +273,295 @@ export const TourStopLogisticsEditor: React.FC<{
         </Card>
       )}
 
-      {/* Per-Stop Cards */}
-      {stops.map((stop, index) => {
-        const isExpanded = expandedStop === stop.id;
-        const data = getEditData(stop.id, stop);
-        const compliance = dotCompliance[index];
-        const aiData = aiResults[stop.id] || stop.lunch_stop_suggestion;
-        const hasChanges = !!editData[stop.id];
+      {/* Per-Stop Cards - Draggable */}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={stops.map(s => s.id)} strategy={verticalListSortingStrategy}>
+          {stops.map((stop, index) => {
+            const isExpanded = expandedStop === stop.id;
+            const data = getEditData(stop.id, stop);
+            const compliance = dotCompliance[index];
+            const aiData = aiResults[stop.id] || stop.lunch_stop_suggestion;
+            const hasChanges = !!editData[stop.id];
 
-        return (
-          <Card key={stop.id} className="overflow-hidden">
-            {/* Compact header */}
-            <button
-              className="w-full flex items-center gap-3 p-3 sm:p-4 text-left hover:bg-muted/30 transition-colors"
-              onClick={() => setExpandedStop(isExpanded ? null : stop.id)}
-            >
-              <Badge variant="outline" className="text-xs shrink-0">{index + 1}</Badge>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm truncate">
-                    {stop.city_name}{stop.state_code ? `, ${stop.state_code}` : ''}
-                  </span>
-                  {index === stops.length - 1 && stop.city_name.toLowerCase().includes('atlanta') && (
-                    <Badge variant="secondary" className="text-[10px]">Returning</Badge>
-                  )}
+            return (
+              <SortableStopCard
+                key={stop.id}
+                stop={stop}
+                index={index}
+                isExpanded={isExpanded}
+                data={data}
+                compliance={compliance}
+                aiData={aiData}
+                hasChanges={hasChanges}
+                stops={stops}
+                reordering={reordering}
+                saving={saving}
+                loadingAI={loadingAI}
+                onToggleExpand={() => setExpandedStop(isExpanded ? null : stop.id)}
+                onUpdateField={updateField}
+                onToggleMeal={toggleMeal}
+                onSaveStop={saveStop}
+                onFetchLunch={() => fetchLunchSuggestions(index)}
+              />
+            );
+          })}
+        </SortableContext>
+      </DndContext>
+    </div>
+  );
+};
+
+// Sortable wrapper for each stop card
+const SortableStopCard: React.FC<{
+  stop: any;
+  index: number;
+  isExpanded: boolean;
+  data: any;
+  compliance: any;
+  aiData: any;
+  hasChanges: boolean;
+  stops: any[];
+  reordering: boolean;
+  saving: string | null;
+  loadingAI: string | null;
+  onToggleExpand: () => void;
+  onUpdateField: (stopId: string, field: string, value: any) => void;
+  onToggleMeal: (stopId: string, meal: string, current: string[]) => void;
+  onSaveStop: (stopId: string) => void;
+  onFetchLunch: () => void;
+}> = ({ stop, index, isExpanded, data, compliance, aiData, hasChanges, stops, reordering, saving, loadingAI, onToggleExpand, onUpdateField, onToggleMeal, onSaveStop, onFetchLunch }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <Card ref={setNodeRef} style={style} className="overflow-hidden">
+      {/* Compact header */}
+      <div className="w-full flex items-center gap-3 p-3 sm:p-4 text-left hover:bg-muted/30 transition-colors">
+        {/* Drag handle */}
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing touch-none p-1 shrink-0"
+          aria-label="Drag to reorder"
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </button>
+
+        <button className="flex-1 flex items-center gap-3 text-left" onClick={onToggleExpand}>
+          <Badge variant="outline" className="text-xs shrink-0">{index + 1}</Badge>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-sm truncate">
+                {stop.city_name}{stop.state_code ? `, ${stop.state_code}` : ''}
+              </span>
+              {index === stops.length - 1 && stop.city_name.toLowerCase().includes('atlanta') && (
+                <Badge variant="secondary" className="text-[10px]">Returning</Badge>
+              )}
+            </div>
+            {stop.arrival_date && (
+              <p className="text-xs text-muted-foreground">
+                {new Date(stop.arrival_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}
+              </p>
+            )}
+          </div>
+
+          {/* Inline DOT warning */}
+          {compliance.exceedsLimit && (
+            <Badge variant="destructive" className="text-[10px] gap-1 shrink-0">
+              <AlertTriangle className="h-3 w-3" />
+              {compliance.driveHours.toFixed(1)}h
+            </Badge>
+          )}
+          {compliance.needsMandatoryBreak && !compliance.exceedsLimit && compliance.driveHours > 0 && (
+            <Badge variant="secondary" className="text-[10px] gap-1 shrink-0">
+              <Info className="h-3 w-3" />
+              {compliance.driveHours.toFixed(1)}h
+            </Badge>
+          )}
+
+          {/* Meal indicators */}
+          {(data.meals_needed || []).length > 0 && (
+            <div className="flex gap-1 shrink-0">
+              {(data.meals_needed || []).map((m: string) => (
+                <Badge key={m} variant="outline" className="text-[10px] px-1 capitalize">{m[0]}</Badge>
+              ))}
+            </div>
+          )}
+
+          {isExpanded ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
+        </button>
+      </div>
+
+      {/* Expanded detail */}
+      {isExpanded && (
+        <CardContent className="pt-0 pb-4 px-3 sm:px-4 space-y-4 border-t">
+          {/* Drive info from previous stop */}
+          {index > 0 && (
+            <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                🚌 From {stops[index - 1].city_name}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Distance (miles)</label>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={data.estimated_drive_miles || ''}
+                    onChange={e => onUpdateField(stop.id, 'estimated_drive_miles', parseFloat(e.target.value) || null)}
+                    className="h-8 text-sm"
+                  />
                 </div>
-                {stop.arrival_date && (
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(stop.arrival_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}
-                  </p>
-                )}
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Drive Time (hours)</label>
+                  <Input
+                    type="number"
+                    step="0.5"
+                    placeholder="0"
+                    value={data.estimated_drive_hours || ''}
+                    onChange={e => onUpdateField(stop.id, 'estimated_drive_hours', parseFloat(e.target.value) || null)}
+                    className="h-8 text-sm"
+                  />
+                </div>
               </div>
 
-              {/* Inline DOT warning */}
-              {compliance.exceedsLimit && (
-                <Badge variant="destructive" className="text-[10px] gap-1 shrink-0">
-                  <AlertTriangle className="h-3 w-3" />
-                  {compliance.driveHours.toFixed(1)}h
-                </Badge>
-              )}
-              {compliance.needsMandatoryBreak && !compliance.exceedsLimit && compliance.driveHours > 0 && (
-                <Badge variant="secondary" className="text-[10px] gap-1 shrink-0">
-                  <Info className="h-3 w-3" />
-                  {compliance.driveHours.toFixed(1)}h
-                </Badge>
-              )}
-
-              {/* Meal indicators */}
-              {(data.meals_needed || []).length > 0 && (
-                <div className="flex gap-1 shrink-0">
-                  {(data.meals_needed || []).map(m => (
-                    <Badge key={m} variant="outline" className="text-[10px] px-1 capitalize">{m[0]}</Badge>
+              {/* DOT warnings inline */}
+              {compliance.warnings.length > 0 && (
+                <div className="space-y-1 mt-2">
+                  {compliance.warnings.map((w: string, i: number) => (
+                    <div
+                      key={i}
+                      className={`text-xs p-2 rounded ${
+                        compliance.exceedsLimit ? 'bg-destructive/10 text-destructive' : 'bg-accent/50 text-accent-foreground'
+                      }`}
+                    >
+                      {w}
+                    </div>
                   ))}
                 </div>
               )}
+            </div>
+          )}
 
-              {isExpanded ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
-            </button>
+          {/* Departure / Arrival Times */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium flex items-center gap-1">
+                <Clock className="h-3 w-3" /> Arrival Time
+              </label>
+              <TimeSelect
+                value={data.arrival_time}
+                onChange={(v: string | null) => onUpdateField(stop.id, 'arrival_time', v)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium flex items-center gap-1">
+                <Clock className="h-3 w-3" /> Departure Time
+              </label>
+              <TimeSelect
+                value={data.departure_time}
+                onChange={(v: string | null) => onUpdateField(stop.id, 'departure_time', v)}
+              />
+            </div>
+          </div>
 
-            {/* Expanded detail */}
-            {isExpanded && (
-              <CardContent className="pt-0 pb-4 px-3 sm:px-4 space-y-4 border-t">
-                {/* Drive info from previous stop */}
-                {index > 0 && (
-                  <div className="bg-muted/30 rounded-lg p-3 space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      🚌 From {stops[index - 1].city_name}
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">Distance (miles)</label>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={data.estimated_drive_miles || ''}
-                          onChange={e => updateField(stop.id, 'estimated_drive_miles', parseFloat(e.target.value) || null)}
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">Drive Time (hours)</label>
-                        <Input
-                          type="number"
-                          step="0.5"
-                          placeholder="0"
-                          value={data.estimated_drive_hours || ''}
-                          onChange={e => updateField(stop.id, 'estimated_drive_hours', parseFloat(e.target.value) || null)}
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    {/* DOT warnings inline */}
-                    {compliance.warnings.length > 0 && (
-                      <div className="space-y-1 mt-2">
-                        {compliance.warnings.map((w, i) => (
-                          <div
-                            key={i}
-                            className={`text-xs p-2 rounded ${
-                              compliance.exceedsLimit ? 'bg-destructive/10 text-destructive' : 'bg-accent/50 text-accent-foreground'
-                            }`}
-                          >
-                            {w}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Departure / Arrival Times */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> Arrival Time
-                    </label>
-                    <TimeSelect
-                      value={data.arrival_time}
-                      onChange={v => updateField(stop.id, 'arrival_time', v)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> Departure Time
-                    </label>
-                    <TimeSelect
-                      value={data.departure_time}
-                      onChange={v => updateField(stop.id, 'departure_time', v)}
-                    />
-                  </div>
-                </div>
-
-                {/* Meals Needed */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium flex items-center gap-1">
-                    <Utensils className="h-3 w-3" /> Meals Needed (46 people)
-                  </label>
-                  <div className="flex gap-4">
-                    {['breakfast', 'lunch', 'dinner'].map(meal => (
-                      <label key={meal} className="flex items-center gap-2 text-sm cursor-pointer">
-                        <Checkbox
-                          checked={(data.meals_needed || []).includes(meal)}
-                          onCheckedChange={() => toggleMeal(stop.id, meal, data.meals_needed || [])}
-                        />
-                        <span className="capitalize">{meal}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <Textarea
-                    placeholder="Meal notes (dietary restrictions, pre-orders, venue catering, etc.)"
-                    value={data.meal_notes || ''}
-                    onChange={e => updateField(stop.id, 'meal_notes', e.target.value)}
-                    className="text-sm min-h-[60px]"
+          {/* Meals Needed */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium flex items-center gap-1">
+              <Utensils className="h-3 w-3" /> Meals Needed (46 people)
+            </label>
+            <div className="flex gap-4">
+              {['breakfast', 'lunch', 'dinner'].map(meal => (
+                <label key={meal} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox
+                    checked={(data.meals_needed || []).includes(meal)}
+                    onCheckedChange={() => onToggleMeal(stop.id, meal, data.meals_needed || [])}
                   />
+                  <span className="capitalize">{meal}</span>
+                </label>
+              ))}
+            </div>
+            <Textarea
+              placeholder="Meal notes (dietary restrictions, pre-orders, venue catering, etc.)"
+              value={data.meal_notes || ''}
+              onChange={e => onUpdateField(stop.id, 'meal_notes', e.target.value)}
+              className="text-sm min-h-[60px]"
+            />
+          </div>
+
+          {/* AI Lunch Stop Suggestions */}
+          {index > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium flex items-center gap-1">
+                  <Sparkles className="h-3 w-3 text-primary" /> AI Lunch Stop Suggestions
+                </label>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1"
+                  onClick={onFetchLunch}
+                  disabled={loadingAI === stop.id}
+                >
+                  {loadingAI === stop.id ? (
+                    <><Loader2 className="h-3 w-3 animate-spin" /> Finding...</>
+                  ) : (
+                    <><Sparkles className="h-3 w-3" /> Find Stops</>
+                  )}
+                </Button>
+              </div>
+
+              {loadingAI === stop.id && (
+                <div className="space-y-2">
+                  <Skeleton className="h-16 w-full rounded" />
+                  <Skeleton className="h-16 w-full rounded" />
                 </div>
+              )}
 
-                {/* AI Lunch Stop Suggestions */}
-                {index > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium flex items-center gap-1">
-                        <Sparkles className="h-3 w-3 text-primary" /> AI Lunch Stop Suggestions
-                      </label>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => fetchLunchSuggestions(index)}
-                        disabled={loadingAI === stop.id}
-                      >
-                        {loadingAI === stop.id ? (
-                          <><Loader2 className="h-3 w-3 animate-spin" /> Finding...</>
-                        ) : (
-                          <><Sparkles className="h-3 w-3" /> Find Stops</>
-                        )}
-                      </Button>
+              {aiData?.suggestions && aiData.suggestions.length > 0 && (
+                <div className="space-y-2">
+                  {aiData.suggestions.map((s: any, i: number) => (
+                    <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-medium">{s.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 inline mr-1" />
+                            {s.city} · {s.distance_from_origin_miles} mi · {s.drive_time_from_origin}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] shrink-0">{s.cost_per_person}/pp</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{s.cuisine} · {s.reason}</p>
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-                    {loadingAI === stop.id && (
-                      <div className="space-y-2">
-                        <Skeleton className="h-16 w-full rounded" />
-                        <Skeleton className="h-16 w-full rounded" />
-                      </div>
-                    )}
-
-                    {aiData?.suggestions && aiData.suggestions.length > 0 && (
-                      <div className="space-y-2">
-                        {aiData.suggestions.map((s: LunchSuggestion, i: number) => (
-                          <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <p className="text-sm font-medium">{s.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  <MapPin className="h-3 w-3 inline mr-1" />
-                                  {s.city} · {s.distance_from_origin_miles} mi · {s.drive_time_from_origin}
-                                </p>
-                              </div>
-                              <Badge variant="outline" className="text-[10px] shrink-0">{s.cost_per_person}/pp</Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground">{s.cuisine} · {s.reason}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Save Button */}
-                {hasChanges && (
-                  <Button
-                    size="sm"
-                    className="w-full gap-1"
-                    onClick={() => saveStop(stop.id)}
-                    disabled={saving === stop.id}
-                  >
-                    {saving === stop.id ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
-                    ) : (
-                      <><Save className="h-4 w-4" /> Save Logistics</>
-                    )}
-                  </Button>
-                )}
-              </CardContent>
-            )}
-          </Card>
-        );
-      })}
-    </div>
+          {/* Save Button */}
+          {hasChanges && (
+            <Button
+              size="sm"
+              className="w-full gap-1"
+              onClick={() => onSaveStop(stop.id)}
+              disabled={saving === stop.id}
+            >
+              {saving === stop.id ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+              ) : (
+                <><Save className="h-4 w-4" /> Save Logistics</>
+              )}
+            </Button>
+          )}
+        </CardContent>
+      )}
+    </Card>
   );
 };
