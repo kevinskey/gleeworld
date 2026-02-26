@@ -48,6 +48,7 @@ import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentMod
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 import { MessengerAdminModule } from '../modules/MessengerAdminModule';
 import { AmazonAffiliateModule } from '../modules/AmazonAffiliateModule';
+import FeedControl from '@/pages/FeedControl';
 import { ProductManagement } from '@/pages/ProductManagement';
 import { CourseAttendanceLedger } from '../attendance/CourseAttendanceLedger';
 
@@ -173,6 +174,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <MessengerAdminModule />;
       case 'amazon-affiliate':
         return <AmazonAffiliateModule />;
+      case 'feed-control':
+        return <FeedControl />;
       case 'merch-store':
         return <ProductManagement />;
       default:
