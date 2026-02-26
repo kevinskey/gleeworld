@@ -8,7 +8,7 @@ import { DocumentUpload } from '@/components/DocumentUpload';
 import { ContractTemplates } from '@/components/ContractTemplates';
 import { TourContractTemplate } from './TourContractTemplate';
 import { useContracts } from '@/hooks/useContracts';
-import { FileText, Plus, Route } from 'lucide-react';
+import { FileText, Plus, Route, Upload } from 'lucide-react';
 import type { Contract } from '@/hooks/useContracts';
 
 interface ContractManagerProps {
@@ -77,6 +77,10 @@ export const ContractManager = ({ user, initialContractData }: ContractManagerPr
             <span>Tour Template</span>
           </TabsTrigger>
           <TabsTrigger value="templates" className="text-xs px-3 py-1.5">Templates</TabsTrigger>
+          <TabsTrigger value="upload" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Upload className="h-3.5 w-3.5" />
+            <span>Upload PDF</span>
+          </TabsTrigger>
           <TabsTrigger value="create" className="text-xs px-3 py-1.5">Create New</TabsTrigger>
         </TabsList>
 
@@ -115,6 +119,20 @@ export const ContractManager = ({ user, initialContractData }: ContractManagerPr
           <ContractTemplates 
             onContractCreated={refetch}
           />
+        </TabsContent>
+
+        <TabsContent value="upload" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Upload PDF Contract
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DocumentUpload />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="create" className="space-y-6">
