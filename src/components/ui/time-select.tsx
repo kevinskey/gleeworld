@@ -41,13 +41,27 @@ function to24(hour: string, minute: string, period: string): string {
 }
 
 export function TimeSelect({ value, onChange, className }: TimeSelectProps) {
-  const parsed = parse24to12(value);
+  const externalParsed = parse24to12(value);
+
+  // Use local state so partial edits are preserved between dropdown interactions
+  const [local, setLocal] = React.useState({
+    hour: externalParsed.hour,
+    minute: externalParsed.minute,
+    period: externalParsed.period,
+  });
+
+  // Sync local state when the external value changes
+  React.useEffect(() => {
+    const p = parse24to12(value);
+    setLocal({ hour: p.hour, minute: p.minute, period: p.period });
+  }, [value]);
 
   const handleChange = (
     field: "hour" | "minute" | "period",
     val: string
   ) => {
-    const next = { ...parsed, [field]: val };
+    const next = { ...local, [field]: val };
+    setLocal(next);
     if (next.hour && next.minute && next.period) {
       onChange(to24(next.hour, next.minute, next.period));
     }
@@ -55,7 +69,7 @@ export function TimeSelect({ value, onChange, className }: TimeSelectProps) {
 
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
-      <Select value={parsed.hour} onValueChange={(v) => handleChange("hour", v)}>
+      <Select value={local.hour} onValueChange={(v) => handleChange("hour", v)}>
         <SelectTrigger className="h-8 w-[60px] text-xs px-2">
           <SelectValue placeholder="Hr" />
         </SelectTrigger>
@@ -70,7 +84,7 @@ export function TimeSelect({ value, onChange, className }: TimeSelectProps) {
 
       <span className="text-muted-foreground font-bold text-sm">:</span>
 
-      <Select value={parsed.minute} onValueChange={(v) => handleChange("minute", v)}>
+      <Select value={local.minute} onValueChange={(v) => handleChange("minute", v)}>
         <SelectTrigger className="h-8 w-[60px] text-xs px-2">
           <SelectValue placeholder="Min" />
         </SelectTrigger>
@@ -83,7 +97,7 @@ export function TimeSelect({ value, onChange, className }: TimeSelectProps) {
         </SelectContent>
       </Select>
 
-      <Select value={parsed.period} onValueChange={(v) => handleChange("period", v)}>
+      <Select value={local.period} onValueChange={(v) => handleChange("period", v)}>
         <SelectTrigger className="h-8 w-[60px] text-xs px-2">
           <SelectValue placeholder="AM" />
         </SelectTrigger>
