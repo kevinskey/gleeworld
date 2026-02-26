@@ -754,142 +754,104 @@ export const HotelManagement = () => {
         </Card>
       )}
 
-      {/* Hotels Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {hotels.map(hotel => (
+      {/* Hotels List — Chronological */}
+      <div className="space-y-3">
+        {hotels.map((hotel, index) => (
           <Card key={hotel.id} className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow" onClick={() => setViewingHotel(hotel)}>
-            <CardHeader className="pb-2 bg-primary/5">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Hotel className="h-4 w-4 text-primary flex-shrink-0" />
-                    <span className="truncate">{hotel.hotel_name}</span>
-                  </CardTitle>
-                  {hotel.tour_city && (
-                    <Badge variant="secondary" className="mt-1 text-xs">
-                      {hotel.tour_city.city_name}, {hotel.tour_city.state_code}
-                    </Badge>
+            <div className="flex items-stretch">
+              {/* Chronological index indicator */}
+              <div className="flex flex-col items-center justify-center px-3 sm:px-4 bg-primary/5 border-r border-border min-w-[60px]">
+                <span className="text-xs font-medium text-muted-foreground">Stop</span>
+                <span className="text-lg font-bold text-primary">{index + 1}</span>
+                {hotel.check_in_date && (
+                  <span className="text-[10px] text-muted-foreground text-center leading-tight mt-0.5">
+                    {new Date(hotel.check_in_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                )}
+              </div>
+
+              {/* Hotel info */}
+              <div className="flex-1 p-3 sm:p-4 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">
+                      <Hotel className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span className="truncate">{hotel.hotel_name}</span>
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      {hotel.tour_city && (
+                        <Badge variant="secondary" className="text-xs">
+                          {hotel.tour_city.city_name}, {hotel.tour_city.state_code}
+                        </Badge>
+                      )}
+                      {hotel.confirmation_number && (
+                        <Badge variant="outline" className="text-xs font-mono">
+                          #{hotel.confirmation_number}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(hotel)}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Hotel</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete {hotel.hotel_name}? This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(hotel.id)} className="bg-destructive text-destructive-foreground">
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+
+                {/* Details row */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {hotel.city}, {hotel.state}
+                  </span>
+                  {(hotel.check_in_date || hotel.check_out_date) && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {formatDate(hotel.check_in_date)} — {formatDate(hotel.check_out_date)}
+                    </span>
                   )}
-                </div>
-                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(hotel)}>
-                    <Edit2 className="h-3.5 w-3.5" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Hotel</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete {hotel.hotel_name}? This cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(hotel.id)} className="bg-destructive text-destructive-foreground">
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-3 space-y-3">
-              {/* Address */}
-              <div className="flex items-start gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div>
-                  {hotel.address && <p>{hotel.address}</p>}
-                  <p>{hotel.city}, {hotel.state} {hotel.zip_code}</p>
-                </div>
-              </div>
-
-              {/* Dates */}
-              {(hotel.check_in_date || hotel.check_out_date) && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>{formatDate(hotel.check_in_date)} - {formatDate(hotel.check_out_date)}</span>
-                </div>
-              )}
-
-              {/* Times */}
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  In: {hotel.check_in_time || '3:00 PM'}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  Out: {hotel.check_out_time || '11:00 AM'}
-                </span>
-              </div>
-
-              {/* Phone */}
-              {hotel.phone && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <a href={`tel:${hotel.phone}`} className="text-primary hover:underline">{hotel.phone}</a>
-                </div>
-              )}
-
-              {/* Rooms & Cost */}
-              {(hotel.room_count || hotel.room_rate) && (
-                <div className="flex items-center gap-4 text-sm">
+                  {hotel.phone && (
+                    <span className="flex items-center gap-1">
+                      <Phone className="h-3.5 w-3.5" />
+                      <a href={`tel:${hotel.phone}`} className="text-primary hover:underline" onClick={e => e.stopPropagation()}>{hotel.phone}</a>
+                    </span>
+                  )}
                   {hotel.room_count && (
                     <span className="flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                      <Users className="h-3.5 w-3.5" />
                       {hotel.room_count} rooms
                     </span>
                   )}
                   {hotel.room_rate && (
                     <span className="flex items-center gap-1">
-                      <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                      <DollarSign className="h-3.5 w-3.5" />
                       ${hotel.room_rate}/night
                     </span>
                   )}
                 </div>
-              )}
-
-              {/* Confirmation */}
-              {hotel.confirmation_number && (
-                <div className="text-sm bg-muted/50 p-2 rounded">
-                  <span className="text-muted-foreground">Confirmation: </span>
-                  <span className="font-mono font-medium">{hotel.confirmation_number}</span>
-                </div>
-              )}
-
-              {/* Amenities */}
-              {hotel.amenities && hotel.amenities.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {hotel.amenities.map(amenity => {
-                    const amenityInfo = AMENITY_OPTIONS.find(a => a.value === amenity);
-                    return amenityInfo ? (
-                      <Badge key={amenity} variant="outline" className="text-xs gap-1">
-                        <amenityInfo.icon className="h-3 w-3" />
-                        {amenityInfo.label}
-                      </Badge>
-                    ) : null;
-                  })}
-                </div>
-              )}
-
-              {/* Website Link */}
-              {hotel.website && (
-                <a 
-                  href={hotel.website} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                >
-                  Visit Website <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-            </CardContent>
+              </div>
+            </div>
           </Card>
         ))}
       </div>
