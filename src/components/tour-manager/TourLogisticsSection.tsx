@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,632 +7,601 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, Bus, MapPin, Music, Users, Package, CheckCircle2, AlertCircle, Plus, Edit, Trash2, Save, Calendar, Megaphone, ShoppingBag, ClipboardList, UserCheck, Timer, DoorOpen } from 'lucide-react';
+import {
+  Clock, Bus, MapPin, Music, Users, Package, CheckCircle2, Plus, Edit, Save, Calendar,
+  ShoppingBag, ClipboardList, UserCheck, Timer, DoorOpen, Trash2, Utensils, Megaphone,
+  ArrowRight, Mic, Loader2, AlertCircle
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-interface TimeSlot {
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import { format, parseISO } from 'date-fns';
+
+// Category configuration
+const EVENT_CATEGORIES = [
+  { value: 'call_time', label: 'Call Time', icon: Megaphone, color: 'bg-orange-500' },
+  { value: 'transport', label: 'Transport', icon: Bus, color: 'bg-blue-500' },
+  { value: 'sound_check', label: 'Sound Check', icon: Mic, color: 'bg-amber-500' },
+  { value: 'performance', label: 'Performance', icon: Music, color: 'bg-purple-500' },
+  { value: 'meal', label: 'Meal', icon: Utensils, color: 'bg-green-500' },
+  { value: 'merch', label: 'Merch', icon: ShoppingBag, color: 'bg-pink-500' },
+  { value: 'crew', label: 'Crew', icon: Users, color: 'bg-cyan-500' },
+  { value: 'load_in', label: 'Load In', icon: ArrowRight, color: 'bg-slate-500' },
+  { value: 'load_out', label: 'Load Out', icon: Package, color: 'bg-slate-600' },
+  { value: 'general', label: 'General', icon: Calendar, color: 'bg-muted-foreground' },
+] as const;
+
+const TARGET_GROUPS = [
+  { value: 'all', label: 'Everyone' },
+  { value: 'singers', label: 'Singers' },
+  { value: 'first_year', label: 'First-Year Members' },
+  { value: 'crew', label: 'Setup Crew' },
+  { value: 'merch_team', label: 'Merch Team' },
+  { value: 'setup_crew', label: 'Setup Crew' },
+  { value: 'route_manager', label: 'Route Manager' },
+];
+
+interface UnifiedTimelineEvent {
   id: string;
   label: string;
-  time: string;
-  notes?: string;
-  status: 'pending' | 'confirmed' | 'completed';
-}
-interface CrewAssignment {
-  id: string;
-  name: string;
-  role: string;
-  callTime: string;
-  duties: string[];
-}
-interface MerchItem {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-  notes?: string;
+  event_category: string;
+  event_date: string;
+  event_time: string | null;
+  end_time: string | null;
+  target_group: string;
+  notes: string | null;
+  status: string;
+  location: string | null;
+  city_name?: string;
+  source: 'manual' | 'routes' | 'hotels';
+  is_auto_generated: boolean;
 }
 
-// Mock data for demonstration
-const mockEventTimeline: TimeSlot[] = [{
-  id: '1',
-  label: 'Setup Crew Call',
-  time: '10:00 AM',
-  status: 'confirmed',
-  notes: 'Load in through back entrance'
-}, {
-  id: '2',
-  label: 'Bus Departure',
-  time: '11:00 AM',
-  status: 'confirmed',
-  notes: 'Depart from Spelman campus'
-}, {
-  id: '3',
-  label: 'Arrival at Venue',
-  time: '2:00 PM',
-  status: 'pending'
-}, {
-  id: '4',
-  label: 'Sound Check',
-  time: '3:00 PM',
-  status: 'pending',
-  notes: 'Full ensemble run-through'
-}, {
-  id: '5',
-  label: 'Performer Call Time',
-  time: '5:00 PM',
-  status: 'pending'
-}, {
-  id: '6',
-  label: 'Off Stage (Doors Open)',
-  time: '6:30 PM',
-  status: 'pending'
-}, {
-  id: '7',
-  label: 'Performance Start',
-  time: '7:00 PM',
-  status: 'pending'
-}, {
-  id: '8',
-  label: 'Performance End',
-  time: '9:00 PM',
-  status: 'pending'
-}, {
-  id: '9',
-  label: 'Load Out Complete',
-  time: '10:30 PM',
-  status: 'pending'
-}];
-const mockCrewAssignments: CrewAssignment[] = [{
-  id: '1',
-  name: 'Stage Manager',
-  role: 'Lead',
-  callTime: '10:00 AM',
-  duties: ['Coordinate load-in', 'Manage backstage', 'Cue performers']
-}, {
-  id: '2',
-  name: 'Sound Tech',
-  role: 'Audio',
-  callTime: '10:00 AM',
-  duties: ['Set up microphones', 'Sound check', 'Mix during performance']
-}, {
-  id: '3',
-  name: 'Lighting Tech',
-  role: 'Lighting',
-  callTime: '10:00 AM',
-  duties: ['Program lighting cues', 'Operate light board']
-}, {
-  id: '4',
-  name: 'Merch Lead',
-  role: 'Merchandise',
-  callTime: '5:00 PM',
-  duties: ['Set up merch table', 'Handle sales', 'Inventory tracking']
-}];
-const mockMerchItems: MerchItem[] = [{
-  id: '1',
-  name: 'Concert T-Shirt',
-  quantity: 50,
-  price: 25,
-  notes: 'Sizes S-XXL'
-}, {
-  id: '2',
-  name: 'Tour Hoodie',
-  quantity: 30,
-  price: 45
-}, {
-  id: '3',
-  name: 'CD Album',
-  quantity: 100,
-  price: 15
-}, {
-  id: '4',
-  name: 'Poster',
-  quantity: 75,
-  price: 10
-}];
+const getCategoryConfig = (category: string) => {
+  return EVENT_CATEGORIES.find(c => c.value === category) || EVENT_CATEGORIES[EVENT_CATEGORIES.length - 1];
+};
+
+const formatTime12 = (time24: string | null) => {
+  if (!time24) return '';
+  const [h, m] = time24.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+};
+
 export const TourLogisticsSection = () => {
+  const { user } = useAuth();
+  const [selectedTourId, setSelectedTourId] = useState<string>('');
+  const [tours, setTours] = useState<any[]>([]);
+  const [timelineEvents, setTimelineEvents] = useState<UnifiedTimelineEvent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('timeline');
-  const [timeline, setTimeline] = useState<TimeSlot[]>(mockEventTimeline);
-  const [crewAssignments, setCrewAssignments] = useState<CrewAssignment[]>(mockCrewAssignments);
-  const [merchItems, setMerchItems] = useState<MerchItem[]>(mockMerchItems);
-  const [isAddingTime, setIsAddingTime] = useState(false);
-  const [isAddingCrew, setIsAddingCrew] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<string>('');
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'confirmed':
-        return <CheckCircle2 className="h-4 w-4 text-blue-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-muted-foreground" />;
+  const [isAddingEvent, setIsAddingEvent] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
+
+  // New event form state
+  const [newEvent, setNewEvent] = useState({
+    label: '',
+    event_category: 'call_time',
+    event_date: '',
+    event_time: '',
+    end_time: '',
+    target_group: 'all',
+    notes: '',
+    location: '',
+    status: 'pending',
+  });
+
+  // Fetch tours
+  useEffect(() => {
+    const fetchTours = async () => {
+      const { data } = await supabase
+        .from('gw_tours')
+        .select('id, name, start_date, end_date, status')
+        .order('start_date', { ascending: false });
+      setTours(data || []);
+      if (data && data.length > 0 && !selectedTourId) {
+        setSelectedTourId(data[0].id);
+      }
+    };
+    fetchTours();
+  }, []);
+
+  // Fetch unified timeline
+  const fetchTimeline = useCallback(async () => {
+    if (!selectedTourId) return;
+    setLoading(true);
+    try {
+      // Fetch manual timeline events
+      const { data: manualEvents } = await supabase
+        .from('gw_tour_timeline_events')
+        .select('*, gw_tour_cities(city_name)')
+        .eq('tour_id', selectedTourId)
+        .order('event_date', { ascending: true })
+        .order('event_time', { ascending: true });
+
+      // Fetch route cities for auto-generated entries
+      const { data: cities } = await supabase
+        .from('gw_tour_cities')
+        .select('*')
+        .eq('tour_id', selectedTourId)
+        .order('city_order', { ascending: true });
+
+      const unified: UnifiedTimelineEvent[] = [];
+
+      // Add manual events
+      (manualEvents || []).forEach(e => {
+        unified.push({
+          id: e.id,
+          label: e.label,
+          event_category: e.event_category,
+          event_date: e.event_date,
+          event_time: e.event_time,
+          end_time: e.end_time,
+          target_group: e.target_group || 'all',
+          notes: e.notes,
+          status: e.status,
+          location: e.location,
+          city_name: (e as any).gw_tour_cities?.city_name,
+          source: 'manual',
+          is_auto_generated: e.is_auto_generated || false,
+        });
+      });
+
+      // Auto-generate transport entries from route cities
+      (cities || []).forEach(city => {
+        if (city.arrival_date) {
+          unified.push({
+            id: `route-arrival-${city.id}`,
+            label: `Arrive in ${city.city_name}`,
+            event_category: 'transport',
+            event_date: city.arrival_date,
+            event_time: city.arrival_time,
+            end_time: null,
+            target_group: 'all',
+            notes: city.city_notes,
+            status: 'confirmed',
+            location: `${city.city_name}${city.state_code ? `, ${city.state_code}` : ''}`,
+            city_name: city.city_name,
+            source: 'routes',
+            is_auto_generated: true,
+          });
+        }
+        if (city.departure_date) {
+          unified.push({
+            id: `route-depart-${city.id}`,
+            label: `Depart ${city.city_name}`,
+            event_category: 'transport',
+            event_date: city.departure_date,
+            event_time: city.departure_time,
+            end_time: null,
+            target_group: 'all',
+            notes: city.meal_notes ? `Meals: ${city.meal_notes}` : null,
+            status: 'confirmed',
+            location: city.city_name,
+            city_name: city.city_name,
+            source: 'routes',
+            is_auto_generated: true,
+          });
+        }
+      });
+
+      // Sort by date then time
+      unified.sort((a, b) => {
+        const dateComp = (a.event_date || '').localeCompare(b.event_date || '');
+        if (dateComp !== 0) return dateComp;
+        return (a.event_time || '').localeCompare(b.event_time || '');
+      });
+
+      setTimelineEvents(unified);
+    } catch (err) {
+      console.error('Error fetching timeline:', err);
+      toast.error('Failed to load timeline');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedTourId]);
+
+  useEffect(() => { fetchTimeline(); }, [fetchTimeline]);
+
+  // Get unique dates for filter
+  const uniqueDates = [...new Set(timelineEvents.map(e => e.event_date))].sort();
+
+  // Filter events
+  const filteredEvents = timelineEvents.filter(e => {
+    if (categoryFilter !== 'all' && e.event_category !== categoryFilter) return false;
+    if (dateFilter !== 'all' && e.event_date !== dateFilter) return false;
+    return true;
+  });
+
+  // Group by date
+  const groupedByDate = filteredEvents.reduce<Record<string, UnifiedTimelineEvent[]>>((acc, e) => {
+    const key = e.event_date || 'unknown';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(e);
+    return acc;
+  }, {});
+
+  const handleAddEvent = async () => {
+    if (!newEvent.label || !newEvent.event_date || !selectedTourId) {
+      toast.error('Label and date are required');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('gw_tour_timeline_events').insert({
+        tour_id: selectedTourId,
+        label: newEvent.label,
+        event_category: newEvent.event_category,
+        event_date: newEvent.event_date,
+        event_time: newEvent.event_time || null,
+        end_time: newEvent.end_time || null,
+        target_group: newEvent.target_group,
+        notes: newEvent.notes || null,
+        location: newEvent.location || null,
+        status: newEvent.status,
+        created_by: user?.id,
+        is_auto_generated: false,
+        source_module: 'manual',
+      });
+      if (error) throw error;
+      toast.success('Event added');
+      setIsAddingEvent(false);
+      setNewEvent({ label: '', event_category: 'call_time', event_date: '', event_time: '', end_time: '', target_group: 'all', notes: '', location: '', status: 'pending' });
+      fetchTimeline();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to add event');
+    } finally {
+      setSaving(false);
     }
   };
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Completed</Badge>;
-      case 'confirmed':
-        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">Confirmed</Badge>;
-      default:
-        return <Badge variant="secondary">Pending</Badge>;
+
+  const handleDeleteEvent = async (id: string) => {
+    try {
+      const { error } = await supabase.from('gw_tour_timeline_events').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Event removed');
+      fetchTimeline();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete');
     }
   };
-  return <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+  const handleStatusToggle = async (id: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'pending' ? 'confirmed' : currentStatus === 'confirmed' ? 'completed' : 'pending';
+    try {
+      const { error } = await supabase.from('gw_tour_timeline_events').update({ status: nextStatus }).eq('id', id);
+      if (error) throw error;
+      fetchTimeline();
+    } catch (err: any) {
+      toast.error('Failed to update status');
+    }
+  };
+
+  const getStatusBadge = (status: string, source: string) => {
+    if (source === 'routes') {
+      return <Badge variant="outline" className="text-xs border-blue-300 text-blue-600 dark:text-blue-400">From Routes</Badge>;
+    }
+    switch (status) {
+      case 'completed':
+        return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100 text-xs">Done</Badge>;
+      case 'confirmed':
+        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 text-xs">Confirmed</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive" className="text-xs">Cancelled</Badge>;
+      default:
+        return <Badge variant="secondary" className="text-xs">Pending</Badge>;
+    }
+  };
+
+  const selectedTour = tours.find(t => t.id === selectedTourId);
+
+  return (
+    <div className="space-y-4">
+      {/* Header with tour selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Tour Logistics</h2>
-          <p className="text-muted-foreground">Manage call times, schedules, crew, and merchandise</p>
+          <h2 className="text-xl font-bold text-foreground">Unified Operations Timeline</h2>
+          <p className="text-sm text-muted-foreground">All call times, transport, performances, meals, and crew schedules</p>
         </div>
-        <Select value={selectedEvent} onValueChange={setSelectedEvent}>
-          <SelectTrigger className="w-[250px]">
-            <SelectValue placeholder="Select Tour Event" />
+        <Select value={selectedTourId} onValueChange={setSelectedTourId}>
+          <SelectTrigger className="w-[260px] bg-card border-border">
+            <SelectValue placeholder="Select Tour" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="spring-tour-2025">Spring Tour 2025 - Atlanta</SelectItem>
-            <SelectItem value="homecoming-2025">Homecoming Concert 2025</SelectItem>
-            <SelectItem value="christmas-tour">Christmas Tour - NYC</SelectItem>
+            {tours.map(t => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name} ({t.status || 'planning'})
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="timeline" className="gap-2">
-            <Clock className="h-4 w-4" />
-            <span className="hidden sm:inline">Timeline</span>
-          </TabsTrigger>
-          <TabsTrigger value="crew" className="gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Crew</span>
-          </TabsTrigger>
-          <TabsTrigger value="merch" className="gap-2">
-            <ShoppingBag className="h-4 w-4" />
-            <span className="hidden sm:inline">Merch</span>
-          </TabsTrigger>
-          <TabsTrigger value="checklist" className="gap-2">
-            <ClipboardList className="h-4 w-4" />
-            <span className="hidden sm:inline">Checklist</span>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Timeline Tab */}
-        <TabsContent value="timeline" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Event Timeline</h3>
-            <Dialog open={isAddingTime} onOpenChange={setIsAddingTime}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Time Slot
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Time Slot</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Event Type</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="call">Call Time</SelectItem>
-                          <SelectItem value="departure">Bus Departure</SelectItem>
-                          <SelectItem value="arrival">Arrival</SelectItem>
-                          <SelectItem value="soundcheck">Sound Check</SelectItem>
-                          <SelectItem value="doors">Doors Open</SelectItem>
-                          <SelectItem value="performance">Performance</SelectItem>
-                          <SelectItem value="loadout">Load Out</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Time</Label>
-                      <Input type="time" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Notes</Label>
-                    <Textarea placeholder="Additional details..." />
-                  </div>
-                  <Button className="w-full" onClick={() => setIsAddingTime(false)}>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Time Slot
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+      {/* Quick stats strip */}
+      {selectedTour && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-muted-foreground">{selectedTour.start_date} → {selectedTour.end_date}</span>
           </div>
+          <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-muted-foreground">{timelineEvents.length} events</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5">
+            <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-muted-foreground">{uniqueDates.length} days</span>
+          </div>
+        </div>
+      )}
 
-          {/* Timeline Visual */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="relative">
+      {/* Category filter chips */}
+      <div className="flex flex-wrap gap-1.5">
+        <button
+          onClick={() => setCategoryFilter('all')}
+          className={cn(
+            "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
+            categoryFilter === 'all'
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          )}
+        >
+          All
+        </button>
+        {EVENT_CATEGORIES.map(cat => {
+          const count = timelineEvents.filter(e => e.event_category === cat.value).length;
+          if (count === 0) return null;
+          const Icon = cat.icon;
+          return (
+            <button
+              key={cat.value}
+              onClick={() => setCategoryFilter(cat.value)}
+              className={cn(
+                "px-2.5 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1",
+                categoryFilter === cat.value
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="h-3 w-3" />
+              {cat.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Date filter */}
+      {uniqueDates.length > 1 && (
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => setDateFilter('all')}
+            className={cn(
+              "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
+              dateFilter === 'all'
+                ? "bg-accent text-accent-foreground"
+                : "bg-muted/50 text-muted-foreground hover:text-foreground"
+            )}
+          >
+            All Dates
+          </button>
+          {uniqueDates.map(d => (
+            <button
+              key={d}
+              onClick={() => setDateFilter(d)}
+              className={cn(
+                "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
+                dateFilter === d
+                  ? "bg-accent text-accent-foreground"
+                  : "bg-muted/50 text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {format(parseISO(d), 'EEE, MMM d')}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Add Event Button */}
+      <div className="flex justify-end">
+        <Dialog open={isAddingEvent} onOpenChange={setIsAddingEvent}>
+          <DialogTrigger asChild>
+            <Button size="sm" disabled={!selectedTourId}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Event
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Timeline Event</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 pt-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Event Label *</Label>
+                <Input
+                  placeholder="e.g. Singer Call Time"
+                  value={newEvent.label}
+                  onChange={e => setNewEvent(p => ({ ...p, label: e.target.value }))}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Category</Label>
+                  <Select value={newEvent.event_category} onValueChange={v => setNewEvent(p => ({ ...p, event_category: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {EVENT_CATEGORIES.map(c => (
+                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">For</Label>
+                  <Select value={newEvent.target_group} onValueChange={v => setNewEvent(p => ({ ...p, target_group: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {TARGET_GROUPS.map(g => (
+                        <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Date *</Label>
+                  <Input type="date" value={newEvent.event_date} onChange={e => setNewEvent(p => ({ ...p, event_date: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Start</Label>
+                  <Input type="time" value={newEvent.event_time} onChange={e => setNewEvent(p => ({ ...p, event_time: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">End</Label>
+                  <Input type="time" value={newEvent.end_time} onChange={e => setNewEvent(p => ({ ...p, end_time: e.target.value }))} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Location</Label>
+                <Input placeholder="Venue, city, etc." value={newEvent.location} onChange={e => setNewEvent(p => ({ ...p, location: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Notes</Label>
+                <Textarea className="h-16" placeholder="Additional details..." value={newEvent.notes} onChange={e => setNewEvent(p => ({ ...p, notes: e.target.value }))} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleAddEvent} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Save className="h-4 w-4 mr-1.5" />}
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Timeline Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : filteredEvents.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center">
+            <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground font-medium">No timeline events</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {selectedTourId ? 'Add events or set up route cities to populate the timeline' : 'Select a tour to view its timeline'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(groupedByDate).map(([date, events]) => (
+            <div key={date}>
+              {/* Day header */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="bg-primary text-primary-foreground px-3 py-1 rounded-md text-sm font-semibold">
+                  {format(parseISO(date), 'EEE, MMM d')}
+                </div>
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground">{events.length} events</span>
+              </div>
+
+              {/* Events for this day */}
+              <div className="relative ml-4">
                 {/* Vertical line */}
-                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
-                
-                <div className="space-y-6">
-                  {timeline.map((slot, index) => <div key={slot.id} className="relative flex gap-4 pl-10">
-                      {/* Timeline dot */}
-                      <div className={cn("absolute left-2 w-5 h-5 rounded-full border-2 flex items-center justify-center bg-background", slot.status === 'completed' ? "border-green-500" : slot.status === 'confirmed' ? "border-blue-500" : "border-muted-foreground")}>
-                        <div className={cn("w-2 h-2 rounded-full", slot.status === 'completed' ? "bg-green-500" : slot.status === 'confirmed' ? "bg-blue-500" : "bg-muted-foreground")} />
-                      </div>
-                      
-                      {/* Content */}
-                      <div className="flex-1 bg-muted/30 rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                        <div className="flex flex-wrap items-start justify-between gap-2">
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg font-bold text-primary">{slot.time}</span>
-                            <h4 className="font-medium">{slot.label}</h4>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(slot.status)}
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
+                <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
+
+                <div className="space-y-2">
+                  {events.map(event => {
+                    const catConfig = getCategoryConfig(event.event_category);
+                    const CatIcon = catConfig.icon;
+                    const targetLabel = TARGET_GROUPS.find(g => g.value === event.target_group)?.label || 'Everyone';
+
+                    return (
+                      <div key={event.id} className="relative flex gap-3 pl-8">
+                        {/* Dot */}
+                        <div className={cn(
+                          "absolute left-1 top-3 w-5 h-5 rounded-full flex items-center justify-center",
+                          catConfig.color
+                        )}>
+                          <CatIcon className="h-2.5 w-2.5 text-white" />
                         </div>
-                        {slot.notes && <p className="text-sm text-muted-foreground mt-2">{slot.notes}</p>}
+
+                        {/* Card */}
+                        <div className="flex-1 bg-card border border-border rounded-lg p-3 hover:bg-muted/30 transition-colors group">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              {event.event_time && (
+                                <span className="text-sm font-bold text-primary font-mono">
+                                  {formatTime12(event.event_time)}
+                                </span>
+                              )}
+                              {event.end_time && (
+                                <span className="text-xs text-muted-foreground">
+                                  – {formatTime12(event.end_time)}
+                                </span>
+                              )}
+                              <h4 className="text-sm font-medium text-foreground">{event.label}</h4>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              {event.target_group !== 'all' && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                  <Users className="h-2.5 w-2.5 mr-0.5" />
+                                  {targetLabel}
+                                </Badge>
+                              )}
+                              {getStatusBadge(event.status, event.source)}
+                              {event.source === 'manual' && (
+                                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => handleStatusToggle(event.id, event.status)}
+                                  >
+                                    <CheckCircle2 className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-destructive"
+                                    onClick={() => handleDeleteEvent(event.id)}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {(event.location || event.notes || event.city_name) && (
+                            <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                              {event.location && (
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" />
+                                  {event.location}
+                                </span>
+                              )}
+                              {event.notes && <span>{event.notes}</span>}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>)}
+                    );
+                  })}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Time Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-              <CardContent className="p-4 text-center">
-                <Bus className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                <p className="text-sm text-muted-foreground">Bus Leaves</p>
-                <p className="text-xl font-bold text-blue-600">11:00 AM</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800">
-              <CardContent className="p-4 text-center">
-                <MapPin className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-                <p className="text-sm text-muted-foreground">Arrival</p>
-                <p className="text-xl font-bold text-purple-600">2:00 PM</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-              <CardContent className="p-4 text-center">
-                <Music className="h-8 w-8 mx-auto mb-2 text-amber-600" />
-                <p className="text-sm text-muted-foreground">Sound Check</p>
-                <p className="text-xl font-bold text-amber-600">3:00 PM</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
-              <CardContent className="p-4 text-center">
-                <DoorOpen className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                <p className="text-sm text-muted-foreground">Doors Open</p>
-                <p className="text-xl font-bold text-green-600">6:30 PM</p>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Crew Tab */}
-        <TabsContent value="crew" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Setup Crew Assignments</h3>
-            <Dialog open={isAddingCrew} onOpenChange={setIsAddingCrew}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Crew Member
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Crew Assignment</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label>Role/Position</Label>
-                    <Input placeholder="e.g., Stage Manager" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Assign To</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select member" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="member1">Jane Doe</SelectItem>
-                          <SelectItem value="member2">Mary Smith</SelectItem>
-                          <SelectItem value="member3">Sarah Johnson</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Call Time</Label>
-                      <Input type="time" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Duties</Label>
-                    <Textarea placeholder="List responsibilities..." />
-                  </div>
-                  <Button className="w-full" onClick={() => setIsAddingCrew(false)}>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Assignment
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {crewAssignments.map(crew => <Card key={crew.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <UserCheck className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-base">{crew.name}</CardTitle>
-                        <Badge variant="outline" className="mt-1">{crew.role}</Badge>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Call Time</p>
-                      <p className="font-bold text-primary">{crew.callTime}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Separator className="my-3" />
-                  <div>
-                    <p className="text-sm font-medium mb-2">Duties:</p>
-                    <ul className="space-y-1">
-                      {crew.duties.map((duty, idx) => <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
-                          <CheckCircle2 className="h-3 w-3 text-green-500" />
-                          {duty}
-                        </li>)}
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>)}
-          </div>
-        </TabsContent>
-
-        {/* Merchandise Tab */}
-        <TabsContent value="merch" className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">Merchandise Coordination</h3>
-              <p className="text-sm text-muted-foreground">Collaborate with Merch Manager for this event</p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Megaphone className="h-4 w-4 mr-2" />
-                Contact Merch Manager
-              </Button>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
-            </div>
-          </div>
-
-          {/* Merch Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Items</p>
-                    <p className="text-2xl font-bold">{merchItems.reduce((acc, item) => acc + item.quantity, 0)}</p>
-                  </div>
-                  <Package className="h-8 w-8 text-muted-foreground" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Potential Revenue</p>
-                    <p className="text-2xl font-bold">${merchItems.reduce((acc, item) => acc + item.quantity * item.price, 0).toLocaleString()}</p>
-                  </div>
-                  <ShoppingBag className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Product Types</p>
-                    <p className="text-2xl font-bold">{merchItems.length}</p>
-                  </div>
-                  <ClipboardList className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Setup Time</p>
-                    <p className="text-2xl font-bold">5:00 PM</p>
-                  </div>
-                  <Timer className="h-8 w-8 text-amber-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Merch Items Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Inventory for Event</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium">Item</th>
-                      <th className="text-center py-3 px-4 font-medium">Quantity</th>
-                      <th className="text-center py-3 px-4 font-medium">Price</th>
-                      <th className="text-center py-3 px-4 font-medium">Total Value</th>
-                      <th className="text-left py-3 px-4 font-medium">Notes</th>
-                      <th className="text-right py-3 px-4 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {merchItems.map(item => <tr key={item.id} className="border-b hover:bg-muted/50">
-                        <td className="py-3 px-4 font-medium">{item.name}</td>
-                        <td className="py-3 px-4 text-center">{item.quantity}</td>
-                        <td className="py-3 px-4 text-center">${item.price}</td>
-                        <td className="py-3 px-4 text-center font-medium">${(item.quantity * item.price).toLocaleString()}</td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground">{item.notes || '-'}</td>
-                        <td className="py-3 px-4 text-right">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>)}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Checklist Tab */}
-        <TabsContent value="checklist" className="space-y-4">
-          <h3 className="text-lg font-semibold">Pre-Event Checklist</h3>
-          
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Bus className="h-5 w-5" />
-                  Transportation
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[{
-                label: 'Bus confirmed and inspected',
-                checked: true
-              }, {
-                label: 'Driver contact info shared',
-                checked: true
-              }, {
-                label: 'Route mapped and shared',
-                checked: false
-              }, {
-                label: 'Rest stops planned',
-                checked: false
-              }].map((item, idx) => <div key={idx} className="flex items-center gap-3">
-                    <div className={cn("w-5 h-5 rounded border-2 flex items-center justify-center", item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground")}>
-                      {item.checked && <CheckCircle2 className="h-3 w-3 text-white" />}
-                    </div>
-                    <span className={cn("text-sm", item.checked && "line-through text-muted-foreground")}>{item.label}</span>
-                  </div>)}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Music className="h-5 w-5" />
-                  Performance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[{
-                label: 'Sound check time confirmed',
-                checked: true
-              }, {
-                label: 'Set list finalized',
-                checked: true
-              }, {
-                label: 'Wardrobe ready',
-                checked: false
-              }, {
-                label: 'Props/staging confirmed',
-                checked: false
-              }].map((item, idx) => <div key={idx} className="flex items-center gap-3">
-                    <div className={cn("w-5 h-5 rounded border-2 flex items-center justify-center", item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground")}>
-                      {item.checked && <CheckCircle2 className="h-3 w-3 text-white" />}
-                    </div>
-                    <span className={cn("text-sm", item.checked && "line-through text-muted-foreground")}>{item.label}</span>
-                  </div>)}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5" />
-                  Merchandise
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[{
-                label: 'Inventory counted',
-                checked: true
-              }, {
-                label: 'Cash box prepared',
-                checked: false
-              }, {
-                label: 'Card reader charged',
-                checked: false
-              }, {
-                label: 'Merch table supplies packed',
-                checked: false
-              }].map((item, idx) => <div key={idx} className="flex items-center gap-3">
-                    <div className={cn("w-5 h-5 rounded border-2 flex items-center justify-center", item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground")}>
-                      {item.checked && <CheckCircle2 className="h-3 w-3 text-white" />}
-                    </div>
-                    <span className={cn("text-sm", item.checked && "line-through text-muted-foreground")}>{item.label}</span>
-                  </div>)}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Crew & Personnel
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[{
-                label: 'All crew assigned',
-                checked: true
-              }, {
-                label: 'Call times communicated',
-                checked: true
-              }, {
-                label: 'Emergency contacts shared',
-                checked: true
-              }, {
-                label: 'Duty sheets distributed',
-                checked: false
-              }].map((item, idx) => <div key={idx} className="flex items-center gap-3">
-                    <div className={cn("w-5 h-5 rounded border-2 flex items-center justify-center", item.checked ? "bg-green-500 border-green-500" : "border-muted-foreground")}>
-                      {item.checked && <CheckCircle2 className="h-3 w-3 text-white" />}
-                    </div>
-                    <span className={cn("text-sm", item.checked && "line-through text-muted-foreground")}>{item.label}</span>
-                  </div>)}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>;
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
