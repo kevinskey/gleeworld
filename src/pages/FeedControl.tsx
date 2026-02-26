@@ -45,40 +45,40 @@ const FeedControl = () => {
   const loadData = async () => {
     setLoading(true);
     const [srcRes, setRes] = await Promise.all([
-      (supabase as any).from('gw_feed_sources').select('*').order('display_order'),
-      (supabase as any).from('gw_feed_settings').select('*'),
-    ]);
+    (supabase as any).from('gw_feed_sources').select('*').order('display_order'),
+    (supabase as any).from('gw_feed_settings').select('*')]
+    );
     if (srcRes.data) setSources(srcRes.data);
     if (setRes.data) setSettings(setRes.data);
     setLoading(false);
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {loadData();}, []);
 
-  const filteredSources = sources.filter(s => s.feed_type === tab);
-  const currentSettings = settings.find(s => s.feed_type === tab);
+  const filteredSources = sources.filter((s) => s.feed_type === tab);
+  const currentSettings = settings.find((s) => s.feed_type === tab);
 
   const updateSource = async (id: string, updates: Partial<FeedSource>) => {
     const { error } = await (supabase as any).from('gw_feed_sources').update(updates).eq('id', id);
-    if (error) { toast.error('Failed to update source'); return; }
-    setSources(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    if (error) {toast.error('Failed to update source');return;}
+    setSources((prev) => prev.map((s) => s.id === id ? { ...s, ...updates } : s));
     toast.success('Source updated');
   };
 
   const deleteSource = async (id: string) => {
     const { error } = await (supabase as any).from('gw_feed_sources').delete().eq('id', id);
-    if (error) { toast.error('Failed to delete'); return; }
-    setSources(prev => prev.filter(s => s.id !== id));
+    if (error) {toast.error('Failed to delete');return;}
+    setSources((prev) => prev.filter((s) => s.id !== id));
     toast.success('Source removed');
   };
 
   const addSource = async () => {
     const order = filteredSources.length + 1;
-    const { data, error } = await (supabase as any).from('gw_feed_sources')
-      .insert({ ...newSource, feed_type: tab, display_order: order, created_by: user?.id })
-      .select().single();
-    if (error) { toast.error(error.message); return; }
-    setSources(prev => [...prev, data]);
+    const { data, error } = await (supabase as any).from('gw_feed_sources').
+    insert({ ...newSource, feed_type: tab, display_order: order, created_by: user?.id }).
+    select().single();
+    if (error) {toast.error(error.message);return;}
+    setSources((prev) => [...prev, data]);
     setNewSource({ name: '', url: '', icon: '📰', feed_type: tab, max_items_per_source: 5, timeout_ms: 8000 });
     setAddOpen(false);
     toast.success('Source added');
@@ -87,8 +87,8 @@ const FeedControl = () => {
   const updateSettings = async (updates: Partial<FeedSettings>) => {
     if (!currentSettings) return;
     const { error } = await (supabase as any).from('gw_feed_settings').update({ ...updates, updated_by: user?.id }).eq('id', currentSettings.id);
-    if (error) { toast.error('Failed to update settings'); return; }
-    setSettings(prev => prev.map(s => s.id === currentSettings.id ? { ...s, ...updates } : s));
+    if (error) {toast.error('Failed to update settings');return;}
+    setSettings((prev) => prev.map((s) => s.id === currentSettings.id ? { ...s, ...updates } : s));
     toast.success('Settings updated');
   };
 
@@ -99,7 +99,7 @@ const FeedControl = () => {
       const timeout = setTimeout(() => controller.abort(), source.timeout_ms);
       const res = await fetch(source.url, {
         headers: { 'User-Agent': 'GleeWorld Feed Test/1.0', Accept: 'application/rss+xml, application/xml, text/xml, */*' },
-        signal: controller.signal,
+        signal: controller.signal
       });
       clearTimeout(timeout);
       if (res.ok) {
@@ -124,8 +124,8 @@ const FeedControl = () => {
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: "'Cinzel', serif" }}>Feed Control</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage RSS sources, limits, and refresh timings for dashboard feeds</p>
+          <h1 className="text-2xl font-bold text-black" style={{ fontFamily: "'Cinzel', serif" }}>Feed Control</h1>
+          <p className="text-sm mt-1 text-black">Manage RSS sources, limits, and refresh timings for dashboard feeds</p>
         </div>
       </div>
 
@@ -137,8 +137,8 @@ const FeedControl = () => {
 
         <TabsContent value={tab} className="space-y-4">
           {/* Global Settings Card */}
-          {currentSettings && (
-            <Card>
+          {currentSettings &&
+          <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2"><Settings2 className="h-4 w-4" /> Feed Settings</CardTitle>
               </CardHeader>
@@ -147,34 +147,34 @@ const FeedControl = () => {
                   <div>
                     <Label className="text-xs">Max Total Items</Label>
                     <Input
-                      type="number"
-                      min={5}
-                      max={100}
-                      value={currentSettings.max_total_items}
-                      onChange={e => updateSettings({ max_total_items: parseInt(e.target.value) || 25 })}
-                    />
+                    type="number"
+                    min={5}
+                    max={100}
+                    value={currentSettings.max_total_items}
+                    onChange={(e) => updateSettings({ max_total_items: parseInt(e.target.value) || 25 })} />
+
                   </div>
                   <div>
                     <Label className="text-xs">Cache Duration (minutes)</Label>
                     <Input
-                      type="number"
-                      min={1}
-                      max={120}
-                      value={currentSettings.cache_minutes}
-                      onChange={e => updateSettings({ cache_minutes: parseInt(e.target.value) || 15 })}
-                    />
+                    type="number"
+                    min={1}
+                    max={120}
+                    value={currentSettings.cache_minutes}
+                    onChange={(e) => updateSettings({ cache_minutes: parseInt(e.target.value) || 15 })} />
+
                   </div>
                   <div className="flex items-center gap-3">
                     <Switch
-                      checked={currentSettings.is_enabled}
-                      onCheckedChange={checked => updateSettings({ is_enabled: checked })}
-                    />
+                    checked={currentSettings.is_enabled}
+                    onCheckedChange={(checked) => updateSettings({ is_enabled: checked })} />
+
                     <Label className="text-sm">{currentSettings.is_enabled ? 'Feed Enabled' : 'Feed Disabled'}</Label>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          )}
+          }
 
           {/* Sources List */}
           <div className="flex items-center justify-between">
@@ -188,24 +188,24 @@ const FeedControl = () => {
                 <div className="space-y-3">
                   <div>
                     <Label>Name</Label>
-                    <Input value={newSource.name} onChange={e => setNewSource(p => ({ ...p, name: e.target.value }))} placeholder="e.g. AP News" />
+                    <Input value={newSource.name} onChange={(e) => setNewSource((p) => ({ ...p, name: e.target.value }))} placeholder="e.g. AP News" />
                   </div>
                   <div>
                     <Label>RSS URL</Label>
-                    <Input value={newSource.url} onChange={e => setNewSource(p => ({ ...p, url: e.target.value }))} placeholder="https://..." />
+                    <Input value={newSource.url} onChange={(e) => setNewSource((p) => ({ ...p, url: e.target.value }))} placeholder="https://..." />
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <Label>Icon (emoji)</Label>
-                      <Input value={newSource.icon} onChange={e => setNewSource(p => ({ ...p, icon: e.target.value }))} />
+                      <Input value={newSource.icon} onChange={(e) => setNewSource((p) => ({ ...p, icon: e.target.value }))} />
                     </div>
                     <div>
                       <Label>Max Items</Label>
-                      <Input type="number" value={newSource.max_items_per_source} onChange={e => setNewSource(p => ({ ...p, max_items_per_source: parseInt(e.target.value) || 5 }))} />
+                      <Input type="number" value={newSource.max_items_per_source} onChange={(e) => setNewSource((p) => ({ ...p, max_items_per_source: parseInt(e.target.value) || 5 }))} />
                     </div>
                     <div>
                       <Label>Timeout (ms)</Label>
-                      <Input type="number" value={newSource.timeout_ms} onChange={e => setNewSource(p => ({ ...p, timeout_ms: parseInt(e.target.value) || 8000 }))} />
+                      <Input type="number" value={newSource.timeout_ms} onChange={(e) => setNewSource((p) => ({ ...p, timeout_ms: parseInt(e.target.value) || 8000 }))} />
                     </div>
                   </div>
                   <Button onClick={addSource} disabled={!newSource.name || !newSource.url} className="w-full">Add Source</Button>
@@ -215,11 +215,11 @@ const FeedControl = () => {
           </div>
 
           <div className="space-y-2">
-            {filteredSources.length === 0 ? (
-              <Card><CardContent className="py-8 text-center text-muted-foreground"><Rss className="h-8 w-8 mx-auto mb-2 opacity-30" />No sources configured</CardContent></Card>
-            ) : (
-              filteredSources.map(source => (
-                <Card key={source.id} className={`transition-opacity ${!source.is_active ? 'opacity-50' : ''}`}>
+            {filteredSources.length === 0 ?
+            <Card><CardContent className="py-8 text-center text-muted-foreground"><Rss className="h-8 w-8 mx-auto mb-2 opacity-30" />No sources configured</CardContent></Card> :
+
+            filteredSources.map((source) =>
+            <Card key={source.id} className={`transition-opacity ${!source.is_active ? 'opacity-50' : ''}`}>
                   <CardContent className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <span className="text-xl">{source.icon}</span>
@@ -241,41 +241,41 @@ const FeedControl = () => {
                           <span>{source.timeout_ms / 1000}s timeout</span>
                         </div>
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => testSource(source)}
-                          disabled={testing === source.id}
-                        >
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => testSource(source)}
+                      disabled={testing === source.id}>
+
                           {testing === source.id ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
                         </Button>
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => updateSource(source.id, { is_active: !source.is_active })}
-                        >
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => updateSource(source.id, { is_active: !source.is_active })}>
+
                           {source.is_active ? <ToggleRight className="h-4 w-4 text-green-500" /> : <ToggleLeft className="h-4 w-4" />}
                         </Button>
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => deleteSource(source.id)}
-                        >
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => deleteSource(source.id)}>
+
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))
-            )}
+            )
+            }
           </div>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
+
 };
 
 export default FeedControl;
