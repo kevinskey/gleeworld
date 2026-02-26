@@ -31,6 +31,17 @@ import { EditEventDialog } from "../EditEventDialog";
 import { EventDetailDialog } from "../EventDetailDialog";
 import { EventAttendanceDialog } from "./EventAttendanceDialog";
 
+// Determine if text should be white or dark based on background color luminance
+const getContrastTextColor = (hexColor: string): string => {
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  // Relative luminance formula
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.55 ? '#1a1a2e' : '#ffffff';
+};
+
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   music: Music,
   'book-open': BookOpen,
@@ -142,12 +153,14 @@ export const CommandCenterEventCard = ({
     }
   };
 
+  const textColor = getContrastTextColor(categoryColor);
+
   const cardContent = compact ? (
     // Compact view for monthly grid
     <div
       onClick={handleCardClick}
-      className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:opacity-90 transition-all text-white shadow-sm"
-      style={{ backgroundColor: categoryColor }}
+      className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:opacity-90 transition-all shadow-sm"
+      style={{ backgroundColor: categoryColor, color: textColor }}
     >
       <Icon className="h-3 w-3 flex-shrink-0" />
       <span className="text-xs font-medium truncate flex-1">{event.title}</span>
