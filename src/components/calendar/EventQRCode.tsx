@@ -14,9 +14,10 @@ interface EventQRCodeProps {
   eventId: string;
   eventTitle: string;
   eventQrToken?: string; // Legacy token, kept for backward compatibility
+  compact?: boolean;
 }
 
-export const EventQRCode = ({ eventId, eventTitle }: EventQRCodeProps) => {
+export const EventQRCode = ({ eventId, eventTitle, compact = false }: EventQRCodeProps) => {
   const [open, setOpen] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [encodedUrl, setEncodedUrl] = useState('');
@@ -267,13 +268,22 @@ export const EventQRCode = ({ eventId, eventTitle }: EventQRCodeProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline"
-          className="h-auto py-4 flex-col gap-2 hover:bg-secondary/80"
-        >
-          <QrCode className="h-5 w-5 text-muted-foreground" />
-          <span className="font-medium">QR Code</span>
-        </Button>
+        {compact ? (
+          <button
+            className="h-8 w-8 rounded-md bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+            title="QR Code"
+          >
+            <QrCode className="h-4 w-4 text-slate-600" />
+          </button>
+        ) : (
+          <Button 
+            variant="outline"
+            className="h-auto py-4 flex-col gap-2 hover:bg-secondary/80"
+          >
+            <QrCode className="h-5 w-5 text-muted-foreground" />
+            <span className="font-medium">QR Code</span>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

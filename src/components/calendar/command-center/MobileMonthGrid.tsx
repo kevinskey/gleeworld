@@ -8,6 +8,7 @@ import { EventQRCode } from "../EventQRCode";
 import { OfficeHoursBooking } from "../OfficeHoursBooking";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Clock, MapPin } from "lucide-react";
 
 const isSameDayET = (date1: Date, date2: Date): boolean => {
   const tz = 'America/New_York';
@@ -55,6 +56,7 @@ export const MobileMonthGrid = ({
     };
     checkPermissions();
   }, [user]);
+
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
@@ -71,7 +73,6 @@ export const MobileMonthGrid = ({
     return categoryConfigs.find(c => c.id === category);
   };
 
-  // Get selected day events for the bottom panel
   const selectedDayEvents = useMemo(() => {
     return events
       .filter(event => isSameDayET(new Date(event.start_date), selectedDate))
@@ -84,16 +85,17 @@ export const MobileMonthGrid = ({
       <div className="bg-[#003366] flex-shrink-0 px-3 py-2">
         <OfficeHoursBooking />
       </div>
+
       {/* Day Headers */}
       <div className="grid grid-cols-7 bg-[#003366] text-white flex-shrink-0">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-          <div key={idx} className="py-2.5 text-center text-sm font-bold tracking-wider">
+          <div key={idx} className="py-2 text-center text-xs font-bold tracking-wider">
             {day}
           </div>
         ))}
       </div>
 
-      {/* Compact Month Grid - taller cells */}
+      {/* Month Grid */}
       <div className="grid grid-cols-7 flex-shrink-0">
         {days.map((day) => {
           const dayEvents = getEventsForDate(day);
@@ -102,7 +104,6 @@ export const MobileMonthGrid = ({
           const isSelected = isSameDayET(day, selectedDate);
           const hasEvents = dayEvents.length > 0;
 
-          // Get unique category colors for dot indicators (max 3)
           const categoryColors = hasEvents
             ? [...new Set(dayEvents.map(e => getCategoryConfig(getCategoryForEvent(e))?.color || '#708090'))].slice(0, 3)
             : [];
@@ -112,14 +113,14 @@ export const MobileMonthGrid = ({
               key={day.toString()}
               onClick={() => onDateSelect(day)}
               className={cn(
-                "flex flex-col items-center py-2.5 min-h-[56px] touch-manipulation transition-colors border-b border-r border-slate-100",
+                "flex flex-col items-center py-2 min-h-[52px] touch-manipulation transition-colors border-b border-r border-slate-100",
                 !isCurrentMonth && "opacity-30",
                 isSelected && "bg-blue-50",
-                isToday && !isSelected && "bg-amber-50",
+                isToday && !isSelected && "bg-amber-50/60",
               )}
             >
               <span className={cn(
-                "inline-flex items-center justify-center w-8 h-8 rounded-full text-base font-bold",
+                "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold",
                 isToday && "bg-[#003366] text-white",
                 isSelected && !isToday && "bg-[#B8860B] text-white",
                 !isToday && !isSelected && isCurrentMonth && "text-slate-800",
@@ -127,7 +128,7 @@ export const MobileMonthGrid = ({
                 {format(day, 'd')}
               </span>
               {hasEvents && (
-                <div className="flex gap-0.5 mt-1">
+                <div className="flex gap-0.5 mt-0.5">
                   {categoryColors.map((color, idx) => (
                     <div
                       key={idx}
@@ -143,19 +144,21 @@ export const MobileMonthGrid = ({
       </div>
 
       {/* Selected Day Events Panel */}
-      <div className="border-t-2 border-slate-300">
-        <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: '#003366' }}>
+      <div className="border-t border-slate-200">
+        {/* Compact date header */}
+        <div className="px-3 py-2 bg-slate-50 flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wide" style={{ color: '#003366' }}>
             {format(selectedDate, 'EEEE, MMMM d')}
           </h3>
           <span className="text-xs font-medium text-slate-500">
             {selectedDayEvents.length} event{selectedDayEvents.length !== 1 ? 's' : ''}
           </span>
         </div>
+
         <div className="p-2 space-y-1.5">
           {selectedDayEvents.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-xs text-slate-400">No events scheduled</p>
+            <div className="text-center py-6">
+              <p className="text-sm text-slate-400">No events scheduled</p>
             </div>
           ) : (
             selectedDayEvents.map((event) => {
@@ -164,24 +167,37 @@ export const MobileMonthGrid = ({
               return (
                 <div
                   key={event.id}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-100 shadow-sm"
+                  className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-slate-100 shadow-sm"
                 >
+                  {/* Category color bar */}
                   <div
-                    className="w-1 self-stretch min-h-[32px] rounded-full flex-shrink-0"
+                    className="w-1 self-stretch min-h-[36px] rounded-full flex-shrink-0"
                     style={{ backgroundColor: config?.color || '#708090' }}
                   />
+
+                  {/* Event details */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate" style={{ color: '#0f172a' }}>
+                    <p className="text-sm font-semibold text-slate-900 truncate">
                       {event.title}
                     </p>
-                    <p className="text-xs text-slate-500">
-                      {format(new Date(event.start_date), 'h:mm a')}
-                      {event.location && ` • ${event.location}`}
-                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-slate-500 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {format(new Date(event.start_date), 'h:mm a')}
+                      </span>
+                      {event.location && (
+                        <span className="text-xs text-slate-500 flex items-center gap-1 truncate">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{event.location}</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Compact QR button */}
                   {canManageAttendance && (
                     <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <EventQRCode eventId={event.id} eventTitle={event.title} />
+                      <EventQRCode eventId={event.id} eventTitle={event.title} compact />
                     </div>
                   )}
                 </div>
