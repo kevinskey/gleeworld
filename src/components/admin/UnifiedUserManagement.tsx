@@ -332,7 +332,7 @@ export const UnifiedUserManagement = () => {
             </div>
           </div>
 
-          <p className="text-[11px] text-slate-500">{filteredUsers.length} of {users.length}</p>
+          <p className="text-[11px]" style={{ color: '#64748b' }}>{filteredUsers.length} of {users.length}</p>
 
           {/* Mobile card list */}
           <div className="sm:hidden space-y-2">
