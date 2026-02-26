@@ -20188,6 +20188,68 @@ export type Database = {
           },
         ]
       }
+      gw_tour_notes: {
+        Row: {
+          author_id: string
+          author_name: string
+          category: string
+          city_id: string | null
+          city_name: string | null
+          content: string
+          created_at: string
+          id: string
+          is_pinned: boolean
+          is_resolved: boolean
+          priority: string
+          resolved_at: string | null
+          resolved_by: string | null
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          author_name: string
+          category?: string
+          city_id?: string | null
+          city_name?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          is_resolved?: boolean
+          priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          category?: string
+          city_id?: string | null
+          city_name?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          is_resolved?: boolean
+          priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_notes_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_tour_participants: {
         Row: {
           created_at: string | null
