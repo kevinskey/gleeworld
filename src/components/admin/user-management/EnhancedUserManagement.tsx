@@ -78,7 +78,6 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
       title: "Success",
       description: "User deleted successfully",
     });
-    // Immediately refresh the list and close the panel
     setShowDetailPanel(false);
     setSelectedUser(null);
     onRefetch();
@@ -103,7 +102,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
       );
       
       if (success) {
-        onRefetch(); // Refresh the user list
+        onRefetch();
         toast({
           title: "Role Updated",
           description: `User role changed from ${currentRole} to ${newRole}`,
@@ -174,7 +173,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
   const noUsersState = !loading && users.length === 0;
 
   return (
-    <div className="space-y-6 p-4 bg-gradient-to-br from-background to-secondary/5 min-h-screen">
+    <div className="space-y-6 p-4 min-h-screen">
       {/* Header Section */}
       <div className="bg-primary rounded-xl p-6 shadow-lg">
         <div className="flex items-center gap-3 mb-2">
@@ -201,8 +200,8 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
       </div>
 
       {/* Main User Management Card */}
-      <Card className="shadow-xl border-0 bg-white backdrop-blur" style={{ color: '#1a1a2e' }}>
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+      <Card className="shadow-xl border bg-card text-card-foreground">
+        <CardHeader className="border-b border-border bg-muted/50">
           <div className="flex flex-col space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -210,14 +209,14 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                   <Search className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl" style={{ color: '#003666' }}>Search & Filter Users</CardTitle>
-                  <CardDescription className="text-base mt-1" style={{ color: '#4a5568' }}>
+                  <CardTitle className="text-xl text-foreground">Search & Filter Users</CardTitle>
+                  <CardDescription className="text-base mt-1">
                     Find and manage user accounts by name, email, role, or status
                   </CardDescription>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button onClick={() => setAddDialogOpen(true)} className="gap-2 bg-primary hover:bg-primary/90">
+                <Button onClick={() => setAddDialogOpen(true)} className="gap-2">
                   <UserPlus className="h-4 w-4" />
                   Add User
                 </Button>
@@ -225,7 +224,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                   variant="outline" 
                   onClick={onRefetch}
                   disabled={loading}
-                  className="gap-2 border-primary/20 hover:bg-primary/5"
+                  className="gap-2"
                 >
                   <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                   Refresh
@@ -234,7 +233,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
             </div>
             
             {/* Enhanced Search and Filter Controls */}
-            <div className="bg-white p-4 rounded-lg border border-slate-200">
+            <div className="bg-card p-4 rounded-lg border border-border">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Search Input */}
                 <div className="relative">
@@ -246,7 +245,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                     placeholder="Search by name or email..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-background border-primary/20 focus:border-primary focus:ring-primary/20"
+                    className="pl-10"
                   />
                   {searchQuery && (
                     <Button
@@ -264,11 +263,11 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <Select value={selectedRole || 'all'} onValueChange={(value) => setSelectedRole(value === 'all' ? undefined : value)}>
-                    <SelectTrigger className="bg-background border-primary/20 focus:border-primary focus:ring-primary/20">
+                    <SelectTrigger>
                       <SelectValue placeholder="Filter by Role" />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover border-primary/20 shadow-lg">
-                      <SelectItem value="all" className="hover:bg-primary/5">
+                    <SelectContent>
+                      <SelectItem value="all">
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4" />
                           All Roles
@@ -342,10 +341,10 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-muted-foreground" />
                   <Select value={selectedStatus || 'all'} onValueChange={(value) => setSelectedStatus(value === 'all' ? 'all' : value as UserFilter['status'])}>
-                    <SelectTrigger className="bg-background border-primary/20 focus:border-primary focus:ring-primary/20">
+                    <SelectTrigger>
                       <SelectValue placeholder="Filter by Status" />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover border-primary/20 shadow-lg">
+                    <SelectContent>
                       <SelectItem value="all">
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4" />
@@ -370,7 +369,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
               </div>
               
               {/* Results Summary */}
-              <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between text-sm" style={{ color: '#4a5568' }}>
+              <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-sm text-muted-foreground">
                 <span>
                   Showing {filteredAndSortedUsers.length} of {users.length} users
                 </span>
@@ -400,14 +399,14 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
           ) : error ? (
             <div className="p-6 text-center">
               <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-3" />
-              <p className="font-medium" style={{ color: '#c53030' }}>Error loading users</p>
-              <p className="mt-1" style={{ color: '#4a5568' }}>{error}</p>
+              <p className="font-medium text-destructive">Error loading users</p>
+              <p className="mt-1 text-muted-foreground">{error}</p>
             </div>
           ) : filteredAndSortedUsers.length === 0 ? (
             <div className="p-8 text-center">
               <Users className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-medium mb-2" style={{ color: '#4a5568' }}>No users found</h3>
-              <p style={{ color: '#718096' }}>
+              <h3 className="text-lg font-medium mb-2 text-foreground">No users found</h3>
+              <p className="text-muted-foreground">
                 {searchQuery || selectedRole || (selectedStatus && selectedStatus !== 'all')
                   ? "Try adjusting your search filters"
                   : "Get started by adding your first user"
@@ -415,69 +414,68 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden border-t border-slate-200">
+            <div className="overflow-hidden border-t border-border">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
-                  <thead className="bg-slate-50">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-muted/50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-200" style={{ color: '#003666' }}>
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground border-r border-border">
                         <Button 
                           variant="ghost" 
                           onClick={() => setSortBy('full_name')} 
-                          className="w-full justify-start font-semibold p-0" style={{ color: '#003666' }}
+                          className="w-full justify-start font-semibold p-0 text-foreground"
                         >
                           <Users className="h-4 w-4 mr-2" />
                           Name
                           <ChevronRight className={`h-3 w-3 ml-2 transition-transform ${sortBy === 'full_name' ? (sortOrder === 'asc' ? 'rotate-90' : '-rotate-90') : ''}`} />
                         </Button>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-200" style={{ color: '#003666' }}>
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground border-r border-border">
                         <Button 
                           variant="ghost" 
                           onClick={() => setSortBy('email')} 
-                          className="w-full justify-start font-semibold p-0" style={{ color: '#003666' }}
+                          className="w-full justify-start font-semibold p-0 text-foreground"
                         >
                           Email
                           <ChevronRight className={`h-3 w-3 ml-2 transition-transform ${sortBy === 'email' ? (sortOrder === 'asc' ? 'rotate-90' : '-rotate-90') : ''}`} />
                         </Button>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-200" style={{ color: '#003666' }}>
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground border-r border-border">
                         <div className="flex items-center gap-2">
                           <Shield className="h-4 w-4" />
                           Role
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider border-r border-slate-200" style={{ color: '#003666' }}>
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-foreground border-r border-border">
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4" />
                           Status
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider bg-slate-100" style={{ color: '#003666' }}>
+                      <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-foreground bg-muted">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
+                  <tbody className="divide-y divide-border bg-card">
                     {filteredAndSortedUsers.map((user, index) => (
                       <tr 
                         key={user.id || `user-${index}`} 
-                        className={`hover:bg-primary/5 transition-all duration-200 group border-l-4 ${
+                        className={`hover:bg-accent/50 transition-all duration-200 group border-l-4 ${
                           user.verified 
                             ? 'border-l-green-400 hover:border-l-green-500' 
                             : 'border-l-yellow-400 hover:border-l-yellow-500'
                         }`}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap border-r border-primary/5">
+                        <td className="px-6 py-4 whitespace-nowrap border-r border-border">
                           <div className="flex items-center gap-3">
                             <div className="relative">
                               {user.avatar_url ? (
                                 <img 
                                   src={user.avatar_url} 
                                   alt={`${user.full_name || user.email} avatar`}
-                                  className="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
+                                  className="w-10 h-10 rounded-full object-cover border-2 border-border"
                                   onError={(e) => {
-                                    // Fallback to initials if image fails to load
                                     const target = e.target as HTMLImageElement;
                                     target.style.display = 'none';
                                     const fallback = target.nextElementSibling as HTMLElement;
@@ -485,7 +483,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                                   }}
                                 />
                               ) : null}
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2 border-primary/20 ${
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2 border-border ${
                                 user.avatar_url ? 'hidden' : 'flex'
                               } ${
                                 user.verified ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
@@ -494,29 +492,29 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                               </div>
                             </div>
                             <div>
-                              <div className="text-sm font-medium" style={{ color: '#1a1a2e' }}>
+                              <div className="text-sm font-medium text-foreground">
                                 {user.full_name || 'No name'}
                               </div>
-                              <div className="text-xs" style={{ color: '#718096' }}>
+                              <div className="text-xs text-muted-foreground">
                                 ID: {user.id?.slice(0, 8)}...
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap border-r border-slate-100">
-                          <div className="text-sm font-mono" style={{ color: '#1a1a2e' }}>{user.email}</div>
+                        <td className="px-6 py-4 whitespace-nowrap border-r border-border">
+                          <div className="text-sm font-mono text-foreground">{user.email}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap border-r border-slate-100">
+                        <td className="px-6 py-4 whitespace-nowrap border-r border-border">
                           <div className="flex items-center gap-2">
                             <Select 
                               value={user.role || 'guest'} 
                               onValueChange={(newRole) => handleRoleChange(user.id, newRole, user.role || 'guest')}
                               disabled={changingRoles.has(user.id)}
                             >
-                              <SelectTrigger className="w-36 h-8 bg-white border-slate-300 hover:border-slate-400" style={{ color: '#1a1a2e' }}>
+                              <SelectTrigger className="w-36 h-8">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent className="bg-popover border-primary/20 shadow-lg z-50">
+                              <SelectContent className="z-50">
                                 <SelectItem value="guest">Guest</SelectItem>
                                 <SelectItem value="fan">Fan</SelectItem>
                                 <SelectItem value="auditioner">Auditioner</SelectItem>
@@ -533,7 +531,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap border-r border-slate-100">
+                        <td className="px-6 py-4 whitespace-nowrap border-r border-border">
                           <div className="flex items-center gap-2">
                             {user.verified ? (
                               <>
@@ -548,12 +546,12 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center bg-slate-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-center bg-muted/30">
                           <Button 
                             variant="outline" 
                             size="sm" 
                             onClick={() => handleUserClick(user)} 
-                            className="border-primary/20 hover:bg-primary hover:text-primary-foreground transition-all duration-200 group-hover:border-primary/40"
+                            className="transition-all duration-200"
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
@@ -579,7 +577,6 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
             setSelectedUser(null);
           }}
           onUserUpdated={() => {
-            // Force immediate refetch for UI update
             onRefetch();
             handleUpdateSuccess();
           }}
@@ -589,7 +586,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
       
       {/* Add User Dialog */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="max-w-lg bg-card border-primary/20 shadow-xl">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-primary">
               <UserPlus className="h-5 w-5" />
