@@ -87,7 +87,7 @@ export const DailyRunSheet = ({
   );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white text-slate-900">
       {/* Header */}
       <div className="bg-[#003366] text-white px-4 py-3 flex-shrink-0">
         <div className="flex items-center gap-2">
