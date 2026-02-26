@@ -134,14 +134,7 @@ export const AIRoutePlanner = ({
         name: tour.name,
         description: tour.description || '',
         stops: (tour.gw_tour_cities || [])
-          .sort((a: any, b: any) => {
-            if (a.arrival_date && b.arrival_date) {
-              return new Date(a.arrival_date).getTime() - new Date(b.arrival_date).getTime();
-            }
-            if (a.arrival_date && !b.arrival_date) return -1;
-            if (!a.arrival_date && b.arrival_date) return 1;
-            return (a.city_order || 0) - (b.city_order || 0);
-          })
+          .sort((a: any, b: any) => (a.city_order ?? 999) - (b.city_order ?? 999))
           .map((city: any, index: number) => ({
             id: city.id,
             city: city.city_name + (city.state_code ? `, ${city.state_code}` : ''),
@@ -152,14 +145,7 @@ export const AIRoutePlanner = ({
           })),
         // Full city data for logistics editor
         cityData: (tour.gw_tour_cities || [])
-          .sort((a: any, b: any) => {
-            if (a.arrival_date && b.arrival_date) {
-              return new Date(a.arrival_date).getTime() - new Date(b.arrival_date).getTime();
-            }
-            if (a.arrival_date && !b.arrival_date) return -1;
-            if (!a.arrival_date && b.arrival_date) return 1;
-            return (a.city_order || 0) - (b.city_order || 0);
-          }),
+          .sort((a: any, b: any) => (a.city_order ?? 999) - (b.city_order ?? 999)),
         status: tour.status as 'planning' | 'optimized' | 'approved',
         totalDistance: tour.total_distance || 0,
         estimatedDuration: tour.estimated_duration || 'Not calculated',
