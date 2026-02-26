@@ -44,14 +44,14 @@ interface UserProfile {
 
 const getRoleBadgeColor = (role?: string) => {
   switch (role) {
-    case 'super-admin': return 'bg-red-500/20 text-red-400 border-red-500/30';
-    case 'admin': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-    case 'executive': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-    case 'student': return 'bg-green-500/20 text-green-400 border-green-500/30';
-    case 'alumna': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-    case 'vip': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-    case 'auditioner': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-    default: return 'bg-muted text-muted-foreground border-border';
+    case 'super-admin': return 'bg-red-100 text-red-800 border-red-300';
+    case 'admin': return 'bg-purple-100 text-purple-800 border-purple-300';
+    case 'executive': return 'bg-blue-100 text-blue-800 border-blue-300';
+    case 'student': return 'bg-green-100 text-green-800 border-green-300';
+    case 'alumna': return 'bg-amber-100 text-amber-800 border-amber-300';
+    case 'vip': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    case 'auditioner': return 'bg-orange-100 text-orange-800 border-orange-300';
+    default: return 'bg-slate-100 text-slate-700 border-slate-300';
   }
 };
 
@@ -69,10 +69,10 @@ const getRoleIcon = (role?: string) => {
 
 // Compact stat pill
 const StatPill = ({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) => (
-  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/60 border border-border/50">
-    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-    <span className="text-xs text-muted-foreground">{label}</span>
-    <span className="text-sm font-bold text-foreground">{value}</span>
+  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200">
+    <Icon className="h-3.5 w-3.5 text-slate-500" />
+    <span className="text-xs text-slate-600">{label}</span>
+    <span className="text-sm font-bold text-slate-900">{value}</span>
   </div>
 );
 
@@ -253,8 +253,8 @@ export const UnifiedUserManagement = () => {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Shield className="h-5 w-5 text-primary shrink-0" />
-          <h1 className="text-lg font-bold text-foreground truncate">Users</h1>
-          <span className="text-xs text-muted-foreground whitespace-nowrap">{userStats.total} · {userStats.verified} verified</span>
+          <h1 className="text-lg font-bold text-slate-900 truncate">Users</h1>
+          <span className="text-xs text-slate-500 whitespace-nowrap">{userStats.total} · {userStats.verified} verified</span>
         </div>
         <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="gap-1.5 shrink-0 h-8">
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -286,16 +286,16 @@ export const UnifiedUserManagement = () => {
           {/* Search + Filter bar */}
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search name or email..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 h-9 bg-card border-border text-sm"
+                className="pl-9 h-9 bg-white border-slate-300 text-slate-900 text-sm placeholder:text-slate-400"
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full sm:w-[160px] h-9 bg-card border-border text-sm">
+              <SelectTrigger className="w-full sm:w-[160px] h-9 bg-white border-slate-300 text-slate-900 text-sm">
                 <SelectValue placeholder="All Roles" />
               </SelectTrigger>
               <SelectContent>
@@ -315,7 +315,7 @@ export const UnifiedUserManagement = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-500">
               Showing {filteredUsers.length} of {users.length}
             </p>
             {/* Mobile sort selector */}
@@ -324,7 +324,7 @@ export const UnifiedUserManagement = () => {
                 const [f, d] = v.split('-') as [typeof sortField, 'asc' | 'desc'];
                 setSortField(f); setSortDir(d);
               }}>
-                <SelectTrigger className="h-8 text-xs bg-card border-border w-[130px]">
+                <SelectTrigger className="h-8 text-xs bg-white border-slate-300 text-slate-900 w-[130px]">
                   <ArrowUpDown className="h-3 w-3 mr-1" />
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
@@ -345,13 +345,13 @@ export const UnifiedUserManagement = () => {
           {/* Mobile card list */}
           <div className="sm:hidden space-y-2">
             {filteredUsers.map(user => (
-              <div key={user.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-card border border-border">
+              <div key={user.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-white border border-slate-200">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xs font-medium text-primary">
                   {user.full_name?.charAt(0)?.toUpperCase() || '?'}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate text-foreground">{user.full_name || 'No name'}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  <p className="text-sm font-medium truncate text-slate-900">{user.full_name || 'No name'}</p>
+                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
                 </div>
                 <Badge variant="outline" className={`text-[10px] shrink-0 ${getRoleBadgeColor(user.role)}`}>
                   {getRoleIcon(user.role)}
@@ -392,28 +392,28 @@ export const UnifiedUserManagement = () => {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden sm:block rounded-lg border border-border overflow-hidden">
+          <div className="hidden sm:block rounded-lg border border-slate-200 overflow-hidden bg-white">
             <Table className="table-fixed w-full">
               <TableHeader>
-                <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none w-[40%]" onClick={() => toggleSort('name')}>
+                <TableRow className="bg-slate-50 hover:bg-slate-50">
+                  <TableHead className="text-xs font-semibold text-slate-700 h-9 cursor-pointer select-none w-[40%]" onClick={() => toggleSort('name')}>
                     <span className="inline-flex items-center">User<SortIcon field="name" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none w-[20%]" onClick={() => toggleSort('role')}>
+                  <TableHead className="text-xs font-semibold text-slate-700 h-9 cursor-pointer select-none w-[20%]" onClick={() => toggleSort('role')}>
                     <span className="inline-flex items-center">Role<SortIcon field="role" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none w-[15%]" onClick={() => toggleSort('status')}>
+                  <TableHead className="text-xs font-semibold text-slate-700 h-9 cursor-pointer select-none w-[15%]" onClick={() => toggleSort('status')}>
                     <span className="inline-flex items-center">Status<SortIcon field="status" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 cursor-pointer select-none w-[15%]" onClick={() => toggleSort('joined')}>
+                  <TableHead className="text-xs font-semibold text-slate-700 h-9 cursor-pointer select-none w-[15%]" onClick={() => toggleSort('joined')}>
                     <span className="inline-flex items-center">Joined<SortIcon field="joined" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground h-9 text-right w-[10%]">Actions</TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-700 h-9 text-right w-[10%]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map(user => (
-                  <TableRow key={user.id} className="h-11 hover:bg-muted/20">
+                  <TableRow key={user.id} className="h-11 hover:bg-slate-50 border-slate-200">
                     <TableCell className="py-2">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary shrink-0">
@@ -424,8 +424,8 @@ export const UnifiedUserManagement = () => {
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium truncate text-foreground leading-tight">{user.full_name || 'No name'}</p>
-                          <p className="text-xs text-muted-foreground truncate leading-tight">{user.email}</p>
+                          <p className="text-sm font-medium truncate text-slate-900 leading-tight">{user.full_name || 'No name'}</p>
+                          <p className="text-xs text-slate-500 truncate leading-tight">{user.email}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -442,17 +442,17 @@ export const UnifiedUserManagement = () => {
                     </TableCell>
                     <TableCell className="py-2">
                       {user.verified ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-green-400">
+                        <span className="inline-flex items-center gap-1 text-xs text-green-700">
                           <UserCheck className="h-3 w-3" /> Verified
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs text-yellow-400">
+                        <span className="inline-flex items-center gap-1 text-xs text-amber-700">
                           <Calendar className="h-3 w-3" /> Pending
                         </span>
                       )}
                     </TableCell>
                     <TableCell className="py-2">
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-slate-600">
                         {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
                       </span>
                     </TableCell>
@@ -505,7 +505,7 @@ export const UnifiedUserManagement = () => {
         <TabsContent value="enroll" className="mt-0">
           <Card className="bg-card border-border max-w-lg">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2 text-foreground">
+              <CardTitle className="text-base flex items-center gap-2 text-slate-900">
                 <UserPlus className="h-4 w-4" />
                 Auto-Enroll User
               </CardTitle>
