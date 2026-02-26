@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Search, Plus, Star, Calendar, MapPin, Mail, Users, Pencil } from 'lucide-react';
+import { Building2, Search, Plus, Star, Calendar, MapPin, Mail, Users, Pencil, Phone, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 interface Host {
@@ -45,6 +46,7 @@ interface HostManagerProps {
 export const HostManager = ({
   user
 }: HostManagerProps) => {
+  const navigate = useNavigate();
   const [hosts, setHosts] = useState<Host[]>([]);
   const [filteredHosts, setFilteredHosts] = useState<Host[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -235,54 +237,23 @@ export const HostManager = ({
       </div>;
   }
   return <div className="space-y-6">
-      {/* Header with Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Building2 className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{hosts.length}</p>
-                <p className="text-xs text-blue-600/80 dark:text-blue-400/80">Total Hosts</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-500/10 rounded-lg">
-                <Calendar className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  {hosts.filter(h => h.total_performances && h.total_performances > 0).length}
-                </p>
-                <p className="text-xs text-purple-600/80 dark:text-purple-400/80">Active Hosts</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-500/10 rounded-lg">
-                <Users className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                  {hosts.reduce((sum, h) => sum + (h.total_performances || 0), 0)}
-                </p>
-                <p className="text-xs text-orange-600/80 dark:text-orange-400/80">Total Performances</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Compact Stats Strip */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30">
+          <Building2 className="h-4 w-4 text-blue-600" />
+          <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">{hosts.length}</span>
+          <span className="text-xs text-blue-600/80 dark:text-blue-400/80">Hosts</span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 dark:bg-purple-900/30">
+          <Calendar className="h-4 w-4 text-purple-600" />
+          <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">{hosts.filter(h => h.total_performances && h.total_performances > 0).length}</span>
+          <span className="text-xs text-purple-600/80 dark:text-purple-400/80">Active</span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-100 dark:bg-orange-900/30">
+          <Users className="h-4 w-4 text-orange-600" />
+          <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">{hosts.reduce((sum, h) => sum + (h.total_performances || 0), 0)}</span>
+          <span className="text-xs text-orange-600/80 dark:text-orange-400/80">Performances</span>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -473,37 +444,47 @@ export const HostManager = ({
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               {host.contact_name && (
                 <div className="flex items-center gap-2 text-sm text-primary-foreground">
-                  <Users className="h-3 w-3" />
+                  <Users className="h-3.5 w-3.5 flex-shrink-0" />
                   {host.contact_name}
                 </div>
               )}
               {host.contact_email && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-3 w-3" />
-                  {host.contact_email}
-                </div>
+                <button
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-blue-500 transition-colors w-full text-left"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/dashboard?module=messenger&compose=true&to=${encodeURIComponent(host.contact_email!)}&subject=${encodeURIComponent(`Re: ${host.organization_name || 'Performance'}`)}`);
+                  }}
+                  title="Email host via Messenger"
+                >
+                  <Mail className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span className="truncate">{host.contact_email}</span>
+                </button>
+              )}
+              {host.contact_phone && (
+                <a
+                  href={`sms:${host.contact_phone}`}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-green-500 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                  title="Text host"
+                >
+                  <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+                  {host.contact_phone}
+                </a>
               )}
               {host.city && host.state && (
                 <div className="flex items-center gap-2 text-sm text-primary-foreground">
-                  <MapPin className="h-3 w-3" />
+                  <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
                   {host.city}, {host.state}
                 </div>
               )}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-primary-foreground">Performances:</span>
-                <span className="font-medium text-secondary-foreground">{host.total_performances || 0}</span>
+              <div className="flex items-center justify-between text-sm pt-1 border-t border-border/50">
+                <span className="text-muted-foreground">Performances:</span>
+                <span className="font-medium">{host.total_performances || 0}</span>
               </div>
-              {host.last_performance_date && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Last performance:</span>
-                  <span className="font-medium">
-                    {new Date(host.last_performance_date).toLocaleDateString()}
-                  </span>
-                </div>
-              )}
             </CardContent>
           </Card>
         ))}
