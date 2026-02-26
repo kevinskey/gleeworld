@@ -6,9 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Plus,
   Minus,
@@ -20,11 +20,12 @@ import {
   Package,
   Loader2,
   X,
-  DollarSign,
   Tag,
   Truck,
   MapPin,
   Settings,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import {
   Dialog,
@@ -33,6 +34,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 interface Product {
   id: string;
@@ -61,6 +69,7 @@ interface ShippingAddress {
 
 export const PointOfSale = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,6 +79,7 @@ export const PointOfSale = () => {
   const [showQR, setShowQR] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [showShippingForm, setShowShippingForm] = useState(false);
+  const [showMobileCart, setShowMobileCart] = useState(false);
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     name: '',
     line1: '',
@@ -165,7 +175,6 @@ export const PointOfSale = () => {
   const handleCheckout = async (mode: 'customer_fills' | 'staff_entered') => {
     if (cart.length === 0) return;
 
-    // If staff is entering address, validate required fields
     if (mode === 'staff_entered' && hasShippingItems) {
       if (!shippingAddress.name || !shippingAddress.line1 || !shippingAddress.city || !shippingAddress.state || !shippingAddress.postal_code) {
         toast({ title: 'Missing address', description: 'Please fill in all required shipping fields.', variant: 'destructive' });
@@ -198,6 +207,7 @@ export const PointOfSale = () => {
         setPaymentUrl(data.url);
         setShowQR(true);
         setShowShippingForm(false);
+        setShowMobileCart(false);
       }
     } catch (err: any) {
       toast({
@@ -234,33 +244,160 @@ export const PointOfSale = () => {
     }
   };
 
+  // Shared cart items renderer
+  const renderCartItems = () => (
+    <div className="space-y-2">
+      {cart.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+          <ShoppingCart className="w-8 h-8 mb-2 opacity-40" />
+          <p className="text-sm">Tap a product to add</p>
+        </div>
+      ) : (
+        cart.map(item => (
+          <div
+            key={item.product.id}
+            className="p-2 rounded-lg bg-muted/50 space-y-1.5"
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{item.product.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  ${item.product.price.toFixed(2)} each
+                </p>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => updateQuantity(item.product.id, -1)}
+                >
+                  <Minus className="w-3 h-3" />
+                </Button>
+                <span className="w-6 text-center text-sm font-semibold">
+                  {item.quantity}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => updateQuantity(item.product.id, 1)}
+                >
+                  <Plus className="w-3 h-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-destructive"
+                  onClick={() => removeFromCart(item.product.id)}
+                >
+                  <Trash2 className="w-3 h-3" />
+                </Button>
+              </div>
+              <p className="text-sm font-bold w-16 text-right shrink-0">
+                ${(item.product.price * item.quantity).toFixed(2)}
+              </p>
+            </div>
+            {/* Ship to Customer toggle */}
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleShipToCustomer(item.product.id);
+              }}
+            >
+              <Switch
+                checked={item.shipToCustomer}
+                onCheckedChange={() => toggleShipToCustomer(item.product.id)}
+                className="scale-75"
+              />
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Truck className="w-3 h-3" />
+                Ship to customer
+              </span>
+              {item.shipToCustomer && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                  Ships later
+                </Badge>
+              )}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  // Shared checkout footer
+  const renderCheckoutFooter = () => (
+    <div className="space-y-3">
+      {hasShippingItems && (
+        <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 rounded-md px-2 py-1.5">
+          <Truck className="w-3.5 h-3.5 shrink-0" />
+          <span>{cart.filter(i => i.shipToCustomer).length} item(s) will ship after tour</span>
+        </div>
+      )}
+      <div className="flex justify-between items-center">
+        <span className="text-sm text-muted-foreground">Subtotal</span>
+        <span className="font-bold text-lg">${subtotal.toFixed(2)}</span>
+      </div>
+      <Button
+        className="w-full h-14 text-lg font-bold gap-2"
+        disabled={cart.length === 0 || checkoutLoading}
+        onClick={handleChargeClick}
+      >
+        {checkoutLoading ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : (
+          <>
+            <CreditCard className="w-5 h-5" />
+            Charge ${subtotal.toFixed(2)}
+          </>
+        )}
+      </Button>
+      <p className="text-[10px] text-center text-muted-foreground">
+        Customer pays via QR code or link
+      </p>
+    </div>
+  );
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Top bar */}
-      <header className="bg-[#003666] text-white px-4 py-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <Package className="w-6 h-6" />
-          <h1 className="text-xl font-bold">GleeWorld POS</h1>
+      <header className="bg-[#003666] text-white px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Package className="w-5 h-5 sm:w-6 sm:h-6" />
+          <h1 className="text-lg sm:text-xl font-bold">GleeWorld POS</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate('/admin/products')}
-            className="text-white/80 hover:text-white hover:bg-white/10 text-sm"
+            className="text-white/80 hover:text-white hover:bg-white/10 text-xs sm:text-sm hidden sm:flex"
           >
             <Settings className="w-4 h-4 mr-1.5" />
             Manage Products
           </Button>
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <ShoppingCart className="w-4 h-4" />
-            <span>{itemCount} items</span>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/admin/products')}
+            className="text-white/80 hover:text-white hover:bg-white/10 sm:hidden h-8 w-8"
+          >
+            <Settings className="w-4 h-4" />
+          </Button>
+          {/* Desktop cart count */}
+          {!isMobile && (
+            <div className="flex items-center gap-2 text-sm opacity-80">
+              <ShoppingCart className="w-4 h-4" />
+              <span>{itemCount} items</span>
+            </div>
+          )}
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Product grid – left side */}
+        {/* Product grid */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Search + filters */}
           <div className="p-3 space-y-2 shrink-0 border-b border-border">
@@ -297,7 +434,7 @@ export const PointOfSale = () => {
           </div>
 
           {/* Product grid */}
-          <div className="flex-1 overflow-y-auto p-3">
+          <div className={cn("flex-1 overflow-y-auto p-3", isMobile && itemCount > 0 && "pb-24")}>
             {loading ? (
               <div className="flex items-center justify-center h-40">
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -367,136 +504,81 @@ export const PointOfSale = () => {
           </div>
         </div>
 
-        {/* Cart – right side */}
-        <div className="w-[320px] lg:w-[380px] bg-card border-l border-border flex flex-col shrink-0">
-          <div className="p-3 border-b border-border flex items-center justify-between">
-            <h2 className="font-semibold flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4" />
-              Cart ({itemCount})
-            </h2>
-            {cart.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearCart} className="text-xs">
-                Clear
-              </Button>
-            )}
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {cart.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-                <ShoppingCart className="w-8 h-8 mb-2 opacity-40" />
-                <p className="text-sm">Tap a product to add</p>
-              </div>
-            ) : (
-              cart.map(item => (
-                <div
-                  key={item.product.id}
-                  className="p-2 rounded-lg bg-muted/50 space-y-1.5"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{item.product.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        ${item.product.price.toFixed(2)} each
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => updateQuantity(item.product.id, -1)}
-                      >
-                        <Minus className="w-3 h-3" />
-                      </Button>
-                      <span className="w-6 text-center text-sm font-semibold">
-                        {item.quantity}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => updateQuantity(item.product.id, 1)}
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive"
-                        onClick={() => removeFromCart(item.product.id)}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                    <p className="text-sm font-bold w-16 text-right shrink-0">
-                      ${(item.product.price * item.quantity).toFixed(2)}
-                    </p>
-                  </div>
-                  {/* Ship to Customer toggle */}
-                  <div
-                    className="flex items-center gap-2 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleShipToCustomer(item.product.id);
-                    }}
-                  >
-                    <Switch
-                      checked={item.shipToCustomer}
-                      onCheckedChange={() => toggleShipToCustomer(item.product.id)}
-                      className="scale-75"
-                    />
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Truck className="w-3 h-3" />
-                      Ship to customer
-                    </span>
-                    {item.shipToCustomer && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        Ships later
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Totals + checkout */}
-          <div className="p-3 border-t border-border space-y-3">
-            {hasShippingItems && (
-              <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 rounded-md px-2 py-1.5">
-                <Truck className="w-3.5 h-3.5 shrink-0" />
-                <span>{cart.filter(i => i.shipToCustomer).length} item(s) will ship after tour</span>
-              </div>
-            )}
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Subtotal</span>
-              <span className="font-bold text-lg">${subtotal.toFixed(2)}</span>
-            </div>
-            <Button
-              className="w-full h-14 text-lg font-bold gap-2"
-              disabled={cart.length === 0 || checkoutLoading}
-              onClick={handleChargeClick}
-            >
-              {checkoutLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <CreditCard className="w-5 h-5" />
-                  Charge ${subtotal.toFixed(2)}
-                </>
+        {/* Desktop Cart – right side (hidden on mobile) */}
+        {!isMobile && (
+          <div className="w-[320px] lg:w-[380px] bg-card border-l border-border flex flex-col shrink-0">
+            <div className="p-3 border-b border-border flex items-center justify-between">
+              <h2 className="font-semibold flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4" />
+                Cart ({itemCount})
+              </h2>
+              {cart.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={clearCart} className="text-xs">
+                  Clear
+                </Button>
               )}
-            </Button>
-            <p className="text-[10px] text-center text-muted-foreground">
-              Customer pays via QR code or link
-            </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3">
+              {renderCartItems()}
+            </div>
+
+            {/* Totals + checkout */}
+            <div className="p-3 border-t border-border">
+              {renderCheckoutFooter()}
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Mobile: Floating cart bar at bottom */}
+      {isMobile && itemCount > 0 && (
+        <button
+          onClick={() => setShowMobileCart(true)}
+          className="fixed bottom-0 left-0 right-0 z-[99998] bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between shadow-2xl"
+          style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+        >
+          <div className="flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5" />
+            <span className="font-semibold">{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-lg">${subtotal.toFixed(2)}</span>
+            <ChevronUp className="w-4 h-4" />
+          </div>
+        </button>
+      )}
+
+      {/* Mobile Cart Sheet */}
+      <Sheet open={showMobileCart} onOpenChange={setShowMobileCart}>
+        <SheetContent side="bottom" className="h-[85vh] flex flex-col p-0 rounded-t-2xl">
+          <SheetHeader className="p-4 pb-2 border-b border-border">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4" />
+                Cart ({itemCount})
+              </SheetTitle>
+              {cart.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={clearCart} className="text-xs">
+                  Clear
+                </Button>
+              )}
+            </div>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto p-4">
+            {renderCartItems()}
+          </div>
+
+          <div className="p-4 border-t border-border bg-card">
+            {renderCheckoutFooter()}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Shipping Method Dialog */}
       <Dialog open={showShippingForm} onOpenChange={setShowShippingForm}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Truck className="w-5 h-5" />
@@ -612,23 +694,40 @@ export const PointOfSale = () => {
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(paymentUrl)}`}
                     alt="Payment QR Code"
-                    className="w-56 h-56 rounded-lg border border-border"
+                    className="w-44 h-44 sm:w-56 sm:h-56 rounded-lg border border-border"
                   />
                 </div>
 
                 <p className="text-xs text-muted-foreground">
                   Or share the link directly:
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(paymentUrl);
-                    toast({ title: 'Link copied!' });
-                  }}
-                >
-                  Copy Payment Link
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(paymentUrl);
+                      toast({ title: 'Link copied!' });
+                    }}
+                  >
+                    Copy Payment Link
+                  </Button>
+                  {isMobile && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({ url: paymentUrl, title: 'GleeWorld Payment' });
+                        } else {
+                          window.open(paymentUrl, '_blank');
+                        }
+                      }}
+                    >
+                      Share Link
+                    </Button>
+                  )}
+                </div>
               </>
             )}
 
