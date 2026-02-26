@@ -70,7 +70,7 @@ export function TimeSelect({ value, onChange, className }: TimeSelectProps) {
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
       <Select value={local.hour} onValueChange={(v) => handleChange("hour", v)}>
-        <SelectTrigger className="h-9 w-[64px] text-sm px-2 bg-white !text-gray-900 border-slate-300 [&>svg]:text-gray-500 [&>svg]:opacity-100">
+        <SelectTrigger className="h-9 w-[64px] text-sm px-2 bg-slate-100 !text-slate-900 border-slate-400 [&>svg]:text-slate-600 [&>svg]:opacity-100 font-medium">
           <SelectValue placeholder="Hr" />
         </SelectTrigger>
         <SelectContent className="bg-white text-gray-900 border-slate-200 [&_[role=option]]:text-gray-900">
@@ -85,7 +85,7 @@ export function TimeSelect({ value, onChange, className }: TimeSelectProps) {
       <span className="font-bold text-sm" style={{ color: 'hsl(0 0% 70%)' }}>:</span>
 
       <Select value={local.minute} onValueChange={(v) => handleChange("minute", v)}>
-        <SelectTrigger className="h-9 w-[64px] text-sm px-2 bg-white !text-gray-900 border-slate-300 [&>svg]:text-gray-500 [&>svg]:opacity-100">
+        <SelectTrigger className="h-9 w-[64px] text-sm px-2 bg-slate-100 !text-slate-900 border-slate-400 [&>svg]:text-slate-600 [&>svg]:opacity-100 font-medium">
           <SelectValue placeholder="Min" />
         </SelectTrigger>
         <SelectContent className="bg-white text-gray-900 border-slate-200 [&_[role=option]]:text-gray-900">
@@ -98,7 +98,7 @@ export function TimeSelect({ value, onChange, className }: TimeSelectProps) {
       </Select>
 
       <Select value={local.period} onValueChange={(v) => handleChange("period", v)}>
-        <SelectTrigger className="h-9 w-[64px] text-sm px-2 bg-white !text-gray-900 border-slate-300 [&>svg]:text-gray-500 [&>svg]:opacity-100">
+        <SelectTrigger className="h-9 w-[64px] text-sm px-2 bg-slate-100 !text-slate-900 border-slate-400 [&>svg]:text-slate-600 [&>svg]:opacity-100 font-medium">
           <SelectValue placeholder="AM" />
         </SelectTrigger>
         <SelectContent className="bg-white text-gray-900 border-slate-200 [&_[role=option]]:text-gray-900">
