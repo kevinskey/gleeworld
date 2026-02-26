@@ -271,30 +271,30 @@ export const Checkout = () => {
 
   return (
     <PublicLayout>
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-4xl text-slate-900">
         <div className="mb-6">
           <Button 
             variant="ghost" 
             onClick={() => navigate('/shop')}
-            className="mb-4"
+            className="mb-4 text-slate-700 hover:text-slate-900"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Shop
           </Button>
-          <h1 className="text-3xl font-bold text-foreground">Checkout</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Checkout</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Customer & Shipping Information */}
           <div className="space-y-6">
-            <Card>
+            <Card className="bg-white border-slate-200">
               <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-                <CardDescription>We'll use this to send you order confirmation and updates.</CardDescription>
+                <CardTitle className="text-slate-900">Contact Information</CardTitle>
+                <CardDescription className="text-slate-500">We'll use this to send you order confirmation and updates.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email" className="text-slate-700">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
@@ -305,7 +305,7 @@ export const Checkout = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name" className="text-slate-700">Full Name</Label>
                   <Input
                     id="name"
                     type="text"
@@ -313,58 +313,62 @@ export const Checkout = () => {
                     onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="Your full name"
                     required
+                    className="bg-white border-slate-300 text-slate-900"
                   />
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white border-slate-200">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-slate-900">
                   <Truck className="h-5 w-5" />
                   Shipping Address
                 </CardTitle>
-                <CardDescription>Enter your shipping address to see available rates.</CardDescription>
+                <CardDescription className="text-slate-500">Enter your shipping address to see available rates.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="street1">Street Address</Label>
+                  <Label htmlFor="street1" className="text-slate-700">Street Address</Label>
                   <Input
                     id="street1"
                     value={shippingAddress.street1}
                     onChange={(e) => setShippingAddress(prev => ({ ...prev, street1: e.target.value }))}
                     placeholder="123 Main Street"
                     required
+                    className="bg-white border-slate-300 text-slate-900"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="street2">Apartment, Suite, etc. (optional)</Label>
+                  <Label htmlFor="street2" className="text-slate-700">Apartment, Suite, etc. (optional)</Label>
                   <Input
                     id="street2"
                     value={shippingAddress.street2}
                     onChange={(e) => setShippingAddress(prev => ({ ...prev, street2: e.target.value }))}
                     placeholder="Apt 4B"
+                    className="bg-white border-slate-300 text-slate-900"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city" className="text-slate-700">City</Label>
                     <Input
                       id="city"
                       value={shippingAddress.city}
                       onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
                       placeholder="City"
                       required
+                      className="bg-white border-slate-300 text-slate-900"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="state">State</Label>
+                    <Label htmlFor="state" className="text-slate-700">State</Label>
                     <Select
                       value={shippingAddress.state}
                       onValueChange={(value) => setShippingAddress(prev => ({ ...prev, state: value }))}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select state" />
+                      <SelectTrigger className="bg-white border-slate-300 text-slate-900">
+                        <SelectValue placeholder="Select state" className="text-slate-500" />
                       </SelectTrigger>
                       <SelectContent>
                         {US_STATES.map((state) => (
@@ -378,23 +382,25 @@ export const Checkout = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="zip">ZIP Code</Label>
+                    <Label htmlFor="zip" className="text-slate-700">ZIP Code</Label>
                     <Input
                       id="zip"
                       value={shippingAddress.zip}
                       onChange={(e) => setShippingAddress(prev => ({ ...prev, zip: e.target.value }))}
                       placeholder="12345"
                       required
+                      className="bg-white border-slate-300 text-slate-900"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone (optional)</Label>
+                    <Label htmlFor="phone" className="text-slate-700">Phone (optional)</Label>
                     <Input
                       id="phone"
                       type="tel"
                       value={shippingAddress.phone}
                       onChange={(e) => setShippingAddress(prev => ({ ...prev, phone: e.target.value }))}
                       placeholder="(555) 123-4567"
+                      className="bg-white border-slate-300 text-slate-900"
                     />
                   </div>
                 </div>
@@ -422,9 +428,9 @@ export const Checkout = () => {
 
             {/* Shipping Rates Selection */}
             {shippingRates.length > 0 && (
-              <Card>
+              <Card className="bg-white border-slate-200">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-slate-900">
                     <CheckCircle className="h-5 w-5 text-green-600" />
                     Select Shipping Method
                   </CardTitle>
@@ -450,16 +456,16 @@ export const Checkout = () => {
                       >
                         <RadioGroupItem value={rate.id} id={rate.id} />
                         <div className="flex-1">
-                          <Label htmlFor={rate.id} className="cursor-pointer font-medium">
+                          <Label htmlFor={rate.id} className="cursor-pointer font-medium text-slate-900">
                             {rate.carrier} - {rate.service}
                           </Label>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-slate-500">
                             {rate.delivery_days 
                               ? `${rate.delivery_days} business day${rate.delivery_days > 1 ? 's' : ''}` 
                               : 'Estimated delivery varies'}
                           </p>
                         </div>
-                        <span className="font-bold text-lg">
+                        <span className="font-bold text-lg text-slate-900">
                           ${rate.rate.toFixed(2)}
                         </span>
                       </div>
@@ -472,9 +478,9 @@ export const Checkout = () => {
 
           {/* Order Summary */}
           <div className="space-y-6">
-            <Card>
+            <Card className="bg-white border-slate-200">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-slate-900">
                   <ShoppingBag className="h-5 w-5" />
                   Order Summary
                 </CardTitle>
@@ -494,11 +500,11 @@ export const Checkout = () => {
                       )}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium text-foreground">{item.product.title}</h4>
-                      <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
+                      <h4 className="font-medium text-slate-900">{item.product.title}</h4>
+                      <p className="text-sm text-slate-500">Quantity: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">${(item.product.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-medium text-slate-900">${(item.product.price * item.quantity).toFixed(2)}</p>
                     </div>
                   </div>
                 ))}
@@ -506,26 +512,26 @@ export const Checkout = () => {
                 <Separator />
 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm text-slate-700">
                     <span>Subtotal</span>
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm text-slate-700">
                     <span>Shipping</span>
                     <span>
                       {selectedRate 
                         ? `$${shippingCost.toFixed(2)}` 
-                        : <span className="text-muted-foreground">Enter address for rates</span>
+                        : <span className="text-slate-400">Enter address for rates</span>
                       }
                     </span>
                   </div>
                   {selectedRate && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-slate-500">
                       {selectedRate.carrier} {selectedRate.service}
                     </p>
                   )}
                   <Separator />
-                  <div className="flex justify-between font-bold text-lg">
+                  <div className="flex justify-between font-bold text-lg text-slate-900">
                     <span>Total</span>
                     <span>${total.toFixed(2)}</span>
                   </div>
@@ -552,7 +558,7 @@ export const Checkout = () => {
               )}
             </Button>
 
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-sm text-slate-500 text-center">
               You'll be redirected to Stripe's secure checkout to complete your payment.
             </p>
           </div>
