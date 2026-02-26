@@ -61,6 +61,7 @@ const getCategoryIcon = (cat: string) => {
 export const TourNotesSection: React.FC = () => {
   const queryClient = useQueryClient();
   const [filterCategory, setFilterCategory] = useState('all');
+  const [filterCity, setFilterCity] = useState('all');
   const [filterStatus, setFilterStatus] = useState('active');
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -70,7 +71,28 @@ export const TourNotesSection: React.FC = () => {
   const [newContent, setNewContent] = useState('');
   const [newCategory, setNewCategory] = useState('general');
   const [newPriority, setNewPriority] = useState('normal');
-  const [newCityName, setNewCityName] = useState('');
+  const [newCityId, setNewCityId] = useState('');
+
+  // Fetch tour cities for dropdown
+  const { data: tourCities = [] } = useQuery({
+    queryKey: ['tour-cities-for-notes'],
+    queryFn: async () => {
+      const { data: tours } = await supabase
+        .from('gw_tours')
+        .select('id')
+        .in('status', ['active', 'planning', 'draft'])
+        .order('start_date', { ascending: true })
+        .limit(1);
+      if (!tours || tours.length === 0) return [];
+      const { data, error } = await supabase
+        .from('gw_tour_cities')
+        .select('id, city_name, state_code, city_order')
+        .eq('tour_id', tours[0].id)
+        .order('city_order', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   // Fetch notes
   const { data: notes = [], isLoading } = useQuery({
@@ -120,6 +142,8 @@ export const TourNotesSection: React.FC = () => {
   const createNote = useMutation({
     mutationFn: async () => {
       if (!currentUser) throw new Error('Not authenticated');
+      if (!newCityId) throw new Error('Please select a city');
+      const selectedCity = tourCities.find(c => c.id === newCityId);
       const { error } = await supabase.from('gw_tour_notes').insert({
         author_id: currentUser.user_id,
         author_name: currentUser.full_name || 'Unknown',
@@ -127,7 +151,8 @@ export const TourNotesSection: React.FC = () => {
         subject: newSubject,
         content: newContent,
         priority: newPriority,
-        city_name: newCityName || null,
+        city_id: newCityId,
+        city_name: selectedCity ? `${selectedCity.city_name}${selectedCity.state_code ? `, ${selectedCity.state_code}` : ''}` : null,
       });
       if (error) throw error;
     },
@@ -139,7 +164,7 @@ export const TourNotesSection: React.FC = () => {
       setNewContent('');
       setNewCategory('general');
       setNewPriority('normal');
-      setNewCityName('');
+      setNewCityId('');
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -176,6 +201,7 @@ export const TourNotesSection: React.FC = () => {
   const filteredNotes = useMemo(() => {
     return notes.filter(n => {
       if (filterCategory !== 'all' && n.category !== filterCategory) return false;
+      if (filterCity !== 'all' && n.city_id !== filterCity) return false;
       if (filterStatus === 'active' && n.is_resolved) return false;
       if (filterStatus === 'resolved' && !n.is_resolved) return false;
       if (searchTerm) {
@@ -184,7 +210,7 @@ export const TourNotesSection: React.FC = () => {
       }
       return true;
     });
-  }, [notes, filterCategory, filterStatus, searchTerm]);
+  }, [notes, filterCategory, filterCity, filterStatus, searchTerm]);
 
   const activeCounts = useMemo(() => {
     const counts: Record<string, number> = { all: 0 };
@@ -246,12 +272,17 @@ export const TourNotesSection: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">City (optional)</label>
-                <Input
-                  placeholder="e.g., Atlanta, Chicago..."
-                  value={newCityName}
-                  onChange={e => setNewCityName(e.target.value)}
-                />
+                <label className="text-sm font-medium">City <span className="text-destructive">*</span></label>
+                <Select value={newCityId} onValueChange={setNewCityId}>
+                  <SelectTrigger><SelectValue placeholder="Select a city..." /></SelectTrigger>
+                  <SelectContent>
+                    {tourCities.map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.city_name}{c.state_code ? `, ${c.state_code}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Subject</label>
@@ -272,7 +303,7 @@ export const TourNotesSection: React.FC = () => {
               </div>
               <Button
                 className="w-full"
-                disabled={!newSubject.trim() || !newContent.trim() || createNote.isPending}
+                disabled={!newSubject.trim() || !newContent.trim() || !newCityId || createNote.isPending}
                 onClick={() => createNote.mutate()}
               >
                 {createNote.isPending ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Plus className="h-4 w-4 mr-1.5" />}
@@ -296,6 +327,19 @@ export const TourNotesSection: React.FC = () => {
               {CATEGORIES.map(c => (
                 <SelectItem key={c.value} value={c.value}>
                   {c.label} {activeCounts[c.value] ? `(${activeCounts[c.value]})` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterCity} onValueChange={setFilterCity}>
+            <SelectTrigger className="w-[150px] h-8 text-sm">
+              <SelectValue placeholder="City" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Cities</SelectItem>
+              {tourCities.map(c => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.city_name}{c.state_code ? `, ${c.state_code}` : ''}
                 </SelectItem>
               ))}
             </SelectContent>
