@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AddressInput } from "@/components/shared/AddressInput";
 import { 
   CreditCard, 
   ArrowLeft, 
@@ -329,12 +330,28 @@ export const Checkout = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="street1" className="text-slate-700">Street Address</Label>
-                  <Input
+                  <AddressInput
                     id="street1"
+                    label="Street Address"
                     value={shippingAddress.street1}
-                    onChange={(e) => setShippingAddress(prev => ({ ...prev, street1: e.target.value }))}
-                    placeholder="123 Main Street"
+                    onChange={(val) => setShippingAddress(prev => ({ ...prev, street1: val }))}
+                    onPlaceSelect={(place) => {
+                      const components = place.address_components || [];
+                      const get = (type: string) => components.find((c: any) => c.types.includes(type));
+                      const streetNumber = get('street_number')?.long_name || '';
+                      const route = get('route')?.long_name || '';
+                      const city = get('locality')?.long_name || get('sublocality_level_1')?.long_name || '';
+                      const state = get('administrative_area_level_1')?.short_name || '';
+                      const zip = get('postal_code')?.long_name || '';
+                      setShippingAddress(prev => ({
+                        ...prev,
+                        street1: `${streetNumber} ${route}`.trim(),
+                        city: city || prev.city,
+                        state: state || prev.state,
+                        zip: zip || prev.zip,
+                      }));
+                    }}
+                    placeholder="Start typing your address..."
                     required
                     className="bg-white border-slate-300 text-slate-900"
                   />
