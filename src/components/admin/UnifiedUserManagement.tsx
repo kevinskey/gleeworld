@@ -69,10 +69,10 @@ const getRoleIcon = (role?: string) => {
 
 // Compact stat pill
 const StatPill = ({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) => (
-  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200">
-    <Icon className="h-3.5 w-3.5 text-slate-500" />
-    <span className="text-xs text-slate-600">{label}</span>
-    <span className="text-sm font-bold text-slate-900">{value}</span>
+  <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-50 border border-slate-200">
+    <Icon className="h-3 w-3 text-slate-500" />
+    <span className="text-[11px] text-slate-600">{label}</span>
+    <span className="text-xs font-bold text-slate-900">{value}</span>
   </div>
 );
 
@@ -248,22 +248,22 @@ export const UnifiedUserManagement = () => {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Single compact header row */}
+    <div className="space-y-2">
+      {/* Header + stats in one compact block */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <Shield className="h-5 w-5 text-primary shrink-0" />
-          <h1 className="text-lg font-bold text-slate-900 truncate">Users</h1>
-          <span className="text-xs text-slate-500 whitespace-nowrap">{userStats.total} · {userStats.verified} verified</span>
+          <Shield className="h-4 w-4 text-primary shrink-0" />
+          <h1 className="text-base font-bold text-slate-900 truncate">Users</h1>
+          <span className="text-[11px] text-slate-500 whitespace-nowrap">{userStats.total} · {userStats.verified} verified</span>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="gap-1.5 shrink-0 h-8">
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">Refresh</span>
+        <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="gap-1 shrink-0 h-7 text-xs border-slate-300">
+          <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
         </Button>
       </div>
 
-      {/* Stat pills - horizontally scrollable on mobile */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+      {/* Stat pills */}
+      <div className="flex gap-1 overflow-x-auto scrollbar-hide">
         <StatPill label="Total" value={userStats.total} icon={Users} />
         <StatPill label="Admins" value={userStats.admins} icon={Shield} />
         <StatPill label="Students" value={userStats.students} icon={User} />
@@ -273,29 +273,29 @@ export const UnifiedUserManagement = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="users" className="space-y-3">
-        <TabsList className="h-9 bg-muted/50">
-          <TabsTrigger value="users" className="text-xs px-3 h-7">Users</TabsTrigger>
-          <TabsTrigger value="dossiers" className="text-xs px-3 h-7">Dossiers</TabsTrigger>
-          <TabsTrigger value="enroll" className="text-xs px-3 h-7">Add User</TabsTrigger>
-          <TabsTrigger value="modules" className="text-xs px-3 h-7">Modules</TabsTrigger>
+      <Tabs defaultValue="users" className="space-y-2">
+        <TabsList className="h-8 bg-slate-100">
+          <TabsTrigger value="users" className="text-xs px-3 h-6 data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-600">Users</TabsTrigger>
+          <TabsTrigger value="dossiers" className="text-xs px-3 h-6 data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-600">Dossiers</TabsTrigger>
+          <TabsTrigger value="enroll" className="text-xs px-3 h-6 data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-600">Add User</TabsTrigger>
+          <TabsTrigger value="modules" className="text-xs px-3 h-6 data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-600">Modules</TabsTrigger>
         </TabsList>
 
         {/* ── USERS TAB ── */}
-        <TabsContent value="users" className="space-y-3 mt-0">
-          {/* Search + Filter bar */}
-          <div className="flex flex-col sm:flex-row gap-2">
+        <TabsContent value="users" className="space-y-1.5 mt-0">
+          {/* Search + Filter - single compact row */}
+          <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
               <Input
                 placeholder="Search name or email..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 h-9 bg-white border-slate-300 text-slate-900 text-sm placeholder:text-slate-400"
+                className="pl-8 h-8 bg-white border-slate-300 text-slate-900 text-xs placeholder:text-slate-400"
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full sm:w-[160px] h-9 bg-white border-slate-300 text-slate-900 text-sm">
+              <SelectTrigger className="w-[130px] h-8 bg-white border-slate-300 text-slate-900 text-xs shrink-0">
                 <SelectValue placeholder="All Roles" />
               </SelectTrigger>
               <SelectContent>
@@ -312,35 +312,27 @@ export const UnifiedUserManagement = () => {
                 <SelectItem value="auditioner">Auditioner</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500">
-              Showing {filteredUsers.length} of {users.length}
-            </p>
-            {/* Mobile sort selector */}
+            {/* Mobile sort */}
             <div className="sm:hidden">
               <Select value={`${sortField}-${sortDir}`} onValueChange={(v) => {
                 const [f, d] = v.split('-') as [typeof sortField, 'asc' | 'desc'];
                 setSortField(f); setSortDir(d);
               }}>
-                <SelectTrigger className="h-8 text-xs bg-white border-slate-300 text-slate-900 w-[130px]">
+                <SelectTrigger className="h-8 text-xs bg-white border-slate-300 text-slate-700 w-[100px]">
                   <ArrowUpDown className="h-3 w-3 mr-1" />
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="name-asc">Name A→Z</SelectItem>
                   <SelectItem value="name-desc">Name Z→A</SelectItem>
-                  <SelectItem value="role-asc">Role A→Z</SelectItem>
-                  <SelectItem value="role-desc">Role Z→A</SelectItem>
-                  <SelectItem value="joined-desc">Newest first</SelectItem>
-                  <SelectItem value="joined-asc">Oldest first</SelectItem>
-                  <SelectItem value="status-desc">Verified first</SelectItem>
-                  <SelectItem value="status-asc">Pending first</SelectItem>
+                  <SelectItem value="joined-desc">Newest</SelectItem>
+                  <SelectItem value="joined-asc">Oldest</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          <p className="text-[11px] text-slate-500">{filteredUsers.length} of {users.length}</p>
 
           {/* Mobile card list */}
           <div className="sm:hidden space-y-2">
@@ -392,75 +384,75 @@ export const UnifiedUserManagement = () => {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden sm:block rounded-lg border border-slate-200 overflow-hidden bg-white">
+          <div className="hidden sm:block rounded-md border border-slate-200 overflow-hidden bg-white">
             <Table className="table-fixed w-full">
               <TableHeader>
-                <TableRow className="bg-slate-50 hover:bg-slate-50">
-                  <TableHead className="text-xs font-semibold text-slate-700 h-9 cursor-pointer select-none w-[40%]" onClick={() => toggleSort('name')}>
+                <TableRow className="bg-slate-100 hover:bg-slate-100 border-slate-200">
+                  <TableHead className="text-[11px] font-semibold text-slate-700 h-8 cursor-pointer select-none w-[40%] uppercase tracking-wide" onClick={() => toggleSort('name')}>
                     <span className="inline-flex items-center">User<SortIcon field="name" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-700 h-9 cursor-pointer select-none w-[20%]" onClick={() => toggleSort('role')}>
+                  <TableHead className="text-[11px] font-semibold text-slate-700 h-8 cursor-pointer select-none w-[20%] uppercase tracking-wide" onClick={() => toggleSort('role')}>
                     <span className="inline-flex items-center">Role<SortIcon field="role" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-700 h-9 cursor-pointer select-none w-[15%]" onClick={() => toggleSort('status')}>
+                  <TableHead className="text-[11px] font-semibold text-slate-700 h-8 cursor-pointer select-none w-[15%] uppercase tracking-wide" onClick={() => toggleSort('status')}>
                     <span className="inline-flex items-center">Status<SortIcon field="status" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-700 h-9 cursor-pointer select-none w-[15%]" onClick={() => toggleSort('joined')}>
+                  <TableHead className="text-[11px] font-semibold text-slate-700 h-8 cursor-pointer select-none w-[15%] uppercase tracking-wide" onClick={() => toggleSort('joined')}>
                     <span className="inline-flex items-center">Joined<SortIcon field="joined" /></span>
                   </TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-700 h-9 text-right w-[10%]">Actions</TableHead>
+                  <TableHead className="text-[11px] font-semibold text-slate-700 h-8 text-right w-[10%] uppercase tracking-wide">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map(user => (
-                  <TableRow key={user.id} className="h-11 hover:bg-slate-50 border-slate-200">
-                    <TableCell className="py-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary shrink-0">
+                  <TableRow key={user.id} className="h-9 hover:bg-slate-50/80 border-slate-100">
+                    <TableCell className="py-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-medium text-primary shrink-0">
                           {user.avatar_url ? (
-                            <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
+                            <img src={user.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover" />
                           ) : (
                             user.full_name?.charAt(0)?.toUpperCase() || '?'
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium truncate text-slate-900 leading-tight">{user.full_name || 'No name'}</p>
-                          <p className="text-xs text-slate-500 truncate leading-tight">{user.email}</p>
+                          <p className="text-xs font-medium truncate text-slate-900 leading-tight">{user.full_name || 'No name'}</p>
+                          <p className="text-[11px] text-slate-500 truncate leading-tight">{user.email}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2">
-                      <Badge variant="outline" className={`text-[11px] py-0 h-5 ${getRoleBadgeColor(user.role)}`}>
+                    <TableCell className="py-1.5">
+                      <Badge variant="outline" className={`text-[10px] py-0 h-4 ${getRoleBadgeColor(user.role)}`}>
                         {getRoleIcon(user.role)}
                         <span className="ml-1">{user.role || 'guest'}</span>
                       </Badge>
                       {user.is_exec_board && (
-                        <Badge variant="outline" className="ml-1 text-[10px] py-0 h-5 text-blue-400 border-blue-400/30">
+                        <Badge variant="outline" className="ml-1 text-[10px] py-0 h-4 text-blue-700 border-blue-300 bg-blue-50">
                           {user.exec_board_role || 'Exec'}
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="py-2">
+                    <TableCell className="py-1.5">
                       {user.verified ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-green-700">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-green-700">
                           <UserCheck className="h-3 w-3" /> Verified
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs text-amber-700">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-amber-700">
                           <Calendar className="h-3 w-3" /> Pending
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="py-2">
-                      <span className="text-xs text-slate-600">
+                    <TableCell className="py-1.5">
+                      <span className="text-[11px] text-slate-600">
                         {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
                       </span>
                     </TableCell>
-                    <TableCell className="py-2 text-right">
+                    <TableCell className="py-1.5 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <MoreHorizontal className="h-3.5 w-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 max-h-[400px] overflow-y-auto z-50">
