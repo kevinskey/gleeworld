@@ -1732,6 +1732,14 @@ const App = () => {
                                 } 
                                />
                                <Route 
+                                path="/store" 
+                                element={
+                                  <ProtectedRoute>
+                                    <ProductManagement />
+                                  </ProtectedRoute>
+                                } 
+                               />
+                               <Route 
                                  path="/handbook" 
                                  element={
                                    <ProtectedRoute>
