@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,6 +24,7 @@ import {
   Tag,
   Truck,
   MapPin,
+  Settings,
 } from 'lucide-react';
 import {
   Dialog,
@@ -58,6 +60,7 @@ interface ShippingAddress {
 }
 
 export const PointOfSale = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -239,9 +242,20 @@ export const PointOfSale = () => {
           <Package className="w-6 h-6" />
           <h1 className="text-xl font-bold">GleeWorld POS</h1>
         </div>
-        <div className="flex items-center gap-2 text-sm opacity-80">
-          <ShoppingCart className="w-4 h-4" />
-          <span>{itemCount} items</span>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/admin/products')}
+            className="text-white/80 hover:text-white hover:bg-white/10 text-sm"
+          >
+            <Settings className="w-4 h-4 mr-1.5" />
+            Manage Products
+          </Button>
+          <div className="flex items-center gap-2 text-sm opacity-80">
+            <ShoppingCart className="w-4 h-4" />
+            <span>{itemCount} items</span>
+          </div>
         </div>
       </header>
 
