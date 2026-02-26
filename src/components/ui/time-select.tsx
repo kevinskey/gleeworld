@@ -70,12 +70,12 @@ export function TimeSelect({ value, onChange, className }: TimeSelectProps) {
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
       <Select value={local.hour} onValueChange={(v) => handleChange("hour", v)}>
-        <SelectTrigger className="h-8 w-[60px] text-xs px-2">
+        <SelectTrigger className="h-9 w-[64px] text-sm px-2 bg-white text-slate-900 border-slate-300">
           <SelectValue placeholder="Hr" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white text-slate-900 border-slate-200">
           {HOURS.map((h) => (
-            <SelectItem key={h} value={String(h)} className="text-xs">
+            <SelectItem key={h} value={String(h)} className="text-sm">
               {h}
             </SelectItem>
           ))}
@@ -85,12 +85,12 @@ export function TimeSelect({ value, onChange, className }: TimeSelectProps) {
       <span className="text-muted-foreground font-bold text-sm">:</span>
 
       <Select value={local.minute} onValueChange={(v) => handleChange("minute", v)}>
-        <SelectTrigger className="h-8 w-[60px] text-xs px-2">
+        <SelectTrigger className="h-9 w-[64px] text-sm px-2 bg-white text-slate-900 border-slate-300">
           <SelectValue placeholder="Min" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white text-slate-900 border-slate-200">
           {MINUTES.map((m) => (
-            <SelectItem key={m} value={String(m).padStart(2, "0")} className="text-xs">
+            <SelectItem key={m} value={String(m).padStart(2, "0")} className="text-sm">
               {String(m).padStart(2, "0")}
             </SelectItem>
           ))}
@@ -98,12 +98,12 @@ export function TimeSelect({ value, onChange, className }: TimeSelectProps) {
       </Select>
 
       <Select value={local.period} onValueChange={(v) => handleChange("period", v)}>
-        <SelectTrigger className="h-8 w-[60px] text-xs px-2">
+        <SelectTrigger className="h-9 w-[64px] text-sm px-2 bg-white text-slate-900 border-slate-300">
           <SelectValue placeholder="AM" />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="AM" className="text-xs">AM</SelectItem>
-          <SelectItem value="PM" className="text-xs">PM</SelectItem>
+        <SelectContent className="bg-white text-slate-900 border-slate-200">
+          <SelectItem value="AM" className="text-sm">AM</SelectItem>
+          <SelectItem value="PM" className="text-sm">PM</SelectItem>
         </SelectContent>
       </Select>
     </div>
