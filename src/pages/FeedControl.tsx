@@ -124,8 +124,8 @@ const FeedControl = () => {
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-black" style={{ fontFamily: "'Cinzel', serif" }}>Feed Control</h1>
-          <p className="text-sm mt-1 text-black">Manage RSS sources, limits, and refresh timings for dashboard feeds</p>
+          <h1 className="text-2xl font-bold text-black bg-primary" style={{ fontFamily: "'Cinzel', serif" }}>Feed Control</h1>
+          <p className="text-sm mt-1 text-black bg-primary">Manage RSS sources, limits, and refresh timings for dashboard feeds</p>
         </div>
       </div>
 

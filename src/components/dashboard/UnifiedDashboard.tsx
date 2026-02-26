@@ -38,7 +38,7 @@ const GleeAcademyDashboardCard = lazy(() => import('@/components/user-dashboard/
   default: m.GleeAcademyDashboardCard
 })));
 
-const CollapsibleDashboardSection = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => {
+const CollapsibleDashboardSection = ({ title, icon, children }: {title: string;icon: React.ReactNode;children: React.ReactNode;}) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -60,8 +60,8 @@ const CollapsibleDashboardSection = ({ title, icon, children }: { title: string;
           </CardContent>
         </CollapsibleContent>
       </Card>
-    </Collapsible>
-  );
+    </Collapsible>);
+
 };
 
 export const UnifiedDashboard = () => {
@@ -196,7 +196,7 @@ export const UnifiedDashboard = () => {
           {!hideBackButton &&
         <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="mb-2 sm:mb-4 hover:bg-primary/10">
               <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Back to Dashboard</span>
+              <span className="hidden sm:inline bg-primary">Back to Dashboard</span>
               <span className="sm:hidden">Back</span>
             </Button>
         }
