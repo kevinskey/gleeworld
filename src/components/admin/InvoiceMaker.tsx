@@ -48,7 +48,7 @@ const emptyLineItem: InvoiceLineItem = {
 };
 
 export const InvoiceMaker = () => {
-  const { invoices, loading, createInvoice, deleteInvoice } = useInvoices();
+  const { invoices, loading, error, createInvoice, deleteInvoice } = useInvoices();
   const [showForm, setShowForm] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [saving, setSaving] = useState(false);
