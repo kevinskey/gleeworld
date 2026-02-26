@@ -123,8 +123,8 @@ import AttendanceScanPage from "./pages/AttendanceScanPage";
 import AttendancePinPage from "./pages/AttendancePinPage";
 // Existing AttendancePage (legacy)
 import AttendancePageLegacy from "./pages/AttendancePage";
-// Existing MusicLibraryPage (legacy)
-import MusicLibraryPageLegacy from "./pages/MusicLibrary";
+// MusicLibraryPage (legacy route reuses member page)
+const MusicLibraryPageLegacy = MusicLibraryPage;
 
 import Budgets from "./pages/Budgets";
 import Treasurer from "./pages/Treasurer";
