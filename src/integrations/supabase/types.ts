@@ -20188,6 +20188,44 @@ export type Database = {
           },
         ]
       }
+      gw_tour_note_replies: {
+        Row: {
+          author_id: string
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+          note_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          author_name: string
+          content: string
+          created_at?: string
+          id?: string
+          note_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+          note_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_note_replies_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_tour_notes: {
         Row: {
           author_id: string
@@ -20201,6 +20239,7 @@ export type Database = {
           is_pinned: boolean
           is_resolved: boolean
           priority: string
+          reply_count: number
           resolved_at: string | null
           resolved_by: string | null
           subject: string
@@ -20218,6 +20257,7 @@ export type Database = {
           is_pinned?: boolean
           is_resolved?: boolean
           priority?: string
+          reply_count?: number
           resolved_at?: string | null
           resolved_by?: string | null
           subject: string
@@ -20235,6 +20275,7 @@ export type Database = {
           is_pinned?: boolean
           is_resolved?: boolean
           priority?: string
+          reply_count?: number
           resolved_at?: string | null
           resolved_by?: string | null
           subject?: string

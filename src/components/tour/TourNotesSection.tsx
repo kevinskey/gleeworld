@@ -9,10 +9,12 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   StickyNote, Plus, Pin, CheckCircle2, Clock, MapPin,
   Building2, Music, Bus, Hotel, Users, Filter, Search,
-  AlertTriangle, Info, Loader2, MessageSquare
+  AlertTriangle, Info, Loader2, MessageSquare, Reply, Send,
+  ChevronDown, ChevronUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDateTime } from '@/utils/formatters';
@@ -31,8 +33,18 @@ interface TourNote {
   is_resolved: boolean;
   resolved_at: string | null;
   resolved_by: string | null;
+  reply_count: number;
   created_at: string;
   updated_at: string;
+}
+
+interface NoteReply {
+  id: string;
+  note_id: string;
+  author_id: string;
+  author_name: string;
+  content: string;
+  created_at: string;
 }
 
 const CATEGORIES = [
@@ -58,6 +70,171 @@ const getCategoryIcon = (cat: string) => {
   return found ? found.icon : StickyNote;
 };
 
+const getInitials = (name: string) => {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+};
+
+// ─── Thread component for each note ────────────────────────────
+const NoteThread: React.FC<{
+  noteId: string;
+  replyCount: number;
+  currentUser: { user_id: string; full_name: string } | null;
+}> = ({ noteId, replyCount, currentUser }) => {
+  const queryClient = useQueryClient();
+  const [expanded, setExpanded] = useState(false);
+  const [showReplyInput, setShowReplyInput] = useState(false);
+  const [replyContent, setReplyContent] = useState('');
+
+  // Fetch replies only when expanded
+  const { data: replies = [], isLoading: loadingReplies } = useQuery({
+    queryKey: ['tour-note-replies', noteId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_tour_note_replies')
+        .select('*')
+        .eq('note_id', noteId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data as NoteReply[];
+    },
+    enabled: expanded,
+  });
+
+  // Real-time for replies
+  useEffect(() => {
+    if (!expanded) return;
+    const channel = supabase
+      .channel(`note-replies-${noteId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gw_tour_note_replies', filter: `note_id=eq.${noteId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['tour-note-replies', noteId] });
+          queryClient.invalidateQueries({ queryKey: ['tour-notes'] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [expanded, noteId, queryClient]);
+
+  const postReply = useMutation({
+    mutationFn: async () => {
+      if (!currentUser) throw new Error('Not authenticated');
+      if (!replyContent.trim()) throw new Error('Reply cannot be empty');
+      const { error } = await supabase.from('gw_tour_note_replies').insert({
+        note_id: noteId,
+        author_id: currentUser.user_id,
+        author_name: currentUser.full_name || 'Unknown',
+        content: replyContent.trim(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-note-replies', noteId] });
+      queryClient.invalidateQueries({ queryKey: ['tour-notes'] });
+      setReplyContent('');
+      setShowReplyInput(false);
+      if (!expanded) setExpanded(true);
+      toast.success('Reply posted');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <div className="pt-2 space-y-2">
+      {/* Action row */}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs gap-1"
+          onClick={() => {
+            setShowReplyInput(!showReplyInput);
+            if (!expanded && replyCount > 0) setExpanded(true);
+          }}
+        >
+          <Reply className="h-3 w-3" />
+          Reply
+        </Button>
+        {replyCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs gap-1 text-muted-foreground"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+          </Button>
+        )}
+      </div>
+
+      {/* Inline reply input */}
+      {showReplyInput && (
+        <div className="flex gap-2 pl-4 border-l-2 border-primary/20">
+          <Textarea
+            placeholder="Write a reply..."
+            rows={2}
+            value={replyContent}
+            onChange={e => setReplyContent(e.target.value)}
+            className="text-sm min-h-[60px] flex-1"
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                postReply.mutate();
+              }
+            }}
+          />
+          <div className="flex flex-col gap-1">
+            <Button
+              size="sm"
+              className="h-8 px-2"
+              disabled={!replyContent.trim() || postReply.isPending}
+              onClick={() => postReply.mutate()}
+            >
+              {postReply.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Thread replies */}
+      {expanded && (
+        <div className="pl-4 border-l-2 border-border space-y-2">
+          {loadingReplies ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+              <Loader2 className="h-3 w-3 animate-spin" /> Loading replies...
+            </div>
+          ) : replies.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-1">No replies yet.</p>
+          ) : (
+            replies.map(reply => (
+              <div key={reply.id} className="flex gap-2 py-1.5">
+                <Avatar className="h-6 w-6 shrink-0 mt-0.5">
+                  <AvatarFallback className="text-[10px] bg-secondary text-secondary-foreground">
+                    {getInitials(reply.author_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-semibold">{reply.author_name}</span>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                      <Clock className="h-2.5 w-2.5" />
+                      {formatDateTime(reply.created_at)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-foreground/80 whitespace-pre-wrap mt-0.5">{reply.content}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Main component ────────────────────────────────────────────
 export const TourNotesSection: React.FC = () => {
   const queryClient = useQueryClient();
   const [filterCategory, setFilterCategory] = useState('all');
@@ -456,6 +633,14 @@ export const TourNotesSection: React.FC = () => {
                           </Button>
                         </div>
                       </div>
+
+                      {/* Thread */}
+                      <Separator className="my-1" />
+                      <NoteThread
+                        noteId={note.id}
+                        replyCount={note.reply_count || 0}
+                        currentUser={currentUser || null}
+                      />
                     </div>
                   </div>
                 </CardContent>
