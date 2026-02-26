@@ -92,6 +92,7 @@ import Mus240Auth from "./pages/Mus240Auth";
 import EventPlanner from "./pages/EventPlanner";
 import BudgetApprovals from "./pages/BudgetApprovals";
 import { Shop } from "./pages/Shop";
+const PointOfSale = lazy(() => import("./pages/PointOfSale"));
 import { AlumnaeShop } from "./pages/AlumnaeShop";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { OrderConfirmation } from "./pages/OrderConfirmation";
@@ -1052,6 +1053,14 @@ const App = () => {
                     <ProtectedRoute>
                       <EditAnnouncement />
                     </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/pos" 
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <PointOfSale />
+                    </Suspense>
                   } 
                 />
                 <Route 
