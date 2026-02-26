@@ -10,7 +10,7 @@ import { useBusSeats, BusSeat } from "@/hooks/useBusSeats";
 import { cn } from "@/lib/utils";
 
 export const BusBuddiesSection = () => {
-  const { seats, rosterMembers, loading, assignSeat, clearSeat, assignDoubleSeat } = useBusSeats();
+  const { seats, rosterMembers, loading, assignSeat, clearSeat, assignDoubleSeat, toggleSeatPurpose } = useBusSeats();
   const [activeSeat, setActiveSeat] = useState<string | null>(null);
   const [doubleMode, setDoubleMode] = useState(false);
 
@@ -93,10 +93,14 @@ export const BusBuddiesSection = () => {
           <span className="text-muted-foreground">Occupied</span>
         </div>
         <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-amber-500/20 border border-amber-500/40" />
+          <span className="text-muted-foreground">Food</span>
+        </div>
+        <div className="flex items-center gap-2">
           <div className="w-8 h-4 rounded bg-accent border border-primary/40" />
           <span className="text-muted-foreground">Double Seat</span>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex gap-2">
           <Button
             variant={doubleMode ? "default" : "outline"}
             size="sm"
@@ -136,14 +140,14 @@ export const BusBuddiesSection = () => {
 
             return (
               <div key={row} className="grid grid-cols-[1fr_1fr_32px_1fr_1fr] gap-1 items-center">
-                <SeatCell seat={seatA} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatB} />
-                <SeatCell seat={seatB} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatA} />
+                <SeatCell seat={seatA} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatB} onTogglePurpose={toggleSeatPurpose} />
+                <SeatCell seat={seatB} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatA} onTogglePurpose={toggleSeatPurpose} />
                 {/* Aisle + row number */}
                 <div className="flex items-center justify-center">
                   <span className="text-[10px] text-muted-foreground font-mono">{row}</span>
                 </div>
-                <SeatCell seat={seatC} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatD} />
-                <SeatCell seat={seatD} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatC} />
+                <SeatCell seat={seatC} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatD} onTogglePurpose={toggleSeatPurpose} />
+                <SeatCell seat={seatD} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatC} onTogglePurpose={toggleSeatPurpose} />
               </div>
             );
           })}
@@ -187,10 +191,37 @@ interface SeatCellProps {
   onClear: (seatId: string) => Promise<boolean>;
   doubleMode: boolean;
   adjacentSeat?: BusSeat;
+  onTogglePurpose: (seatId: string, purpose: string) => Promise<boolean>;
 }
 
-const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign, onClear, doubleMode, adjacentSeat }: SeatCellProps) => {
+const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign, onClear, doubleMode, adjacentSeat, onTogglePurpose }: SeatCellProps) => {
   if (!seat) return <div className="h-12" />;
+
+  // Food seat
+  if (seat.seat_purpose === 'food') {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            className="h-12 rounded bg-amber-500/15 border border-amber-500/30 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:bg-amber-500/25 transition-colors"
+            title={`Row ${seat.row_number}, Seat ${seat.seat_letter} — Food`}
+          >
+            <span className="text-base">🍱</span>
+            <span className="text-[7px] text-foreground font-medium">Food</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-48 p-3 bg-card border border-border shadow-lg z-50" side="right">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Food Seat</p>
+            <p className="text-xs text-muted-foreground">Row {seat.row_number}, Seat {seat.seat_letter}</p>
+            <Button variant="outline" size="sm" className="w-full" onClick={() => onTogglePurpose(seat.id, 'passenger')}>
+              <X className="h-3 w-3 mr-1" /> Remove Food Label
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
 
   const isOccupied = !!seat.user_id;
   const isPairedSecondary = seat.paired_with_seat_id && seat.is_double_seat;
@@ -198,10 +229,7 @@ const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign,
     ? seat.profile.full_name.split(' ').map(n => n[0]).join('')
     : '';
 
-  // If this is a secondary paired seat, show merged visual
   if (isPairedSecondary && seat.paired_with_seat_id) {
-    const primary = seat.paired_with_seat_id;
-    // Only show clear on one of the paired seats
     return (
       <div
         className="h-12 rounded bg-accent/60 border border-primary/30 flex items-center justify-center cursor-pointer hover:bg-accent/80 transition-colors"
@@ -242,14 +270,8 @@ const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign,
               Row {seat.row_number}, Seat {seat.seat_letter}
               {seat.profile?.voice_part && ` • ${seat.profile.voice_part}`}
             </p>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="w-full"
-              onClick={() => onClear(seat.id)}
-            >
-              <X className="h-3 w-3 mr-1" />
-              Remove
+            <Button variant="destructive" size="sm" className="w-full" onClick={() => onClear(seat.id)}>
+              <X className="h-3 w-3 mr-1" /> Remove
             </Button>
           </div>
         </PopoverContent>
@@ -257,7 +279,7 @@ const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign,
     );
   }
 
-  // Empty seat — show assign popover
+  // Empty seat
   const canDouble = doubleMode && adjacentSeat && !adjacentSeat.user_id;
 
   return (
@@ -280,6 +302,14 @@ const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign,
             Row {seat.row_number}, Seat {seat.seat_letter}
             {canDouble && " (Double seat mode)"}
           </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mb-2 gap-1"
+            onClick={() => { onTogglePurpose(seat.id, 'food'); setActiveSeat(null); }}
+          >
+            🍱 Mark as Food Seat
+          </Button>
           {availableMembers.length === 0 ? (
             <p className="text-xs text-muted-foreground">All roster members assigned</p>
           ) : (
