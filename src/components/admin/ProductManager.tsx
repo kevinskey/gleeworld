@@ -499,13 +499,16 @@ export const ProductManager = () => {
           }} /> : <div className="w-full h-full flex items-center justify-center">
                     <Package className="h-12 w-12 text-muted-foreground/30" />
                   </div>}
-                {/* Status Badge */}
-                <Badge
-                  className={`absolute top-2 left-2 cursor-pointer hover:opacity-80 ${product.is_active ? 'bg-green-500' : 'bg-muted'}`}
-                  onClick={(e) => handleToggleActive(e, product)}
+                {/* Status Badge - wrapped in button for reliable click handling */}
+                <button
+                  type="button"
+                  className="absolute top-2 left-2 z-10"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleActive(e, product); }}
                 >
-                  {product.is_active ? "Active" : "Inactive"}
-                </Badge>
+                  <Badge className={`cursor-pointer hover:opacity-80 ${product.is_active ? 'bg-green-500' : 'bg-muted'}`}>
+                    {product.is_active ? "Active" : "Inactive"}
+                  </Badge>
+                </button>
                 {/* Action buttons on hover */}
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button size="icon" variant="secondary" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(product); }}>
@@ -547,13 +550,17 @@ export const ProductManager = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold truncate">{product.title}</h3>
-                      <Badge
-                        variant={product.is_active ? "default" : "secondary"}
-                        className="flex-shrink-0 cursor-pointer hover:opacity-80"
-                        onClick={(e) => handleToggleActive(e, product)}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleActive(e, product); }}
                       >
-                        {product.is_active ? "Active" : "Inactive"}
-                      </Badge>
+                        <Badge
+                          variant={product.is_active ? "default" : "secondary"}
+                          className="flex-shrink-0 cursor-pointer hover:opacity-80"
+                        >
+                          {product.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </button>
                     </div>
                     <p className="text-sm text-muted-foreground truncate">{product.description || "No description"}</p>
                     <div className="flex items-center gap-4 mt-1">
