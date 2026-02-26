@@ -224,22 +224,10 @@ const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign,
   }
 
   const isOccupied = !!seat.user_id;
-  const isPairedSecondary = seat.paired_with_seat_id && seat.is_double_seat;
+  const isDouble = seat.is_double_seat && seat.paired_with_seat_id;
   const initials = seat.profile?.full_name
     ? seat.profile.full_name.split(' ').map(n => n[0]).join('')
     : '';
-
-  if (isPairedSecondary && seat.paired_with_seat_id) {
-    return (
-      <div
-        className="h-12 rounded bg-accent/60 border border-primary/30 flex items-center justify-center cursor-pointer hover:bg-accent/80 transition-colors"
-        onClick={() => onClear(seat.id)}
-        title={`${seat.profile?.full_name || 'Double seat'} — click to clear`}
-      >
-        <span className="text-[9px] text-muted-foreground">2×</span>
-      </div>
-    );
-  }
 
   if (isOccupied) {
     return (
@@ -247,11 +235,14 @@ const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign,
         <PopoverTrigger asChild>
           <button
             className={cn(
-              "h-12 rounded flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer",
-              "bg-primary/15 border border-primary/30 hover:bg-primary/25"
+              "h-12 rounded flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer relative",
+              isDouble ? "bg-accent/60 border border-primary/30 hover:bg-accent/80" : "bg-primary/15 border border-primary/30 hover:bg-primary/25"
             )}
             title={seat.profile?.full_name || 'Assigned'}
           >
+            {isDouble && (
+              <span className="absolute top-0.5 right-0.5 text-[7px] text-muted-foreground font-bold">2×</span>
+            )}
             <Avatar className="h-5 w-5">
               <AvatarImage src={seat.profile?.avatar_url || undefined} />
               <AvatarFallback className="text-[8px] bg-primary/20 text-primary">
