@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { cartItems } = await req.json();
+    const { cartItems, requiresShipping, shippingMode, shippingAddress } = await req.json();
 
     if (!cartItems || cartItems.length === 0) {
       throw new Error("Cart is empty");
@@ -23,13 +23,15 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    // Build line items for a Stripe Payment Link
+    // Build line items
     const lineItems = cartItems.map((item: any) => ({
       price_data: {
         currency: "usd",
         product_data: {
           name: item.product.title,
-          description: item.product.description || undefined,
+          description: item.shipToCustomer
+            ? `${item.product.description || "Merch"} — Ships after tour`
+            : item.product.description || undefined,
           images: item.product.images?.filter((img: string) => img).slice(0, 1) || [],
         },
         unit_amount: Math.round(item.product.price * 100),
@@ -37,18 +39,52 @@ serve(async (req) => {
       quantity: item.quantity,
     }));
 
-    // Create a checkout session in payment mode (no shipping for in-person)
-    const session = await stripe.checkout.sessions.create({
+    // Determine which items ship
+    const shippingItemTitles = cartItems
+      .filter((item: any) => item.shipToCustomer)
+      .map((item: any) => item.product.title);
+
+    // Build metadata
+    const metadata: Record<string, string> = {
+      sale_type: "pos_in_person",
+      fulfillment_type: requiresShipping ? "mixed" : "in_person_pickup",
+      shipping_items: shippingItemTitles.join(", ").slice(0, 500),
+    };
+
+    // If staff entered address, store in metadata
+    if (shippingMode === "staff_entered" && shippingAddress) {
+      metadata.ship_to_name = shippingAddress.name || "";
+      metadata.ship_to_line1 = shippingAddress.line1 || "";
+      metadata.ship_to_line2 = shippingAddress.line2 || "";
+      metadata.ship_to_city = shippingAddress.city || "";
+      metadata.ship_to_state = shippingAddress.state || "";
+      metadata.ship_to_postal_code = shippingAddress.postal_code || "";
+    }
+
+    // Checkout session options
+    const sessionParams: any = {
       line_items: lineItems,
       mode: "payment",
       success_url: `${req.headers.get("origin") || "https://gleeworld.lovable.app"}/pos?paid=true`,
       cancel_url: `${req.headers.get("origin") || "https://gleeworld.lovable.app"}/pos?paid=false`,
-      metadata: {
-        sale_type: "pos_in_person",
-      },
-    });
+      metadata,
+    };
 
-    console.log("[POS] Payment session created", { sessionId: session.id });
+    // If shipping needed and customer fills address, enable Stripe's address collection
+    if (requiresShipping && shippingMode === "customer_fills") {
+      sessionParams.shipping_address_collection = {
+        allowed_countries: ["US"],
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    console.log("[POS] Payment session created", {
+      sessionId: session.id,
+      requiresShipping,
+      shippingMode,
+      shippingItems: shippingItemTitles.length,
+    });
 
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id }),
