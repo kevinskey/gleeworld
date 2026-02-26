@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import {
   Plus,
@@ -19,6 +21,8 @@ import {
   X,
   DollarSign,
   Tag,
+  Truck,
+  MapPin,
 } from 'lucide-react';
 import {
   Dialog,
@@ -41,6 +45,16 @@ interface Product {
 interface CartItem {
   product: Product;
   quantity: number;
+  shipToCustomer: boolean;
+}
+
+interface ShippingAddress {
+  name: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  postal_code: string;
 }
 
 export const PointOfSale = () => {
@@ -52,6 +66,15 @@ export const PointOfSale = () => {
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [showShippingForm, setShowShippingForm] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
+    name: '',
+    line1: '',
+    line2: '',
+    city: '',
+    state: '',
+    postal_code: '',
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -100,7 +123,7 @@ export const PointOfSale = () => {
             : item
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product, quantity: 1, shipToCustomer: false }];
     });
   };
 
@@ -116,6 +139,16 @@ export const PointOfSale = () => {
     );
   };
 
+  const toggleShipToCustomer = (productId: string) => {
+    setCart(prev =>
+      prev.map(item =>
+        item.product.id === productId
+          ? { ...item, shipToCustomer: !item.shipToCustomer }
+          : item
+      )
+    );
+  };
+
   const removeFromCart = (productId: string) => {
     setCart(prev => prev.filter(item => item.product.id !== productId));
   };
@@ -124,9 +157,19 @@ export const PointOfSale = () => {
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const hasShippingItems = cart.some(item => item.shipToCustomer);
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (mode: 'customer_fills' | 'staff_entered') => {
     if (cart.length === 0) return;
+
+    // If staff is entering address, validate required fields
+    if (mode === 'staff_entered' && hasShippingItems) {
+      if (!shippingAddress.name || !shippingAddress.line1 || !shippingAddress.city || !shippingAddress.state || !shippingAddress.postal_code) {
+        toast({ title: 'Missing address', description: 'Please fill in all required shipping fields.', variant: 'destructive' });
+        return;
+      }
+    }
+
     setCheckoutLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('pos-create-payment-link', {
@@ -139,7 +182,11 @@ export const PointOfSale = () => {
               images: item.product.images || [],
             },
             quantity: item.quantity,
+            shipToCustomer: item.shipToCustomer,
           })),
+          requiresShipping: hasShippingItems,
+          shippingMode: mode,
+          shippingAddress: mode === 'staff_entered' ? shippingAddress : undefined,
         },
       });
 
@@ -147,6 +194,7 @@ export const PointOfSale = () => {
       if (data?.url) {
         setPaymentUrl(data.url);
         setShowQR(true);
+        setShowShippingForm(false);
       }
     } catch (err: any) {
       toast({
@@ -163,8 +211,9 @@ export const PointOfSale = () => {
     setShowQR(false);
     setPaymentUrl(null);
     clearCart();
+    setShippingAddress({ name: '', line1: '', line2: '', city: '', state: '', postal_code: '' });
     toast({ title: 'Sale recorded!', description: 'Cart cleared for next customer.' });
-    fetchProducts(); // refresh inventory
+    fetchProducts();
   };
 
   const getProductImage = (product: Product) => {
@@ -172,6 +221,14 @@ export const PointOfSale = () => {
       return product.images[0];
     }
     return null;
+  };
+
+  const handleChargeClick = () => {
+    if (!hasShippingItems) {
+      handleCheckout('customer_fills');
+    } else {
+      setShowShippingForm(true);
+    }
   };
 
   return (
@@ -320,46 +377,71 @@ export const PointOfSale = () => {
               cart.map(item => (
                 <div
                   key={item.product.id}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-muted/50"
+                  className="p-2 rounded-lg bg-muted/50 space-y-1.5"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.product.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      ${item.product.price.toFixed(2)} each
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.product.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        ${item.product.price.toFixed(2)} each
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => updateQuantity(item.product.id, -1)}
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="w-6 text-center text-sm font-semibold">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => updateQuantity(item.product.id, 1)}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive"
+                        onClick={() => removeFromCart(item.product.id)}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <p className="text-sm font-bold w-16 text-right shrink-0">
+                      ${(item.product.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => updateQuantity(item.product.id, -1)}
-                    >
-                      <Minus className="w-3 h-3" />
-                    </Button>
-                    <span className="w-6 text-center text-sm font-semibold">
-                      {item.quantity}
+                  {/* Ship to Customer toggle */}
+                  <div
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleShipToCustomer(item.product.id);
+                    }}
+                  >
+                    <Switch
+                      checked={item.shipToCustomer}
+                      onCheckedChange={() => toggleShipToCustomer(item.product.id)}
+                      className="scale-75"
+                    />
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Truck className="w-3 h-3" />
+                      Ship to customer
                     </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => updateQuantity(item.product.id, 1)}
-                    >
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive"
-                      onClick={() => removeFromCart(item.product.id)}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                    {item.shipToCustomer && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        Ships later
+                      </Badge>
+                    )}
                   </div>
-                  <p className="text-sm font-bold w-16 text-right shrink-0">
-                    ${(item.product.price * item.quantity).toFixed(2)}
-                  </p>
                 </div>
               ))
             )}
@@ -367,6 +449,12 @@ export const PointOfSale = () => {
 
           {/* Totals + checkout */}
           <div className="p-3 border-t border-border space-y-3">
+            {hasShippingItems && (
+              <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 rounded-md px-2 py-1.5">
+                <Truck className="w-3.5 h-3.5 shrink-0" />
+                <span>{cart.filter(i => i.shipToCustomer).length} item(s) will ship after tour</span>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Subtotal</span>
               <span className="font-bold text-lg">${subtotal.toFixed(2)}</span>
@@ -374,7 +462,7 @@ export const PointOfSale = () => {
             <Button
               className="w-full h-14 text-lg font-bold gap-2"
               disabled={cart.length === 0 || checkoutLoading}
-              onClick={handleCheckout}
+              onClick={handleChargeClick}
             >
               {checkoutLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -391,6 +479,103 @@ export const PointOfSale = () => {
           </div>
         </div>
       </div>
+
+      {/* Shipping Method Dialog */}
+      <Dialog open={showShippingForm} onOpenChange={setShowShippingForm}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Truck className="w-5 h-5" />
+              Shipping Details
+            </DialogTitle>
+            <DialogDescription>
+              Some items will ship to the customer after the tour. Choose how to collect the address.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Option 1: Customer fills via Stripe */}
+            <Card
+              className="cursor-pointer hover:border-primary transition-colors"
+              onClick={() => handleCheckout('customer_fills')}
+            >
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-primary/10 shrink-0 mt-0.5">
+                  <QrCode className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Customer enters address</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Customer fills in their shipping address on the Stripe checkout page after scanning the QR code.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground">or</span>
+              <Separator className="flex-1" />
+            </div>
+
+            {/* Option 2: Staff enters address */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <p className="text-sm font-semibold">Enter address for customer</p>
+              </div>
+              <div className="grid gap-2">
+                <Input
+                  placeholder="Customer name *"
+                  value={shippingAddress.name}
+                  onChange={e => setShippingAddress(prev => ({ ...prev, name: e.target.value }))}
+                />
+                <Input
+                  placeholder="Street address *"
+                  value={shippingAddress.line1}
+                  onChange={e => setShippingAddress(prev => ({ ...prev, line1: e.target.value }))}
+                />
+                <Input
+                  placeholder="Apt, suite, etc."
+                  value={shippingAddress.line2}
+                  onChange={e => setShippingAddress(prev => ({ ...prev, line2: e.target.value }))}
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  <Input
+                    placeholder="City *"
+                    value={shippingAddress.city}
+                    onChange={e => setShippingAddress(prev => ({ ...prev, city: e.target.value }))}
+                  />
+                  <Input
+                    placeholder="State *"
+                    value={shippingAddress.state}
+                    onChange={e => setShippingAddress(prev => ({ ...prev, state: e.target.value }))}
+                  />
+                  <Input
+                    placeholder="ZIP *"
+                    value={shippingAddress.postal_code}
+                    onChange={e => setShippingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <Button
+                className="w-full gap-2"
+                disabled={checkoutLoading}
+                onClick={() => handleCheckout('staff_entered')}
+              >
+                {checkoutLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4" />
+                    Generate Payment QR
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* QR / Payment Link Dialog */}
       <Dialog open={showQR} onOpenChange={setShowQR}>
@@ -409,7 +594,6 @@ export const PointOfSale = () => {
 
             {paymentUrl && (
               <>
-                {/* QR Code using a simple API */}
                 <div className="flex justify-center">
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(paymentUrl)}`}
