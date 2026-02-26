@@ -133,15 +133,7 @@ export const MobileMusicLibrary = ({
       <div className="flex-shrink-0 bg-background border-b border-border safe-top">
         {/* Primary Row - Navigation */}
         <div className="flex items-center h-12 px-2 gap-1.5">
-          {/* Back Button */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-9 w-9 flex-shrink-0"
-            onClick={() => navigate(fromPath || '/dashboard')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          {/* Section Dropdown - replaces old back button position */}
 
           {/* Section Dropdown - Primary Navigation */}
           <DropdownMenu>
@@ -176,6 +168,16 @@ export const MobileMusicLibrary = ({
 
           {/* Action Buttons - Compact */}
           <div className="flex items-center gap-0.5">
+            {/* Back to Dashboard */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-9 px-2.5 text-xs gap-1 flex-shrink-0"
+              onClick={() => navigate(fromPath || '/dashboard')}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back
+            </Button>
             {/* Search Toggle */}
             <Button 
               variant={searchOpen ? "secondary" : "ghost"} 
