@@ -44,6 +44,7 @@ const adminModules = [
   { id: 'tour-planner', name: 'Tour Planner', icon: Calendar, description: 'Plan tours and routes', route: '/tour-planner' },
   
   { id: 'shop', name: 'Shop', icon: ShoppingBag, description: 'Public storefront', route: '/shop' },
+  { id: 'pos', name: 'Point of Sale', icon: ShoppingBag, description: 'Tablet POS for in-person merch sales', route: '/pos' },
   { id: 'inventory-products', name: 'Inventory & Products', icon: Package, description: 'Admin product management', route: '/admin/products' },
   { id: 'scholarships', name: 'Scholarships', icon: GraduationCap, description: 'Manage scholarships', route: '/admin/scholarships' },
   { id: 'contracts', name: 'Contracts', icon: FileText, description: 'Contracts and signatures', route: '/contracts' },
