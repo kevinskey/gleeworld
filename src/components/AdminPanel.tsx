@@ -8,6 +8,7 @@ import { AdminSummaryStats } from "./admin/AdminSummaryStats";
 import { ActivityLogs } from "./admin/ActivityLogs";
 import { ContractSignatureFixer } from "./admin/ContractSignatureFixer";
 import { ReceiptsManagement } from "./admin/ReceiptsManagement";
+import { InvoiceMaker } from "./admin/InvoiceMaker";
 import { AccountingCardCollapsible } from "./AccountingCardCollapsible";
 import { BulkW9EmailDialog } from "./admin/BulkW9EmailDialog";
 import { Button } from "@/components/ui/button";
@@ -79,6 +80,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
     (currentPath.includes('users') ? 'users' : 
      currentPath.includes('activity') ? 'activity' : 
      currentPath.includes('receipts') ? 'receipts' : 
+     currentPath.includes('invoices') ? 'invoices' : 
      currentPath.includes('accounting') ? 'accounting' : 
      currentPath.includes('music') ? 'music' :
      currentPath.includes('announcements') ? 'announcements' :
@@ -167,6 +169,8 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
         return <ContractSignatureFixer />;
       case 'receipts':
         return <ReceiptsManagement />;
+      case 'invoices':
+        return <InvoiceMaker />;
       case 'calendar':
         return <MasterCalendar />;
       case 'scheduling':

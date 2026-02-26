@@ -12125,6 +12125,101 @@ export type Database = {
           },
         ]
       }
+      gw_invoices: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          director_name: string
+          director_title: string
+          donor_address: string | null
+          donor_city: string | null
+          donor_email: string | null
+          donor_name: string
+          donor_organization: string | null
+          donor_phone: string | null
+          donor_state: string | null
+          donor_zip: string | null
+          due_date: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          line_items: Json
+          media_id: string | null
+          notes: string | null
+          payment_status: string
+          pdf_url: string | null
+          status: string
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          director_name?: string
+          director_title?: string
+          donor_address?: string | null
+          donor_city?: string | null
+          donor_email?: string | null
+          donor_name: string
+          donor_organization?: string | null
+          donor_phone?: string | null
+          donor_state?: string | null
+          donor_zip?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          line_items?: Json
+          media_id?: string | null
+          notes?: string | null
+          payment_status?: string
+          pdf_url?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          director_name?: string
+          director_title?: string
+          donor_address?: string | null
+          donor_city?: string | null
+          donor_email?: string | null
+          donor_name?: string
+          donor_organization?: string | null
+          donor_phone?: string | null
+          donor_state?: string | null
+          donor_zip?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          line_items?: Json
+          media_id?: string | null
+          notes?: string | null
+          payment_status?: string
+          pdf_url?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_invoices_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "gw_media_library"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_karaoke_recordings: {
         Row: {
           created_at: string
