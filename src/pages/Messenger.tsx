@@ -725,7 +725,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                       {/* Compose form - hide on mobile when viewing history */}
                       <div className={`flex-1 flex flex-col min-h-0 ${showEmailHistory ? 'hidden lg:flex' : 'flex'}`}>
                         <ScrollArea className="flex-1 min-h-0">
-                          <div className="bg-card p-4 lg:p-6 space-y-4">
+                          <div className="bg-card p-4 lg:p-6 space-y-4 pb-24 lg:pb-4">
                             {/* Recipients */}
                             <div className="space-y-1">
                               <Label className="text-base font-semibold text-foreground">To:</Label>
@@ -793,14 +793,21 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                               </div>
                             </div>
 
-                            {/* Send Button */}
-                            <div className="pt-2 pb-4">
+                            {/* Send Button - visible inline on desktop */}
+                            <div className="pt-2 pb-4 hidden lg:block">
                               <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full h-12">
                                 {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
                               </Button>
                             </div>
                           </div>
                         </ScrollArea>
+
+                        {/* Send Button - fixed at bottom on mobile */}
+                        <div className="flex-shrink-0 p-3 border-t border-border bg-card lg:hidden">
+                          <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full h-14 text-base">
+                            {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
