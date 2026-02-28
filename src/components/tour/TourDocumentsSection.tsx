@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { FastPDFViewer } from "@/components/FastPDFViewer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   FileText, Download, Upload, Trash2, Plus, Loader2, Eye, X,
   Search, FileImage, FileSpreadsheet, File, FileScan, CheckCircle2,
-  FolderOpen, Image as ImageIcon, Folder, FolderPlus, ChevronRight, ArrowLeft
+  FolderOpen, Image as ImageIcon, Folder, FolderPlus, ChevronRight, ArrowLeft,
+  GripVertical, Pencil
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,6 +87,12 @@ export const TourDocumentsSection = () => {
   const [folderPath, setFolderPath] = useState<{ id: string; name: string }[]>([]);
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+  const [editingFolderName, setEditingFolderName] = useState("");
+  const [editingDocId, setEditingDocId] = useState<string | null>(null);
+  const [editingDocName, setEditingDocName] = useState("");
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+  const [draggingDocId, setDraggingDocId] = useState<string | null>(null);
 
   // Find the root "Tour Documents" folder
   useEffect(() => {
@@ -207,7 +214,58 @@ export const TourDocumentsSection = () => {
     onError: (err: any) => toast.error(err.message || 'Failed to delete folder'),
   });
 
-  // Navigate into a folder
+  // Rename folder
+  const renameFolderMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase
+        .from('gw_media_folders')
+        .update({ name })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-doc-subfolders'] });
+      setEditingFolderId(null);
+      toast.success('Folder renamed');
+    },
+    onError: () => toast.error('Failed to rename folder'),
+  });
+
+  // Rename document
+  const renameDocMutation = useMutation({
+    mutationFn: async ({ id, title }: { id: string; title: string }) => {
+      const { error } = await supabase
+        .from('gw_media_library')
+        .update({ title })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-documents-media'] });
+      setEditingDocId(null);
+      toast.success('Document renamed');
+    },
+    onError: () => toast.error('Failed to rename document'),
+  });
+
+  // Move document to folder
+  const moveDocMutation = useMutation({
+    mutationFn: async ({ docId, folderId }: { docId: string; folderId: string }) => {
+      const { error } = await supabase
+        .from('gw_media_library')
+        .update({ folder_id: folderId })
+        .eq('id', docId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-documents-media'] });
+      queryClient.invalidateQueries({ queryKey: ['tour-doc-folder-counts'] });
+      toast.success('Document moved');
+    },
+    onError: () => toast.error('Failed to move document'),
+  });
+
+
   const navigateToFolder = (folder: MediaFolder) => {
     setCurrentFolderId(folder.id);
     setFolderPath(prev => [...prev, { id: folder.id, name: folder.name }]);
@@ -438,15 +496,72 @@ export const TourDocumentsSection = () => {
           {subfolders.map(folder => (
             <Card
               key={folder.id}
-              className="cursor-pointer hover:bg-muted/40 transition-colors group"
-              onClick={() => navigateToFolder(folder)}
+              className={cn(
+                "cursor-pointer hover:bg-muted/40 transition-all group",
+                dragOverFolderId === folder.id && "ring-2 ring-primary bg-primary/10 scale-105"
+              )}
+              onClick={() => {
+                if (editingFolderId !== folder.id) navigateToFolder(folder);
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDragOverFolderId(folder.id);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                setDragOverFolderId(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDragOverFolderId(null);
+                const docId = e.dataTransfer.getData('text/doc-id');
+                if (docId) {
+                  moveDocMutation.mutate({ docId, folderId: folder.id });
+                }
+              }}
             >
               <CardContent className="p-3 flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-accent/50 text-primary shrink-0">
                   <Folder className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{folder.name}</p>
+                  {editingFolderId === folder.id ? (
+                    <Input
+                      value={editingFolderName}
+                      onChange={(e) => setEditingFolderName(e.target.value)}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter' && editingFolderName.trim()) {
+                          renameFolderMutation.mutate({ id: folder.id, name: editingFolderName.trim() });
+                        }
+                        if (e.key === 'Escape') setEditingFolderId(null);
+                      }}
+                      onBlur={() => {
+                        if (editingFolderName.trim() && editingFolderName.trim() !== folder.name) {
+                          renameFolderMutation.mutate({ id: folder.id, name: editingFolderName.trim() });
+                        } else {
+                          setEditingFolderId(null);
+                        }
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-6 text-sm py-0 px-1"
+                      autoFocus
+                    />
+                  ) : (
+                    <p
+                      className="text-sm font-medium truncate hover:text-primary cursor-text"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingFolderId(folder.id);
+                        setEditingFolderName(folder.name);
+                      }}
+                      title="Click to rename"
+                    >
+                      {folder.name}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {folderCounts[folder.id] ?? '...'} files
                   </p>
@@ -495,23 +610,71 @@ export const TourDocumentsSection = () => {
           <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
             <span>{filtered.length} document{filtered.length !== 1 ? 's' : ''}</span>
             <span className="flex items-center gap-1">
-              <Upload className="h-3 w-3" />
-              Drag files anywhere to upload
+              <GripVertical className="h-3 w-3" />
+              Drag docs to folders
             </span>
           </div>
           {filtered.map(doc => (
             <Card
               key={doc.id}
-              className="overflow-hidden hover:bg-muted/30 transition-colors cursor-pointer group"
-              onClick={() => handlePreview(doc)}
+              className={cn(
+                "overflow-hidden hover:bg-muted/30 transition-colors cursor-pointer group",
+                draggingDocId === doc.id && "opacity-50"
+              )}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData('text/doc-id', doc.id);
+                setDraggingDocId(doc.id);
+              }}
+              onDragEnd={() => setDraggingDocId(null)}
+              onClick={() => {
+                if (editingDocId !== doc.id) handlePreview(doc);
+              }}
             >
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 cursor-grab active:cursor-grabbing">
+                    <GripVertical className="h-4 w-4 opacity-40 group-hover:opacity-100" />
+                  </div>
                   <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
                     {getFileIcon(doc.file_type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium truncate text-foreground">{doc.title}</h3>
+                    {editingDocId === doc.id ? (
+                      <Input
+                        value={editingDocName}
+                        onChange={(e) => setEditingDocName(e.target.value)}
+                        onKeyDown={(e) => {
+                          e.stopPropagation();
+                          if (e.key === 'Enter' && editingDocName.trim()) {
+                            renameDocMutation.mutate({ id: doc.id, title: editingDocName.trim() });
+                          }
+                          if (e.key === 'Escape') setEditingDocId(null);
+                        }}
+                        onBlur={() => {
+                          if (editingDocName.trim() && editingDocName.trim() !== doc.title) {
+                            renameDocMutation.mutate({ id: doc.id, title: editingDocName.trim() });
+                          } else {
+                            setEditingDocId(null);
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-6 text-sm py-0 px-1"
+                        autoFocus
+                      />
+                    ) : (
+                      <h3
+                        className="text-sm font-medium truncate text-foreground hover:text-primary cursor-text"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingDocId(doc.id);
+                          setEditingDocName(doc.title);
+                        }}
+                        title="Click to rename"
+                      >
+                        {doc.title}
+                      </h3>
+                    )}
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                         {getFileExtBadge(doc.file_type, doc.title)}
