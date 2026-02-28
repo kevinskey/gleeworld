@@ -26,7 +26,9 @@ import {
   Settings,
   ChevronUp,
   ChevronDown,
+  Ticket,
 } from 'lucide-react';
+import { CouponManagerDialog } from '@/components/pos/CouponManagerDialog';
 import {
   Dialog,
   DialogContent,
@@ -91,6 +93,7 @@ export const PointOfSale = () => {
   const [couponCode, setCouponCode] = useState('');
   const [couponStatus, setCouponStatus] = useState<{ valid: boolean; message: string; discount?: number } | null>(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [showCouponManager, setShowCouponManager] = useState(false);
   const { toast } = useToast();
 
   const validateCoupon = async () => {
@@ -446,11 +449,28 @@ export const PointOfSale = () => {
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => setShowCouponManager(true)}
+            className="text-white/80 hover:text-white hover:bg-white/10 text-xs sm:text-sm hidden sm:flex"
+          >
+            <Ticket className="w-4 h-4 mr-1.5" />
+            Coupons
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => navigate('/admin/products')}
             className="text-white/80 hover:text-white hover:bg-white/10 text-xs sm:text-sm hidden sm:flex"
           >
             <Settings className="w-4 h-4 mr-1.5" />
             Manage Products
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowCouponManager(true)}
+            className="text-white/80 hover:text-white hover:bg-white/10 sm:hidden h-8 w-8"
+          >
+            <Ticket className="w-4 h-4" />
           </Button>
           <Button
             variant="ghost"
@@ -817,6 +837,9 @@ export const PointOfSale = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Coupon Manager */}
+      <CouponManagerDialog open={showCouponManager} onOpenChange={setShowCouponManager} />
     </div>
   );
 };
