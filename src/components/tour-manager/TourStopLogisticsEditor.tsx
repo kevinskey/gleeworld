@@ -176,6 +176,7 @@ export const TourStopLogisticsEditor: React.FC<{
     updateField(stopId, field, value);
 
     if (field === 'departure_time' || field === 'arrival_time') {
+      console.log(`[AutoSave] Scheduling save for ${field} = "${value}" on stop ${stopId}`);
       const key = `${stopId}:${field}`;
       if (autoSaveTimeoutRef.current[key]) {
         clearTimeout(autoSaveTimeoutRef.current[key]);
@@ -183,16 +184,20 @@ export const TourStopLogisticsEditor: React.FC<{
       autoSaveTimeoutRef.current[key] = setTimeout(() => {
         // Save directly to DB to avoid stale editData references
         (async () => {
+          console.log(`[AutoSave] Executing save: ${field} = "${value}" on stop ${stopId}`);
           setSaving(stopId);
           try {
-            const { error } = await supabase
+            const { data: result, error } = await supabase
               .from('gw_tour_cities')
               .update({ [field]: value })
-              .eq('id', stopId);
+              .eq('id', stopId)
+              .select();
+            console.log(`[AutoSave] Result:`, { result, error });
             if (error) throw error;
             toast({ title: 'Time saved' });
             onUpdate();
           } catch (err: any) {
+            console.error(`[AutoSave] Error:`, err);
             toast({ title: 'Error saving time', description: err.message, variant: 'destructive' });
           } finally {
             setSaving(null);
