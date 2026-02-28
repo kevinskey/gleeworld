@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Users, Calculator, Plus, Trash2, Download, Music, MapPin, Info, Pencil, Eye, Save, RotateCcw } from 'lucide-react';
+import { DollarSign, Users, Calculator, Plus, Trash2, Download, Music, MapPin, Info, Pencil, Eye, Save, RotateCcw, FileText } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -677,6 +677,78 @@ const StipendLetterCard = ({
 
   const displayText = letterText || savedLetterText || generatedText;
 
+  const [savingToDocs, setSavingToDocs] = useState(false);
+
+  const handleSaveToDocs = async () => {
+    setSavingToDocs(true);
+    try {
+      // Get Tour Documents folder id
+      const { data: folder } = await supabase
+        .from('gw_media_folders')
+        .select('id')
+        .eq('name', 'Tour Documents')
+        .limit(1)
+        .single();
+
+      if (!folder) {
+        toast.error('Tour Documents folder not found');
+        setSavingToDocs(false);
+        return;
+      }
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // Create text file blob
+      const textContent = displayText;
+      const blob = new Blob([textContent], { type: 'text/plain' });
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const fileName = `Stipend-Request-Letter-${timestamp}.txt`;
+      const storagePath = `tour-documents/${Date.now()}-${fileName}`;
+
+      // Upload to media-library bucket
+      const { error: uploadError } = await supabase.storage
+        .from('media-library')
+        .upload(storagePath, blob, { contentType: 'text/plain', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('media-library')
+        .getPublicUrl(storagePath);
+
+      // Insert into gw_media_library
+      const { error: insertError } = await supabase
+        .from('gw_media_library')
+        .insert({
+          title: `Stipend Request Letter - ${timestamp}`,
+          description: 'Auto-generated stipend request letter from Tour Stipends module',
+          file_url: urlData.publicUrl,
+          file_path: storagePath,
+          file_type: 'text/plain',
+          file_size: blob.size,
+          category: 'document',
+          tags: ['stipend', 'letter', 'tour', 'per-diem'],
+          context: 'tour',
+          folder_id: folder.id,
+          uploaded_by: user?.id || null,
+          bucket_id: 'media-library',
+          is_public: false,
+          is_deleted: false,
+        });
+
+      if (insertError) throw insertError;
+
+      toast.success('Letter saved to Tour Documents');
+    } catch (err: any) {
+      console.error('Save to docs error:', err);
+      toast.error(err.message || 'Failed to save to Tour Documents');
+    } finally {
+      setSavingToDocs(false);
+    }
+  };
+
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -728,6 +800,10 @@ const StipendLetterCard = ({
                 <Button variant="outline" size="sm" onClick={handleEdit}>
                   <Pencil className="h-4 w-4 mr-1" />
                   Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleSaveToDocs} disabled={savingToDocs}>
+                  <FileText className="h-4 w-4 mr-1" />
+                  {savingToDocs ? 'Saving...' : 'Save to Tour Docs'}
                 </Button>
                 <Button variant="outline" size="sm" onClick={handlePrint}>
                   <Download className="h-4 w-4 mr-1" />
