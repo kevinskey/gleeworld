@@ -1,16 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Users, Calculator, Plus, Trash2, Download, Music, MapPin, Info, Pencil, Eye } from 'lucide-react';
+import { DollarSign, Users, Calculator, Plus, Trash2, Download, Music, MapPin, Info, Pencil, Eye, Save, RotateCcw } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from 'sonner';
 
 // --- Per Diem Rate Directory ---
 const HIGH_COST_STATES = [
@@ -80,6 +82,9 @@ export const TourStipends = () => {
   const [singerCount, setSingerCount] = useState<number>(0);
   const [tourDays, setTourDays] = useState<number>(0);
   const [isLetterEditable, setIsLetterEditable] = useState(false);
+  const [letterText, setLetterText] = useState<string>('');
+  const [savedLetterText, setSavedLetterText] = useState<string>('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Fetch roster count
   const { data: rosterCount } = useQuery({
@@ -527,172 +532,226 @@ export const TourStipends = () => {
       )}
 
       {/* Formal Stipend Request Letter */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base">Stipend Request Letter</CardTitle>
-              <CardDescription>Formal tour stipend & per diem request document</CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={isLetterEditable ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setIsLetterEditable(!isLetterEditable)}
-              >
-                {isLetterEditable ? (
-                  <><Eye className="h-4 w-4 mr-1" />Preview</>
-                ) : (
-                  <><Pencil className="h-4 w-4 mr-1" />Edit</>
-                )}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => {
-                if (isLetterEditable) setIsLetterEditable(false);
-                setTimeout(() => {
-                  const letterEl = document.getElementById('stipend-letter');
-                  if (!letterEl) return;
-                  const printWindow = window.open('', '_blank');
-                  if (!printWindow) return;
-                  printWindow.document.write(`
-                    <html><head><title>Stipend Request</title>
-                    <style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;color:#000;line-height:1.6}
-                    h2{text-align:center;margin:24px 0 8px}p{margin:6px 0}
-                    .indent{margin-left:24px}.bold{font-weight:700}.total-line{border-top:1px solid #000;padding-top:8px;margin-top:12px}
-                    </style></head><body>${letterEl.innerHTML}</body></html>
-                  `);
-                  printWindow.document.close();
-                  printWindow.print();
-                }, 100);
-              }}>
-                <Download className="h-4 w-4 mr-1" />
-                Print / Save PDF
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLetterEditable && (
-            <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2 border border-border/50">
-              <Pencil className="h-3 w-3" />
-              Click any text below to edit. Changes persist until you leave this page.
-            </div>
-          )}
-          <div
-            id="stipend-letter"
-            contentEditable={isLetterEditable}
-            suppressContentEditableWarning
-            className={`bg-background border rounded-lg p-6 sm:p-8 space-y-4 text-sm leading-relaxed font-serif transition-all ${
-              isLetterEditable
-                ? 'border-primary/50 ring-2 ring-primary/20 focus:outline-none cursor-text'
-                : 'border-border'
-            }`}
-          >
-            {/* Tour Description */}
-            <p>
-              The tour consists of performances in{' '}
-              {cityBreakdown.length > 0
-                ? cityBreakdown.map((c, i) => {
-                    const label = `${c.city_name}, ${c.state_code || ''}`;
-                    if (i === cityBreakdown.length - 1 && cityBreakdown.length > 1) return `and ${label}`;
-                    return label;
-                  }).join('; ')
-                : 'Huntsville, AL; New Orleans, LA; Denver, CO; Kansas City, MO; Chicago, IL; Cleveland, OH; and Harlem, NY'}
-              .{' '}
-              <span className="font-bold">
-                The checks are needed by Wednesday, March 5th before departing from the college on Saturday, March 8th.
-              </span>
-            </p>
-
-            <Separator />
-
-            {/* Section 1: Cash for Student Meals */}
-            <div>
-              <p className="font-semibold text-base">Cash for Student Meals</p>
-              <p>
-                {effectiveSingerCount || 44} Glee Club Members Per Diem $100 = {formatCurrency((effectiveSingerCount || 44) * 100)}
-              </p>
-              <p className="text-center font-bold text-base mt-3">
-                Grand Total for Glee Club Members = {formatCurrency((effectiveSingerCount || 44) * 100)}
-              </p>
-            </div>
-
-            <Separator />
-
-            {/* Section 2: Director Misc/Emergency */}
-            <div>
-              <p>
-                Glee Club Director – Dr. Kevin Johnson- <span className="font-bold">Misc./ Emergency Expenses = $2,500.00</span>
-              </p>
-              <p className="text-muted-foreground italic">
-                (i.e. Bus tolls, Bus driver tip, Bus parking, Bus water and snacks)
-              </p>
-            </div>
-
-            <Separator />
-
-            {/* Section 3: Faculty Per Diem Breakdown */}
-            <div>
-              <p className="font-semibold">Glee Club Director- Dr. Kevin Johnson</p>
-
-              {/* Group cities by rate */}
-              {(() => {
-                const standardCities = cityBreakdown.filter(c => c.rate === STANDARD_RATE);
-                const highCostCities = cityBreakdown.filter(c => c.rate === HIGH_COST_RATE);
-                const standardDays = standardCities.reduce((s, c) => s + c.days, 0);
-                const highCostDays = highCostCities.reduce((s, c) => s + c.days, 0);
-                const standardTotal = standardDays * STANDARD_RATE;
-                const highCostTotal = highCostDays * HIGH_COST_RATE;
-                const facultyPerDiemTotal = standardTotal + highCostTotal;
-
-                return (
-                  <div className="ml-4 space-y-1">
-                    {standardCities.length > 0 && (
-                      <p>
-                        - ${STANDARD_RATE}/day @ {standardDays} days (
-                        {standardCities.map(c => {
-                          const suffix = c.days > 1 ? `(x${c.days})` : '';
-                          return `${c.state_code}${suffix}`;
-                        }).join(',')}
-                        ) = {formatCurrency(standardTotal)}
-                      </p>
-                    )}
-                    {highCostCities.length > 0 && (
-                      <p>
-                        - ${HIGH_COST_RATE}/day @ {highCostDays} days (
-                        {highCostCities.map(c => {
-                          const suffix = c.days > 1 ? `(x${c.days})` : '';
-                          return `${c.state_code}${suffix}`;
-                        }).join(',')}
-                        ) = {formatCurrency(highCostTotal)}
-                      </p>
-                    )}
-                    <p className="font-bold">Total = {formatCurrency(facultyPerDiemTotal)}</p>
-                  </div>
-                );
-              })()}
-            </div>
-
-            <Separator />
-
-            {/* Grand Total Faculty */}
-            {(() => {
-              const standardCities = cityBreakdown.filter(c => c.rate === STANDARD_RATE);
-              const highCostCities = cityBreakdown.filter(c => c.rate === HIGH_COST_RATE);
-              const standardDays = standardCities.reduce((s, c) => s + c.days, 0);
-              const highCostDays = highCostCities.reduce((s, c) => s + c.days, 0);
-              const facultyPerDiemTotal = (standardDays * STANDARD_RATE) + (highCostDays * HIGH_COST_RATE);
-              const miscExpenses = 2500;
-              const grandFacultyTotal = facultyPerDiemTotal + miscExpenses;
-
-              return (
-                <p className="text-center font-bold text-base pt-2">
-                  Grand Total Faculty Per Diem and Misc. = {formatCurrency(grandFacultyTotal)}
-                </p>
-              );
-            })()}
-          </div>
-        </CardContent>
-      </Card>
+      <StipendLetterCard
+        cityBreakdown={cityBreakdown}
+        effectiveSingerCount={effectiveSingerCount}
+        isLetterEditable={isLetterEditable}
+        setIsLetterEditable={setIsLetterEditable}
+        letterText={letterText}
+        setLetterText={setLetterText}
+        savedLetterText={savedLetterText}
+        setSavedLetterText={setSavedLetterText}
+        hasUnsavedChanges={hasUnsavedChanges}
+        setHasUnsavedChanges={setHasUnsavedChanges}
+      />
     </div>
+  );
+};
+
+// --- Stipend Letter Card Component ---
+interface CityBreakdownItem {
+  city_name: string;
+  state_code: string | null;
+  days: number;
+  rate: number;
+  stateName: string;
+  totalPerDiem: number;
+}
+
+interface StipendLetterCardProps {
+  cityBreakdown: CityBreakdownItem[];
+  effectiveSingerCount: number;
+  isLetterEditable: boolean;
+  setIsLetterEditable: (v: boolean) => void;
+  letterText: string;
+  setLetterText: (v: string) => void;
+  savedLetterText: string;
+  setSavedLetterText: (v: string) => void;
+  hasUnsavedChanges: boolean;
+  setHasUnsavedChanges: (v: boolean) => void;
+}
+
+function generateLetterText(cityBreakdown: CityBreakdownItem[], effectiveSingerCount: number): string {
+  const singerCount = effectiveSingerCount || 44;
+  const studentMealTotal = singerCount * 100;
+
+  const citiesLine = cityBreakdown.length > 0
+    ? cityBreakdown.map((c, i) => {
+        const label = `${c.city_name}, ${c.state_code || ''}`;
+        if (i === cityBreakdown.length - 1 && cityBreakdown.length > 1) return `and ${label}`;
+        return label;
+      }).join('; ')
+    : 'Huntsville, AL; New Orleans, LA; Denver, CO; Kansas City, MO; Chicago, IL; Cleveland, OH; and Harlem, NY';
+
+  const standardCities = cityBreakdown.filter(c => c.rate === STANDARD_RATE);
+  const highCostCities = cityBreakdown.filter(c => c.rate === HIGH_COST_RATE);
+  const standardDays = standardCities.reduce((s, c) => s + c.days, 0);
+  const highCostDays = highCostCities.reduce((s, c) => s + c.days, 0);
+  const standardTotal = standardDays * STANDARD_RATE;
+  const highCostTotal = highCostDays * HIGH_COST_RATE;
+  const facultyPerDiemTotal = standardTotal + highCostTotal;
+  const miscExpenses = 2500;
+  const grandFacultyTotal = facultyPerDiemTotal + miscExpenses;
+
+  const standardLine = standardCities.length > 0
+    ? ` - $${STANDARD_RATE}/day @ ${standardDays} days (${standardCities.map(c => `${c.state_code}${c.days > 1 ? `(x${c.days})` : ''}`).join(',')}) = ${formatCurrency(standardTotal)}`
+    : '';
+  const highCostLine = highCostCities.length > 0
+    ? ` - $${HIGH_COST_RATE}/day @ ${highCostDays} days (${highCostCities.map(c => `${c.state_code}${c.days > 1 ? `(x${c.days})` : ''}`).join(',')}) = ${formatCurrency(highCostTotal)}`
+    : '';
+
+  return `The tour consists of performances in ${citiesLine}. The checks are needed by Wednesday, March 5th before departing from the college on Saturday, March 8th.
+
+───────────────────────────────────
+
+Cash for Student Meals
+${singerCount} Glee Club Members Per Diem $100 = ${formatCurrency(studentMealTotal)}
+
+                  Grand Total for Glee Club Members = ${formatCurrency(studentMealTotal)}
+
+───────────────────────────────────
+
+Glee Club Director – Dr. Kevin Johnson- Misc./ Emergency Expenses = $2,500.00
+
+(i.e. Bus tolls, Bus driver tip, Bus parking, Bus water and snacks)
+
+───────────────────────────────────
+
+Glee Club Director- Dr. Kevin Johnson
+${standardLine}
+${highCostLine}
+ Total = ${formatCurrency(facultyPerDiemTotal)}
+
+───────────────────────────────────
+
+Grand Total Faculty Per Diem and Misc. = ${formatCurrency(grandFacultyTotal)}`.trim();
+}
+
+const StipendLetterCard = ({
+  cityBreakdown,
+  effectiveSingerCount,
+  isLetterEditable,
+  setIsLetterEditable,
+  letterText,
+  setLetterText,
+  savedLetterText,
+  setSavedLetterText,
+  hasUnsavedChanges,
+  setHasUnsavedChanges,
+}: StipendLetterCardProps) => {
+  // Generate initial letter text
+  const generatedText = useMemo(
+    () => generateLetterText(cityBreakdown, effectiveSingerCount),
+    [cityBreakdown, effectiveSingerCount]
+  );
+
+  // Initialize letter text from saved or generated
+  useEffect(() => {
+    if (!savedLetterText && !letterText) {
+      setLetterText(generatedText);
+    }
+  }, [generatedText, savedLetterText, letterText, setLetterText]);
+
+  const handleEdit = () => {
+    if (!letterText) setLetterText(savedLetterText || generatedText);
+    setIsLetterEditable(true);
+  };
+
+  const handleSave = () => {
+    setSavedLetterText(letterText);
+    setHasUnsavedChanges(false);
+    setIsLetterEditable(false);
+    toast.success('Letter saved');
+  };
+
+  const handleRegenerate = () => {
+    const newText = generatedText;
+    setLetterText(newText);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleTextChange = (value: string) => {
+    setLetterText(value);
+    setHasUnsavedChanges(true);
+  };
+
+  const displayText = letterText || savedLetterText || generatedText;
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    const escaped = displayText.replace(/\n/g, '<br/>').replace(/───+/g, '<hr style="border:none;border-top:1px solid #000;margin:12px 0"/>');
+    printWindow.document.write(`
+      <html><head><title>Stipend Request</title>
+      <style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;color:#000;line-height:1.8;font-size:14px;white-space:pre-wrap}
+      hr{border:none;border-top:1px solid #000;margin:16px 0}
+      </style></head><body>${escaped}</body></html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <CardTitle className="text-base">Stipend Request Letter</CardTitle>
+            <CardDescription>
+              Formal tour stipend & per diem request document
+              {hasUnsavedChanges && (
+                <Badge variant="outline" className="ml-2 text-warning border-warning/50">Unsaved</Badge>
+              )}
+            </CardDescription>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {isLetterEditable ? (
+              <>
+                <Button variant="outline" size="sm" onClick={handleRegenerate}>
+                  <RotateCcw className="h-4 w-4 mr-1" />
+                  Regenerate
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => {
+                  setLetterText(savedLetterText || generatedText);
+                  setHasUnsavedChanges(false);
+                  setIsLetterEditable(false);
+                }}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave}>
+                  <Save className="h-4 w-4 mr-1" />
+                  Save
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" onClick={handleEdit}>
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={handlePrint}>
+                  <Download className="h-4 w-4 mr-1" />
+                  Print / Save PDF
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLetterEditable ? (
+          <Textarea
+            value={letterText}
+            onChange={(e) => handleTextChange(e.target.value)}
+            className="font-serif text-sm leading-relaxed min-h-[400px] resize-y"
+            placeholder="Edit the stipend request letter..."
+          />
+        ) : (
+          <div className="bg-background border border-border rounded-lg p-6 sm:p-8 font-serif text-sm leading-relaxed whitespace-pre-wrap">
+            {displayText}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
