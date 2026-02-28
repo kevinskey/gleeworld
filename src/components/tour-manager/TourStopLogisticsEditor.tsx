@@ -169,21 +169,45 @@ export const TourStopLogisticsEditor: React.FC<{
     }
   };
 
-  // Auto-save time fields when they change
+  // Auto-save time fields when they change — keyed by stopId+field so both can save independently
   const autoSaveTimeoutRef = React.useRef<Record<string, NodeJS.Timeout>>({});
 
   const updateFieldWithAutoSave = (stopId: string, field: string, value: any) => {
     updateField(stopId, field, value);
 
     if (field === 'departure_time' || field === 'arrival_time') {
-      if (autoSaveTimeoutRef.current[stopId]) {
-        clearTimeout(autoSaveTimeoutRef.current[stopId]);
+      const key = `${stopId}:${field}`;
+      if (autoSaveTimeoutRef.current[key]) {
+        clearTimeout(autoSaveTimeoutRef.current[key]);
       }
-      autoSaveTimeoutRef.current[stopId] = setTimeout(() => {
-        saveStop(stopId, { [field]: value } as Partial<TourStopLogistics>);
+      autoSaveTimeoutRef.current[key] = setTimeout(() => {
+        // Save directly to DB to avoid stale editData references
+        (async () => {
+          setSaving(stopId);
+          try {
+            const { error } = await supabase
+              .from('gw_tour_cities')
+              .update({ [field]: value })
+              .eq('id', stopId);
+            if (error) throw error;
+            toast({ title: 'Time saved' });
+            onUpdate();
+          } catch (err: any) {
+            toast({ title: 'Error saving time', description: err.message, variant: 'destructive' });
+          } finally {
+            setSaving(null);
+          }
+        })();
       }, 600);
     }
   };
+
+  // Flush pending time saves on unmount
+  React.useEffect(() => {
+    return () => {
+      Object.values(autoSaveTimeoutRef.current).forEach(clearTimeout);
+    };
+  }, []);
 
   const fetchLunchSuggestions = async (stopIndex: number) => {
     if (stopIndex === 0) return;
