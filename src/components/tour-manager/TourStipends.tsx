@@ -524,6 +524,146 @@ export const TourStipends = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Formal Stipend Request Letter */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Stipend Request Letter</CardTitle>
+              <CardDescription>Formal tour stipend & per diem request document</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => {
+              const letterEl = document.getElementById('stipend-letter');
+              if (!letterEl) return;
+              const printWindow = window.open('', '_blank');
+              if (!printWindow) return;
+              printWindow.document.write(`
+                <html><head><title>Stipend Request</title>
+                <style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;color:#000;line-height:1.6}
+                h2{text-align:center;margin:24px 0 8px}p{margin:6px 0}
+                .indent{margin-left:24px}.bold{font-weight:700}.total-line{border-top:1px solid #000;padding-top:8px;margin-top:12px}
+                </style></head><body>${letterEl.innerHTML}</body></html>
+              `);
+              printWindow.document.close();
+              printWindow.print();
+            }}>
+              <Download className="h-4 w-4 mr-1" />
+              Print
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div
+            id="stipend-letter"
+            className="bg-background border border-border rounded-lg p-6 sm:p-8 space-y-4 text-sm leading-relaxed font-serif"
+          >
+            {/* Tour Description */}
+            <p>
+              The tour consists of performances in{' '}
+              {cityBreakdown.length > 0
+                ? cityBreakdown.map((c, i) => {
+                    const label = `${c.city_name}, ${c.state_code || ''}`;
+                    if (i === cityBreakdown.length - 1 && cityBreakdown.length > 1) return `and ${label}`;
+                    return label;
+                  }).join('; ')
+                : 'Huntsville, AL; New Orleans, LA; Denver, CO; Kansas City, MO; Chicago, IL; Cleveland, OH; and Harlem, NY'}
+              .{' '}
+              <span className="font-bold">
+                The checks are needed by Wednesday, March 5th before departing from the college on Saturday, March 8th.
+              </span>
+            </p>
+
+            <Separator />
+
+            {/* Section 1: Cash for Student Meals */}
+            <div>
+              <p className="font-semibold text-base">Cash for Student Meals</p>
+              <p>
+                {effectiveSingerCount || 44} Glee Club Members Per Diem $100 = {formatCurrency((effectiveSingerCount || 44) * 100)}
+              </p>
+              <p className="text-center font-bold text-base mt-3">
+                Grand Total for Glee Club Members = {formatCurrency((effectiveSingerCount || 44) * 100)}
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Section 2: Director Misc/Emergency */}
+            <div>
+              <p>
+                Glee Club Director – Dr. Kevin Johnson- <span className="font-bold">Misc./ Emergency Expenses = $2,500.00</span>
+              </p>
+              <p className="text-muted-foreground italic">
+                (i.e. Bus tolls, Bus driver tip, Bus parking, Bus water and snacks)
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Section 3: Faculty Per Diem Breakdown */}
+            <div>
+              <p className="font-semibold">Glee Club Director- Dr. Kevin Johnson</p>
+
+              {/* Group cities by rate */}
+              {(() => {
+                const standardCities = cityBreakdown.filter(c => c.rate === STANDARD_RATE);
+                const highCostCities = cityBreakdown.filter(c => c.rate === HIGH_COST_RATE);
+                const standardDays = standardCities.reduce((s, c) => s + c.days, 0);
+                const highCostDays = highCostCities.reduce((s, c) => s + c.days, 0);
+                const standardTotal = standardDays * STANDARD_RATE;
+                const highCostTotal = highCostDays * HIGH_COST_RATE;
+                const facultyPerDiemTotal = standardTotal + highCostTotal;
+
+                return (
+                  <div className="ml-4 space-y-1">
+                    {standardCities.length > 0 && (
+                      <p>
+                        - ${STANDARD_RATE}/day @ {standardDays} days (
+                        {standardCities.map(c => {
+                          const suffix = c.days > 1 ? `(x${c.days})` : '';
+                          return `${c.state_code}${suffix}`;
+                        }).join(',')}
+                        ) = {formatCurrency(standardTotal)}
+                      </p>
+                    )}
+                    {highCostCities.length > 0 && (
+                      <p>
+                        - ${HIGH_COST_RATE}/day @ {highCostDays} days (
+                        {highCostCities.map(c => {
+                          const suffix = c.days > 1 ? `(x${c.days})` : '';
+                          return `${c.state_code}${suffix}`;
+                        }).join(',')}
+                        ) = {formatCurrency(highCostTotal)}
+                      </p>
+                    )}
+                    <p className="font-bold">Total = {formatCurrency(facultyPerDiemTotal)}</p>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <Separator />
+
+            {/* Grand Total Faculty */}
+            {(() => {
+              const standardCities = cityBreakdown.filter(c => c.rate === STANDARD_RATE);
+              const highCostCities = cityBreakdown.filter(c => c.rate === HIGH_COST_RATE);
+              const standardDays = standardCities.reduce((s, c) => s + c.days, 0);
+              const highCostDays = highCostCities.reduce((s, c) => s + c.days, 0);
+              const facultyPerDiemTotal = (standardDays * STANDARD_RATE) + (highCostDays * HIGH_COST_RATE);
+              const miscExpenses = 2500;
+              const grandFacultyTotal = facultyPerDiemTotal + miscExpenses;
+
+              return (
+                <p className="text-center font-bold text-base pt-2">
+                  Grand Total Faculty Per Diem and Misc. = {formatCurrency(grandFacultyTotal)}
+                </p>
+              );
+            })()}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
