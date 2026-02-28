@@ -441,3 +441,9 @@ verify_jwt = false
 
 [functions.pos-create-payment-link]
 verify_jwt = false
+
+[functions.terminal-connection-token]
+verify_jwt = false
+
+[functions.terminal-create-payment-intent]
+verify_jwt = false

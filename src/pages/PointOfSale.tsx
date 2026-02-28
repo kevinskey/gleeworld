@@ -9,6 +9,9 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useStripeTerminal } from '@/hooks/useStripeTerminal';
+import { ReaderStatus } from '@/components/pos/ReaderStatus';
+import { ReaderSettingsDialog } from '@/components/pos/ReaderSettingsDialog';
 import {
   Plus,
   Minus,
@@ -27,6 +30,7 @@ import {
   ChevronUp,
   ChevronDown,
   Ticket,
+  Wifi,
 } from 'lucide-react';
 import { CouponManagerDialog } from '@/components/pos/CouponManagerDialog';
 import {
@@ -94,7 +98,11 @@ export const PointOfSale = () => {
   const [couponStatus, setCouponStatus] = useState<{ valid: boolean; message: string; discount?: number } | null>(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [showCouponManager, setShowCouponManager] = useState(false);
+  const [showReaderSettings, setShowReaderSettings] = useState(false);
+  const [terminalPaymentLoading, setTerminalPaymentLoading] = useState(false);
   const { toast } = useToast();
+
+  const terminal = useStripeTerminal();
 
   const validateCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -275,6 +283,40 @@ export const PointOfSale = () => {
     }
   };
 
+  const handleTerminalCharge = async () => {
+    if (cart.length === 0 || terminal.connectionStatus !== 'connected') return;
+
+    setTerminalPaymentLoading(true);
+    try {
+      const amountCents = Math.round(discountedTotal * 100);
+      const result = await terminal.collectPayment(
+        amountCents,
+        couponStatus?.valid ? couponCode.trim() : undefined
+      );
+
+      if (result) {
+        // Create order in gw_orders
+        handlePaymentComplete();
+        toast({ title: 'Payment successful!', description: `Charged $${(result.amount / 100).toFixed(2)} on reader.` });
+      } else {
+        toast({
+          title: 'Payment failed',
+          description: terminal.error || 'Unable to process payment on reader',
+          variant: 'destructive',
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Terminal error',
+        description: err.message || 'Payment failed',
+        variant: 'destructive',
+      });
+    } finally {
+      setTerminalPaymentLoading(false);
+      terminal.resetPaymentStatus();
+    }
+  };
+
   // Shared cart items renderer
   const renderCartItems = () => (
     <div className="space-y-2">
@@ -417,8 +459,29 @@ export const PointOfSale = () => {
           <span className="font-bold text-lg text-emerald-600">${discountedTotal.toFixed(2)}</span>
         </div>
       )}
+      {/* Terminal charge button (when reader connected) */}
+      {terminal.connectionStatus === 'connected' && (
+        <Button
+          className="w-full h-14 text-lg font-bold gap-2"
+          variant="branded"
+          disabled={cart.length === 0 || terminalPaymentLoading}
+          onClick={handleTerminalCharge}
+        >
+          {terminalPaymentLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <>
+              <Wifi className="w-5 h-5" />
+              Charge on Reader ${discountedTotal.toFixed(2)}
+            </>
+          )}
+        </Button>
+      )}
+
+      {/* QR code charge button */}
       <Button
         className="w-full h-14 text-lg font-bold gap-2"
+        variant={terminal.connectionStatus === 'connected' ? 'outline' : 'default'}
         disabled={cart.length === 0 || checkoutLoading}
         onClick={handleChargeClick}
       >
@@ -426,13 +489,15 @@ export const PointOfSale = () => {
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
           <>
-            <CreditCard className="w-5 h-5" />
-            Charge ${discountedTotal.toFixed(2)}
+            <QrCode className="w-5 h-5" />
+            {terminal.connectionStatus === 'connected' ? 'QR Code' : 'Charge'} ${discountedTotal.toFixed(2)}
           </>
         )}
       </Button>
       <p className="text-[10px] text-center text-muted-foreground">
-        Customer pays via QR code or link
+        {terminal.connectionStatus === 'connected'
+          ? 'Tap "Charge on Reader" for card/tap payments'
+          : 'Customer pays via QR code or link'}
       </p>
     </div>
   );
@@ -446,6 +511,11 @@ export const PointOfSale = () => {
           <h1 className="text-lg sm:text-xl font-bold">GleeWorld POS</h1>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
+            <ReaderStatus
+              connectionStatus={terminal.connectionStatus}
+              readerLabel={terminal.connectedReader?.label}
+              onClick={() => setShowReaderSettings(true)}
+            />
           <Button
             variant="ghost"
             size="sm"
@@ -840,6 +910,21 @@ export const PointOfSale = () => {
 
       {/* Coupon Manager */}
       <CouponManagerDialog open={showCouponManager} onOpenChange={setShowCouponManager} />
+
+      {/* Reader Settings */}
+      <ReaderSettingsDialog
+        open={showReaderSettings}
+        onOpenChange={setShowReaderSettings}
+        connectionStatus={terminal.connectionStatus}
+        connectedReader={terminal.connectedReader as any}
+        discoveredReaders={terminal.discoveredReaders as any}
+        isDiscovering={terminal.isDiscovering}
+        error={terminal.error}
+        lastReaderId={terminal.lastReaderId}
+        onDiscover={terminal.discoverReaders}
+        onConnect={terminal.connectReader as any}
+        onDisconnect={terminal.disconnectReader}
+      />
     </div>
   );
 };
