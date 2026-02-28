@@ -17,7 +17,8 @@ import {
   Truck,
   CheckCircle,
   Loader2,
-  Package
+  Package,
+  X
 } from "lucide-react";
 import {
   Select,
@@ -124,6 +125,34 @@ export const Checkout = () => {
     country: "US",
     phone: "",
   });
+
+  const [couponCode, setCouponCode] = useState('');
+  const [couponStatus, setCouponStatus] = useState<{ valid: boolean; message: string; discount?: number } | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setValidatingCoupon(true);
+    try {
+      const { data, error } = await supabase.rpc('validate_coupon', { p_code: couponCode.trim() });
+      if (error) throw error;
+      const result = data as any;
+      if (result?.valid) {
+        setCouponStatus({ valid: true, message: `${result.discount_value}% off applied!`, discount: result.discount_value });
+      } else {
+        setCouponStatus({ valid: false, message: result?.error || 'Invalid coupon' });
+      }
+    } catch {
+      setCouponStatus({ valid: false, message: 'Failed to validate coupon' });
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const clearCoupon = () => {
+    setCouponCode('');
+    setCouponStatus(null);
+  };
 
   const cartItems: CartItem[] = location.state?.cartItems || [];
 
@@ -242,6 +271,7 @@ export const Checkout = () => {
           shippingRate: selectedRate,
           shippingAddress,
           shipmentId,
+          couponCode: couponStatus?.valid ? couponCode.trim() : undefined,
         }
       });
 
@@ -528,11 +558,50 @@ export const Checkout = () => {
 
                 <Separator />
 
+                {/* Coupon Code */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Coupon Code</label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter code"
+                      value={couponCode}
+                      onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(null); }}
+                      className="text-sm bg-white text-slate-900"
+                      onKeyDown={e => e.key === 'Enter' && validateCoupon()}
+                    />
+                    {couponStatus?.valid ? (
+                      <Button variant="outline" size="sm" onClick={clearCoupon}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={validateCoupon}
+                        disabled={!couponCode.trim() || validatingCoupon}
+                      >
+                        {validatingCoupon ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Apply'}
+                      </Button>
+                    )}
+                  </div>
+                  {couponStatus && (
+                    <p className={`text-xs ${couponStatus.valid ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {couponStatus.message}
+                    </p>
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm text-slate-700">
                     <span>Subtotal</span>
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
+                  {couponStatus?.valid && couponStatus.discount && (
+                    <div className="flex justify-between text-sm text-emerald-600">
+                      <span>Discount ({couponStatus.discount}% off)</span>
+                      <span>-${(subtotal * couponStatus.discount / 100).toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm text-slate-700">
                     <span>Shipping</span>
                     <span>
@@ -550,7 +619,7 @@ export const Checkout = () => {
                   <Separator />
                   <div className="flex justify-between font-bold text-lg text-slate-900">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>${((couponStatus?.valid && couponStatus.discount ? subtotal * (1 - couponStatus.discount / 100) : subtotal) + shippingCost).toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>

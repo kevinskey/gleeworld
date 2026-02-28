@@ -88,7 +88,34 @@ export const PointOfSale = () => {
     state: '',
     postal_code: '',
   });
+  const [couponCode, setCouponCode] = useState('');
+  const [couponStatus, setCouponStatus] = useState<{ valid: boolean; message: string; discount?: number } | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
   const { toast } = useToast();
+
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setValidatingCoupon(true);
+    try {
+      const { data, error } = await supabase.rpc('validate_coupon', { p_code: couponCode.trim() });
+      if (error) throw error;
+      const result = data as any;
+      if (result?.valid) {
+        setCouponStatus({ valid: true, message: `${result.discount_value}% off applied!`, discount: result.discount_value });
+      } else {
+        setCouponStatus({ valid: false, message: result?.error || 'Invalid coupon' });
+      }
+    } catch (err: any) {
+      setCouponStatus({ valid: false, message: 'Failed to validate coupon' });
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const clearCoupon = () => {
+    setCouponCode('');
+    setCouponStatus(null);
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -199,6 +226,7 @@ export const PointOfSale = () => {
           requiresShipping: hasShippingItems,
           shippingMode: mode,
           shippingAddress: mode === 'staff_entered' ? shippingAddress : undefined,
+          couponCode: couponStatus?.valid ? couponCode.trim() : undefined,
         },
       });
 
@@ -328,6 +356,10 @@ export const PointOfSale = () => {
   );
 
   // Shared checkout footer
+  const discountedTotal = couponStatus?.valid && couponStatus.discount
+    ? subtotal * (1 - couponStatus.discount / 100)
+    : subtotal;
+
   const renderCheckoutFooter = () => (
     <div className="space-y-3">
       {hasShippingItems && (
@@ -336,10 +368,52 @@ export const PointOfSale = () => {
           <span>{cart.filter(i => i.shipToCustomer).length} item(s) will ship after tour</span>
         </div>
       )}
+
+      {/* Coupon Code Input */}
+      <div className="space-y-1.5">
+        <div className="flex gap-1.5">
+          <Input
+            placeholder="Coupon code"
+            value={couponCode}
+            onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(null); }}
+            className="text-sm h-8 bg-card"
+            onKeyDown={e => e.key === 'Enter' && validateCoupon()}
+          />
+          {couponStatus?.valid ? (
+            <Button variant="outline" size="sm" className="h-8 shrink-0" onClick={clearCoupon}>
+              <X className="w-3 h-3" />
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 shrink-0"
+              onClick={validateCoupon}
+              disabled={!couponCode.trim() || validatingCoupon}
+            >
+              {validatingCoupon ? <Loader2 className="w-3 h-3 animate-spin" /> : <Tag className="w-3 h-3" />}
+            </Button>
+          )}
+        </div>
+        {couponStatus && (
+          <p className={cn("text-xs", couponStatus.valid ? "text-emerald-600" : "text-destructive")}>
+            {couponStatus.message}
+          </p>
+        )}
+      </div>
+
       <div className="flex justify-between items-center">
         <span className="text-sm text-muted-foreground">Subtotal</span>
-        <span className="font-bold text-lg">${subtotal.toFixed(2)}</span>
+        <span className={cn("font-bold text-lg", couponStatus?.valid && "line-through text-muted-foreground text-sm")}>
+          ${subtotal.toFixed(2)}
+        </span>
       </div>
+      {couponStatus?.valid && (
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium text-emerald-600">After discount</span>
+          <span className="font-bold text-lg text-emerald-600">${discountedTotal.toFixed(2)}</span>
+        </div>
+      )}
       <Button
         className="w-full h-14 text-lg font-bold gap-2"
         disabled={cart.length === 0 || checkoutLoading}
@@ -350,7 +424,7 @@ export const PointOfSale = () => {
         ) : (
           <>
             <CreditCard className="w-5 h-5" />
-            Charge ${subtotal.toFixed(2)}
+            Charge ${discountedTotal.toFixed(2)}
           </>
         )}
       </Button>

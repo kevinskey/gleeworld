@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,12 +40,14 @@ serve(async (req) => {
       customerName,
       shippingRate,
       shippingAddress,
-      shipmentId
+      shipmentId,
+      couponCode
     } = await req.json();
 
     console.log("[CHECKOUT] Request received", { 
       itemCount: cartItems?.length, 
-      hasShippingRate: !!shippingRate 
+      hasShippingRate: !!shippingRate,
+      hasCoupon: !!couponCode
     });
 
     if (!cartItems || cartItems.length === 0) {
@@ -54,6 +57,21 @@ serve(async (req) => {
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
+
+    // Validate coupon if provided
+    let couponValid = false;
+    let discountPercent = 0;
+    if (couponCode) {
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+      const { data: couponResult } = await supabaseAdmin.rpc('validate_coupon', { p_code: couponCode });
+      if (couponResult?.valid && couponResult.discount_type === 'percent') {
+        couponValid = true;
+        discountPercent = couponResult.discount_value;
+      }
+    }
 
     // Calculate subtotal
     const subtotal = cartItems.reduce((sum: number, item: any) => 
@@ -129,11 +147,21 @@ serve(async (req) => {
         shipping_rate_id: shippingRate?.id || "",
         shipping_carrier: shippingRate?.carrier || "",
         shipping_service: shippingRate?.service || "",
+        coupon_code: couponCode || "",
       },
     };
 
+    // Apply coupon discount via Stripe
+    if (couponValid && discountPercent > 0) {
+      const stripeCoupon = await stripe.coupons.create({
+        percent_off: discountPercent,
+        duration: 'once',
+        name: `Checkout Coupon: ${couponCode}`,
+      });
+      sessionOptions.discounts = [{ coupon: stripeCoupon.id }];
+    }
+
     // If we already have a shipping address from EasyPost, skip Stripe's collection
-    // Otherwise, collect it via Stripe
     if (!shippingAddress?.street1) {
       sessionOptions.shipping_address_collection = {
         allowed_countries: ["US", "CA"],
@@ -143,7 +171,16 @@ serve(async (req) => {
     // Create checkout session
     const session = await stripe.checkout.sessions.create(sessionOptions);
 
-    console.log("[CHECKOUT] Session created", { sessionId: session.id });
+    // Redeem coupon after successful session creation
+    if (couponValid && couponCode) {
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+      await supabaseAdmin.rpc('redeem_coupon', { p_code: couponCode, p_order_total: subtotal, p_channel: 'online' });
+    }
+
+    console.log("[CHECKOUT] Session created", { sessionId: session.id, couponApplied: couponValid });
 
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id }),
