@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { FastPDFViewer } from "@/components/FastPDFViewer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -385,10 +386,9 @@ export const TourDocumentsSection = () => {
                 <img src={previewUrl} alt={previewTitle} className="max-w-full max-h-full object-contain rounded-lg" />
               </div>
             ) : (
-              <iframe
-                src={previewUrl}
-                className="w-full h-full"
-                title={previewTitle}
+              <FastPDFViewer
+                pdfUrl={previewUrl}
+                className="w-full h-full min-h-[80vh]"
               />
             )}
           </div>
