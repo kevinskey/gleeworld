@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   FileText, Download, Upload, Trash2, Plus, Loader2, Eye, X,
   Search, FileImage, FileSpreadsheet, File, FileScan, CheckCircle2,
-  FolderOpen, Image as ImageIcon
+  FolderOpen, Image as ImageIcon, Folder, FolderPlus, ChevronRight, ArrowLeft
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
+} from "@/components/ui/dialog";
 
 interface MediaDoc {
   id: string;
@@ -29,6 +32,15 @@ interface MediaDoc {
   tags: string[] | null;
   description: string | null;
   category: string;
+}
+
+interface MediaFolder {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  created_at: string;
+  icon: string | null;
+  color: string | null;
 }
 
 const formatFileSize = (bytes: number) => {
@@ -69,9 +81,13 @@ export const TourDocumentsSection = () => {
   const [previewTitle, setPreviewTitle] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ name: string; done: boolean }[]>([]);
-  const [folderId, setFolderId] = useState<string | null>(null);
+  const [rootFolderId, setRootFolderId] = useState<string | null>(null);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [folderPath, setFolderPath] = useState<{ id: string; name: string }[]>([]);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
 
-  // Find or create the "Tour Documents" folder
+  // Find the root "Tour Documents" folder
   useEffect(() => {
     const findFolder = async () => {
       const { data } = await supabase
@@ -80,32 +96,135 @@ export const TourDocumentsSection = () => {
         .eq('name', 'Tour Documents')
         .limit(1)
         .single();
-      if (data) setFolderId(data.id);
+      if (data) {
+        setRootFolderId(data.id);
+        setCurrentFolderId(data.id);
+        setFolderPath([{ id: data.id, name: 'Tour Documents' }]);
+      }
     };
     findFolder();
   }, []);
 
-  // Fetch documents from gw_media_library in the Tour Documents folder
-  const { data: documents = [], isLoading } = useQuery({
-    queryKey: ['tour-documents-media', folderId],
+  // Fetch subfolders of current folder
+  const { data: subfolders = [] } = useQuery({
+    queryKey: ['tour-doc-subfolders', currentFolderId],
     queryFn: async () => {
-      if (!folderId) return [];
+      if (!currentFolderId) return [];
+      const { data, error } = await supabase
+        .from('gw_media_folders')
+        .select('id, name, parent_id, created_at, icon, color')
+        .eq('parent_id', currentFolderId)
+        .order('name');
+      if (error) throw error;
+      return (data || []) as MediaFolder[];
+    },
+    enabled: !!currentFolderId,
+  });
+
+  // Fetch documents in current folder
+  const { data: documents = [], isLoading } = useQuery({
+    queryKey: ['tour-documents-media', currentFolderId],
+    queryFn: async () => {
+      if (!currentFolderId) return [];
       const { data, error } = await supabase
         .from('gw_media_library')
         .select('id, title, file_url, file_type, file_size, file_path, uploaded_by, created_at, tags, description, category')
-        .eq('folder_id', folderId)
+        .eq('folder_id', currentFolderId)
         .eq('is_deleted', false)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data || []) as MediaDoc[];
     },
-    enabled: !!folderId,
+    enabled: !!currentFolderId,
   });
 
-  // Delete mutation
+  // Count docs in a subfolder
+  const { data: folderCounts = {} } = useQuery({
+    queryKey: ['tour-doc-folder-counts', subfolders.map(f => f.id).join(',')],
+    queryFn: async () => {
+      const counts: Record<string, number> = {};
+      for (const folder of subfolders) {
+        const { count } = await supabase
+          .from('gw_media_library')
+          .select('*', { count: 'exact', head: true })
+          .eq('folder_id', folder.id)
+          .eq('is_deleted', false);
+        counts[folder.id] = count || 0;
+      }
+      return counts;
+    },
+    enabled: subfolders.length > 0,
+  });
+
+  // Create subfolder
+  const createFolderMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const { error } = await supabase
+        .from('gw_media_folders')
+        .insert({
+          name,
+          parent_id: currentFolderId,
+          created_by: user?.id || null,
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-doc-subfolders'] });
+      toast.success('Folder created');
+      setShowNewFolderDialog(false);
+      setNewFolderName('');
+    },
+    onError: () => toast.error('Failed to create folder'),
+  });
+
+  // Delete folder (only if empty)
+  const deleteFolderMutation = useMutation({
+    mutationFn: async (folderId: string) => {
+      // Check for docs
+      const { count: docCount } = await supabase
+        .from('gw_media_library')
+        .select('*', { count: 'exact', head: true })
+        .eq('folder_id', folderId)
+        .eq('is_deleted', false);
+      if (docCount && docCount > 0) throw new Error('Folder is not empty');
+      // Check for subfolders
+      const { count: subCount } = await supabase
+        .from('gw_media_folders')
+        .select('*', { count: 'exact', head: true })
+        .eq('parent_id', folderId);
+      if (subCount && subCount > 0) throw new Error('Folder has subfolders');
+
+      const { error } = await supabase
+        .from('gw_media_folders')
+        .delete()
+        .eq('id', folderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-doc-subfolders'] });
+      toast.success('Folder deleted');
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to delete folder'),
+  });
+
+  // Navigate into a folder
+  const navigateToFolder = (folder: MediaFolder) => {
+    setCurrentFolderId(folder.id);
+    setFolderPath(prev => [...prev, { id: folder.id, name: folder.name }]);
+    setSearchQuery('');
+  };
+
+  // Navigate via breadcrumb
+  const navigateToBreadcrumb = (index: number) => {
+    const target = folderPath[index];
+    setCurrentFolderId(target.id);
+    setFolderPath(prev => prev.slice(0, index + 1));
+    setSearchQuery('');
+  };
+
+  // Delete mutation for docs
   const deleteMutation = useMutation({
     mutationFn: async (doc: MediaDoc) => {
-      // Soft delete in media library
       const { error } = await supabase
         .from('gw_media_library')
         .update({ is_deleted: true })
@@ -119,9 +238,9 @@ export const TourDocumentsSection = () => {
     onError: () => toast.error('Failed to delete document'),
   });
 
-  // Upload handler for multiple files
+  // Upload handler
   const handleUpload = useCallback(async (files: File[]) => {
-    if (!folderId || !user?.id) {
+    if (!currentFolderId || !user?.id) {
       toast.error('Unable to upload — folder not ready');
       return;
     }
@@ -131,11 +250,9 @@ export const TourDocumentsSection = () => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
-        const ext = file.name.split('.').pop() || 'bin';
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
         const storagePath = `tour-documents/${Date.now()}-${safeName}`;
 
-        // Upload to media-library bucket
         const { error: uploadErr } = await supabase.storage
           .from('media-library')
           .upload(storagePath, file);
@@ -145,13 +262,9 @@ export const TourDocumentsSection = () => {
           .from('media-library')
           .getPublicUrl(storagePath);
 
-        // Determine category from MIME
         let category = 'document';
         if (file.type.startsWith('image/')) category = 'image';
-        else if (file.type.includes('pdf')) category = 'document';
-        else if (file.type.includes('spreadsheet') || file.type.includes('excel') || file.type.includes('csv')) category = 'document';
 
-        // Insert into gw_media_library
         const { error: insertErr } = await supabase
           .from('gw_media_library')
           .insert({
@@ -160,7 +273,7 @@ export const TourDocumentsSection = () => {
             file_type: file.type,
             file_size: file.size,
             file_path: storagePath,
-            folder_id: folderId,
+            folder_id: currentFolderId,
             uploaded_by: user.id,
             category,
             is_public: false,
@@ -179,7 +292,7 @@ export const TourDocumentsSection = () => {
     toast.success(`${files.length} document${files.length > 1 ? 's' : ''} uploaded`);
     setUploading(false);
     setUploadProgress([]);
-  }, [folderId, user?.id, queryClient]);
+  }, [currentFolderId, user?.id, queryClient]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) handleUpload(acceptedFiles);
@@ -188,7 +301,7 @@ export const TourDocumentsSection = () => {
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: ACCEPTED_TYPES,
-    maxSize: 100 * 1024 * 1024, // 100MB
+    maxSize: 100 * 1024 * 1024,
     noClick: true,
     noKeyboard: true,
   });
@@ -202,22 +315,19 @@ export const TourDocumentsSection = () => {
   };
 
   const handlePreview = (doc: MediaDoc) => {
-    if (doc.file_type.includes('pdf')) {
-      setPreviewUrl(doc.file_url);
-      setPreviewTitle(doc.title);
-    } else if (doc.file_type.startsWith('image/')) {
+    if (doc.file_type.includes('pdf') || doc.file_type.startsWith('image/')) {
       setPreviewUrl(doc.file_url);
       setPreviewTitle(doc.title);
     } else {
-      // For non-previewable files, download
       handleDownload(doc);
     }
   };
 
-  // Filter documents
   const filtered = documents.filter(d =>
     d.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const isRoot = currentFolderId === rootFolderId;
 
   return (
     <div {...getRootProps()} className="space-y-4 relative min-h-[400px]">
@@ -252,12 +362,52 @@ export const TourDocumentsSection = () => {
               onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
+          <Button variant="outline" size="sm" onClick={() => setShowNewFolderDialog(true)}>
+            <FolderPlus className="h-4 w-4 mr-1.5" />
+            New Folder
+          </Button>
           <Button size="sm" onClick={open} disabled={uploading}>
             <Plus className="h-4 w-4 mr-1.5" />
             Upload
           </Button>
         </div>
       </div>
+
+      {/* Breadcrumb navigation */}
+      {folderPath.length > 1 && (
+        <div className="flex items-center gap-1 text-sm flex-wrap">
+          {folderPath.map((crumb, idx) => (
+            <div key={crumb.id} className="flex items-center gap-1">
+              {idx > 0 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+              <button
+                onClick={() => navigateToBreadcrumb(idx)}
+                className={cn(
+                  "px-1.5 py-0.5 rounded hover:bg-muted transition-colors",
+                  idx === folderPath.length - 1
+                    ? "font-semibold text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {idx === 0 ? <Folder className="h-3.5 w-3.5 inline mr-1" /> : null}
+                {crumb.name}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Back button when inside subfolder */}
+      {!isRoot && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground"
+          onClick={() => navigateToBreadcrumb(folderPath.length - 2)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
+      )}
 
       {/* Upload progress */}
       {uploadProgress.length > 0 && (
@@ -282,13 +432,50 @@ export const TourDocumentsSection = () => {
         </Card>
       )}
 
-      {/* Drop zone hint when empty */}
+      {/* Subfolders */}
+      {subfolders.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          {subfolders.map(folder => (
+            <Card
+              key={folder.id}
+              className="cursor-pointer hover:bg-muted/40 transition-colors group"
+              onClick={() => navigateToFolder(folder)}
+            >
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-accent/50 text-primary shrink-0">
+                  <Folder className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{folder.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {folderCounts[folder.id] ?? '...'} files
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive/70 hover:text-destructive shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteFolderMutation.mutate(folder.id);
+                  }}
+                  disabled={deleteFolderMutation.isPending}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Documents list */}
       {isLoading ? (
         <Card className="p-8 text-center">
           <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
           <p className="text-muted-foreground mt-2">Loading documents...</p>
         </Card>
-      ) : filtered.length === 0 ? (
+      ) : filtered.length === 0 && subfolders.length === 0 ? (
         <Card
           className="border-dashed border-2 cursor-pointer hover:border-primary/50 transition-colors"
           onClick={open}
@@ -296,17 +483,14 @@ export const TourDocumentsSection = () => {
           <CardContent className="py-12 text-center">
             <FolderOpen className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-muted-foreground font-medium">
-              {searchQuery ? 'No documents match your search' : 'No tour documents yet'}
+              {searchQuery ? 'No documents match your search' : 'No documents in this folder'}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Drag & drop files here or click to browse
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              PDFs, images, Word docs, spreadsheets — up to 100MB
+              Drag & drop files here, click to browse, or create a subfolder
             </p>
           </CardContent>
         </Card>
-      ) : (
+      ) : filtered.length > 0 ? (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
             <span>{filtered.length} document{filtered.length !== 1 ? 's' : ''}</span>
@@ -363,7 +547,38 @@ export const TourDocumentsSection = () => {
             </Card>
           ))}
         </div>
-      )}
+      ) : null}
+
+      {/* New Folder Dialog */}
+      <Dialog open={showNewFolderDialog} onOpenChange={setShowNewFolderDialog}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Create New Folder</DialogTitle>
+            <DialogDescription>
+              Add a subfolder inside "{folderPath[folderPath.length - 1]?.name || 'Tour Documents'}"
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            placeholder="Folder name"
+            value={newFolderName}
+            onChange={e => setNewFolderName(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && newFolderName.trim()) {
+                createFolderMutation.mutate(newFolderName.trim());
+              }
+            }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewFolderDialog(false)}>Cancel</Button>
+            <Button
+              onClick={() => createFolderMutation.mutate(newFolderName.trim())}
+              disabled={!newFolderName.trim() || createFolderMutation.isPending}
+            >
+              {createFolderMutation.isPending ? 'Creating...' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* PDF/Image Preview Modal */}
       {previewUrl && (
