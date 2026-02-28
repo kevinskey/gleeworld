@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Users, Calculator, Plus, Trash2, Download, Music, MapPin, Info } from 'lucide-react';
+import { DollarSign, Users, Calculator, Plus, Trash2, Download, Music, MapPin, Info, Pencil, Eye } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -79,6 +79,7 @@ export const TourStipends = () => {
   ]);
   const [singerCount, setSingerCount] = useState<number>(0);
   const [tourDays, setTourDays] = useState<number>(0);
+  const [isLetterEditable, setIsLetterEditable] = useState(false);
 
   // Fetch roster count
   const { data: rosterCount } = useQuery({
@@ -533,30 +534,58 @@ export const TourStipends = () => {
               <CardTitle className="text-base">Stipend Request Letter</CardTitle>
               <CardDescription>Formal tour stipend & per diem request document</CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={() => {
-              const letterEl = document.getElementById('stipend-letter');
-              if (!letterEl) return;
-              const printWindow = window.open('', '_blank');
-              if (!printWindow) return;
-              printWindow.document.write(`
-                <html><head><title>Stipend Request</title>
-                <style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;color:#000;line-height:1.6}
-                h2{text-align:center;margin:24px 0 8px}p{margin:6px 0}
-                .indent{margin-left:24px}.bold{font-weight:700}.total-line{border-top:1px solid #000;padding-top:8px;margin-top:12px}
-                </style></head><body>${letterEl.innerHTML}</body></html>
-              `);
-              printWindow.document.close();
-              printWindow.print();
-            }}>
-              <Download className="h-4 w-4 mr-1" />
-              Print
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant={isLetterEditable ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setIsLetterEditable(!isLetterEditable)}
+              >
+                {isLetterEditable ? (
+                  <><Eye className="h-4 w-4 mr-1" />Preview</>
+                ) : (
+                  <><Pencil className="h-4 w-4 mr-1" />Edit</>
+                )}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => {
+                if (isLetterEditable) setIsLetterEditable(false);
+                setTimeout(() => {
+                  const letterEl = document.getElementById('stipend-letter');
+                  if (!letterEl) return;
+                  const printWindow = window.open('', '_blank');
+                  if (!printWindow) return;
+                  printWindow.document.write(`
+                    <html><head><title>Stipend Request</title>
+                    <style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;color:#000;line-height:1.6}
+                    h2{text-align:center;margin:24px 0 8px}p{margin:6px 0}
+                    .indent{margin-left:24px}.bold{font-weight:700}.total-line{border-top:1px solid #000;padding-top:8px;margin-top:12px}
+                    </style></head><body>${letterEl.innerHTML}</body></html>
+                  `);
+                  printWindow.document.close();
+                  printWindow.print();
+                }, 100);
+              }}>
+                <Download className="h-4 w-4 mr-1" />
+                Print / Save PDF
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
+          {isLetterEditable && (
+            <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2 border border-border/50">
+              <Pencil className="h-3 w-3" />
+              Click any text below to edit. Changes persist until you leave this page.
+            </div>
+          )}
           <div
             id="stipend-letter"
-            className="bg-background border border-border rounded-lg p-6 sm:p-8 space-y-4 text-sm leading-relaxed font-serif"
+            contentEditable={isLetterEditable}
+            suppressContentEditableWarning
+            className={`bg-background border rounded-lg p-6 sm:p-8 space-y-4 text-sm leading-relaxed font-serif transition-all ${
+              isLetterEditable
+                ? 'border-primary/50 ring-2 ring-primary/20 focus:outline-none cursor-text'
+                : 'border-border'
+            }`}
           >
             {/* Tour Description */}
             <p>
