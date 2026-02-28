@@ -8501,6 +8501,86 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_coupon_usage: {
+        Row: {
+          channel: string | null
+          coupon_id: string
+          id: string
+          order_total: number | null
+          used_at: string
+          used_by: string | null
+        }
+        Insert: {
+          channel?: string | null
+          coupon_id: string
+          id?: string
+          order_total?: number | null
+          used_at?: string
+          used_by?: string | null
+        }
+        Update: {
+          channel?: string | null
+          coupon_id?: string
+          id?: string
+          order_total?: number | null
+          used_at?: string
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_coupon_usage_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "gw_coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_coupons: {
+        Row: {
+          batch_id: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          times_used: number
+        }
+        Insert: {
+          batch_id?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          times_used?: number
+        }
+        Update: {
+          batch_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          times_used?: number
+        }
+        Relationships: []
+      }
       gw_course_announcements: {
         Row: {
           content: string
@@ -30314,6 +30394,21 @@ export type Database = {
           qr_token: string
         }[]
       }
+      generate_coupon_batch: {
+        Args: {
+          p_count: number
+          p_description?: string
+          p_discount_type?: string
+          p_discount_value?: number
+          p_expires_at?: string
+          p_max_uses?: number
+          p_prefix?: string
+        }
+        Returns: {
+          code: string
+          id: string
+        }[]
+      }
       generate_course_qr_code: {
         Args: {
           p_content: string
@@ -30855,6 +30950,10 @@ export type Database = {
           submission_id: string
         }[]
       }
+      redeem_coupon: {
+        Args: { p_channel?: string; p_code: string; p_order_total?: number }
+        Returns: Json
+      }
       refresh_all_user_permissions: { Args: never; Returns: Json }
       require_security_confirmation: {
         Args: {
@@ -31096,6 +31195,7 @@ export type Database = {
         }
         Returns: Json
       }
+      validate_coupon: { Args: { p_code: string }; Returns: Json }
       validate_password_strength: {
         Args: { password_text: string }
         Returns: Json
