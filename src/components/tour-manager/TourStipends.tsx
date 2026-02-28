@@ -6,11 +6,50 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign, Users, Calculator, Plus, Trash2, Download, Music } from 'lucide-react';
+import { DollarSign, Users, Calculator, Plus, Trash2, Download, Music, MapPin, Info } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
+// --- Per Diem Rate Directory ---
+const HIGH_COST_STATES = [
+  'California', 'Florida', 'Illinois', 'Massachusetts', 'Michigan',
+  'Minnesota', 'Montana', 'New York', 'North Carolina', 'Ohio',
+  'Oregon', 'Pennsylvania', 'South Carolina', 'South Dakota',
+  'Tennessee', 'Utah', 'Vermont', 'Virginia', 'Washington',
+  'Washington, D.C.', 'Wisconsin', 'Wyoming',
+];
+
+const STATE_CODE_MAP: Record<string, string> = {
+  AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
+  CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia',
+  HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa',
+  KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
+  MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi',
+  MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire',
+  NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York', NC: 'North Carolina',
+  ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania',
+  RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota', TN: 'Tennessee',
+  TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington',
+  WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming', DC: 'Washington, D.C.',
+};
+
+const STANDARD_RATE = 69;
+const HIGH_COST_RATE = 79;
+
+function getPerDiemRate(stateCode: string | null): number {
+  if (!stateCode) return STANDARD_RATE;
+  const stateName = STATE_CODE_MAP[stateCode.toUpperCase()] || stateCode;
+  return HIGH_COST_STATES.includes(stateName) ? HIGH_COST_RATE : STANDARD_RATE;
+}
+
+function getStateName(stateCode: string | null): string {
+  if (!stateCode) return 'Unknown';
+  return STATE_CODE_MAP[stateCode.toUpperCase()] || stateCode;
+}
+
+// --- Line Item Types ---
 interface StipendLineItem {
   id: string;
   description: string;
@@ -26,6 +65,14 @@ const STIPEND_TYPES = [
   { value: 'other', label: 'Other' },
 ] as const;
 
+interface TourCityStop {
+  city_name: string;
+  state_code: string | null;
+  arrival_date: string | null;
+  departure_date: string | null;
+  city_order: number;
+}
+
 export const TourStipends = () => {
   const [lineItems, setLineItems] = useState<StipendLineItem[]>([
     { id: '1', description: 'Performance stipend', amount: 0, type: 'performance' },
@@ -33,7 +80,7 @@ export const TourStipends = () => {
   const [singerCount, setSingerCount] = useState<number>(0);
   const [tourDays, setTourDays] = useState<number>(0);
 
-  // Fetch roster count for quick-fill
+  // Fetch roster count
   const { data: rosterCount } = useQuery({
     queryKey: ['tour-roster-count'],
     queryFn: async () => {
@@ -45,17 +92,38 @@ export const TourStipends = () => {
     },
   });
 
-  // Fetch tour cities for day count
+  // Fetch tour cities for per diem calculation
   const { data: tourCities } = useQuery({
     queryKey: ['tour-cities-stipend'],
     queryFn: async () => {
       const { data } = await supabase
         .from('gw_tour_cities')
-        .select('arrival_date, departure_date, city_name')
+        .select('city_name, state_code, arrival_date, departure_date, city_order')
         .order('city_order');
-      return data || [];
+      return (data || []) as TourCityStop[];
     },
   });
+
+  // Calculate days per city stop
+  const cityBreakdown = useMemo(() => {
+    if (!tourCities || tourCities.length === 0) return [];
+    return tourCities.map(city => {
+      let days = 1;
+      if (city.arrival_date && city.departure_date) {
+        const arr = new Date(city.arrival_date).getTime();
+        const dep = new Date(city.departure_date).getTime();
+        days = Math.max(1, Math.ceil((dep - arr) / (1000 * 60 * 60 * 24)) + 1);
+      }
+      const rate = getPerDiemRate(city.state_code);
+      return {
+        ...city,
+        days,
+        rate,
+        stateName: getStateName(city.state_code),
+        totalPerDiem: rate * days,
+      };
+    });
+  }, [tourCities]);
 
   const calculatedTourDays = useMemo(() => {
     if (!tourCities || tourCities.length === 0) return 0;
@@ -64,10 +132,13 @@ export const TourStipends = () => {
       .filter(Boolean)
       .map(d => new Date(d!).getTime());
     if (dates.length < 2) return 0;
-    const min = Math.min(...dates);
-    const max = Math.max(...dates);
-    return Math.ceil((max - min) / (1000 * 60 * 60 * 24)) + 1;
+    return Math.ceil((Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24)) + 1;
   }, [tourCities]);
+
+  const totalPerDiemPerSinger = useMemo(
+    () => cityBreakdown.reduce((sum, c) => sum + c.totalPerDiem, 0),
+    [cityBreakdown]
+  );
 
   const addLineItem = () => {
     setLineItems(prev => [
@@ -89,13 +160,14 @@ export const TourStipends = () => {
   const effectiveSingerCount = singerCount || rosterCount || 0;
   const effectiveTourDays = tourDays || calculatedTourDays || 0;
 
-  const perSingerTotal = useMemo(
+  const lineItemTotal = useMemo(
     () => lineItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0),
     [lineItems]
   );
 
+  const perSingerTotal = lineItemTotal + totalPerDiemPerSinger;
   const grandTotal = perSingerTotal * effectiveSingerCount;
-
+  const totalPerDiemAll = totalPerDiemPerSinger * effectiveSingerCount;
   const perDayPerSinger = effectiveTourDays > 0 ? perSingerTotal / effectiveTourDays : 0;
 
   const byType = useMemo(() => {
@@ -104,8 +176,11 @@ export const TourStipends = () => {
       const label = STIPEND_TYPES.find(t => t.value === item.type)?.label || 'Other';
       map[label] = (map[label] || 0) + (Number(item.amount) || 0);
     });
+    if (totalPerDiemPerSinger > 0) {
+      map['Per Diem (auto)'] = totalPerDiemPerSinger;
+    }
     return Object.entries(map).filter(([, v]) => v > 0);
-  }, [lineItems]);
+  }, [lineItems, totalPerDiemPerSinger]);
 
   const exportCSV = () => {
     const rows = [
@@ -116,7 +191,13 @@ export const TourStipends = () => {
         item.amount.toString(),
       ]),
       [],
-      ['', 'Per Singer Total', perSingerTotal.toString()],
+      ['Per Diem Breakdown', '', ''],
+      ['City', 'State', 'Rate', 'Days', 'Total'],
+      ...cityBreakdown.map(c => [c.city_name, c.stateName, `$${c.rate}`, c.days.toString(), `$${c.totalPerDiem}`]),
+      [],
+      ['', 'Per Diem Total (per singer)', totalPerDiemPerSinger.toString()],
+      ['', 'Line Items Total (per singer)', lineItemTotal.toString()],
+      ['', 'Per Singer Grand Total', perSingerTotal.toString()],
       ['', `Grand Total (${effectiveSingerCount} singers)`, grandTotal.toString()],
     ];
     const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
@@ -179,7 +260,106 @@ export const TourStipends = () => {
         </Card>
       </div>
 
-      {/* Controls */}
+      {/* Per Diem Rate Directory */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base">Per Diem Rate Directory</CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p>Rates auto-applied based on tour stop states. ${STANDARD_RATE}/day standard, ${HIGH_COST_RATE}/day for high-cost states.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <CardDescription>
+            Auto-calculated from your itinerary stops — {formatCurrency(totalPerDiemPerSinger)} per singer, {formatCurrency(totalPerDiemAll)} total
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {cityBreakdown.length > 0 ? (
+            <div className="space-y-2">
+              {/* Rate legend */}
+              <div className="flex flex-wrap gap-3 mb-3">
+                <Badge variant="outline" className="gap-1.5 px-3 py-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-primary/60 inline-block" />
+                  Standard: ${STANDARD_RATE}/day
+                </Badge>
+                <Badge variant="outline" className="gap-1.5 px-3 py-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-destructive/60 inline-block" />
+                  High-Cost: ${HIGH_COST_RATE}/day
+                </Badge>
+              </div>
+
+              {/* City rows */}
+              <div className="rounded-lg border border-border overflow-hidden">
+                <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-x-4 px-3 py-2 bg-muted/50 text-xs font-medium text-muted-foreground">
+                  <span>City</span>
+                  <span className="text-right">State</span>
+                  <span className="text-right">Rate</span>
+                  <span className="text-right">Days</span>
+                  <span className="text-right">Total</span>
+                </div>
+                {cityBreakdown.map((city, idx) => {
+                  const isHighCost = city.rate === HIGH_COST_RATE;
+                  return (
+                    <div
+                      key={idx}
+                      className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-x-4 px-3 py-2.5 border-t border-border/50 items-center text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        <span className="font-medium truncate">{city.city_name}</span>
+                      </div>
+                      <span className="text-muted-foreground text-right">{city.state_code || '—'}</span>
+                      <Badge
+                        variant={isHighCost ? 'destructive' : 'secondary'}
+                        className="text-xs font-mono justify-self-end"
+                      >
+                        ${city.rate}
+                      </Badge>
+                      <span className="text-right tabular-nums">{city.days}</span>
+                      <span className="text-right font-semibold tabular-nums">{formatCurrency(city.totalPerDiem)}</span>
+                    </div>
+                  );
+                })}
+                <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-x-4 px-3 py-2.5 border-t border-border bg-muted/30 font-semibold text-sm">
+                  <span>Per Diem Total (per singer)</span>
+                  <span />
+                  <span />
+                  <span className="text-right tabular-nums">{cityBreakdown.reduce((s, c) => s + c.days, 0)}</span>
+                  <span className="text-right tabular-nums text-primary">{formatCurrency(totalPerDiemPerSinger)}</span>
+                </div>
+              </div>
+
+              {/* High-cost state reference */}
+              <details className="mt-3">
+                <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                  View full ${HIGH_COST_RATE}/day state list
+                </summary>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {HIGH_COST_STATES.map(state => (
+                    <Badge key={state} variant="outline" className="text-xs">
+                      {state}
+                    </Badge>
+                  ))}
+                </div>
+              </details>
+            </div>
+          ) : (
+            <div className="text-center py-6 text-muted-foreground text-sm">
+              <MapPin className="h-8 w-8 mx-auto mb-2 opacity-40" />
+              No tour stops found. Add cities to your itinerary to auto-calculate per diem rates.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Tour Parameters */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Tour Parameters</CardTitle>
@@ -235,13 +415,13 @@ export const TourStipends = () => {
         </CardContent>
       </Card>
 
-      {/* Line Items */}
+      {/* Additional Line Items */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base">Stipend Line Items</CardTitle>
-              <CardDescription>Add each stipend component per singer</CardDescription>
+              <CardTitle className="text-base">Additional Stipend Items</CardTitle>
+              <CardDescription>Add performance fees, travel pay, or other per-singer costs beyond per diem</CardDescription>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={exportCSV}>
@@ -256,7 +436,7 @@ export const TourStipends = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {lineItems.map((item, idx) => (
+          {lineItems.map((item) => (
             <div
               key={item.id}
               className="flex flex-col sm:flex-row items-start sm:items-end gap-2 p-3 rounded-lg bg-muted/30 border border-border/50"
@@ -311,27 +491,24 @@ export const TourStipends = () => {
               </Button>
             </div>
           ))}
-
-          {lineItems.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground text-sm">
-              No line items. Click "Add Item" to get started.
-            </div>
-          )}
         </CardContent>
       </Card>
 
-      {/* Breakdown */}
+      {/* Grand Breakdown */}
       {byType.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Breakdown by Category</CardTitle>
+            <CardTitle className="text-base">Full Stipend Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {byType.map(([label, amount]) => (
                 <div key={label} className="flex items-center justify-between py-1.5">
-                  <Badge variant="secondary">{label}</Badge>
-                  <span className="font-medium">{formatCurrency(amount)} <span className="text-xs text-muted-foreground">per singer</span></span>
+                  <Badge variant={label.includes('Per Diem') ? 'default' : 'secondary'}>{label}</Badge>
+                  <span className="font-medium">
+                    {formatCurrency(amount)}{' '}
+                    <span className="text-xs text-muted-foreground">per singer</span>
+                  </span>
                 </div>
               ))}
               <Separator />

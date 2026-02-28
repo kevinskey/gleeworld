@@ -100,6 +100,10 @@ const navItems = [{
   label: 'Wardrobe',
   icon: Shirt
 }, {
+  value: 'stipends',
+  label: 'Stipends',
+  icon: DollarSign
+}, {
   value: 'budget',
   label: 'Budget',
   icon: DollarSign
@@ -175,6 +179,10 @@ const contentConfig: Record<string, {
   'notes': {
     title: 'Notes',
     description: 'Real-time status updates from exec board and tour managers'
+  },
+  'stipends': {
+    title: 'Stipends',
+    description: 'Per diem directory and stipend calculator'
   }
 };
 export const TourManagerDashboard = ({
@@ -286,6 +294,8 @@ export const TourManagerDashboard = ({
         return <TourDocumentsSection />;
       case 'wardrobe':
         return <WardrobeMistressHub />;
+      case 'stipends':
+        return <TourStipends />;
       case 'budget':
         return <TourBudgetManager />;
       case 'notes':
