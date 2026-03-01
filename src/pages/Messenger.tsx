@@ -791,10 +791,10 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                       addRecipient(searchQuery);
                                     }
                                   }} placeholder="Search or type email..." className="h-7 bg-transparent text-foreground text-sm placeholder:text-foreground/50" />
-                                  {showDropdown && filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                      {filteredContacts.map(result => <button key={result.user_id} onClick={() => { addRecipient(result.email); setShowDropdown(false); }} className="w-full px-3 py-2 text-left hover:bg-accent text-popover-foreground flex items-center gap-2">
-                                          <span className="font-medium text-popover-foreground">{result.full_name}</span>
-                                          <span className="text-sm text-muted-foreground">{result.email}</span>
+                                  {showDropdown && filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                      {filteredContacts.map(result => <button key={result.user_id} onClick={() => { addRecipient(result.email); setShowDropdown(false); }} className="w-full px-3 py-2 text-left hover:bg-slate-100 text-slate-900 flex items-center gap-2">
+                                          <span className="font-medium text-slate-900">{result.full_name}</span>
+                                          <span className="text-sm text-slate-500">{result.email}</span>
                                         </button>)}
                                     </div>}
                                 </div>
@@ -875,14 +875,14 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                     (e.target as HTMLInputElement).blur();
                                   }
                                 }} placeholder="Search members..." className="border-0 h-7 p-0 focus-visible:ring-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground" />
-                                {showDropdown && filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                {showDropdown && filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                     {filteredContacts.filter(r => r.phone_number).map(result => <button key={result.user_id} onClick={() => { addSmsRecipient({
                                 user_id: result.user_id,
                                 full_name: result.full_name,
                                 phone_number: result.phone_number || ''
-                              }); setShowDropdown(false); }} className="w-full px-3 py-2 text-left hover:bg-accent text-popover-foreground flex items-center gap-2">
-                                        <span className="font-medium text-popover-foreground">{result.full_name}</span>
-                                        <span className="text-sm text-muted-foreground">{result.phone_number}</span>
+                              }); setShowDropdown(false); }} className="w-full px-3 py-2 text-left hover:bg-slate-100 text-slate-900 flex items-center gap-2">
+                                        <span className="font-medium text-slate-900">{result.full_name}</span>
+                                        <span className="text-sm text-slate-500">{result.phone_number}</span>
                                       </button>)}
                                   </div>}
                               </div>
