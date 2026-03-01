@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Mic, MicOff, X, Volume2, VolumeX, Loader2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAudioCoordinator } from '@/hooks/useAudioCoordinator';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -31,6 +32,21 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const continuousListeningRef = useRef(false);
   const shouldRestartRef = useRef(false);
+
+  // Audio coordination — pause radio/music when Aria speaks
+  const { requestPlayback, registerPauseCallback, unregisterPauseCallback } = useAudioCoordinator();
+
+  useEffect(() => {
+    const pauseAria = () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        setIsSpeaking(false);
+      }
+    };
+    registerPauseCallback('aria', pauseAria);
+    return () => unregisterPauseCallback('aria');
+  }, [registerPauseCallback, unregisterPauseCallback]);
 
   // Predefined ElevenLabs voices to pick from
   const voiceOptions = [
@@ -231,6 +247,8 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   // ── ElevenLabs TTS ──
   const speakText = async (text: string) => {
     setIsSpeaking(true);
+    // Pause radio/music/other audio before Aria speaks
+    requestPlayback('aria');
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
