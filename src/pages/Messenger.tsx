@@ -675,18 +675,18 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
             {/* Tabs */}
             <Tabs value={composerMode} onValueChange={v => setComposerMode(v as 'email' | 'sms' | 'video')} className="flex flex-col flex-1 overflow-hidden">
-                <TabsList className={`grid w-full ${canSendSMS ? 'grid-cols-3' : 'grid-cols-2'} rounded-none bg-background h-11 p-0 gap-0 border-b`}>
-                  <TabsTrigger value="email" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
-                    <Mail className="h-4 w-4" />
-                    <span className="hidden sm:inline">Email</span>
+                <TabsList className={`grid w-full ${canSendSMS ? 'grid-cols-3' : 'grid-cols-2'} rounded-none bg-background h-9 p-0 gap-0 border-b`}>
+                  <TabsTrigger value="email" className="gap-1.5 rounded-none h-full border-0 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
+                    <Mail className="h-3.5 w-3.5" />
+                    Email
                   </TabsTrigger>
-                  {canSendSMS && <TabsTrigger value="sms" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
-                      <Smartphone className="h-4 w-4" />
-                      <span className="hidden sm:inline">SMS</span>
+                  {canSendSMS && <TabsTrigger value="sms" className="gap-1.5 rounded-none h-full border-0 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
+                      <Smartphone className="h-3.5 w-3.5" />
+                      SMS
                     </TabsTrigger>}
-                  <TabsTrigger value="video" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
-                    <Video className="h-4 w-4" />
-                    <span className="hidden sm:inline">Video</span>
+                  <TabsTrigger value="video" className="gap-1.5 rounded-none h-full border-0 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-background data-[state=inactive]:text-muted-foreground font-medium">
+                    <Video className="h-3.5 w-3.5" />
+                    Video
                   </TabsTrigger>
                 </TabsList>
 
@@ -723,22 +723,22 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                       {/* Compose form - hide on mobile when viewing history */}
                       <div className={`flex-1 flex flex-col min-h-0 ${showEmailHistory ? 'hidden lg:flex' : 'flex'}`}>
                         <ScrollArea className="flex-1 min-h-0">
-                          <div className="bg-card p-4 lg:p-6 space-y-4 pb-24 lg:pb-4">
+                          <div className="bg-card p-3 lg:p-4 space-y-3 pb-24 lg:pb-3">
                             {/* Recipients */}
-                            <div className="space-y-1">
-                              <Label className="text-base font-semibold text-foreground">To:</Label>
-                              <div className="border border-border rounded-lg bg-background">
+                            <div className="space-y-0.5">
+                              <Label className="text-sm font-semibold text-foreground">To:</Label>
+                              <div className="border border-border rounded-md bg-background">
                                 {/* Collapsible recipients when there are many */}
                                 {recipients.length > 3 ? (
                                   <Collapsible defaultOpen={false}>
-                                    <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 text-left hover:bg-muted/50 transition-colors">
-                                      <ChevronRight className="h-4 w-4 transition-transform [[data-state=open]>&]:rotate-90" />
-                                      <span className="text-sm font-medium">{recipients.length} recipients selected</span>
+                                    <CollapsibleTrigger className="flex items-center gap-2 w-full p-2 text-left hover:bg-muted/50 transition-colors">
+                                      <ChevronRight className="h-3.5 w-3.5 transition-transform [[data-state=open]>&]:rotate-90" />
+                                      <span className="text-xs font-medium">{recipients.length} recipients selected</span>
                                     </CollapsibleTrigger>
                                     <CollapsibleContent>
-                                      <div className="flex flex-wrap gap-2 px-3 pb-3 max-h-[200px] overflow-y-auto">
+                                      <div className="flex flex-wrap gap-1.5 px-2 pb-2 max-h-[120px] overflow-y-auto">
                                         {recipients.map((r) => (
-                                          <Badge key={r} variant="secondary" className="gap-1 pr-1">
+                                          <Badge key={r} variant="secondary" className="gap-1 pr-1 text-xs">
                                             {r}
                                             <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
                                               <X className="h-3 w-3" />
@@ -749,9 +749,9 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                     </CollapsibleContent>
                                   </Collapsible>
                                 ) : (
-                                  <div className="flex flex-wrap gap-2 p-3 min-h-[48px]">
+                                  <div className="flex flex-wrap gap-1.5 p-2 min-h-[36px]">
                                     {recipients.map((r) => (
-                                      <Badge key={r} variant="secondary" className="gap-1 pr-1">
+                                      <Badge key={r} variant="secondary" className="gap-1 pr-1 text-xs">
                                         {r}
                                         <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
                                           <X className="h-3 w-3" />
@@ -760,13 +760,12 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                     ))}
                                   </div>
                                 )}
-                                {/* Search input always visible */}
-                                <div className="relative p-3 pt-0">
+                                <div className="relative px-2 pb-2">
                                   <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
                                     if (e.key === 'Enter' && searchQuery.includes('@')) {
                                       addRecipient(searchQuery);
                                     }
-                                  }} placeholder="Search or type email..." className="h-8 bg-transparent text-foreground text-base placeholder:text-foreground/50" />
+                                  }} placeholder="Search or type email..." className="h-7 bg-transparent text-foreground text-sm placeholder:text-foreground/50" />
                                   {filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                       {filteredContacts.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-gray-100 text-gray-900 flex items-center gap-2">
                                           <span className="font-medium text-gray-900">{result.full_name}</span>
@@ -778,22 +777,22 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                             </div>
 
                             {/* Subject */}
-                            <div className="space-y-1">
-                              <Label className="text-base font-semibold text-foreground">Subject:</Label>
-                              <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject line..." className="h-10 bg-background border-border text-foreground text-base placeholder:text-foreground/50" />
+                            <div className="space-y-0.5">
+                              <Label className="text-sm font-semibold text-foreground">Subject:</Label>
+                              <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject line..." className="h-8 bg-background border-border text-foreground text-sm placeholder:text-foreground/50" />
                             </div>
 
-                            {/* Content - Rich text editor with good height */}
-                            <div className="space-y-1">
-                              <Label className="text-base font-semibold text-foreground">Message:</Label>
-                              <div className="border border-border rounded-lg overflow-hidden bg-background">
-                                <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="300px" />
+                            {/* Content */}
+                            <div className="space-y-0.5">
+                              <Label className="text-sm font-semibold text-foreground">Message:</Label>
+                              <div className="border border-border rounded-md overflow-hidden bg-background">
+                                <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="250px" />
                               </div>
                             </div>
 
-                            {/* Send Button - visible inline on desktop */}
-                            <div className="pt-2 pb-4 hidden lg:block">
-                              <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full h-12">
+                            {/* Send Button - desktop */}
+                            <div className="pt-1 hidden lg:block">
+                              <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full h-9 text-sm">
                                 {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
                               </Button>
                             </div>
@@ -823,29 +822,29 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                 >
                   <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
                     {/* SMS Compose Section */}
-                    <div className="flex-1 flex flex-col min-w-0 border-r border-border">
-                      <div className="flex-1 bg-muted/50 p-4 space-y-4 overflow-auto">
+                    <div className="flex-1 flex flex-col min-w-0 border-r border-border lg:w-[65%] lg:flex-shrink-0">
+                      <div className="flex-1 bg-muted/50 p-3 space-y-3 overflow-auto">
                         {/* Send to All Toggle */}
-                        <div className="flex items-center justify-between p-3 bg-background border border-border rounded-lg">
+                        <div className="flex items-center justify-between p-2 bg-background border border-border rounded-md">
                           <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <Label className="text-foreground">Send to All Members with Phone</Label>
+                            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                            <Label className="text-sm text-foreground">Send to All Members with Phone</Label>
                           </div>
                           <Switch checked={sendToAll} onCheckedChange={setSendToAll} />
                         </div>
 
                         {/* Individual Recipients */}
-                        {!sendToAll && <div className="space-y-1">
+                        {!sendToAll && <div className="space-y-0.5">
                             <Label className="text-sm font-medium text-foreground">Recipients:</Label>
-                            <div className="flex flex-wrap gap-2 p-3 min-h-[48px] border border-border rounded-lg bg-background">
-                              {smsRecipients.map(r => <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1">
+                            <div className="flex flex-wrap gap-1.5 p-2 min-h-[36px] border border-border rounded-md bg-background">
+                              {smsRecipients.map(r => <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1 text-xs">
                                   {r.full_name}
                                   <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
                                     <X className="h-3 w-3" />
                                   </button>
                                 </Badge>)}
                               <div className="relative flex-1 min-w-[200px]">
-                                <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search members..." className="border-0 h-8 p-0 focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground" />
+                                <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search members..." className="border-0 h-7 p-0 focus-visible:ring-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground" />
                                 {filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                     {filteredContacts.filter(r => r.phone_number).map(result => <button key={result.user_id} onClick={() => addSmsRecipient({
                                 user_id: result.user_id,
@@ -861,10 +860,10 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           </div>}
 
                         {/* SMS Content */}
-                        <div className="space-y-1 flex-1 flex flex-col">
+                        <div className="space-y-0.5 flex-1 flex flex-col">
                           <Label className="text-sm font-medium text-foreground">Message:</Label>
-                          <Textarea value={smsContent} onChange={e => setSmsContent(e.target.value)} placeholder="Type your SMS message..." className="flex-1 min-h-[120px] resize-none bg-background border-border text-foreground placeholder:text-muted-foreground" maxLength={480} />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                          <Textarea value={smsContent} onChange={e => setSmsContent(e.target.value)} placeholder="Type your SMS message..." className="flex-1 min-h-[100px] resize-none bg-background border-border text-foreground text-sm placeholder:text-muted-foreground" maxLength={480} />
+                          <div className="flex justify-between text-xs text-muted-foreground">
                             <span>{smsContent.length}/480 characters</span>
                             <span>{Math.ceil(smsContent.length / 160) || 1} SMS segment{smsContent.length > 160 ? 's' : ''}</span>
                           </div>
@@ -872,15 +871,15 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                       </div>
                       
                       {/* Send Button */}
-                      <div className="flex-shrink-0 p-4 bg-muted border-t border-border">
-                        <Button onClick={handleSendSMS} disabled={isSending || !sendToAll && smsRecipients.length === 0 || !smsContent.trim()} className="w-full">
+                      <div className="flex-shrink-0 p-3 bg-muted border-t border-border">
+                        <Button onClick={handleSendSMS} disabled={isSending || !sendToAll && smsRecipients.length === 0 || !smsContent.trim()} className="w-full h-9 text-sm">
                           {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <><Send className="h-4 w-4 mr-2" /> Send SMS {sendToAll ? 'to All Members' : ''}</>}
                         </Button>
                       </div>
                     </div>
 
                     {/* SMS History Panel */}
-                    <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-background overflow-hidden border-t lg:border-t-0">
+                    <div className="w-full lg:w-[35%] flex-shrink-0 bg-background overflow-hidden border-t lg:border-t-0">
                       <SMSHistoryPanel />
                     </div>
                   </div>
