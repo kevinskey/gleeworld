@@ -4,7 +4,7 @@ import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Shield, User, BarChart3, Home, Youtube, Settings, Star } from "lucide-react";
+import { Shield, User, BarChart3, Home, Youtube, Settings, Star, Command } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { isAdmin } from "@/constants/permissions";
@@ -77,6 +77,15 @@ export const DashboardSwitcher = () => {
           </Link>
         </DropdownMenuItem>
         
+        {/* Control Center */}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/control-center" className="flex items-center cursor-pointer">
+            <Command className="mr-2 h-4 w-4 text-cyan-500" />
+            Control Center
+          </Link>
+        </DropdownMenuItem>
+
         {/* Quick Admin Tools */}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>

@@ -3,6 +3,7 @@ export const ROUTES = {
   AUTH: '/auth',
   ADMIN: '/admin',
   DASHBOARD: '/dashboard',
+  CONTROL_CENTER: '/control-center',
   
   ACTIVITY_LOGS: '/activity-logs',
   ACCOUNTING: '/accounting',
@@ -47,6 +48,7 @@ export const ROUTES = {
 export const PROTECTED_ROUTES = [
   ROUTES.ADMIN,
   ROUTES.DASHBOARD,
+  ROUTES.CONTROL_CENTER,
   ROUTES.ACTIVITY_LOGS,
   ROUTES.ACCOUNTING,
   ROUTES.ADMIN_SIGNING,
