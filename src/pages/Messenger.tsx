@@ -885,21 +885,21 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                     <X className="h-3 w-3" />
                                   </button>
                                 </Badge>)}
-                              <div className="relative flex-1 min-w-[200px]" ref={smsDropdownRef}>
+                              <div className="relative flex-1 min-w-[120px] sm:min-w-[200px]" ref={smsDropdownRef}>
                                 <Input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true); }} onFocus={() => setShowDropdown(true)} onKeyDown={e => {
                                   if (e.key === 'Escape') {
                                     setShowDropdown(false);
                                     (e.target as HTMLInputElement).blur();
                                   }
                                 }} placeholder="Search members..." className="border-0 h-7 p-0 focus-visible:ring-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground" />
-                                {showDropdown && filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                {showDropdown && filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-background border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                     {filteredContacts.filter(r => r.phone_number).map(result => <button key={result.user_id} onClick={() => { addSmsRecipient({
                                 user_id: result.user_id,
                                 full_name: result.full_name,
                                 phone_number: result.phone_number || ''
-                              }); setShowDropdown(false); }} className="w-full px-3 py-2 text-left hover:bg-slate-100 text-slate-900 flex items-center gap-2">
-                                        <span className="font-medium text-slate-900">{result.full_name}</span>
-                                        <span className="text-sm text-slate-500">{result.phone_number}</span>
+                              }); setShowDropdown(false); }} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
+                                        <span className="font-medium text-foreground">{result.full_name}</span>
+                                        <span className="text-sm text-muted-foreground">{result.phone_number}</span>
                                       </button>)}
                                   </div>}
                               </div>
