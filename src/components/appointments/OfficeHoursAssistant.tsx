@@ -24,6 +24,7 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedVoiceId, setSelectedVoiceId] = useState('cgSgspJ2msm6clMCkdW9');
   const [showVoicePicker, setShowVoicePicker] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -62,6 +63,13 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   useEffect(() => {
     const saved = localStorage.getItem('aria-voice-id');
     if (saved) setSelectedVoiceId(saved);
+  }, []);
+
+  // Get current user ID
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) setUserId(data.user.id);
+    });
   }, []);
 
   // ── Speech Recognition ──
@@ -183,6 +191,7 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
           messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
           appointments,
           currentDate: new Date().toISOString(),
+          userId,
         }
       });
 
