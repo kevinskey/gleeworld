@@ -848,14 +848,14 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                 </Badge>)}
                               <div className="relative flex-1 min-w-[200px]">
                                 <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search members..." className="border-0 h-8 p-0 focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground" />
-                                {filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                {filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                     {filteredContacts.filter(r => r.phone_number).map(result => <button key={result.user_id} onClick={() => addSmsRecipient({
                                 user_id: result.user_id,
                                 full_name: result.full_name,
                                 phone_number: result.phone_number || ''
-                              })} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
-                                        <span className="font-medium">{result.full_name}</span>
-                                        <span className="text-sm text-muted-foreground">{result.phone_number}</span>
+                              })} className="w-full px-3 py-2 text-left hover:bg-gray-100 text-gray-900 flex items-center gap-2">
+                                        <span className="font-medium text-gray-900">{result.full_name}</span>
+                                        <span className="text-sm text-gray-500">{result.phone_number}</span>
                                       </button>)}
                                   </div>}
                               </div>
