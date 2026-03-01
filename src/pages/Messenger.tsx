@@ -699,7 +699,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                 >
                   <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
                     {/* Email Compose Section */}
-                    <div className="flex-1 flex flex-col min-w-0 lg:border-r border-border">
+                    <div className="flex flex-col min-w-0 lg:border-r border-border lg:w-[65%] lg:flex-shrink-0">
                       {/* Toggle for mobile only */}
                       <div className="flex items-center gap-2 p-3 bg-background border-b border-border lg:hidden">
                         <Button 
@@ -769,10 +769,10 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                       addRecipient(searchQuery);
                                     }
                                   }} placeholder="Search or type email..." className="h-8 bg-transparent text-foreground text-base placeholder:text-foreground/50" />
-                                  {filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                      {filteredContacts.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-accent text-foreground flex items-center gap-2">
-                                          <span className="font-medium">{result.full_name}</span>
-                                          <span className="text-sm text-muted-foreground">{result.email}</span>
+                                  {filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                      {filteredContacts.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-gray-100 text-gray-900 flex items-center gap-2">
+                                          <span className="font-medium text-gray-900">{result.full_name}</span>
+                                          <span className="text-sm text-gray-500">{result.email}</span>
                                         </button>)}
                                     </div>}
                                 </div>
@@ -812,7 +812,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                     </div>
 
                     {/* Email History Panel - always visible on desktop, toggle on mobile */}
-                    <div className={`w-full lg:w-1/2 flex-shrink-0 bg-background overflow-hidden border-t lg:border-t-0 ${showEmailHistory ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'}`}>
+                    <div className={`w-full lg:w-[35%] flex-shrink-0 bg-background overflow-hidden border-t lg:border-t-0 ${showEmailHistory ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'}`}>
                       <CommunicationHistoryPanel channelFilter="email" />
                     </div>
                   </div>
