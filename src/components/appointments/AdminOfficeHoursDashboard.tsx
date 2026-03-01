@@ -33,7 +33,7 @@ import { OfficeHoursAssistant } from './OfficeHoursAssistant';
 import { useUserProfile } from '@/hooks/useUserProfile';
 
 // Lazy-load Control Center tabs
-const CommandCenterCalendar = lazy(() => import('@/components/calendar/command-center').then(m => ({ default: m.CommandCenterCalendar })));
+const ControlCenterCalendarGrid = lazy(() => import('./ControlCenterCalendarGrid').then(m => ({ default: m.ControlCenterCalendarGrid })));
 const ControlCenterAcademy = lazy(() => import('./ControlCenterAcademy').then(m => ({ default: m.ControlCenterAcademy })));
 const MyModules = lazy(() => import('@/components/dashboard/MyModules').then(m => ({ default: m.MyModules })));
 
@@ -631,9 +631,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
             {/* ═══ CALENDAR TAB ═══ */}
             {controlTab === 'calendar' && (
               <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-white/60" /></div>}>
-                <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md">
-                  <CommandCenterCalendar />
-                </div>
+                <ControlCenterCalendarGrid />
               </Suspense>
             )}
 
