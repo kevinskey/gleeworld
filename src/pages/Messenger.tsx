@@ -92,7 +92,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredContacts, setFilteredContacts] = useState<typeof contacts>([]);
   const [showDropdown, setShowDropdown] = useState(true);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const emailDropdownRef = useRef<HTMLDivElement>(null);
+  const smsDropdownRef = useRef<HTMLDivElement>(null);
 
   // SMS specific state
   const [smsContent, setSmsContent] = useState('');
@@ -164,7 +165,10 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   // Click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const insideEmail = emailDropdownRef.current?.contains(target);
+      const insideSms = smsDropdownRef.current?.contains(target);
+      if (!insideEmail && !insideSms) {
         setShowDropdown(false);
       }
     };
@@ -778,7 +782,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                     ))}
                                   </div>
                                 )}
-                                <div className="relative px-2 pb-2" ref={dropdownRef}>
+                                <div className="relative px-2 pb-2" ref={emailDropdownRef}>
                                   <Input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true); }} onFocus={() => setShowDropdown(true)} onKeyDown={e => {
                                     if (e.key === 'Escape') {
                                       setShowDropdown(false);
@@ -864,7 +868,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                     <X className="h-3 w-3" />
                                   </button>
                                 </Badge>)}
-                              <div className="relative flex-1 min-w-[200px]" ref={dropdownRef}>
+                              <div className="relative flex-1 min-w-[200px]" ref={smsDropdownRef}>
                                 <Input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true); }} onFocus={() => setShowDropdown(true)} onKeyDown={e => {
                                   if (e.key === 'Escape') {
                                     setShowDropdown(false);
