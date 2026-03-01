@@ -183,6 +183,9 @@ async function executeTool(name: string, args: any, userId: string): Promise<str
 
         const calendarId = cal?.id || "d0241f76-a1fa-4950-a696-d64920a350a8"; // Main Calendar fallback
 
+        // Only set created_by if userId is a real user (not the fallback zero UUID)
+        const isRealUser = userId && userId !== "00000000-0000-0000-0000-000000000000";
+
         const { data, error } = await supabase.from("gw_events").insert({
           title: args.title,
           description: args.description || null,
@@ -193,11 +196,14 @@ async function executeTool(name: string, args: any, userId: string): Promise<str
           calendar_id: calendarId,
           is_public: args.is_public ?? true,
           attendance_required: args.attendance_required ?? false,
-          created_by: userId,
+          created_by: isRealUser ? userId : null,
           status: "scheduled",
         }).select().single();
 
-        if (error) return `Failed to create event: ${error.message}`;
+        if (error) {
+          console.error("create_calendar_event error:", error.message);
+          return `Failed to create event: ${error.message}`;
+        }
         return `Event "${args.title}" created successfully for ${new Date(args.start_date).toLocaleString("en-US", { timeZone: "America/New_York" })}.`;
       }
 
@@ -537,6 +543,7 @@ serve(async (req) => {
 
         console.log(`Executing tool: ${fnName}`, fnArgs);
         const result = await executeTool(fnName, fnArgs, activeUserId);
+        console.log(`Tool result for ${fnName}:`, result.substring(0, 200));
 
         aiMessages.push({
           role: "tool",
