@@ -149,11 +149,28 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
       setFilteredContacts([]);
       return;
     }
-    const filtered = contacts.filter(c => 
-      c.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      c.email?.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 20);
-    console.log('[Messenger Search] filtered count:', filtered.length, 'first few:', filtered.slice(0, 3).map(c => c.full_name));
+    const q = searchQuery.toLowerCase().trim();
+    // Separate into "starts with" and "contains" for better relevance
+    const startsWithName: typeof contacts = [];
+    const startsWithEmail: typeof contacts = [];
+    const containsMatch: typeof contacts = [];
+
+    contacts.forEach(c => {
+      const name = c.full_name?.toLowerCase() || '';
+      const email = c.email?.toLowerCase() || '';
+      // Check first name and last name starts-with
+      const nameParts = name.split(/\s+/);
+      if (nameParts.some(part => part.startsWith(q))) {
+        startsWithName.push(c);
+      } else if (email.startsWith(q)) {
+        startsWithEmail.push(c);
+      } else if (name.includes(q) || email.includes(q)) {
+        containsMatch.push(c);
+      }
+    });
+
+    const filtered = [...startsWithName, ...startsWithEmail, ...containsMatch].slice(0, 20);
+    console.log('[Messenger Search] filtered count:', filtered.length, 'query:', q);
     setFilteredContacts(filtered);
   }, [searchQuery, contacts]);
 
