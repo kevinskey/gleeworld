@@ -13919,6 +13919,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_office_hours_reminders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          hours_before: number | null
+          id: string
+          is_active: boolean | null
+          message_template: string | null
+          reminder_type: string
+          sms_enabled: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          hours_before?: number | null
+          id?: string
+          is_active?: boolean | null
+          message_template?: string | null
+          reminder_type: string
+          sms_enabled?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          hours_before?: number | null
+          id?: string
+          is_active?: boolean | null
+          message_template?: string | null
+          reminder_type?: string
+          sms_enabled?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_order_items: {
         Row: {
           created_at: string | null

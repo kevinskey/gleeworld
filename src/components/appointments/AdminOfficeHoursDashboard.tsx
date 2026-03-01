@@ -16,11 +16,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { TimeSelect } from '@/components/ui/time-select';
 import {
   Calendar as CalendarIcon, CalendarDays, Clock, User, Mail, Phone,
   Loader2, CheckCircle2, XCircle, AlertCircle, Send, MessageSquare,
   Settings, RefreshCw, Ban, ThumbsUp, ThumbsDown, ChevronDown,
-  Globe, Wifi
+  Globe, Wifi, Bell, Plus, Trash2, ShieldAlert, CalendarOff, CalendarPlus
 } from 'lucide-react';
 import { format, isToday, isFuture, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -28,7 +29,7 @@ import { toast } from 'sonner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 type AdminTab = 'today' | 'upcoming' | 'past';
-type DashboardSection = 'appointments' | 'communications' | 'availability' | 'settings';
+type DashboardSection = 'appointments' | 'communications' | 'availability' | 'reminders' | 'settings';
 
 export const AdminOfficeHoursDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -201,6 +202,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
     { key: 'appointments', label: 'Appts', icon: CalendarDays },
     { key: 'communications', label: 'SMS', icon: MessageSquare },
     { key: 'availability', label: 'Hours', icon: Clock },
+    { key: 'reminders', label: 'Remind', icon: Bell },
     { key: 'settings', label: 'Sync', icon: Settings },
   ];
 
@@ -436,13 +438,33 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
           <div className="space-y-3">
             <Card className="border-border">
               <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm font-semibold">Office Hours Schedule</CardTitle>
-                <CardDescription className="text-[11px]">Manage your weekly availability</CardDescription>
+                <CardTitle className="text-sm font-semibold">Weekly Schedule</CardTitle>
+                <CardDescription className="text-[11px]">Set your recurring office hours for each day</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0">
                 <AvailabilityManager />
               </CardContent>
             </Card>
+
+            <Card className="border-border">
+              <CardHeader className="p-3 pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+                  <CalendarPlus className="h-4 w-4 text-green-500" />
+                  Date Overrides
+                </CardTitle>
+                <CardDescription className="text-[11px]">Add or block availability for specific dates</CardDescription>
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <DateOverrideManager />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* ═══ REMINDERS SECTION ═══ */}
+        {activeSection === 'reminders' && (
+          <div className="space-y-3">
+            <ReminderManager />
           </div>
         )}
 
@@ -593,11 +615,12 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
 const AvailabilityManager: React.FC = () => {
   const queryClient = useQueryClient();
   const { data: availability = [], isLoading } = useQuery({
-    queryKey: ['provider-availability'],
+    queryKey: ['provider-availability-weekly'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_provider_availability')
         .select('*')
+        .is('specific_date', null)
         .order('day_of_week');
       if (error) throw error;
       return data || [];
@@ -611,7 +634,6 @@ const AvailabilityManager: React.FC = () => {
       if (existingId) {
         await supabase.from('gw_provider_availability').update({ is_available: !isActive }).eq('id', existingId);
       } else {
-        // Get a provider ID
         const { data: providers } = await supabase.from('gw_service_providers').select('id').limit(1).single();
         if (!providers) { toast.error('No provider found'); return; }
         await supabase.from('gw_provider_availability').insert({
@@ -622,7 +644,17 @@ const AvailabilityManager: React.FC = () => {
           is_available: true
         });
       }
-      queryClient.invalidateQueries({ queryKey: ['provider-availability'] });
+      queryClient.invalidateQueries({ queryKey: ['provider-availability-weekly'] });
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const updateTime = async (id: string, field: 'start_time' | 'end_time', value: string) => {
+    try {
+      await supabase.from('gw_provider_availability').update({ [field]: value }).eq('id', id);
+      queryClient.invalidateQueries({ queryKey: ['provider-availability-weekly'] });
+      toast.success('Schedule updated');
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -635,22 +667,446 @@ const AvailabilityManager: React.FC = () => {
       {dayNames.map((name, i) => {
         const dayAvail = availability.find((a: any) => a.day_of_week === i);
         return (
-          <div key={i} className="flex items-center justify-between p-2 rounded-lg border border-border">
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={dayAvail?.is_available || false}
-                onCheckedChange={() => toggleDay(i, dayAvail?.is_available || false, dayAvail?.id)}
-              />
-              <span className="text-xs font-medium text-foreground">{name}</span>
+          <div key={i} className="p-2 rounded-lg border border-border space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={dayAvail?.is_available || false}
+                  onCheckedChange={() => toggleDay(i, dayAvail?.is_available || false, dayAvail?.id)}
+                />
+                <span className="text-xs font-medium text-foreground">{name}</span>
+              </div>
+              {dayAvail?.is_available && (
+                <Badge variant="outline" className="text-[9px] h-5">Active</Badge>
+              )}
             </div>
             {dayAvail?.is_available && (
-              <span className="text-[10px] text-muted-foreground">
-                {dayAvail.start_time} – {dayAvail.end_time}
-              </span>
+              <div className="flex items-center gap-1.5 ml-10">
+                <TimeSelect
+                  value={dayAvail.start_time}
+                  onChange={(v) => updateTime(dayAvail.id, 'start_time', v)}
+                  className="[&_button]:h-7 [&_button]:text-[10px] [&_button]:w-[52px]"
+                />
+                <span className="text-[10px] text-muted-foreground">to</span>
+                <TimeSelect
+                  value={dayAvail.end_time}
+                  onChange={(v) => updateTime(dayAvail.id, 'end_time', v)}
+                  className="[&_button]:h-7 [&_button]:text-[10px] [&_button]:w-[52px]"
+                />
+              </div>
             )}
           </div>
         );
       })}
     </div>
+  );
+};
+
+// ── Date Override Manager ──
+const DateOverrideManager: React.FC = () => {
+  const queryClient = useQueryClient();
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [overrideDate, setOverrideDate] = useState<Date | undefined>(undefined);
+  const [overrideDateOpen, setOverrideDateOpen] = useState(false);
+  const [overrideType, setOverrideType] = useState<'available' | 'blocked'>('blocked');
+  const [overrideStart, setOverrideStart] = useState('09:00');
+  const [overrideEnd, setOverrideEnd] = useState('17:00');
+
+  const { data: overrides = [], isLoading } = useQuery({
+    queryKey: ['provider-availability-overrides'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_provider_availability')
+        .select('*')
+        .not('specific_date', 'is', null)
+        .order('specific_date', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const addOverride = async () => {
+    if (!overrideDate) { toast.error('Select a date'); return; }
+    try {
+      const { data: providers } = await supabase.from('gw_service_providers').select('id').limit(1).single();
+      if (!providers) { toast.error('No provider found'); return; }
+      await supabase.from('gw_provider_availability').insert({
+        provider_id: providers.id,
+        specific_date: format(overrideDate, 'yyyy-MM-dd'),
+        day_of_week: overrideDate.getDay(),
+        start_time: overrideType === 'available' ? overrideStart : '00:00',
+        end_time: overrideType === 'available' ? overrideEnd : '00:00',
+        is_available: overrideType === 'available',
+      });
+      queryClient.invalidateQueries({ queryKey: ['provider-availability-overrides'] });
+      toast.success(overrideType === 'blocked' ? 'Date blocked' : 'Availability added');
+      setShowAddDialog(false);
+      setOverrideDate(undefined);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const deleteOverride = async (id: string) => {
+    try {
+      await supabase.from('gw_provider_availability').delete().eq('id', id);
+      queryClient.invalidateQueries({ queryKey: ['provider-availability-overrides'] });
+      toast.success('Override removed');
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  if (isLoading) return <div className="flex justify-center py-4"><Loader2 className="h-4 w-4 animate-spin" /></div>;
+
+  return (
+    <div className="space-y-2">
+      {/* Existing overrides */}
+      {overrides.length === 0 ? (
+        <p className="text-muted-foreground text-xs py-3 text-center">No date overrides set.</p>
+      ) : (
+        <div className="space-y-1.5">
+          {overrides.map((ov: any) => (
+            <div key={ov.id} className={cn(
+              "flex items-center justify-between p-2 rounded-lg border",
+              ov.is_available ? "border-green-500/30 bg-green-500/5" : "border-destructive/30 bg-destructive/5"
+            )}>
+              <div className="flex items-center gap-2">
+                {ov.is_available
+                  ? <CalendarPlus className="h-3.5 w-3.5 text-green-500" />
+                  : <CalendarOff className="h-3.5 w-3.5 text-destructive" />
+                }
+                <div>
+                  <p className="text-xs font-medium text-foreground">{format(new Date(ov.specific_date + 'T12:00:00'), 'EEE, MMM d, yyyy')}</p>
+                  {ov.is_available && (
+                    <p className="text-[10px] text-muted-foreground">{ov.start_time} – {ov.end_time}</p>
+                  )}
+                  {!ov.is_available && (
+                    <p className="text-[10px] text-destructive">Blocked — not available</p>
+                  )}
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                onClick={() => deleteOverride(ov.id)}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add override button */}
+      <Button variant="outline" className="w-full h-8 text-xs" onClick={() => setShowAddDialog(true)}>
+        <Plus className="h-3 w-3 mr-1" />Add Date Override
+      </Button>
+
+      {/* Add Override Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-sm z-[200000]">
+          <DialogHeader>
+            <DialogTitle className="text-base">Add Date Override</DialogTitle>
+            <DialogDescription className="text-xs">Block a day off or add extra availability</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex gap-1 bg-muted rounded-lg p-0.5">
+              <button
+                onClick={() => setOverrideType('blocked')}
+                className={cn("flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center justify-center gap-1",
+                  overrideType === 'blocked' ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground"
+                )}
+              >
+                <CalendarOff className="h-3 w-3" />Block Day
+              </button>
+              <button
+                onClick={() => setOverrideType('available')}
+                className={cn("flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center justify-center gap-1",
+                  overrideType === 'available' ? "bg-green-600 text-white shadow-sm" : "text-muted-foreground"
+                )}
+              >
+                <CalendarPlus className="h-3 w-3" />Add Hours
+              </button>
+            </div>
+
+            <div>
+              <Label className="text-xs font-medium">Date</Label>
+              <Popover open={overrideDateOpen} onOpenChange={setOverrideDateOpen} modal>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start h-9 text-sm mt-1">
+                    <CalendarIcon className="h-3.5 w-3.5 mr-2" />
+                    {overrideDate ? format(overrideDate, 'EEE, MMM d, yyyy') : 'Select date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 z-[200001]" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={overrideDate}
+                    onSelect={(d) => { setOverrideDate(d); setOverrideDateOpen(false); }}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {overrideType === 'available' && (
+              <div className="space-y-2">
+                <div>
+                  <Label className="text-xs font-medium">Start Time</Label>
+                  <div className="mt-1">
+                    <TimeSelect value={overrideStart} onChange={setOverrideStart} />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium">End Time</Label>
+                  <div className="mt-1">
+                    <TimeSelect value={overrideEnd} onChange={setOverrideEnd} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={() => setShowAddDialog(false)} className="h-8 text-xs">Cancel</Button>
+            <Button size="sm" onClick={addOverride} className="h-8 text-xs">
+              {overrideType === 'blocked' ? 'Block Date' : 'Add Availability'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ── Reminder Manager ──
+const ReminderManager: React.FC = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  const { data: reminders = [], isLoading } = useQuery({
+    queryKey: ['office-hours-reminders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_office_hours_reminders')
+        .select('*')
+        .order('reminder_type', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const [showAdd, setShowAdd] = useState(false);
+  const [newType, setNewType] = useState<string>('upcoming_appointment');
+  const [newHours, setNewHours] = useState('24');
+  const [newMessage, setNewMessage] = useState('');
+  const [newSms, setNewSms] = useState(true);
+
+  const toggleReminder = async (id: string, currentActive: boolean) => {
+    try {
+      await supabase.from('gw_office_hours_reminders').update({ is_active: !currentActive }).eq('id', id);
+      queryClient.invalidateQueries({ queryKey: ['office-hours-reminders'] });
+      toast.success(!currentActive ? 'Reminder activated' : 'Reminder paused');
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const deleteReminder = async (id: string) => {
+    try {
+      await supabase.from('gw_office_hours_reminders').delete().eq('id', id);
+      queryClient.invalidateQueries({ queryKey: ['office-hours-reminders'] });
+      toast.success('Reminder deleted');
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const addReminder = async () => {
+    if (!newMessage) { toast.error('Enter a message template'); return; }
+    try {
+      await supabase.from('gw_office_hours_reminders').insert({
+        reminder_type: newType,
+        hours_before: parseInt(newHours) || 24,
+        sms_enabled: newSms,
+        is_active: true,
+        message_template: newMessage,
+        created_by: user?.id,
+      });
+      queryClient.invalidateQueries({ queryKey: ['office-hours-reminders'] });
+      toast.success('Reminder created');
+      setShowAdd(false);
+      setNewMessage('');
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const sendBookingNudge = async () => {
+    try {
+      // Fetch all members with phone numbers
+      const { data: members, error } = await supabase
+        .from('gw_profiles')
+        .select('phone, full_name')
+        .not('phone', 'is', null)
+        .eq('role', 'member');
+      if (error) throw error;
+      if (!members || members.length === 0) { toast.error('No members with phone numbers found'); return; }
+
+      let sent = 0;
+      for (const member of members.slice(0, 50)) {
+        if (member.phone) {
+          try {
+            await supabase.functions.invoke('gw-send-sms', {
+              body: { to: member.phone, message: '📚 GleeWorld: Office hours are open this week! Book your slot now at GleeWorld.org/book-appointment' }
+            });
+            sent++;
+          } catch { /* skip individual failures */ }
+        }
+      }
+      toast.success(`Booking reminder sent to ${sent} members`);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  if (isLoading) return <div className="flex justify-center py-4"><Loader2 className="h-4 w-4 animate-spin" /></div>;
+
+  const appointmentReminders = reminders.filter((r: any) => r.reminder_type === 'upcoming_appointment');
+  const bookPrompts = reminders.filter((r: any) => r.reminder_type === 'book_prompt');
+
+  return (
+    <>
+      {/* Appointment Reminders */}
+      <Card className="border-border">
+        <CardHeader className="p-3 pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+            <Bell className="h-4 w-4 text-primary" />
+            Appointment Reminders
+          </CardTitle>
+          <CardDescription className="text-[11px]">Auto-remind you and students before appointments</CardDescription>
+        </CardHeader>
+        <CardContent className="p-3 pt-0 space-y-1.5">
+          {appointmentReminders.length === 0 ? (
+            <p className="text-muted-foreground text-xs py-3 text-center">No reminders configured.</p>
+          ) : (
+            appointmentReminders.map((r: any) => (
+              <div key={r.id} className="flex items-center justify-between p-2 rounded-lg border border-border">
+                <div className="flex items-center gap-2">
+                  <Switch checked={r.is_active} onCheckedChange={() => toggleReminder(r.id, r.is_active)} />
+                  <div>
+                    <p className="text-xs font-medium text-foreground">
+                      {r.hours_before >= 24 ? `${r.hours_before / 24} day${r.hours_before >= 48 ? 's' : ''}` : `${r.hours_before} hour${r.hours_before > 1 ? 's' : ''}`} before
+                    </p>
+                    <p className="text-[10px] text-muted-foreground line-clamp-1">{r.message_template}</p>
+                    <div className="flex gap-1 mt-0.5">
+                      {r.sms_enabled && <Badge variant="outline" className="text-[8px] h-4 px-1">SMS</Badge>}
+                    </div>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  onClick={() => deleteReminder(r.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Book Prompt / Nudge */}
+      <Card className="border-border">
+        <CardHeader className="p-3 pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+            <Send className="h-4 w-4 text-green-500" />
+            Booking Nudge
+          </CardTitle>
+          <CardDescription className="text-[11px]">Prompt students to book office hours</CardDescription>
+        </CardHeader>
+        <CardContent className="p-3 pt-0 space-y-2">
+          {bookPrompts.map((r: any) => (
+            <div key={r.id} className="flex items-center justify-between p-2 rounded-lg border border-border">
+              <div className="flex items-center gap-2">
+                <Switch checked={r.is_active} onCheckedChange={() => toggleReminder(r.id, r.is_active)} />
+                <div>
+                  <p className="text-xs font-medium text-foreground">Auto booking nudge</p>
+                  <p className="text-[10px] text-muted-foreground line-clamp-1">{r.message_template}</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                onClick={() => deleteReminder(r.id)}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
+
+          <Separator />
+
+          <Button className="w-full h-9 text-xs" variant="outline" onClick={sendBookingNudge}>
+            <Send className="h-3.5 w-3.5 mr-1.5" />
+            Send Booking Nudge to All Members Now
+          </Button>
+          <p className="text-[10px] text-muted-foreground text-center">Sends SMS to all members with a phone number on file</p>
+        </CardContent>
+      </Card>
+
+      {/* Add Reminder */}
+      <Button variant="outline" className="w-full h-8 text-xs" onClick={() => setShowAdd(true)}>
+        <Plus className="h-3 w-3 mr-1" />Add Custom Reminder
+      </Button>
+
+      <Dialog open={showAdd} onOpenChange={setShowAdd}>
+        <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-sm z-[200000]">
+          <DialogHeader>
+            <DialogTitle className="text-base">New Reminder</DialogTitle>
+            <DialogDescription className="text-xs">Configure a new automated reminder</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs font-medium">Type</Label>
+              <Select value={newType} onValueChange={setNewType}>
+                <SelectTrigger className="h-9 text-sm mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="upcoming_appointment">Appointment Reminder</SelectItem>
+                  <SelectItem value="book_prompt">Booking Nudge</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {newType === 'upcoming_appointment' && (
+              <div>
+                <Label className="text-xs font-medium">Hours Before</Label>
+                <Select value={newHours} onValueChange={setNewHours}>
+                  <SelectTrigger className="h-9 text-sm mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 hour</SelectItem>
+                    <SelectItem value="2">2 hours</SelectItem>
+                    <SelectItem value="4">4 hours</SelectItem>
+                    <SelectItem value="24">1 day</SelectItem>
+                    <SelectItem value="48">2 days</SelectItem>
+                    <SelectItem value="72">3 days</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <Label className="text-xs font-medium">Message Template</Label>
+              <Textarea value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Use {time}, {date}, {name}, {link} as placeholders..." rows={3} className="text-sm mt-1" />
+              <p className="text-[9px] text-muted-foreground mt-1">Variables: {'{time}'}, {'{date}'}, {'{name}'}, {'{link}'}</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium">Send via SMS</Label>
+              <Switch checked={newSms} onCheckedChange={setNewSms} />
+            </div>
+          </div>
+          <DialogFooter className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={() => setShowAdd(false)} className="h-8 text-xs">Cancel</Button>
+            <Button size="sm" onClick={addReminder} className="h-8 text-xs">Create Reminder</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
