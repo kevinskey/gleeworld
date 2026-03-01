@@ -34,7 +34,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 
 // Lazy-load Control Center tabs
 const CommandCenterCalendar = lazy(() => import('@/components/calendar/command-center').then(m => ({ default: m.CommandCenterCalendar })));
-const GleeAcademyDashboardCard = lazy(() => import('@/components/user-dashboard/GleeAcademyDashboardCard').then(m => ({ default: m.GleeAcademyDashboardCard })));
+const ControlCenterAcademy = lazy(() => import('./ControlCenterAcademy').then(m => ({ default: m.ControlCenterAcademy })));
 const MyModules = lazy(() => import('@/components/dashboard/MyModules').then(m => ({ default: m.MyModules })));
 
 type AdminTab = 'today' | 'upcoming' | 'past';
@@ -640,9 +640,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
             {/* ═══ ACADEMY TAB ═══ */}
             {controlTab === 'academy' && (
               <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-white/60" /></div>}>
-                <div className="rounded-xl overflow-hidden border border-white/10">
-                  <GleeAcademyDashboardCard />
-                </div>
+                <ControlCenterAcademy />
               </Suspense>
             )}
 
