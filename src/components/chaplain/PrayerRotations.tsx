@@ -111,7 +111,7 @@ export const PrayerRotations = () => {
                     {new Date(rotation.date).toLocaleDateString()}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {new Date(rotation.date).toLocaleTimeString()}
+                    {new Date(rotation.date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                   </div>
                 </div>
               </div>

@@ -294,7 +294,7 @@ export const MidtermExamForm: React.FC = () => {
           <h2 className="text-2xl font-bold mb-4">Exam Submitted Successfully</h2>
           <p className="text-slate-600 mb-4">
             Your midterm exam was submitted on {new Date(submission.submitted_at).toLocaleDateString()} 
-            at {new Date(submission.submitted_at).toLocaleTimeString()}.
+            at {new Date(submission.submitted_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}.
           </p>
           <p className="text-slate-600 mb-6">
             Total time: {submission.total_time_minutes} minutes

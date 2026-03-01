@@ -193,7 +193,7 @@ export const AlumnaeDashboardMonitor = () => {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">
-            Last updated: {lastRefresh.toLocaleTimeString()}
+            Last updated: {lastRefresh.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
           </span>
           <Button 
             onClick={fetchAlumnaeDashboardData} 

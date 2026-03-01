@@ -102,14 +102,14 @@ export const ContractDetails = ({
                 <h4 className="text-sm font-medium text-muted-foreground mb-1">Created</h4>
                 <p className="text-sm flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {new Date(contract.created_at).toLocaleDateString()} at {new Date(contract.created_at).toLocaleTimeString()}
+                  {new Date(contract.created_at).toLocaleDateString()} at {new Date(contract.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                 </p>
               </div>
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-1">Last Updated</h4>
                 <p className="text-sm flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {new Date(contract.updated_at).toLocaleDateString()} at {new Date(contract.updated_at).toLocaleTimeString()}
+                  {new Date(contract.updated_at).toLocaleDateString()} at {new Date(contract.updated_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                 </p>
               </div>
             </div>

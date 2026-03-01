@@ -300,16 +300,16 @@ export const ExcuseRequestApproval = () => {
                         </p>
                         {request.secretary_message_sent_at && (
                           <p className="text-xs text-gray-500 mt-1">
-                            Added: {format(new Date(request.secretary_message_sent_at), 'MMM dd, yyyy HH:mm')}
+                            Added: {format(new Date(request.secretary_message_sent_at), 'MMM dd, yyyy h:mm a')}
                           </p>
                         )}
                       </div>
                     )}
 
                     <div className="flex justify-between items-center text-xs text-gray-500 mb-4">
-                      <span>Submitted: {format(new Date(request.submitted_at), 'MMM dd, yyyy HH:mm')}</span>
+                      <span>Submitted: {format(new Date(request.submitted_at), 'MMM dd, yyyy h:mm a')}</span>
                       {request.forwarded_at && (
-                        <span>Forwarded: {format(new Date(request.forwarded_at), 'MMM dd, yyyy HH:mm')}</span>
+                        <span>Forwarded: {format(new Date(request.forwarded_at), 'MMM dd, yyyy h:mm a')}</span>
                       )}
                     </div>
 
