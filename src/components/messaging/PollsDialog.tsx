@@ -59,7 +59,7 @@ export const PollsDialog: React.FC<PollsDialogProps> = ({
       <DialogContent className="sm:max-w-[600px] h-[85vh] flex flex-col bg-background z-50">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-[hsl(var(--message-header))]" />
+            <BarChart3 className="h-5 w-5 text-primary" />
             Group Polls
           </DialogTitle>
         </DialogHeader>
@@ -89,7 +89,7 @@ export const PollsDialog: React.FC<PollsDialogProps> = ({
             ) : (
               <Button
                 onClick={() => setShowPollCreator(true)}
-                className="w-full bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90"
+                className="w-full bg-primary hover:bg-primary/90"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Poll
@@ -101,12 +101,12 @@ export const PollsDialog: React.FC<PollsDialogProps> = ({
           <ScrollArea className="flex-1 mt-4 pr-4">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--message-header))]"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : pollMessages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mb-4">
-                  <BarChart3 className="h-8 w-8 text-[hsl(var(--message-header))]" />
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <BarChart3 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">No Polls Yet</h3>
                 <p className="text-sm text-muted-foreground max-w-xs">

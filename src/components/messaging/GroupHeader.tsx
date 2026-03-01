@@ -103,7 +103,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   };
 
   return (
-    <div className="bg-[hsl(var(--message-header))] text-white px-1.5 md:px-4 py-2 md:py-3 flex items-center justify-between shadow-md">
+    <div className="bg-primary text-primary-foreground px-1.5 md:px-4 py-2 md:py-3 flex items-center justify-between shadow-md">
       <div className="flex items-center gap-1.5 md:gap-3 flex-1 min-w-0">
         {showBackButton && (
           <EnhancedTooltip content="Go back">
@@ -111,7 +111,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
               variant="ghost"
               size="icon"
               onClick={onBack}
-              className="h-7 w-7 md:h-9 md:w-9 text-white hover:bg-white/20 flex-shrink-0"
+              className="h-7 w-7 md:h-9 md:w-9 text-primary-foreground hover:bg-white/20 flex-shrink-0"
             >
               <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
@@ -120,7 +120,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
         
         <Avatar className="h-7 w-7 md:h-10 md:w-10 flex-shrink-0 border-2 border-white/30">
           <AvatarImage src={groupAvatar} />
-          <AvatarFallback className="bg-white/20 text-white font-medium text-[10px] md:text-sm">
+          <AvatarFallback className="bg-white/20 text-primary-foreground font-medium text-[10px] md:text-sm">
             {groupInitials}
           </AvatarFallback>
         </Avatar>
@@ -134,7 +134,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
           <Button
             variant="ghost"
             onClick={() => setShowPollsDialog(true)}
-            className="relative h-8 md:h-9 px-2 md:px-3 text-white hover:bg-white/20 flex items-center gap-1"
+            className="relative h-8 md:h-9 px-2 md:px-3 text-primary-foreground hover:bg-white/20 flex items-center gap-1"
           >
             <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
             <span className="hidden sm:inline text-xs md:text-sm font-medium">Polls</span>
@@ -150,7 +150,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 md:h-9 md:w-9 text-white hover:bg-white/20"
+            className="h-8 w-8 md:h-9 md:w-9 text-primary-foreground hover:bg-white/20"
           >
             <Search className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
@@ -162,7 +162,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 md:h-9 md:w-9 text-white hover:bg-white/20"
+                className="h-8 w-8 md:h-9 md:w-9 text-primary-foreground hover:bg-white/20"
               >
                 <MoreVertical className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
