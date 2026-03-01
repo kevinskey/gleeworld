@@ -164,7 +164,7 @@ export const WellnessCheckins = () => {
                 </div>
               )}
               <div className="text-xs text-muted-foreground">
-                Recorded on {new Date(checkin.created_at).toLocaleDateString()} at {new Date(checkin.created_at).toLocaleTimeString()}
+                Recorded on {new Date(checkin.created_at).toLocaleDateString()} at {new Date(checkin.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
               </div>
             </CardContent>
           </Card>

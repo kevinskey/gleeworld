@@ -195,7 +195,7 @@ export const MyExcuseRequests = ({ onEditRequest }: MyExcuseRequestsProps) => {
                         </p>
                         {request.secretary_message_sent_at && (
                           <p className="text-xs text-white/60 mt-1">
-                            Sent: {format(new Date(request.secretary_message_sent_at), 'MMM dd, yyyy HH:mm')}
+                            Sent: {format(new Date(request.secretary_message_sent_at), 'MMM dd, yyyy h:mm a')}
                           </p>
                         )}
                       </div>
@@ -233,9 +233,9 @@ export const MyExcuseRequests = ({ onEditRequest }: MyExcuseRequestsProps) => {
                     </div>
 
                     <div className="flex justify-between items-center text-xs text-white/60">
-                      <span>Submitted: {format(new Date(request.submitted_at), 'MMM dd, yyyy HH:mm')}</span>
+                      <span>Submitted: {format(new Date(request.submitted_at), 'MMM dd, yyyy h:mm a')}</span>
                       {request.reviewed_at && (
-                        <span>Reviewed: {format(new Date(request.reviewed_at), 'MMM dd, yyyy HH:mm')}</span>
+                        <span>Reviewed: {format(new Date(request.reviewed_at), 'MMM dd, yyyy h:mm a')}</span>
                       )}
                     </div>
                   </CardContent>

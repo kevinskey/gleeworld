@@ -192,7 +192,7 @@ export const MeetingMinutesEditor = ({ minute, onBack, onSave }: MeetingMinutesE
           <div className="flex items-center gap-2">
             {lastSaved && (
               <span className="text-xs text-muted-foreground">
-                Last saved: {lastSaved.toLocaleTimeString()}
+                Last saved: {lastSaved.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
               </span>
             )}
             

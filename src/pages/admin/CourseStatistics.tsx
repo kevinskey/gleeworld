@@ -322,7 +322,7 @@ export const CourseStatistics: React.FC = () => {
                           {submission.student_id.slice(0, 8)}...
                         </TableCell>
                         <TableCell className="font-medium">{submission.assignment_id}</TableCell>
-                        <TableCell>{format(new Date(submission.submitted_at), 'MMM d, yyyy HH:mm')}</TableCell>
+                        <TableCell>{format(new Date(submission.submitted_at), 'MMM d, yyyy h:mm a')}</TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                             submission.status === 'graded' 

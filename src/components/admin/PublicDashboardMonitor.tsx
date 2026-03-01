@@ -363,7 +363,7 @@ export const PublicDashboardMonitor = () => {
             {editMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
           </Button>
           <span className="text-sm text-muted-foreground">
-            Last updated: {lastRefresh.toLocaleTimeString()}
+            Last updated: {lastRefresh.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
           </span>
           <Button 
             onClick={fetchDashboardData} 

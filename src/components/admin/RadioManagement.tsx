@@ -392,7 +392,7 @@ export const RadioManagement = () => {
                 {radioStats.lastUpdated && (
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-muted-foreground">Last Updated</span>
-                    <span>{new Date(radioStats.lastUpdated).toLocaleTimeString()}</span>
+                    <span>{new Date(radioStats.lastUpdated).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
                   </div>
                 )}
               </CardContent>

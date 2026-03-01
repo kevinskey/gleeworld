@@ -172,7 +172,7 @@ export const QRScanHistory = () => {
     const csvContent = [
       headers.join(','),
       ...filteredLogs.map(log => [
-        format(new Date(log.scanned_at), 'yyyy-MM-dd HH:mm:ss'),
+        format(new Date(log.scanned_at), 'yyyy-MM-dd h:mm:ss a'),
         `"${log.user_name}"`,
         log.user_email,
         `"${log.event_title}"`,
@@ -298,7 +298,7 @@ export const QRScanHistory = () => {
                           <Clock className="h-4 w-4 text-muted-foreground" />
                           <p className="text-sm text-muted-foreground">
                             {isValid(new Date(log.scanned_at)) 
-                              ? format(new Date(log.scanned_at), 'MMM dd, yyyy HH:mm')
+                              ? format(new Date(log.scanned_at), 'MMM dd, yyyy h:mm a')
                               : 'Invalid date'
                             }
                           </p>

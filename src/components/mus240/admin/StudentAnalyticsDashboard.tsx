@@ -373,7 +373,7 @@ export const StudentAnalyticsDashboard: React.FC = () => {
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} />
                           <YAxis />
-                          <Tooltip labelFormatter={(value) => new Date(value).toLocaleTimeString()} />
+                          <Tooltip labelFormatter={(value) => new Date(value).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} />
                           <Line dataKey="duration" stroke="#8884d8" />
                         </LineChart>
                       </ResponsiveContainer>

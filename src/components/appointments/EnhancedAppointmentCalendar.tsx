@@ -279,7 +279,7 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
                             onEventSelect?.(event);
                           }}
                         >
-                          {format(parseISO(event.start_date), 'HH:mm')} - {event.title}
+                          {format(parseISO(event.start_date), 'h:mm a')} - {event.title}
                         </div>
                       );
                     }
@@ -355,7 +355,7 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
                         style={{ backgroundColor: eventColor, borderColor: eventColor }}
                         onClick={() => onEventSelect?.(event)}
                       >
-                        <div className="font-medium text-sm">{format(parseISO(event.start_date), 'HH:mm')}</div>
+                        <div className="font-medium text-sm">{format(parseISO(event.start_date), 'h:mm a')}</div>
                         <div className="text-xs truncate">{event.title}</div>
                         {event.location && <div className="text-xs truncate opacity-80">{event.location}</div>}
                       </div>
@@ -462,7 +462,7 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{format(parseISO(event.start_date), 'HH:mm')}</span>
+                            <span className="font-medium">{format(parseISO(event.start_date), 'h:mm a')}</span>
                           </div>
                           <Badge style={{ backgroundColor: eventColor, color: 'white', borderColor: eventColor }}>
                             {event.event_type || 'Event'}
@@ -638,7 +638,7 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
                         onClick={() => onEventSelect?.(event)}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{format(parseISO(event.start_date), 'HH:mm')}</span>
+                          <span className="font-medium text-sm">{format(parseISO(event.start_date), 'h:mm a')}</span>
                           <Badge style={{ backgroundColor: eventColor, color: 'white' }} className="text-xs">
                             Event
                           </Badge>

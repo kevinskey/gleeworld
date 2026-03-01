@@ -220,7 +220,7 @@ export const SavedScoresViewer = () => {
                       
                       <div className="text-sm text-muted-foreground">
                         {new Date(score.created_at).toLocaleDateString()} at{' '}
-                        {new Date(score.created_at).toLocaleTimeString()}
+                        {new Date(score.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                       </div>
 
                       {score.comments && (

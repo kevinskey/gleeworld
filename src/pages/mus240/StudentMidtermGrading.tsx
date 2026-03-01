@@ -365,7 +365,7 @@ export const StudentMidtermGrading = () => {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-gray-400" />
-                    <span>Time: {new Date(submission.submitted_at).toLocaleTimeString()}</span>
+                    <span>Time: {new Date(submission.submitted_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
                   </div>
                 </div>
               </CardContent>

@@ -154,7 +154,7 @@ export const AutoNotificationService = {
           await this.sendNotification({
             userId: participant.user_id,
             title: 'Event Reminder',
-            message: `Reminder: ${eventTitle} is tomorrow at ${new Date(eventDate).toLocaleTimeString()}`,
+            message: `Reminder: ${eventTitle} is tomorrow at ${new Date(eventDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`,
             type: 'info',
             category: 'event',
             actionUrl: `/calendar`,

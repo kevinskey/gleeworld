@@ -201,7 +201,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             id: event.id,
             title: event.title,
             date: new Date(event.start_date).toISOString().split('T')[0],
-            time: new Date(event.start_date).toLocaleTimeString(),
+            time: new Date(event.start_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
             location: event.location || 'TBA'
           })) || [],
           recentActivity: activities?.map((activity, index) => ({

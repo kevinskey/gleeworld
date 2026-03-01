@@ -128,7 +128,7 @@ export const StripeSalesSync = () => {
                 <span className="text-sm font-medium">Sync Time</span>
               </div>
               <p className="text-sm font-medium text-blue-600">
-                {new Date(syncStats.last_sync_time).toLocaleTimeString()}
+                {new Date(syncStats.last_sync_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
               </p>
               <p className="text-xs text-muted-foreground">
                 {new Date(syncStats.last_sync_time).toLocaleDateString()}
