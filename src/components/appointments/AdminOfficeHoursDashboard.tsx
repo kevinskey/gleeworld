@@ -223,7 +223,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
               backgroundImage: `url(${underwaterBg})`,
               backgroundSize: '200% 200%',
               backgroundPosition: 'center',
-              animation: 'underwaterPan 120s ease-in-out infinite alternate',
+              animation: 'underwaterPan 120s linear infinite',
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#001a33]/40 via-transparent to-[#001a33]/60" />
@@ -253,12 +253,9 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
 
         {/* CSS Animations */}
         <style>{`
-          @keyframes underwaterPan {
-            0% { background-position: 0% 30%; }
-            25% { background-position: 60% 40%; }
-            50% { background-position: 100% 50%; }
-            75% { background-position: 40% 60%; }
-            100% { background-position: 0% 70%; }
+           @keyframes underwaterPan {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
           }
           @keyframes underwaterRays {
             0% { transform: translateX(-20px) skewX(-2deg); opacity: 0.15; }
