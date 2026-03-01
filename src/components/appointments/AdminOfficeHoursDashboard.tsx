@@ -223,7 +223,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
               backgroundImage: `url(${underwaterBg})`,
               backgroundSize: '200% 200%',
               backgroundPosition: 'center',
-              animation: 'underwaterPan 120s linear infinite',
+              animation: 'underwaterPan 240s linear infinite',
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#001a33]/40 via-transparent to-[#001a33]/60" />
