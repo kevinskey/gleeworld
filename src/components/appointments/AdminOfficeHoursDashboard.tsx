@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,6 +27,7 @@ import { format, isToday, isFuture, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import underwaterBg from '@/assets/underwater-bg.jpg';
 
 type AdminTab = 'today' | 'upcoming' | 'past';
 type DashboardSection = 'appointments' | 'communications' | 'availability' | 'reminders' | 'settings';
@@ -208,24 +209,89 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
 
   return (
     <UniversalLayout>
-      {/* Header */}
-      <div className="w-full py-3 sm:py-6" style={{ backgroundColor: '#003666' }}>
-        <div className="px-3 sm:px-8 flex flex-col items-center">
-          <h1 className="text-center tracking-wide text-white text-xl sm:text-4xl font-bold font-['Bebas_Neue']">
-            OFFICE HOURS DASHBOARD
-          </h1>
-          <p className="text-center text-white/70 text-[11px] sm:text-sm mt-0.5">
-            {pendingAppointments.length > 0 && (
-              <span className="text-amber-300 font-semibold">{pendingAppointments.length} pending • </span>
-            )}
-            {todayAppointments.length} today • {allAppointments.length} total
-          </p>
+      {/* Underwater Background */}
+      <div className="relative min-h-screen">
+        <div 
+          className="fixed inset-0 z-0" 
+          style={{ 
+            top: 'var(--gw-header-h, 4rem)',
+          }}
+        >
+          <div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${underwaterBg})`,
+              backgroundSize: '200% 200%',
+              backgroundPosition: 'center',
+              animation: 'underwaterPan 60s ease-in-out infinite alternate',
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#001a33]/40 via-transparent to-[#001a33]/60" />
+          {/* Animated light rays */}
+          <div className="absolute inset-0 opacity-20" style={{
+            background: 'repeating-linear-gradient(105deg, transparent, transparent 40px, rgba(255,255,255,0.03) 40px, rgba(255,255,255,0.03) 80px)',
+            animation: 'underwaterRays 8s ease-in-out infinite alternate',
+          }} />
+          {/* Bubble particles */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(12)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full bg-white/10 border border-white/20"
+                style={{
+                  width: `${4 + Math.random() * 8}px`,
+                  height: `${4 + Math.random() * 8}px`,
+                  left: `${5 + Math.random() * 90}%`,
+                  bottom: `-${10 + Math.random() * 20}px`,
+                  animation: `bubbleRise ${8 + Math.random() * 12}s linear infinite`,
+                  animationDelay: `${Math.random() * 10}s`,
+                }}
+              />
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="w-full px-2 sm:px-6 md:px-8 py-2 sm:py-6">
-        {/* Section Navigation */}
-        <div className="flex gap-0.5 mb-3 bg-muted rounded-lg p-0.5">
+        {/* CSS Animations */}
+        <style>{`
+          @keyframes underwaterPan {
+            0% { background-position: 0% 30%; }
+            25% { background-position: 60% 40%; }
+            50% { background-position: 100% 50%; }
+            75% { background-position: 40% 60%; }
+            100% { background-position: 0% 70%; }
+          }
+          @keyframes underwaterRays {
+            0% { transform: translateX(-20px) skewX(-2deg); opacity: 0.15; }
+            100% { transform: translateX(20px) skewX(2deg); opacity: 0.25; }
+          }
+          @keyframes bubbleRise {
+            0% { transform: translateY(0) translateX(0) scale(0.5); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) translateX(${Math.random() > 0.5 ? '' : '-'}30px) scale(1); opacity: 0; }
+          }
+        `}</style>
+
+        {/* Content Layer */}
+        <div className="relative z-10">
+          {/* Header */}
+          <div className="w-full py-3 sm:py-6" style={{ backgroundColor: 'rgba(0, 54, 102, 0.85)', backdropFilter: 'blur(8px)' }}>
+            <div className="px-3 sm:px-8 flex flex-col items-center">
+              <h1 className="text-center tracking-wide text-white text-xl sm:text-4xl font-bold font-['Bebas_Neue']">
+                OFFICE HOURS DASHBOARD
+              </h1>
+              <p className="text-center text-white/70 text-[11px] sm:text-sm mt-0.5">
+                {pendingAppointments.length > 0 && (
+                  <span className="text-amber-300 font-semibold">{pendingAppointments.length} pending • </span>
+                )}
+                {todayAppointments.length} today • {allAppointments.length} total
+              </p>
+            </div>
+          </div>
+
+          <div className="w-full px-2 sm:px-6 md:px-8 py-2 sm:py-6">
+            {/* Section Navigation */}
+            <div className="flex gap-0.5 mb-3 bg-white/10 backdrop-blur-md rounded-lg p-0.5 border border-white/10">
           {sectionTabs.map(tab => (
             <button
               key={tab.key}
@@ -233,8 +299,8 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
               className={cn(
                 "flex-1 flex items-center justify-center gap-1 py-2 text-[11px] sm:text-xs font-semibold rounded-md transition-colors",
                 activeSection === tab.key
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-white/20 text-white shadow-sm backdrop-blur-sm"
+                  : "text-white/60 hover:text-white hover:bg-white/10"
               )}
             >
               <tab.icon className="h-3.5 w-3.5" />
@@ -249,22 +315,22 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
             {/* Stats */}
             <div className="grid grid-cols-4 gap-1.5 mb-3">
               {[
-                { label: 'Today', value: todayAppointments.length, color: 'text-primary' },
-                { label: 'Pending', value: pendingAppointments.length, color: 'text-amber-400' },
-                { label: 'Upcoming', value: upcomingAppointments.length, color: 'text-green-400' },
-                { label: 'Total', value: allAppointments.length, color: 'text-muted-foreground' },
+                { label: 'Today', value: todayAppointments.length, color: 'text-cyan-300' },
+                { label: 'Pending', value: pendingAppointments.length, color: 'text-amber-300' },
+                { label: 'Upcoming', value: upcomingAppointments.length, color: 'text-green-300' },
+                { label: 'Total', value: allAppointments.length, color: 'text-white/70' },
               ].map(stat => (
-                <Card key={stat.label} className="border-border">
+                <Card key={stat.label} className="border-white/10 bg-white/10 backdrop-blur-md">
                   <CardContent className="p-2 sm:p-3 text-center">
                     <div className={cn("text-xl sm:text-2xl font-bold", stat.color)}>{stat.value}</div>
-                    <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground">{stat.label}</div>
+                    <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-white/50">{stat.label}</div>
                   </CardContent>
                 </Card>
               ))}
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-0.5 mb-2 bg-muted rounded-lg p-0.5">
+            <div className="flex gap-0.5 mb-2 bg-white/10 backdrop-blur-md rounded-lg p-0.5 border border-white/10">
               {([
                 { key: 'today' as const, label: 'Today', count: todayAppointments.length },
                 { key: 'upcoming' as const, label: 'Upcoming', count: upcomingAppointments.length },
@@ -275,7 +341,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                   onClick={() => setAdminTab(tab.key)}
                   className={cn(
                     "flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-md transition-colors",
-                    adminTab === tab.key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                    adminTab === tab.key ? "bg-white/20 text-white shadow-sm" : "text-white/50 hover:text-white"
                   )}
                 >
                   {tab.label} ({tab.count})
@@ -290,8 +356,8 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
               </div>
             ) : adminFilteredList.length === 0 ? (
               <div className="text-center py-10">
-                <CalendarDays className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                <p className="text-muted-foreground text-sm">No {adminTab} appointments.</p>
+                <CalendarDays className="h-8 w-8 mx-auto text-white/30 mb-2" />
+                <p className="text-white/50 text-sm">No {adminTab} appointments.</p>
               </div>
             ) : (
               <ScrollArea className="h-[calc(100vh-380px)]">
@@ -299,15 +365,15 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                   {adminFilteredList
                     .sort((a: any, b: any) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime())
                     .map((apt: any) => (
-                    <Card key={apt.id} className="border-border">
+                    <Card key={apt.id} className="border-white/10 bg-white/10 backdrop-blur-md">
                       <CardContent className="p-2.5">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                              <span className="font-semibold text-xs text-foreground truncate">{apt.client_name || 'Unknown'}</span>
+                              <span className="font-semibold text-xs text-white truncate">{apt.client_name || 'Unknown'}</span>
                               {getStatusBadge(apt.status)}
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                            <div className="flex items-center gap-2 text-[10px] text-white/60">
                               <span className="flex items-center gap-0.5">
                                 <CalendarIcon className="h-2.5 w-2.5" />
                                 {format(new Date(apt.appointment_date), 'MMM d')}
@@ -315,12 +381,12 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                               {apt.start_time && <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{apt.start_time}</span>}
                               {apt.duration_minutes && <span>{apt.duration_minutes}m</span>}
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                            <div className="flex items-center gap-2 text-[10px] text-white/60 mt-0.5">
                               {apt.client_email && <span className="flex items-center gap-0.5"><Mail className="h-2.5 w-2.5" />{apt.client_email}</span>}
                               {apt.client_phone && <span className="flex items-center gap-0.5"><Phone className="h-2.5 w-2.5" />{apt.client_phone}</span>}
                             </div>
                             {apt.notes && (
-                              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1 bg-muted/50 rounded px-1.5 py-0.5">{apt.notes}</p>
+                              <p className="mt-1 text-[10px] text-white/50 line-clamp-1 bg-white/5 rounded px-1.5 py-0.5">{apt.notes}</p>
                             )}
                           </div>
                         </div>
@@ -370,14 +436,14 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
         {/* ═══ COMMUNICATIONS SECTION ═══ */}
         {activeSection === 'communications' && (
           <div className="space-y-3">
-            <Card className="border-border">
+            <Card className="border-white/10 bg-white/10 backdrop-blur-md">
               <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm font-semibold">Quick SMS</CardTitle>
-                <CardDescription className="text-[11px]">Send SMS to any student by phone number</CardDescription>
+                <CardTitle className="text-sm font-semibold text-white">Quick SMS</CardTitle>
+                <CardDescription className="text-[11px] text-white/50">Send SMS to any student by phone number</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0 space-y-2">
-                <Input placeholder="Phone number" id="quick-sms-phone" className="h-9 text-sm bg-background border-border text-foreground" />
-                <Textarea placeholder="Type your message..." id="quick-sms-msg" rows={3} className="text-sm bg-background border-border text-foreground" />
+                <Input placeholder="Phone number" id="quick-sms-phone" className="h-9 text-sm bg-white/10 border-white/20 text-white placeholder:text-white/40" />
+                <Textarea placeholder="Type your message..." id="quick-sms-msg" rows={3} className="text-sm bg-white/10 border-white/20 text-white placeholder:text-white/40" />
                 <Button className="w-full h-9 text-sm" onClick={async () => {
                   const phone = (document.getElementById('quick-sms-phone') as HTMLInputElement)?.value;
                   const msg = (document.getElementById('quick-sms-msg') as HTMLTextAreaElement)?.value;
@@ -394,24 +460,24 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
             </Card>
 
             {/* Pending Appointments needing response */}
-            <Card className="border-border">
+            <Card className="border-white/10 bg-white/10 backdrop-blur-md">
               <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                <CardTitle className="text-sm font-semibold text-white flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 text-amber-400" />
                   Pending Responses ({pendingAppointments.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0">
                 {pendingAppointments.length === 0 ? (
-                  <p className="text-muted-foreground text-xs py-4 text-center">All caught up! No pending requests.</p>
+                  <p className="text-white/50 text-xs py-4 text-center">All caught up! No pending requests.</p>
                 ) : (
                   <div className="space-y-2">
                     {pendingAppointments.slice(0, 5).map((apt: any) => (
-                      <div key={apt.id} className="p-2 rounded-lg border border-amber-500/30 bg-amber-500/5">
+                      <div key={apt.id} className="p-2 rounded-lg border border-amber-500/30 bg-amber-500/10">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-semibold text-foreground">{apt.client_name}</p>
-                            <p className="text-[10px] text-muted-foreground">{format(new Date(apt.appointment_date), 'MMM d')} • {apt.start_time}</p>
+                            <p className="text-xs font-semibold text-white">{apt.client_name}</p>
+                            <p className="text-[10px] text-white/60">{format(new Date(apt.appointment_date), 'MMM d')} • {apt.start_time}</p>
                           </div>
                           <div className="flex gap-1">
                             <Button size="sm" className="h-6 text-[10px] px-1.5 bg-green-600 hover:bg-green-700 text-white"
@@ -436,23 +502,23 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
         {/* ═══ AVAILABILITY SECTION ═══ */}
         {activeSection === 'availability' && (
           <div className="space-y-3">
-            <Card className="border-border">
+            <Card className="border-white/10 bg-white/10 backdrop-blur-md">
               <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm font-semibold">Weekly Schedule</CardTitle>
-                <CardDescription className="text-[11px]">Set your recurring office hours for each day</CardDescription>
+                <CardTitle className="text-sm font-semibold text-white">Weekly Schedule</CardTitle>
+                <CardDescription className="text-[11px] text-white/50">Set your recurring office hours for each day</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0">
                 <AvailabilityManager />
               </CardContent>
             </Card>
 
-            <Card className="border-border">
+            <Card className="border-white/10 bg-white/10 backdrop-blur-md">
               <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                  <CalendarPlus className="h-4 w-4 text-green-500" />
+                <CardTitle className="text-sm font-semibold text-white flex items-center gap-1.5">
+                  <CalendarPlus className="h-4 w-4 text-green-400" />
                   Date Overrides
                 </CardTitle>
-                <CardDescription className="text-[11px]">Add or block availability for specific dates</CardDescription>
+                <CardDescription className="text-[11px] text-white/50">Add or block availability for specific dates</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0">
                 <DateOverrideManager />
@@ -471,32 +537,32 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
         {/* ═══ SETTINGS (Google Calendar) ═══ */}
         {activeSection === 'settings' && (
           <div className="space-y-3">
-            <Card className="border-border">
+            <Card className="border-white/10 bg-white/10 backdrop-blur-md">
               <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                  <Globe className="h-4 w-4" />Google Calendar Integration
+                <CardTitle className="text-sm font-semibold text-white flex items-center gap-1.5">
+                  <Globe className="h-4 w-4 text-cyan-300" />Google Calendar Integration
                 </CardTitle>
-                <CardDescription className="text-[11px]">Sync appointments with your Google Calendar</CardDescription>
+                <CardDescription className="text-[11px] text-white/50">Sync appointments with your Google Calendar</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0 space-y-3">
-                <div className="flex items-center justify-between p-2.5 rounded-lg border border-border">
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-white/10">
                   <div className="flex items-center gap-2">
-                    <Wifi className={cn("h-4 w-4", gcalEnabled ? "text-green-500" : "text-muted-foreground")} />
+                    <Wifi className={cn("h-4 w-4", gcalEnabled ? "text-green-400" : "text-white/40")} />
                     <div>
-                      <p className="text-xs font-medium text-foreground">Auto-sync appointments</p>
-                      <p className="text-[10px] text-muted-foreground">New appointments sync to Google Calendar</p>
+                      <p className="text-xs font-medium text-white">Auto-sync appointments</p>
+                      <p className="text-[10px] text-white/50">New appointments sync to Google Calendar</p>
                     </div>
                   </div>
                   <Switch checked={gcalEnabled} onCheckedChange={setGcalEnabled} />
                 </div>
 
-                <Button className="w-full h-9 text-sm" variant="outline" onClick={handleGcalSync} disabled={gcalSyncing}>
+                <Button className="w-full h-9 text-sm border-white/20 text-white hover:bg-white/10" variant="outline" onClick={handleGcalSync} disabled={gcalSyncing}>
                   {gcalSyncing ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
                   Sync All Appointments Now
                 </Button>
 
-                <div className="p-2.5 rounded-lg bg-muted/50 text-[10px] text-muted-foreground space-y-1">
-                  <p className="font-medium text-foreground text-[11px]">Configuration</p>
+                <div className="p-2.5 rounded-lg bg-white/5 text-[10px] text-white/60 space-y-1">
+                  <p className="font-medium text-white text-[11px]">Configuration</p>
                   <p>✅ Google Calendar API Key configured</p>
                   <p>✅ Google Calendar ID configured</p>
                   <p>✅ Service Account Key configured</p>
@@ -505,16 +571,16 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-border">
+            <Card className="border-white/10 bg-white/10 backdrop-blur-md">
               <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm font-semibold">SMS Settings</CardTitle>
+                <CardTitle className="text-sm font-semibold text-white">SMS Settings</CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0">
-                <div className="p-2.5 rounded-lg bg-muted/50 text-[10px] text-muted-foreground space-y-1">
+                <div className="p-2.5 rounded-lg bg-white/5 text-[10px] text-white/60 space-y-1">
                   <p>✅ Twilio Account SID configured</p>
                   <p>✅ Twilio Auth Token configured</p>
                   <p>✅ Twilio Phone Number configured</p>
-                  <p className="text-foreground font-medium mt-2 text-[11px]">Auto-notifications enabled for:</p>
+                  <p className="text-white font-medium mt-2 text-[11px]">Auto-notifications enabled for:</p>
                   <p>• Appointment approval → SMS to student</p>
                   <p>• Appointment denial → SMS with reason</p>
                   <p>• Appointment cancellation → SMS alert</p>
@@ -607,6 +673,8 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>{/* end content layer */}
+      </div>{/* end relative wrapper */}
     </UniversalLayout>
   );
 };
@@ -667,14 +735,14 @@ const AvailabilityManager: React.FC = () => {
       {dayNames.map((name, i) => {
         const dayAvail = availability.find((a: any) => a.day_of_week === i);
         return (
-          <div key={i} className="p-2 rounded-lg border border-border space-y-1.5">
+          <div key={i} className="p-2 rounded-lg border border-white/10 space-y-1.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Switch
                   checked={dayAvail?.is_available || false}
                   onCheckedChange={() => toggleDay(i, dayAvail?.is_available || false, dayAvail?.id)}
                 />
-                <span className="text-xs font-medium text-foreground">{name}</span>
+                <span className="text-xs font-medium text-white">{name}</span>
               </div>
               {dayAvail?.is_available && (
                 <Badge variant="outline" className="text-[9px] h-5">Active</Badge>
@@ -976,33 +1044,33 @@ const ReminderManager: React.FC = () => {
   return (
     <>
       {/* Appointment Reminders */}
-      <Card className="border-border">
+      <Card className="border-white/10 bg-white/10 backdrop-blur-md">
         <CardHeader className="p-3 pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-            <Bell className="h-4 w-4 text-primary" />
+          <CardTitle className="text-sm font-semibold text-white flex items-center gap-1.5">
+            <Bell className="h-4 w-4 text-cyan-300" />
             Appointment Reminders
           </CardTitle>
-          <CardDescription className="text-[11px]">Auto-remind you and students before appointments</CardDescription>
+          <CardDescription className="text-[11px] text-white/50">Auto-remind you and students before appointments</CardDescription>
         </CardHeader>
         <CardContent className="p-3 pt-0 space-y-1.5">
           {appointmentReminders.length === 0 ? (
-            <p className="text-muted-foreground text-xs py-3 text-center">No reminders configured.</p>
+            <p className="text-white/50 text-xs py-3 text-center">No reminders configured.</p>
           ) : (
             appointmentReminders.map((r: any) => (
-              <div key={r.id} className="flex items-center justify-between p-2 rounded-lg border border-border">
+              <div key={r.id} className="flex items-center justify-between p-2 rounded-lg border border-white/10">
                 <div className="flex items-center gap-2">
                   <Switch checked={r.is_active} onCheckedChange={() => toggleReminder(r.id, r.is_active)} />
                   <div>
-                    <p className="text-xs font-medium text-foreground">
+                    <p className="text-xs font-medium text-white">
                       {r.hours_before >= 24 ? `${r.hours_before / 24} day${r.hours_before >= 48 ? 's' : ''}` : `${r.hours_before} hour${r.hours_before > 1 ? 's' : ''}`} before
                     </p>
-                    <p className="text-[10px] text-muted-foreground line-clamp-1">{r.message_template}</p>
+                    <p className="text-[10px] text-white/50 line-clamp-1">{r.message_template}</p>
                     <div className="flex gap-1 mt-0.5">
-                      {r.sms_enabled && <Badge variant="outline" className="text-[8px] h-4 px-1">SMS</Badge>}
+                      {r.sms_enabled && <Badge variant="outline" className="text-[8px] h-4 px-1 border-white/20 text-white/60">SMS</Badge>}
                     </div>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-white/40 hover:text-destructive"
                   onClick={() => deleteReminder(r.id)}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
@@ -1013,43 +1081,43 @@ const ReminderManager: React.FC = () => {
       </Card>
 
       {/* Book Prompt / Nudge */}
-      <Card className="border-border">
+      <Card className="border-white/10 bg-white/10 backdrop-blur-md">
         <CardHeader className="p-3 pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-            <Send className="h-4 w-4 text-green-500" />
+          <CardTitle className="text-sm font-semibold text-white flex items-center gap-1.5">
+            <Send className="h-4 w-4 text-green-400" />
             Booking Nudge
           </CardTitle>
-          <CardDescription className="text-[11px]">Prompt students to book office hours</CardDescription>
+          <CardDescription className="text-[11px] text-white/50">Prompt students to book office hours</CardDescription>
         </CardHeader>
         <CardContent className="p-3 pt-0 space-y-2">
           {bookPrompts.map((r: any) => (
-            <div key={r.id} className="flex items-center justify-between p-2 rounded-lg border border-border">
+            <div key={r.id} className="flex items-center justify-between p-2 rounded-lg border border-white/10">
               <div className="flex items-center gap-2">
                 <Switch checked={r.is_active} onCheckedChange={() => toggleReminder(r.id, r.is_active)} />
                 <div>
-                  <p className="text-xs font-medium text-foreground">Auto booking nudge</p>
-                  <p className="text-[10px] text-muted-foreground line-clamp-1">{r.message_template}</p>
+                  <p className="text-xs font-medium text-white">Auto booking nudge</p>
+                  <p className="text-[10px] text-white/50 line-clamp-1">{r.message_template}</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-white/40 hover:text-destructive"
                 onClick={() => deleteReminder(r.id)}>
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           ))}
 
-          <Separator />
+          <Separator className="bg-white/10" />
 
-          <Button className="w-full h-9 text-xs" variant="outline" onClick={sendBookingNudge}>
+          <Button className="w-full h-9 text-xs border-white/20 text-white hover:bg-white/10" variant="outline" onClick={sendBookingNudge}>
             <Send className="h-3.5 w-3.5 mr-1.5" />
             Send Booking Nudge to All Members Now
           </Button>
-          <p className="text-[10px] text-muted-foreground text-center">Sends SMS to all members with a phone number on file</p>
+          <p className="text-[10px] text-white/50 text-center">Sends SMS to all members with a phone number on file</p>
         </CardContent>
       </Card>
 
       {/* Add Reminder */}
-      <Button variant="outline" className="w-full h-8 text-xs" onClick={() => setShowAdd(true)}>
+      <Button variant="outline" className="w-full h-8 text-xs border-white/20 text-white hover:bg-white/10" onClick={() => setShowAdd(true)}>
         <Plus className="h-3 w-3 mr-1" />Add Custom Reminder
       </Button>
 
