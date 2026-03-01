@@ -287,7 +287,11 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setIsOpen(true);
+          // Auto-start listening on open
+          setTimeout(() => startListening(), 100);
+        }}
         className="fixed bottom-6 right-6 z-[100001] group"
         aria-label="Open Aria Assistant"
       >
