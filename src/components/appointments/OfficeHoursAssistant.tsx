@@ -32,6 +32,8 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const continuousListeningRef = useRef(false);
   const shouldRestartRef = useRef(false);
+  const errorCountRef = useRef(0);
+  const lastErrorTimeRef = useRef(0);
 
   // Audio coordination — pause radio/music when Aria speaks
   const { requestPlayback, registerPauseCallback, unregisterPauseCallback } = useAudioCoordinator();
@@ -107,11 +109,16 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
-    recognition.onstart = () => setIsListening(true);
+    recognition.onstart = () => {
+      setIsListening(true);
+      errorCountRef.current = 0; // Reset on successful start
+    };
     recognition.onend = () => {
       setIsListening(false);
       // Auto-restart if continuous mode is still on (like ChatGPT voice)
       if (continuousListeningRef.current && shouldRestartRef.current) {
+        // Back off if we've had too many errors
+        const delay = Math.min(100 + errorCountRef.current * 500, 3000);
         setTimeout(() => {
           if (continuousListeningRef.current) {
             try {
@@ -120,25 +127,40 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
               recognition.start();
             } catch (e) {
               console.log('Recognition restart failed, retrying...', e);
-              // If start fails, create a new instance
               setTimeout(() => {
                 if (continuousListeningRef.current) startListening();
-              }, 300);
+              }, 1000);
             }
           }
-        }, 100);
+        }, delay);
       }
     };
     recognition.onerror = (e: any) => {
-      console.error('Speech recognition error:', e);
+      const now = Date.now();
+      // Reset error count if last error was >5s ago
+      if (now - lastErrorTimeRef.current > 5000) {
+        errorCountRef.current = 0;
+      }
+      lastErrorTimeRef.current = now;
+      errorCountRef.current++;
+
       if (e.error === 'not-allowed') {
         toast.error('Microphone access denied');
         continuousListeningRef.current = false;
+        shouldRestartRef.current = false;
         setIsListening(false);
       } else if (e.error === 'aborted' || e.error === 'no-speech') {
-        // These are normal — recognition will auto-restart via onend
+        // Normal — recognition will auto-restart via onend
       } else {
-        setIsListening(false);
+        console.warn('Speech recognition error:', e.error);
+        // Stop completely after 5 rapid errors to prevent infinite loop
+        if (errorCountRef.current >= 5) {
+          console.warn('Too many speech errors, stopping continuous listening');
+          continuousListeningRef.current = false;
+          shouldRestartRef.current = false;
+          setIsListening(false);
+          toast.error('Microphone disconnected. Tap mic to retry.');
+        }
       }
     };
 
