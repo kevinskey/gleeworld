@@ -111,7 +111,7 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
 
       {/* DM Dialog */}
       <Dialog open={showDirectMessages} onOpenChange={setShowDirectMessages}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[85vh] flex flex-col z-[9999]">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[85vh] flex flex-col z-[200000]">
           <DialogHeader>
             <DialogTitle>Send Direct Message</DialogTitle>
           </DialogHeader>
