@@ -29,6 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import drJohnsonOffice from '@/assets/dr-johnson-office.jpg';
 import { AmazonProductSlider } from '@/components/shared/AmazonProductSlider';
+import { AdminOfficeHoursDashboard } from '@/components/appointments/AdminOfficeHoursDashboard';
 
 const appointmentTypes = [
   { id: 'office-hours', name: 'Office Hours', duration: 15 },
@@ -53,10 +54,10 @@ export default function BookAppointmentPage() {
   const [selectedTime, setSelectedTime] = useState('');
   const [topic, setTopic] = useState('');
   const [notes, setNotes] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
-  const [adminTab, setAdminTab] = useState<'today' | 'upcoming' | 'past'>('today');
 
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
@@ -97,23 +98,12 @@ export default function BookAppointmentPage() {
     enabled: !!user?.id
   });
 
-  // Admin: fetch ALL appointments
-  const { data: allAppointments = [], isLoading: allAptsLoading } = useQuery({
-    queryKey: ['admin-all-appointments'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_appointments')
-        .select('*')
-        .order('appointment_date', { ascending: false });
-      if (error) { console.error('Error fetching all appointments:', error); return []; }
-      return data || [];
-    },
-    enabled: isAdminUser
-  });
+  // Admin: redirect to admin dashboard component
+
 
   const handleBookAppointment = async () => {
-    if (!selectedType || !selectedDateStr || !selectedTime || !topic) {
-      toast.error('Please fill in all required fields');
+    if (!selectedType || !selectedDateStr || !selectedTime || !topic || !customerPhone) {
+      toast.error('Please fill in all required fields including phone number');
       return;
     }
     const serviceId = getServiceIdForType(selectedType);
@@ -129,7 +119,7 @@ export default function BookAppointmentPage() {
         p_start_time: selectedTime,
         p_customer_name: profile?.full_name || user?.email || 'Student',
         p_customer_email: user?.email || '',
-        p_customer_phone: null,
+        p_customer_phone: customerPhone,
         p_attendee_count: 1,
         p_special_requests: `Type: ${selectedTypeData?.name}\nTopic: ${topic}${notes ? `\n\nNotes: ${notes}` : ''}`
       });
@@ -143,7 +133,7 @@ export default function BookAppointmentPage() {
               appointment_id: result.appointment_id || '',
               student_name: profile?.full_name || user?.email || 'Student',
               student_email: user?.email || '',
-              student_phone: (profile as any)?.phone || null,
+              student_phone: customerPhone || (profile as any)?.phone || null,
               appointment_type: selectedTypeData?.name || selectedType,
               appointment_date: selectedDateStr,
               appointment_time: selectedTime,
@@ -159,6 +149,7 @@ export default function BookAppointmentPage() {
         setSelectedTime('');
         setTopic('');
         setNotes('');
+        setCustomerPhone('');
       } else {
         toast.error(result.error || 'Failed to book appointment');
       }
@@ -219,129 +210,14 @@ export default function BookAppointmentPage() {
     }
   };
 
-  const sourceData = isAdminUser ? allAppointments : appointmentHistory;
-  const completedCount = sourceData.filter(a => a.status === 'completed').length;
-  const upcomingCount = sourceData.filter(a => a.status === 'confirmed').length;
-  const pendingCount = sourceData.filter(a => a.status === 'pending').length;
-
-  // Admin computed data
-  const todayAppointments = allAppointments.filter((a: any) => isToday(new Date(a.appointment_date)));
-  const upcomingAppointments = allAppointments.filter((a: any) => isFuture(new Date(a.appointment_date)) && !isToday(new Date(a.appointment_date)));
-  const pastAppointments = allAppointments.filter((a: any) => isPast(new Date(a.appointment_date)) && !isToday(new Date(a.appointment_date)));
-
-
-
-  const adminFilteredList = adminTab === 'today' ? todayAppointments : adminTab === 'upcoming' ? upcomingAppointments : pastAppointments;
+  const completedCount = appointmentHistory.filter(a => a.status === 'completed').length;
+  const upcomingCount = appointmentHistory.filter(a => a.status === 'confirmed').length;
+  const pendingCount = appointmentHistory.filter(a => a.status === 'pending').length;
 
   // ─── Admin Dashboard View ───
   if (isAdminUser) {
-    return (
-      <UniversalLayout>
-        <div className="w-full py-3 sm:py-8" style={{ backgroundColor: '#003666' }}>
-          <div className="px-3 sm:px-8 flex flex-col items-center">
-            <h1 className="text-center tracking-wide text-white text-xl sm:text-4xl md:text-5xl font-bold font-['Bebas_Neue']">
-              OFFICE HOURS DASHBOARD
-            </h1>
-            <p className="text-center text-white/70 text-xs sm:text-base mt-0.5">Manage your appointments</p>
-          </div>
-        </div>
-
-        <div className="w-full px-3 sm:px-6 md:px-8 lg:px-12 py-3 sm:py-8">
-          {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4">
-            {[
-              { label: 'Today', value: todayAppointments.length, color: 'text-primary' },
-              { label: 'Upcoming', value: upcomingAppointments.length, color: 'text-green-400' },
-              { label: 'Total', value: allAppointments.length, color: 'text-muted-foreground' },
-            ].map(stat => (
-              <Card key={stat.label} className="border-border">
-                <CardContent className="p-3 sm:p-4 text-center">
-                  <div className={cn("text-2xl sm:text-3xl font-bold", stat.color)}>{stat.value}</div>
-                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground mt-1">{stat.label}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Filter Tabs */}
-          <div className="flex gap-1 mb-3 bg-muted rounded-lg p-1">
-            {[
-              { key: 'today' as const, label: 'Today', count: todayAppointments.length },
-              { key: 'upcoming' as const, label: 'Upcoming', count: upcomingAppointments.length },
-              { key: 'past' as const, label: 'Past', count: pastAppointments.length },
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setAdminTab(tab.key)}
-                className={cn(
-                  "flex-1 py-2 px-2 text-xs sm:text-sm font-semibold rounded-md transition-colors",
-                  adminTab === tab.key
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {tab.label} ({tab.count})
-              </button>
-            ))}
-          </div>
-
-          {/* Appointment List */}
-          {allAptsLoading ? (
-            <div className="flex items-center justify-center py-10">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            </div>
-          ) : adminFilteredList.length === 0 ? (
-            <div className="text-center py-10">
-              <CalendarDays className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-              <p className="text-muted-foreground text-sm">No {adminTab} appointments.</p>
-            </div>
-          ) : (
-            <ScrollArea className="h-[calc(100vh-340px)]">
-              <div className="space-y-2 pr-2">
-                {adminFilteredList
-                  .sort((a: any, b: any) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime())
-                  .map((apt: any) => (
-                  <Card key={apt.id} className="border-border hover:bg-accent/30 transition-colors">
-                    <CardContent className="p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                            <span className="font-semibold text-sm text-foreground truncate">{apt.client_name || 'Unknown'}</span>
-                            {getStatusBadge(apt.status)}
-                          </div>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <CalendarIcon className="h-3 w-3" />
-                              {format(new Date(apt.appointment_date), 'MMM d, yyyy')}
-                            </span>
-                            {apt.start_time && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" /> {apt.start_time}
-                              </span>
-                            )}
-                            {apt.duration_minutes && <span>{apt.duration_minutes} min</span>}
-                          </div>
-                          {apt.client_email && (
-                            <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                              <Mail className="h-3 w-3" /> {apt.client_email}
-                            </p>
-                          )}
-                          {apt.notes && (
-                            <p className="mt-1.5 text-[11px] text-muted-foreground line-clamp-2 bg-muted/50 rounded p-1.5">{apt.notes}</p>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
-          )}
-        </div>
-      </UniversalLayout>
-    );
+    return <AdminOfficeHoursDashboard />;
   }
-
   // ─── Student View ───
   return (
     <UniversalLayout>
@@ -558,6 +434,22 @@ export default function BookAppointmentPage() {
                     />
                   </div>
 
+                  {/* Phone Number */}
+                  <div className="space-y-1.5">
+                    <Label className="text-sm sm:text-base font-medium text-foreground">Phone Number *</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="tel"
+                        value={customerPhone}
+                        onChange={e => setCustomerPhone(e.target.value)}
+                        placeholder="(404) 555-1234"
+                        className="h-10 sm:h-12 pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground text-sm sm:text-base"
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Required for appointment confirmations via SMS</p>
+                  </div>
+
                   {/* Notes */}
                   <div className="space-y-1.5">
                     <Label className="text-sm sm:text-base font-medium text-foreground">Additional Notes</Label>
@@ -573,7 +465,7 @@ export default function BookAppointmentPage() {
                   {/* Submit */}
                   <Button
                     onClick={handleBookAppointment}
-                    disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic}
+                    disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic || !customerPhone}
                     className="w-full h-11 sm:h-14 text-base sm:text-xl text-white shadow-lg hover:shadow-xl transition-all font-bold"
                     style={{ backgroundColor: '#1D4ED8' }}
                   >
