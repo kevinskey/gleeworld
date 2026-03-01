@@ -208,41 +208,41 @@ export default function BookAppointmentPage() {
   return (
     <UniversalLayout>
       {/* Header Banner */}
-      <div className="w-full py-5 sm:py-8" style={{ backgroundColor: '#003666' }}>
-        <div className="px-4 sm:px-8 flex flex-col items-center">
-          <h1 className="text-center tracking-wide text-white text-2xl sm:text-4xl md:text-5xl font-bold font-['Bebas_Neue']">
+      <div className="w-full py-3 sm:py-8" style={{ backgroundColor: '#003666' }}>
+        <div className="px-3 sm:px-8 flex flex-col items-center">
+          <h1 className="text-center tracking-wide text-white text-xl sm:text-4xl md:text-5xl font-bold font-['Bebas_Neue']">
             OFFICE HOURS
           </h1>
-          <p className="text-center text-white/70 text-sm sm:text-base mt-1">with Dr. Kevin Johnson</p>
+          <p className="text-center text-white/70 text-xs sm:text-base mt-0.5">with Dr. Kevin Johnson</p>
         </div>
       </div>
 
-      <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-8">
+      <div className="w-full px-3 sm:px-6 md:px-8 lg:px-12 py-3 sm:py-8">
         {/* Instructor Card — full width on mobile, side card on desktop */}
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
           {/* Instructor Card */}
           <div className="w-full lg:w-80 lg:flex-shrink-0">
             <Card className="overflow-hidden border-border">
-              <div className="relative aspect-[16/9] sm:aspect-[4/3] bg-muted">
+              <div className="relative aspect-[16/9] bg-muted">
                 <img src={drJohnsonOffice} alt="Dr. Johnson's Office" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  <h2 className="text-base sm:text-lg font-semibold">Dr. Kevin Johnson</h2>
-                  <p className="flex items-center gap-1.5 mt-1 text-sm text-white/90">
-                    <MapPin className="h-3.5 w-3.5" /> Fine Arts Building 105
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
+                  <h2 className="text-sm sm:text-lg font-semibold">Dr. Kevin Johnson</h2>
+                  <p className="flex items-center gap-1 mt-0.5 text-xs sm:text-sm text-white/90">
+                    <MapPin className="h-3 w-3" /> Fine Arts Building 105
                   </p>
                 </div>
               </div>
-              <CardContent className="p-4">
-                <div className="grid grid-cols-3 gap-3 text-center">
+              <CardContent className="p-3 sm:p-4">
+                <div className="grid grid-cols-3 gap-2 text-center">
                   {[
                     { label: 'Completed', value: completedCount, color: 'text-foreground' },
                     { label: 'Upcoming', value: upcomingCount, color: 'text-green-400' },
                     { label: 'Pending', value: pendingCount, color: 'text-amber-400' },
                   ].map(stat => (
                     <div key={stat.label}>
-                      <div className={cn("text-xl font-bold", stat.color)}>{stat.value}</div>
-                      <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-0.5">{stat.label}</div>
+                      <div className={cn("text-lg sm:text-xl font-bold", stat.color)}>{stat.value}</div>
+                      <div className="text-[10px] sm:text-[11px] uppercase tracking-wider text-muted-foreground mt-0.5">{stat.label}</div>
                     </div>
                   ))}
                 </div>
@@ -250,7 +250,7 @@ export default function BookAppointmentPage() {
             </Card>
 
             {/* Quick Contact — visible on mobile, hidden on desktop (shown in contact tab) */}
-            <div className="grid grid-cols-4 gap-2 mt-4 lg:hidden">
+            <div className="grid grid-cols-4 gap-1.5 mt-3 lg:hidden">
               {[
                 { href: 'mailto:docjohnson@spelman.edu', icon: Mail, label: 'Email', bg: 'bg-blue-100', fg: 'text-blue-600' },
                 { href: 'tel:+14706221392', icon: Phone, label: 'Call', bg: 'bg-green-100', fg: 'text-green-600' },
@@ -262,12 +262,12 @@ export default function BookAppointmentPage() {
                   <Wrapper
                     key={item.label}
                     {...(item.href ? { href: item.href, ...(item.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {}) } : {})}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border bg-card hover:bg-muted transition-colors"
+                    className="flex flex-col items-center gap-1 p-2 rounded-lg border border-border bg-card hover:bg-muted transition-colors"
                   >
-                    <div className={cn("h-9 w-9 rounded-full flex items-center justify-center", item.bg)}>
-                      <item.icon className={cn("h-4 w-4", item.fg)} />
+                    <div className={cn("h-7 w-7 rounded-full flex items-center justify-center", item.bg)}>
+                      <item.icon className={cn("h-3.5 w-3.5", item.fg)} />
                     </div>
-                    <span className="text-[11px] font-medium text-foreground">{item.label}</span>
+                    <span className="text-[10px] font-medium text-foreground">{item.label}</span>
                   </Wrapper>
                 );
               })}
@@ -277,7 +277,7 @@ export default function BookAppointmentPage() {
           {/* Main Content Tabs */}
           <div className="flex-1 min-w-0">
             <Tabs defaultValue="book" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 h-14 sm:h-16 bg-gradient-to-b from-[#004080] to-[#003666] p-0 rounded-t-xl rounded-b-none shadow-lg">
+              <TabsList className="grid w-full grid-cols-3 h-11 sm:h-16 bg-gradient-to-b from-[#004080] to-[#003666] p-0 rounded-t-xl rounded-b-none shadow-lg">
                 {[
                   { value: 'book', icon: CalendarDays, label: 'Book' },
                   { value: 'history', icon: History, label: 'History' },
@@ -287,34 +287,34 @@ export default function BookAppointmentPage() {
                     key={tab.value}
                     value={tab.value}
                     className={cn(
-                      "gap-1.5 sm:gap-2 font-['Bebas_Neue'] tracking-wide py-3 h-full hover:bg-white/20 transition-all duration-200 rounded-none text-white data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-md",
+                      "gap-1 sm:gap-2 font-['Bebas_Neue'] tracking-wide py-2 h-full hover:bg-white/20 transition-all duration-200 rounded-none text-white data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-md",
                       i === 0 && "rounded-tl-xl",
                       i === 2 && "rounded-tr-xl",
                       i < 2 && "border-r border-white/20"
                     )}
                   >
-                    <tab.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="text-lg sm:text-2xl">{tab.label}</span>
+                    <tab.icon className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
+                    <span className="text-base sm:text-2xl">{tab.label}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>
 
               {/* ── Book Tab ── */}
               <TabsContent value="book" className="mt-0 bg-card border border-t-0 border-border rounded-b-xl shadow-lg">
-                <div className="p-4 sm:p-6 space-y-5">
+                <div className="p-3 sm:p-6 space-y-3 sm:space-y-5">
                   {/* Service Type */}
-                  <div className="space-y-2">
-                    <Label className="text-base font-semibold text-foreground">Service Type *</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm sm:text-base font-semibold text-foreground">Service Type *</Label>
                     <Select value={selectedType} onValueChange={val => { setSelectedType(val); setSelectedTime(''); }}>
-                      <SelectTrigger className="h-12 sm:h-14 text-base bg-background border-border">
+                      <SelectTrigger className="h-10 sm:h-14 text-sm sm:text-base bg-background border-border">
                         <SelectValue placeholder="Select a service..." />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover border border-border shadow-xl z-[100]">
+                      <SelectContent className="bg-popover border border-border shadow-xl z-[100000] max-w-[calc(100vw-24px)]" position="popper" sideOffset={4}>
                         {appointmentTypes.map(type => (
-                          <SelectItem key={type.id} value={type.id} className="py-3 text-base text-popover-foreground">
-                            <div className="flex items-center gap-3">
+                          <SelectItem key={type.id} value={type.id} className="py-2.5 text-sm text-popover-foreground">
+                            <div className="flex items-center gap-2">
                               <span>{type.name}</span>
-                              <Badge variant="secondary" className="text-xs">{type.duration} min</Badge>
+                              <Badge variant="secondary" className="text-[10px]">{type.duration} min</Badge>
                             </div>
                           </SelectItem>
                         ))}
@@ -323,24 +323,24 @@ export default function BookAppointmentPage() {
                   </div>
 
                   {/* Date & Time — stacked on mobile, inline on desktop */}
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium text-foreground">Date & Time *</Label>
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm sm:text-base font-medium text-foreground">Date & Time *</Label>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                       {/* Date Picker */}
                       <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
                             disabled={!selectedType}
-                            className="w-full sm:w-auto justify-start text-left font-semibold h-12 rounded-lg bg-background border-border text-foreground text-base"
+                            className="w-full sm:w-auto justify-start text-left font-semibold h-10 sm:h-12 rounded-lg bg-background border-border text-foreground text-sm sm:text-base"
                           >
-                            <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
-                            <span>{selectedDate ? format(selectedDate, "EEEE, MMM d") : "Select date"}</span>
+                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                            <span>{selectedDate ? format(selectedDate, "EEE, MMM d") : "Select date"}</span>
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent
-                          className="w-auto p-0 bg-popover border border-border shadow-2xl z-[9999] max-h-[70vh] overflow-y-auto overscroll-contain touch-pan-y"
-                          align="start" side="bottom" sideOffset={8} avoidCollisions
+                          className="w-auto p-0 bg-popover border border-border shadow-2xl z-[100000] max-h-[60vh] max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain touch-pan-y"
+                          align="center" side="bottom" sideOffset={4} avoidCollisions
                         >
                           <Calendar
                             mode="single"
@@ -353,12 +353,12 @@ export default function BookAppointmentPage() {
                             }}
                             disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
                             initialFocus
-                            className="p-3 pointer-events-auto touch-manipulation [&_button]:text-foreground [&_.rdp-day_button]:text-foreground [&_.day-today]:font-bold"
+                            className="p-2 sm:p-3 pointer-events-auto touch-manipulation [&_button]:text-foreground [&_.rdp-day_button]:text-foreground [&_.day-today]:font-bold"
                           />
                         </PopoverContent>
                       </Popover>
 
-                      <ArrowRight className="h-5 w-5 text-muted-foreground hidden sm:block" />
+                      <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
 
                       {/* Time Picker */}
                       <Popover open={timePickerOpen} onOpenChange={setTimePickerOpen} modal>
@@ -366,40 +366,40 @@ export default function BookAppointmentPage() {
                           <Button
                             variant="outline"
                             disabled={!selectedType || !selectedDateStr}
-                            className="w-full sm:w-auto justify-start text-left font-semibold h-12 rounded-lg bg-background border-border text-foreground text-base"
+                            className="w-full sm:w-auto justify-start text-left font-semibold h-10 sm:h-12 rounded-lg bg-background border-border text-foreground text-sm sm:text-base"
                           >
-                            <Clock className="mr-2 h-5 w-5 text-muted-foreground" />
+                            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
                             <span>{selectedTime || "Select time"}</span>
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent
-                          className="w-[220px] p-2 bg-popover border border-border shadow-2xl z-[9999]"
-                          align="start" side="bottom" sideOffset={8} avoidCollisions
+                          className="w-[200px] p-2 bg-popover border border-border shadow-2xl z-[100000] max-w-[calc(100vw-24px)]"
+                          align="center" side="bottom" sideOffset={4} avoidCollisions
                         >
-                          <div className="max-h-[280px] overflow-y-auto overscroll-contain pointer-events-auto">
+                          <div className="max-h-[240px] overflow-y-auto overscroll-contain pointer-events-auto">
                             {slotsLoading ? (
-                              <div className="flex items-center justify-center py-8">
+                              <div className="flex items-center justify-center py-6">
                                 <Loader2 className="h-5 w-5 animate-spin" />
                               </div>
                             ) : timeSlots && timeSlots.length > 0 ? (
-                              <div className="space-y-1 p-1">
+                              <div className="space-y-0.5 p-0.5">
                                 {timeSlots.map((slot: any) => (
                                   <button
                                     key={slot.start_time}
                                     type="button"
                                     className={cn(
-                                      "w-full flex items-center justify-between h-11 px-4 text-base font-normal rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors text-popover-foreground",
+                                      "w-full flex items-center justify-between h-9 px-3 text-sm font-normal rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors text-popover-foreground",
                                       slot.start_time === selectedTime && "bg-primary/10 text-primary font-medium"
                                     )}
                                     onClick={() => { setSelectedTime(slot.start_time); setTimePickerOpen(false); }}
                                   >
                                     <span>{slot.start_time} - {slot.end_time}</span>
-                                    {slot.start_time === selectedTime && <Check className="h-5 w-5" />}
+                                    {slot.start_time === selectedTime && <Check className="h-4 w-4" />}
                                   </button>
                                 ))}
                               </div>
                             ) : (
-                              <div className="text-center py-8 text-muted-foreground text-sm">
+                              <div className="text-center py-6 text-muted-foreground text-sm">
                                 No available times
                               </div>
                             )}
@@ -410,25 +410,25 @@ export default function BookAppointmentPage() {
                   </div>
 
                   {/* Topic */}
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium text-foreground">Topic / Purpose *</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm sm:text-base font-medium text-foreground">Topic / Purpose *</Label>
                     <Input
                       value={topic}
                       onChange={e => setTopic(e.target.value)}
                       placeholder="What would you like to discuss?"
-                      className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground text-base"
+                      className="h-10 sm:h-12 bg-background border-border text-foreground placeholder:text-muted-foreground text-sm sm:text-base"
                     />
                   </div>
 
                   {/* Notes */}
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium text-foreground">Additional Notes</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm sm:text-base font-medium text-foreground">Additional Notes</Label>
                     <Textarea
                       value={notes}
                       onChange={e => setNotes(e.target.value)}
                       placeholder="Any additional context..."
-                      rows={3}
-                      className="bg-background border-border text-foreground placeholder:text-muted-foreground text-base"
+                      rows={2}
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground text-sm sm:text-base"
                     />
                   </div>
 
@@ -436,13 +436,13 @@ export default function BookAppointmentPage() {
                   <Button
                     onClick={handleBookAppointment}
                     disabled={loading || !selectedType || !selectedDateStr || !selectedTime || !topic}
-                    className="w-full h-14 text-lg sm:text-xl text-white shadow-lg hover:shadow-xl transition-all font-bold"
+                    className="w-full h-11 sm:h-14 text-base sm:text-xl text-white shadow-lg hover:shadow-xl transition-all font-bold"
                     style={{ backgroundColor: '#1D4ED8' }}
                   >
                     {loading ? (
-                      <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Booking...</>
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Booking...</>
                     ) : (
-                      <><CalendarDays className="h-5 w-5 mr-2" /> Book Appointment</>
+                      <><CalendarDays className="h-4 w-4 mr-2" /> Book Appointment</>
                     )}
                   </Button>
                 </div>
@@ -450,46 +450,46 @@ export default function BookAppointmentPage() {
 
               {/* ── History Tab ── */}
               <TabsContent value="history" className="mt-0 bg-card border border-t-0 border-border rounded-b-xl shadow-lg">
-                <div className="p-4 sm:p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <BookOpen className="h-5 w-5 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold text-foreground">Meeting History</h3>
+                <div className="p-3 sm:p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    <h3 className="text-base sm:text-lg font-semibold text-foreground">Meeting History</h3>
                   </div>
 
                   {historyLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <div className="flex items-center justify-center py-10">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
                     </div>
                   ) : appointmentHistory.length === 0 ? (
-                    <div className="text-center py-12">
-                      <History className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+                    <div className="text-center py-10">
+                      <History className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
                       <p className="text-muted-foreground text-sm">No appointment history yet.</p>
                       <p className="text-xs text-muted-foreground mt-1">Book your first session to get started!</p>
                     </div>
                   ) : (
-                    <ScrollArea className="h-[400px] sm:h-[500px]">
-                      <div className="space-y-3 pr-2">
+                    <ScrollArea className="h-[350px] sm:h-[500px]">
+                      <div className="space-y-2 pr-2">
                         {appointmentHistory.map((apt: any) => (
-                          <div key={apt.id} className="p-4 rounded-xl border border-border bg-card hover:bg-accent/30 transition-colors">
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                          <div key={apt.id} className="p-3 rounded-lg border border-border bg-card hover:bg-accent/30 transition-colors">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5">
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
+                                <div className="flex items-center gap-1.5 flex-wrap">
                                   {getStatusBadge(apt.status)}
-                                  <span className="text-xs text-muted-foreground">
+                                  <span className="text-[11px] text-muted-foreground">
                                     {format(new Date(apt.appointment_date), 'MMM d, yyyy')}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-3 text-xs mt-2 text-muted-foreground">
+                                <div className="flex items-center gap-2 text-[11px] mt-1.5 text-muted-foreground">
                                   <span className="flex items-center gap-1">
                                     <Clock className="h-3 w-3" /> {apt.start_time}
                                   </span>
                                   <span>{apt.duration_minutes} min</span>
                                 </div>
                                 {apt.special_requests && (
-                                  <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{apt.special_requests}</p>
+                                  <p className="mt-1.5 text-[11px] text-muted-foreground line-clamp-2">{apt.special_requests}</p>
                                 )}
                                 {apt.notes && (
-                                  <div className="mt-2 p-2.5 rounded-lg bg-muted/50 text-xs">
+                                  <div className="mt-1.5 p-2 rounded-lg bg-muted/50 text-[11px]">
                                     <strong className="text-muted-foreground">Notes:</strong>
                                     <p className="mt-0.5 text-foreground">{apt.notes}</p>
                                   </div>
@@ -506,9 +506,9 @@ export default function BookAppointmentPage() {
 
               {/* ── Contact Tab ── */}
               <TabsContent value="contact" className="mt-0 bg-card border border-t-0 border-border rounded-b-xl shadow-lg">
-                <div className="p-4 sm:p-6 space-y-5">
+                <div className="p-3 sm:p-6 space-y-3 sm:space-y-5">
                   {/* Quick Contact Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
                       { href: 'mailto:docjohnson@spelman.edu', icon: Mail, label: 'Email', bg: 'bg-blue-100', fg: 'text-blue-600' },
                       { href: 'tel:+14706221392', icon: Phone, label: 'Call', bg: 'bg-green-100', fg: 'text-green-600' },
@@ -520,12 +520,12 @@ export default function BookAppointmentPage() {
                         <Wrapper
                           key={item.label}
                           {...(item.href ? { href: item.href, ...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {}) } : {})}
-                          className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-center"
+                          className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-center"
                         >
-                          <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", item.bg)}>
-                            <item.icon className={cn("h-5 w-5", item.fg)} />
+                          <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", item.bg)}>
+                            <item.icon className={cn("h-4 w-4", item.fg)} />
                           </div>
-                          <span className="text-xs font-medium text-foreground">{item.label}</span>
+                          <span className="text-[11px] font-medium text-foreground">{item.label}</span>
                         </Wrapper>
                       );
                     })}
@@ -533,34 +533,34 @@ export default function BookAppointmentPage() {
 
                   {/* Send Message Form */}
                   <Card className="border-border">
-                    <CardHeader className="pb-3 border-b border-border">
-                      <CardTitle className="text-lg text-foreground">Send a Message</CardTitle>
-                      <CardDescription className="text-sm text-muted-foreground">
+                    <CardHeader className="pb-2 border-b border-border p-3 sm:p-6 sm:pb-3">
+                      <CardTitle className="text-base sm:text-lg text-foreground">Send a Message</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm text-muted-foreground">
                         Send Dr. Johnson a direct message
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4 pt-4">
-                      <div className="space-y-2">
-                        <Label className="font-medium text-base text-foreground">Subject</Label>
+                    <CardContent className="space-y-3 p-3 sm:p-6 sm:pt-4 pt-3">
+                      <div className="space-y-1.5">
+                        <Label className="font-medium text-sm sm:text-base text-foreground">Subject</Label>
                         <Input
                           value={emailSubject}
                           onChange={e => setEmailSubject(e.target.value)}
                           placeholder="What is this about?"
-                          className="h-11 bg-background border-border text-foreground placeholder:text-muted-foreground text-base"
+                          className="h-10 sm:h-11 bg-background border-border text-foreground placeholder:text-muted-foreground text-sm sm:text-base"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="font-medium text-base text-foreground">Message</Label>
+                      <div className="space-y-1.5">
+                        <Label className="font-medium text-sm sm:text-base text-foreground">Message</Label>
                         <Textarea
                           value={emailBody}
                           onChange={e => setEmailBody(e.target.value)}
                           placeholder="Type your message here..."
-                          rows={4}
-                          className="bg-background border-border text-foreground placeholder:text-muted-foreground text-base"
+                          rows={3}
+                          className="bg-background border-border text-foreground placeholder:text-muted-foreground text-sm sm:text-base"
                         />
                       </div>
-                      <div className="bg-muted rounded-lg p-3 text-xs flex items-center gap-2">
-                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      <div className="bg-muted rounded-lg p-2.5 text-[11px] flex items-center gap-2">
+                        <User className="h-3 w-3 text-muted-foreground" />
                         <span className="text-muted-foreground">
                           From: <strong className="text-foreground">{profile?.full_name || user?.email}</strong>
                         </span>
@@ -568,7 +568,7 @@ export default function BookAppointmentPage() {
                       <Button
                         onClick={handleSendEmail}
                         disabled={sendingEmail || !emailSubject || !emailBody}
-                        className="w-full h-12 text-base sm:text-lg text-white shadow-lg hover:shadow-xl transition-all font-bold"
+                        className="w-full h-10 sm:h-12 text-sm sm:text-lg text-white shadow-lg hover:shadow-xl transition-all font-bold"
                         style={{ backgroundColor: '#1D4ED8' }}
                       >
                         {sendingEmail ? (
