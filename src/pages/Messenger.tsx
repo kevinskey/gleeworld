@@ -642,24 +642,24 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     >
       {/* Persistent Header - hide in embedded mode */}
       {!embedded && (
-        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border backdrop-blur px-4 sm:px-6 lg:px-10 py-2 bg-card shadow-sm">
+        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border/30 px-4 sm:px-6 lg:px-10 py-2 bg-[hsl(208,60%,28%)] text-white shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="hidden sm:block">
+              <div className="hidden sm:block text-white/80 [&_a]:text-white/80 [&_a:hover]:text-white">
                 <BackNavigation />
               </div>
-              <div className="rounded-md p-1.5 bg-primary flex-shrink-0">
-                <Mail className="h-5 w-5 text-primary-foreground" />
+              <div className="rounded-md p-1.5 bg-white/15 flex-shrink-0">
+                <Mail className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0 flex items-center gap-2">
-                <h1 className="text-lg font-bold text-foreground font-cinzel tracking-wide uppercase">Messenger</h1>
-                <Badge variant="outline" className="text-xs capitalize px-2 py-0.5 flex-shrink-0">{messengerRole}</Badge>
-                <span className="text-xs text-muted-foreground hidden sm:inline">
+                <h1 className="text-lg font-bold font-cinzel tracking-wide uppercase text-white">Messenger</h1>
+                <Badge variant="outline" className="text-xs capitalize px-2 py-0.5 flex-shrink-0 border-white/30 text-white/90">{messengerRole}</Badge>
+                <span className="text-xs text-white/60 hidden sm:inline">
                   {canMessageAnyone ? '· Full access' : messengerRole === 'alumna' ? '· Alumnae & mentees' : `· ${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`}
                 </span>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-2 flex-shrink-0 h-8 px-3">
+            <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-2 flex-shrink-0 h-8 px-3 border-white/30 text-white hover:bg-white/15 hover:text-white">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline text-sm">Groups ({recipientGroups.length})</span>
               <span className="sm:hidden text-xs">{recipientGroups.length}</span>
@@ -669,7 +669,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
       )}
       
       {/* Main Content with L/R padding */}
-      <div className={`flex-1 min-h-0 overflow-hidden ${embedded ? 'px-0' : 'px-6 lg:px-10'}`}>
+      <div className={`flex-1 min-h-0 overflow-hidden`}>
         <div className="h-full flex w-full">
           {/* Composer Area */}
           <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
