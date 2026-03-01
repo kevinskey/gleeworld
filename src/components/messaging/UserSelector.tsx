@@ -241,12 +241,12 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={member.user_profile?.avatar_url} />
-                            <AvatarFallback>
+                            <AvatarFallback className="bg-primary/10 text-primary">
                               {getUserInitials(member.user_profile?.full_name, member.user_profile?.email)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-medium text-sm">
+                            <div className="font-medium text-sm text-foreground">
                               {member.user_profile?.full_name || 'Unknown User'}
                             </div>
                             <div className="text-xs text-muted-foreground">
@@ -289,12 +289,12 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={user.avatar_url} />
-                            <AvatarFallback>
+                            <AvatarFallback className="bg-primary/10 text-primary">
                               {getUserInitials(user.full_name, user.email)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-medium text-sm">
+                            <div className="font-medium text-sm text-foreground">
                               {user.full_name || user.email}
                             </div>
                             <div className="text-xs text-muted-foreground flex gap-2">
@@ -490,12 +490,12 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                         />
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user.avatar_url} />
-                          <AvatarFallback>
+                          <AvatarFallback className="bg-primary/10 text-primary">
                             {getUserInitials(user.full_name, user.email)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <div className="font-medium text-sm">
+                          <div className="font-medium text-sm text-foreground">
                             {user.full_name || user.email}
                           </div>
                           <div className="text-xs text-muted-foreground flex gap-2">
