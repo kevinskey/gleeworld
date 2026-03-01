@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Mic, MicOff, X, Volume2, VolumeX, Loader2, Sparkles } from 'lucide-react';
+import { Mic, X, Volume2, VolumeX, Loader2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAudioCoordinator } from '@/hooks/useAudioCoordinator';
@@ -22,20 +22,16 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   const [isMuted, setIsMuted] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [lastReply, setLastReply] = useState('');
-  const [selectedVoiceId, setSelectedVoiceId] = useState('cgSgspJ2msm6clMCkdW9'); // Jessica default
-  const [availableVoices, setAvailableVoices] = useState<any[]>([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState('cgSgspJ2msm6clMCkdW9');
   const [showVoicePicker, setShowVoicePicker] = useState(false);
 
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const continuousListeningRef = useRef(false);
   const shouldRestartRef = useRef(false);
   const errorCountRef = useRef(0);
   const lastErrorTimeRef = useRef(0);
 
-  // Audio coordination — pause radio/music when Aria speaks
   const { requestPlayback, registerPauseCallback, unregisterPauseCallback } = useAudioCoordinator();
 
   useEffect(() => {
@@ -50,7 +46,6 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
     return () => unregisterPauseCallback('aria');
   }, [registerPauseCallback, unregisterPauseCallback]);
 
-  // Predefined ElevenLabs voices to pick from
   const voiceOptions = [
     { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', desc: 'Young, natural female' },
     { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', desc: 'Soft, warm female' },
@@ -64,34 +59,10 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
     { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric', desc: 'Friendly, conversational male' },
   ];
 
-  // Load saved voice preference
   useEffect(() => {
     const saved = localStorage.getItem('aria-voice-id');
     if (saved) setSelectedVoiceId(saved);
   }, []);
-
-  // Fetch custom voices from ElevenLabs account
-  useEffect(() => {
-    const fetchVoices = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('elevenlabs-voice-info', {
-          body: { voiceIds: voiceOptions.map(v => v.id) }
-        });
-        if (data?.voices) {
-          setAvailableVoices(data.voices);
-        }
-      } catch (err) {
-        console.log('Could not fetch voice info, using defaults');
-      }
-    };
-    if (isOpen) fetchVoices();
-  }, [isOpen]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(scrollToBottom, [messages, lastReply]);
 
   // ── Speech Recognition ──
   const startListening = useCallback(() => {
@@ -111,13 +82,11 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
 
     recognition.onstart = () => {
       setIsListening(true);
-      errorCountRef.current = 0; // Reset on successful start
+      errorCountRef.current = 0;
     };
     recognition.onend = () => {
       setIsListening(false);
-      // Auto-restart if continuous mode is still on (like ChatGPT voice)
       if (continuousListeningRef.current && shouldRestartRef.current) {
-        // Back off if we've had too many errors
         const delay = Math.min(100 + errorCountRef.current * 500, 3000);
         setTimeout(() => {
           if (continuousListeningRef.current) {
@@ -126,7 +95,6 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
               setTranscript('');
               recognition.start();
             } catch (e) {
-              console.log('Recognition restart failed, retrying...', e);
               setTimeout(() => {
                 if (continuousListeningRef.current) startListening();
               }, 1000);
@@ -137,10 +105,7 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
     };
     recognition.onerror = (e: any) => {
       const now = Date.now();
-      // Reset error count if last error was >5s ago
-      if (now - lastErrorTimeRef.current > 5000) {
-        errorCountRef.current = 0;
-      }
+      if (now - lastErrorTimeRef.current > 5000) errorCountRef.current = 0;
       lastErrorTimeRef.current = now;
       errorCountRef.current++;
 
@@ -150,12 +115,9 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
         shouldRestartRef.current = false;
         setIsListening(false);
       } else if (e.error === 'aborted' || e.error === 'no-speech') {
-        // Normal — recognition will auto-restart via onend
+        // Normal
       } else {
-        console.warn('Speech recognition error:', e.error);
-        // Stop completely after 5 rapid errors to prevent infinite loop
         if (errorCountRef.current >= 5) {
-          console.warn('Too many speech errors, stopping continuous listening');
           continuousListeningRef.current = false;
           shouldRestartRef.current = false;
           setIsListening(false);
@@ -164,7 +126,6 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
       }
     };
 
-    // Silence timeout: auto-send after user stops talking
     let silenceTimer: ReturnType<typeof setTimeout> | null = null;
 
     recognition.onresult = (e: any) => {
@@ -172,44 +133,27 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
       let final = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) {
-          final += t;
-        } else {
-          interim += t;
-        }
+        if (e.results[i].isFinal) final += t;
+        else interim += t;
       }
       if (final) {
         recognition._finalTranscript = (recognition._finalTranscript || '') + final;
         setTranscript(recognition._finalTranscript);
-
-        // Reset silence timer — send after 1.5s of silence
-        if (silenceTimer) clearTimeout(silenceTimer);
-        silenceTimer = setTimeout(() => {
-          if (recognition._finalTranscript?.trim()) {
-            const textToSend = recognition._finalTranscript.trim();
-            recognition._finalTranscript = '';
-            setTranscript('');
-            // Pause listening while processing, will resume after TTS
-            shouldRestartRef.current = false;
-            recognition.stop();
-            handleSend(textToSend);
-          }
-        }, 1500);
       } else {
         setTranscript((recognition._finalTranscript || '') + interim);
-        // Reset silence timer on interim results too
-        if (silenceTimer) clearTimeout(silenceTimer);
-        silenceTimer = setTimeout(() => {
-          if (recognition._finalTranscript?.trim()) {
-            const textToSend = recognition._finalTranscript.trim();
-            recognition._finalTranscript = '';
-            setTranscript('');
-            shouldRestartRef.current = false;
-            recognition.stop();
-            handleSend(textToSend);
-          }
-        }, 1500);
       }
+
+      if (silenceTimer) clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        if (recognition._finalTranscript?.trim()) {
+          const textToSend = recognition._finalTranscript.trim();
+          recognition._finalTranscript = '';
+          setTranscript('');
+          shouldRestartRef.current = false;
+          recognition.stop();
+          handleSend(textToSend);
+        }
+      }, 1500);
     };
 
     recognition._finalTranscript = '';
@@ -243,16 +187,12 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
       });
 
       if (error) throw new Error(error.message);
-      const reply = data?.reply || "I'm sorry, I couldn't process that.";
-      const assistantMsg: Message = { role: 'assistant', content: reply };
-      setMessages(prev => [...prev, assistantMsg]);
-      setLastReply(reply);
+      const reply = data?.reply || "I couldn't process that.";
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
 
-      // Speak the reply
       if (!isMuted) {
         await speakText(reply);
       } else {
-        // If muted, restart listening immediately
         if (continuousListeningRef.current) {
           shouldRestartRef.current = true;
           startListening();
@@ -269,7 +209,6 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   // ── ElevenLabs TTS ──
   const speakText = async (text: string) => {
     setIsSpeaking(true);
-    // Pause radio/music/other audio before Aria speaks
     requestPlayback('aria');
     try {
       const response = await fetch(
@@ -300,7 +239,6 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
       audio.onended = () => {
         setIsSpeaking(false);
         URL.revokeObjectURL(url);
-        // Auto-restart listening after speaking (ChatGPT voice mode behavior)
         if (continuousListeningRef.current) {
           shouldRestartRef.current = true;
           startListening();
@@ -336,8 +274,6 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
     toast.success('Voice updated');
   };
 
-  const selectedVoiceName = voiceOptions.find(v => v.id === selectedVoiceId)?.name || 'Custom';
-
   // ── Orb Button (collapsed) ──
   if (!isOpen) {
     return (
@@ -347,10 +283,8 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
         aria-label="Open Aria Assistant"
       >
         <div className="relative w-16 h-16">
-          {/* Pulsing rings */}
           <div className="absolute inset-0 rounded-full bg-cyan-400/20 animate-ping" style={{ animationDuration: '3s' }} />
           <div className="absolute inset-1 rounded-full bg-cyan-400/15 animate-ping" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }} />
-          {/* Core orb */}
           <div className="absolute inset-2 rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 shadow-lg shadow-cyan-500/40 flex items-center justify-center transition-transform group-hover:scale-110">
             <Sparkles className="h-6 w-6 text-white" />
           </div>
@@ -359,54 +293,83 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
     );
   }
 
-  // ── Full Overlay ──
+  // ── Voice-only orb overlay ──
   return (
-    <div className="fixed inset-0 z-[100001] flex items-end justify-center sm:items-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+    <div className="fixed inset-0 z-[100001] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={() => { stopListening(); setIsOpen(false); }} />
 
-      {/* Assistant Panel */}
-      <div className="relative w-full max-w-md mx-2 mb-2 sm:mb-0 rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-cyan-500/10"
-        style={{ background: 'linear-gradient(180deg, rgba(0,30,60,0.95) 0%, rgba(0,15,40,0.98) 100%)', maxHeight: '85vh' }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
-              <Sparkles className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <h3 className="text-white font-semibold text-sm">Aria</h3>
-              <p className="text-white/40 text-[10px]">Office Hours Assistant</p>
-            </div>
+      <div className="relative flex flex-col items-center gap-6 z-10">
+        <button
+          onClick={() => { stopListening(); setIsOpen(false); }}
+          className="absolute -top-14 right-0 p-2 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        {/* Main orb */}
+        <button
+          onClick={isListening || continuousListeningRef.current ? stopListening : startListening}
+          disabled={isThinking}
+          className="relative w-28 h-28 rounded-full flex items-center justify-center transition-all focus:outline-none"
+        >
+          {isListening && (
+            <>
+              <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping" style={{ animationDuration: '2s' }} />
+              <div className="absolute -inset-3 rounded-full bg-green-400/10 animate-ping" style={{ animationDuration: '2.5s', animationDelay: '0.3s' }} />
+              <div className="absolute -inset-6 rounded-full bg-green-400/5 animate-ping" style={{ animationDuration: '3s', animationDelay: '0.6s' }} />
+            </>
+          )}
+          {isSpeaking && (
+            <>
+              <div className="absolute inset-0 rounded-full bg-cyan-400/20 animate-ping" style={{ animationDuration: '1.5s' }} />
+              <div className="absolute -inset-3 rounded-full bg-cyan-400/10 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.3s' }} />
+            </>
+          )}
+          {isThinking && (
+            <div className="absolute inset-0 rounded-full border-2 border-cyan-400/40 border-t-transparent animate-spin" />
+          )}
+          <div className={cn(
+            "w-24 h-24 rounded-full flex items-center justify-center transition-all shadow-2xl",
+            isListening
+              ? "bg-gradient-to-br from-green-400 to-emerald-600 shadow-green-500/50"
+              : isSpeaking
+                ? "bg-gradient-to-br from-cyan-400 to-blue-600 shadow-cyan-500/50 scale-105"
+                : isThinking
+                  ? "bg-gradient-to-br from-cyan-400/60 to-blue-600/60 shadow-cyan-500/20"
+                  : "bg-gradient-to-br from-cyan-400 to-blue-600 shadow-cyan-500/40 hover:scale-105"
+          )}>
+            {isThinking ? (
+              <Loader2 className="h-10 w-10 text-white animate-spin" />
+            ) : (
+              <Mic className={cn("h-10 w-10 text-white", isSpeaking && "animate-pulse")} />
+            )}
           </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setShowVoicePicker(!showVoicePicker)}
-              className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 text-[10px] transition-colors"
-              title="Change voice"
-            >
-              🎙 {selectedVoiceName}
+        </button>
+
+        <p className="text-white/50 text-xs font-medium tracking-wide">
+          {isListening ? 'Listening...' : isSpeaking ? 'Speaking...' : isThinking ? 'Thinking...' : 'Tap to talk'}
+        </p>
+
+        {transcript && (
+          <p className="text-white/40 text-sm italic max-w-xs text-center truncate">{transcript}</p>
+        )}
+
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsMuted(!isMuted)} className="p-2 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors">
+            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </button>
+          {isSpeaking && (
+            <button onClick={stopSpeaking} className="p-2 rounded-full text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+              <VolumeX className="h-4 w-4" />
             </button>
-            <button
-              onClick={() => setIsMuted(!isMuted)}
-              className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </button>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          )}
+          <button onClick={() => setShowVoicePicker(!showVoicePicker)} className="p-2 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors text-[10px]">
+            🎙
+          </button>
         </div>
 
-        {/* Voice Picker */}
         {showVoicePicker && (
-          <div className="border-b border-white/10 bg-white/5 p-2 max-h-40 overflow-y-auto">
-            <p className="text-white/40 text-[9px] uppercase tracking-wider mb-1.5 px-1">Select Aria's Voice</p>
+          <div className="absolute -bottom-48 bg-black/90 border border-white/10 rounded-xl p-2 max-h-40 overflow-y-auto w-64 backdrop-blur-lg">
             <div className="grid grid-cols-2 gap-1">
               {voiceOptions.map(voice => (
                 <button
@@ -426,89 +389,6 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
             </div>
           </div>
         )}
-
-        {/* Messages */}
-        <div className="h-64 overflow-y-auto p-3 space-y-2.5">
-          {messages.length === 0 && !isThinking && (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400/20 to-blue-600/20 flex items-center justify-center mb-3">
-                <Sparkles className="h-7 w-7 text-cyan-400/60" />
-              </div>
-              <p className="text-white/40 text-xs">Tap the mic and ask me anything</p>
-              <p className="text-white/25 text-[10px] mt-1">Schedule, reminders, analysis, tasks...</p>
-            </div>
-          )}
-          {messages.map((msg, i) => (
-            <div key={i} className={cn("flex", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-              <div className={cn(
-                "max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed",
-                msg.role === 'user'
-                  ? "bg-cyan-600/30 text-white/90 border border-cyan-500/20"
-                  : "bg-white/8 text-white/80 border border-white/10"
-              )}>
-                {msg.content}
-              </div>
-            </div>
-          ))}
-          {isThinking && (
-            <div className="flex justify-start">
-              <div className="bg-white/8 border border-white/10 rounded-xl px-3 py-2 flex items-center gap-2">
-                <Loader2 className="h-3 w-3 animate-spin text-cyan-400" />
-                <span className="text-white/40 text-xs">Aria is thinking...</span>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Live transcript */}
-        {transcript && (
-          <div className="px-3 pb-1">
-            <div className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-white/50 text-[11px] italic">
-              {transcript}
-            </div>
-          </div>
-        )}
-
-        {/* Controls */}
-        <div className="px-4 py-3 border-t border-white/10 flex items-center justify-center gap-4">
-          {isSpeaking && (
-            <button
-              onClick={stopSpeaking}
-              className="p-2.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors"
-            >
-              <VolumeX className="h-5 w-5" />
-            </button>
-          )}
-
-          <button
-            onClick={isListening || continuousListeningRef.current ? stopListening : startListening}
-            disabled={isThinking || isSpeaking}
-            className={cn(
-              "relative p-4 rounded-full transition-all",
-              isListening
-                ? "bg-green-500 text-white shadow-lg shadow-green-500/40"
-                : (isThinking || isSpeaking)
-                  ? "bg-white/10 text-white/30 cursor-not-allowed"
-                  : "bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
-            )}
-          >
-            {isListening && (
-              <>
-                <div className="absolute inset-0 rounded-full bg-green-400/30 animate-ping" style={{ animationDuration: '2s' }} />
-                <div className="absolute -inset-1 rounded-full bg-green-400/15 animate-ping" style={{ animationDuration: '2.5s', animationDelay: '0.3s' }} />
-              </>
-            )}
-            {isListening ? <Mic className="h-6 w-6 relative z-10" /> : <Mic className="h-6 w-6" />}
-          </button>
-        </div>
-
-        {/* Status */}
-        <div className="text-center pb-2">
-          <span className="text-white/25 text-[9px]">
-            {isListening ? '🟢 Listening — speak naturally' : isSpeaking ? '🔊 Aria is speaking...' : isThinking ? '💭 Thinking...' : 'Tap mic to start conversation'}
-          </span>
-        </div>
       </div>
     </div>
   );
