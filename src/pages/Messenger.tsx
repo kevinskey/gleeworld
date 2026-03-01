@@ -642,28 +642,26 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     >
       {/* Persistent Header - hide in embedded mode */}
       {!embedded && (
-        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border backdrop-blur px-3 sm:px-6 lg:px-10 py-3 sm:py-6 bg-card shadow-lg">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border backdrop-blur px-4 sm:px-6 lg:px-10 py-2 bg-card shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="hidden sm:block">
                 <BackNavigation />
               </div>
-              <div className="rounded-lg p-2 sm:p-4 bg-primary flex-shrink-0">
-                <Mail className="h-6 w-6 sm:h-10 sm:w-10 text-primary-foreground" />
+              <div className="rounded-md p-1.5 bg-primary flex-shrink-0">
+                <Mail className="h-5 w-5 text-primary-foreground" />
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate">Messenger</h1>
-                  <Badge variant="outline" className="text-xs sm:text-base capitalize px-2 sm:px-3 py-0.5 sm:py-1 flex-shrink-0">{messengerRole}</Badge>
-                </div>
-                <p className="text-sm sm:text-base text-muted-foreground hidden sm:block">
-                  {canMessageAnyone ? 'Full access' : messengerRole === 'alumna' ? 'Alumnae & mentees' : `${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`}
-                </p>
+              <div className="min-w-0 flex items-center gap-2">
+                <h1 className="text-lg font-bold text-foreground font-cinzel tracking-wide uppercase">Messenger</h1>
+                <Badge variant="outline" className="text-xs capitalize px-2 py-0.5 flex-shrink-0">{messengerRole}</Badge>
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  {canMessageAnyone ? '· Full access' : messengerRole === 'alumna' ? '· Alumnae & mentees' : `· ${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`}
+                </span>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-1 sm:gap-3 flex-shrink-0 h-9 sm:h-11 px-2 sm:px-4">
-              <Users className="h-5 w-5 sm:h-8 sm:w-8" />
-              <span className="hidden sm:inline text-lg">Groups ({recipientGroups.length})</span>
+            <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-2 flex-shrink-0 h-8 px-3">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Groups ({recipientGroups.length})</span>
               <span className="sm:hidden text-xs">{recipientGroups.length}</span>
             </Button>
           </div>
