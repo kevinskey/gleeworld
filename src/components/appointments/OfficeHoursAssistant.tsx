@@ -29,6 +29,8 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const continuousListeningRef = useRef(false);
+  const shouldRestartRef = useRef(false);
 
   // Predefined ElevenLabs voices to pick from
   const voiceOptions = [
@@ -81,27 +83,52 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
       return;
     }
 
+    continuousListeningRef.current = true;
+    shouldRestartRef.current = true;
+
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => {
       setIsListening(false);
-      // Auto-send on speech end if there's content
-      if (recognitionRef.current?._finalTranscript) {
-        handleSend(recognitionRef.current._finalTranscript);
-        recognitionRef.current._finalTranscript = '';
+      // Auto-restart if continuous mode is still on (like ChatGPT voice)
+      if (continuousListeningRef.current && shouldRestartRef.current) {
+        setTimeout(() => {
+          if (continuousListeningRef.current) {
+            try {
+              recognition._finalTranscript = '';
+              setTranscript('');
+              recognition.start();
+            } catch (e) {
+              console.log('Recognition restart failed, retrying...', e);
+              // If start fails, create a new instance
+              setTimeout(() => {
+                if (continuousListeningRef.current) startListening();
+              }, 300);
+            }
+          }
+        }, 100);
       }
     };
     recognition.onerror = (e: any) => {
       console.error('Speech recognition error:', e);
-      setIsListening(false);
       if (e.error === 'not-allowed') {
         toast.error('Microphone access denied');
+        continuousListeningRef.current = false;
+        setIsListening(false);
+      } else if (e.error === 'aborted' || e.error === 'no-speech') {
+        // These are normal — recognition will auto-restart via onend
+      } else {
+        setIsListening(false);
       }
     };
+
+    // Silence timeout: auto-send after user stops talking
+    let silenceTimer: ReturnType<typeof setTimeout> | null = null;
+
     recognition.onresult = (e: any) => {
       let interim = '';
       let final = '';
@@ -116,8 +143,34 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
       if (final) {
         recognition._finalTranscript = (recognition._finalTranscript || '') + final;
         setTranscript(recognition._finalTranscript);
+
+        // Reset silence timer — send after 1.5s of silence
+        if (silenceTimer) clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+          if (recognition._finalTranscript?.trim()) {
+            const textToSend = recognition._finalTranscript.trim();
+            recognition._finalTranscript = '';
+            setTranscript('');
+            // Pause listening while processing, will resume after TTS
+            shouldRestartRef.current = false;
+            recognition.stop();
+            handleSend(textToSend);
+          }
+        }, 1500);
       } else {
         setTranscript((recognition._finalTranscript || '') + interim);
+        // Reset silence timer on interim results too
+        if (silenceTimer) clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+          if (recognition._finalTranscript?.trim()) {
+            const textToSend = recognition._finalTranscript.trim();
+            recognition._finalTranscript = '';
+            setTranscript('');
+            shouldRestartRef.current = false;
+            recognition.stop();
+            handleSend(textToSend);
+          }
+        }, 1500);
       }
     };
 
@@ -128,6 +181,8 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   }, []);
 
   const stopListening = useCallback(() => {
+    continuousListeningRef.current = false;
+    shouldRestartRef.current = false;
     recognitionRef.current?.stop();
   }, []);
 
@@ -158,6 +213,12 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
       // Speak the reply
       if (!isMuted) {
         await speakText(reply);
+      } else {
+        // If muted, restart listening immediately
+        if (continuousListeningRef.current) {
+          shouldRestartRef.current = true;
+          startListening();
+        }
       }
     } catch (err: any) {
       console.error('Assistant error:', err);
@@ -199,10 +260,19 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
       audio.onended = () => {
         setIsSpeaking(false);
         URL.revokeObjectURL(url);
+        // Auto-restart listening after speaking (ChatGPT voice mode behavior)
+        if (continuousListeningRef.current) {
+          shouldRestartRef.current = true;
+          startListening();
+        }
       };
       audio.onerror = () => {
         setIsSpeaking(false);
         URL.revokeObjectURL(url);
+        if (continuousListeningRef.current) {
+          shouldRestartRef.current = true;
+          startListening();
+        }
       };
       await audio.play();
     } catch (err) {
@@ -372,31 +442,31 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
           )}
 
           <button
-            onClick={isListening ? stopListening : startListening}
-            disabled={isThinking}
+            onClick={isListening || continuousListeningRef.current ? stopListening : startListening}
+            disabled={isThinking || isSpeaking}
             className={cn(
               "relative p-4 rounded-full transition-all",
               isListening
-                ? "bg-red-500 text-white shadow-lg shadow-red-500/40"
-                : isThinking
+                ? "bg-green-500 text-white shadow-lg shadow-green-500/40"
+                : (isThinking || isSpeaking)
                   ? "bg-white/10 text-white/30 cursor-not-allowed"
                   : "bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105"
             )}
           >
             {isListening && (
               <>
-                <div className="absolute inset-0 rounded-full bg-red-400/30 animate-ping" />
-                <div className="absolute -inset-1 rounded-full bg-red-400/15 animate-ping" style={{ animationDelay: '0.3s' }} />
+                <div className="absolute inset-0 rounded-full bg-green-400/30 animate-ping" style={{ animationDuration: '2s' }} />
+                <div className="absolute -inset-1 rounded-full bg-green-400/15 animate-ping" style={{ animationDuration: '2.5s', animationDelay: '0.3s' }} />
               </>
             )}
-            {isListening ? <MicOff className="h-6 w-6 relative z-10" /> : <Mic className="h-6 w-6" />}
+            {isListening ? <Mic className="h-6 w-6 relative z-10" /> : <Mic className="h-6 w-6" />}
           </button>
         </div>
 
         {/* Status */}
         <div className="text-center pb-2">
           <span className="text-white/25 text-[9px]">
-            {isListening ? '🔴 Listening...' : isSpeaking ? '🔊 Speaking...' : isThinking ? '💭 Thinking...' : 'Tap mic to talk to Aria'}
+            {isListening ? '🟢 Listening — speak naturally' : isSpeaking ? '🔊 Aria is speaking...' : isThinking ? '💭 Thinking...' : 'Tap mic to start conversation'}
           </span>
         </div>
       </div>
