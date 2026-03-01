@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import underwaterBg from '@/assets/underwater-bg.jpg';
+import { OfficeHoursAssistant } from './OfficeHoursAssistant';
 
 type AdminTab = 'today' | 'upcoming' | 'past';
 type DashboardSection = 'appointments' | 'communications' | 'availability' | 'reminders' | 'settings';
@@ -672,6 +673,9 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
       </Dialog>
       </div>{/* end content layer */}
       </div>{/* end relative wrapper */}
+
+      {/* Aria AI Assistant */}
+      <OfficeHoursAssistant appointments={allAppointments} />
     </UniversalLayout>
   );
 };
