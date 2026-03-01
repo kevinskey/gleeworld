@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,7 +21,8 @@ import {
   Calendar as CalendarIcon, CalendarDays, Clock, User, Mail, Phone,
   Loader2, CheckCircle2, XCircle, AlertCircle, Send, MessageSquare,
   Settings, RefreshCw, Ban, ThumbsUp, ThumbsDown, ChevronDown,
-  Globe, Wifi, Bell, Plus, Trash2, ShieldAlert, CalendarOff, CalendarPlus
+  Globe, Wifi, Bell, Plus, Trash2, ShieldAlert, CalendarOff, CalendarPlus,
+  LayoutGrid, GraduationCap
 } from 'lucide-react';
 import { format, isToday, isFuture, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -29,13 +30,22 @@ import { toast } from 'sonner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import underwaterBg from '@/assets/underwater-bg.jpg';
 import { OfficeHoursAssistant } from './OfficeHoursAssistant';
+import { useUserProfile } from '@/hooks/useUserProfile';
+
+// Lazy-load Control Center tabs
+const CommandCenterCalendar = lazy(() => import('@/components/calendar/command-center').then(m => ({ default: m.CommandCenterCalendar })));
+const GleeAcademyDashboardCard = lazy(() => import('@/components/user-dashboard/GleeAcademyDashboardCard').then(m => ({ default: m.GleeAcademyDashboardCard })));
+const MyModules = lazy(() => import('@/components/dashboard/MyModules').then(m => ({ default: m.MyModules })));
 
 type AdminTab = 'today' | 'upcoming' | 'past';
 type DashboardSection = 'appointments' | 'communications' | 'availability' | 'reminders' | 'settings';
+type ControlCenterTab = 'appts' | 'calendar' | 'academy' | 'modules';
 
 export const AdminOfficeHoursDashboard: React.FC = () => {
   const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
   const queryClient = useQueryClient();
+  const [controlTab, setControlTab] = useState<ControlCenterTab>('appts');
 
   const [adminTab, setAdminTab] = useState<AdminTab>('today');
   const [activeSection, setActiveSection] = useState<DashboardSection>('appointments');
@@ -276,7 +286,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
           <div className="w-full py-3 sm:py-6" style={{ backgroundColor: 'rgba(0, 54, 102, 0.85)', backdropFilter: 'blur(8px)' }}>
             <div className="px-3 sm:px-8 flex flex-col items-center">
               <h1 className="text-center tracking-wide text-white text-xl sm:text-4xl font-bold font-['Bebas_Neue']">
-                OFFICE HOURS DASHBOARD
+                CONTROL CENTER
               </h1>
               <p className="text-center text-white/70 text-[11px] sm:text-sm mt-0.5">
                 {pendingAppointments.length > 0 && (
@@ -288,6 +298,33 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
           </div>
 
           <div className="w-full px-2 sm:px-6 md:px-8 py-2 sm:py-6">
+            {/* Control Center Top-Level Tabs */}
+            <div className="flex gap-0.5 mb-3 bg-white/10 backdrop-blur-md rounded-lg p-0.5 border border-white/10">
+              {([
+                { key: 'appts' as const, label: 'Appts', icon: CalendarDays },
+                { key: 'calendar' as const, label: 'Calendar', icon: CalendarIcon },
+                { key: 'academy' as const, label: 'Academy', icon: GraduationCap },
+                { key: 'modules' as const, label: 'Modules', icon: LayoutGrid },
+              ]).map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setControlTab(tab.key)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-semibold rounded-md transition-colors",
+                    controlTab === tab.key
+                      ? "bg-white/25 text-white shadow-md backdrop-blur-sm border border-white/20"
+                      : "text-white/60 hover:text-white hover:bg-white/10"
+                  )}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* ═══ APPTS TAB ═══ */}
+            {controlTab === 'appts' && (
+            <>
             {/* Section Navigation */}
             <div className="flex gap-0.5 mb-3 bg-white/10 backdrop-blur-md rounded-lg p-0.5 border border-white/10">
           {sectionTabs.map(tab => (
@@ -588,7 +625,43 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
             </Card>
           </div>
         )}
-      </div>
+            </>
+            )}
+
+            {/* ═══ CALENDAR TAB ═══ */}
+            {controlTab === 'calendar' && (
+              <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-white/60" /></div>}>
+                <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md">
+                  <CommandCenterCalendar />
+                </div>
+              </Suspense>
+            )}
+
+            {/* ═══ ACADEMY TAB ═══ */}
+            {controlTab === 'academy' && (
+              <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-white/60" /></div>}>
+                <div className="rounded-xl overflow-hidden border border-white/10">
+                  <GleeAcademyDashboardCard />
+                </div>
+              </Suspense>
+            )}
+
+            {/* ═══ MODULES TAB ═══ */}
+            {controlTab === 'modules' && user && userProfile && (
+              <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-white/60" /></div>}>
+                <div className="rounded-xl overflow-hidden">
+                  <MyModules userProfile={{
+                    user_id: user.id,
+                    role: userProfile.role,
+                    is_admin: userProfile.is_admin,
+                    is_super_admin: userProfile.is_super_admin,
+                    is_exec_board: userProfile.is_exec_board,
+                    exec_board_role: userProfile.exec_board_role,
+                  }} />
+                </div>
+              </Suspense>
+            )}
+          </div>
 
       {/* ═══ ACTION DIALOG ═══ */}
       <Dialog open={!!actionDialog} onOpenChange={(open) => { if (!open) { setActionDialog(null); setActionReason(''); setSmsMessage(''); } }}>

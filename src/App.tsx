@@ -608,6 +608,15 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
+              {/* Control Center alias */}
+              <Route 
+                path="/control-center" 
+                element={
+                  <ProtectedRoute>
+                    <BookAppointmentPage />
+                  </ProtectedRoute>
+                } 
+              />
 
               {/* Legacy redirects to new academy structure */}
               <Route path="/glee-club-course" element={<Navigate to="/academy/mus-070" replace />} />

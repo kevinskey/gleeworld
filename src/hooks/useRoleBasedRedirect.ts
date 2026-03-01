@@ -126,6 +126,7 @@ export const useRoleBasedRedirect = () => {
     // Also skip redirect if user is already on their target dashboard
     const isOnTargetPage = location.pathname.includes('/admin') || 
                           location.pathname.includes('/dashboard') || 
+                          location.pathname.includes('/control-center') ||
                           location.pathname.includes('/fan') || 
                           location.pathname.includes('/alumnae') ||
                           location.pathname.startsWith('/classes/mus240') ||
@@ -152,6 +153,7 @@ export const useRoleBasedRedirect = () => {
           location.pathname.startsWith('/academy') ||
           location.pathname.startsWith('/grading') ||
           location.pathname.startsWith('/admin') ||
+          location.pathname.startsWith('/control-center') ||
           (location.pathname.includes('/dashboard') && !isStudentRole)) {
         console.log('🛑 useRoleBasedRedirect: User on specific area, not redirecting');
         return;
@@ -167,10 +169,10 @@ export const useRoleBasedRedirect = () => {
         }
       }
 
-      // PRIORITY 1: Super Admin -> Admin Panel  
+      // PRIORITY 1: Super Admin -> Control Center  
       if (userProfile.is_super_admin || userProfile.role === 'super-admin') {
-        console.log('🚀 useRoleBasedRedirect: Super Admin redirect to /dashboard');
-        navigate('/dashboard', { replace: true });
+        console.log('🚀 useRoleBasedRedirect: Super Admin redirect to /control-center');
+        navigate('/control-center', { replace: true });
         return;
       }
 

@@ -47,8 +47,10 @@ export const HomeRoute = () => {
       }
       
       // Only redirect to dashboard if user is intentionally visiting root
-      if (userProfile.is_super_admin || userProfile.role === 'super-admin' || 
-          userProfile.is_admin || userProfile.role === 'admin' || 
+      if (userProfile.is_super_admin || userProfile.role === 'super-admin') {
+        console.log('🚀 HomeRoute: Force redirecting super-admin to control center');
+        navigate('/control-center', { replace: true });
+      } else if (userProfile.is_admin || userProfile.role === 'admin' || 
           userProfile.is_exec_board) {
         console.log('🚀 HomeRoute: Force redirecting admin/executive to dashboard');
         navigate('/dashboard', { replace: true });
