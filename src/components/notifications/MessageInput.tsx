@@ -91,8 +91,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         </Button>
 
         <div className={cn(
-          'flex-1 flex items-end gap-1.5 p-1.5 rounded-2xl border transition-all',
-          isFocused ? 'border-[hsl(var(--message-header))]/50 bg-background shadow-sm' : 'border-border bg-card'
+          'flex-1 flex items-end gap-1.5 p-1.5 rounded-2xl border-2 transition-all',
+          isFocused ? 'border-primary bg-background shadow-md' : 'border-border bg-card'
         )}>
           <div className="flex-1 relative">
             <Textarea
@@ -134,7 +134,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             onClick={handleSend}
             disabled={!canSend}
             size="sm"
-            className="h-10 w-10 p-0 flex-shrink-0 rounded-full bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 touch-manipulation"
+            className="h-10 w-10 p-0 flex-shrink-0 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground touch-manipulation"
           >
             <Send className="h-4 w-4" />
           </Button>

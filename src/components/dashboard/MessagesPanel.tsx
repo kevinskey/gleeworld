@@ -25,7 +25,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
       {/* Full-page content */}
       <div className="relative z-10 flex flex-col h-full">
         {/* Header */}
-        <div className="flex-shrink-0 bg-[hsl(var(--message-header))] text-white px-6 py-3 flex items-center justify-between">
+        <div className="flex-shrink-0 bg-primary text-primary-foreground px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-lg font-semibold">GleeWorld Messenger</span>
             <span className="text-sm text-white/70">Send branded emails and SMS to members</span>
@@ -34,7 +34,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="h-10 w-10 rounded-full text-white hover:bg-white/20"
+            className="h-10 w-10 rounded-full text-primary-foreground hover:bg-white/20"
           >
             <X className="h-5 w-5" />
           </Button>

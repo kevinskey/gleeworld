@@ -28,7 +28,7 @@ const highlightMentions = (text: string | undefined) => {
   return parts.map((part, index) => {
     if (part.startsWith('@')) {
       return (
-        <span key={index} className="font-semibold text-[hsl(var(--message-header))] bg-[hsl(var(--message-header))]/10 px-1 rounded">
+        <span key={index} className="font-semibold text-primary bg-primary/10 px-1 rounded">
           {part}
         </span>
       );
@@ -57,7 +57,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
       {/* Avatar for received messages */}
       {!isOutbound && (
         <Avatar className="h-6 w-6 md:h-9 md:w-9 flex-shrink-0 mt-0.5">
-          <AvatarFallback className="bg-[hsl(var(--message-header))]/20 text-[hsl(var(--message-header))] text-[9px] md:text-xs font-medium">
+          <AvatarFallback className="bg-primary/15 text-primary text-[9px] md:text-xs font-medium">
             {senderInitials}
           </AvatarFallback>
         </Avatar>
@@ -71,7 +71,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
       )}>
         {/* Sender name for inbound messages */}
         {!isOutbound && message.sender_name && (
-          <div className="text-[10px] md:text-xs font-semibold text-[hsl(var(--message-header))] mb-0.5 md:mb-1">
+          <div className="text-[10px] md:text-xs font-semibold text-primary mb-0.5 md:mb-1">
             {message.sender_name}
           </div>
         )}

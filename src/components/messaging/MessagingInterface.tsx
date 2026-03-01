@@ -56,7 +56,7 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
       {showGroupsList ? (
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex-shrink-0 bg-[hsl(var(--message-header))] text-white px-4 py-3 shadow-md">
+          <div className="flex-shrink-0 bg-primary text-primary-foreground px-4 py-3 shadow-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <MessageSquare className="h-6 w-6" />
@@ -68,7 +68,7 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="gap-1.5 text-white hover:bg-white/20"
+                    className="gap-1.5 text-primary-foreground hover:bg-white/20"
                     onClick={() => setShowDirectMessages(true)}
                   >
                     <UserPlus className="h-4 w-4" />
