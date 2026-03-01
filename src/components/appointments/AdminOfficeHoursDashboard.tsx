@@ -254,8 +254,8 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
         {/* CSS Animations */}
         <style>{`
            @keyframes underwaterPan {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
+            0% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
           }
           @keyframes underwaterRays {
             0% { transform: translateX(-20px) skewX(-2deg); opacity: 0.15; }
