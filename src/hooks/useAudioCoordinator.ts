@@ -12,7 +12,7 @@ import { create } from 'zustand';
  * - global: Global audio player (useGlobalAudioPlayer)
  */
 
-export type AudioSource = 'radio' | 'music' | 'global' | 'course' | 'none';
+export type AudioSource = 'radio' | 'music' | 'global' | 'course' | 'aria' | 'none';
 
 interface AudioCoordinatorState {
   activeSource: AudioSource;
