@@ -1,23 +1,33 @@
 
-# Add Contract Signing Indicator to Tour Roster
 
-## What You'll See
-Each student on the tour roster will show a small indicator next to their name showing whether they have signed their tour contract or not. Students who haven't signed will be clearly highlighted so tour managers can follow up.
+## Backfill Glee Cam Photos with Course ID
 
-## How It Works
-- When the roster loads, the system will also fetch all tour contract signatures
-- Each roster member row will display a small badge: a green checkmark for "Signed" or a red/amber warning for "Not Signed"
-- A summary strip at the top will show "X of Y contracts signed" so managers can see the overall status at a glance
+### Problem
+All 37 existing approved Glee Cam photos have `course_id = NULL`. The `GleeCamCard` component filters by `course_id` when viewing a course page, so these photos are invisible on course-specific sliders (e.g., MUS 070).
 
-## Technical Details
+### Solution
 
-### File: `src/components/tour/TourRosterSection.tsx`
-- In `fetchData`, add a query to `tour_contract_signatures` filtered by the known tour contract ID (`99ad60d3-0e94-41b2-b4f9-1b03146c62c9`) to get the list of `user_id`s who have signed
-- Store the signed user IDs in a `Set` state variable
-- In the roster member row (around line 304-350), add a contract status indicator:
-  - If user_id is in the signed set: green "Signed" badge with a check icon
-  - If not: amber/red "Not Signed" badge with an alert icon
-- Add a new summary chip to the status strip (lines 247-268) showing contract completion: e.g., "Contracts: 12/18 signed"
+**1. Data Backfill** -- Assign all existing photos to MUS 070 (Glee Club)
 
-### No database or schema changes needed
-The `tour_contract_signatures` table already exists with `user_id` and `contract_id` columns.
+Update all 37 approved image records in `quick_capture_media` that have `course_id IS NULL` to use the MUS 070 course UUID (`a0000000-0000-0000-0000-000000000070`). These are all Glee Club member photos, so this is the correct association.
+
+```sql
+UPDATE quick_capture_media
+SET course_id = 'a0000000-0000-0000-0000-000000000070'
+WHERE file_type LIKE 'image/%'
+  AND is_approved = true
+  AND course_id IS NULL;
+```
+
+**2. Add Fallback Logic to GleeCamCard** -- Show general photos when no course-specific ones exist
+
+Modify `src/components/dashboard/GleeCamCard.tsx` so that when viewing a course page and no course-tagged photos are found, it falls back to showing general (non-course-tagged) photos. This prevents empty sliders for courses that haven't accumulated their own photos yet.
+
+The change is in the `fetchPhotos` function: after querying with the `course_id` filter, if zero results come back, re-query without the filter.
+
+### Technical Details
+
+- **File changed**: `src/components/dashboard/GleeCamCard.tsx` (fallback query logic)
+- **Data update**: 37 rows in `quick_capture_media` via the data insert tool
+- No schema changes needed; the `course_id` column already exists
+
