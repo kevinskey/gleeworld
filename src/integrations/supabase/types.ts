@@ -20682,6 +20682,7 @@ export type Database = {
           city_id: string | null
           created_at: string
           created_by: string | null
+          description: string | null
           display_order: number | null
           end_time: string | null
           event_category: string
@@ -20703,6 +20704,7 @@ export type Database = {
           city_id?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           display_order?: number | null
           end_time?: string | null
           event_category?: string
@@ -20724,6 +20726,7 @@ export type Database = {
           city_id?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           display_order?: number | null
           end_time?: string | null
           event_category?: string

@@ -48,6 +48,7 @@ const TARGET_GROUPS = [
 interface UnifiedTimelineEvent {
   id: string;
   label: string;
+  description: string | null;
   event_category: string;
   event_date: string;
   event_time: string | null;
@@ -89,6 +90,7 @@ export const TourLogisticsSection = () => {
   // New event form state
   const [newEvent, setNewEvent] = useState({
     label: '',
+    description: '',
     event_category: 'call_time',
     event_date: '',
     event_time: '',
@@ -141,6 +143,7 @@ export const TourLogisticsSection = () => {
         unified.push({
           id: e.id,
           label: e.label,
+          description: (e as any).description || null,
           event_category: e.event_category,
           event_date: e.event_date,
           event_time: e.event_time,
@@ -161,6 +164,7 @@ export const TourLogisticsSection = () => {
           unified.push({
             id: `route-arrival-${city.id}`,
             label: `Arrive in ${city.city_name}`,
+            description: null,
             event_category: 'transport',
             event_date: city.arrival_date,
             event_time: city.arrival_time,
@@ -178,6 +182,7 @@ export const TourLogisticsSection = () => {
           unified.push({
             id: `route-depart-${city.id}`,
             label: `Depart ${city.city_name}`,
+            description: null,
             event_category: 'transport',
             event_date: city.departure_date,
             event_time: city.departure_time,
@@ -239,6 +244,7 @@ export const TourLogisticsSection = () => {
       const { error } = await supabase.from('gw_tour_timeline_events').insert({
         tour_id: selectedTourId,
         label: newEvent.label,
+        description: newEvent.description || null,
         event_category: newEvent.event_category,
         event_date: newEvent.event_date,
         event_time: newEvent.event_time || null,
@@ -254,7 +260,7 @@ export const TourLogisticsSection = () => {
       if (error) throw error;
       toast.success('Event added');
       setIsAddingEvent(false);
-      setNewEvent({ label: '', event_category: 'call_time', event_date: '', event_time: '', end_time: '', target_group: 'all', notes: '', location: '', status: 'pending' });
+      setNewEvent({ label: '', description: '', event_category: 'call_time', event_date: '', event_time: '', end_time: '', target_group: 'all', notes: '', location: '', status: 'pending' });
       fetchTimeline();
     } catch (err: any) {
       toast.error(err.message || 'Failed to add event');
@@ -456,6 +462,15 @@ export const TourLogisticsSection = () => {
                   onChange={e => setNewEvent(p => ({ ...p, label: e.target.value }))}
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Description</Label>
+                <Textarea
+                  className="h-16"
+                  placeholder="What is this event about? Details for the tour manager..."
+                  value={newEvent.description}
+                  onChange={e => setNewEvent(p => ({ ...p, description: e.target.value }))}
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Category</Label>
@@ -608,6 +623,9 @@ export const TourLogisticsSection = () => {
                               )}
                             </div>
                           </div>
+                          {event.description && (
+                            <p className="mt-1 text-xs text-foreground/70">{event.description}</p>
+                          )}
                           {(event.location || event.notes || event.city_name) && (
                             <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                               {event.location && (
