@@ -38,9 +38,15 @@ serve(async (req) => {
       throw new Error('Failed to download signed contract PDF');
     }
 
-    // Convert to base64 for email attachment
+    // Convert to base64 for email attachment (chunked to avoid stack overflow)
     const arrayBuffer = await fileData.arrayBuffer();
-    const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+    }
+    const base64Pdf = btoa(binary);
 
     // Send email via Resend
     const emailResponse = await fetch('https://api.resend.com/emails', {
