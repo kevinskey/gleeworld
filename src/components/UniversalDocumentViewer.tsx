@@ -36,7 +36,7 @@ export const UniversalDocumentViewer = ({
         __html: `
           .universal-document-viewer {
             line-height: 1.7;
-            color: hsl(var(--foreground));
+            color: #1a1a1a;
             word-wrap: break-word;
             overflow-wrap: break-word;
             width: 100%;
@@ -49,7 +49,7 @@ export const UniversalDocumentViewer = ({
           .universal-document-viewer h4,
           .universal-document-viewer h5,
           .universal-document-viewer h6 {
-            color: hsl(var(--foreground));
+            color: #1a1a1a;
             word-wrap: break-word;
             overflow-wrap: break-word;
             margin-top: 1.5rem;
@@ -190,7 +190,7 @@ export const UniversalDocumentViewer = ({
           print:max-w-none print:w-[8.5in] print:shadow-none print:rounded-none
           ${className}
         `}
-        style={{ backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--card-foreground))' }}
+        style={{ backgroundColor: '#ffffff', color: '#1a1a1a' }}
       >
         {(title || subtitle) && (
           <div className="border-b border-border p-4 md:p-6">
