@@ -90,6 +90,8 @@ export const publishTourToCalendar = async () => {
     attendance_type: e.event_type === 'performance' ? 'required' : 'none',
   }));
 
+  console.log('INSERTING EVENTS - sample:', JSON.stringify(eventsToInsert[0]));
+
   const { data, error } = await supabase
     .from('gw_events')
     .insert(eventsToInsert)
