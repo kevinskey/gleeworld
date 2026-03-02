@@ -208,7 +208,7 @@ export const StudentTourView: React.FC = () => {
           {hasSigned ? (
             <div className="flex items-center gap-2 bg-primary-foreground/10 rounded-lg px-4 py-2.5">
               <CheckCircle2 className="h-4 w-4 text-green-400" />
-              <span className="text-sm text-primary-foreground font-medium">Tour Contract Signed ✓</span>
+              <span className="text-sm text-primary-foreground font-medium">Thank You for Signing Your Tour Contract ✓</span>
             </div>
           ) : (
             <Button
