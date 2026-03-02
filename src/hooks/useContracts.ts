@@ -51,21 +51,8 @@ export const useContracts = () => {
         .from('contracts_v2')
         .select('*');
 
-      if (isSuperAdmin || isExecBoard) {
-        // Super admins and exec board see all contracts (no filter)
-      } else if (isAdmin) {
-        // Admins see all contracts EXCEPT those created by super admins
-        const { data: superAdmins } = await supabase
-          .from('gw_profiles')
-          .select('user_id')
-          .eq('is_super_admin', true)
-          .not('user_id', 'is', null);
-        
-        const superAdminIds = (superAdmins || []).map(sa => sa.user_id).filter(id => id && id.length > 0);
-        
-        if (superAdminIds.length > 0) {
-          query = query.not('created_by', 'in', `(${superAdminIds.join(',')})`);
-        }
+      if (isSuperAdmin || isExecBoard || isAdmin) {
+        // All admin-level roles see all contracts (no filter)
       } else {
         // Regular users only see their own contracts
         query = query.eq('created_by', user.id);
