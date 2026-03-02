@@ -15,8 +15,9 @@ interface TourCalendarEvent {
 
 export const publishTourToCalendar = async () => {
   // Get current user for created_by field
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('You must be logged in to publish tour events');
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  console.log('publishTourToCalendar: user =', user?.id, 'error =', userError?.message);
+  if (!user?.id) throw new Error('You must be logged in to publish tour events');
 
   // First, remove any previously published tour events to avoid duplicates
   const { error: deleteError } = await supabase
