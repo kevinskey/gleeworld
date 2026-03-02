@@ -178,9 +178,9 @@ export const TourContractSigningModal: React.FC<TourContractSigningModalProps> =
 
       if (sigError) throw sigError;
 
-      // 4. Save to "Students Tour Contracts" folder in tour documents
-      const STUDENTS_TOUR_CONTRACTS_FOLDER_ID = '57e3e2cf-11f2-4638-a364-0ac04a9af9c0';
-      const folderId = STUDENTS_TOUR_CONTRACTS_FOLDER_ID;
+      // 4. Save to "Student Tour Documents" folder in tour documents
+      const STUDENT_TOUR_DOCS_FOLDER_ID = '6f0188aa-290b-4a18-a2a8-9d06658bd011';
+      const folderId = STUDENT_TOUR_DOCS_FOLDER_ID;
 
       // 5. Add document to media library for tour docs page
       const { data: publicUrl } = supabase.storage.from('user-files').getPublicUrl(fileName);
