@@ -1,42 +1,23 @@
 
-# Restore Glee Cam: Photos Appear in Course Landing Slider
+# Add Contract Signing Indicator to Tour Roster
 
-## Overview
-When a user taps the Camera button, selects "Glee Cam", and takes a photo, that photo will automatically appear in the **CourseTopicSlider** on the landing page of their currently selected course. This creates a live, student-driven photo feed on each class landing page.
+## What You'll See
+Each student on the tour roster will show a small indicator next to their name showing whether they have signed their tour contract or not. Students who haven't signed will be clearly highlighted so tour managers can follow up.
 
-## How It Works Today
-- Users tap Camera -> Photo -> Glee Cam -> take photo -> saved to `quick_capture_media` table
-- The `quick_capture_media` table already has a `course_id` column (currently unused)
-- The `GleeCamCard` component shows a scrolling strip of photos but doesn't filter by course
-- Each course landing page has a `CourseTopicSlider` that reads from the `gw_universal_sliders` system (admin-managed slides only)
-- The `sync-glee-cam-to-heroes` edge function syncs photos to `dashboard_hero_slides` (the main homepage hero, not course-specific)
-
-## Plan
-
-### 1. Save course_id when capturing a Glee Cam photo
-- Update `CategorizedQuickCapture.tsx` to import `useCourseContext` and include the `selectedCourseId` in the `quick_capture_media` insert
-- This tags every Glee Cam photo with the course the user had selected
-
-### 2. Add a Course Cam slider component to the course landing page
-- Create a new `CourseCamSlider` component that queries `quick_capture_media` filtered by `course_id` and `category = 'glee_cam_pic'` and `is_approved = true`
-- Display these photos in a compact Embla carousel (similar to the existing `GleeCamCard` marquee style)
-- Show the photos in reverse chronological order so newest appear first
-
-### 3. Add CourseCamSlider to course landing pages
-- Add the `CourseCamSlider` to `MobileCourseLanding.tsx` (below the CourseTopicSlider or replacing it contextually)
-- Also add it to the desktop course views (`TeachingFirstHome`, `StudentDossierHome`) where the `GleeCamCard` or `CourseTopicSlider` appears
-
-### 4. Update GleeCamCard to filter by course when in course view
-- The existing `GleeCamCard` already has course-aware logic scaffolded (`isInCourseView`, `selectedCourseId`) but the query doesn't filter by `course_id`
-- Add `.eq('course_id', selectedCourseId)` to the query when `isInCourseView` is true
+## How It Works
+- When the roster loads, the system will also fetch all tour contract signatures
+- Each roster member row will display a small badge: a green checkmark for "Signed" or a red/amber warning for "Not Signed"
+- A summary strip at the top will show "X of Y contracts signed" so managers can see the overall status at a glance
 
 ## Technical Details
 
-### Files to modify:
-- **`src/components/quick-capture/CategorizedQuickCapture.tsx`** -- Add `useCourseContext` import, include `course_id: selectedCourseId` in the insert data for glee_cam_pic/glee_cam_video categories
-- **`src/components/dashboard/GleeCamCard.tsx`** -- Add course_id filter to the query when `isInCourseView && selectedCourseId`
-- **`src/components/course/MobileCourseLanding.tsx`** -- Import and render the `GleeCamCard` component with course awareness
-- **`src/components/academy/TeachingFirstHome.tsx`** and **`src/components/academy/StudentDossierHome.tsx`** -- Add `GleeCamCard` to desktop course views
+### File: `src/components/tour/TourRosterSection.tsx`
+- In `fetchData`, add a query to `tour_contract_signatures` filtered by the known tour contract ID (`99ad60d3-0e94-41b2-b4f9-1b03146c62c9`) to get the list of `user_id`s who have signed
+- Store the signed user IDs in a `Set` state variable
+- In the roster member row (around line 304-350), add a contract status indicator:
+  - If user_id is in the signed set: green "Signed" badge with a check icon
+  - If not: amber/red "Not Signed" badge with an alert icon
+- Add a new summary chip to the status strip (lines 247-268) showing contract completion: e.g., "Contracts: 12/18 signed"
 
-### No database changes needed
-The `quick_capture_media` table already has a `course_id` column with a foreign key to courses. We just need to start populating it and querying by it.
+### No database or schema changes needed
+The `tour_contract_signatures` table already exists with `user_id` and `contract_id` columns.
