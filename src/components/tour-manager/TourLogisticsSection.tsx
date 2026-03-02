@@ -12,13 +12,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Clock, Bus, MapPin, Music, Users, Package, CheckCircle2, Plus, Edit, Save, Calendar,
   ShoppingBag, ClipboardList, UserCheck, Timer, DoorOpen, Trash2, Utensils, Megaphone,
-  ArrowRight, Mic, Loader2, AlertCircle
+  ArrowRight, Mic, Loader2, AlertCircle, CalendarPlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
+import { publishTourToCalendar } from '@/utils/publishTourToCalendar';
 
 // Category configuration
 const EVENT_CATEGORIES = [
@@ -83,6 +84,7 @@ export const TourLogisticsSection = () => {
   const [saving, setSaving] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [publishing, setPublishing] = useState(false);
 
   // New event form state
   const [newEvent, setNewEvent] = useState({
@@ -301,6 +303,19 @@ export const TourLogisticsSection = () => {
 
   const selectedTour = tours.find(t => t.id === selectedTourId);
 
+  const handlePublishToCalendar = async () => {
+    setPublishing(true);
+    try {
+      const result = await publishTourToCalendar();
+      toast.success(`Published ${result?.length || 0} tour events to MUS 070 calendar`);
+    } catch (err: any) {
+      toast.error('Failed to publish: ' + (err.message || 'Unknown error'));
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+
   return (
     <div className="space-y-4">
       {/* Header with tour selector */}
@@ -309,18 +324,30 @@ export const TourLogisticsSection = () => {
           <h2 className="text-xl font-bold text-foreground">Unified Operations Timeline</h2>
           <p className="text-sm text-muted-foreground">All call times, transport, performances, meals, and crew schedules</p>
         </div>
-        <Select value={selectedTourId} onValueChange={setSelectedTourId}>
-          <SelectTrigger className="w-[260px] bg-card border-border">
-            <SelectValue placeholder="Select Tour" />
-          </SelectTrigger>
-          <SelectContent>
-            {tours.map(t => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.name} ({t.status || 'planning'})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePublishToCalendar}
+            disabled={publishing || !selectedTourId}
+            className="gap-1.5"
+          >
+            {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CalendarPlus className="h-3.5 w-3.5" />}
+            {publishing ? 'Publishing...' : 'Publish to MUS 070 Calendar'}
+          </Button>
+          <Select value={selectedTourId} onValueChange={setSelectedTourId}>
+            <SelectTrigger className="w-[260px] bg-card border-border">
+              <SelectValue placeholder="Select Tour" />
+            </SelectTrigger>
+            <SelectContent>
+              {tours.map(t => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name} ({t.status || 'planning'})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Quick stats strip */}
