@@ -252,6 +252,10 @@ export const TourLogisticsSection = () => {
       toast.error('Label and date are required');
       return;
     }
+    if (!user?.id) {
+      toast.error('You must be logged in to add events');
+      return;
+    }
     setSaving(true);
     try {
       const { error } = await supabase.from('gw_tour_timeline_events').insert({
