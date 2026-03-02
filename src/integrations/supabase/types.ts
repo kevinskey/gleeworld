@@ -20681,7 +20681,7 @@ export type Database = {
           assigned_to: string[] | null
           city_id: string | null
           created_at: string
-          created_by: string | null
+          created_by: string
           description: string | null
           display_order: number | null
           end_time: string | null
@@ -20703,7 +20703,7 @@ export type Database = {
           assigned_to?: string[] | null
           city_id?: string | null
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           description?: string | null
           display_order?: number | null
           end_time?: string | null
@@ -20725,7 +20725,7 @@ export type Database = {
           assigned_to?: string[] | null
           city_id?: string | null
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           description?: string | null
           display_order?: number | null
           end_time?: string | null
