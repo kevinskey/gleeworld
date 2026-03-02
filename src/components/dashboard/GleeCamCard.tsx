@@ -42,11 +42,13 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
       try {
         setLoading(true);
         
-        let query = supabase
+      let baseQuery = () => supabase
           .from("quick_capture_media")
           .select("id, file_url, title")
           .in("file_type", IMAGE_FILE_TYPES)
           .eq("is_approved", true);
+
+        let query = baseQuery();
 
         // Filter by course when viewing a specific course
         if (isInCourseView && selectedCourseId) {
@@ -58,8 +60,20 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
           .limit(24);
 
         if (error) throw error;
+
+        let results = data || [];
+
+        // Fallback: if course view returned nothing, show all photos
+        if (results.length === 0 && isInCourseView && selectedCourseId) {
+          const { data: fallbackData, error: fallbackError } = await baseQuery()
+            .order("created_at", { ascending: false })
+            .limit(24);
+          if (fallbackError) throw fallbackError;
+          results = fallbackData || [];
+        }
+
         // Shuffle for variety
-        const shuffled = (data || []).sort(() => Math.random() - 0.5);
+        const shuffled = results.sort(() => Math.random() - 0.5);
         setPhotos(shuffled);
       } catch (err) {
         console.error("Error fetching glee cam photos:", err);
