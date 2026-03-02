@@ -16,6 +16,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
 import { CourseTopicSlider } from './CourseTopicSlider';
+import { GleeCamCard } from '@/components/dashboard/GleeCamCard';
 import { ClassScheduleForm } from './ClassScheduleForm';
 import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
 
@@ -503,6 +504,9 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
             </CardContent>
           </Card>
         )}
+
+        {/* Glee Cam Photos */}
+        <GleeCamCard />
 
         {/* Topic Photo Slider */}
         <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />

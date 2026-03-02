@@ -42,12 +42,18 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
       try {
         setLoading(true);
         
-        // For now, fetch all approved photos (course filtering will work after types regenerate)
-        const { data, error } = await supabase
+        let query = supabase
           .from("quick_capture_media")
           .select("id, file_url, title")
           .in("file_type", IMAGE_FILE_TYPES)
-          .eq("is_approved", true)
+          .eq("is_approved", true);
+
+        // Filter by course when viewing a specific course
+        if (isInCourseView && selectedCourseId) {
+          query = query.eq("course_id", selectedCourseId);
+        }
+
+        const { data, error } = await query
           .order("created_at", { ascending: false })
           .limit(24);
 

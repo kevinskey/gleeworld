@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { CourseTopicSlider } from '@/components/academy/CourseTopicSlider';
 import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
+import { GleeCamCard } from '@/components/dashboard/GleeCamCard';
 import { ClassScheduleForm } from '@/components/academy/ClassScheduleForm';
 import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { MobilePlaylistDropdown } from './MobilePlaylistDropdown';
@@ -262,6 +263,9 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
               </>
             )}
           </div>
+
+          {/* Glee Cam Photos */}
+          <GleeCamCard className={isMus070 ? glass : ''} />
 
           {/* Announcements / Media Slider */}
           <Card className={isMus070 ? `${glass} overflow-hidden relative z-0` : 'border-0 shadow-sm overflow-hidden relative z-0'}>
