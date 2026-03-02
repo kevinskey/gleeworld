@@ -1,57 +1,42 @@
 
-# Super-Admin Control Center -- Landing Page on Login
+# Restore Glee Cam: Photos Appear in Course Landing Slider
 
 ## Overview
-Transform the Office Hours Dashboard into a unified **Control Center** with tabs for Appointments, Calendar, Academy, and Modules. Additionally, make this the **default landing page** for super-admins after login, replacing `/dashboard`.
+When a user taps the Camera button, selects "Glee Cam", and takes a photo, that photo will automatically appear in the **CourseTopicSlider** on the landing page of their currently selected course. This creates a live, student-driven photo feed on each class landing page.
 
-## What Changes
+## How It Works Today
+- Users tap Camera -> Photo -> Glee Cam -> take photo -> saved to `quick_capture_media` table
+- The `quick_capture_media` table already has a `course_id` column (currently unused)
+- The `GleeCamCard` component shows a scrolling strip of photos but doesn't filter by course
+- Each course landing page has a `CourseTopicSlider` that reads from the `gw_universal_sliders` system (admin-managed slides only)
+- The `sync-glee-cam-to-heroes` edge function syncs photos to `dashboard_hero_slides` (the main homepage hero, not course-specific)
 
-### 1. Expand AdminOfficeHoursDashboard into a Control Center
-Add a top-level tab bar with 4 sections:
+## Plan
 
-```text
-[ Appts | Calendar | Academy | Modules ]
-```
+### 1. Save course_id when capturing a Glee Cam photo
+- Update `CategorizedQuickCapture.tsx` to import `useCourseContext` and include the `selectedCourseId` in the `quick_capture_media` insert
+- This tags every Glee Cam photo with the course the user had selected
 
-- **Appts**: All existing appointment management (unchanged)
-- **Calendar**: Lazy-loads `CommandCenterCalendar` inline
-- **Academy**: Lazy-loads `GleeAcademyDashboardCard` with instructor quick links
-- **Modules**: Renders the `MyModules` grid for direct access to all admin tools
+### 2. Add a Course Cam slider component to the course landing page
+- Create a new `CourseCamSlider` component that queries `quick_capture_media` filtered by `course_id` and `category = 'glee_cam_pic'` and `is_approved = true`
+- Display these photos in a compact Embla carousel (similar to the existing `GleeCamCard` marquee style)
+- Show the photos in reverse chronological order so newest appear first
 
-### 2. Add `/control-center` Route Alias
-Add a new route in `App.tsx` pointing `/control-center` to the same `BookAppointmentPage`, giving a cleaner URL.
+### 3. Add CourseCamSlider to course landing pages
+- Add the `CourseCamSlider` to `MobileCourseLanding.tsx` (below the CourseTopicSlider or replacing it contextually)
+- Also add it to the desktop course views (`TeachingFirstHome`, `StudentDossierHome`) where the `GleeCamCard` or `CourseTopicSlider` appears
 
-### 3. Make Control Center the Super-Admin Landing Page
-Update two redirect points so super-admins land on `/control-center` instead of `/dashboard` after login:
-
-- **`useRoleBasedRedirect.ts`** (line 173): Change `navigate('/dashboard')` to `navigate('/control-center')` for super-admins only
-- **`HomeRoute.tsx`** (line 51): Change the force-redirect for super-admins to `/control-center`
-
-Admins and executive board members continue landing on `/dashboard` as before.
-
-### 4. Update DashboardSwitcher
-Add a "Control Center" link in the dropdown so you can jump back to `/control-center` from anywhere.
+### 4. Update GleeCamCard to filter by course when in course view
+- The existing `GleeCamCard` already has course-aware logic scaffolded (`isInCourseView`, `selectedCourseId`) but the query doesn't filter by `course_id`
+- Add `.eq('course_id', selectedCourseId)` to the query when `isInCourseView` is true
 
 ## Technical Details
 
 ### Files to modify:
+- **`src/components/quick-capture/CategorizedQuickCapture.tsx`** -- Add `useCourseContext` import, include `course_id: selectedCourseId` in the insert data for glee_cam_pic/glee_cam_video categories
+- **`src/components/dashboard/GleeCamCard.tsx`** -- Add course_id filter to the query when `isInCourseView && selectedCourseId`
+- **`src/components/course/MobileCourseLanding.tsx`** -- Import and render the `GleeCamCard` component with course awareness
+- **`src/components/academy/TeachingFirstHome.tsx`** and **`src/components/academy/StudentDossierHome.tsx`** -- Add `GleeCamCard` to desktop course views
 
-1. **`src/components/appointments/AdminOfficeHoursDashboard.tsx`**
-   - Wrap existing content in a new top-level `Tabs` component
-   - Lazy-load `CommandCenterCalendar`, `GleeAcademyDashboardCard`, and `MyModules`
-   - Maintain the underwater aesthetic across all tabs
-
-2. **`src/App.tsx`**
-   - Add `/control-center` route pointing to `BookAppointmentPage`
-
-3. **`src/hooks/useRoleBasedRedirect.ts`**
-   - Line 171-174: Change super-admin redirect from `/dashboard` to `/control-center`
-
-4. **`src/components/routing/HomeRoute.tsx`**
-   - Line 51: Change super-admin force-redirect from `/dashboard` to `/control-center`
-
-5. **`src/components/navigation/DashboardSwitcher.tsx`**
-   - Add a "Control Center" menu item linking to `/control-center`
-
-6. **`src/constants/routes.ts`**
-   - Add `CONTROL_CENTER: '/control-center'` to `ROUTES` and `PROTECTED_ROUTES`
+### No database changes needed
+The `quick_capture_media` table already has a `course_id` column with a foreign key to courses. We just need to start populating it and querying by it.
