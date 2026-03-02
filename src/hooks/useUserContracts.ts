@@ -106,7 +106,7 @@ export const useUserContracts = () => {
             content: contract.content,
             status: contract.status,
             created_at: contract.created_at,
-            signature_status: signatureData?.status || 'pending',
+            signature_status: signatureData?.status || contract.status || 'draft',
             artist_signed_at: signatureData?.artist_signed_at || null,
             admin_signed_at: signatureData?.admin_signed_at || null,
           };
