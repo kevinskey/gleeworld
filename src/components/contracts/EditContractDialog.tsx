@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, CopyCheck } from "lucide-react";
 
 interface Contract {
   id: string;
@@ -49,7 +49,32 @@ export const EditContractDialog = ({
   const [status, setStatus] = useState("draft");
   const [stipendAmount, setStipendAmount] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showSelectAll, setShowSelectAll] = useState(false);
+  const [selectAllPos, setSelectAllPos] = useState({ x: 0, y: 0 });
+  const contentRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+
+  // Show "Select All" tooltip on double-click or triple-click in content area
+  const handleContentMouseUp = useCallback((e: React.MouseEvent<HTMLTextAreaElement>) => {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+    const hasSelection = textarea.selectionStart !== textarea.selectionEnd;
+    if (hasSelection) {
+      // Position the tooltip near the click
+      const rect = textarea.getBoundingClientRect();
+      setSelectAllPos({ x: e.clientX - rect.left, y: e.clientY - rect.top - 36 });
+      setShowSelectAll(true);
+    }
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    const textarea = contentRef.current;
+    if (textarea) {
+      textarea.focus();
+      textarea.setSelectionRange(0, textarea.value.length);
+    }
+    setShowSelectAll(false);
+  }, []);
 
   useEffect(() => {
     if (contract) {
@@ -176,16 +201,32 @@ export const EditContractDialog = ({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
             <Label htmlFor="content">Content</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Enter contract content"
-              disabled={saving}
-              className="min-h-[300px] font-mono text-sm"
-            />
+            <div className="relative">
+              <Textarea
+                id="content"
+                ref={contentRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onMouseUp={handleContentMouseUp}
+                onBlur={() => setTimeout(() => setShowSelectAll(false), 200)}
+                placeholder="Enter contract content"
+                disabled={saving}
+                className="min-h-[300px] font-mono text-sm"
+              />
+              {showSelectAll && (
+                <button
+                  type="button"
+                  onMouseDown={(e) => { e.preventDefault(); handleSelectAll(); }}
+                  className="absolute z-10 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-popover text-popover-foreground border border-border rounded-md shadow-md hover:bg-accent transition-colors"
+                  style={{ left: Math.max(0, selectAllPos.x - 40), top: Math.max(0, selectAllPos.y) }}
+                >
+                  <CopyCheck className="h-3 w-3" />
+                  Select All
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
