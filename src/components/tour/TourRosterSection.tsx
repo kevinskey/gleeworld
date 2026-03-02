@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, UserPlus, Search, Check, X, Clock, AlertCircle } from 'lucide-react';
+import { Users, UserPlus, Search, Check, X, Clock, AlertCircle, FileCheck, FileWarning } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -29,6 +29,7 @@ export const TourRosterSection = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [signedUserIds, setSignedUserIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchData();
@@ -50,6 +51,14 @@ export const TourRosterSection = () => {
         .select('*');
 
       if (rosterError) throw rosterError;
+
+      // Fetch contract signatures for the tour contract
+      const { data: signatures } = await supabase
+        .from('tour_contract_signatures')
+        .select('user_id')
+        .eq('contract_id', '99ad60d3-0e94-41b2-b4f9-1b03146c62c9');
+
+      setSignedUserIds(new Set(signatures?.map(s => s.user_id) || []));
 
       setAllMembers(members || []);
       
@@ -265,6 +274,13 @@ export const TourRosterSection = () => {
           <span className="text-xs text-muted-foreground">Total</span>
           <span className="text-sm font-bold text-foreground">{statusCounts.total}</span>
         </div>
+        <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5">
+          <FileCheck className="h-3.5 w-3.5 text-emerald-600" />
+          <span className="text-xs text-muted-foreground">Contracts</span>
+          <span className="text-sm font-bold text-foreground">
+            {rosterMembers.filter(m => signedUserIds.has(m.user_id)).length}/{rosterMembers.length} signed
+          </span>
+        </div>
       </div>
 
       {/* Voice Part Distribution - Compact strip */}
@@ -324,6 +340,17 @@ export const TourRosterSection = () => {
                   <Badge variant="outline" className="text-xs font-medium flex-shrink-0">
                     {member.voice_part || 'N/A'}
                   </Badge>
+                  {signedUserIds.has(member.user_id) ? (
+                    <Badge variant="success" size="sm" className="flex-shrink-0 gap-1">
+                      <FileCheck className="h-3 w-3" />
+                      Signed
+                    </Badge>
+                  ) : (
+                    <Badge variant="warning" size="sm" className="flex-shrink-0 gap-1">
+                      <FileWarning className="h-3 w-3" />
+                      Not Signed
+                    </Badge>
+                  )}
                   <Select
                     value={member.status}
                     onValueChange={(value) => member.roster_id && updateStatus(member.roster_id, value)}
