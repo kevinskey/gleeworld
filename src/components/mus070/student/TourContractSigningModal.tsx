@@ -178,24 +178,9 @@ export const TourContractSigningModal: React.FC<TourContractSigningModalProps> =
 
       if (sigError) throw sigError;
 
-      // 4. Save to tour documents folder — create "Student Contracts" folder if needed
-      let folderId: string | null = null;
-      const { data: existingFolder } = await supabase
-        .from('gw_media_folders')
-        .select('id')
-        .eq('name', 'Student Contracts')
-        .maybeSingle();
-
-      if (existingFolder) {
-        folderId = existingFolder.id;
-      } else {
-        const { data: newFolder } = await supabase
-          .from('gw_media_folders')
-          .insert({ name: 'Student Contracts', created_by: user.id, icon: 'file-signature', color: '#3b82f6' })
-          .select('id')
-          .single();
-        if (newFolder) folderId = newFolder.id;
-      }
+      // 4. Save to "Students Tour Contracts" folder in tour documents
+      const STUDENTS_TOUR_CONTRACTS_FOLDER_ID = '57e3e2cf-11f2-4638-a364-0ac04a9af9c0';
+      const folderId = STUDENTS_TOUR_CONTRACTS_FOLDER_ID;
 
       // 5. Add document to media library for tour docs page
       const { data: publicUrl } = supabase.storage.from('user-files').getPublicUrl(fileName);
