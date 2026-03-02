@@ -28755,6 +28755,53 @@ export type Database = {
           },
         ]
       }
+      tour_contract_signatures: {
+        Row: {
+          contract_id: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          pdf_storage_path: string | null
+          signature_data: string
+          signed_at: string
+          signer_ip: unknown
+          user_id: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          pdf_storage_path?: string | null
+          signature_data: string
+          signed_at?: string
+          signer_ip?: unknown
+          user_id: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          pdf_storage_path?: string | null
+          signature_data?: string
+          signed_at?: string
+          signer_ip?: unknown
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tour_contract_signatures_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tour_documents: {
         Row: {
           created_at: string | null
