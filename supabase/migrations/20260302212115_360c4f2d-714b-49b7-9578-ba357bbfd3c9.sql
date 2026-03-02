@@ -1,0 +1,1 @@
+ALTER TABLE gw_tour_timeline_events ADD COLUMN description text;
