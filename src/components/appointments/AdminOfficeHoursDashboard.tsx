@@ -823,13 +823,13 @@ const AvailabilityManager: React.FC = () => {
                 <TimeSelect
                   value={dayAvail.start_time}
                   onChange={(v) => updateTime(dayAvail.id, 'start_time', v)}
-                  className="[&_button]:h-7 [&_button]:text-[10px] [&_button]:w-[52px]"
+                  className="[&_button]:h-7 [&_button]:text-[10px] [&_button]:w-[52px] [&_button]:bg-white [&_button]:!text-slate-900 [&_button]:border-slate-300"
                 />
-                <span className="text-[10px] text-muted-foreground">to</span>
+                <span className="text-[10px] text-white/60">to</span>
                 <TimeSelect
                   value={dayAvail.end_time}
                   onChange={(v) => updateTime(dayAvail.id, 'end_time', v)}
-                  className="[&_button]:h-7 [&_button]:text-[10px] [&_button]:w-[52px]"
+                  className="[&_button]:h-7 [&_button]:text-[10px] [&_button]:w-[52px] [&_button]:bg-white [&_button]:!text-slate-900 [&_button]:border-slate-300"
                 />
               </div>
             )}
