@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { MapPin, Calendar, Clock, Hotel, Music, Bus, Utensils, Users, ChevronRight, Plane } from 'lucide-react';
+import { MapPin, Calendar, Clock, Hotel, Music, Bus, Utensils, Users, ChevronRight, Plane, FileSignature, CheckCircle2 } from 'lucide-react';
 import { format, differenceInDays, isValid, parseISO } from 'date-fns';
+import { TourContractSigningModal } from './TourContractSigningModal';
 
 const safeFormat = (dateStr: string | null | undefined, fmt: string, fallback = '—') => {
   if (!dateStr) return fallback;
@@ -64,6 +66,22 @@ const eventTypeConfig: Record<string, { icon: React.ElementType; color: string; 
 
 export const StudentTourView: React.FC = () => {
   const { user } = useAuth();
+  const [contractOpen, setContractOpen] = useState(false);
+
+  // Check if student already signed the tour contract
+  const { data: hasSigned } = useQuery({
+    queryKey: ['tour-contract-signature', user?.id, '99ad60d3-0e94-41b2-b4f9-1b03146c62c9'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('tour_contract_signatures')
+        .select('id')
+        .eq('contract_id', '99ad60d3-0e94-41b2-b4f9-1b03146c62c9')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return !!data;
+    },
+    enabled: !!user,
+  });
 
   // Fetch active/upcoming tour
   const { data: tour, isLoading: tourLoading } = useQuery({
@@ -184,7 +202,28 @@ export const StudentTourView: React.FC = () => {
             <p className="text-xs text-primary-foreground/70">Days</p>
           </div>
         </div>
+
+        {/* Contract Signing Button */}
+        <div className="mt-5">
+          {hasSigned ? (
+            <div className="flex items-center gap-2 bg-primary-foreground/10 rounded-lg px-4 py-2.5">
+              <CheckCircle2 className="h-4 w-4 text-green-400" />
+              <span className="text-sm text-primary-foreground font-medium">Tour Contract Signed ✓</span>
+            </div>
+          ) : (
+            <Button
+              onClick={() => setContractOpen(true)}
+              className="w-full gap-2 bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0"
+              variant="outline"
+            >
+              <FileSignature className="h-4 w-4" />
+              Sign Tour Participation Contract
+            </Button>
+          )}
+        </div>
       </div>
+
+      <TourContractSigningModal open={contractOpen} onOpenChange={setContractOpen} />
 
       {/* Tour Itinerary */}
       <div>
