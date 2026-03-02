@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCameraImport } from '@/hooks/useCameraImport';
 import { Camera, Upload, X, SwitchCamera, Video, Circle, Square, Mic, ArrowLeft, Sparkles } from 'lucide-react';
+import { useCourseContext } from '@/contexts/CourseContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { QuickCaptureCategory } from './QuickCaptureCategorySelector';
@@ -69,6 +70,7 @@ const categoryConfig = {
 
 export const CategorizedQuickCapture = ({ category, onClose, onBack }: CategorizedQuickCaptureProps) => {
   const config = categoryConfig[category];
+  const { selectedCourseId } = useCourseContext();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -294,6 +296,10 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
         file_type: capturedMedia.type,
         file_size: capturedMedia.size,
         is_approved: category === 'glee_cam_pic' || category === 'glee_cam_video' || category === 'exec_board_video',
+        // Tag Glee Cam photos/videos with the user's currently selected course
+        ...((category === 'glee_cam_pic' || category === 'glee_cam_video') && selectedCourseId
+          ? { course_id: selectedCourseId }
+          : {}),
       };
       
       console.log('Inserting to database:', insertData);

@@ -20,6 +20,7 @@ import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
 import { getCourseTemplateConfig } from '@/config/courseTemplateConfig';
 import { CourseTopicSlider } from './CourseTopicSlider';
+import { GleeCamCard } from '@/components/dashboard/GleeCamCard';
 import { ModuleVideosModal } from './ModuleVideosModal';
 import { ModuleReadingsModal } from './ModuleReadingsModal';
 import { useCoursePlaylist } from '@/hooks/useCoursePlaylist';
@@ -842,6 +843,9 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
           </div>
         </Card>
       )}
+
+      {/* Glee Cam Photos */}
+      <GleeCamCard />
 
       {/* ═══ 3. DUE THIS WEEK — Urgency System ═══ */}
       {currentModule && currentModule.assignments.length > 0 && (
