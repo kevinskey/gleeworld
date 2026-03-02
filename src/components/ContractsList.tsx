@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { SendContractDialog } from "@/components/SendContractDialog";
 import { BulkActions } from "@/components/contracts/BulkActions";
+import { BulkSendToRosterDialog } from "@/components/contracts/BulkSendToRosterDialog";
 import { ContractItem } from "@/components/contracts/ContractItem";
 import { AdminSignatureModal } from "@/components/contracts/AdminSignatureModal";
 import { EmptyState } from "@/components/contracts/EmptyState";
@@ -47,6 +48,7 @@ export const ContractsList = ({
   const [editTitleDialogOpen, setEditTitleDialogOpen] = useState(false);
   const [selectedEditContract, setSelectedEditContract] = useState<Contract | null>(null);
   const [syncingContractId, setSyncingContractId] = useState<string | null>(null);
+  const [bulkSendContract, setBulkSendContract] = useState<Contract | null>(null);
   const {
     contractSendHistory,
     reloadSendHistory
@@ -198,7 +200,7 @@ export const ContractsList = ({
               {error && !loading ? <EmptyState type="error" error={error} onUploadContract={onUploadContract} onRetry={onRetry} /> : loading ? <EmptyState type="loading" onUploadContract={onUploadContract} /> : contracts.length === 0 ? <EmptyState type="empty" onUploadContract={onUploadContract} /> : <div className="space-y-4">
                   <ContractFilters sortBy={sortBy} sortOrder={sortOrder} filterByTemplate={filterByTemplate} filterByType={filterByType} filterByDate={filterByDate} onSortChange={handleSortChange} onFiltersChange={handleFilterChange} availableTemplates={availableTemplates} availableTypes={availableTypes} />
 
-                  <BulkActions contracts={filteredAndSortedContracts} selectedContracts={selectedContracts} onSelectAll={handleSelectAll} onDeleteSelected={handleDeleteSelected} />
+                  <BulkActions contracts={filteredAndSortedContracts} selectedContracts={selectedContracts} onSelectAll={handleSelectAll} onDeleteSelected={handleDeleteSelected} onSendToRoster={(contract) => setBulkSendContract(contract)} />
 
                   {filteredAndSortedContracts.map(contract => {
                 const sendCount = contractSendHistory[contract.id] || 0;
@@ -229,5 +231,13 @@ export const ContractsList = ({
 
       {/* Edit Contract Title Dialog */}
       <EditContractTitleDialog open={editTitleDialogOpen} onOpenChange={setEditTitleDialogOpen} contract={selectedEditContract} onContractUpdated={handleContractUpdated} />
+
+      {/* Bulk Send to Roster Dialog */}
+      <BulkSendToRosterDialog
+        isOpen={!!bulkSendContract}
+        onClose={() => setBulkSendContract(null)}
+        contract={bulkSendContract}
+        onSent={handleContractSent}
+      />
     </>;
 };
