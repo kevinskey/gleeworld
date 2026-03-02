@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarWidget } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -559,7 +561,22 @@ export const TourLogisticsSection = () => {
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Date *</Label>
-                  <Input type="date" value={newEvent.event_date} onChange={e => setNewEvent(p => ({ ...p, event_date: e.target.value }))} />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-10 text-sm", !newEvent.event_date && "text-muted-foreground")}>
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {newEvent.event_date ? format(parseISO(newEvent.event_date), 'MMM d, yyyy') : 'Pick date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarWidget
+                        mode="single"
+                        selected={newEvent.event_date ? parseISO(newEvent.event_date) : undefined}
+                        onSelect={(date) => setNewEvent(p => ({ ...p, event_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Start</Label>
