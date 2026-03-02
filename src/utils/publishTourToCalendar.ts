@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+// Tour calendar publish utility - v2
 
 const MUS_070_CALENDAR_ID = '7053fa69-0d24-45c2-bd42-b191b5460e83';
 const MUS_070_COURSE_ID = 'a0000000-0000-0000-0000-000000000070';
