@@ -86,6 +86,19 @@ export const TourLogisticsSection = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [publishing, setPublishing] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<UnifiedTimelineEvent | null>(null);
+  const [editForm, setEditForm] = useState({
+    label: '',
+    description: '',
+    event_category: 'call_time',
+    event_date: '',
+    event_time: '',
+    end_time: '',
+    target_group: 'all',
+    notes: '',
+    location: '',
+    status: 'pending',
+  });
 
   // New event form state
   const [newEvent, setNewEvent] = useState({
@@ -269,11 +282,55 @@ export const TourLogisticsSection = () => {
     }
   };
 
+  const openEditDialog = (event: UnifiedTimelineEvent) => {
+    setEditForm({
+      label: event.label,
+      description: event.description || '',
+      event_category: event.event_category,
+      event_date: event.event_date,
+      event_time: event.event_time || '',
+      end_time: event.end_time || '',
+      target_group: event.target_group,
+      notes: event.notes || '',
+      location: event.location || '',
+      status: event.status,
+    });
+    setEditingEvent(event);
+  };
+
+  const handleUpdateEvent = async () => {
+    if (!editingEvent) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('gw_tour_timeline_events').update({
+        label: editForm.label,
+        description: editForm.description || null,
+        event_category: editForm.event_category,
+        event_date: editForm.event_date,
+        event_time: editForm.event_time || null,
+        end_time: editForm.end_time || null,
+        target_group: editForm.target_group,
+        notes: editForm.notes || null,
+        location: editForm.location || null,
+        status: editForm.status,
+      }).eq('id', editingEvent.id);
+      if (error) throw error;
+      toast.success('Event updated');
+      setEditingEvent(null);
+      fetchTimeline();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update event');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDeleteEvent = async (id: string) => {
     try {
       const { error } = await supabase.from('gw_tour_timeline_events').delete().eq('id', id);
       if (error) throw error;
       toast.success('Event removed');
+      setEditingEvent(null);
       fetchTimeline();
     } catch (err: any) {
       toast.error(err.message || 'Failed to delete');
@@ -607,6 +664,14 @@ export const TourLogisticsSection = () => {
                                     variant="ghost"
                                     size="icon"
                                     className="h-6 w-6"
+                                    onClick={() => openEditDialog(event)}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
                                     onClick={() => handleStatusToggle(event.id, event.status)}
                                   >
                                     <CheckCircle2 className="h-3 w-3" />
@@ -647,6 +712,106 @@ export const TourLogisticsSection = () => {
           ))}
         </div>
       )}
+
+      {/* Edit Event Dialog */}
+      <Dialog open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Event</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Event Label *</Label>
+              <Input
+                placeholder="e.g. Singer Call Time"
+                value={editForm.label}
+                onChange={e => setEditForm(p => ({ ...p, label: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Description</Label>
+              <Textarea
+                className="h-16"
+                placeholder="What is this event about?"
+                value={editForm.description}
+                onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Category</Label>
+                <Select value={editForm.event_category} onValueChange={v => setEditForm(p => ({ ...p, event_category: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {EVENT_CATEGORIES.map(c => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">For</Label>
+                <Select value={editForm.target_group} onValueChange={v => setEditForm(p => ({ ...p, target_group: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TARGET_GROUPS.map(g => (
+                      <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Date *</Label>
+                <Input type="date" value={editForm.event_date} onChange={e => setEditForm(p => ({ ...p, event_date: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Start</Label>
+                <Input type="time" value={editForm.event_time} onChange={e => setEditForm(p => ({ ...p, event_time: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">End</Label>
+                <Input type="time" value={editForm.end_time} onChange={e => setEditForm(p => ({ ...p, end_time: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Location</Label>
+              <Input placeholder="Venue, city, etc." value={editForm.location} onChange={e => setEditForm(p => ({ ...p, location: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Notes</Label>
+              <Textarea className="h-16" placeholder="Additional details..." value={editForm.notes} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Status</Label>
+              <Select value={editForm.status} onValueChange={v => setEditForm(p => ({ ...p, status: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => editingEvent && handleDeleteEvent(editingEvent.id)}
+            >
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              Delete
+            </Button>
+            <Button onClick={handleUpdateEvent} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Save className="h-4 w-4 mr-1.5" />}
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
