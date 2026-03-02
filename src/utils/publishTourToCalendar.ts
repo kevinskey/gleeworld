@@ -14,6 +14,10 @@ interface TourCalendarEvent {
 }
 
 export const publishTourToCalendar = async () => {
+  // Get current user for created_by field
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('You must be logged in to publish tour events');
+
   // First, remove any previously published tour events to avoid duplicates
   const { error: deleteError } = await supabase
     .from('gw_events')
@@ -88,6 +92,7 @@ export const publishTourToCalendar = async () => {
     tags: ['tour', 'spring-2026'],
     attendance_required: e.event_type === 'performance',
     attendance_type: e.event_type === 'performance' ? 'required' : 'none',
+    created_by: user.id,
   }));
 
   console.log('INSERTING EVENTS - sample:', JSON.stringify(eventsToInsert[0]));
