@@ -87,6 +87,7 @@ export const publishTourToCalendar = async () => {
     category: 'spring-tour-2026',
     tags: ['tour', 'spring-2026'],
     attendance_required: e.event_type === 'performance',
+    attendance_type: e.event_type === 'performance' ? 'required' : 'none',
   }));
 
   const { data, error } = await supabase
