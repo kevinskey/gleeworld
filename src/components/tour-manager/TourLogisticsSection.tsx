@@ -568,7 +568,7 @@ export const TourLogisticsSection = () => {
                         {newEvent.event_date ? format(parseISO(newEvent.event_date), 'MMM d, yyyy') : 'Pick date'}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 bg-white text-black" align="start">
                       <CalendarWidget
                         mode="single"
                         selected={newEvent.event_date ? parseISO(newEvent.event_date) : undefined}
