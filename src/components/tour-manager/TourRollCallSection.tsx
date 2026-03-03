@@ -9,10 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, XCircle, Plus, Lock, ChevronDown, Clock, Users, MapPin } from 'lucide-react';
+import { CheckCircle2, XCircle, Plus, Lock, ChevronDown, Clock, Users, MapPin, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const TourRollCallSection: React.FC = () => {
@@ -24,6 +25,10 @@ export const TourRollCallSection: React.FC = () => {
   const [cityId, setCityId] = useState<string>('none');
   const [checkinDate, setCheckinDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [editCheckin, setEditCheckin] = useState<any>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editCityId, setEditCityId] = useState('none');
+  const [editDate, setEditDate] = useState('');
 
   // Fetch active tour
   const { data: tour } = useQuery({
@@ -152,6 +157,43 @@ export const TourRollCallSection: React.FC = () => {
     },
   });
 
+  // Edit session mutation
+  const editMutation = useMutation({
+    mutationFn: async ({ id, title, cityId, date }: { id: string; title: string; cityId: string; date: string }) => {
+      const { error } = await supabase
+        .from('gw_tour_checkins')
+        .update({ title, city_id: cityId === 'none' ? null : cityId, checkin_date: date })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['rollcall-checkins'] });
+      toast({ title: 'Roll Call Updated' });
+      setEditCheckin(null);
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  // Delete session mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('gw_tour_checkins').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['rollcall-checkins'] });
+      toast({ title: 'Roll Call Deleted' });
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  const openEdit = (checkin: any) => {
+    setEditCheckin(checkin);
+    setEditTitle(checkin.title);
+    setEditCityId(checkin.city_id || 'none');
+    setEditDate(checkin.checkin_date);
+  };
+
   const closedCheckins = checkins.filter(c => !!c.closed_at);
 
   const getResponsesForCheckin = (checkinId: string) =>
@@ -267,19 +309,41 @@ export const TourRollCallSection: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right space-y-1">
                   <p className="text-2xl font-bold text-primary">
                     {checkedInIds.size}<span className="text-sm text-muted-foreground font-normal">/{rosterCount}</span>
                   </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 gap-1 text-xs"
-                    onClick={() => closeMutation.mutate(checkin.id)}
-                    disabled={closeMutation.isPending}
-                  >
-                    <Lock className="h-3 w-3" /> Close
-                  </Button>
+                  <div className="flex items-center gap-1 justify-end">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(checkin)}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Roll Call?</AlertDialogTitle>
+                          <AlertDialogDescription>This will permanently delete "{checkin.title}" and all check-in responses.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteMutation.mutate(checkin.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 text-xs"
+                      onClick={() => closeMutation.mutate(checkin.id)}
+                      disabled={closeMutation.isPending}
+                    >
+                      <Lock className="h-3 w-3" /> Close
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -343,7 +407,29 @@ export const TourRollCallSection: React.FC = () => {
                           {cityName && <span>• {cityName}</span>}
                         </div>
                       </div>
-                      <Badge variant="secondary" className="text-xs">Closed</Badge>
+                      <div className="flex items-center gap-1">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(checkin)}>
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Roll Call?</AlertDialogTitle>
+                              <AlertDialogDescription>This will permanently delete "{checkin.title}" and all responses.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteMutation.mutate(checkin.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <Badge variant="secondary" className="text-xs">Closed</Badge>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -352,6 +438,44 @@ export const TourRollCallSection: React.FC = () => {
           </CollapsibleContent>
         </Collapsible>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editCheckin} onOpenChange={open => { if (!open) setEditCheckin(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Roll Call</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div>
+              <Label>Title</Label>
+              <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+            </div>
+            <div>
+              <Label>City (optional)</Label>
+              <Select value={editCityId} onValueChange={setEditCityId}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No specific city</SelectItem>
+                  {cities.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.city_name}, {c.state_code}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Date</Label>
+              <Input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
+            </div>
+            <Button
+              onClick={() => editCheckin && editMutation.mutate({ id: editCheckin.id, title: editTitle, cityId: editCityId, date: editDate })}
+              disabled={!editTitle.trim() || editMutation.isPending}
+              className="w-full"
+            >
+              {editMutation.isPending ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
