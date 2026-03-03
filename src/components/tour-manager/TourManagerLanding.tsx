@@ -13,6 +13,7 @@ import { TourMilestones } from './TourMilestones';
 import { TourRouteTimeline } from './TourRouteTimeline';
 import { TourStopDetailDialog, type TourStopFull } from './TourStopDetailDialog';
 import { TourStopEditForm } from './TourStopEditForm';
+import { CreateTourGroupButton } from '@/components/tour/CreateTourGroupButton';
 interface TourManagerLandingProps {
   onNavigate: (section: string) => void;
   stats?: {
@@ -502,10 +503,13 @@ export const TourManagerLanding = ({
                       </div>
                     );
                   })()}
-                  <Button variant="ghost" size="sm" className="w-full mt-2 text-xs" onClick={() => onNavigate('roster')}>
-                    Manage Roster
-                    <ChevronRight className="h-3 w-3 ml-1" />
-                  </Button>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button variant="ghost" size="sm" className="flex-1 text-xs" onClick={() => onNavigate('roster')}>
+                      Manage Roster
+                      <ChevronRight className="h-3 w-3 ml-1" />
+                    </Button>
+                    <CreateTourGroupButton />
+                  </div>
                 </>
               )}
             </CardContent>
