@@ -30,18 +30,27 @@ export const TourRollCallSection: React.FC = () => {
   const [editCityId, setEditCityId] = useState('none');
   const [editDate, setEditDate] = useState('');
 
-  // Check if current user is a tour manager or super admin
+  // Check if current user can close roll calls (tour_manager or super_admin)
   const { data: canCloseRollCall = false } = useQuery({
     queryKey: ['can-close-rollcall', user?.id],
     queryFn: async () => {
-      const { data } = await supabase
+      // Check app_roles for tour_manager or super_admin
+      const { data: roles } = await supabase
         .from('app_roles')
         .select('id')
         .eq('user_id', user!.id)
         .in('role', ['tour_manager', 'super_admin', 'super-admin'])
         .eq('is_active', true)
         .limit(1);
-      return (data && data.length > 0) || false;
+      if (roles && roles.length > 0) return true;
+
+      // Also check gw_profiles.is_super_admin
+      const { data: prof } = await supabase
+        .from('gw_profiles')
+        .select('is_super_admin')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return prof?.is_super_admin === true;
     },
     enabled: !!user?.id,
   });
