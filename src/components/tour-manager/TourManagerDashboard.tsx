@@ -310,7 +310,6 @@ export const TourManagerDashboard = ({
       case 'budget':
         return <TourBudgetManager />;
       case 'notes':
-      case 'notes':
         return <TourNotesSection />;
       default:
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
