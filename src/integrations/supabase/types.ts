@@ -30938,6 +30938,10 @@ export type Database = {
         Args: { user_id_param?: string }
         Returns: boolean
       }
+      is_exec_board_member: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
       is_executive_board_member: {
         Args: { user_id_param: string }
         Returns: boolean
