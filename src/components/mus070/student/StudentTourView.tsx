@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -211,7 +211,6 @@ export const StudentTourView: React.FC = () => {
       return data;
     },
     enabled: !!tour?.id,
-    refetchInterval: 10000,
   });
 
   // Check if user already responded
@@ -227,8 +226,22 @@ export const StudentTourView: React.FC = () => {
       return data;
     },
     enabled: !!activeCheckin?.id && !!user?.id,
-    refetchInterval: 10000,
   });
+
+  // Realtime subscription for roll call updates
+  useEffect(() => {
+    if (!tour?.id) return;
+    const channel = supabase
+      .channel('student-rollcall-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gw_tour_checkins', filter: `tour_id=eq.${tour.id}` }, () => {
+        qc.invalidateQueries({ queryKey: ['student-active-checkin', tour.id] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gw_tour_checkin_responses' }, () => {
+        qc.invalidateQueries({ queryKey: ['student-checkin-response'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [tour?.id, qc]);
 
   // Check-in mutation
   const checkinMutation = useMutation({
