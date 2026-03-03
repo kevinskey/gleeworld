@@ -30,18 +30,18 @@ export const TourRollCallSection: React.FC = () => {
   const [editCityId, setEditCityId] = useState('none');
   const [editDate, setEditDate] = useState('');
 
-  // Check if current user is a tour manager
-  const { data: isTourManager = false } = useQuery({
-    queryKey: ['is-tour-manager', user?.id],
+  // Check if current user is a tour manager or super admin
+  const { data: canCloseRollCall = false } = useQuery({
+    queryKey: ['can-close-rollcall', user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from('app_roles')
         .select('id')
         .eq('user_id', user!.id)
-        .eq('role', 'tour_manager')
+        .in('role', ['tour_manager', 'super_admin', 'super-admin'])
         .eq('is_active', true)
-        .maybeSingle();
-      return !!data;
+        .limit(1);
+      return (data && data.length > 0) || false;
     },
     enabled: !!user?.id,
   });
@@ -363,7 +363,7 @@ export const TourRollCallSection: React.FC = () => {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                    {isTourManager && (
+                    {canCloseRollCall && (
                       <Button
                         size="sm"
                         variant="outline"
