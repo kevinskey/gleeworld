@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp, Mic, MapPin, Settings } from 'lucide-react';
+import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp, Mic, MapPin, Settings, FileSignature, CheckCircle2, UserCheck } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
 import { AcademyCourse } from '@/config/academyCourses';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { CourseTopicSlider } from '@/components/academy/CourseTopicSlider';
@@ -18,6 +18,8 @@ import { GleeCamCard } from '@/components/dashboard/GleeCamCard';
 import { ClassScheduleForm } from '@/components/academy/ClassScheduleForm';
 import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { MobilePlaylistDropdown } from './MobilePlaylistDropdown';
+import { TourContractSigningModal } from '@/components/mus070/student/TourContractSigningModal';
+import { useToast } from '@/hooks/use-toast';
 
 
 interface MobileCourseLandingProps {
@@ -31,6 +33,9 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   const { letterGrade, percentage, loading: gradeLoading } = useCourseGrade(course.id);
   const [playlistOpen, setPlaylistOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [contractOpen, setContractOpen] = useState(false);
+  const qc = useQueryClient();
+  const { toast } = useToast();
 
   const isMus070 = course.courseCode === 'MUS 070';
   const isAdmin = profile?.is_admin || profile?.is_super_admin || profile?.role === 'instructor';
@@ -97,6 +102,102 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
     return `Due ${format(due, 'MMM d')}`;
   };
 
+  const TOUR_CONTRACT_ID = '99ad60d3-0e94-41b2-b4f9-1b03146c62c9';
+
+  // Check if student already signed the tour contract (MUS 070 only)
+  const { data: hasSigned } = useQuery({
+    queryKey: ['tour-contract-signature', user?.id, TOUR_CONTRACT_ID],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('tour_contract_signatures')
+        .select('id')
+        .eq('contract_id', TOUR_CONTRACT_ID)
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && isMus070,
+  });
+
+  // Fetch active tour (MUS 070 only)
+  const { data: activeTour } = useQuery({
+    queryKey: ['student-tour-active'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_tours')
+        .select('id')
+        .in('status', ['planning', 'confirmed', 'active'])
+        .order('start_date', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: isMus070,
+  });
+
+  // Fetch active roll call session
+  const { data: activeCheckin } = useQuery({
+    queryKey: ['student-active-checkin', activeTour?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_tour_checkins')
+        .select('id, title, opened_at')
+        .eq('tour_id', activeTour!.id)
+        .is('closed_at', null)
+        .order('opened_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!activeTour?.id && isMus070,
+  });
+
+  // Check if user already responded to roll call
+  const { data: myResponse } = useQuery({
+    queryKey: ['student-checkin-response', activeCheckin?.id, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_tour_checkin_responses')
+        .select('id, checked_in_at')
+        .eq('checkin_id', activeCheckin!.id)
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!activeCheckin?.id && !!user?.id,
+  });
+
+  // Realtime subscription for roll call updates
+  useEffect(() => {
+    if (!activeTour?.id || !isMus070) return;
+    const channel = supabase
+      .channel('landing-rollcall-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gw_tour_checkins', filter: `tour_id=eq.${activeTour.id}` }, () => {
+        qc.invalidateQueries({ queryKey: ['student-active-checkin', activeTour.id] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gw_tour_checkin_responses' }, () => {
+        qc.invalidateQueries({ queryKey: ['student-checkin-response'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activeTour?.id, isMus070, qc]);
+
+  // Check-in mutation
+  const checkinMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('gw_tour_checkin_responses').insert({
+        checkin_id: activeCheckin!.id,
+        user_id: user!.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['student-checkin-response'] });
+      toast({ title: '✓ Checked In', description: 'Your presence has been recorded.' });
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
   const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
 
   return (
@@ -158,6 +259,61 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
 
         <main className="p-4 space-y-4 pb-32">
 
+          {/* Active Roll Call - MUS 070 only */}
+          {isMus070 && activeCheckin && (
+            <Card className="border-primary/40 bg-primary/5 shadow-md animate-in fade-in slide-in-from-top-2">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-foreground text-sm flex items-center gap-2">
+                      <UserCheck className="h-4 w-4 text-primary" />
+                      {activeCheckin.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Roll call is active — confirm your presence</p>
+                  </div>
+                  {myResponse ? (
+                    <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 rounded-lg px-3 py-2">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <div className="text-right">
+                        <p className="text-xs font-semibold text-green-700 dark:text-green-300">Present</p>
+                        <p className="text-[10px] text-green-600/70 dark:text-green-400/70">
+                          {format(new Date(myResponse.checked_in_at), 'h:mm a')}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="gap-2 bg-primary text-primary-foreground font-bold px-6"
+                      onClick={() => checkinMutation.mutate()}
+                      disabled={checkinMutation.isPending}
+                    >
+                      <UserCheck className="h-4 w-4" />
+                      I Am Here
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Tour Contract Signing - MUS 070 only */}
+          {isMus070 && hasSigned === false && (
+            <Card className={`shadow-sm ${glass} border-amber-400/50`}>
+              <CardContent className="py-3">
+                <Button
+                  onClick={() => setContractOpen(true)}
+                  className="w-full gap-2"
+                  variant="default"
+                >
+                  <FileSignature className="h-4 w-4" />
+                  Sign Tour Participation Contract
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {isMus070 && <TourContractSigningModal open={contractOpen} onOpenChange={setContractOpen} />}
 
           {/* Listen to Tracks */}
           <div className="relative">
