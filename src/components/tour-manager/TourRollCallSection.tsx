@@ -30,6 +30,22 @@ export const TourRollCallSection: React.FC = () => {
   const [editCityId, setEditCityId] = useState('none');
   const [editDate, setEditDate] = useState('');
 
+  // Check if current user is a tour manager
+  const { data: isTourManager = false } = useQuery({
+    queryKey: ['is-tour-manager', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_roles')
+        .select('id')
+        .eq('user_id', user!.id)
+        .eq('role', 'tour_manager')
+        .eq('is_active', true)
+        .maybeSingle();
+      return !!data;
+    },
+    enabled: !!user?.id,
+  });
+
   // Fetch active tour
   const { data: tour } = useQuery({
     queryKey: ['rollcall-tour'],
@@ -347,15 +363,17 @@ export const TourRollCallSection: React.FC = () => {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1 text-xs"
-                      onClick={() => closeMutation.mutate(checkin.id)}
-                      disabled={closeMutation.isPending}
-                    >
-                      <Lock className="h-3 w-3" /> Close
-                    </Button>
+                    {isTourManager && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 text-xs"
+                        onClick={() => closeMutation.mutate(checkin.id)}
+                        disabled={closeMutation.isPending}
+                      >
+                        <Lock className="h-3 w-3" /> Close
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
