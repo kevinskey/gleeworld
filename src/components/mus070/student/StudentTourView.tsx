@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { MapPin, Calendar, Clock, Hotel, Music, Bus, Utensils, Users, ChevronRight, Plane, FileSignature, CheckCircle2, ListChecks, AlertCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { MapPin, Calendar, Clock, Hotel, Music, Bus, Utensils, Users, ChevronRight, Plane, FileSignature, CheckCircle2, ListChecks, AlertCircle, UserCheck } from 'lucide-react';
 import { format, differenceInDays, isValid, parseISO } from 'date-fns';
 import { TourContractSigningModal } from './TourContractSigningModal';
 
@@ -99,6 +100,8 @@ const formatTime12 = (time: string | null) => {
 
 export const StudentTourView: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const qc = useQueryClient();
   const [contractOpen, setContractOpen] = useState(false);
 
   // Check if student already signed the tour contract
@@ -191,6 +194,56 @@ export const StudentTourView: React.FC = () => {
       return data as TimelineEvent[];
     },
     enabled: !!tour?.id,
+  });
+
+  // Fetch active roll call sessions
+  const { data: activeCheckin } = useQuery({
+    queryKey: ['student-active-checkin', tour?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_tour_checkins')
+        .select('id, title, opened_at')
+        .eq('tour_id', tour!.id)
+        .is('closed_at', null)
+        .order('opened_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!tour?.id,
+    refetchInterval: 10000,
+  });
+
+  // Check if user already responded
+  const { data: myResponse } = useQuery({
+    queryKey: ['student-checkin-response', activeCheckin?.id, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_tour_checkin_responses')
+        .select('id, checked_in_at')
+        .eq('checkin_id', activeCheckin!.id)
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!activeCheckin?.id && !!user?.id,
+    refetchInterval: 10000,
+  });
+
+  // Check-in mutation
+  const checkinMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('gw_tour_checkin_responses').insert({
+        checkin_id: activeCheckin!.id,
+        user_id: user!.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['student-checkin-response'] });
+      toast({ title: '✓ Checked In', description: 'Your presence has been recorded.' });
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
 
   if (tourLoading) {
@@ -288,7 +341,44 @@ export const StudentTourView: React.FC = () => {
 
       <TourContractSigningModal open={contractOpen} onOpenChange={setContractOpen} />
 
-      {/* Tour Itinerary */}
+      {/* Roll Call - I Am Here */}
+      {activeCheckin && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-foreground text-sm flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 text-primary" />
+                  {activeCheckin.title}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">Roll call is active — confirm your presence</p>
+              </div>
+              {myResponse ? (
+                <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 rounded-lg px-3 py-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <div className="text-right">
+                    <p className="text-xs font-semibold text-green-700 dark:text-green-300">Present</p>
+                    <p className="text-[10px] text-green-600/70 dark:text-green-400/70">
+                      {format(new Date(myResponse.checked_in_at), 'h:mm a')}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  className="gap-2 bg-primary text-primary-foreground font-bold px-6"
+                  onClick={() => checkinMutation.mutate()}
+                  disabled={checkinMutation.isPending}
+                >
+                  <UserCheck className="h-4 w-4" />
+                  I Am Here
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div>
         <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
