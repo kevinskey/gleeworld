@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ interface GleeCamPhoto {
   id: string;
   file_url: string;
   title: string | null;
+  file_type?: string | null;
 }
 
 interface GleeCamCardProps {
@@ -41,10 +42,23 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const { camTitle, isInCourseView } = useCourseDisplayInfo();
   const { selectedCourseId } = useCourseContext();
   const [photos, setPhotos] = useState<GleeCamPhoto[]>([]);
+  const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const offsetRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+
+  const handleImageError = useCallback((photoId: string, photoUrl: string) => {
+    // If the render endpoint failed, try the original URL as fallback
+    // (some browsers like Safari support HEIC natively)
+    const img = document.querySelector(`[data-photo-id="${photoId}"]`) as HTMLImageElement;
+    if (img && img.src !== photoUrl) {
+      img.src = photoUrl;
+      return;
+    }
+    // If original also failed, hide the image
+    setFailedIds(prev => new Set(prev).add(photoId));
+  }, []);
 
   // Fetch photos - course-aware
   useEffect(() => {
@@ -54,7 +68,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         
       let baseQuery = () => supabase
           .from("quick_capture_media")
-          .select("id, file_url, title")
+          .select("id, file_url, title, file_type")
           .in("file_type", IMAGE_FILE_TYPES)
           .eq("is_approved", true);
 
@@ -85,6 +99,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         // Shuffle for variety
         const shuffled = results.sort(() => Math.random() - 0.5);
         setPhotos(shuffled);
+        setFailedIds(new Set());
       } catch (err) {
         console.error("Error fetching glee cam photos:", err);
       } finally {
@@ -96,8 +111,10 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   }, [isInCourseView, selectedCourseId]);
 
   // Animation loop (JS marquee for reliability)
+  const visibleCount = photos.filter(p => !failedIds.has(p.id)).length;
+
   useEffect(() => {
-    if (photos.length < 4) {
+    if (visibleCount < 4) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       return;
     }
@@ -107,7 +124,6 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     ).matches;
     if (prefersReducedMotion) return;
 
-    // Measure half of the duplicated track width (one full set of photos)
     const getLoopWidth = () => {
       const el = trackRef.current;
       if (!el) return 0;
@@ -117,7 +133,6 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     let loopWidth = getLoopWidth();
 
     const animate = () => {
-      // If images load after mount, our width can change; keep it fresh.
       if (!loopWidth) loopWidth = getLoopWidth();
 
       offsetRef.current -= SCROLL_SPEED;
@@ -138,7 +153,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [photos.length]);
+  }, [visibleCount]);
 
   const goToGallery = () => {
     if (isInCourseView && selectedCourseId) {
@@ -180,8 +195,9 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     );
   }
 
-  // Duplicate photos for seamless loop
-  const displayPhotos = photos.length >= 4 ? [...photos, ...photos] : photos;
+  // Filter out failed photos and duplicate for seamless loop
+  const visiblePhotos = photos.filter(p => !failedIds.has(p.id));
+  const displayPhotos = visiblePhotos.length >= 4 ? [...visiblePhotos, ...visiblePhotos] : visiblePhotos;
 
   return (
     <Card className={cn("bg-card", className)}>
@@ -217,12 +233,14 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
                 className="group flex-shrink-0 text-left"
                 aria-label={`Open ${camTitle} gallery`}
               >
-                <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] overflow-hidden rounded-lg border border-border hover:border-primary/50 transition-all duration-300">
+                <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] overflow-hidden rounded-lg border border-border hover:border-primary/50 transition-all duration-300 bg-muted">
                   <img
+                    data-photo-id={photo.id}
                     src={toDisplayUrl(photo.file_url)}
                     alt={photo.title || `${camTitle} photo`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
+                    onError={() => handleImageError(photo.id, photo.file_url)}
                   />
                 </div>
               </button>
