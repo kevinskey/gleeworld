@@ -26,6 +26,16 @@ const IMAGE_FILE_TYPES = [
 
 const SCROLL_SPEED = 0.6; // pixels per frame
 
+// Convert HEIC storage URLs to rendered/transformed URLs browsers can display
+const toDisplayUrl = (url: string): string => {
+  if (!url) return url;
+  // If it's a .heic file served from Supabase storage, use the render endpoint
+  if (url.includes('.heic') && url.includes('/storage/v1/object/public/')) {
+    return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + '?format=webp&width=300&quality=80';
+  }
+  return url;
+};
+
 export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const navigate = useNavigate();
   const { camTitle, isInCourseView } = useCourseDisplayInfo();
@@ -209,7 +219,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
               >
                 <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] overflow-hidden rounded-lg border border-border hover:border-primary/50 transition-all duration-300">
                   <img
-                    src={photo.file_url}
+                    src={toDisplayUrl(photo.file_url)}
                     alt={photo.title || `${camTitle} photo`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
