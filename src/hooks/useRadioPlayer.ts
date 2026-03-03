@@ -263,8 +263,8 @@ export const useRadioPlayer = () => {
       if (!isPlayingRef.current || userPausedRef.current) return;
       
       const timeSinceUpdate = Date.now() - lastTimeUpdateRef.current;
-      // If no timeupdate for 10 seconds while we should be playing, reconnect
-      if (timeSinceUpdate > 10000 && audioRef.current && !audioRef.current.paused) {
+      // If no timeupdate for 20 seconds while we should be playing, reconnect
+      if (timeSinceUpdate > 20000 && audioRef.current && !audioRef.current.paused) {
         console.log('useRadioPlayer: Stream heartbeat timeout, reconnecting...');
         clearReconnectTimeout();
         attemptReconnect();
@@ -290,8 +290,17 @@ export const useRadioPlayer = () => {
     setupMediaSession();
 
     const handlePlay = () => {
+      // IMPORTANT: Do NOT reset userPausedRef here.
+      // Only the explicit play() function should clear it.
+      // Resetting it here caused a loop where audio coordinator pauses radio,
+      // but a stray 'play' event clears the flag and triggers auto-resume.
+      if (userPausedRef.current) {
+        // If user/coordinator paused, immediately re-pause to stop the loop
+        console.log('useRadioPlayer: play event fired but userPaused=true, re-pausing');
+        audioRef.current?.pause();
+        return;
+      }
       isPlayingRef.current = true;
-      userPausedRef.current = false;
       reconnectAttemptRef.current = 0;
       lastTimeUpdateRef.current = Date.now();
       setState(prev => ({ ...prev, isPlaying: true, isLoading: false }));
@@ -330,9 +339,9 @@ export const useRadioPlayer = () => {
             if (!userPausedRef.current && isPlayingRef.current) {
               resumePlayback();
             }
-          }, 500);
+          }, 2000);
         }
-      }, 150); // Slightly longer delay for more reliable flag checking
+      }, 500); // Longer delay for more reliable flag checking
     };
     
     const handleError = (e: Event) => {
