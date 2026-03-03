@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { MapPin, Calendar, Clock, Hotel, Music, Bus, Utensils, Users, ChevronRight, Plane, FileSignature, CheckCircle2 } from 'lucide-react';
+import { MapPin, Calendar, Clock, Hotel, Music, Bus, Utensils, Users, ChevronRight, Plane, FileSignature, CheckCircle2, ListChecks, AlertCircle } from 'lucide-react';
 import { format, differenceInDays, isValid, parseISO } from 'date-fns';
 import { TourContractSigningModal } from './TourContractSigningModal';
 
@@ -57,11 +57,44 @@ interface TourLogistics {
   hospitality_notes: string | null;
 }
 
+interface TimelineEvent {
+  id: string;
+  label: string;
+  description: string | null;
+  event_category: string;
+  event_date: string;
+  event_time: string | null;
+  end_time: string | null;
+  location: string | null;
+  status: string | null;
+  notes: string | null;
+}
+
 const eventTypeConfig: Record<string, { icon: React.ElementType; color: string; label: string }> = {
   performance: { icon: Music, color: 'bg-primary text-primary-foreground', label: 'Performance' },
   travel: { icon: Bus, color: 'bg-muted text-foreground/70', label: 'Travel Day' },
   free: { icon: Calendar, color: 'bg-accent text-accent-foreground', label: 'Free Day' },
   rehearsal: { icon: Music, color: 'bg-secondary text-secondary-foreground', label: 'Rehearsal' },
+};
+
+const timelineCategoryConfig: Record<string, { icon: React.ElementType; color: string; label: string }> = {
+  call_time: { icon: AlertCircle, color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300', label: 'Call Time' },
+  transport: { icon: Bus, color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300', label: 'Transport' },
+  performance: { icon: Music, color: 'bg-primary/10 text-primary', label: 'Performance' },
+  rehearsal: { icon: Music, color: 'bg-secondary text-secondary-foreground', label: 'Rehearsal' },
+  meal: { icon: Utensils, color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', label: 'Meal' },
+  lodging: { icon: Hotel, color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300', label: 'Lodging' },
+  free_time: { icon: Calendar, color: 'bg-muted text-foreground/70', label: 'Free Time' },
+};
+
+const formatTime12 = (time: string | null) => {
+  if (!time) return null;
+  try {
+    const [h, m] = time.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+  } catch { return time; }
 };
 
 export const StudentTourView: React.FC = () => {
@@ -144,6 +177,22 @@ export const StudentTourView: React.FC = () => {
     enabled: cities.length > 0,
   });
 
+  // Fetch timeline events from logistics
+  const { data: timelineEvents = [] } = useQuery({
+    queryKey: ['student-tour-timeline', tour?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_tour_timeline_events')
+        .select('id, label, description, event_category, event_date, event_time, end_time, location, status, notes')
+        .eq('tour_id', tour!.id)
+        .order('event_date', { ascending: true })
+        .order('event_time', { ascending: true });
+      if (error) throw error;
+      return data as TimelineEvent[];
+    },
+    enabled: !!tour?.id,
+  });
+
   if (tourLoading) {
     return <LoadingSpinner size="lg" text="Loading tour info..." />;
   }
@@ -169,6 +218,20 @@ export const StudentTourView: React.FC = () => {
       const eventDate = new Date(e.start_date).toISOString().split('T')[0];
       return eventDate === city.arrival_date;
     });
+  };
+
+  // Match timeline events to cities by date
+  const getTimelineForCity = (city: TourCity) => {
+    // Get all dates this city covers (arrival to departure)
+    const dates: string[] = [];
+    const start = new Date(city.arrival_date + 'T12:00:00');
+    const end = city.departure_date ? new Date(city.departure_date + 'T12:00:00') : start;
+    const current = new Date(start);
+    while (current <= end) {
+      dates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+    }
+    return timelineEvents.filter(te => dates.includes(te.event_date));
   };
 
   return (
@@ -236,6 +299,7 @@ export const StudentTourView: React.FC = () => {
           {cities.map((city, idx) => {
             const cityLogistics = getLogisticsForCity(city.id);
             const cityEvents = getEventsForCity(city);
+            const cityTimeline = getTimelineForCity(city);
             const isLast = idx === cities.length - 1;
 
             return (
@@ -260,7 +324,7 @@ export const StudentTourView: React.FC = () => {
                 </CardHeader>
 
                 <CardContent className="pt-3 space-y-3">
-                  {/* Events for this city */}
+                  {/* Tour Events (from gw_tour_events) */}
                   {cityEvents.map(event => {
                     const cfg = eventTypeConfig[event.event_type] || eventTypeConfig.performance;
                     const Icon = cfg.icon;
@@ -289,6 +353,52 @@ export const StudentTourView: React.FC = () => {
                       </div>
                     );
                   })}
+
+                  {/* Timeline Events (from logistics) */}
+                  {cityTimeline.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-foreground/60 uppercase tracking-wider pt-1">
+                        <ListChecks className="h-3.5 w-3.5" />
+                        <span>Day Schedule</span>
+                      </div>
+                      {cityTimeline.map(te => {
+                        const cfg = timelineCategoryConfig[te.event_category] || timelineCategoryConfig.call_time;
+                        const Icon = cfg.icon;
+                        return (
+                          <div key={te.id} className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/30 border border-border/50">
+                            <div className={`flex items-center justify-center w-8 h-8 rounded-md ${cfg.color} flex-shrink-0`}>
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm text-foreground">{te.label}</p>
+                              {(te.event_time || te.end_time) && (
+                                <p className="text-xs text-foreground/70 flex items-center gap-1 mt-0.5">
+                                  <Clock className="h-3 w-3" />
+                                  {formatTime12(te.event_time)}
+                                  {te.end_time && ` – ${formatTime12(te.end_time)}`}
+                                </p>
+                              )}
+                              {te.location && (
+                                <p className="text-xs text-foreground/70 flex items-center gap-1 mt-0.5">
+                                  <MapPin className="h-3 w-3" />
+                                  {te.location}
+                                </p>
+                              )}
+                              {te.description && (
+                                <p className="text-xs text-foreground/70 mt-1.5 whitespace-pre-line leading-relaxed">
+                                  {te.description}
+                                </p>
+                              )}
+                              {te.notes && (
+                                <p className="text-xs text-foreground/50 mt-1 italic">{te.notes}</p>
+                              )}
+                            </div>
+                            <Badge variant="outline" className="text-xs shrink-0">{cfg.label}</Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {/* Logistics Details */}
                   {cityLogistics && (
@@ -345,7 +455,7 @@ export const StudentTourView: React.FC = () => {
                   )}
 
                   {/* No details fallback */}
-                  {cityEvents.length === 0 && !cityLogistics && city.city_notes && (
+                  {cityEvents.length === 0 && cityTimeline.length === 0 && !cityLogistics && city.city_notes && (
                     <p className="text-sm text-foreground/60 italic">{city.city_notes}</p>
                   )}
                 </CardContent>
