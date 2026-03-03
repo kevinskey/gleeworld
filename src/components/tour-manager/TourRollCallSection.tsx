@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -71,8 +71,22 @@ export const TourRollCallSection: React.FC = () => {
       return data || [];
     },
     enabled: !!tour?.id,
-    refetchInterval: 10000,
   });
+
+  // Realtime subscription for checkins & responses
+  useEffect(() => {
+    if (!tour?.id) return;
+    const channel = supabase
+      .channel('rollcall-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gw_tour_checkins', filter: `tour_id=eq.${tour.id}` }, () => {
+        qc.invalidateQueries({ queryKey: ['rollcall-checkins', tour.id] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gw_tour_checkin_responses' }, () => {
+        qc.invalidateQueries({ queryKey: ['rollcall-responses'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [tour?.id, qc]);
 
   // Fetch roster count
   const { data: rosterCount = 0 } = useQuery({
@@ -117,7 +131,6 @@ export const TourRollCallSection: React.FC = () => {
       return data || [];
     },
     enabled: activeCheckins.length > 0,
-    refetchInterval: 10000,
   });
 
   // Create session mutation
