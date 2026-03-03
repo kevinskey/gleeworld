@@ -710,7 +710,7 @@ export const TourLogisticsSection = () => {
                             </div>
                           </div>
                           {event.description && (
-                            <p className="mt-1 text-xs text-foreground/70">{event.description}</p>
+                            <p className="mt-1 text-xs text-foreground/70 whitespace-pre-line">{event.description}</p>
                           )}
                           {(event.location || event.notes || event.city_name) && (
                             <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
