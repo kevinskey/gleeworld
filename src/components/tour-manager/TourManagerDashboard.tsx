@@ -27,6 +27,7 @@ import { TourBudgetManager } from './TourBudgetManager';
 import { TourMilestones } from './TourMilestones';
 import { RisersSection } from '@/components/tour/RisersSection';
 import { TourNotesSection } from '@/components/tour/TourNotesSection';
+import { TourRollCallSection } from './TourRollCallSection';
 import { supabase } from '@/integrations/supabase/client';
 interface TourManagerDashboardProps {
   user?: {
@@ -67,6 +68,10 @@ const navItems = [{
   value: 'roster',
   label: 'Roster',
   icon: UserCheck
+}, {
+  value: 'roll-call',
+  label: 'Roll Call',
+  icon: CheckCircle2
 }, {
   value: 'risers',
   label: 'Risers',
@@ -143,6 +148,10 @@ const contentConfig: Record<string, {
   'roster': {
     title: 'Roster',
     description: 'Manage which members are going on tour'
+  },
+  'roll-call': {
+    title: 'Roll Call',
+    description: 'Check-in sessions for tour attendance'
   },
   'risers': {
     title: 'Risers',
@@ -278,6 +287,8 @@ export const TourManagerDashboard = ({
         return <TourDatesSection onGenerateContract={handleGenerateContract} />;
       case 'roster':
         return <TourRosterSection />;
+      case 'roll-call':
+        return <TourRollCallSection />;
       case 'risers':
         return <RisersSection />;
       case 'route-planning':

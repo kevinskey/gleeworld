@@ -19844,6 +19844,86 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_tour_checkin_responses: {
+        Row: {
+          checked_in_at: string
+          checkin_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checkin_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          checkin_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_checkin_responses_checkin_id_fkey"
+            columns: ["checkin_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_checkins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_tour_checkins: {
+        Row: {
+          checkin_date: string
+          city_id: string | null
+          closed_at: string | null
+          created_at: string
+          created_by: string
+          id: string
+          opened_at: string
+          title: string
+          tour_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          city_id?: string | null
+          closed_at?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          opened_at?: string
+          title: string
+          tour_id: string
+        }
+        Update: {
+          checkin_date?: string
+          city_id?: string | null
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          opened_at?: string
+          title?: string
+          tour_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_checkins_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_tour_checkins_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_tour_cities: {
         Row: {
           arrival_date: string | null
