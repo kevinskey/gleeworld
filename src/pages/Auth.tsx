@@ -1,19 +1,37 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthTabs } from "@/components/auth/AuthTabs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const { user, loading } = useAuth();
   const { profile, loading: profileLoading, isAdmin } = useUserRole();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const isReset = searchParams.get('reset') === 'true';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isRecovery, setIsRecovery] = useState(searchParams.get('reset') === 'true');
+  const isReset = isRecovery;
   const theme = searchParams.get('theme') as 'default' | 'mus240' || 'default';
+
+  // Listen for PASSWORD_RECOVERY event from Supabase (fires when user clicks reset link)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        console.log('🔑 PASSWORD_RECOVERY event detected');
+        setIsRecovery(true);
+        // Ensure the URL reflects reset state
+        setSearchParams((prev) => {
+          prev.set('reset', 'true');
+          return prev;
+        }, { replace: true });
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [setSearchParams]);
 
   useEffect(() => {
     // Don't redirect if user is resetting their password
@@ -40,7 +58,7 @@ const Auth = () => {
       // Redirect to root - useRoleBasedRedirect will handle the proper destination
       navigate('/', { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isReset]);
 
   // Show loading only during initial auth check
   if (loading) {
