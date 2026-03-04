@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -101,6 +101,7 @@ export const PointOfSale = () => {
   const [showReaderSettings, setShowReaderSettings] = useState(false);
   const [terminalPaymentLoading, setTerminalPaymentLoading] = useState(false);
   const [terminalCancelled, setTerminalCancelled] = useState(false);
+  const terminalCancelledRef = useRef(false);
   const { toast } = useToast();
 
   const terminal = useStripeTerminal();
@@ -289,6 +290,7 @@ export const PointOfSale = () => {
 
     setTerminalPaymentLoading(true);
     setTerminalCancelled(false);
+    terminalCancelledRef.current = false;
     try {
       const amountCents = Math.round(discountedTotal * 100);
       const result = await terminal.collectPayment(
@@ -297,11 +299,9 @@ export const PointOfSale = () => {
       );
 
       if (result) {
-        // Create order in gw_orders
         handlePaymentComplete();
         toast({ title: 'Payment successful!', description: `Charged $${(result.amount / 100).toFixed(2)} on reader.` });
-      } else if (!terminalCancelled) {
-        // Only show error if not user-cancelled
+      } else if (!terminalCancelledRef.current) {
         toast({
           title: 'Payment failed',
           description: terminal.error || 'Unable to process payment on reader',
@@ -309,7 +309,7 @@ export const PointOfSale = () => {
         });
       }
     } catch (err: any) {
-      if (!terminalCancelled) {
+      if (!terminalCancelledRef.current) {
         toast({
           title: 'Terminal error',
           description: err.message || 'Payment failed',
@@ -317,8 +317,10 @@ export const PointOfSale = () => {
         });
       }
     } finally {
-      setTerminalPaymentLoading(false);
-      terminal.resetPaymentStatus();
+      if (!terminalCancelledRef.current) {
+        setTerminalPaymentLoading(false);
+        terminal.resetPaymentStatus();
+      }
     }
   };
 
@@ -487,9 +489,12 @@ export const PointOfSale = () => {
               className="w-full h-12 text-base font-semibold gap-2"
               variant="destructive"
               onClick={async () => {
-                await terminal.cancelPayment();
+                terminalCancelledRef.current = true;
+                setTerminalCancelled(true);
                 setTerminalPaymentLoading(false);
-                toast({ title: 'Payment cancelled', description: 'The transaction was cancelled on the reader.' });
+                terminal.resetPaymentStatus();
+                toast({ title: 'Payment cancelled', description: 'You can update the cart and try again.' });
+                terminal.cancelPayment().catch(() => {});
               }}
             >
               <X className="w-5 h-5" />
@@ -735,10 +740,13 @@ export const PointOfSale = () => {
             className="h-14 px-10 text-lg font-bold gap-2"
             variant="destructive"
             onClick={async () => {
+              terminalCancelledRef.current = true;
               setTerminalCancelled(true);
-              await terminal.cancelPayment();
               setTerminalPaymentLoading(false);
+              terminal.resetPaymentStatus();
               toast({ title: 'Payment cancelled', description: 'You can update the cart and try again.' });
+              // Fire-and-forget the server cancel
+              terminal.cancelPayment().catch(() => {});
             }}
           >
             <X className="w-5 h-5" />
