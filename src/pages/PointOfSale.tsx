@@ -503,9 +503,12 @@ export const PointOfSale = () => {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
       {/* Top bar */}
-      <header className="bg-[#003666] text-white px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shrink-0">
+      <header
+        className="bg-[#003666] text-white px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shrink-0"
+        style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
+      >
         <div className="flex items-center gap-2 sm:gap-3">
           <Package className="w-5 h-5 sm:w-6 sm:h-6" />
           <h1 className="text-lg sm:text-xl font-bold">GleeWorld POS</h1>
