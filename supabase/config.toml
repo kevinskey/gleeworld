@@ -450,3 +450,6 @@ verify_jwt = false
 
 [functions.terminal-create-payment-intent]
 verify_jwt = false
+
+[functions.terminal-register-reader]
+verify_jwt = false
