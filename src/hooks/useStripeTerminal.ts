@@ -265,6 +265,7 @@ export function useStripeTerminal() {
     error,
     isDiscovering,
     lastReaderId,
+    isRegistering,
     initialize,
     discoverReaders,
     connectReader,
@@ -272,5 +273,6 @@ export function useStripeTerminal() {
     collectPayment,
     cancelPayment,
     resetPaymentStatus,
+    registerReader,
   };
 }
