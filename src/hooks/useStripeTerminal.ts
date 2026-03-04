@@ -227,6 +227,29 @@ export function useStripeTerminal() {
     setPaymentStatus('idle');
   }, []);
 
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  const registerReader = useCallback(async (registrationCode: string, label: string): Promise<boolean> => {
+    setIsRegistering(true);
+    setError(null);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('terminal-register-reader', {
+        body: { registration_code: registrationCode, label: label || undefined },
+      });
+      if (fnError || data?.error) {
+        throw new Error(fnError?.message || data?.error || 'Registration failed');
+      }
+      // Auto-discover after registration
+      await discoverReaders();
+      return true;
+    } catch (err: any) {
+      setError(err.message);
+      return false;
+    } finally {
+      setIsRegistering(false);
+    }
+  }, [discoverReaders]);
+
   const resetPaymentStatus = useCallback(() => {
     setPaymentStatus('idle');
     setError(null);
