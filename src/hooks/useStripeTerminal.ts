@@ -1,176 +1,107 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-// Types for the Stripe Terminal SDK
+// Types for server-driven Terminal integration
 interface StripeTerminalReader {
   id: string;
-  object: string;
-  device_sw_version: string | null;
+  object?: string;
+  device_sw_version?: string | null;
   device_type: string;
   label: string;
   serial_number: string;
   status: string;
-  ip_address?: string;
-}
-
-interface StripeTerminalInstance {
-  discoverReaders: (config?: any) => Promise<{ discoveredReaders?: StripeTerminalReader[]; error?: any }>;
-  connectReader: (reader: StripeTerminalReader) => Promise<{ reader?: StripeTerminalReader; error?: any }>;
-  disconnectReader: () => Promise<void>;
-  getConnectionStatus: () => string;
-  collectPaymentMethod: (clientSecret: string) => Promise<{ paymentIntent?: any; error?: any }>;
-  processPayment: (paymentIntent: any) => Promise<{ paymentIntent?: any; error?: any }>;
-  cancelCollectPaymentMethod: () => Promise<void>;
-  clearCachedCredentials: () => Promise<void>;
+  ip_address?: string | null;
+  location?: string | null;
 }
 
 type ConnectionStatus = 'not_connected' | 'connecting' | 'connected';
 type PaymentStatus = 'idle' | 'collecting' | 'processing' | 'succeeded' | 'failed';
 
 const LAST_READER_KEY = 'gleeworld_pos_last_reader_id';
+const POLL_INTERVAL = 2000; // 2 seconds
 
 export function useStripeTerminal() {
-  const terminalRef = useRef<StripeTerminalInstance | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('not_connected');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
   const [connectedReader, setConnectedReader] = useState<StripeTerminalReader | null>(null);
   const [discoveredReaders, setDiscoveredReaders] = useState<StripeTerminalReader[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isDiscovering, setIsDiscovering] = useState(false);
-  const initRef = useRef(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const pollRef = useRef<number | null>(null);
 
-  const fetchConnectionToken = useCallback(async (): Promise<string> => {
-    const { data, error } = await supabase.functions.invoke('terminal-connection-token');
-    if (error || !data?.secret) {
-      throw new Error(error?.message || 'Failed to fetch connection token');
-    }
-    return data.secret;
+  // Server-driven: no SDK to initialize
+  const initialize = useCallback(async () => {
+    console.log('[StripeTerminal] Server-driven mode — no SDK initialization needed');
   }, []);
 
-  const initialize = useCallback(async () => {
-    if (terminalRef.current) return;
-    if (initRef.current) return;
-    initRef.current = true;
-
-    try {
-      console.log('[StripeTerminal] Initializing...');
-      // Dynamically load the Stripe Terminal SDK from CDN
-      if (!(window as any).StripeTerminal) {
-        await new Promise<void>((resolve, reject) => {
-          const existing = document.querySelector('script[src*="stripe.com/terminal"]') as HTMLScriptElement | null;
-          if (existing) {
-            if ((window as any).StripeTerminal) {
-              resolve();
-            } else {
-              existing.addEventListener('load', () => resolve());
-              existing.addEventListener('error', () => reject(new Error('Failed to load Stripe Terminal SDK')));
-              setTimeout(() => {
-                if ((window as any).StripeTerminal) resolve();
-                else reject(new Error('Stripe Terminal SDK load timeout'));
-              }, 5000);
-            }
-            return;
-          }
-          const script = document.createElement('script');
-          script.src = 'https://js.stripe.com/terminal/v1/';
-          script.onload = () => {
-            console.log('[StripeTerminal] SDK script loaded');
-            resolve();
-          };
-          script.onerror = (e) => {
-            console.error('[StripeTerminal] SDK script failed to load', e);
-            reject(new Error('Failed to load Stripe Terminal SDK'));
-          };
-          document.head.appendChild(script);
-        });
-      }
-
-      const StripeTerminal = (window as any).StripeTerminal;
-      if (!StripeTerminal) {
-        throw new Error('Stripe Terminal SDK not available after script load');
-      }
-
-      console.log('[StripeTerminal] Creating terminal instance...');
-      const terminal = StripeTerminal.create({
-        onFetchConnectionToken: fetchConnectionToken,
-        onUnexpectedReaderDisconnect: () => {
-          setConnectionStatus('not_connected');
-          setConnectedReader(null);
-          setError('Reader disconnected unexpectedly');
-        },
-      });
-
-      terminalRef.current = terminal;
-      console.log('[StripeTerminal] Initialized successfully');
-    } catch (err: any) {
-      console.error('[StripeTerminal] Init failed:', err.message);
-      setError(err.message);
-      initRef.current = false;
-    }
-  }, [fetchConnectionToken]);
-
-  // Auto-initialize on mount
   useEffect(() => {
     initialize();
   }, [initialize]);
 
-  const discoverReaders = useCallback(async () => {
-    if (!terminalRef.current) {
-      console.log('[StripeTerminal] Terminal not ready, re-initializing...');
-      initRef.current = false; // Allow retry
-      await initialize();
-    }
-    if (!terminalRef.current) {
-      setError('Terminal not initialized. The Stripe Terminal SDK may be blocked. Try opening the POS on your published site.');
-      return [];
-    }
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+  }, []);
 
+  // Discover readers via Stripe API (server-side)
+  const discoverReaders = useCallback(async () => {
     setIsDiscovering(true);
     setError(null);
 
     try {
-      const result = await terminalRef.current.discoverReaders({
-        simulated: false,
-      });
+      const { data, error: fnError } = await supabase.functions.invoke(
+        'terminal-server-driven',
+        { body: { action: 'list_readers' } }
+      );
 
-      if (result.error) {
-        setError(result.error.message || 'Failed to discover readers');
-        setIsDiscovering(false);
-        return [];
+      if (fnError || data?.error) {
+        throw new Error(fnError?.message || data?.error || 'Failed to list readers');
       }
 
-      const readers = result.discoveredReaders || [];
-      setDiscoveredReaders(readers);
+      const readers: StripeTerminalReader[] = data.readers || [];
+      // Only show online readers
+      const onlineReaders = readers.filter((r) => r.status === 'online');
+      setDiscoveredReaders(onlineReaders);
       setIsDiscovering(false);
-      return readers;
+      console.log(`[StripeTerminal] Found ${onlineReaders.length} online reader(s) of ${readers.length} total`);
+      return onlineReaders;
     } catch (err: any) {
       setError(err.message);
       setIsDiscovering(false);
       return [];
     }
-  }, [initialize]);
+  }, []);
 
+  // "Connect" to a reader (server-driven = just select it, verify it's online)
   const connectReader = useCallback(async (reader: StripeTerminalReader) => {
-    if (!terminalRef.current) {
-      setError('Terminal not initialized');
-      return false;
-    }
-
     setConnectionStatus('connecting');
     setError(null);
 
     try {
-      const result = await terminalRef.current.connectReader(reader);
+      // Verify reader is online by checking its status
+      const { data, error: fnError } = await supabase.functions.invoke(
+        'terminal-server-driven',
+        { body: { action: 'reader_status', reader_id: reader.id } }
+      );
 
-      if (result.error) {
-        setError(result.error.message || 'Failed to connect to reader');
-        setConnectionStatus('not_connected');
-        return false;
+      if (fnError || data?.error) {
+        throw new Error(fnError?.message || data?.error || 'Failed to check reader status');
       }
 
-      setConnectedReader(result.reader || reader);
+      if (data.status !== 'online') {
+        throw new Error(`Reader is ${data.status}. It must be online to accept payments.`);
+      }
+
+      setConnectedReader({ ...reader, status: data.status });
       setConnectionStatus('connected');
       localStorage.setItem(LAST_READER_KEY, reader.id);
+      console.log(`[StripeTerminal] Selected reader: ${reader.label} (${reader.id})`);
       return true;
     } catch (err: any) {
       setError(err.message);
@@ -179,98 +110,179 @@ export function useStripeTerminal() {
     }
   }, []);
 
+  // Disconnect (just clear local state)
   const disconnectReader = useCallback(async () => {
-    if (!terminalRef.current) return;
-
-    try {
-      await terminalRef.current.disconnectReader();
-    } catch {
-      // ignore
-    }
     setConnectionStatus('not_connected');
     setConnectedReader(null);
     localStorage.removeItem(LAST_READER_KEY);
   }, []);
 
-  const collectPayment = useCallback(async (amountCents: number, couponCode?: string) => {
-    if (!terminalRef.current || connectionStatus !== 'connected') {
-      setError('Reader not connected');
-      return null;
-    }
+  // Poll reader action status until complete
+  const pollReaderAction = useCallback(
+    async (readerId: string, paymentIntentId: string): Promise<{ success: boolean; error?: string }> => {
+      const maxAttempts = 90; // 3 minutes max (2s intervals)
+      let attempts = 0;
 
-    setPaymentStatus('collecting');
-    setError(null);
+      return new Promise((resolve) => {
+        const poll = async () => {
+          attempts++;
+          try {
+            const { data, error: fnError } = await supabase.functions.invoke(
+              'terminal-server-driven',
+              { body: { action: 'reader_status', reader_id: readerId } }
+            );
 
-    try {
-      // 1. Create the PaymentIntent via edge function
-      const { data, error: fnError } = await supabase.functions.invoke(
-        'terminal-create-payment-intent',
-        { body: { amount: amountCents, couponCode } }
-      );
+            if (fnError || data?.error) {
+              resolve({ success: false, error: fnError?.message || data?.error });
+              return;
+            }
 
-      if (fnError || !data?.client_secret) {
-        throw new Error(fnError?.message || data?.error || 'Failed to create payment intent');
+            const action = data.action;
+
+            // No action means it completed (reader goes idle after success)
+            if (!action) {
+              // Check the payment intent status directly
+              resolve({ success: true });
+              return;
+            }
+
+            if (action.status === 'succeeded') {
+              resolve({ success: true });
+              return;
+            }
+
+            if (action.status === 'failed') {
+              resolve({
+                success: false,
+                error: action.failure_message || 'Payment failed on reader',
+              });
+              return;
+            }
+
+            // Still in progress
+            if (attempts >= maxAttempts) {
+              resolve({ success: false, error: 'Payment timed out' });
+              return;
+            }
+
+            // Continue polling
+            setTimeout(poll, POLL_INTERVAL);
+          } catch (err: any) {
+            resolve({ success: false, error: err.message });
+          }
+        };
+
+        poll();
+      });
+    },
+    []
+  );
+
+  // Collect payment: create PI, hand off to reader, poll for result
+  const collectPayment = useCallback(
+    async (amountCents: number, couponCode?: string) => {
+      if (!connectedReader || connectionStatus !== 'connected') {
+        setError('Reader not connected');
+        return null;
       }
 
-      // 2. Collect payment method on the reader
-      const collectResult = await terminalRef.current.collectPaymentMethod(data.client_secret);
+      setPaymentStatus('collecting');
+      setError(null);
 
-      if (collectResult.error) {
-        throw new Error(collectResult.error.message || 'Payment collection failed');
+      try {
+        // 1. Create the PaymentIntent via existing edge function
+        const { data: piData, error: piError } = await supabase.functions.invoke(
+          'terminal-create-payment-intent',
+          { body: { amount: amountCents, couponCode } }
+        );
+
+        if (piError || !piData?.id) {
+          throw new Error(piError?.message || piData?.error || 'Failed to create payment intent');
+        }
+
+        console.log(`[StripeTerminal] Created PaymentIntent: ${piData.id}`);
+
+        // 2. Hand off the PaymentIntent to the reader via Stripe API
+        const { data: processData, error: processError } = await supabase.functions.invoke(
+          'terminal-server-driven',
+          {
+            body: {
+              action: 'process_payment',
+              reader_id: connectedReader.id,
+              payment_intent_id: piData.id,
+            },
+          }
+        );
+
+        if (processError || processData?.error) {
+          throw new Error(
+            processError?.message || processData?.error || 'Failed to send payment to reader'
+          );
+        }
+
+        console.log(`[StripeTerminal] Payment handed off to reader, polling for result...`);
+
+        // 3. Poll for the reader action to complete
+        setPaymentStatus('processing');
+        const result = await pollReaderAction(connectedReader.id, piData.id);
+
+        if (!result.success) {
+          throw new Error(result.error || 'Payment failed');
+        }
+
+        setPaymentStatus('succeeded');
+        return {
+          paymentIntentId: piData.id,
+          amount: piData.amount,
+        };
+      } catch (err: any) {
+        setError(err.message);
+        setPaymentStatus('failed');
+        return null;
       }
+    },
+    [connectedReader, connectionStatus, pollReaderAction]
+  );
 
-      // 3. Process the payment
-      setPaymentStatus('processing');
-      const processResult = await terminalRef.current.processPayment(collectResult.paymentIntent);
-
-      if (processResult.error) {
-        throw new Error(processResult.error.message || 'Payment processing failed');
-      }
-
-      setPaymentStatus('succeeded');
-      return {
-        paymentIntentId: data.id,
-        amount: data.amount,
-      };
-    } catch (err: any) {
-      setError(err.message);
-      setPaymentStatus('failed');
-      return null;
-    }
-  }, [connectionStatus]);
-
+  // Cancel payment: cancel the reader's current action
   const cancelPayment = useCallback(async () => {
-    if (!terminalRef.current) return;
+    if (!connectedReader) return;
     try {
-      await terminalRef.current.cancelCollectPaymentMethod();
+      await supabase.functions.invoke('terminal-server-driven', {
+        body: { action: 'cancel_action', reader_id: connectedReader.id },
+      });
     } catch {
       // ignore
     }
     setPaymentStatus('idle');
-  }, []);
+  }, [connectedReader]);
 
-  const [isRegistering, setIsRegistering] = useState(false);
-
-  const registerReader = useCallback(async (registrationCode: string, label: string): Promise<boolean> => {
-    setIsRegistering(true);
-    setError(null);
-    try {
-      const { data, error: fnError } = await supabase.functions.invoke('terminal-register-reader', {
-        body: { registration_code: registrationCode, label: label || undefined },
-      });
-      if (fnError || data?.error) {
-        throw new Error(fnError?.message || data?.error || 'Registration failed');
+  const registerReader = useCallback(
+    async (registrationCode: string, label: string): Promise<boolean> => {
+      setIsRegistering(true);
+      setError(null);
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke(
+          'terminal-register-reader',
+          {
+            body: { registration_code: registrationCode, label: label || undefined },
+          }
+        );
+        if (fnError || data?.error) {
+          throw new Error(fnError?.message || data?.error || 'Registration failed');
+        }
+        // Auto-discover after registration
+        await discoverReaders();
+        return true;
+      } catch (err: any) {
+        setError(err.message);
+        return false;
+      } finally {
+        setIsRegistering(false);
       }
-      // Auto-discover after registration
-      await discoverReaders();
-      return true;
-    } catch (err: any) {
-      setError(err.message);
-      return false;
-    } finally {
-      setIsRegistering(false);
-    }
-  }, [discoverReaders]);
+    },
+    [discoverReaders]
+  );
 
   const resetPaymentStatus = useCallback(() => {
     setPaymentStatus('idle');
