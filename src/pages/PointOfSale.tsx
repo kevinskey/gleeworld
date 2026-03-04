@@ -461,21 +461,37 @@ export const PointOfSale = () => {
       )}
       {/* Terminal charge button (when reader connected) */}
       {terminal.connectionStatus === 'connected' && (
-        <Button
-          className="w-full h-14 text-lg font-bold gap-2"
-          variant="branded"
-          disabled={cart.length === 0 || terminalPaymentLoading}
-          onClick={handleTerminalCharge}
-        >
-          {terminalPaymentLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <>
-              <Wifi className="w-5 h-5" />
-              Charge on Reader ${discountedTotal.toFixed(2)}
-            </>
+        <>
+          <Button
+            className="w-full h-14 text-lg font-bold gap-2"
+            variant="branded"
+            disabled={cart.length === 0 || terminalPaymentLoading}
+            onClick={handleTerminalCharge}
+          >
+            {terminalPaymentLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <Wifi className="w-5 h-5" />
+                Charge on Reader ${discountedTotal.toFixed(2)}
+              </>
+            )}
+          </Button>
+          {terminalPaymentLoading && (
+            <Button
+              className="w-full h-12 text-base font-semibold gap-2"
+              variant="destructive"
+              onClick={async () => {
+                await terminal.cancelPayment();
+                setTerminalPaymentLoading(false);
+                toast({ title: 'Payment cancelled', description: 'The transaction was cancelled on the reader.' });
+              }}
+            >
+              <X className="w-5 h-5" />
+              Cancel Transaction
+            </Button>
           )}
-        </Button>
+        </>
       )}
 
       {/* QR code charge button */}
