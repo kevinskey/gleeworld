@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +8,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Wifi, WifiOff, RefreshCw, Unplug } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader2, Wifi, WifiOff, RefreshCw, Unplug, Plus } from 'lucide-react';
 
 interface Reader {
   id: string;
@@ -30,6 +33,8 @@ interface ReaderSettingsDialogProps {
   onDiscover: () => void;
   onConnect: (reader: Reader) => void;
   onDisconnect: () => void;
+  onRegister: (code: string, label: string) => Promise<boolean>;
+  isRegistering?: boolean;
 }
 
 export function ReaderSettingsDialog({
@@ -44,7 +49,23 @@ export function ReaderSettingsDialog({
   onDiscover,
   onConnect,
   onDisconnect,
+  onRegister,
+  isRegistering,
 }: ReaderSettingsDialogProps) {
+  const [showRegister, setShowRegister] = useState(false);
+  const [regCode, setRegCode] = useState('');
+  const [regLabel, setRegLabel] = useState('');
+
+  const handleRegister = async () => {
+    if (!regCode.trim()) return;
+    const ok = await onRegister(regCode.trim(), regLabel.trim());
+    if (ok) {
+      setRegCode('');
+      setRegLabel('');
+      setShowRegister(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -85,20 +106,73 @@ export function ReaderSettingsDialog({
             </div>
           )}
 
-          {/* Discover button */}
+          {/* Discover + Register buttons */}
           {connectionStatus !== 'connected' && (
-            <Button
-              className="w-full gap-2"
-              onClick={onDiscover}
-              disabled={isDiscovering}
-            >
-              {isDiscovering ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4" />
-              )}
-              {isDiscovering ? 'Searching for readers…' : 'Discover Readers'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                className="flex-1 gap-2"
+                onClick={onDiscover}
+                disabled={isDiscovering}
+              >
+                {isDiscovering ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                {isDiscovering ? 'Searching…' : 'Discover Readers'}
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => setShowRegister(!showRegister)}
+              >
+                <Plus className="w-4 h-4" />
+                Register
+              </Button>
+            </div>
+          )}
+
+          {/* Register reader form */}
+          {showRegister && connectionStatus !== 'connected' && (
+            <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+              <p className="text-sm font-medium">Register New Reader</p>
+              <p className="text-xs text-muted-foreground">
+                Enter the pairing code shown on your reader's screen.
+              </p>
+              <div className="space-y-2">
+                <div>
+                  <Label htmlFor="reg-code" className="text-xs">Pairing Code</Label>
+                  <Input
+                    id="reg-code"
+                    placeholder="e.g. sepia-cerulean-orchid"
+                    value={regCode}
+                    onChange={(e) => setRegCode(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="reg-label" className="text-xs">Label (optional)</Label>
+                  <Input
+                    id="reg-label"
+                    placeholder="e.g. Tour POS Reader"
+                    value={regLabel}
+                    onChange={(e) => setRegLabel(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="w-full gap-2"
+                onClick={handleRegister}
+                disabled={!regCode.trim() || isRegistering}
+              >
+                {isRegistering ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : null}
+                {isRegistering ? 'Registering…' : 'Register Reader'}
+              </Button>
+            </div>
           )}
 
           {/* Error */}
@@ -153,12 +227,13 @@ export function ReaderSettingsDialog({
           {/* Empty state */}
           {connectionStatus !== 'connected' &&
             !isDiscovering &&
-            discoveredReaders.length === 0 && (
+            discoveredReaders.length === 0 &&
+            !showRegister && (
               <div className="text-center py-6 text-muted-foreground">
                 <WifiOff className="w-8 h-8 mx-auto mb-2 opacity-40" />
                 <p className="text-sm">No readers found</p>
                 <p className="text-xs mt-1">
-                  Make sure your S710 reader is powered on and on the same network.
+                  Make sure your S710 is powered on and on the same network, or tap <strong>Register</strong> to pair a new reader.
                 </p>
               </div>
             )}
