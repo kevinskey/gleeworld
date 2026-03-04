@@ -714,6 +714,29 @@ export const PointOfSale = () => {
         )}
       </div>
 
+      {/* Fixed cancel overlay when terminal payment is processing */}
+      {terminalPaymentLoading && (
+        <div className="fixed inset-0 z-[99999] bg-black/60 flex flex-col items-center justify-center gap-6">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-12 h-12 animate-spin text-white" />
+            <p className="text-white text-xl font-semibold">Processing on Reader…</p>
+            <p className="text-white/70 text-sm">Waiting for customer to tap or insert card</p>
+          </div>
+          <Button
+            className="h-14 px-10 text-lg font-bold gap-2"
+            variant="destructive"
+            onClick={async () => {
+              await terminal.cancelPayment();
+              setTerminalPaymentLoading(false);
+              toast({ title: 'Payment cancelled', description: 'The transaction was cancelled on the reader.' });
+            }}
+          >
+            <X className="w-5 h-5" />
+            Cancel Transaction
+          </Button>
+        </div>
+      )}
+
       {/* Mobile: Floating cart bar at bottom */}
       {isMobile && itemCount > 0 && (
         <button
