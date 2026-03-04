@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isPasswordRecovery: boolean;
   signOut: () => Promise<void>;
   resetAuth: () => Promise<void>;
 }
@@ -44,6 +45,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(() => {
+    const hash = window.location.hash;
+    return hash.includes('type=recovery') || hash.includes('type=password_recovery');
+  });
   const subscriptionRef = useRef<any>(null);
   const mountedRef = useRef(true);
   const initializedRef = useRef(false);
@@ -93,6 +98,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           async (event, session) => {
             if (!mountedRef.current) return;
             
+            if (event === 'PASSWORD_RECOVERY') {
+              setIsPasswordRecovery(true);
+            }
+            
             if (event === 'TOKEN_REFRESHED' && !session) {
               cleanupAuthState();
               setSession(null);
@@ -105,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             
             if (event === 'SIGNED_OUT') {
               cleanupAuthState();
+              setIsPasswordRecovery(false);
             }
           }
         );
@@ -187,6 +197,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     session,
     loading,
+    isPasswordRecovery,
     signOut,
     resetAuth,
   };
