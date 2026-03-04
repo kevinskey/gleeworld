@@ -139,10 +139,22 @@ export function useStripeTerminal() {
 
             const action = data.action;
 
-            // No action means it completed (reader goes idle after success)
+            // No action means reader went idle — check PaymentIntent status
             if (!action) {
-              // Check the payment intent status directly
-              resolve({ success: true });
+              const { data: piData, error: piError } = await supabase.functions.invoke(
+                'terminal-server-driven',
+                { body: { action: 'payment_intent_status', payment_intent_id: paymentIntentId } }
+              );
+              if (piError || piData?.error) {
+                resolve({ success: false, error: piError?.message || piData?.error || 'Could not verify payment' });
+                return;
+              }
+              const piStatus = piData?.status;
+              if (piStatus === 'succeeded' || piStatus === 'requires_capture') {
+                resolve({ success: true });
+              } else {
+                resolve({ success: false, error: `Payment not completed (status: ${piStatus})` });
+              }
               return;
             }
 

@@ -112,6 +112,27 @@ serve(async (req) => {
         );
       }
 
+      // Check the status of a PaymentIntent
+      case "payment_intent_status": {
+        const { payment_intent_id } = params;
+        if (!payment_intent_id) {
+          throw new Error("payment_intent_id is required");
+        }
+
+        const pi = await stripe.paymentIntents.retrieve(payment_intent_id);
+
+        return new Response(
+          JSON.stringify({
+            id: pi.id,
+            status: pi.status,
+            amount: pi.amount,
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }
