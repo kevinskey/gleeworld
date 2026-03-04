@@ -927,6 +927,8 @@ export const PointOfSale = () => {
         onDiscover={terminal.discoverReaders}
         onConnect={terminal.connectReader as any}
         onDisconnect={terminal.disconnectReader}
+        onRegister={terminal.registerReader}
+        isRegistering={terminal.isRegistering}
       />
     </div>
   );
