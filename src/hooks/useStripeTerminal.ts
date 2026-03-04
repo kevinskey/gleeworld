@@ -55,9 +55,20 @@ export function useStripeTerminal() {
       // Dynamically load the Stripe Terminal SDK from CDN
       if (!(window as any).StripeTerminal) {
         await new Promise<void>((resolve, reject) => {
-          const existing = document.querySelector('script[src*="terminal"]');
+          const existing = document.querySelector('script[src*="stripe.com/terminal"]') as HTMLScriptElement | null;
           if (existing) {
-            resolve();
+            // Script tag exists but may still be loading
+            if ((window as any).StripeTerminal) {
+              resolve();
+            } else {
+              existing.addEventListener('load', () => resolve());
+              existing.addEventListener('error', () => reject(new Error('Failed to load Stripe Terminal SDK')));
+              // Timeout fallback in case events already fired
+              setTimeout(() => {
+                if ((window as any).StripeTerminal) resolve();
+                else reject(new Error('Stripe Terminal SDK load timeout'));
+              }, 5000);
+            }
             return;
           }
           const script = document.createElement('script');
