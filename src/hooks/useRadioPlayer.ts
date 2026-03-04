@@ -25,6 +25,12 @@ export interface RadioPlayerState {
 }
 
 let sharedAudio: HTMLAudioElement | null = null;
+let listenersAttached = false;
+// Shared state subscribers so all hook instances stay in sync
+const stateSubscribers = new Set<(update: Partial<RadioPlayerState>) => void>();
+const notifySubscribers = (update: Partial<RadioPlayerState>) => {
+  stateSubscribers.forEach(fn => fn(update));
+};
 
 /**
  * IMPORTANT:
@@ -78,6 +84,14 @@ export const useRadioPlayer = () => {
   // Audio coordination - ensure only one audio source plays at a time
   const { requestPlayback, registerPauseCallback, unregisterPauseCallback, notifyPaused } = useAudioCoordinator();
 
+  // Subscribe to shared state broadcasts so all instances stay in sync
+  useEffect(() => {
+    const handler = (update: Partial<RadioPlayerState>) => {
+      setState(prev => ({ ...prev, ...update }));
+    };
+    stateSubscribers.add(handler);
+    return () => { stateSubscribers.delete(handler); };
+  }, []);
   const refreshNowPlaying = useCallback(async () => {
     try {
       const status = await radioCoService.getStatus();
@@ -180,7 +194,7 @@ export const useRadioPlayer = () => {
     
     if (reconnectAttemptRef.current > maxReconnectAttempts) {
       console.error('useRadioPlayer: Max reconnect attempts reached');
-      setState(prev => ({ ...prev, isPlaying: false, isLoading: false }));
+      notifySubscribers({ isPlaying: false, isLoading: false });
       isPlayingRef.current = false;
       clearHeartbeat();
       toast({ 
@@ -303,7 +317,7 @@ export const useRadioPlayer = () => {
       isPlayingRef.current = true;
       reconnectAttemptRef.current = 0;
       lastTimeUpdateRef.current = Date.now();
-      setState(prev => ({ ...prev, isPlaying: true, isLoading: false }));
+      notifySubscribers({ isPlaying: true, isLoading: false });
       
       // Update Media Session playback state
       if ('mediaSession' in navigator) {
@@ -313,7 +327,7 @@ export const useRadioPlayer = () => {
     
     const handlePause = () => {
       // Update UI state
-      setState(prev => ({ ...prev, isPlaying: false }));
+      notifySubscribers({ isPlaying: false });
       
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
@@ -346,7 +360,7 @@ export const useRadioPlayer = () => {
     
     const handleError = (e: Event) => {
       console.error('useRadioPlayer: Stream error', e);
-      setState(prev => ({ ...prev, isLoading: false }));
+      notifySubscribers({ isLoading: false });
       
       // Only attempt reconnect if we were supposed to be playing and user didn't pause
       if (isPlayingRef.current && !userPausedRef.current) {
@@ -354,17 +368,17 @@ export const useRadioPlayer = () => {
         clearReconnectTimeout();
         reconnectTimeoutRef.current = setTimeout(attemptReconnect, 1000);
       } else {
-        setState(prev => ({ ...prev, isPlaying: false }));
+        notifySubscribers({ isPlaying: false });
       }
     };
     
     const handleWaiting = () => {
       console.log('useRadioPlayer: Stream buffering...');
-      setState(prev => ({ ...prev, isLoading: true }));
+      notifySubscribers({ isLoading: true });
     };
     
     const handleCanPlay = () => {
-      setState(prev => ({ ...prev, isLoading: false }));
+      notifySubscribers({ isLoading: false });
     };
     
     const handleTimeUpdate = () => {
@@ -399,15 +413,19 @@ export const useRadioPlayer = () => {
       // Don't do anything immediately - let visibility handler manage it
     };
 
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('waiting', handleWaiting);
-    audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('stalled', handleStalled);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('suspend', handleSuspend);
+    // Only attach listeners ONCE to the shared audio element
+    if (!listenersAttached) {
+      listenersAttached = true;
+      audio.addEventListener('play', handlePlay);
+      audio.addEventListener('pause', handlePause);
+      audio.addEventListener('error', handleError);
+      audio.addEventListener('waiting', handleWaiting);
+      audio.addEventListener('canplay', handleCanPlay);
+      audio.addEventListener('timeupdate', handleTimeUpdate);
+      audio.addEventListener('stalled', handleStalled);
+      audio.addEventListener('ended', handleEnded);
+      audio.addEventListener('suspend', handleSuspend);
+    }
 
     if (!audio.paused && audio.src) {
       isPlayingRef.current = true;
@@ -415,15 +433,8 @@ export const useRadioPlayer = () => {
     }
 
     return () => {
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('waiting', handleWaiting);
-      audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('stalled', handleStalled);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('suspend', handleSuspend);
+      // Don't remove listeners on unmount since other instances share the audio.
+      // They are cleaned up only on resetAudio.
       clearReconnectTimeout();
     };
   }, [attemptReconnect, clearReconnectTimeout, setupMediaSession, resumePlayback]);
@@ -502,7 +513,7 @@ export const useRadioPlayer = () => {
       if (audioRef.current) {
         audioRef.current.pause();
       }
-      setState(prev => ({ ...prev, isPlaying: false }));
+      notifySubscribers({ isPlaying: false });
     };
     
     registerPauseCallback('radio', pauseRadio);
@@ -673,6 +684,7 @@ export const useRadioPlayer = () => {
       sharedAudio.src = '';
     }
     sharedAudio = null;
+    listenersAttached = false;
     audioRef.current = null;
     isPlayingRef.current = false;
     userPausedRef.current = true;
