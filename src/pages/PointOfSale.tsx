@@ -100,6 +100,7 @@ export const PointOfSale = () => {
   const [showCouponManager, setShowCouponManager] = useState(false);
   const [showReaderSettings, setShowReaderSettings] = useState(false);
   const [terminalPaymentLoading, setTerminalPaymentLoading] = useState(false);
+  const [terminalCancelled, setTerminalCancelled] = useState(false);
   const { toast } = useToast();
 
   const terminal = useStripeTerminal();
@@ -287,6 +288,7 @@ export const PointOfSale = () => {
     if (cart.length === 0 || terminal.connectionStatus !== 'connected') return;
 
     setTerminalPaymentLoading(true);
+    setTerminalCancelled(false);
     try {
       const amountCents = Math.round(discountedTotal * 100);
       const result = await terminal.collectPayment(
@@ -298,7 +300,8 @@ export const PointOfSale = () => {
         // Create order in gw_orders
         handlePaymentComplete();
         toast({ title: 'Payment successful!', description: `Charged $${(result.amount / 100).toFixed(2)} on reader.` });
-      } else {
+      } else if (!terminalCancelled) {
+        // Only show error if not user-cancelled
         toast({
           title: 'Payment failed',
           description: terminal.error || 'Unable to process payment on reader',
@@ -306,11 +309,13 @@ export const PointOfSale = () => {
         });
       }
     } catch (err: any) {
-      toast({
-        title: 'Terminal error',
-        description: err.message || 'Payment failed',
-        variant: 'destructive',
-      });
+      if (!terminalCancelled) {
+        toast({
+          title: 'Terminal error',
+          description: err.message || 'Payment failed',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setTerminalPaymentLoading(false);
       terminal.resetPaymentStatus();
@@ -730,9 +735,10 @@ export const PointOfSale = () => {
             className="h-14 px-10 text-lg font-bold gap-2"
             variant="destructive"
             onClick={async () => {
+              setTerminalCancelled(true);
               await terminal.cancelPayment();
               setTerminalPaymentLoading(false);
-              toast({ title: 'Payment cancelled', description: 'The transaction was cancelled on the reader.' });
+              toast({ title: 'Payment cancelled', description: 'You can update the cart and try again.' });
             }}
           >
             <X className="w-5 h-5" />
