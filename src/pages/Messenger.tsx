@@ -832,8 +832,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                               </div>
                             </div>
 
-                            {/* Send Button - desktop */}
-                            <div className="pt-1 hidden lg:block">
+                            {/* Send Button - desktop & tablet */}
+                            <div className="pt-1 hidden sm:block">
                               <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full h-9 text-sm">
                                 {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
                               </Button>
@@ -841,8 +841,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           </div>
                         </ScrollArea>
 
-                        {/* Send Button - fixed at bottom on mobile */}
-                        <div className="flex-shrink-0 p-3 border-t border-border bg-card lg:hidden">
+                        {/* Send Button - fixed at bottom on phone only */}
+                        <div className="flex-shrink-0 p-3 border-t border-border bg-card sm:hidden">
                           <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full h-14 text-base">
                             {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
                           </Button>
