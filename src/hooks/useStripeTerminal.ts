@@ -48,22 +48,22 @@ export function useStripeTerminal() {
   }, []);
 
   const initialize = useCallback(async () => {
-    if (initRef.current || terminalRef.current) return;
+    if (terminalRef.current) return;
+    if (initRef.current) return;
     initRef.current = true;
 
     try {
+      console.log('[StripeTerminal] Initializing...');
       // Dynamically load the Stripe Terminal SDK from CDN
       if (!(window as any).StripeTerminal) {
         await new Promise<void>((resolve, reject) => {
           const existing = document.querySelector('script[src*="stripe.com/terminal"]') as HTMLScriptElement | null;
           if (existing) {
-            // Script tag exists but may still be loading
             if ((window as any).StripeTerminal) {
               resolve();
             } else {
               existing.addEventListener('load', () => resolve());
               existing.addEventListener('error', () => reject(new Error('Failed to load Stripe Terminal SDK')));
-              // Timeout fallback in case events already fired
               setTimeout(() => {
                 if ((window as any).StripeTerminal) resolve();
                 else reject(new Error('Stripe Terminal SDK load timeout'));
@@ -73,17 +73,24 @@ export function useStripeTerminal() {
           }
           const script = document.createElement('script');
           script.src = 'https://js.stripe.com/terminal/v1/';
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error('Failed to load Stripe Terminal SDK'));
+          script.onload = () => {
+            console.log('[StripeTerminal] SDK script loaded');
+            resolve();
+          };
+          script.onerror = (e) => {
+            console.error('[StripeTerminal] SDK script failed to load', e);
+            reject(new Error('Failed to load Stripe Terminal SDK'));
+          };
           document.head.appendChild(script);
         });
       }
 
       const StripeTerminal = (window as any).StripeTerminal;
       if (!StripeTerminal) {
-        throw new Error('Stripe Terminal SDK not available');
+        throw new Error('Stripe Terminal SDK not available after script load');
       }
 
+      console.log('[StripeTerminal] Creating terminal instance...');
       const terminal = StripeTerminal.create({
         onFetchConnectionToken: fetchConnectionToken,
         onUnexpectedReaderDisconnect: () => {
@@ -94,7 +101,9 @@ export function useStripeTerminal() {
       });
 
       terminalRef.current = terminal;
+      console.log('[StripeTerminal] Initialized successfully');
     } catch (err: any) {
+      console.error('[StripeTerminal] Init failed:', err.message);
       setError(err.message);
       initRef.current = false;
     }
@@ -107,10 +116,12 @@ export function useStripeTerminal() {
 
   const discoverReaders = useCallback(async () => {
     if (!terminalRef.current) {
+      console.log('[StripeTerminal] Terminal not ready, re-initializing...');
+      initRef.current = false; // Allow retry
       await initialize();
     }
     if (!terminalRef.current) {
-      setError('Terminal not initialized');
+      setError('Terminal not initialized. The Stripe Terminal SDK may be blocked. Try opening the POS on your published site.');
       return [];
     }
 
