@@ -715,12 +715,16 @@ export const PointOfSale = () => {
       </div>
 
       {/* Fixed cancel overlay when terminal payment is processing */}
-      {terminalPaymentLoading && (
+      {(terminalPaymentLoading || terminal.paymentStatus === 'collecting' || terminal.paymentStatus === 'processing') && (
         <div className="fixed inset-0 z-[99999] bg-black/60 flex flex-col items-center justify-center gap-6">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-12 h-12 animate-spin text-white" />
             <p className="text-white text-xl font-semibold">Processing on Reader…</p>
-            <p className="text-white/70 text-sm">Waiting for customer to tap or insert card</p>
+            <p className="text-white/70 text-sm">
+              {terminal.paymentStatus === 'collecting'
+                ? 'Sending payment to reader…'
+                : 'Waiting for customer to tap or insert card'}
+            </p>
           </div>
           <Button
             className="h-14 px-10 text-lg font-bold gap-2"
