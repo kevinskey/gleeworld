@@ -181,17 +181,17 @@ export default function AuthPage() {
       <div className="w-full max-w-md relative z-10">
         
         {/* Header */}
-        <div className="text-center mb-4 sm:mb-6 md:mb-8">
-          <div className="flex justify-center mb-3 sm:mb-4 md:mb-6">
-            <img src={gleeWorldLogoCircle} alt="GleeWorld.org logo" className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 object-contain drop-shadow-2xl" />
+        <div className="text-center mb-3 sm:mb-5 md:mb-8">
+          <div className="flex justify-center mb-2 sm:mb-3 md:mb-5">
+            <img src={gleeWorldLogoCircle} alt="GleeWorld.org logo" className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 object-contain drop-shadow-2xl" />
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3 drop-shadow-2xl lg:text-6xl">
+          <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-white mb-1 sm:mb-2 drop-shadow-2xl lg:text-5xl">
             Glee World! 
           </h1>
-          <h2 className="text-base sm:text-lg md:text-xl mb-2 sm:mb-3 md:mb-4 drop-shadow-lg font-serif text-white font-semibold">
+          <h2 className="text-sm sm:text-base md:text-xl mb-1 sm:mb-2 md:mb-3 drop-shadow-lg font-serif text-white font-semibold">
             {isForgotPassword ? 'Reset Your Password' : 'Sign in or Create an account'}
           </h2>
-          <p className="text-white/80 text-sm sm:text-base md:text-lg drop-shadow-md">
+          <p className="text-white/80 text-xs sm:text-sm md:text-base drop-shadow-md">
             {isForgotPassword 
               ? 'Enter your email to receive a reset link' 
               : isLogin 
