@@ -1,7 +1,5 @@
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { GroupMessageInterface } from "@/components/notifications/GroupMessageInterface";
-import { ModulePageHeader } from "@/components/shared/ModulePageHeader";
-import { MessageSquare } from "lucide-react";
 
 export default function Messages() {
   return (
