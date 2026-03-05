@@ -781,6 +781,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             color: hsl(var(--primary)) !important;
             text-decoration: underline;
           }
+          @media (max-width: 767px) {
+            .rich-text-editor-content {
+              min-height: 120px !important;
+              max-height: 35vh !important;
+            }
+          }
         `}</style>
       </div>
 

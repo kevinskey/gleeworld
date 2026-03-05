@@ -677,7 +677,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   // Main content component (used in both embedded and full page modes)
   const mainContent = (
     <div
-      className={`flex flex-col ${embedded ? 'h-full' : 'h-[calc(100dvh-var(--gw-header-h,4rem)-var(--gw-radio-bar-height,0px))]'}`}
+      className={`flex flex-col ${embedded ? 'h-full' : 'h-[100dvh] md:h-[calc(100dvh-var(--gw-header-h,4rem)-var(--gw-radio-bar-height,0px))]'} overflow-hidden`}
     >
       {/* Persistent Header - hide in embedded mode */}
       {!embedded && (
@@ -762,7 +762,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                       {/* Compose form - hide on mobile when viewing history */}
                       <div className={`flex-1 flex flex-col min-h-0 ${showEmailHistory ? 'hidden lg:flex' : 'flex'}`}>
                         <ScrollArea className="flex-1 min-h-0">
-                          <div className="bg-card p-3 lg:p-4 space-y-3 pb-24 lg:pb-3">
+                          <div className="bg-card p-3 lg:p-4 space-y-3 pb-4 lg:pb-3">
                             {/* Recipients */}
                             <div className="space-y-0.5">
                               <Label className="text-sm font-semibold text-foreground">To:</Label>
