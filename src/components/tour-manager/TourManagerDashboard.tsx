@@ -50,7 +50,7 @@ const navItems = [{
   icon: MessageSquare
 }, {
   value: 'logistics',
-  label: 'Logistics',
+  label: 'Itinerary',
   icon: Clock
 }, {
   value: 'contracts',
@@ -126,7 +126,7 @@ const contentConfig: Record<string, {
     description: 'Overview of all tour operations'
   },
   'logistics': {
-    title: 'Logistics',
+    title: 'Itinerary',
     description: 'Call times, crew duties, and merchandise coordination'
   },
   'booking-requests': {
