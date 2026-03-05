@@ -116,7 +116,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
               <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
                 {/* Logo Image */}
                 <img
-                  src="/gleeworld-door-icon.png?v=2"
+                  src="/favicon.png?v=3"
                   alt="GleeWorld"
                   className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0 object-contain`}
                   style={{ filter: 'drop-shadow(0 0 0.5px rgba(0,0,0,0.18))' }}
