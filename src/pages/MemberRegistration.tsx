@@ -42,7 +42,7 @@ const MemberRegistration = () => {
         // User might exist but wrong password, or user doesn't exist
         // Try password reset to definitively check
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`
+          redirectTo: `https://gleeworld.org/reset-password`
         });
 
         if (resetError && resetError.message.includes('User not found')) {
@@ -115,7 +115,7 @@ const MemberRegistration = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: `https://gleeworld.org/reset-password`
       });
 
       if (error) throw error;
