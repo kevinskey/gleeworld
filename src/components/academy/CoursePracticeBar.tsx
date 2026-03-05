@@ -179,7 +179,6 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
 
   const showPlayer = !loading && playlists.length > 0;
 
-  // Clean display title - remove timestamps and hashes
   const cleanDisplayTitle = (title: string) => {
     return title
       .replace(/^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_/, '')
@@ -206,44 +205,95 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
     <>
       <audio ref={audioRef} preload="metadata" />
       
+      {/* ===== MOBILE: Single compact row ===== */}
       <Card className={cn(
-        "mx-3 sm:mx-4 md:mx-6 mt-3 md:mt-4 shadow-md border-border/80 overflow-hidden",
+        "md:hidden mx-3 sm:mx-4 mt-3 shadow-sm border-border/80 overflow-hidden",
+        className
+      )}>
+        <div className="flex items-center gap-2 px-2.5 py-2">
+          {/* Modules */}
+          <CourseModulesSheet courseId={courseId} courseCode={courseCode} />
+
+          {/* Play/Pause */}
+          <Button
+            variant="default"
+            size="icon-sm"
+            className="h-8 w-8 rounded-md shrink-0"
+            onClick={currentTrack ? togglePlay : handleFirstPlay}
+            disabled={tracks.length === 0}
+          >
+            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+          </Button>
+
+          {/* Track title + progress */}
+          <div className="flex-1 min-w-0 space-y-0.5" onClick={() => setDrawerOpen(true)}>
+            <p className="text-xs font-medium text-foreground truncate leading-tight">
+              {currentTrack?.track_data?.title
+                ? cleanDisplayTitle(currentTrack.track_data.title)
+                : courseCode + ' Practice'}
+            </p>
+            <Slider
+              value={[progress]}
+              onValueChange={handleSeek}
+              max={100}
+              step={0.1}
+              className="cursor-pointer h-1"
+              disabled={!currentTrack}
+            />
+          </div>
+
+          {/* Time */}
+          {currentTrack && (
+            <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+              {formatTime(currentTime)}
+            </span>
+          )}
+
+          {/* Queue */}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="h-7 w-7 shrink-0"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <ListMusic className="h-4 w-4" />
+          </Button>
+        </div>
+      </Card>
+
+      {/* ===== DESKTOP: Full multi-row layout ===== */}
+      <Card className={cn(
+        "hidden md:block mx-4 md:mx-6 mt-3 md:mt-4 shadow-md border-border/80 overflow-hidden",
         className
       )}>
         {/* Row 1: Course Identity + Now Playing */}
-        <div className="px-3 sm:px-4 py-1.5 sm:py-2.5 border-b border-border/50 bg-muted/30">
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Course Badge */}
+        <div className="px-4 py-2.5 border-b border-border/50 bg-muted/30">
+          <div className="flex items-center gap-3">
             <Badge variant="secondary" className="font-mono text-xs shrink-0">
               {courseCode}
             </Badge>
 
-            {/* Album Art & Track Info */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0 border border-border/50">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0 border border-border/50">
                 {currentTrack ? (
-                  <Music className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <Music className="h-5 w-5 text-primary" />
                 ) : (
-                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                  <BookOpen className="h-5 w-5 text-muted-foreground" />
                 )}
               </div>
               
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-foreground truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {currentTrack?.track_data?.title 
                     ? cleanDisplayTitle(currentTrack.track_data.title) 
                     : 'Course Listening & Practice Engine'}
                 </p>
-                <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   {currentTrack ? (
                     <>
-                      <span className="truncate">
-                        {selectedPlaylist?.title || 'Listening'}
-                      </span>
+                      <span className="truncate">{selectedPlaylist?.title || 'Listening'}</span>
                       <span className="text-border">•</span>
-                      <span className="shrink-0">
-                        Track {(currentTrackIndex ?? 0) + 1} of {tracks.length}
-                      </span>
+                      <span className="shrink-0">Track {(currentTrackIndex ?? 0) + 1} of {tracks.length}</span>
                     </>
                   ) : (
                     <span>Select a track to begin practicing</span>
@@ -252,14 +302,12 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
               </div>
             </div>
 
-            {/* Assignment Tag (when applicable) */}
             {currentTrack && (
-              <Badge className="hidden sm:flex bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200 border-amber-300 dark:border-amber-700 text-[10px] font-medium">
+              <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200 border-amber-300 dark:border-amber-700 text-[10px] font-medium">
                 Listening Assignment
               </Badge>
             )}
 
-            {/* Expand Button */}
             <Button
               variant="ghost"
               size="icon-sm"
@@ -272,167 +320,61 @@ export const CoursePracticeBar: React.FC<CoursePracticeBarProps> = ({
         </div>
 
         {/* Row 2: Transport + Waveform + Tools */}
-        <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-card">
-          <div className="flex items-center gap-1.5 sm:gap-3">
-            {/* Modules Button */}
+        <div className="px-4 py-2 bg-card">
+          <div className="flex items-center gap-3">
             <CourseModulesSheet courseId={courseId} courseCode={courseCode} />
 
-            {/* Transport Controls */}
             <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="h-8 w-8"
-                onClick={skipPrevious}
-                disabled={currentTrackIndex === null || currentTrackIndex === 0}
-              >
+              <Button variant="ghost" size="icon-sm" className="h-8 w-8" onClick={skipPrevious}
+                disabled={currentTrackIndex === null || currentTrackIndex === 0}>
                 <SkipBack className="h-4 w-4" />
               </Button>
-              
-              <Button
-                variant="default"
-                size="icon"
-                className="h-8 w-8 sm:h-10 sm:w-10 rounded-md shadow-sm"
-                onClick={currentTrack ? togglePlay : handleFirstPlay}
-                disabled={tracks.length === 0}
-              >
-                {isPlaying ? (
-                  <Pause className="h-5 w-5" />
-                ) : (
-                  <Play className="h-5 w-5 ml-0.5" />
-                )}
+              <Button variant="default" size="icon" className="h-10 w-10 rounded-md shadow-sm"
+                onClick={currentTrack ? togglePlay : handleFirstPlay} disabled={tracks.length === 0}>
+                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
               </Button>
-              
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="h-8 w-8"
-                onClick={skipNext}
-                disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}
-              >
+              <Button variant="ghost" size="icon-sm" className="h-8 w-8" onClick={skipNext}
+                disabled={currentTrackIndex === null || currentTrackIndex >= tracks.length - 1}>
                 <SkipForward className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* Time Display (Current) */}
-            <span className="text-xs text-muted-foreground tabular-nums w-10 text-right hidden sm:inline">
+            <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
               {formatTime(currentTime)}
             </span>
 
-            {/* Waveform/Progress Scrubber */}
             <div className="flex-1 max-w-md">
-              <Slider
-                value={[progress]}
-                onValueChange={handleSeek}
-                max={100}
-                step={0.1}
-                className="cursor-pointer"
-                disabled={!currentTrack}
-              />
+              <Slider value={[progress]} onValueChange={handleSeek} max={100} step={0.1}
+                className="cursor-pointer" disabled={!currentTrack} />
             </div>
 
-            {/* Time Display (Duration) */}
-            <span className="text-xs text-muted-foreground tabular-nums w-10 hidden sm:inline">
+            <span className="text-xs text-muted-foreground tabular-nums w-10">
               {formatTime(duration)}
             </span>
 
-            {/* Tool Buttons */}
-            <div className="hidden md:flex items-center gap-1 border-l border-border pl-2 ml-1">
-              {/* Loop */}
-              <Button
-                variant="ghost"
-                size="icon-sm"
+            <div className="flex items-center gap-1 border-l border-border pl-2 ml-1">
+              <Button variant="ghost" size="icon-sm"
                 className={cn("h-7 w-7", isLooping && "text-primary bg-primary/10")}
-                onClick={() => setIsLooping(!isLooping)}
-                title="Loop"
-              >
+                onClick={() => setIsLooping(!isLooping)} title="Loop">
                 <Repeat className="h-3.5 w-3.5" />
               </Button>
-
-              {/* Tempo/Playback Rate */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "h-7 px-2 text-xs tabular-nums",
-                  playbackRate !== 1 && "text-primary bg-primary/10"
-                )}
-                onClick={cyclePlaybackRate}
-                title="Playback Speed"
-              >
+              <Button variant="ghost" size="sm"
+                className={cn("h-7 px-2 text-xs tabular-nums", playbackRate !== 1 && "text-primary bg-primary/10")}
+                onClick={cyclePlaybackRate} title="Playback Speed">
                 {playbackRate}x
               </Button>
-
-              {/* Volume */}
               <div className="flex items-center gap-1 group">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="h-7 w-7"
-                  onClick={toggleMute}
-                >
-                  {isMuted || volume === 0 ? (
-                    <VolumeX className="h-3.5 w-3.5" />
-                  ) : (
-                    <Volume2 className="h-3.5 w-3.5" />
-                  )}
+                <Button variant="ghost" size="icon-sm" className="h-7 w-7" onClick={toggleMute}>
+                  {isMuted || volume === 0 ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
                 </Button>
                 <div className="w-16 hidden lg:block">
-                  <Slider
-                    value={[isMuted ? 0 : volume]}
-                    onValueChange={handleVolumeChange}
-                    max={100}
-                    step={1}
-                    className="cursor-pointer"
-                  />
+                  <Slider value={[isMuted ? 0 : volume]} onValueChange={handleVolumeChange} max={100} step={1} className="cursor-pointer" />
                 </div>
               </div>
             </div>
 
-            {/* Playlist/Queue Button */}
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="h-8 w-8 shrink-0"
-              onClick={() => setDrawerOpen(true)}
-            >
+            <Button variant="ghost" size="icon-sm" className="h-8 w-8 shrink-0" onClick={() => setDrawerOpen(true)}>
               <ListMusic className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Tools Row */}
-        <div className="md:hidden px-3 py-2 border-t border-border/50 bg-muted/20 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="tabular-nums">{formatTime(currentTime)} / {formatTime(duration)}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className={cn("h-7 w-7", isLooping && "text-primary bg-primary/10")}
-              onClick={() => setIsLooping(!isLooping)}
-            >
-              <Repeat className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "h-7 px-2 text-xs",
-                playbackRate !== 1 && "text-primary bg-primary/10"
-              )}
-              onClick={cyclePlaybackRate}
-            >
-              {playbackRate}x
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="h-7 w-7"
-              onClick={toggleMute}
-            >
-              {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
             </Button>
           </div>
         </div>
