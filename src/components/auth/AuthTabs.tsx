@@ -10,7 +10,10 @@ import { ResetPasswordForm } from "./ResetPasswordForm";
 export const AuthTabs = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [searchParams] = useSearchParams();
-  const isReset = searchParams.get('reset') === 'true';
+  const hash = window.location.hash;
+  const isReset = searchParams.get('reset') === 'true' 
+    || hash.includes('type=recovery') 
+    || hash.includes('type=password_recovery');
 
   // If it's a password reset, show the reset form directly
   if (isReset) {
