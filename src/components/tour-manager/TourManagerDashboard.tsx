@@ -201,6 +201,17 @@ export const TourManagerDashboard = ({
   const [activeSection, setActiveSection] = useState('overview');
   const [contractEventData, setContractEventData] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const mainContentRef = React.useRef<HTMLDivElement>(null);
+
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section);
+    setSidebarOpen(false);
+    // Scroll main content to top
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  };
   const [stats, setStats] = useState({
     upcomingDates: 0,
     activeRoutes: 0,
