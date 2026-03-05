@@ -613,7 +613,9 @@ const App = () => {
                 path="/control-center" 
                 element={
                   <ProtectedRoute>
-                    <BookAppointmentPage />
+                    <UniversalLayout>
+                      <UnifiedDashboard />
+                    </UniversalLayout>
                   </ProtectedRoute>
                 } 
               />
