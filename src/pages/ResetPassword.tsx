@@ -86,7 +86,7 @@ const ResetPassword = () => {
       });
 
       setTimeout(() => {
-        navigate('/onboarding');
+        navigate('/', { replace: true });
       }, 3000);
 
     } catch (err: any) {
@@ -116,7 +116,7 @@ const ResetPassword = () => {
             <CardContent className="space-y-4">
               <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
                 <p className="text-sm text-green-800 dark:text-green-200">
-                  You'll be automatically redirected to complete your onboarding in a few seconds...
+                  You'll be automatically redirected in a few seconds...
                 </p>
               </div>
               <div className="space-y-2">
