@@ -1097,7 +1097,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   // Return full page mode with layout
   return (
     <>
-      <UniversalLayout showHeader={true} showFooter={false}>
+      <UniversalLayout showHeader={true} showFooter={false} containerized={false}>
         {mainContent}
       </UniversalLayout>
       {groupEditorDialog}
