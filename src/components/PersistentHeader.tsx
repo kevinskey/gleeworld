@@ -71,9 +71,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
             {/* GleeWorld Logo */}
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-base md:text-lg">GW</span>
-            </div>
+            <img src="/favicon.png?v=3" alt="GleeWorld" className="w-8 h-8 md:w-10 md:h-10 rounded-lg object-contain" />
             
             {/* Branding Text */}
             <div className="flex flex-col">
