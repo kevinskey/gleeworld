@@ -15,8 +15,12 @@ const Auth = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isRecovery, setIsRecovery] = useState(() => {
     if (searchParams.get('reset') === 'true') return true;
+    if (sessionStorage.getItem('password_recovery_active') === 'true') return true;
     const hash = window.location.hash;
-    if (hash.includes('type=recovery') || hash.includes('type=password_recovery')) return true;
+    if (hash.includes('type=recovery') || hash.includes('type=password_recovery')) {
+      sessionStorage.setItem('password_recovery_active', 'true');
+      return true;
+    }
     return false;
   });
   const isReset = isRecovery || isPasswordRecovery;
@@ -27,6 +31,7 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         console.log('🔑 PASSWORD_RECOVERY event detected');
+        sessionStorage.setItem('password_recovery_active', 'true');
         setIsRecovery(true);
         // Ensure the URL reflects reset state
         setSearchParams((prev) => {
