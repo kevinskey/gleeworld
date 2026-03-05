@@ -367,10 +367,7 @@ export const TourManagerDashboard = ({
               {navItems.map(item => (
                 <button 
                   key={item.value} 
-                  onClick={() => {
-                    setActiveSection(item.value);
-                    setSidebarOpen(false);
-                  }} 
+                  onClick={() => handleSectionChange(item.value)} 
                   className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-left",
                     activeSection === item.value 
@@ -391,7 +388,7 @@ export const TourManagerDashboard = ({
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
-          <div className="flex-1 overflow-auto p-4">
+          <div ref={mainContentRef} className="flex-1 overflow-auto p-4">
             {renderContent()}
           </div>
         </main>
@@ -401,7 +398,7 @@ export const TourManagerDashboard = ({
       <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-30 safe-area-inset-bottom">
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex items-center h-16 px-2 min-w-max">
-            {navItems.map(item => <button key={item.value} onClick={() => setActiveSection(item.value)} className={cn("flex flex-col items-center gap-1 px-4 py-2 rounded-md transition-colors flex-shrink-0", activeSection === item.value ? "text-primary" : "text-muted-foreground")}>
+            {navItems.map(item => <button key={item.value} onClick={() => handleSectionChange(item.value)} className={cn("flex flex-col items-center gap-1 px-4 py-2 rounded-md transition-colors flex-shrink-0", activeSection === item.value ? "text-primary" : "text-muted-foreground")}>
                 <item.icon className="h-5 w-5" />
                 <span className="text-[10px] font-medium">{item.label}</span>
               </button>)}
