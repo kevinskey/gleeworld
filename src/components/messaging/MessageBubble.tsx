@@ -131,7 +131,47 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         )}
 
+        {/* Image attachment */}
+        {message.message_type === 'image' && message.file_url && (
+          <a href={message.file_url} target="_blank" rel="noopener noreferrer" className="block mb-1">
+            <img
+              src={message.file_url}
+              alt={message.file_name || 'Image'}
+              className="max-w-[240px] sm:max-w-xs lg:max-w-md rounded-xl object-cover cursor-pointer hover:opacity-90 transition-opacity"
+              loading="lazy"
+            />
+          </a>
+        )}
+
+        {/* File attachment */}
+        {message.message_type === 'file' && message.file_url && (
+          <a
+            href={message.file_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "flex items-center gap-2 mb-1 p-2 rounded-xl border max-w-[240px] sm:max-w-xs hover:bg-accent/30 transition-colors",
+              isOwnMessage ? "border-white/20 text-white" : "border-border text-foreground"
+            )}
+          >
+            <div className="h-9 w-9 rounded-lg bg-muted/30 flex items-center justify-center flex-shrink-0">
+              <span className="text-xs font-bold uppercase">{message.file_name?.split('.').pop() || '?'}</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium truncate">{message.file_name}</p>
+              {message.file_size && (
+                <p className="text-[10px] opacity-70">
+                  {message.file_size < 1024 * 1024
+                    ? `${(message.file_size / 1024).toFixed(1)} KB`
+                    : `${(message.file_size / (1024 * 1024)).toFixed(1)} MB`}
+                </p>
+              )}
+            </div>
+          </a>
+        )}
+
         {/* Message bubble */}
+        {message.content && (
         <div className="relative flex items-center gap-1 sm:gap-2">
           <div 
             className={cn(
