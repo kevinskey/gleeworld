@@ -46,18 +46,43 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
     if (!groupId) return;
 
     try {
-      let fileUrl, fileName, fileSize;
+      let fileUrl: string | undefined;
+      let fileName: string | undefined;
+      let fileSize: number | undefined;
+      let messageType: 'text' | 'image' | 'file' = 'text';
       
       if (file) {
-        // Upload file logic would go here
-        // For now, we'll just handle text messages
-        return;
+        // Upload file to Supabase storage
+        const ext = file.name.split('.').pop();
+        const path = `messages/${groupId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('message-attachments')
+          .upload(path, file);
+
+        if (uploadError) {
+          console.error('File upload failed:', uploadError);
+          return;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('message-attachments')
+          .getPublicUrl(path);
+
+        fileUrl = urlData.publicUrl;
+        fileName = file.name;
+        fileSize = file.size;
+        messageType = file.type.startsWith('image/') ? 'image' : 'file';
       }
 
       // Send the message to the app database
       await sendMessage.mutateAsync({
         groupId,
-        content,
+        content: content || (file ? fileName : undefined),
+        messageType,
+        fileUrl,
+        fileName,
+        fileSize,
         replyToId: replyingTo || undefined
       });
 
