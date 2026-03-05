@@ -256,7 +256,7 @@ export const UniversalHeader = ({
               <Link to="/" className="flex items-center gap-1.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-white p-0.5 sm:p-1">
                 <div className="relative">
                   <img
-                    src="/gleeworld-door-icon.png?v=2"
+                    src="/favicon.png?v=3"
                     alt="GleeWorld"
                     className="w-8 h-8 sm:w-9 sm:h-9 md:w-6 md:h-6 lg:w-10 lg:h-10 object-contain flex-shrink-0"
                     style={{ filter: 'drop-shadow(0 0 4px rgba(56,146,227,0.3))' }}
