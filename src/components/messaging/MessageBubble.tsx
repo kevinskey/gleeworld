@@ -239,6 +239,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             </div>
           )}
         </div>
+        )}
 
         {/* Reactions */}
         {groupedReactions && Object.keys(groupedReactions).length > 0 && (
