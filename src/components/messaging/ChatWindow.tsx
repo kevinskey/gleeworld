@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useGroupMessages, useRealtimeMessaging, useSendMessage, useTypingIndicator, useGroupMembers } from '@/hooks/useMessaging';
 import { useSendSMSNotification } from '@/hooks/useSMSIntegration';
 import { usePollNotifications } from '@/hooks/usePollNotifications';
