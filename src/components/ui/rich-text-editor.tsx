@@ -736,7 +736,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
         {/* Editor */}
         <div ref={editorRef} contentEditable role="textbox" aria-multiline aria-label="Rich text editor" suppressContentEditableWarning onInput={handleInput} onBlur={handleInput} onClick={handleEditorClick} onPaste={handlePaste} data-placeholder={placeholder} className="p-4 focus:outline-none prose prose-sm max-w-none overflow-y-auto text-inherit" style={{
-        minHeight,
+        minHeight: window.innerWidth < 768 ? '150px' : minHeight,
+        maxHeight: window.innerWidth < 768 ? '40vh' : undefined,
         position: 'relative',
         color: '#1e293b',
         backgroundColor: 'white'
