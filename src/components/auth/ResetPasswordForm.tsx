@@ -76,6 +76,7 @@ export const ResetPasswordForm = () => {
       if (error) throw error;
       
       setSuccess(true);
+      sessionStorage.removeItem('password_recovery_active');
       
       // Redirect to dashboard after a short delay
       setTimeout(() => {
