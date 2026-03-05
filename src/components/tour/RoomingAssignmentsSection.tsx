@@ -11,10 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Bed, Users, Building2, Plus, Trash2, UserPlus, X, Save,
-  ChevronRight, Search, ArrowLeft, AlertCircle, CheckCircle2,
+  ChevronRight, Search, ArrowLeft, AlertCircle, CheckCircle2, Download,
 } from "lucide-react";
 import { useRoomAssignments, RoomAssignment, TourHotel } from "@/hooks/useRoomAssignments";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
 
 export const RoomingAssignmentsSection = () => {
   const {
@@ -115,6 +116,100 @@ export const RoomingAssignmentsSection = () => {
 
   const handleQuickAssign = async (roomId: string, userId: string) => {
     await addOccupant(roomId, userId);
+  };
+
+  const exportRoomListPDF = () => {
+    if (!selectedHotel) return;
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(selectedHotel.hotel_name, pageWidth / 2, y, { align: "center" });
+    y += 8;
+
+    // Subtitle with location and dates
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const subtitle = [
+      `${selectedHotel.city}${selectedHotel.state ? `, ${selectedHotel.state}` : ""}`,
+      selectedHotel.check_in_date ? `Check-in: ${format(new Date(selectedHotel.check_in_date), "MMM d, yyyy")}` : "",
+      selectedHotel.check_out_date ? `Check-out: ${format(new Date(selectedHotel.check_out_date), "MMM d, yyyy")}` : "",
+    ].filter(Boolean).join("  •  ");
+    doc.text(subtitle, pageWidth / 2, y, { align: "center" });
+    y += 6;
+
+    // Stats line
+    const stats = hotelStats[selectedHotel.id] || { roomCount: 0, occupants: 0, capacity: 0 };
+    doc.setFontSize(9);
+    doc.text(`${stats.roomCount} rooms  •  ${stats.occupants}/${stats.capacity} filled`, pageWidth / 2, y, { align: "center" });
+    y += 10;
+
+    // Table header
+    const colX = { room: 14, type: 40, occupants: 75, voicePart: 145 };
+    doc.setFillColor(41, 37, 36);
+    doc.rect(12, y - 4, pageWidth - 24, 8, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Room", colX.room, y);
+    doc.text("Type", colX.type, y);
+    doc.text("Occupants", colX.occupants, y);
+    doc.text("Voice Part", colX.voicePart, y);
+    y += 8;
+    doc.setTextColor(0, 0, 0);
+
+    // Table rows
+    const sortedRooms = [...hotelRooms].sort((a, b) => a.room_number.localeCompare(b.room_number, undefined, { numeric: true }));
+
+    for (const room of sortedRooms) {
+      // Check if we need a new page
+      const rowHeight = Math.max(room.occupants.length, 1) * 6 + 4;
+      if (y + rowHeight > doc.internal.pageSize.getHeight() - 20) {
+        doc.addPage();
+        y = 20;
+      }
+
+      // Alternating row background
+      const rowIdx = sortedRooms.indexOf(room);
+      if (rowIdx % 2 === 0) {
+        doc.setFillColor(245, 245, 244);
+        doc.rect(12, y - 4, pageWidth - 24, rowHeight, "F");
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(room.room_number, colX.room, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(room.room_type || "standard", colX.type, y);
+
+      if (room.occupants.length === 0) {
+        doc.setTextColor(150, 150, 150);
+        doc.text("(empty)", colX.occupants, y);
+        doc.setTextColor(0, 0, 0);
+        y += 10;
+      } else {
+        for (const occ of room.occupants) {
+          const name = occ.profile?.full_name || "Unknown";
+          const part = occ.profile?.voice_part || "—";
+          doc.text(name, colX.occupants, y);
+          doc.text(part, colX.voicePart, y);
+          y += 6;
+        }
+        y += 4;
+      }
+    }
+
+    // Footer
+    y += 4;
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Generated on ${format(new Date(), "MMM d, yyyy 'at' h:mm a")}  •  Spelman College Glee Club`, pageWidth / 2, y, { align: "center" });
+
+    const filename = `rooming-list-${selectedHotel.hotel_name.replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    doc.save(filename);
   };
 
   if (loading) {
@@ -238,6 +333,9 @@ export const RoomingAssignmentsSection = () => {
           <Users className="h-3 w-3" /> {stats.occupants}/{stats.capacity} filled
         </Badge>
         <div className="ml-auto flex gap-2">
+          <Button size="sm" variant="outline" onClick={exportRoomListPDF} className="text-xs h-8" disabled={hotelRooms.length === 0}>
+            <Download className="h-3 w-3 mr-1" /> Export PDF
+          </Button>
           <Button size="sm" variant="outline" onClick={() => setShowBatchDialog(true)} className="text-xs h-8">
             <Plus className="h-3 w-3 mr-1" /> Batch Add
           </Button>
