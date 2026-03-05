@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { UniversalFooter } from '@/components/layout/UniversalFooter';
-import { Lock, CheckCircle, AlertCircle, Music } from 'lucide-react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Lock, CheckCircle, AlertCircle, Music, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,23 +16,44 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [sessionReady, setSessionReady] = useState(false);
+  const [checking, setChecking] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have the access token and refresh token in the URL
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    
-    if (accessToken && refreshToken) {
-      // Set the session with the tokens from the URL
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-    }
-  }, [searchParams]);
+    // Listen for the auth state change — PKCE code exchange happens automatically
+    // via detectSessionInUrl. We just need to wait for the resulting session.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('ResetPassword: auth event', event, !!session);
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        setSessionReady(true);
+        setChecking(false);
+      }
+      if (event === 'TOKEN_REFRESHED' && session) {
+        setSessionReady(true);
+        setChecking(false);
+      }
+    });
+
+    // Also check if session already exists (e.g. user refreshed the page while still logged in)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSessionReady(true);
+        setChecking(false);
+      }
+    });
+
+    // Safety timeout — if no session after 8 seconds, show error
+    const timeout = setTimeout(() => {
+      setChecking(false);
+    }, 8000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
+  }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,12 +79,12 @@ const ResetPassword = () => {
       if (error) throw error;
 
       setSuccess(true);
+      sessionStorage.removeItem('password_recovery_active');
       toast({
         title: "Password updated successfully!",
         description: "You can now sign in with your new password.",
       });
 
-      // Redirect to onboarding after a short delay
       setTimeout(() => {
         navigate('/onboarding');
       }, 3000);
@@ -79,7 +100,6 @@ const ResetPassword = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <UniversalHeader />
-        
         <main className="flex-1 flex items-center justify-center px-4 py-8">
           <Card className="w-full max-w-md mx-auto">
             <CardHeader className="text-center">
@@ -99,7 +119,6 @@ const ResetPassword = () => {
                   You'll be automatically redirected to complete your onboarding in a few seconds...
                 </p>
               </div>
-              
               <div className="space-y-2">
                 <Button asChild className="w-full">
                   <Link to="/onboarding">Continue to Onboarding</Link>
@@ -111,7 +130,6 @@ const ResetPassword = () => {
             </CardContent>
           </Card>
         </main>
-
         <UniversalFooter />
       </div>
     );
@@ -120,10 +138,8 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <UniversalHeader />
-      
       <main className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
-          {/* Hero Section */}
           <div className="text-center mb-8 space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur px-4 py-2 text-sm font-medium">
               <Music className="h-4 w-4 text-primary" />
@@ -150,77 +166,97 @@ const ResetPassword = () => {
               </p>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleResetPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-medium">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Enter your new password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
-                      required
-                      minLength={6}
-                    />
-                  </div>
+              {checking ? (
+                <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">Verifying your reset link...</p>
                 </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="confirmPassword" className="text-sm font-medium">
-                    Confirm New Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Confirm your new password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-10"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                </div>
-
-                {error && (
+              ) : !sessionReady ? (
+                <div className="space-y-4">
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>
+                      This reset link has expired or is invalid. Please request a new password reset.
+                    </AlertDescription>
                   </Alert>
-                )}
-
-                <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>Password Requirements:</strong>
-                  </p>
-                  <ul className="text-sm text-blue-700 dark:text-blue-300 mt-1 space-y-1">
-                    <li>• At least 6 characters long</li>
-                    <li>• Use a mix of letters, numbers, and symbols</li>
-                    <li>• Don't use easily guessable information</li>
-                  </ul>
+                  <Button asChild className="w-full">
+                    <Link to="/auth">Back to Login</Link>
+                  </Button>
                 </div>
+              ) : (
+                <>
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <label htmlFor="password" className="text-sm font-medium">
+                        New Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="Enter your new password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="pl-10"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                    </div>
 
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? 'Updating Password...' : 'Update Password & Continue to Onboarding'}
-                </Button>
-              </form>
+                    <div className="space-y-2">
+                      <label htmlFor="confirmPassword" className="text-sm font-medium">
+                        Confirm New Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          placeholder="Confirm your new password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="pl-10"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                    </div>
 
-              <div className="mt-4 text-center">
-                <Link to="/auth" className="text-sm text-primary hover:underline">
-                  Back to Login
-                </Link>
-              </div>
+                    {error && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>Password Requirements:</strong>
+                      </p>
+                      <ul className="text-sm text-blue-700 dark:text-blue-300 mt-1 space-y-1">
+                        <li>• At least 6 characters long</li>
+                        <li>• Use a mix of letters, numbers, and symbols</li>
+                        <li>• Don't use easily guessable information</li>
+                      </ul>
+                    </div>
+
+                    <Button type="submit" disabled={loading} className="w-full">
+                      {loading ? 'Updating Password...' : 'Update Password & Continue to Onboarding'}
+                    </Button>
+                  </form>
+
+                  <div className="mt-4 text-center">
+                    <Link to="/auth" className="text-sm text-primary hover:underline">
+                      Back to Login
+                    </Link>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
-          {/* Help Text */}
           <div className="mt-8 text-center">
             <p className="text-sm text-muted-foreground">
               Need help? Contact us at{' '}
@@ -231,7 +267,6 @@ const ResetPassword = () => {
           </div>
         </div>
       </main>
-
       <UniversalFooter />
     </div>
   );
