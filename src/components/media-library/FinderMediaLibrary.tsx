@@ -669,7 +669,7 @@ export const FinderMediaLibrary = () => {
               <div 
                 {...getRootProps()}
                 className={cn(
-                  "flex-1 overflow-auto p-4 transition-colors",
+                  "flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 transition-colors",
                   isDragActive && "bg-primary/5 border-2 border-dashed border-primary"
                 )}
               >
