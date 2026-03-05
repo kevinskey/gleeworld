@@ -333,6 +333,9 @@ export const RoomingAssignmentsSection = () => {
           <Users className="h-3 w-3" /> {stats.occupants}/{stats.capacity} filled
         </Badge>
         <div className="ml-auto flex gap-2">
+          <Button size="sm" variant="outline" onClick={exportRoomListPDF} className="text-xs h-8" disabled={hotelRooms.length === 0}>
+            <Download className="h-3 w-3 mr-1" /> Export PDF
+          </Button>
           <Button size="sm" variant="outline" onClick={() => setShowBatchDialog(true)} className="text-xs h-8">
             <Plus className="h-3 w-3 mr-1" /> Batch Add
           </Button>
