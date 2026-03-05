@@ -122,7 +122,7 @@ const Auth = () => {
       subtitle={getSubtitle()}
       theme={theme}
     >
-      <AuthTabs />
+      <AuthTabs forceReset={isReset} />
     </AuthLayout>
   );
 };

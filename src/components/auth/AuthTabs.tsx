@@ -7,13 +7,19 @@ import { SignupForm } from "./SignupForm";
 import { ForgotPasswordForm } from "./ForgotPasswordForm";
 import { ResetPasswordForm } from "./ResetPasswordForm";
 
-export const AuthTabs = () => {
+interface AuthTabsProps {
+  forceReset?: boolean;
+}
+
+export const AuthTabs = ({ forceReset }: AuthTabsProps = {}) => {
   const [activeTab, setActiveTab] = useState("login");
   const [searchParams] = useSearchParams();
   const hash = window.location.hash;
-  const isReset = searchParams.get('reset') === 'true' 
+  const isReset = forceReset
+    || searchParams.get('reset') === 'true' 
     || hash.includes('type=recovery') 
-    || hash.includes('type=password_recovery');
+    || hash.includes('type=password_recovery')
+    || sessionStorage.getItem('password_recovery_active') === 'true';
 
   // If it's a password reset, show the reset form directly
   if (isReset) {
