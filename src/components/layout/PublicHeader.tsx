@@ -42,9 +42,9 @@ const HEADER_STYLES = {
   
   // Logo sizes at different breakpoints (30% larger)
   logoSizes: {
-    mobile: "w-10 h-10",      // 40px (was 32px)
-    tablet: "md:w-14 md:h-14", // 56px (was 40px)
-    desktop: "lg:w-16 lg:h-16" // 64px (was 48px)
+    mobile: "w-12 h-12",       // 48px
+    tablet: "md:w-16 md:h-16", // 64px
+    desktop: "lg:w-18 lg:h-18" // 72px
   },
   
   // Title sizes - 90% of logo, then reduced by 10%
@@ -118,8 +118,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 <img
                   src="/favicon.png?v=3"
                   alt="GleeWorld"
-                  className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0 object-contain`}
-                  style={{ filter: 'drop-shadow(0 0 0.5px rgba(0,0,0,0.18))' }}
+                  className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0 object-cover rounded-full`}
                 />
                 
                 {/* Site Title - Cinzel font, 90% of logo size */}
