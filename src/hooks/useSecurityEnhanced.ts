@@ -259,7 +259,7 @@ export const useSecurityEnhanced = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
-        redirectTo: `https://gleeworld.org/auth?reset=true`,
+        redirectTo: `https://gleeworld.org/reset-password`,
       });
 
       if (error) {

@@ -24,7 +24,7 @@ export const ForgotPasswordForm = ({ onSwitchToLogin }: ForgotPasswordFormProps)
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://gleeworld.org/auth?reset=true`,
+        redirectTo: `https://gleeworld.org/reset-password`,
       });
 
       if (error) throw error;
