@@ -11,10 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Bed, Users, Building2, Plus, Trash2, UserPlus, X, Save,
-  ChevronRight, Search, ArrowLeft, AlertCircle, CheckCircle2,
+  ChevronRight, Search, ArrowLeft, AlertCircle, CheckCircle2, Download,
 } from "lucide-react";
 import { useRoomAssignments, RoomAssignment, TourHotel } from "@/hooks/useRoomAssignments";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
 
 export const RoomingAssignmentsSection = () => {
   const {
