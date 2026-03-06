@@ -94,23 +94,24 @@ export const ProductManager = () => {
 
       // Fetch size variants for all products
       const productIds = (data || []).map(p => p.id);
-      let variantMap: Record<string, string[]> = {};
+      let variantMap: Record<string, SizeVariant[]> = {};
       if (productIds.length > 0) {
         const { data: variants } = await supabase
           .from('product_variants')
-          .select('product_id, size')
+          .select('product_id, size, stock_quantity')
           .in('product_id', productIds);
         if (variants) {
           variants.forEach(v => {
             if (!variantMap[v.product_id]) variantMap[v.product_id] = [];
-            variantMap[v.product_id].push(v.size);
+            variantMap[v.product_id].push({ size: v.size, stock_quantity: v.stock_quantity ?? 0 });
           });
         }
       }
 
       const productsWithSizes = (data || []).map(p => ({
         ...p,
-        sizes: variantMap[p.id] || []
+        sizes: (variantMap[p.id] || []).map(v => v.size),
+        sizeVariants: variantMap[p.id] || []
       }));
 
       setProducts(productsWithSizes);
