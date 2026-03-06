@@ -592,7 +592,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="price">Regular Price ($) *</Label>
               <Input id="price" type="number" step="0.01" value={formData.price} onChange={e => setFormData({
