@@ -104,7 +104,8 @@ export const ProductManager = () => {
     is_active: true,
     images: "",
     tags: "",
-    sizes: [] as string[]
+    sizes: [] as string[],
+    sizeQuantities: {} as Record<string, number>
   });
   const filteredAndSortedProducts = products.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) || product.description?.toLowerCase().includes(searchTerm.toLowerCase()) || product.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -170,7 +171,8 @@ export const ProductManager = () => {
       title: "", description: "", price: "", product_type: "",
       inventory_quantity: "", vendor: "GleeWorld", weight: "",
       requires_shipping: true, is_active: true, images: "", tags: "",
-      sizes: []
+      sizes: [],
+      sizeQuantities: {}
     });
     setEditingProduct(null);
     setSelectedFiles([]);
@@ -180,6 +182,10 @@ export const ProductManager = () => {
     const existingSizes = (product.variants || [])
       .map(v => v.option1)
       .filter((s): s is string => !!s);
+    const existingQuantities: Record<string, number> = {};
+    (product.variants || []).forEach(v => {
+      if (v.option1) existingQuantities[v.option1] = v.inventory_quantity ?? 0;
+    });
     setFormData({
       title: product.title,
       description: product.description || "",
@@ -192,7 +198,8 @@ export const ProductManager = () => {
       is_active: product.is_active ?? true,
       images: product.images?.join(", ") || "",
       tags: product.tags?.join(", ") || "",
-      sizes: existingSizes
+      sizes: existingSizes,
+      sizeQuantities: existingQuantities
     });
     setSelectedFiles([]);
     setIsDialogOpen(true);
@@ -282,6 +289,7 @@ export const ProductManager = () => {
           title: `${formData.title} - ${size}`,
           option1: size,
           price: parseFloat(formData.price),
+          inventory_quantity: formData.sizeQuantities[size] ?? 0,
         }));
         const { error: variantError } = await supabase.from('gw_product_variants').insert(variantRows);
         if (variantError) console.error('Error saving variants:', variantError);
@@ -458,23 +466,46 @@ export const ProductManager = () => {
                     <Ruler className="h-4 w-4" />
                     Available Sizes
                   </Label>
-                  <div className="flex flex-wrap gap-3">
-                    {AVAILABLE_SIZES.map(size => (
-                      <label key={size} className="flex items-center gap-2 cursor-pointer">
-                        <Checkbox
-                          checked={formData.sizes.includes(size)}
-                          onCheckedChange={(checked) => {
-                            setFormData(prev => ({
-                              ...prev,
-                              sizes: checked
-                                ? [...prev.sizes, size]
-                                : prev.sizes.filter(s => s !== size)
-                            }));
-                          }}
-                        />
-                        <span className="text-sm font-medium">{size}</span>
-                      </label>
-                    ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {AVAILABLE_SIZES.map(size => {
+                      const isChecked = formData.sizes.includes(size);
+                      return (
+                        <div key={size} className="flex items-center gap-2 p-2 rounded-md border border-border bg-muted/30">
+                          <Checkbox
+                            id={`admin-size-${size}`}
+                            checked={isChecked}
+                            onCheckedChange={(checked) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                sizes: checked
+                                  ? [...prev.sizes, size]
+                                  : prev.sizes.filter(s => s !== size),
+                                sizeQuantities: checked
+                                  ? { ...prev.sizeQuantities, [size]: prev.sizeQuantities[size] ?? 0 }
+                                  : (() => { const { [size]: _, ...rest } = prev.sizeQuantities; return rest; })()
+                              }));
+                            }}
+                          />
+                          <Label htmlFor={`admin-size-${size}`} className="text-sm cursor-pointer min-w-[2rem]">{size}</Label>
+                          {isChecked && (
+                            <Input
+                              type="number"
+                              min="0"
+                              inputMode="numeric"
+                              placeholder="Qty"
+                              className="flex-1 h-8 text-sm"
+                              value={formData.sizeQuantities[size] ?? 0}
+                              onChange={(e) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  sizeQuantities: { ...prev.sizeQuantities, [size]: parseInt(e.target.value) || 0 }
+                                }));
+                              }}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
