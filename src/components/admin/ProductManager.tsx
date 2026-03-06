@@ -586,6 +586,15 @@ export const ProductManager = () => {
                 <div className="space-y-2">
                   <h3 className="font-semibold line-clamp-1 text-primary-foreground">{product.title}</h3>
                   <p className="text-sm line-clamp-2 text-primary-foreground">{product.description || "No description"}</p>
+                  {product.variants && product.variants.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {product.variants.map(v => (
+                        <Badge key={v.id} variant="secondary" className="text-xs">
+                          {v.option1}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-lg font-bold text-primary">${product.price.toFixed(2)}</span>
                     <Badge variant="outline" className="text-xs text-secondary-foreground">
