@@ -452,6 +452,31 @@ export const ProductManager = () => {
                   tags: e.target.value
                 })} placeholder="tag1, tag2, tag3" />
                 </div>
+                
+                <div className="md:col-span-2">
+                  <Label className="flex items-center gap-2 mb-2">
+                    <Ruler className="h-4 w-4" />
+                    Available Sizes
+                  </Label>
+                  <div className="flex flex-wrap gap-3">
+                    {AVAILABLE_SIZES.map(size => (
+                      <label key={size} className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={formData.sizes.includes(size)}
+                          onCheckedChange={(checked) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              sizes: checked
+                                ? [...prev.sizes, size]
+                                : prev.sizes.filter(s => s !== size)
+                            }));
+                          }}
+                        />
+                        <span className="text-sm font-medium">{size}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
               
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4">
