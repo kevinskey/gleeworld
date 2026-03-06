@@ -17,6 +17,11 @@ import { Plus, Upload, Trash2, Edit, Eye, Star } from 'lucide-react';
 
 const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL'] as const;
 
+interface SizeVariant {
+  size: string;
+  stock_quantity: number;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -38,6 +43,7 @@ interface Product {
   };
   images?: ProductImage[];
   sizes?: string[];
+  sizeVariants?: SizeVariant[];
 }
 interface ProductImage {
   id: string;
