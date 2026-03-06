@@ -85,9 +85,29 @@ export const ProductManager = () => {
         ascending: false
       });
       if (error) throw error;
-      console.log('Fetched products:', data);
-      console.log('Products with images:', data?.filter(p => p.images && p.images.length > 0));
-      setProducts(data || []);
+
+      // Fetch size variants for all products
+      const productIds = (data || []).map(p => p.id);
+      let variantMap: Record<string, string[]> = {};
+      if (productIds.length > 0) {
+        const { data: variants } = await supabase
+          .from('product_variants')
+          .select('product_id, size')
+          .in('product_id', productIds);
+        if (variants) {
+          variants.forEach(v => {
+            if (!variantMap[v.product_id]) variantMap[v.product_id] = [];
+            variantMap[v.product_id].push(v.size);
+          });
+        }
+      }
+
+      const productsWithSizes = (data || []).map(p => ({
+        ...p,
+        sizes: variantMap[p.id] || []
+      }));
+
+      setProducts(productsWithSizes);
     } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({
