@@ -258,23 +258,35 @@ export const ProductManager = () => {
         images: allImageUrls,
         tags: formData.tags ? formData.tags.split(",").map(tag => tag.trim()) : []
       };
+      let productId: string;
       if (editingProduct) {
-        const {
-          error
-        } = await supabase.from('gw_products').update(productData).eq('id', editingProduct.id);
+        const { error } = await supabase.from('gw_products').update(productData).eq('id', editingProduct.id);
         if (error) throw error;
-        toast({
-          title: "Product updated successfully"
-        });
+        productId = editingProduct.id;
+        toast({ title: "Product updated successfully" });
       } else {
-        const {
-          error
-        } = await supabase.from('gw_products').insert([productData]);
+        const { data: inserted, error } = await supabase.from('gw_products').insert([productData]).select('id').single();
         if (error) throw error;
-        toast({
-          title: "Product created successfully"
-        });
+        productId = inserted.id;
+        toast({ title: "Product created successfully" });
       }
+      
+      // Sync size variants
+      // Delete existing variants for this product
+      await supabase.from('gw_product_variants').delete().eq('product_id', productId);
+      
+      // Insert new size variants
+      if (formData.sizes.length > 0) {
+        const variantRows = formData.sizes.map(size => ({
+          product_id: productId,
+          title: `${formData.title} - ${size}`,
+          option1: size,
+          price: parseFloat(formData.price),
+        }));
+        const { error: variantError } = await supabase.from('gw_product_variants').insert(variantRows);
+        if (variantError) console.error('Error saving variants:', variantError);
+      }
+      
       setIsDialogOpen(false);
       resetForm();
       loadProducts();
