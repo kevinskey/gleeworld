@@ -103,7 +103,8 @@ export const ProductManager = () => {
     requires_shipping: true,
     is_active: true,
     images: "",
-    tags: ""
+    tags: "",
+    sizes: [] as string[]
   });
   const filteredAndSortedProducts = products.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) || product.description?.toLowerCase().includes(searchTerm.toLowerCase()) || product.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
