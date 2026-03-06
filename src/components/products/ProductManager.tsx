@@ -12,7 +12,11 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Upload, Trash2, Edit, Eye, Star } from 'lucide-react';
+
+const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL'] as const;
+
 interface Product {
   id: string;
   name: string;
@@ -33,6 +37,7 @@ interface Product {
     name: string;
   };
   images?: ProductImage[];
+  sizes?: string[];
 }
 interface ProductImage {
   id: string;
