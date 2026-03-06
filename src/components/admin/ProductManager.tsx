@@ -9,8 +9,22 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit, Trash2, Package, Save, X, Upload, Image as ImageIcon, Search, Filter, ArrowUpDown, Grid3X3, List } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Save, X, Upload, Image as ImageIcon, Search, Filter, ArrowUpDown, Grid3X3, List, Ruler } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ProductMockupGenerator } from './ProductMockupGenerator';
+
+const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL'] as const;
+
+interface ProductVariant {
+  id: string;
+  product_id: string | null;
+  title: string;
+  option1: string | null;
+  price: number;
+  inventory_quantity: number | null;
+  sku: string | null;
+}
+
 interface Product {
   id: string;
   title: string;
@@ -24,6 +38,7 @@ interface Product {
   vendor: string | null;
   weight: number | null;
   requires_shipping: boolean | null;
+  variants?: ProductVariant[];
 }
 const PRODUCT_TYPES = [{
   value: "tshirts",
