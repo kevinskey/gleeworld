@@ -17,6 +17,11 @@ import { Plus, Upload, Trash2, Edit, Eye, Star } from 'lucide-react';
 
 const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL'] as const;
 
+interface SizeVariant {
+  size: string;
+  stock_quantity: number;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -38,6 +43,7 @@ interface Product {
   };
   images?: ProductImage[];
   sizes?: string[];
+  sizeVariants?: SizeVariant[];
 }
 interface ProductImage {
   id: string;
@@ -88,23 +94,24 @@ export const ProductManager = () => {
 
       // Fetch size variants for all products
       const productIds = (data || []).map(p => p.id);
-      let variantMap: Record<string, string[]> = {};
+      let variantMap: Record<string, SizeVariant[]> = {};
       if (productIds.length > 0) {
         const { data: variants } = await supabase
           .from('product_variants')
-          .select('product_id, size')
+          .select('product_id, size, stock_quantity')
           .in('product_id', productIds);
         if (variants) {
           variants.forEach(v => {
             if (!variantMap[v.product_id]) variantMap[v.product_id] = [];
-            variantMap[v.product_id].push(v.size);
+            variantMap[v.product_id].push({ size: v.size, stock_quantity: v.stock_quantity ?? 0 });
           });
         }
       }
 
       const productsWithSizes = (data || []).map(p => ({
         ...p,
-        sizes: variantMap[p.id] || []
+        sizes: (variantMap[p.id] || []).map(v => v.size),
+        sizeVariants: variantMap[p.id] || []
       }));
 
       setProducts(productsWithSizes);
@@ -296,14 +303,17 @@ export const ProductManager = () => {
                   <Badge variant="outline">{product.category?.name}</Badge>
                 </div>
                   <div className="space-y-2">
-                  {/* Size badges */}
-                  {product.sizes && product.sizes.length > 0 && (
+                  {/* Size badges with stock */}
+                  {product.sizeVariants && product.sizeVariants.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {AVAILABLE_SIZES.filter(s => product.sizes?.includes(s)).map(size => (
-                        <Badge key={size} variant="secondary" className="text-xs px-1.5 py-0">
-                          {size}
-                        </Badge>
-                      ))}
+                      {AVAILABLE_SIZES.filter(s => product.sizeVariants?.some(v => v.size === s)).map(size => {
+                        const variant = product.sizeVariants?.find(v => v.size === size);
+                        return (
+                          <Badge key={size} variant="secondary" className="text-xs px-1.5 py-0">
+                            {size}: {variant?.stock_quantity ?? 0}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   )}
                   <div className="flex gap-2">
@@ -378,7 +388,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
     manage_stock: product?.manage_stock ?? true,
     weight: product?.weight || 0,
     tags: product?.tags?.join(', ') || '',
-    sizes: product?.sizes || [] as string[]
+    sizes: product?.sizes || [] as string[],
+    sizeQuantities: Object.fromEntries(
+      (product?.sizeVariants || []).map(v => [v.size, v.stock_quantity])
+    ) as Record<string, number>
   });
   const [saving, setSaving] = useState(false);
   const {
@@ -392,7 +405,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     e.preventDefault();
     setSaving(true);
     try {
-      const { sizes, ...rest } = formData;
+      const { sizes, sizeQuantities, ...rest } = formData;
       const productData = {
         ...rest,
         tags: rest.tags.split(',').map(tag => tag.trim()).filter(Boolean),
@@ -424,6 +437,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             title: `${rest.name} - ${size}`,
             size,
             price: rest.price,
+            stock_quantity: sizeQuantities[size] ?? 0,
           }));
           const { error: variantError } = await supabase.from('product_variants').insert(variantRows);
           if (variantError) console.error('Error saving variants:', variantError);
@@ -534,25 +548,46 @@ const ProductForm: React.FC<ProductFormProps> = ({
         <TabsContent value="pricing" className="space-y-4">
           {/* Size Variants */}
           <div>
-            <Label className="mb-2 block">Available Sizes</Label>
-            <div className="flex flex-wrap gap-4">
-              {AVAILABLE_SIZES.map(size => (
-                <div key={size} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`size-${size}`}
-                    checked={formData.sizes.includes(size)}
-                    onCheckedChange={(checked) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        sizes: checked
-                          ? [...prev.sizes, size]
-                          : prev.sizes.filter(s => s !== size)
-                      }));
-                    }}
-                  />
-                  <Label htmlFor={`size-${size}`} className="text-sm cursor-pointer">{size}</Label>
-                </div>
-              ))}
+           <Label className="mb-2 block">Available Sizes & Quantities</Label>
+            <div className="space-y-3">
+              {AVAILABLE_SIZES.map(size => {
+                const isChecked = formData.sizes.includes(size);
+                return (
+                  <div key={size} className="flex items-center gap-3">
+                    <Checkbox
+                      id={`size-${size}`}
+                      checked={isChecked}
+                      onCheckedChange={(checked) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          sizes: checked
+                            ? [...prev.sizes, size]
+                            : prev.sizes.filter(s => s !== size),
+                          sizeQuantities: checked
+                            ? { ...prev.sizeQuantities, [size]: prev.sizeQuantities[size] ?? 0 }
+                            : (() => { const { [size]: _, ...rest } = prev.sizeQuantities; return rest; })()
+                        }));
+                      }}
+                    />
+                    <Label htmlFor={`size-${size}`} className="text-sm cursor-pointer w-10">{size}</Label>
+                    {isChecked && (
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="Qty"
+                        className="w-24 h-8"
+                        value={formData.sizeQuantities[size] ?? 0}
+                        onChange={(e) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            sizeQuantities: { ...prev.sizeQuantities, [size]: parseInt(e.target.value) || 0 }
+                          }));
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
