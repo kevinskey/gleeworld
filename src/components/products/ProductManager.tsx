@@ -388,7 +388,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
     manage_stock: product?.manage_stock ?? true,
     weight: product?.weight || 0,
     tags: product?.tags?.join(', ') || '',
-    sizes: product?.sizes || [] as string[]
+    sizes: product?.sizes || [] as string[],
+    sizeQuantities: Object.fromEntries(
+      (product?.sizeVariants || []).map(v => [v.size, v.stock_quantity])
+    ) as Record<string, number>
   });
   const [saving, setSaving] = useState(false);
   const {
@@ -402,7 +405,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     e.preventDefault();
     setSaving(true);
     try {
-      const { sizes, ...rest } = formData;
+      const { sizes, sizeQuantities, ...rest } = formData;
       const productData = {
         ...rest,
         tags: rest.tags.split(',').map(tag => tag.trim()).filter(Boolean),
@@ -434,6 +437,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             title: `${rest.name} - ${size}`,
             size,
             price: rest.price,
+            stock_quantity: sizeQuantities[size] ?? 0,
           }));
           const { error: variantError } = await supabase.from('product_variants').insert(variantRows);
           if (variantError) console.error('Error saving variants:', variantError);
@@ -544,25 +548,46 @@ const ProductForm: React.FC<ProductFormProps> = ({
         <TabsContent value="pricing" className="space-y-4">
           {/* Size Variants */}
           <div>
-            <Label className="mb-2 block">Available Sizes</Label>
-            <div className="flex flex-wrap gap-4">
-              {AVAILABLE_SIZES.map(size => (
-                <div key={size} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`size-${size}`}
-                    checked={formData.sizes.includes(size)}
-                    onCheckedChange={(checked) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        sizes: checked
-                          ? [...prev.sizes, size]
-                          : prev.sizes.filter(s => s !== size)
-                      }));
-                    }}
-                  />
-                  <Label htmlFor={`size-${size}`} className="text-sm cursor-pointer">{size}</Label>
-                </div>
-              ))}
+           <Label className="mb-2 block">Available Sizes & Quantities</Label>
+            <div className="space-y-3">
+              {AVAILABLE_SIZES.map(size => {
+                const isChecked = formData.sizes.includes(size);
+                return (
+                  <div key={size} className="flex items-center gap-3">
+                    <Checkbox
+                      id={`size-${size}`}
+                      checked={isChecked}
+                      onCheckedChange={(checked) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          sizes: checked
+                            ? [...prev.sizes, size]
+                            : prev.sizes.filter(s => s !== size),
+                          sizeQuantities: checked
+                            ? { ...prev.sizeQuantities, [size]: prev.sizeQuantities[size] ?? 0 }
+                            : (() => { const { [size]: _, ...rest } = prev.sizeQuantities; return rest; })()
+                        }));
+                      }}
+                    />
+                    <Label htmlFor={`size-${size}`} className="text-sm cursor-pointer w-10">{size}</Label>
+                    {isChecked && (
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="Qty"
+                        className="w-24 h-8"
+                        value={formData.sizeQuantities[size] ?? 0}
+                        onChange={(e) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            sizeQuantities: { ...prev.sizeQuantities, [size]: parseInt(e.target.value) || 0 }
+                          }));
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
