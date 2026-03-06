@@ -303,14 +303,17 @@ export const ProductManager = () => {
                   <Badge variant="outline">{product.category?.name}</Badge>
                 </div>
                   <div className="space-y-2">
-                  {/* Size badges */}
-                  {product.sizes && product.sizes.length > 0 && (
+                  {/* Size badges with stock */}
+                  {product.sizeVariants && product.sizeVariants.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {AVAILABLE_SIZES.filter(s => product.sizes?.includes(s)).map(size => (
-                        <Badge key={size} variant="secondary" className="text-xs px-1.5 py-0">
-                          {size}
-                        </Badge>
-                      ))}
+                      {AVAILABLE_SIZES.filter(s => product.sizeVariants?.some(v => v.size === s)).map(size => {
+                        const variant = product.sizeVariants?.find(v => v.size === size);
+                        return (
+                          <Badge key={size} variant="secondary" className="text-xs px-1.5 py-0">
+                            {size}: {variant?.stock_quantity ?? 0}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   )}
                   <div className="flex gap-2">
