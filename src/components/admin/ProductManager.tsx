@@ -136,42 +136,50 @@ export const ProductManager = () => {
   }, []);
   const loadProducts = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('gw_products').select('*').order('title');
+      const { data, error } = await supabase.from('gw_products').select('*').order('title');
       if (error) throw error;
-      setProducts(data || []);
+      
+      // Load variants for all products
+      const productIds = (data || []).map(p => p.id);
+      let variantsMap: Record<string, ProductVariant[]> = {};
+      if (productIds.length > 0) {
+        const { data: variants } = await supabase
+          .from('gw_product_variants')
+          .select('*')
+          .in('product_id', productIds);
+        if (variants) {
+          for (const v of variants) {
+            if (v.product_id) {
+              if (!variantsMap[v.product_id]) variantsMap[v.product_id] = [];
+              variantsMap[v.product_id].push(v);
+            }
+          }
+        }
+      }
+      
+      setProducts((data || []).map(p => ({ ...p, variants: variantsMap[p.id] || [] })));
     } catch (error) {
       console.error('Error loading products:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load products",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to load products", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
   const resetForm = () => {
     setFormData({
-      title: "",
-      description: "",
-      price: "",
-      product_type: "",
-      inventory_quantity: "",
-      vendor: "GleeWorld",
-      weight: "",
-      requires_shipping: true,
-      is_active: true,
-      images: "",
-      tags: ""
+      title: "", description: "", price: "", product_type: "",
+      inventory_quantity: "", vendor: "GleeWorld", weight: "",
+      requires_shipping: true, is_active: true, images: "", tags: "",
+      sizes: []
     });
     setEditingProduct(null);
     setSelectedFiles([]);
   };
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
+    const existingSizes = (product.variants || [])
+      .map(v => v.option1)
+      .filter((s): s is string => !!s);
     setFormData({
       title: product.title,
       description: product.description || "",
@@ -183,7 +191,8 @@ export const ProductManager = () => {
       requires_shipping: product.requires_shipping ?? true,
       is_active: product.is_active ?? true,
       images: product.images?.join(", ") || "",
-      tags: product.tags?.join(", ") || ""
+      tags: product.tags?.join(", ") || "",
+      sizes: existingSizes
     });
     setSelectedFiles([]);
     setIsDialogOpen(true);
