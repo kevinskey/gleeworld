@@ -318,10 +318,9 @@ export const ProductManager = () => {
                         <DialogHeader>
                           <DialogTitle>Edit Product: {product.name}</DialogTitle>
                         </DialogHeader>
-                        <ProductForm product={selectedProduct} categories={categories} onSave={() => {
-                      setSelectedProduct(null);
+                        <ProductForm product={product} categories={categories} onSave={() => {
                       fetchProducts();
-                    }} onCancel={() => setSelectedProduct(null)} />
+                    }} onCancel={() => {}} />
                       </DialogContent>
                     </Dialog>
                     <Button variant="destructive" size="sm" onClick={() => handleDeleteProduct(product.id, product.name)} title="Delete Product">
