@@ -393,9 +393,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
     e.preventDefault();
     setSaving(true);
     try {
+      const { sizes, ...rest } = formData;
       const productData = {
-        ...formData,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        ...rest,
+        tags: rest.tags.split(',').map(tag => tag.trim()).filter(Boolean),
         created_by: product ? undefined : (await supabase.auth.getUser()).data.user?.id
       };
 
@@ -403,17 +404,33 @@ const ProductForm: React.FC<ProductFormProps> = ({
       if (!productData.sku || productData.sku.trim() === '') {
         delete productData.sku;
       }
+
+      let productId = product?.id;
+
       if (product) {
-        const {
-          error
-        } = await supabase.from('products').update(productData).eq('id', product.id);
+        const { error } = await supabase.from('products').update(productData).eq('id', product.id);
         if (error) throw error;
       } else {
-        const {
-          error
-        } = await supabase.from('products').insert(productData);
+        const { data: newProduct, error } = await supabase.from('products').insert(productData).select('id').single();
         if (error) throw error;
+        productId = newProduct.id;
       }
+
+      // Sync size variants
+      if (productId) {
+        await supabase.from('product_variants').delete().eq('product_id', productId);
+        if (sizes.length > 0) {
+          const variantRows = sizes.map(size => ({
+            product_id: productId!,
+            title: `${rest.name} - ${size}`,
+            size,
+            price: rest.price,
+          }));
+          const { error: variantError } = await supabase.from('product_variants').insert(variantRows);
+          if (variantError) console.error('Error saving variants:', variantError);
+        }
+      }
+
       toast({
         title: "Success",
         description: `Product ${product ? 'updated' : 'created'} successfully`
