@@ -12,7 +12,11 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Upload, Trash2, Edit, Eye, Star } from 'lucide-react';
+
+const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL'] as const;
+
 interface Product {
   id: string;
   name: string;
@@ -33,6 +37,7 @@ interface Product {
     name: string;
   };
   images?: ProductImage[];
+  sizes?: string[];
 }
 interface ProductImage {
   id: string;
@@ -80,9 +85,29 @@ export const ProductManager = () => {
         ascending: false
       });
       if (error) throw error;
-      console.log('Fetched products:', data);
-      console.log('Products with images:', data?.filter(p => p.images && p.images.length > 0));
-      setProducts(data || []);
+
+      // Fetch size variants for all products
+      const productIds = (data || []).map(p => p.id);
+      let variantMap: Record<string, string[]> = {};
+      if (productIds.length > 0) {
+        const { data: variants } = await supabase
+          .from('product_variants')
+          .select('product_id, size')
+          .in('product_id', productIds);
+        if (variants) {
+          variants.forEach(v => {
+            if (!variantMap[v.product_id]) variantMap[v.product_id] = [];
+            variantMap[v.product_id].push(v.size);
+          });
+        }
+      }
+
+      const productsWithSizes = (data || []).map(p => ({
+        ...p,
+        sizes: variantMap[p.id] || []
+      }));
+
+      setProducts(productsWithSizes);
     } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({
@@ -270,7 +295,17 @@ export const ProductManager = () => {
                   </div>
                   <Badge variant="outline">{product.category?.name}</Badge>
                 </div>
-                <div className="space-y-2">
+                  <div className="space-y-2">
+                  {/* Size badges */}
+                  {product.sizes && product.sizes.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {AVAILABLE_SIZES.filter(s => product.sizes?.includes(s)).map(size => (
+                        <Badge key={size} variant="secondary" className="text-xs px-1.5 py-0">
+                          {size}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <Dialog>
                       <DialogTrigger asChild>
@@ -343,7 +378,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
     stock_quantity: product?.stock_quantity || 0,
     manage_stock: product?.manage_stock ?? true,
     weight: product?.weight || 0,
-    tags: product?.tags?.join(', ') || ''
+    tags: product?.tags?.join(', ') || '',
+    sizes: product?.sizes || [] as string[]
   });
   const [saving, setSaving] = useState(false);
   const {
@@ -357,9 +393,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
     e.preventDefault();
     setSaving(true);
     try {
+      const { sizes, ...rest } = formData;
       const productData = {
-        ...formData,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        ...rest,
+        tags: rest.tags.split(',').map(tag => tag.trim()).filter(Boolean),
         created_by: product ? undefined : (await supabase.auth.getUser()).data.user?.id
       };
 
@@ -367,17 +404,33 @@ const ProductForm: React.FC<ProductFormProps> = ({
       if (!productData.sku || productData.sku.trim() === '') {
         delete productData.sku;
       }
+
+      let productId = product?.id;
+
       if (product) {
-        const {
-          error
-        } = await supabase.from('products').update(productData).eq('id', product.id);
+        const { error } = await supabase.from('products').update(productData).eq('id', product.id);
         if (error) throw error;
       } else {
-        const {
-          error
-        } = await supabase.from('products').insert(productData);
+        const { data: newProduct, error } = await supabase.from('products').insert(productData).select('id').single();
         if (error) throw error;
+        productId = newProduct.id;
       }
+
+      // Sync size variants
+      if (productId) {
+        await supabase.from('product_variants').delete().eq('product_id', productId);
+        if (sizes.length > 0) {
+          const variantRows = sizes.map(size => ({
+            product_id: productId!,
+            title: `${rest.name} - ${size}`,
+            size,
+            price: rest.price,
+          }));
+          const { error: variantError } = await supabase.from('product_variants').insert(variantRows);
+          if (variantError) console.error('Error saving variants:', variantError);
+        }
+      }
+
       toast({
         title: "Success",
         description: `Product ${product ? 'updated' : 'created'} successfully`
@@ -480,6 +533,30 @@ const ProductForm: React.FC<ProductFormProps> = ({
         </TabsContent>
 
         <TabsContent value="pricing" className="space-y-4">
+          {/* Size Variants */}
+          <div>
+            <Label className="mb-2 block">Available Sizes</Label>
+            <div className="flex flex-wrap gap-4">
+              {AVAILABLE_SIZES.map(size => (
+                <div key={size} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`size-${size}`}
+                    checked={formData.sizes.includes(size)}
+                    onCheckedChange={(checked) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        sizes: checked
+                          ? [...prev.sizes, size]
+                          : prev.sizes.filter(s => s !== size)
+                      }));
+                    }}
+                  />
+                  <Label htmlFor={`size-${size}`} className="text-sm cursor-pointer">{size}</Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="price">Regular Price ($) *</Label>
