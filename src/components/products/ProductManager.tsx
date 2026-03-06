@@ -461,14 +461,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
   return <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3 text-xs sm:text-sm">
           <TabsTrigger value="basic">Basic Info</TabsTrigger>
           <TabsTrigger value="pricing">Pricing & Stock</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="name">Product Name *</Label>
               <Input id="name" value={formData.name} onChange={e => setFormData({
@@ -501,7 +501,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           })} rows={4} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="category">Category</Label>
               <Select value={formData.category_id} onValueChange={value => setFormData({
@@ -549,11 +549,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
           {/* Size Variants */}
           <div>
            <Label className="mb-2 block">Available Sizes & Quantities</Label>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {AVAILABLE_SIZES.map(size => {
                 const isChecked = formData.sizes.includes(size);
                 return (
-                  <div key={size} className="flex items-center gap-3">
+                  <div key={size} className="flex items-center gap-2 p-2 rounded-md border border-border bg-muted/30">
                     <Checkbox
                       id={`size-${size}`}
                       checked={isChecked}
@@ -569,13 +569,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         }));
                       }}
                     />
-                    <Label htmlFor={`size-${size}`} className="text-sm cursor-pointer w-10">{size}</Label>
+                    <Label htmlFor={`size-${size}`} className="text-sm cursor-pointer min-w-[2rem]">{size}</Label>
                     {isChecked && (
                       <Input
                         type="number"
                         min="0"
+                        inputMode="numeric"
                         placeholder="Qty"
-                        className="w-24 h-8"
+                        className="flex-1 h-8 text-sm"
                         value={formData.sizeQuantities[size] ?? 0}
                         onChange={(e) => {
                           setFormData(prev => ({
