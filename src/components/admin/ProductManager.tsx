@@ -9,8 +9,22 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit, Trash2, Package, Save, X, Upload, Image as ImageIcon, Search, Filter, ArrowUpDown, Grid3X3, List } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Save, X, Upload, Image as ImageIcon, Search, Filter, ArrowUpDown, Grid3X3, List, Ruler } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ProductMockupGenerator } from './ProductMockupGenerator';
+
+const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL'] as const;
+
+interface ProductVariant {
+  id: string;
+  product_id: string | null;
+  title: string;
+  option1: string | null;
+  price: number;
+  inventory_quantity: number | null;
+  sku: string | null;
+}
+
 interface Product {
   id: string;
   title: string;
@@ -24,6 +38,7 @@ interface Product {
   vendor: string | null;
   weight: number | null;
   requires_shipping: boolean | null;
+  variants?: ProductVariant[];
 }
 const PRODUCT_TYPES = [{
   value: "tshirts",
@@ -88,7 +103,8 @@ export const ProductManager = () => {
     requires_shipping: true,
     is_active: true,
     images: "",
-    tags: ""
+    tags: "",
+    sizes: [] as string[]
   });
   const filteredAndSortedProducts = products.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) || product.description?.toLowerCase().includes(searchTerm.toLowerCase()) || product.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -120,42 +136,50 @@ export const ProductManager = () => {
   }, []);
   const loadProducts = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('gw_products').select('*').order('title');
+      const { data, error } = await supabase.from('gw_products').select('*').order('title');
       if (error) throw error;
-      setProducts(data || []);
+      
+      // Load variants for all products
+      const productIds = (data || []).map(p => p.id);
+      let variantsMap: Record<string, ProductVariant[]> = {};
+      if (productIds.length > 0) {
+        const { data: variants } = await supabase
+          .from('gw_product_variants')
+          .select('*')
+          .in('product_id', productIds);
+        if (variants) {
+          for (const v of variants) {
+            if (v.product_id) {
+              if (!variantsMap[v.product_id]) variantsMap[v.product_id] = [];
+              variantsMap[v.product_id].push(v);
+            }
+          }
+        }
+      }
+      
+      setProducts((data || []).map(p => ({ ...p, variants: variantsMap[p.id] || [] })));
     } catch (error) {
       console.error('Error loading products:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load products",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to load products", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
   const resetForm = () => {
     setFormData({
-      title: "",
-      description: "",
-      price: "",
-      product_type: "",
-      inventory_quantity: "",
-      vendor: "GleeWorld",
-      weight: "",
-      requires_shipping: true,
-      is_active: true,
-      images: "",
-      tags: ""
+      title: "", description: "", price: "", product_type: "",
+      inventory_quantity: "", vendor: "GleeWorld", weight: "",
+      requires_shipping: true, is_active: true, images: "", tags: "",
+      sizes: []
     });
     setEditingProduct(null);
     setSelectedFiles([]);
   };
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
+    const existingSizes = (product.variants || [])
+      .map(v => v.option1)
+      .filter((s): s is string => !!s);
     setFormData({
       title: product.title,
       description: product.description || "",
@@ -167,7 +191,8 @@ export const ProductManager = () => {
       requires_shipping: product.requires_shipping ?? true,
       is_active: product.is_active ?? true,
       images: product.images?.join(", ") || "",
-      tags: product.tags?.join(", ") || ""
+      tags: product.tags?.join(", ") || "",
+      sizes: existingSizes
     });
     setSelectedFiles([]);
     setIsDialogOpen(true);
@@ -233,23 +258,35 @@ export const ProductManager = () => {
         images: allImageUrls,
         tags: formData.tags ? formData.tags.split(",").map(tag => tag.trim()) : []
       };
+      let productId: string;
       if (editingProduct) {
-        const {
-          error
-        } = await supabase.from('gw_products').update(productData).eq('id', editingProduct.id);
+        const { error } = await supabase.from('gw_products').update(productData).eq('id', editingProduct.id);
         if (error) throw error;
-        toast({
-          title: "Product updated successfully"
-        });
+        productId = editingProduct.id;
+        toast({ title: "Product updated successfully" });
       } else {
-        const {
-          error
-        } = await supabase.from('gw_products').insert([productData]);
+        const { data: inserted, error } = await supabase.from('gw_products').insert([productData]).select('id').single();
         if (error) throw error;
-        toast({
-          title: "Product created successfully"
-        });
+        productId = inserted.id;
+        toast({ title: "Product created successfully" });
       }
+      
+      // Sync size variants
+      // Delete existing variants for this product
+      await supabase.from('gw_product_variants').delete().eq('product_id', productId);
+      
+      // Insert new size variants
+      if (formData.sizes.length > 0) {
+        const variantRows = formData.sizes.map(size => ({
+          product_id: productId,
+          title: `${formData.title} - ${size}`,
+          option1: size,
+          price: parseFloat(formData.price),
+        }));
+        const { error: variantError } = await supabase.from('gw_product_variants').insert(variantRows);
+        if (variantError) console.error('Error saving variants:', variantError);
+      }
+      
       setIsDialogOpen(false);
       resetForm();
       loadProducts();
@@ -415,6 +452,31 @@ export const ProductManager = () => {
                   tags: e.target.value
                 })} placeholder="tag1, tag2, tag3" />
                 </div>
+                
+                <div className="md:col-span-2">
+                  <Label className="flex items-center gap-2 mb-2">
+                    <Ruler className="h-4 w-4" />
+                    Available Sizes
+                  </Label>
+                  <div className="flex flex-wrap gap-3">
+                    {AVAILABLE_SIZES.map(size => (
+                      <label key={size} className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={formData.sizes.includes(size)}
+                          onCheckedChange={(checked) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              sizes: checked
+                                ? [...prev.sizes, size]
+                                : prev.sizes.filter(s => s !== size)
+                            }));
+                          }}
+                        />
+                        <span className="text-sm font-medium">{size}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
               
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4">
@@ -524,6 +586,15 @@ export const ProductManager = () => {
                 <div className="space-y-2">
                   <h3 className="font-semibold line-clamp-1 text-primary-foreground">{product.title}</h3>
                   <p className="text-sm line-clamp-2 text-primary-foreground">{product.description || "No description"}</p>
+                  {product.variants && product.variants.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {product.variants.map(v => (
+                        <Badge key={v.id} variant="secondary" className="text-xs">
+                          {v.option1}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-lg font-bold text-primary">${product.price.toFixed(2)}</span>
                     <Badge variant="outline" className="text-xs text-secondary-foreground">
