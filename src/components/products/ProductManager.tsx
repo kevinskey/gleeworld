@@ -378,7 +378,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
     stock_quantity: product?.stock_quantity || 0,
     manage_stock: product?.manage_stock ?? true,
     weight: product?.weight || 0,
-    tags: product?.tags?.join(', ') || ''
+    tags: product?.tags?.join(', ') || '',
+    sizes: product?.sizes || [] as string[]
   });
   const [saving, setSaving] = useState(false);
   const {
