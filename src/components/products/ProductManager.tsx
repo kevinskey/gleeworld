@@ -295,7 +295,17 @@ export const ProductManager = () => {
                   </div>
                   <Badge variant="outline">{product.category?.name}</Badge>
                 </div>
-                <div className="space-y-2">
+                  <div className="space-y-2">
+                  {/* Size badges */}
+                  {product.sizes && product.sizes.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {AVAILABLE_SIZES.filter(s => product.sizes?.includes(s)).map(size => (
+                        <Badge key={size} variant="secondary" className="text-xs px-1.5 py-0">
+                          {size}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <Dialog>
                       <DialogTrigger asChild>
