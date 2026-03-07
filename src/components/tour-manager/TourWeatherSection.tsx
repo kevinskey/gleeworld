@@ -116,11 +116,37 @@ export const TourWeatherSection: React.FC = () => {
   const fetchTourWeather = async () => {
     setLoading(true);
     try {
-      // Fetch tour cities
-      const { data: cities } = await supabase
+      // Find the most relevant tour (active > confirmed > planning)
+      const { data: tours } = await supabase
+        .from('gw_tours')
+        .select('id, name, status')
+        .in('status', ['active', 'confirmed', 'planning'])
+        .order('start_date', { ascending: true })
+        .limit(10);
+
+      const activeTour = tours?.find(t => t.status === 'active')
+        || tours?.find(t => t.status === 'confirmed')
+        || tours?.[0];
+
+      if (!activeTour) {
+        console.log('Weather: No active tour found');
+        setWeatherData([]);
+        setLoading(false);
+        return;
+      }
+
+      console.log(`Weather: Loading cities for "${activeTour.name}" (${activeTour.status})`);
+
+      // Fetch tour cities for the selected tour
+      const { data: cities, error: citiesError } = await supabase
         .from('gw_tour_cities')
-        .select('city_name, state_code, arrival_date, departure_date, latitude, longitude')
+        .select('city_name, state_code, arrival_date, departure_date, latitude, longitude, city_order')
+        .eq('tour_id', activeTour.id)
         .order('city_order', { ascending: true });
+
+      if (citiesError) {
+        console.error('Weather: Error fetching cities:', citiesError);
+      }
 
       if (!cities || cities.length === 0) {
         setWeatherData([]);
