@@ -286,7 +286,7 @@ export const TourWeatherSection: React.FC = () => {
             </p>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={fetchTourWeather} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => fetchTourWeather()} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
