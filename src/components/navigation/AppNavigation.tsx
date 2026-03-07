@@ -188,7 +188,7 @@ export const AppNavigation = () => {
 
   // Mobile Navigation Flow Component
   const MobileNavigationFlowContent = () => (
-    <div className="h-[50vh] w-full mb-4">
+    <div className="h-[30vh] w-full mb-4 rounded-lg overflow-hidden border border-border">
       <MobileNavigationFlow />
     </div>
   );
