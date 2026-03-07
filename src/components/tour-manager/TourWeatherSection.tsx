@@ -46,23 +46,53 @@ const getWeatherGradient = (description: string) => {
   return 'from-sky-400/20 to-blue-400/10 border-sky-300/30';
 };
 
+// State name to code mapping for geocoding
+const STATE_NAME_TO_CODE: Record<string, string> = {
+  'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+  'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+  'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+  'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+  'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+  'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+  'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+  'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+  'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+  'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
+  'District of Columbia': 'DC',
+};
+
+const normalizeState = (state: string): string => {
+  if (!state) return '';
+  // If already a 2-letter code, return as-is
+  if (state.length === 2) return state;
+  return STATE_NAME_TO_CODE[state] || state;
+};
+
 // Geocode city name to lat/lon using Open-Meteo geocoding (free, no API key)
 const geocodeCity = async (city: string, state: string): Promise<{ lat: number; lon: number } | null> => {
   try {
-    const query = `${city}, ${state}, US`;
-    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`);
+    const stateCode = normalizeState(state);
+    // Try city + state
+    const query = stateCode ? `${city}, ${stateCode}` : city;
+    console.log(`Weather: Geocoding "${query}"...`);
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=5&language=en&format=json`);
     const data = await res.json();
     if (data.results && data.results.length > 0) {
-      return { lat: data.results[0].latitude, lon: data.results[0].longitude };
-    }
-    // Fallback: try just city name
-    const res2 = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
-    const data2 = await res2.json();
-    if (data2.results && data2.results.length > 0) {
-      return { lat: data2.results[0].latitude, lon: data2.results[0].longitude };
+      // Try to match the state if we have one
+      if (stateCode) {
+        const match = data.results.find((r: any) => 
+          r.admin1?.toLowerCase().includes(state.toLowerCase()) || 
+          r.country_code === 'US'
+        );
+        if (match) return { lat: match.latitude, lon: match.longitude };
+      }
+      // Prefer US results
+      const usResult = data.results.find((r: any) => r.country_code === 'US');
+      return { lat: (usResult || data.results[0]).latitude, lon: (usResult || data.results[0]).longitude };
     }
     return null;
-  } catch {
+  } catch (err) {
+    console.error('Geocoding error:', err);
     return null;
   }
 };
