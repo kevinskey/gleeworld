@@ -153,30 +153,39 @@ export const TourWeatherSection: React.FC = () => {
   const fetchTourWeather = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const { data: tours } = await supabase
+      const { data: tours, error: toursError } = await supabase
         .from('gw_tours')
         .select('id, name, status')
         .in('status', ['active', 'confirmed', 'planning'])
         .order('start_date', { ascending: true })
         .limit(10);
 
+      if (signal?.aborted) return;
+
+      console.log('Weather: Tours query result:', { tours, error: toursError?.message });
+
       const activeTour = tours?.find(t => t.status === 'active')
         || tours?.find(t => t.status === 'confirmed')
         || tours?.[0];
 
       if (!activeTour) {
+        console.warn('Weather: No active tour found');
         setWeatherData([]);
         setLoading(false);
         return;
       }
 
-      console.log(`Weather: Loading cities for "${activeTour.name}" (${activeTour.status})`);
+      console.log(`Weather: Loading cities for "${activeTour.name}" (${activeTour.status}) id=${activeTour.id}`);
 
       const { data: cities, error: citiesError } = await supabase
         .from('gw_tour_cities')
         .select('city_name, state_code, arrival_date, departure_date, latitude, longitude, city_order')
         .eq('tour_id', activeTour.id)
         .order('city_order', { ascending: true });
+
+      if (signal?.aborted) return;
+
+      console.log('Weather: Cities query result:', { count: cities?.length, error: citiesError?.message });
 
       if (citiesError || !cities || cities.length === 0) {
         setWeatherData([]);
