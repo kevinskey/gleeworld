@@ -213,16 +213,16 @@ export const AppNavigation = () => {
               <span className="sr-only">Open navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-80 p-0 bg-background flex flex-col">
+          <SheetContent side="left" className="w-80 p-0 bg-background flex flex-col max-h-screen">
             <div className="flex items-center h-16 px-4 border-b bg-gradient-to-r from-brand-700 to-brand-800 flex-shrink-0">
               <h1 className="text-lg font-bold text-white">Navigation</h1>
             </div>
-            <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y px-4 py-4 -webkit-overflow-scrolling-touch">
               <MobileNavigationFlowContent />
               
               {/* Traditional navigation */}
-              <div className="border-t border-border pt-4">
-                <h3 className="text-sm font-medium mb-2 text-muted-foreground">Quick Links</h3>
+              <div className="border-t border-border pt-4 pb-8">
+                <h3 className="text-sm font-medium mb-2 text-muted-foreground">Quick Links (A–Z)</h3>
                 <MobileNavigationContent />
               </div>
             </div>
