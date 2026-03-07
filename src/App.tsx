@@ -1707,8 +1707,16 @@ const App = () => {
                                      <TourPlanner />
                                    </ProtectedRoute>
                                  } 
-                               />
-                               <Route 
+                                />
+                                <Route 
+                                  path="/weather" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <Weather />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
                                   path="/wardrobe-appointments" 
                                   element={
                                     <ProtectedRoute>
