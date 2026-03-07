@@ -102,10 +102,19 @@ const fetchWeather = async (lat: number, lon: number): Promise<{
   temp: number; feelsLike: number; humidity: number; windSpeed: number; description: string; icon: string;
 } | null> => {
   try {
-    const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`
-    );
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
+    console.log('Weather: Fetching', url);
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.error(`Weather: API returned ${res.status} ${res.statusText}`);
+      return null;
+    }
     const data = await res.json();
+    console.log('Weather: API response', data);
+    if (!data.current) {
+      console.error('Weather: No current data in response', data);
+      return null;
+    }
     const current = data.current;
     const weatherCode = current.weather_code;
     
@@ -120,7 +129,8 @@ const fetchWeather = async (lat: number, lon: number): Promise<{
       description: desc,
       icon: desc.toLowerCase(),
     };
-  } catch {
+  } catch (err) {
+    console.error('Weather: fetch error', err);
     return null;
   }
 };
