@@ -147,7 +147,7 @@ export const AppNavigation = () => {
 
   // Desktop horizontal navigation for header
   const DesktopNavigation = () => (
-    <nav className="flex items-center space-x-1">
+    <nav className="flex items-center space-x-1 overflow-x-auto scrollbar-hide max-w-full">
       {filteredItems.map((item) => (
         <Link
           key={item.href}

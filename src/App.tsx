@@ -166,6 +166,7 @@ import ExecutiveBoard from "./pages/admin/ExecutiveBoard";
 import DocumentsForms from "./pages/admin/DocumentsForms";
 import { StudentConductorDashboard } from "./pages/StudentConductorDashboard";
 import TourPlanner from "./pages/TourPlanner";
+import Weather from "./pages/Weather";
 import BookingRequest from "./pages/BookingRequest";
 import BookingForms from "./pages/BookingForms";
 import Wardrobe from "./pages/Wardrobe";
@@ -1706,8 +1707,16 @@ const App = () => {
                                      <TourPlanner />
                                    </ProtectedRoute>
                                  } 
-                               />
-                               <Route 
+                                />
+                                <Route 
+                                  path="/weather" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <Weather />
+                                    </ProtectedRoute>
+                                  } 
+                                />
+                                <Route 
                                   path="/wardrobe-appointments" 
                                   element={
                                     <ProtectedRoute>
