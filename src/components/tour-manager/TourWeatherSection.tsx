@@ -214,32 +214,41 @@ export const TourWeatherSection: React.FC = () => {
         return { city, coords: null };
       });
 
-      // Fetch weather for all cities in parallel
-      const weatherPromises = cityCoords.map(async ({ city, coords }) => {
-        if (!coords) {
-          // Try geocoding
-          const geocoded = await geocodeCity(city.city_name, city.state_code || '');
-          if (!geocoded) return null;
-          coords = geocoded;
+      // Fetch weather in batches of 3 to avoid overwhelming the API
+      const results: WeatherData[] = [];
+      for (let i = 0; i < cityCoords.length; i += 3) {
+        if (signal?.aborted) break;
+        const batch = cityCoords.slice(i, i + 3);
+        const batchResults = await Promise.all(
+          batch.map(async ({ city, coords: c }) => {
+            let finalCoords = c;
+            if (!finalCoords) {
+              const geocoded = await geocodeCity(city.city_name, city.state_code || '');
+              if (!geocoded) return null;
+              finalCoords = geocoded;
+            }
+            const weather = await fetchWeather(finalCoords.lat, finalCoords.lon);
+            if (!weather) return null;
+            return {
+              city: city.city_name,
+              state: normalizeState(city.state_code || ''),
+              temp: weather.temp,
+              feelsLike: weather.feelsLike,
+              humidity: weather.humidity,
+              windSpeed: weather.windSpeed,
+              description: weather.description,
+              icon: weather.icon,
+              arrivalDate: city.arrival_date || '',
+              departureDate: city.departure_date || '',
+            } as WeatherData;
+          })
+        );
+        results.push(...batchResults.filter(Boolean) as WeatherData[]);
+        // Small delay between batches
+        if (i + 3 < cityCoords.length) {
+          await new Promise(r => setTimeout(r, 200));
         }
-        if (signal?.aborted) return null;
-        const weather = await fetchWeather(coords.lat, coords.lon);
-        if (!weather) return null;
-        return {
-          city: city.city_name,
-          state: normalizeState(city.state_code || ''),
-          temp: weather.temp,
-          feelsLike: weather.feelsLike,
-          humidity: weather.humidity,
-          windSpeed: weather.windSpeed,
-          description: weather.description,
-          icon: weather.icon,
-          arrivalDate: city.arrival_date || '',
-          departureDate: city.departure_date || '',
-        } as WeatherData;
-      });
-
-      const results = (await Promise.all(weatherPromises)).filter(Boolean) as WeatherData[];
+      }
       
       if (signal?.aborted) return;
 
