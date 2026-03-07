@@ -98,38 +98,49 @@ const geocodeCity = async (city: string, state: string): Promise<{ lat: number; 
 };
 
 // Fetch weather from Open-Meteo (free, no API key)
-const fetchWeather = async (lat: number, lon: number, signal?: AbortSignal): Promise<{
+const fetchWeather = async (lat: number, lon: number): Promise<{
   temp: number; feelsLike: number; humidity: number; windSpeed: number; description: string; icon: string;
 } | null> => {
-  try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
-    const res = await fetch(url, { signal });
-    if (!res.ok) {
-      console.error(`Weather: API returned ${res.status} ${res.statusText}`);
+  const maxRetries = 2;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error(`Weather: API returned ${res.status} ${res.statusText}`);
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+          continue;
+        }
+        return null;
+      }
+      const data = await res.json();
+      if (!data.current) {
+        console.error('Weather: No current data in response', data);
+        return null;
+      }
+      const current = data.current;
+      const weatherCode = current.weather_code;
+      const desc = wmoCodeToDescription(weatherCode);
+      
+      return {
+        temp: Math.round(current.temperature_2m),
+        feelsLike: Math.round(current.apparent_temperature),
+        humidity: current.relative_humidity_2m,
+        windSpeed: Math.round(current.wind_speed_10m),
+        description: desc,
+        icon: desc.toLowerCase(),
+      };
+    } catch (err: any) {
+      console.error(`Weather: fetch error (attempt ${attempt + 1})`, err);
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+        continue;
+      }
       return null;
     }
-    const data = await res.json();
-    if (!data.current) {
-      console.error('Weather: No current data in response', data);
-      return null;
-    }
-    const current = data.current;
-    const weatherCode = current.weather_code;
-    const desc = wmoCodeToDescription(weatherCode);
-    
-    return {
-      temp: Math.round(current.temperature_2m),
-      feelsLike: Math.round(current.apparent_temperature),
-      humidity: current.relative_humidity_2m,
-      windSpeed: Math.round(current.wind_speed_10m),
-      description: desc,
-      icon: desc.toLowerCase(),
-    };
-  } catch (err: any) {
-    if (err?.name === 'AbortError') return null;
-    console.error('Weather: fetch error', err);
-    return null;
   }
+  return null;
 };
 
 const wmoCodeToDescription = (code: number): string => {
@@ -153,30 +164,39 @@ export const TourWeatherSection: React.FC = () => {
   const fetchTourWeather = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const { data: tours } = await supabase
+      const { data: tours, error: toursError } = await supabase
         .from('gw_tours')
         .select('id, name, status')
         .in('status', ['active', 'confirmed', 'planning'])
         .order('start_date', { ascending: true })
         .limit(10);
 
+      if (signal?.aborted) return;
+
+      console.log('Weather: Tours query result:', { tours, error: toursError?.message });
+
       const activeTour = tours?.find(t => t.status === 'active')
         || tours?.find(t => t.status === 'confirmed')
         || tours?.[0];
 
       if (!activeTour) {
+        console.warn('Weather: No active tour found');
         setWeatherData([]);
         setLoading(false);
         return;
       }
 
-      console.log(`Weather: Loading cities for "${activeTour.name}" (${activeTour.status})`);
+      console.log(`Weather: Loading cities for "${activeTour.name}" (${activeTour.status}) id=${activeTour.id}`);
 
       const { data: cities, error: citiesError } = await supabase
         .from('gw_tour_cities')
         .select('city_name, state_code, arrival_date, departure_date, latitude, longitude, city_order')
         .eq('tour_id', activeTour.id)
         .order('city_order', { ascending: true });
+
+      if (signal?.aborted) return;
+
+      console.log('Weather: Cities query result:', { count: cities?.length, error: citiesError?.message });
 
       if (citiesError || !cities || cities.length === 0) {
         setWeatherData([]);
@@ -194,32 +214,41 @@ export const TourWeatherSection: React.FC = () => {
         return { city, coords: null };
       });
 
-      // Fetch weather for all cities in parallel
-      const weatherPromises = cityCoords.map(async ({ city, coords }) => {
-        if (!coords) {
-          // Try geocoding
-          const geocoded = await geocodeCity(city.city_name, city.state_code || '');
-          if (!geocoded) return null;
-          coords = geocoded;
+      // Fetch weather in batches of 3 to avoid overwhelming the API
+      const results: WeatherData[] = [];
+      for (let i = 0; i < cityCoords.length; i += 3) {
+        if (signal?.aborted) break;
+        const batch = cityCoords.slice(i, i + 3);
+        const batchResults = await Promise.all(
+          batch.map(async ({ city, coords: c }) => {
+            let finalCoords = c;
+            if (!finalCoords) {
+              const geocoded = await geocodeCity(city.city_name, city.state_code || '');
+              if (!geocoded) return null;
+              finalCoords = geocoded;
+            }
+            const weather = await fetchWeather(finalCoords.lat, finalCoords.lon);
+            if (!weather) return null;
+            return {
+              city: city.city_name,
+              state: normalizeState(city.state_code || ''),
+              temp: weather.temp,
+              feelsLike: weather.feelsLike,
+              humidity: weather.humidity,
+              windSpeed: weather.windSpeed,
+              description: weather.description,
+              icon: weather.icon,
+              arrivalDate: city.arrival_date || '',
+              departureDate: city.departure_date || '',
+            } as WeatherData;
+          })
+        );
+        results.push(...batchResults.filter(Boolean) as WeatherData[]);
+        // Small delay between batches
+        if (i + 3 < cityCoords.length) {
+          await new Promise(r => setTimeout(r, 200));
         }
-        if (signal?.aborted) return null;
-        const weather = await fetchWeather(coords.lat, coords.lon, signal);
-        if (!weather) return null;
-        return {
-          city: city.city_name,
-          state: normalizeState(city.state_code || ''),
-          temp: weather.temp,
-          feelsLike: weather.feelsLike,
-          humidity: weather.humidity,
-          windSpeed: weather.windSpeed,
-          description: weather.description,
-          icon: weather.icon,
-          arrivalDate: city.arrival_date || '',
-          departureDate: city.departure_date || '',
-        } as WeatherData;
-      });
-
-      const results = (await Promise.all(weatherPromises)).filter(Boolean) as WeatherData[];
+      }
       
       if (signal?.aborted) return;
 
