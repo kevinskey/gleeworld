@@ -42,45 +42,9 @@ export const AppNavigation = () => {
 
   const navigationItems = [
     {
-      label: "Library",
-      href: "/?tab=library",
-      icon: Library,
-      permission: null
-    },
-    ...(isInstructor ? [{
-      label: "Grading",
-      href: "/grading/instructor/dashboard",
-      icon: BookOpen,
-      permission: null
-    }] : []),
-    {
-      label: "My Grades",
-      href: "/student/my-submissions",
-      icon: GraduationCap,
-      permission: null
-    },
-    {
-      label: "Contracts",
-      href: "/",
-      icon: FileText,
-      permission: "view_own_contracts"
-    },
-    {
-      label: "Finance",
-      href: "/?tab=finance",
-      icon: DollarSign,
-      permission: "view_own_payments"
-    },
-    {
       label: "Amazon Shopping",
       href: "/amazon-shopping",
       icon: ShoppingCart,
-      permission: null
-    },
-    {
-      label: "Music Library",
-      href: "/music-library",
-      icon: Music,
       permission: null
     },
     {
@@ -90,15 +54,57 @@ export const AppNavigation = () => {
       permission: null
     },
     {
+      label: "Contracts",
+      href: "/",
+      icon: FileText,
+      permission: "view_own_contracts"
+    },
+    {
       label: "Event Planner",
       href: "/event-planner",
       icon: CalendarDays,
       permission: null
     },
     {
+      label: "Feed Control",
+      href: "/feed-control",
+      icon: Rss,
+      permission: "manage_settings"
+    },
+    {
+      label: "Finance",
+      href: "/?tab=finance",
+      icon: DollarSign,
+      permission: "view_own_payments"
+    },
+    ...(isInstructor ? [{
+      label: "Grading",
+      href: "/grading/instructor/dashboard",
+      icon: BookOpen,
+      permission: null
+    }] : []),
+    {
+      label: "Library",
+      href: "/?tab=library",
+      icon: Library,
+      permission: null
+    },
+    {
       label: "Modules",
       href: "/modules",
       icon: LayoutDashboard,
+      permission: null
+    },
+    {
+      label: "Music Library",
+      href: "/music-library",
+      icon: Music,
+      permission: null
+    },
+    {
+      label: "My Grades",
+      href: "/student/my-submissions",
+      icon: GraduationCap,
       permission: null
     },
     {
@@ -112,12 +118,6 @@ export const AppNavigation = () => {
       href: "/saved-feed",
       icon: Bookmark,
       permission: null
-    },
-    {
-      label: "Feed Control",
-      href: "/feed-control",
-      icon: Rss,
-      permission: "manage_settings"
     },
   ];
 
@@ -213,19 +213,17 @@ export const AppNavigation = () => {
               <span className="sr-only">Open navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-80 p-0 bg-background">
-            <div className="flex flex-col h-full">
-              <div className="flex items-center h-16 px-4 border-b bg-gradient-to-r from-brand-700 to-brand-800">
-                <h1 className="text-lg font-bold text-white">Navigation Flow</h1>
-              </div>
-              <div className="flex-1 px-4 py-6">
-                <MobileNavigationFlowContent />
-                
-                {/* Traditional navigation as fallback */}
-                <div className="border-t border-border pt-4">
-                  <h3 className="text-sm font-medium mb-2 text-muted-foreground">Quick Links</h3>
-                  <MobileNavigationContent />
-                </div>
+          <SheetContent side="left" className="w-80 p-0 bg-background flex flex-col">
+            <div className="flex items-center h-16 px-4 border-b bg-gradient-to-r from-brand-700 to-brand-800 flex-shrink-0">
+              <h1 className="text-lg font-bold text-white">Navigation</h1>
+            </div>
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+              <MobileNavigationFlowContent />
+              
+              {/* Traditional navigation */}
+              <div className="border-t border-border pt-4">
+                <h3 className="text-sm font-medium mb-2 text-muted-foreground">Quick Links</h3>
+                <MobileNavigationContent />
               </div>
             </div>
           </SheetContent>
