@@ -223,7 +223,7 @@ export const TourWeatherSection: React.FC = () => {
           coords = geocoded;
         }
         if (signal?.aborted) return null;
-        const weather = await fetchWeather(coords.lat, coords.lon, signal);
+        const weather = await fetchWeather(coords.lat, coords.lon);
         if (!weather) return null;
         return {
           city: city.city_name,
