@@ -98,27 +98,23 @@ const geocodeCity = async (city: string, state: string): Promise<{ lat: number; 
 };
 
 // Fetch weather from Open-Meteo (free, no API key)
-const fetchWeather = async (lat: number, lon: number): Promise<{
+const fetchWeather = async (lat: number, lon: number, signal?: AbortSignal): Promise<{
   temp: number; feelsLike: number; humidity: number; windSpeed: number; description: string; icon: string;
 } | null> => {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
-    console.log('Weather: Fetching', url);
-    const res = await fetch(url);
+    const res = await fetch(url, { signal });
     if (!res.ok) {
       console.error(`Weather: API returned ${res.status} ${res.statusText}`);
       return null;
     }
     const data = await res.json();
-    console.log('Weather: API response', data);
     if (!data.current) {
       console.error('Weather: No current data in response', data);
       return null;
     }
     const current = data.current;
     const weatherCode = current.weather_code;
-    
-    // Map WMO weather codes to descriptions
     const desc = wmoCodeToDescription(weatherCode);
     
     return {
@@ -129,10 +125,12 @@ const fetchWeather = async (lat: number, lon: number): Promise<{
       description: desc,
       icon: desc.toLowerCase(),
     };
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.name === 'AbortError') return null;
     console.error('Weather: fetch error', err);
     return null;
   }
+};
 };
 
 const wmoCodeToDescription = (code: number): string => {
