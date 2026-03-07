@@ -98,18 +98,23 @@ const geocodeCity = async (city: string, state: string): Promise<{ lat: number; 
 };
 
 // Fetch weather from Open-Meteo (free, no API key)
-const fetchWeather = async (lat: number, lon: number): Promise<{
+const fetchWeather = async (lat: number, lon: number, signal?: AbortSignal): Promise<{
   temp: number; feelsLike: number; humidity: number; windSpeed: number; description: string; icon: string;
 } | null> => {
   try {
-    const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`
-    );
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
+    const res = await fetch(url, { signal });
+    if (!res.ok) {
+      console.error(`Weather: API returned ${res.status} ${res.statusText}`);
+      return null;
+    }
     const data = await res.json();
+    if (!data.current) {
+      console.error('Weather: No current data in response', data);
+      return null;
+    }
     const current = data.current;
     const weatherCode = current.weather_code;
-    
-    // Map WMO weather codes to descriptions
     const desc = wmoCodeToDescription(weatherCode);
     
     return {
@@ -120,7 +125,9 @@ const fetchWeather = async (lat: number, lon: number): Promise<{
       description: desc,
       icon: desc.toLowerCase(),
     };
-  } catch {
+  } catch (err: any) {
+    if (err?.name === 'AbortError') return null;
+    console.error('Weather: fetch error', err);
     return null;
   }
 };
@@ -143,10 +150,9 @@ export const TourWeatherSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchTourWeather = async () => {
+  const fetchTourWeather = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      // Find the most relevant tour (active > confirmed > planning)
       const { data: tours } = await supabase
         .from('gw_tours')
         .select('id, name, status')
@@ -159,7 +165,6 @@ export const TourWeatherSection: React.FC = () => {
         || tours?.[0];
 
       if (!activeTour) {
-        console.log('Weather: No active tour found');
         setWeatherData([]);
         setLoading(false);
         return;
@@ -167,52 +172,40 @@ export const TourWeatherSection: React.FC = () => {
 
       console.log(`Weather: Loading cities for "${activeTour.name}" (${activeTour.status})`);
 
-      // Fetch tour cities for the selected tour
       const { data: cities, error: citiesError } = await supabase
         .from('gw_tour_cities')
         .select('city_name, state_code, arrival_date, departure_date, latitude, longitude, city_order')
         .eq('tour_id', activeTour.id)
         .order('city_order', { ascending: true });
 
-      if (citiesError) {
-        console.error('Weather: Error fetching cities:', citiesError);
+      if (citiesError || !cities || cities.length === 0) {
         setWeatherData([]);
         setLoading(false);
         return;
       }
 
-      console.log(`Weather: Found ${cities?.length || 0} cities`, cities);
+      console.log(`Weather: Found ${cities.length} cities`);
 
-      if (!cities || cities.length === 0) {
-        setWeatherData([]);
-        setLoading(false);
-        return;
-      }
-
-      const results: WeatherData[] = [];
-
-      for (const city of cities) {
-        // Use stored lat/lon if available, otherwise geocode
-        let coords: { lat: number; lon: number } | null = null;
+      // Build coords for all cities first
+      const cityCoords = cities.map(city => {
         if (city.latitude && city.longitude) {
-          coords = { lat: Number(city.latitude), lon: Number(city.longitude) };
-          console.log(`Weather: Using stored coords for ${city.city_name}: ${coords.lat}, ${coords.lon}`);
-        } else {
-          console.log(`Weather: Geocoding ${city.city_name}...`);
-          coords = await geocodeCity(city.city_name, city.state_code || '');
+          return { city, coords: { lat: Number(city.latitude), lon: Number(city.longitude) } };
         }
+        return { city, coords: null };
+      });
+
+      // Fetch weather for all cities in parallel
+      const weatherPromises = cityCoords.map(async ({ city, coords }) => {
         if (!coords) {
-          console.warn(`Weather: No coords for ${city.city_name}, skipping`);
-          continue;
+          // Try geocoding
+          const geocoded = await geocodeCity(city.city_name, city.state_code || '');
+          if (!geocoded) return null;
+          coords = geocoded;
         }
-
-        const weather = await fetchWeather(coords.lat, coords.lon);
-        if (!weather) {
-          console.warn(`Weather: No weather data for ${city.city_name}, skipping`);
-          continue;
-        }
-
-        results.push({
+        if (signal?.aborted) return null;
+        const weather = await fetchWeather(coords.lat, coords.lon, signal);
+        if (!weather) return null;
+        return {
           city: city.city_name,
           state: normalizeState(city.state_code || ''),
           temp: weather.temp,
@@ -223,22 +216,28 @@ export const TourWeatherSection: React.FC = () => {
           icon: weather.icon,
           arrivalDate: city.arrival_date || '',
           departureDate: city.departure_date || '',
-        });
-      }
+        } as WeatherData;
+      });
+
+      const results = (await Promise.all(weatherPromises)).filter(Boolean) as WeatherData[];
+      
+      if (signal?.aborted) return;
 
       console.log(`Weather: Got ${results.length} results`);
-
       setWeatherData(results);
       setLastUpdated(new Date());
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === 'AbortError') return;
       console.error('Error fetching tour weather:', error);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTourWeather();
+    const controller = new AbortController();
+    fetchTourWeather(controller.signal);
+    return () => controller.abort();
   }, []);
 
   if (loading) {
@@ -287,7 +286,7 @@ export const TourWeatherSection: React.FC = () => {
             </p>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={fetchTourWeather} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => fetchTourWeather()} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
