@@ -46,7 +46,7 @@ const getWeatherGradient = (description: string) => {
   return 'from-sky-400/20 to-blue-400/10 border-sky-300/30';
 };
 
-// State name to code mapping for geocoding
+// State name to code mapping
 const STATE_NAME_TO_CODE: Record<string, string> = {
   'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
   'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
@@ -63,97 +63,8 @@ const STATE_NAME_TO_CODE: Record<string, string> = {
 
 const normalizeState = (state: string): string => {
   if (!state) return '';
-  // If already a 2-letter code, return as-is
   if (state.length === 2) return state;
   return STATE_NAME_TO_CODE[state] || state;
-};
-
-// Geocode city name to lat/lon using Open-Meteo geocoding (free, no API key)
-const geocodeCity = async (city: string, state: string): Promise<{ lat: number; lon: number } | null> => {
-  try {
-    const stateCode = normalizeState(state);
-    // Try city + state
-    const query = stateCode ? `${city}, ${stateCode}` : city;
-    console.log(`Weather: Geocoding "${query}"...`);
-    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=5&language=en&format=json`);
-    const data = await res.json();
-    if (data.results && data.results.length > 0) {
-      // Try to match the state if we have one
-      if (stateCode) {
-        const match = data.results.find((r: any) => 
-          r.admin1?.toLowerCase().includes(state.toLowerCase()) || 
-          r.country_code === 'US'
-        );
-        if (match) return { lat: match.latitude, lon: match.longitude };
-      }
-      // Prefer US results
-      const usResult = data.results.find((r: any) => r.country_code === 'US');
-      return { lat: (usResult || data.results[0]).latitude, lon: (usResult || data.results[0]).longitude };
-    }
-    return null;
-  } catch (err) {
-    console.error('Geocoding error:', err);
-    return null;
-  }
-};
-
-// Fetch weather from Open-Meteo (free, no API key)
-const fetchWeather = async (lat: number, lon: number): Promise<{
-  temp: number; feelsLike: number; humidity: number; windSpeed: number; description: string; icon: string;
-} | null> => {
-  const maxRetries = 2;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        console.error(`Weather: API returned ${res.status} ${res.statusText}`);
-        if (attempt < maxRetries) {
-          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
-          continue;
-        }
-        return null;
-      }
-      const data = await res.json();
-      if (!data.current) {
-        console.error('Weather: No current data in response', data);
-        return null;
-      }
-      const current = data.current;
-      const weatherCode = current.weather_code;
-      const desc = wmoCodeToDescription(weatherCode);
-      
-      return {
-        temp: Math.round(current.temperature_2m),
-        feelsLike: Math.round(current.apparent_temperature),
-        humidity: current.relative_humidity_2m,
-        windSpeed: Math.round(current.wind_speed_10m),
-        description: desc,
-        icon: desc.toLowerCase(),
-      };
-    } catch (err: any) {
-      console.error(`Weather: fetch error (attempt ${attempt + 1})`, err);
-      if (attempt < maxRetries) {
-        await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
-        continue;
-      }
-      return null;
-    }
-  }
-  return null;
-};
-
-const wmoCodeToDescription = (code: number): string => {
-  if (code === 0) return 'Clear sky';
-  if (code <= 3) return 'Clouds';
-  if (code <= 49) return 'Fog';
-  if (code <= 59) return 'Drizzle';
-  if (code <= 69) return 'Rain';
-  if (code <= 79) return 'Snow';
-  if (code <= 84) return 'Rain showers';
-  if (code <= 86) return 'Snow showers';
-  if (code <= 99) return 'Thunderstorm';
-  return 'Clear';
 };
 
 export const TourWeatherSection: React.FC = () => {
@@ -161,9 +72,10 @@ export const TourWeatherSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchTourWeather = async (signal?: AbortSignal) => {
+  const fetchTourWeather = async () => {
     setLoading(true);
     try {
+      // Find the active tour
       const { data: tours, error: toursError } = await supabase
         .from('gw_tours')
         .select('id, name, status')
@@ -171,9 +83,9 @@ export const TourWeatherSection: React.FC = () => {
         .order('start_date', { ascending: true })
         .limit(10);
 
-      if (signal?.aborted) return;
-
-      console.log('Weather: Tours query result:', { tours, error: toursError?.message });
+      if (toursError) {
+        console.error('Weather: Tours query error:', toursError.message);
+      }
 
       const activeTour = tours?.find(t => t.status === 'active')
         || tours?.find(t => t.status === 'confirmed')
@@ -186,87 +98,73 @@ export const TourWeatherSection: React.FC = () => {
         return;
       }
 
-      console.log(`Weather: Loading cities for "${activeTour.name}" (${activeTour.status}) id=${activeTour.id}`);
+      console.log(`Weather: Loading cities for "${activeTour.name}" (${activeTour.status})`);
 
+      // Get tour cities with coordinates
       const { data: cities, error: citiesError } = await supabase
         .from('gw_tour_cities')
         .select('city_name, state_code, arrival_date, departure_date, latitude, longitude, city_order')
         .eq('tour_id', activeTour.id)
         .order('city_order', { ascending: true });
 
-      if (signal?.aborted) return;
-
-      console.log('Weather: Cities query result:', { count: cities?.length, error: citiesError?.message });
-
       if (citiesError || !cities || cities.length === 0) {
+        console.warn('Weather: No cities found', citiesError?.message);
         setWeatherData([]);
         setLoading(false);
         return;
       }
 
-      console.log(`Weather: Found ${cities.length} cities`);
+      console.log(`Weather: Found ${cities.length} cities, calling Edge Function...`);
 
-      // Build coords for all cities first
-      const cityCoords = cities.map(city => {
-        if (city.latitude && city.longitude) {
-          return { city, coords: { lat: Number(city.latitude), lon: Number(city.longitude) } };
-        }
-        return { city, coords: null };
+      // Build payload for edge function
+      const citiesPayload = cities
+        .filter(c => c.latitude && c.longitude)
+        .map(c => ({
+          lat: Number(c.latitude),
+          lon: Number(c.longitude),
+          name: c.city_name,
+          state: normalizeState(c.state_code || ''),
+          arrivalDate: c.arrival_date || '',
+          departureDate: c.departure_date || '',
+        }));
+
+      if (citiesPayload.length === 0) {
+        console.warn('Weather: No cities have coordinates');
+        setWeatherData([]);
+        setLoading(false);
+        return;
+      }
+
+      // Call Edge Function to fetch weather server-side
+      const { data, error } = await supabase.functions.invoke('get-weather', {
+        body: { cities: citiesPayload },
       });
 
-      // Fetch weather in batches of 3 to avoid overwhelming the API
-      const results: WeatherData[] = [];
-      for (let i = 0; i < cityCoords.length; i += 3) {
-        if (signal?.aborted) break;
-        const batch = cityCoords.slice(i, i + 3);
-        const batchResults = await Promise.all(
-          batch.map(async ({ city, coords: c }) => {
-            let finalCoords = c;
-            if (!finalCoords) {
-              const geocoded = await geocodeCity(city.city_name, city.state_code || '');
-              if (!geocoded) return null;
-              finalCoords = geocoded;
-            }
-            const weather = await fetchWeather(finalCoords.lat, finalCoords.lon);
-            if (!weather) return null;
-            return {
-              city: city.city_name,
-              state: normalizeState(city.state_code || ''),
-              temp: weather.temp,
-              feelsLike: weather.feelsLike,
-              humidity: weather.humidity,
-              windSpeed: weather.windSpeed,
-              description: weather.description,
-              icon: weather.icon,
-              arrivalDate: city.arrival_date || '',
-              departureDate: city.departure_date || '',
-            } as WeatherData;
-          })
-        );
-        results.push(...batchResults.filter(Boolean) as WeatherData[]);
-        // Small delay between batches
-        if (i + 3 < cityCoords.length) {
-          await new Promise(r => setTimeout(r, 200));
-        }
+      if (error) {
+        console.error('Weather: Edge Function error:', error);
+        setWeatherData([]);
+        setLoading(false);
+        return;
       }
-      
-      if (signal?.aborted) return;
 
-      console.log(`Weather: Got ${results.length} results`);
+      const results = (data?.weather || []) as WeatherData[];
+      console.log(`Weather: Got ${results.length} results from Edge Function`);
       setWeatherData(results);
       setLastUpdated(new Date());
-    } catch (error: any) {
-      if (error?.name === 'AbortError') return;
+    } catch (error) {
       console.error('Error fetching tour weather:', error);
     } finally {
-      if (!signal?.aborted) setLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetchTourWeather(controller.signal);
-    return () => controller.abort();
+    let cancelled = false;
+    const load = async () => {
+      await fetchTourWeather();
+    };
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) {
