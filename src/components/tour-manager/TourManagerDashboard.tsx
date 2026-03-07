@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid, ArrowLeft, MessageSquare, CloudSun } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -28,6 +28,7 @@ import { TourMilestones } from './TourMilestones';
 import { RisersSection } from '@/components/tour/RisersSection';
 import { TourNotesSection } from '@/components/tour/TourNotesSection';
 import { TourRollCallSection } from './TourRollCallSection';
+import { TourWeatherSection } from './TourWeatherSection';
 import { supabase } from '@/integrations/supabase/client';
 interface TourManagerDashboardProps {
   user?: {
@@ -116,6 +117,10 @@ const navItems = [{
   value: 'booking-requests',
   label: 'Requests',
   icon: Mail
+}, {
+  value: 'weather',
+  label: 'Weather',
+  icon: CloudSun
 }];
 const contentConfig: Record<string, {
   title: string;
@@ -192,6 +197,10 @@ const contentConfig: Record<string, {
   'stipends': {
     title: 'Stipends',
     description: 'Per diem directory and stipend calculator'
+  },
+  'weather': {
+    title: 'Weather',
+    description: 'Current weather for tour destination cities'
   }
 };
 export const TourManagerDashboard = ({
@@ -322,6 +331,8 @@ export const TourManagerDashboard = ({
         return <TourBudgetManager />;
       case 'notes':
         return <TourNotesSection />;
+      case 'weather':
+        return <TourWeatherSection />;
       default:
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
     }
