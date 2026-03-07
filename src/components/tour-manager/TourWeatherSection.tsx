@@ -221,6 +221,8 @@ export const TourWeatherSection: React.FC = () => {
           console.warn(`Weather: No weather data for ${city.city_name}, skipping`);
           continue;
         }
+        // Small delay to avoid rate limiting
+        await new Promise(r => setTimeout(r, 300));
 
         results.push({
           city: city.city_name,
