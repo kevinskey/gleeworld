@@ -176,7 +176,12 @@ export const TourWeatherSection: React.FC = () => {
 
       if (citiesError) {
         console.error('Weather: Error fetching cities:', citiesError);
+        setWeatherData([]);
+        setLoading(false);
+        return;
       }
+
+      console.log(`Weather: Found ${cities?.length || 0} cities`, cities);
 
       if (!cities || cities.length === 0) {
         setWeatherData([]);
@@ -190,14 +195,22 @@ export const TourWeatherSection: React.FC = () => {
         // Use stored lat/lon if available, otherwise geocode
         let coords: { lat: number; lon: number } | null = null;
         if (city.latitude && city.longitude) {
-          coords = { lat: city.latitude, lon: city.longitude };
+          coords = { lat: Number(city.latitude), lon: Number(city.longitude) };
+          console.log(`Weather: Using stored coords for ${city.city_name}: ${coords.lat}, ${coords.lon}`);
         } else {
+          console.log(`Weather: Geocoding ${city.city_name}...`);
           coords = await geocodeCity(city.city_name, city.state_code || '');
         }
-        if (!coords) continue;
+        if (!coords) {
+          console.warn(`Weather: No coords for ${city.city_name}, skipping`);
+          continue;
+        }
 
         const weather = await fetchWeather(coords.lat, coords.lon);
-        if (!weather) continue;
+        if (!weather) {
+          console.warn(`Weather: No weather data for ${city.city_name}, skipping`);
+          continue;
+        }
 
         results.push({
           city: city.city_name,
@@ -212,6 +225,8 @@ export const TourWeatherSection: React.FC = () => {
           departureDate: city.departure_date || '',
         });
       }
+
+      console.log(`Weather: Got ${results.length} results`);
 
       setWeatherData(results);
       setLastUpdated(new Date());
