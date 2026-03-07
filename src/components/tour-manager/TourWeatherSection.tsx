@@ -131,7 +131,6 @@ const fetchWeather = async (lat: number, lon: number, signal?: AbortSignal): Pro
     return null;
   }
 };
-};
 
 const wmoCodeToDescription = (code: number): string => {
   if (code === 0) return 'Clear sky';
