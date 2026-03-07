@@ -372,9 +372,9 @@ export const TourManagerDashboard = ({
       <div className="flex-1 flex flex-row">
         {/* Sidebar - hidden on mobile, shown on desktop */}
         <aside className={cn("fixed top-[6.5rem] bottom-0 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:h-[calc(100vh-48px)] lg:inset-y-0 lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
-          <div className="flex flex-col h-full px-0 pt-4 overflow-y-auto">
+          <div className="flex flex-col h-full px-0 pt-4 overflow-y-auto overscroll-contain touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
             {/* Navigation */}
-            <nav className="flex flex-col space-y-1 px-2 w-full pb-4">
+            <nav className="flex flex-col space-y-1 px-2 w-full pb-20">
               {navItems.map(item => (
                 <button 
                   key={item.value} 
@@ -406,11 +406,11 @@ export const TourManagerDashboard = ({
       </div>
 
       {/* Mobile Bottom Navigation - Scrollable */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-30 safe-area-inset-bottom">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex items-center h-16 px-2 min-w-max">
-            {navItems.map(item => <button key={item.value} onClick={() => handleSectionChange(item.value)} className={cn("flex flex-col items-center gap-1 px-4 py-2 rounded-md transition-colors flex-shrink-0", activeSection === item.value ? "text-primary" : "text-muted-foreground")}>
-                <item.icon className="h-5 w-5" />
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-[99998]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="overflow-x-auto scrollbar-hide overscroll-x-contain touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex items-center h-14 px-2 min-w-max">
+            {navItems.map(item => <button key={item.value} onClick={() => handleSectionChange(item.value)} className={cn("flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-md transition-colors flex-shrink-0", activeSection === item.value ? "text-primary bg-primary/10" : "text-muted-foreground")}>
+                <item.icon className="h-4 w-4" />
                 <span className="text-[10px] font-medium">{item.label}</span>
               </button>)}
           </div>
