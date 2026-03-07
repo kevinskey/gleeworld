@@ -98,38 +98,49 @@ const geocodeCity = async (city: string, state: string): Promise<{ lat: number; 
 };
 
 // Fetch weather from Open-Meteo (free, no API key)
-const fetchWeather = async (lat: number, lon: number, signal?: AbortSignal): Promise<{
+const fetchWeather = async (lat: number, lon: number): Promise<{
   temp: number; feelsLike: number; humidity: number; windSpeed: number; description: string; icon: string;
 } | null> => {
-  try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
-    const res = await fetch(url, { signal });
-    if (!res.ok) {
-      console.error(`Weather: API returned ${res.status} ${res.statusText}`);
+  const maxRetries = 2;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error(`Weather: API returned ${res.status} ${res.statusText}`);
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+          continue;
+        }
+        return null;
+      }
+      const data = await res.json();
+      if (!data.current) {
+        console.error('Weather: No current data in response', data);
+        return null;
+      }
+      const current = data.current;
+      const weatherCode = current.weather_code;
+      const desc = wmoCodeToDescription(weatherCode);
+      
+      return {
+        temp: Math.round(current.temperature_2m),
+        feelsLike: Math.round(current.apparent_temperature),
+        humidity: current.relative_humidity_2m,
+        windSpeed: Math.round(current.wind_speed_10m),
+        description: desc,
+        icon: desc.toLowerCase(),
+      };
+    } catch (err: any) {
+      console.error(`Weather: fetch error (attempt ${attempt + 1})`, err);
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+        continue;
+      }
       return null;
     }
-    const data = await res.json();
-    if (!data.current) {
-      console.error('Weather: No current data in response', data);
-      return null;
-    }
-    const current = data.current;
-    const weatherCode = current.weather_code;
-    const desc = wmoCodeToDescription(weatherCode);
-    
-    return {
-      temp: Math.round(current.temperature_2m),
-      feelsLike: Math.round(current.apparent_temperature),
-      humidity: current.relative_humidity_2m,
-      windSpeed: Math.round(current.wind_speed_10m),
-      description: desc,
-      icon: desc.toLowerCase(),
-    };
-  } catch (err: any) {
-    if (err?.name === 'AbortError') return null;
-    console.error('Weather: fetch error', err);
-    return null;
   }
+  return null;
 };
 
 const wmoCodeToDescription = (code: number): string => {
