@@ -116,10 +116,10 @@ export const TourWeatherSection: React.FC = () => {
   const fetchTourWeather = async () => {
     setLoading(true);
     try {
-      // Fetch tour cities from itinerary
+      // Fetch tour cities
       const { data: cities } = await supabase
-        .from('gw_tour_itinerary')
-        .select('city_name, state, arrival_date, departure_date')
+        .from('gw_tour_cities')
+        .select('city_name, state_code, arrival_date, departure_date, latitude, longitude')
         .order('city_order', { ascending: true });
 
       if (!cities || cities.length === 0) {
@@ -131,7 +131,13 @@ export const TourWeatherSection: React.FC = () => {
       const results: WeatherData[] = [];
 
       for (const city of cities) {
-        const coords = await geocodeCity(city.city_name, city.state || '');
+        // Use stored lat/lon if available, otherwise geocode
+        let coords: { lat: number; lon: number } | null = null;
+        if (city.latitude && city.longitude) {
+          coords = { lat: city.latitude, lon: city.longitude };
+        } else {
+          coords = await geocodeCity(city.city_name, city.state_code || '');
+        }
         if (!coords) continue;
 
         const weather = await fetchWeather(coords.lat, coords.lon);
@@ -139,7 +145,7 @@ export const TourWeatherSection: React.FC = () => {
 
         results.push({
           city: city.city_name,
-          state: city.state || '',
+          state: city.state_code || '',
           temp: weather.temp,
           feelsLike: weather.feelsLike,
           humidity: weather.humidity,

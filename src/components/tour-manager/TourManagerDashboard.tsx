@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid, ArrowLeft, MessageSquare, CloudSun } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
