@@ -201,7 +201,7 @@ export const TourWeatherSection: React.FC = () => {
 
         results.push({
           city: city.city_name,
-          state: city.state_code || '',
+          state: normalizeState(city.state_code || ''),
           temp: weather.temp,
           feelsLike: weather.feelsLike,
           humidity: weather.humidity,
