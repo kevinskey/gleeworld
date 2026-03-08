@@ -28,6 +28,8 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
   const queryClient = useQueryClient();
   const { activeMeeting, startMeeting, setMinimized } = useActiveMeeting();
   const [roomName, setRoomName] = useState('');
+  const [newMeetingName, setNewMeetingName] = useState('');
+  const [showNewMeetingDialog, setShowNewMeetingDialog] = useState(false);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [showQuickRoomsDialog, setShowQuickRoomsDialog] = useState(false);
 
@@ -65,9 +67,14 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
     setShowJoinDialog(false);
   };
 
-  const handleJoinQuickMeeting = () => {
-    const quickRoom = `glee-meeting-${Date.now().toString(36)}`;
-    launchMeeting(quickRoom);
+  const handleStartNewMeeting = () => {
+    const name = newMeetingName.trim();
+    const sanitized = name
+      ? name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      : `glee-meeting-${Date.now().toString(36)}`;
+    launchMeeting(sanitized);
+    setNewMeetingName('');
+    setShowNewMeetingDialog(false);
   };
 
   // If there's an active meeting, show a "return to meeting" banner instead
@@ -96,13 +103,39 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
     <div className={`space-y-8 ${className}`}>
       {/* Main Actions Grid */}
       <div className="grid grid-cols-2 gap-6 max-w-md mx-auto pt-4">
-        <button onClick={handleJoinQuickMeeting} className="flex flex-col items-center gap-3 group">
-          <div className="w-20 h-20 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105">
-            <Video className="h-10 w-10 text-white" />
-          </div>
-          <span className="text-base font-medium text-foreground">New meeting</span>
-        </button>
-
+        <Dialog open={showNewMeetingDialog} onOpenChange={setShowNewMeetingDialog}>
+          <DialogTrigger asChild>
+            <button className="flex flex-col items-center gap-3 group">
+              <div className="w-20 h-20 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                <Video className="h-10 w-10 text-white" />
+              </div>
+              <span className="text-base font-medium text-foreground">New meeting</span>
+            </button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Name Your Meeting</DialogTitle>
+              <DialogDescription>Give your meeting a name so others can find it easily.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-meeting-name">Meeting Name</Label>
+                <Input
+                  id="new-meeting-name"
+                  placeholder="e.g., Soprano Rehearsal, Exec Check-in"
+                  value={newMeetingName}
+                  onChange={e => setNewMeetingName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleStartNewMeeting()}
+                  autoFocus
+                />
+              </div>
+              <Button onClick={handleStartNewMeeting} className="w-full">
+                <Video className="h-4 w-4 mr-2" />
+                {newMeetingName.trim() ? 'Start Meeting' : 'Start with Random Name'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
         <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
           <DialogTrigger asChild>
             <button className="flex flex-col items-center gap-3 group">
