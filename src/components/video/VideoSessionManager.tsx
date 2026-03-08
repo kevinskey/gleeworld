@@ -136,6 +136,7 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
             </div>
           </DialogContent>
         </Dialog>
+        <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
           <DialogTrigger asChild>
             <button className="flex flex-col items-center gap-3 group">
               <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105">
