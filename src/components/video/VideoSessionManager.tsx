@@ -67,9 +67,14 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
     setShowJoinDialog(false);
   };
 
-  const handleJoinQuickMeeting = () => {
-    const quickRoom = `glee-meeting-${Date.now().toString(36)}`;
-    launchMeeting(quickRoom);
+  const handleStartNewMeeting = () => {
+    const name = newMeetingName.trim();
+    const sanitized = name
+      ? name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      : `glee-meeting-${Date.now().toString(36)}`;
+    launchMeeting(sanitized);
+    setNewMeetingName('');
+    setShowNewMeetingDialog(false);
   };
 
   // If there's an active meeting, show a "return to meeting" banner instead
