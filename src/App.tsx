@@ -22,6 +22,8 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 
 import { MessengerProvider } from "@/contexts/MessengerContext";
 import { MessengerModal } from "@/components/messenger/MessengerModal";
+import { ActiveMeetingProvider } from "@/contexts/ActiveMeetingContext";
+import { PersistentMeetingOverlay } from "@/components/video/PersistentMeetingOverlay";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { ScrollToTop } from "@/components/routing/ScrollToTop";
