@@ -28,6 +28,8 @@ export const VideoSessionManager: React.FC<VideoSessionManagerProps> = ({
   const queryClient = useQueryClient();
   const { activeMeeting, startMeeting, setMinimized } = useActiveMeeting();
   const [roomName, setRoomName] = useState('');
+  const [newMeetingName, setNewMeetingName] = useState('');
+  const [showNewMeetingDialog, setShowNewMeetingDialog] = useState(false);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [showQuickRoomsDialog, setShowQuickRoomsDialog] = useState(false);
 
