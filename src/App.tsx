@@ -2436,6 +2436,7 @@ const App = () => {
                     <PWAInstallPrompt />
                    </div>
                    </AudioCompanionProvider>
+                  </ActiveMeetingProvider>
                   </MessengerProvider>
                   </CourseProvider>
                   </Mus240SemesterProvider>
