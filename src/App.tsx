@@ -357,11 +357,13 @@ const App = () => {
                   <Mus240SemesterProvider>
                   <CourseProvider>
                   <MessengerProvider>
+                  <ActiveMeetingProvider>
                   <AudioCompanionProvider>
                   <div>
                   <Toaster />
                   <Sonner />
                   
+                  <PersistentMeetingOverlay />
                   <MessengerModal />
                   <DesignSystemEnforcer />
                   <GlobalMiniPlayer />
