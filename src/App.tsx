@@ -22,6 +22,8 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 
 import { MessengerProvider } from "@/contexts/MessengerContext";
 import { MessengerModal } from "@/components/messenger/MessengerModal";
+import { ActiveMeetingProvider } from "@/contexts/ActiveMeetingContext";
+import { PersistentMeetingOverlay } from "@/components/video/PersistentMeetingOverlay";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { ScrollToTop } from "@/components/routing/ScrollToTop";
@@ -355,11 +357,13 @@ const App = () => {
                   <Mus240SemesterProvider>
                   <CourseProvider>
                   <MessengerProvider>
+                  <ActiveMeetingProvider>
                   <AudioCompanionProvider>
                   <div>
                   <Toaster />
                   <Sonner />
                   
+                  <PersistentMeetingOverlay />
                   <MessengerModal />
                   <DesignSystemEnforcer />
                   <GlobalMiniPlayer />
@@ -2432,6 +2436,7 @@ const App = () => {
                     <PWAInstallPrompt />
                    </div>
                    </AudioCompanionProvider>
+                  </ActiveMeetingProvider>
                   </MessengerProvider>
                   </CourseProvider>
                   </Mus240SemesterProvider>
