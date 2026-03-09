@@ -535,6 +535,14 @@ export const GroupMessageInterface: React.FC = () => {
               <div className="bg-primary text-primary-foreground px-3 py-2.5 shadow-md flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-semibold flex items-center gap-1.5">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-primary-foreground hover:bg-white/20 h-6 w-6 -ml-1 mr-1"
+                      onClick={() => navigate(-1)}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
                     <MessageSquare className="h-4 w-4" />
                     Messages
                   </h2>
