@@ -61,6 +61,16 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
           <div className="flex-shrink-0 bg-primary text-primary-foreground px-4 py-3 shadow-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
+                {!embedded && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="text-primary-foreground hover:bg-white/20 -ml-2"
+                    onClick={() => navigate(-1)}
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                )}
                 <MessageSquare className="h-6 w-6" />
                 <h1 className="text-lg font-bold">Messages</h1>
               </div>
