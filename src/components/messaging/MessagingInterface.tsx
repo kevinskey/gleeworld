@@ -6,15 +6,17 @@ import { ChatWindow } from './ChatWindow';
 import { CreateGroupDialog } from './GroupManagement';
 import { UserSelector } from './UserSelector';
 import { useMessageGroups } from '@/hooks/useMessaging';
-import { MessageSquare, UserPlus } from 'lucide-react';
+import { MessageSquare, UserPlus, ArrowLeft } from 'lucide-react';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { GroupHeader } from '@/components/messaging/GroupHeader';
+import { useNavigate } from 'react-router-dom';
 
 interface MessagingInterfaceProps {
   embedded?: boolean;
 }
 
 export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded = false }) => {
+  const navigate = useNavigate();
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showDirectMessages, setShowDirectMessages] = useState(false);
   
@@ -59,6 +61,16 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
           <div className="flex-shrink-0 bg-primary text-primary-foreground px-4 py-3 shadow-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
+                {!embedded && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="text-primary-foreground hover:bg-white/20 -ml-2"
+                    onClick={() => navigate(-1)}
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                )}
                 <MessageSquare className="h-6 w-6" />
                 <h1 className="text-lg font-bold">Messages</h1>
               </div>
