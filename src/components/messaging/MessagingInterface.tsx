@@ -6,15 +6,17 @@ import { ChatWindow } from './ChatWindow';
 import { CreateGroupDialog } from './GroupManagement';
 import { UserSelector } from './UserSelector';
 import { useMessageGroups } from '@/hooks/useMessaging';
-import { MessageSquare, UserPlus } from 'lucide-react';
+import { MessageSquare, UserPlus, ArrowLeft } from 'lucide-react';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { GroupHeader } from '@/components/messaging/GroupHeader';
+import { useNavigate } from 'react-router-dom';
 
 interface MessagingInterfaceProps {
   embedded?: boolean;
 }
 
 export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded = false }) => {
+  const navigate = useNavigate();
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showDirectMessages, setShowDirectMessages] = useState(false);
   
