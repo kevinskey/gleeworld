@@ -10,7 +10,7 @@ import { ConversationListItem } from '@/components/messaging/ConversationListIte
 import { GroupHeader } from '@/components/messaging/GroupHeader';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { MessageSquare, Plus, User, X, Search, FolderPlus, Folder, ChevronDown, ChevronRight, GripVertical, Video, Users } from 'lucide-react';
+import { MessageSquare, Plus, User, X, Search, FolderPlus, Folder, ChevronDown, ChevronRight, GripVertical, Video, Users, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import useGroupMessages from '@/hooks/useGroupMessages';
 import { useDirectMessages } from '@/hooks/useDirectMessages';
