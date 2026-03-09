@@ -10,7 +10,7 @@ import { ConversationListItem } from '@/components/messaging/ConversationListIte
 import { GroupHeader } from '@/components/messaging/GroupHeader';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { MessageSquare, Plus, User, X, Search, FolderPlus, Folder, ChevronDown, ChevronRight, GripVertical, Video, Users } from 'lucide-react';
+import { MessageSquare, Plus, User, X, Search, FolderPlus, Folder, ChevronDown, ChevronRight, GripVertical, Video, Users, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import useGroupMessages from '@/hooks/useGroupMessages';
 import { useDirectMessages } from '@/hooks/useDirectMessages';
@@ -336,7 +336,17 @@ export const GroupMessageInterface: React.FC = () => {
           {/* Group List - Compact horizontal scroll at top */}
           <div className="flex-shrink-0 bg-muted/50 border-b border-border">
             <div className="bg-primary text-primary-foreground px-2 py-1.5 shadow-sm flex items-center justify-between">
-              <h2 className="text-xs font-semibold">Conversations</h2>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-primary-foreground hover:bg-white/20 h-6 w-6 -ml-1"
+                  onClick={() => navigate(-1)}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <h2 className="text-xs font-semibold">Conversations</h2>
+              </div>
               <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="ghost" className="text-primary-foreground hover:bg-white/20 h-6 px-2 text-[10px]">
@@ -525,6 +535,14 @@ export const GroupMessageInterface: React.FC = () => {
               <div className="bg-primary text-primary-foreground px-3 py-2.5 shadow-md flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-semibold flex items-center gap-1.5">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-primary-foreground hover:bg-white/20 h-6 w-6 -ml-1 mr-1"
+                      onClick={() => navigate(-1)}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
                     <MessageSquare className="h-4 w-4" />
                     Messages
                   </h2>
