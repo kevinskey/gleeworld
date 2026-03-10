@@ -104,6 +104,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [dismissedAnnouncements, setDismissedAnnouncements] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [stipendDialogOpen, setStipendDialogOpen] = useState(false);
 
   const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
   const isMus070 = course.courseCode === 'MUS 070';
