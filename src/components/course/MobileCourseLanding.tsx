@@ -35,6 +35,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   const [playlistOpen, setPlaylistOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [contractOpen, setContractOpen] = useState(false);
+  const [stipendDialogOpen, setStipendDialogOpen] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
 
