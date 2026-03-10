@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   User, Calendar, ClipboardList, CheckCircle, XCircle, Clock, 
-  FileText, AlertCircle, Play, MoreHorizontal, Mail, ChevronDown, Bell
+  FileText, AlertCircle, Play, MoreHorizontal, Mail, ChevronDown, Bell, DollarSign
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
