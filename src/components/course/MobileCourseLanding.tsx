@@ -19,6 +19,7 @@ import { ClassScheduleForm } from '@/components/academy/ClassScheduleForm';
 import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { MobilePlaylistDropdown } from './MobilePlaylistDropdown';
 import { TourContractSigningModal } from '@/components/mus070/student/TourContractSigningModal';
+import { StipendReceiptDialog } from '@/components/mus070/StipendReceiptDialog';
 import { useToast } from '@/hooks/use-toast';
 
 
