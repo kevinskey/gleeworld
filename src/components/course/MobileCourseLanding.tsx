@@ -317,6 +317,23 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
 
           {isMus070 && <TourContractSigningModal open={contractOpen} onOpenChange={setContractOpen} />}
 
+          {/* Stipend Receipt - MUS 070 only */}
+          {isMus070 && (
+            <Card className={`shadow-sm ${glass}`}>
+              <CardContent className="py-3">
+                <Button
+                  onClick={() => setStipendDialogOpen(true)}
+                  className="w-full gap-2 bg-white/[0.08] border border-white/10 text-sky-400 hover:bg-white/[0.14]"
+                  variant="outline"
+                >
+                  <DollarSign className="h-4 w-4" />
+                  Sign Stipend Receipt ($100)
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+          {isMus070 && <StipendReceiptDialog open={stipendDialogOpen} onOpenChange={setStipendDialogOpen} />}
+
           {/* Listen to Tracks */}
           <div className="relative">
             <Card variant="outline" className={`shadow-sm ${glass}`}>
