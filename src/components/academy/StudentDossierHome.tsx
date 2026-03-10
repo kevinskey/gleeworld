@@ -441,7 +441,21 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
     <div className="space-y-6 relative z-10">
       {/* Advertising Hero - Full width above content */}
       <AdvertisingHero className="rounded-xl overflow-hidden" />
-      
+
+      {/* Stipend Receipt Button - MUS 070 only */}
+      {isMus070 && (
+        <Button
+          onClick={() => setStipendDialogOpen(true)}
+          className="w-full bg-white/[0.08] backdrop-blur-sm border border-white/10 text-sky-400 hover:bg-white/[0.14] hover:text-sky-300 transition-all"
+          size="lg"
+        >
+          <DollarSign className="h-5 w-5 mr-2" />
+          Sign Stipend Receipt ($100)
+        </Button>
+      )}
+
+      {/* Stipend Dialog */}
+      <StipendReceiptDialog open={stipendDialogOpen} onOpenChange={setStipendDialogOpen} />
       <div className="flex gap-6">
       {/* Main Content Column - 70% */}
       <div className="flex-1 space-y-6 min-w-0">
