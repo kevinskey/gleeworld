@@ -19,6 +19,7 @@ import { CourseTopicSlider } from './CourseTopicSlider';
 import { GleeCamCard } from '@/components/dashboard/GleeCamCard';
 import { ClassScheduleForm } from './ClassScheduleForm';
 import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
+import { StipendReceiptDialog } from '@/components/mus070/StipendReceiptDialog';
 
 interface StudentProfile {
   user_id: string;
