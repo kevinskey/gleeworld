@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   User, Calendar, ClipboardList, CheckCircle, XCircle, Clock, 
-  FileText, AlertCircle, Play, MoreHorizontal, Mail, ChevronDown, Bell
+  FileText, AlertCircle, Play, MoreHorizontal, Mail, ChevronDown, Bell, DollarSign
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +19,7 @@ import { CourseTopicSlider } from './CourseTopicSlider';
 import { GleeCamCard } from '@/components/dashboard/GleeCamCard';
 import { ClassScheduleForm } from './ClassScheduleForm';
 import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
+import { StipendReceiptDialog } from '@/components/mus070/StipendReceiptDialog';
 
 interface StudentProfile {
   user_id: string;
@@ -103,6 +104,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [dismissedAnnouncements, setDismissedAnnouncements] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [stipendDialogOpen, setStipendDialogOpen] = useState(false);
 
   const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
   const isMus070 = course.courseCode === 'MUS 070';
@@ -439,7 +441,21 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
     <div className="space-y-6 relative z-10">
       {/* Advertising Hero - Full width above content */}
       <AdvertisingHero className="rounded-xl overflow-hidden" />
-      
+
+      {/* Stipend Receipt Button - MUS 070 only */}
+      {isMus070 && (
+        <Button
+          onClick={() => setStipendDialogOpen(true)}
+          className="w-full bg-white/[0.08] backdrop-blur-sm border border-white/10 text-sky-400 hover:bg-white/[0.14] hover:text-sky-300 transition-all"
+          size="lg"
+        >
+          <DollarSign className="h-5 w-5 mr-2" />
+          Sign Stipend Receipt ($100)
+        </Button>
+      )}
+
+      {/* Stipend Dialog */}
+      <StipendReceiptDialog open={stipendDialogOpen} onOpenChange={setStipendDialogOpen} />
       <div className="flex gap-6">
       {/* Main Content Column - 70% */}
       <div className="flex-1 space-y-6 min-w-0">
