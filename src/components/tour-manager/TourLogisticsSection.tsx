@@ -651,114 +651,47 @@ export const TourLogisticsSection = () => {
         </Card>
       ) : (
         <div className="space-y-6">
-          {Object.entries(groupedByDate).map(([date, events]) => (
-            <div key={date}>
-              {/* Day header */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="bg-primary text-primary-foreground px-3 py-1 rounded-md text-sm font-semibold">
-                  {format(parseISO(date), 'EEE, MMM d')}
-                </div>
+          {/* Active / Upcoming Section */}
+          {activeEvents.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Current & Upcoming</h3>
+                <Badge variant="secondary" className="text-xs">{activeEvents.length}</Badge>
                 <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground">{events.length} events</span>
               </div>
-
-              {/* Events for this day */}
-              <div className="relative ml-4">
-                {/* Vertical line */}
-                <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
-
-                <div className="space-y-2">
-                  {events.map(event => {
-                    const catConfig = getCategoryConfig(event.event_category);
-                    const CatIcon = catConfig.icon;
-                    const targetLabel = TARGET_GROUPS.find(g => g.value === event.target_group)?.label || 'Everyone';
-
-                    return (
-                      <div key={event.id} className="relative flex gap-3 pl-8">
-                        {/* Dot */}
-                        <div className={cn(
-                          "absolute left-1 top-3 w-5 h-5 rounded-full flex items-center justify-center",
-                          catConfig.color
-                        )}>
-                          <CatIcon className="h-2.5 w-2.5 text-white" />
-                        </div>
-
-                        {/* Card */}
-                        <div className="flex-1 bg-card border border-border rounded-lg p-3 hover:bg-muted/30 transition-colors group">
-                          <div className="flex flex-wrap items-start justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              {event.event_time && (
-                                <span className="text-sm font-bold text-primary font-mono">
-                                  {formatTime12(event.event_time)}
-                                </span>
-                              )}
-                              {event.end_time && (
-                                <span className="text-xs text-muted-foreground">
-                                  – {formatTime12(event.end_time)}
-                                </span>
-                              )}
-                              <h4 className="text-sm font-medium text-foreground">{event.label}</h4>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              {event.target_group !== 'all' && (
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                  <Users className="h-2.5 w-2.5 mr-0.5" />
-                                  {targetLabel}
-                                </Badge>
-                              )}
-                              {getStatusBadge(event.status, event.source)}
-                              {event.source === 'manual' && (
-                                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6"
-                                    onClick={() => openEditDialog(event)}
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6"
-                                    onClick={() => handleStatusToggle(event.id, event.status)}
-                                  >
-                                    <CheckCircle2 className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 text-destructive"
-                                    onClick={() => handleDeleteEvent(event.id)}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          {event.description && (
-                            <p className="mt-1 text-xs text-foreground/70 whitespace-pre-line">{event.description}</p>
-                          )}
-                          {(event.location || event.notes || event.city_name) && (
-                            <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                              {event.location && (
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  {event.location}
-                                </span>
-                              )}
-                              {event.notes && <span>{event.notes}</span>}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              {Object.entries(activeGrouped).map(([date, events]) => (
+                <CollapsibleDateGroup key={`active-${date}`} date={date} events={events} defaultOpen={true}
+                  getCategoryConfig={getCategoryConfig} formatTime12={formatTime12}
+                  getStatusBadge={getStatusBadge} openEditDialog={openEditDialog}
+                  handleStatusToggle={handleStatusToggle} handleDeleteEvent={handleDeleteEvent}
+                />
+              ))}
             </div>
-          ))}
+          )}
+
+          {/* Completed Section */}
+          {completedEvents.length > 0 && (
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger className="flex items-center gap-2 w-full group cursor-pointer py-2">
+                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Completed</h3>
+                <Badge variant="outline" className="text-xs text-muted-foreground">{completedEvents.length}</Badge>
+                <div className="flex-1 h-px bg-border" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-2">
+                {Object.entries(completedGrouped).map(([date, events]) => (
+                  <CollapsibleDateGroup key={`done-${date}`} date={date} events={events} defaultOpen={false}
+                    getCategoryConfig={getCategoryConfig} formatTime12={formatTime12}
+                    getStatusBadge={getStatusBadge} openEditDialog={openEditDialog}
+                    handleStatusToggle={handleStatusToggle} handleDeleteEvent={handleDeleteEvent}
+                    muted
+                  />
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </div>
       )}
 
