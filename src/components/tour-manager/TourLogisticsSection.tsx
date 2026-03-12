@@ -147,7 +147,7 @@ const CollapsibleDateGroup = ({
                               – {formatTime12(event.end_time)}
                             </span>
                           )}
-                          <h4 className="text-sm font-medium text-foreground truncate">{event.label}</h4>
+                          <h4 className="text-sm font-medium text-foreground break-words sm:truncate">{event.label}</h4>
                         </div>
                         {/* Badges row */}
                         <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -160,17 +160,17 @@ const CollapsibleDateGroup = ({
                           {getStatusBadge(event.status, event.source)}
                         </div>
                         {event.description && (
-                          <p className="mt-1.5 text-xs text-foreground/70 whitespace-pre-line line-clamp-3">{event.description}</p>
+                          <p className="mt-1.5 text-xs text-foreground/80 whitespace-pre-line break-words">{event.description}</p>
                         )}
                         {(event.location || event.notes) && (
-                          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                          <div className="mt-1.5 space-y-1 text-xs text-muted-foreground">
                             {event.location && (
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3 shrink-0" />
-                                <span className="truncate">{event.location}</span>
+                              <span className="flex items-start gap-1">
+                                <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+                                <span className="break-words">{event.location}</span>
                               </span>
                             )}
-                            {event.notes && <span className="truncate">{event.notes}</span>}
+                            {event.notes && <p className="break-words">{event.notes}</p>}
                           </div>
                         )}
                       </div>
