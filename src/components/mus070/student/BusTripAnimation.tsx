@@ -134,6 +134,9 @@ export const BusTripAnimation: React.FC<BusTripAnimationProps> = ({ cities, tour
             {tripState.status === 'pre-tour' ? 'Upcoming' : tripState.status === 'completed' ? 'Completed' : 'En Route'}
           </span>
         </div>
+        {'fromLabel' in tripState && tripState.fromLabel && (
+          <span className="text-xs font-medium text-foreground/60">{tripState.fromLabel} •</span>
+        )}
         <div className="flex items-center gap-1.5 bg-primary/10 rounded-full px-3 py-1">
           <Navigation className="h-3 w-3 text-primary" />
           <span className="text-xs font-bold text-primary">{tripState.timeLabel}</span>
