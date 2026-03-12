@@ -70,7 +70,7 @@ export const BusTripAnimation: React.FC<BusTripAnimationProps> = ({ cities, tour
       const depart = parseISO(departDate + 'T08:00:00');
       const arrive = parseISO(arriveDate + 'T18:00:00');
 
-      if ((isBefore(now, arrive) || i === sortedCities.length - 2)) {
+      if (isAfter(now, depart) && (isBefore(now, arrive) || i === sortedCities.length - 2)) {
         const totalMs = arrive.getTime() - depart.getTime();
         const elapsedMs = now.getTime() - depart.getTime();
         const segProgress = Math.max(0, Math.min(100, (elapsedMs / totalMs) * 100));
