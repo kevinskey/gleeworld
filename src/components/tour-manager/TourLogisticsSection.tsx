@@ -97,81 +97,98 @@ const CollapsibleDateGroup = ({
     <Collapsible defaultOpen={defaultOpen}>
       <CollapsibleTrigger className="flex items-center gap-2 w-full group cursor-pointer">
         <div className={cn(
-          "px-3 py-1 rounded-md text-sm font-semibold",
+          "px-2.5 py-1 rounded-md text-xs sm:text-sm font-semibold shrink-0",
           muted ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"
         )}>
           {format(parseISO(date), 'EEE, MMM d')}
         </div>
         <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground">{events.length} events</span>
-        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+        <span className="text-xs text-muted-foreground shrink-0">{events.length}</span>
+        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90 shrink-0" />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className={cn("relative ml-4 mt-3", muted && "opacity-60")}>
-          <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
+        <div className={cn("relative mt-2 sm:ml-4 sm:mt-3", muted && "opacity-60")}>
+          {/* Timeline line - hidden on mobile for space */}
+          <div className="hidden sm:block absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
           <div className="space-y-2">
             {events.map(event => {
               const catConfig = getCategoryConfig(event.event_category);
               const CatIcon = catConfig.icon;
               const targetLabel = TARGET_GROUPS.find(g => g.value === event.target_group)?.label || 'Everyone';
               return (
-                <div key={event.id} className="relative flex gap-3 pl-8">
+                <div key={event.id} className="relative sm:pl-8">
+                  {/* Category dot - positioned differently on mobile */}
                   <div className={cn(
-                    "absolute left-1 top-3 w-5 h-5 rounded-full flex items-center justify-center",
+                    "hidden sm:flex absolute left-1 top-3 w-5 h-5 rounded-full items-center justify-center",
                     catConfig.color
                   )}>
                     <CatIcon className="h-2.5 w-2.5 text-white" />
                   </div>
-                  <div className="flex-1 bg-card border border-border rounded-lg p-3 hover:bg-muted/30 transition-colors group">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        {event.event_time && (
-                          <span className="text-sm font-bold text-primary font-mono">
-                            {formatTime12(event.event_time)}
-                          </span>
-                        )}
-                        {event.end_time && (
-                          <span className="text-xs text-muted-foreground">
-                            – {formatTime12(event.end_time)}
-                          </span>
-                        )}
-                        <h4 className="text-sm font-medium text-foreground">{event.label}</h4>
+                  <div className="bg-card border border-border rounded-lg p-3 active:bg-muted/30 sm:hover:bg-muted/30 transition-colors">
+                    {/* Mobile: stacked layout / Desktop: inline */}
+                    <div className="flex items-start gap-2">
+                      {/* Mobile category icon */}
+                      <div className={cn(
+                        "sm:hidden w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5",
+                        catConfig.color
+                      )}>
+                        <CatIcon className="h-3.5 w-3.5 text-white" />
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        {event.target_group !== 'all' && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            <Users className="h-2.5 w-2.5 mr-0.5" />
-                            {targetLabel}
-                          </Badge>
+                      <div className="flex-1 min-w-0">
+                        {/* Title + time row */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {event.event_time && (
+                            <span className="text-xs sm:text-sm font-bold text-primary font-mono shrink-0">
+                              {formatTime12(event.event_time)}
+                            </span>
+                          )}
+                          {event.end_time && (
+                            <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">
+                              – {formatTime12(event.end_time)}
+                            </span>
+                          )}
+                          <h4 className="text-sm font-medium text-foreground truncate">{event.label}</h4>
+                        </div>
+                        {/* Badges row */}
+                        <div className="flex items-center gap-1 mt-1 flex-wrap">
+                          {event.target_group !== 'all' && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                              <Users className="h-2.5 w-2.5 mr-0.5" />
+                              {targetLabel}
+                            </Badge>
+                          )}
+                          {getStatusBadge(event.status, event.source)}
+                        </div>
+                        {event.description && (
+                          <p className="mt-1.5 text-xs text-foreground/70 whitespace-pre-line line-clamp-3">{event.description}</p>
                         )}
-                        {getStatusBadge(event.status, event.source)}
-                        {event.source === 'manual' && (
-                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(event)}>
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleStatusToggle(event.id, event.status)}>
-                              <CheckCircle2 className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDeleteEvent(event.id)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                        {(event.location || event.notes) && (
+                          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                            {event.location && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{event.location}</span>
+                              </span>
+                            )}
+                            {event.notes && <span className="truncate">{event.notes}</span>}
                           </div>
                         )}
                       </div>
                     </div>
-                    {event.description && (
-                      <p className="mt-1 text-xs text-foreground/70 whitespace-pre-line">{event.description}</p>
-                    )}
-                    {(event.location || event.notes || event.city_name) && (
-                      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                        {event.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {event.location}
-                          </span>
-                        )}
-                        {event.notes && <span>{event.notes}</span>}
+                    {/* Action buttons - always visible on mobile (touch), hover on desktop */}
+                    {event.source === 'manual' && (
+                      <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-border/50 sm:mt-0 sm:pt-0 sm:border-0 sm:opacity-0 sm:hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => openEditDialog(event)}>
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => handleStatusToggle(event.id, event.status)}>
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Status
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-destructive" onClick={() => handleDeleteEvent(event.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -522,26 +539,16 @@ export const TourLogisticsSection = () => {
 
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Header with tour selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="space-y-2">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Unified Operations Timeline</h2>
-          <p className="text-sm text-muted-foreground">All call times, transport, performances, meals, and crew schedules</p>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">Operations Timeline</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">Call times, transport, performances, meals & crew</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePublishToCalendar}
-            disabled={publishing || !selectedTourId}
-            className="gap-1.5"
-          >
-            {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CalendarPlus className="h-3.5 w-3.5" />}
-            {publishing ? 'Publishing...' : 'Publish to MUS 070 Calendar'}
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
           <Select value={selectedTourId} onValueChange={setSelectedTourId}>
-            <SelectTrigger className="w-[260px] bg-card border-border">
+            <SelectTrigger className="w-full sm:w-[260px] bg-card border-border">
               <SelectValue placeholder="Select Tour" />
             </SelectTrigger>
             <SelectContent>
@@ -552,6 +559,16 @@ export const TourLogisticsSection = () => {
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePublishToCalendar}
+            disabled={publishing || !selectedTourId}
+            className="gap-1.5 w-full sm:w-auto"
+          >
+            {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CalendarPlus className="h-3.5 w-3.5" />}
+            <span className="truncate">{publishing ? 'Publishing...' : 'Publish to Calendar'}</span>
+          </Button>
         </div>
       </div>
 
@@ -573,69 +590,73 @@ export const TourLogisticsSection = () => {
         </div>
       )}
 
-      {/* Category filter chips */}
-      <div className="flex flex-wrap gap-1.5">
-        <button
-          onClick={() => setCategoryFilter('all')}
-          className={cn(
-            "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-            categoryFilter === 'all'
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground"
-          )}
-        >
-          All
-        </button>
-        {EVENT_CATEGORIES.map(cat => {
-          const count = timelineEvents.filter(e => e.event_category === cat.value).length;
-          if (count === 0) return null;
-          const Icon = cat.icon;
-          return (
-            <button
-              key={cat.value}
-              onClick={() => setCategoryFilter(cat.value)}
-              className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1",
-                categoryFilter === cat.value
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Icon className="h-3 w-3" />
-              {cat.label} ({count})
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Date filter */}
-      {uniqueDates.length > 1 && (
-        <div className="flex flex-wrap gap-1.5">
+      {/* Category filter chips - horizontally scrollable on mobile */}
+      <div className="overflow-x-auto -mx-1 px-1 pb-1">
+        <div className="flex gap-1.5 w-max">
           <button
-            onClick={() => setDateFilter('all')}
+            onClick={() => setCategoryFilter('all')}
             className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-              dateFilter === 'all'
-                ? "bg-accent text-accent-foreground"
-                : "bg-muted/50 text-muted-foreground hover:text-foreground"
+              "px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+              categoryFilter === 'all'
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
             )}
           >
-            All Dates
+            All
           </button>
-          {uniqueDates.map(d => (
+          {EVENT_CATEGORIES.map(cat => {
+            const count = timelineEvents.filter(e => e.event_category === cat.value).length;
+            if (count === 0) return null;
+            const Icon = cat.icon;
+            return (
+              <button
+                key={cat.value}
+                onClick={() => setCategoryFilter(cat.value)}
+                className={cn(
+                  "px-2.5 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1 whitespace-nowrap",
+                  categoryFilter === cat.value
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="h-3 w-3" />
+                {cat.label} ({count})
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Date filter - horizontally scrollable on mobile */}
+      {uniqueDates.length > 1 && (
+        <div className="overflow-x-auto -mx-1 px-1 pb-1">
+          <div className="flex gap-1.5 w-max">
             <button
-              key={d}
-              onClick={() => setDateFilter(d)}
+              onClick={() => setDateFilter('all')}
               className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-                dateFilter === d
+                "px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+                dateFilter === 'all'
                   ? "bg-accent text-accent-foreground"
                   : "bg-muted/50 text-muted-foreground hover:text-foreground"
               )}
             >
-              {format(parseISO(d), 'EEE, MMM d')}
+              All Dates
             </button>
-          ))}
+            {uniqueDates.map(d => (
+              <button
+                key={d}
+                onClick={() => setDateFilter(d)}
+                className={cn(
+                  "px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+                  dateFilter === d
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-muted/50 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {format(parseISO(d), 'EEE, MMM d')}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -694,32 +715,32 @@ export const TourLogisticsSection = () => {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-10 text-sm", !newEvent.event_date && "text-muted-foreground")}>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {newEvent.event_date ? format(parseISO(newEvent.event_date), 'MMM d, yyyy') : 'Pick date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-white text-black" align="start">
+                    <CalendarWidget
+                      mode="single"
+                      selected={newEvent.event_date ? parseISO(newEvent.event_date) : undefined}
+                      onSelect={(date) => setNewEvent(p => ({ ...p, event_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Date *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-10 text-sm", !newEvent.event_date && "text-muted-foreground")}>
-                        <Calendar className="mr-2 h-4 w-4" />
-                        {newEvent.event_date ? format(parseISO(newEvent.event_date), 'MMM d, yyyy') : 'Pick date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-white text-black" align="start">
-                      <CalendarWidget
-                        mode="single"
-                        selected={newEvent.event_date ? parseISO(newEvent.event_date) : undefined}
-                        onSelect={(date) => setNewEvent(p => ({ ...p, event_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Start</Label>
+                  <Label className="text-xs">Start Time</Label>
                   <Input type="time" value={newEvent.event_time} onChange={e => setNewEvent(p => ({ ...p, event_time: e.target.value }))} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">End</Label>
+                  <Label className="text-xs">End Time</Label>
                   <Input type="time" value={newEvent.end_time} onChange={e => setNewEvent(p => ({ ...p, end_time: e.target.value }))} />
                 </div>
               </div>
@@ -851,17 +872,17 @@ export const TourLogisticsSection = () => {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Date *</Label>
+              <Input type="date" value={editForm.event_date} onChange={e => setEditForm(p => ({ ...p, event_date: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs">Date *</Label>
-                <Input type="date" value={editForm.event_date} onChange={e => setEditForm(p => ({ ...p, event_date: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Start</Label>
+                <Label className="text-xs">Start Time</Label>
                 <Input type="time" value={editForm.event_time} onChange={e => setEditForm(p => ({ ...p, event_time: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">End</Label>
+                <Label className="text-xs">End Time</Label>
                 <Input type="time" value={editForm.end_time} onChange={e => setEditForm(p => ({ ...p, end_time: e.target.value }))} />
               </div>
             </div>
